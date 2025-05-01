@@ -75,14 +75,14 @@ const sampleFlashcards = [
   }
 ];
 
-// Mảng chứa URLs của các hình ảnh ví dụ (kích thước 1024x1536px)
+// Array containing URLs of example images (1024x1536px)
 const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1", // Placeholder example images
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
   "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
   "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
   "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
-  // Thêm nhiều hình ảnh khác nếu cần
+  // Add more images if needed
 ];
 
 
@@ -211,8 +211,8 @@ export default function VerticalFlashcardGallery() {
         </div>
       );
     } else if (imageDetail === 'example') {
-      // Lấy hình ảnh ví dụ dựa trên index của card trong mảng cards
-      // Hoặc bạn có thể sử dụng một logic khác để chọn hình ảnh ví dụ
+      // Get example image based on card index in the cards array
+      // Or you can use another logic to select the example image
       const exampleIndex = originalIndex % exampleImages.length;
       const exampleImageUrl = exampleImages[exampleIndex];
 
@@ -363,11 +363,13 @@ export default function VerticalFlashcardGallery() {
 
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+    // Main container now handles scrolling
+    <div className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
       {/* Inject CSS animations */}
       <style>{animations}</style>
 
       {/* Header with Tabs and Settings */}
+      {/* This div will now scroll with the content */}
       <div className="w-full max-w-6xl px-4 py-6 mx-auto"> {/* Added mx-auto for centering */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1> {/* Added dark mode text color */}
@@ -449,16 +451,16 @@ export default function VerticalFlashcardGallery() {
         </div>
       </div>
 
-      {/* Main Content - With 1 or 2 column layout mode */}
-      {/* Added pb-16 to the main content container to prevent overlap with the fixed navigation bar */}
-      <div className="flex-1 overflow-auto p-4 pb-16">
+      {/* Main Content - Removed flex-1 from this container to fix the layout issue */}
+      {/* This div now allows the grid layout inside to function correctly */}
+      <div className="p-4 pb-16 min-h-0">
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {filteredFlashcards.length > 0 ? (
             <div
               ref={scrollContainerRef}
               className={`w-full ${
                 layoutMode === 'double'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' // Changed back to grid-cols-2, added sm breakpoint
+                  ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' // This class correctly sets up the 2-column grid on small screens and up
                   : 'flex flex-col items-center space-y-16'
               }`}
             >
@@ -913,7 +915,7 @@ export default function VerticalFlashcardGallery() {
         </>
       )}
 
-      
+
     </div>
   );
 }
