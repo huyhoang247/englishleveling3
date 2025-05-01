@@ -1,4 +1,6 @@
 import { useState } from "react";
+// Thêm import Profile component
+import Profile from './profile'; // Đảm bảo đường dẫn này đúng với vị trí file profile.tsx của bạn
 
 export default function BottomNavigationBar() {
   const [activeTab, setActiveTab] = useState("home");
@@ -121,6 +123,16 @@ export default function BottomNavigationBar() {
     setIsVisible(!isVisible);
   };
 
+  // Hàm xử lý khi click vào tab
+  const handleTabClick = (tabName: string) => {
+    setActiveTab(tabName);
+    // Khi chuyển tab, nếu không phải 'story', đảm bảo thanh điều hướng hiển thị
+    if (tabName !== 'story') {
+      setIsVisible(true);
+    }
+  };
+
+
   return (
     <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center">
       {/* Nút bật tắt thanh điều hướng chỉ hiển thị khi activeTab là 'story' */}
@@ -152,13 +164,7 @@ export default function BottomNavigationBar() {
               <div key={tab.id} className="flex-1 relative flex justify-center items-center">
                 <button
                   className="w-full flex flex-col items-center relative group justify-center"
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    // Khi chuyển tab, nếu không phải 'story', đảm bảo thanh điều hướng hiển thị
-                    if (tab.id !== 'story') {
-                      setIsVisible(true);
-                    }
-                  }}
+                  onClick={() => handleTabClick(tab.id)} // Gọi hàm xử lý tab click
                 >
                   {/* Hiệu ứng phát sáng nền luôn hiện nhưng chỉ hiển thị khi active */}
                   <div
@@ -197,6 +203,20 @@ export default function BottomNavigationBar() {
           box-shadow: 0 0 8px 1px rgba(59, 130, 246, 0.5);
         }
       `}</style>
+
+      {/* Phần hiển thị nội dung tương ứng với tab được chọn */}
+      <div className="content-area mb-20 w-full"> {/* Thêm margin-bottom để tránh bị che bởi thanh nav */}
+        {/* Hiển thị component Profile khi activeTab là 'profile' */}
+        {activeTab === 'profile' && (
+          <div className="content-container">
+            <Profile />
+          </div>
+        )}
+        {/* Thêm các điều kiện hiển thị cho các tab khác nếu cần */}
+        {/* Ví dụ: {activeTab === 'home' && <HomeComponent />} */}
+        {/* Ví dụ: {activeTab === 'quiz' && <QuizComponent />} */}
+        {/* ... */}
+      </div>
     </div>
   );
 }
