@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom'
 import NavigationBarBottom from './navigation-bar-bottom.tsx'
-import Profile from './profile'
+import Profile from './profile.tsx'
 import VerticalFlashcardGallery from './VerticalFlashcardGallery.tsx'
 
 const App = () => {
