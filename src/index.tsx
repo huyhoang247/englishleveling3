@@ -5,22 +5,40 @@ import Profile from './profile.tsx'
 import VerticalFlashcardGallery from './VerticalFlashcardGallery.tsx'
 
 const App = () => {
-  // state theo dõi tab đang active: 'home' | 'profile' | 'flashcards'
-  const [activeTab, setActiveTab] = useState<'home' | 'profile' | 'flashcards'>('home')
+  // state theo dõi tab đang active
+  const [activeTab, setActiveTab] = useState('home')
+  
+  // Xác định nội dung hiển thị dựa trên tab active
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'home':
+        return <VerticalFlashcardGallery />
+      case 'quiz':
+        return <div className="p-4 text-center text-white">Nội dung trắc nghiệm</div>
+      case 'story':
+        return <div className="p-4 text-center text-white">Nội dung truyện</div>
+      case 'game':
+        return <div className="p-4 text-center text-white">Nội dung mini game</div>
+      case 'profile':
+        return <Profile />
+      default:
+        return <VerticalFlashcardGallery />
+    }
+  }
 
   return (
-    <>
+    <div className="app-container">
       {/* vùng content tùy tab */}
-      {activeTab === 'home' && <Profile />}
-      {activeTab === 'profile' && <Profile />}
-      {activeTab === 'flashcards' && <VerticalFlashcardGallery />}
-
+      <div className="main-content pb-24">
+        {renderContent()}
+      </div>
+      
       {/* navigation bar dưới cùng */}
-      <NavigationBarBottom
+      <NavigationBarBottom 
         activeTab={activeTab}
-        onChangeTab={(tab) => setActiveTab(tab)}
+        setActiveTab={setActiveTab}
       />
-    </>
+    </div>
   )
 }
 
