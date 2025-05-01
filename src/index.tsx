@@ -11,9 +11,7 @@ const App = () => {
   return (
     <>
       {/* vùng content tùy tab */}
-      {activeTab === 'home' && (
-        
-      )}
+      {activeTab === 'home' && <Profile />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'flashcards' && <VerticalFlashcardGallery />}
 
