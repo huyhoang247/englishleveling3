@@ -1,4 +1,6 @@
 import { useState } from "react";
+import VerticalFlashcardGallery from "./VerticalFlashcardGallery.tsx";
+import Profile from "./profile.tsx";
 
 export default function BottomNavigationBar() {
   const [activeTab, setActiveTab] = useState("home");
@@ -149,54 +151,42 @@ export default function BottomNavigationBar() {
             const isActive = activeTab === tab.id;
 
             return (
-              <div key={tab.id} className="flex-1 relative flex justify-center items-center">
-                <button
-                  className="w-full flex flex-col items-center relative group justify-center"
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    // Khi chuyển tab, nếu không phải 'story', đảm bảo thanh điều hướng hiển thị
-                    if (tab.id !== 'story') {
-                      setIsVisible(true);
-                    }
-                  }}
-                >
-                  {/* Hiệu ứng phát sáng nền luôn hiện nhưng chỉ hiển thị khi active */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} rounded-xl blur-sm
-                      transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-15' : 'opacity-0'}`}
-                  />
+  <div className="flex flex-col h-screen">
+    {/* === Phần nội dung động === */}
+    <div className="flex-1 overflow-auto pb-16">
+      {activeTab === "home" && <VerticalFlashcardGallery />}
+      {activeTab === "quiz" && /* <YourQuizComponent /> */ null}
+      {activeTab === "story" && /* <YourStoryComponent /> */ null}
+      {activeTab === "game" && /* <YourGameComponent /> */ null}
+      {activeTab === "profile" && <Profile />}
+    </div>
 
-                  {/* Container icon với hiệu ứng chuyển động mượt mà */}
-                  <div
-                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
-                      ${isActive ? `bg-gradient-to-br ${tab.gradient} shadow-lg` : 'bg-transparent'}`}
-                  >
-                    <Icon
-                      size={20}
-                      color={isActive ? "#ffffff" : "#9ca3af"}
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
-                  </div>
-                </button>
-
-                {/* Đường phân cách giữa các mục */}
-                {index < tabs.length - 1 && (
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-800"></div>
-                )}
-              </div>
+    {/* === Thanh bottom navigation (fixed) === */}
+    {isVisible && (
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-t">
+        <ul className="flex justify-around items-center h-full">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <li
+                key={tab.id}
+                className="flex-1 text-center"
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (tab.id !== "story") setIsVisible(true);
+                }}
+              >
+                <Icon className={isActive ? "text-primary" : "text-gray-400"} />
+                <span className={isActive ? "font-bold" : "font-normal"}>
+                  {tab.label}
+                </span>
+              </li>
             );
           })}
-        </div>
-
-        <div className="h-1 w-full bg-gray-900"></div>
-      </div>
-
-      {/* Thêm CSS tùy chỉnh cho hiệu ứng phát sáng */}
-      <style jsx>{`
-        .glow-sm {
-          box-shadow: 0 0 8px 1px rgba(59, 130, 246, 0.5);
-        }
-      `}</style>
-    </div>
-  );
+        </ul>
+      </nav>
+    )}
+  </div>
+);
 }
