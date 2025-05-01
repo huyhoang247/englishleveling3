@@ -81,7 +81,7 @@ const exampleImages = [
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
   "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
   "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
-  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
+  "https://placehold.co/1024x153FF/A133FF/FFFFFF?text=Example+5",
   // Add more images if needed
 ];
 
@@ -147,6 +147,7 @@ export default function VerticalFlashcardGallery() {
   const [showFavoriteToast, setShowFavoriteToast] = useState(false);
   const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'favorite'
   const [showSettings, setShowSettings] = useState(false);
+  // Updated initial layoutMode to 'single' to match the grid class logic
   const [layoutMode, setLayoutMode] = useState('single'); // 'single' or 'double'
 
   // Add a new state variable for visual style
@@ -456,96 +457,98 @@ export default function VerticalFlashcardGallery() {
       <div className="p-4 pb-16 min-h-0">
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {filteredFlashcards.length > 0 ? (
+            // Wrapped flashcard mapping in a grid div based on layoutMode
             <div
               ref={scrollContainerRef}
-              className={`w-full ${
-                layoutMode === 'double'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 gap-6' // This class correctly sets up the 2-column grid on small screens and up
-                  : 'flex flex-col items-center space-y-16'
+              className={`grid gap-4 ${
+                layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'
               }`}
             >
               {filteredFlashcards.map((card) => (
-                <div
-                  id={`flashcard-${card.id}`}
-                  key={card.id}
-                  className={`${layoutMode === 'double' ? 'w-full max-w-full' : 'w-full'} flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative group ${layoutMode === 'single' ? 'mb-8' : 'mb-0'}`} // Added dark mode styles
-                >
-                  {/* Hover effect for flashcard */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-
-                  {/* Heart Icon - Favorite/Unfavorite - Size and padding change based on layout */}
-                  <button
-                    className={`absolute top-3 right-3 ${layoutMode === 'double' ? 'p-1.5' : 'p-2'} rounded-full bg-white dark:bg-gray-700 bg-opacity-70 hover:bg-opacity-90 transition-all duration-300 z-10 shadow-md flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Added dark mode styles
-                    onClick={() => toggleFavorite(card.id)}
-                    aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                // Removed w-[48%] and w-full as grid handles width
+                <div key={card.id}>
+                  {/* Flashcard component rendering */}
+                  <div
+                    id={`flashcard-${card.id}`}
+                    className={`flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className={`transition-all duration-300 ${
-                        layoutMode === 'double'
-                          ? 'h-4 w-4'
-                          : 'h-6 w-6'
-                      } ${card.isFavorite ? 'text-pink-600 dark:text-pink-400 scale-110' : 'text-gray-400 dark:text-gray-500'}`} // Added dark mode styles
-                      viewBox="0 0 24 24"
-                      fill={card.isFavorite ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    {/* Hover effect for flashcard */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+
+                    {/* Heart Icon - Favorite/Unfavorite - Size and padding change based on layout */}
+                    <button
+                      className={`absolute top-3 right-3 ${layoutMode === 'double' ? 'p-1.5' : 'p-2'} rounded-full bg-white dark:bg-gray-700 bg-opacity-70 hover:bg-opacity-90 transition-all duration-300 z-10 shadow-md flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Added dark mode styles
+                      onClick={() => toggleFavorite(card.id)}
+                      aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                    </svg>
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`transition-all duration-300 ${
+                          layoutMode === 'double'
+                            ? 'h-4 w-4'
+                            : 'h-6 w-6'
+                        } ${card.isFavorite ? 'text-pink-600 dark:text-pink-400 scale-110' : 'text-gray-400 dark:text-gray-500'}`} // Added dark mode styles
+                        viewBox="0 0 24 24"
+                        fill={card.isFavorite ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </button>
 
-                  {/* Image aspect ratio container with style effects */}
-                  <div className="w-full">
-                    <div className={`relative w-full ${
-                      // Apply frame styles based on visualStyle
-                      visualStyle === 'anime' ? 'border-4 border-pink-300 bg-pink-50 dark:border-pink-700 dark:bg-pink-900' : // Added dark mode styles
-                      visualStyle === 'comic' ? 'border-4 border-blue-300 border-dashed bg-blue-50 dark:border-blue-700 dark:bg-blue-900' : // Added dark mode styles
-                      visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
-                      ''
-                    }`}>
-                      {/* Apply style-specific overlays */}
-                      {visualStyle === 'anime' && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>
-                      )}
-                      {visualStyle === 'comic' && (
-                        <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" // Added dark mode styles
+                    {/* Image aspect ratio container with style effects */}
+                    <div className="w-full">
+                      <div className={`relative w-full ${
+                        // Apply frame styles based on visualStyle
+                        visualStyle === 'anime' ? 'border-4 border-pink-300 bg-pink-50 dark:border-pink-700 dark:bg-pink-900' : // Added dark mode styles
+                        visualStyle === 'comic' ? 'border-4 border-blue-300 border-dashed bg-blue-50 dark:border-blue-700 dark:bg-blue-900' : // Added dark mode styles
+                        visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
+                        ''
+                      }`}>
+                        {/* Apply style-specific overlays */}
+                        {visualStyle === 'anime' && (
+                          <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>
+                        )}
+                        {visualStyle === 'comic' && (
+                          <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" // Added dark mode styles
+                            style={{
+                              backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)',
+                              backgroundSize: '4px 4px'
+                            }}>
+                          </div>
+                        )}
+                        {visualStyle === 'realistic' && (
+                          <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
+                        )}
+
+                        {/* Flashcard image updated to include click event */}
+                        <img
+                          src={card.imageUrl}
+                          alt={`Flashcard ${card.id}`}
+                          className={`w-full h-auto ${
+                            visualStyle === 'anime' ? 'saturate-150 contrast-105' :
+                            visualStyle === 'comic' ? 'contrast-125 brightness-105' :
+                            visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
+                            ''
+                          } cursor-pointer`} // Added cursor-pointer
                           style={{
-                            backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)',
-                            backgroundSize: '4px 4px'
-                          }}>
-                        </div>
-                      )}
-                      {visualStyle === 'realistic' && (
-                        <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
-                      )}
+                            aspectRatio: '1024/1536',
+                            filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
+                          }}
+                          onClick={() => openVocabDetail(card)} // Added click event
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Image+Error`;
+                          }}
+                        />
 
-                      {/* Flashcard image updated to include click event */}
-                      <img
-                        src={card.imageUrl}
-                        alt={`Flashcard ${card.id}`}
-                        className={`w-full h-auto ${
-                          visualStyle === 'anime' ? 'saturate-150 contrast-105' :
-                          visualStyle === 'comic' ? 'contrast-125 brightness-105' :
-                          visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
-                          ''
-                        } cursor-pointer`} // Added cursor-pointer
-                        style={{
-                          aspectRatio: '1024/1536',
-                          filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
-                        }}
-                        onClick={() => openVocabDetail(card)} // Added click event
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Image+Error`;
-                        }}
-                      />
+                        {/* Image Detail Overlay based on setting - Removed the overlay */}
+                        {/* The overlay for image detail is now completely removed */}
 
-                      {/* Image Detail Overlay based on setting - Removed the overlay */}
-                      {/* The overlay for image detail is now completely removed */}
-
+                      </div>
                     </div>
                   </div>
                 </div>
