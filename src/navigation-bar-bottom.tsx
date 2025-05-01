@@ -1,4 +1,4 @@
-import { useState } from "react"; import VerticalFlashcardGallery from "./VerticalFlashcardGallery"; import Profile from "./profile";
+import React, { useState } from "react"; import VerticalFlashcardGallery from "./VerticalFlashcardGallery.tsx"; import Profile from "./profile.tsx";
 
 export default function BottomNavigationBar() { const [activeTab, setActiveTab] = useState<string>("home"); const [isVisible, setIsVisible] = useState<boolean>(true);
 
@@ -96,11 +96,11 @@ return ( <> {/* Render content theo tab */} <div className="flex-1"> {activeTab 
               >
                 <div
                   className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} rounded-xl blur-sm
-                    transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-15' : 'opacity-0'}`}
+                    transition-opacity duration-300.ease-in-out ${isActive ? 'opacity-15' : 'opacity-0'}`}
                 />
 
                 <div
-                  className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
+                  className={`p-2 rounded-full transition-all duration-300.ease-in-out transform
                     ${isActive ? `bg-gradient-to-br ${tab.gradient} shadow-lg` : 'bg-transparent'}`}
                 >
                   <Icon
