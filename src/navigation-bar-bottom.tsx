@@ -1,6 +1,6 @@
 import React, { useState } from "react"; import VerticalFlashcardGallery from "./VerticalFlashcardGallery.tsx"; import Profile from "./profile.tsx";
 
-export default function BottomNavigationBar() { const [activeTab, setActiveTab] = useState<string>("home"); const [isVisible, setIsVisible] = useState<boolean>(true);
+export default function BottomNavigationBar() { const [activeTab, setActiveTab] = useState("home"); const [isVisible, setIsVisible] = useState(true);
 
 // Định nghĩa các tab của thanh điều hướng const tabs = [ { id: "home", label: "Trang chủ", icon: (props) => ( <svg
 xmlns="http://www.w3.org/2000/svg"
