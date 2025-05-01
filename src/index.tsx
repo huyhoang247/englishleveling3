@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import VerticalFlashcardGallery from './VerticalFlashcardGallery.tsx';
-import Navigationbarbottom from './home.tsx';
+import VerticalFlashcardGallery from './home.tsx';
 import Profile from './profile.tsx';
 
 const container = document.getElementById('root');
