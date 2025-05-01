@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Star, ShoppingBag, Award, AlertTriangle, User, Home, Gift, Sword, Shield, Crown, Gem } from 'lucide-react'; // Removed Settings icon
+// Thay thế import từ lucide-react bằng các icon tùy chỉnh
+import { BellIcon, CalendarIcon, ChevronRightIcon, ClockIcon, MapPinIcon, PenIcon, SwordIcon, ShieldIcon, CrownIcon, GemIcon, StarIcon, ShoppingBagIcon, AwardIcon, AlertTriangleIcon, UserIcon, HomeIcon, GiftIcon } from "./icons";
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
 const TreasureChestGame = () => {
@@ -21,10 +22,11 @@ const TreasureChestGame = () => {
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
 
   const cards = [
-    { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <Sword size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
-    { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <Shield size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
-    { id: 3, name: "Vương Miện", rarity: "epic", icon: <Crown size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
-    { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <Gem size={36} />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
+    // Sử dụng các icon tùy chỉnh
+    { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
+    { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
+    { id: 3, name: "Vương Miện", rarity: "epic", icon: <CrownIcon size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
+    { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <GemIcon size={36} />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
   ];
 
   const getRarityColor = (rarity) => {
@@ -586,6 +588,7 @@ const TreasureChestGame = () => {
                     {showCard ? (
                       <div className={`w-16 h-22 mx-auto rounded-lg shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
                         <div className="text-3xl mb-2" style={{ color: currentCard?.color }}>
+                          {/* Sử dụng icon tùy chỉnh */}
                           {currentCard?.icon}
                         </div>
                       </div>
@@ -675,6 +678,7 @@ const TreasureChestGame = () => {
               </div>
 
               <div className="text-6xl mb-2" style={{ color: currentCard.color }}>
+                {/* Sử dụng icon tùy chỉnh */}
                 {currentCard?.icon}
               </div>
               <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
@@ -687,7 +691,8 @@ const TreasureChestGame = () => {
                   currentCard.rarity === "epic" ? 4 :
                   currentCard.rarity === "rare" ? 3 : 2
                 )].map((_, i) => (
-                  <Star key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" />
+                  // Sử dụng icon tùy chỉnh
+                  <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" />
                 ))}
               </div>
             </div>
@@ -911,3 +916,4 @@ if (rootElement) {
     document.body.appendChild(newRoot);
     ReactDOM.render(<App />, newRoot);
 }
+
