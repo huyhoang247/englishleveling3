@@ -1,6 +1,6 @@
 import { useState } from "react";
 // Thêm import Profile component
-import Profile from './profile'; // Đảm bảo đường dẫn này đúng với vị trí file profile.tsx của bạn
+import Profile from './profile.tsx'; // Đảm bảo đường dẫn này đúng với vị trí file profile.tsx của bạn
 
 export default function BottomNavigationBar() {
   const [activeTab, setActiveTab] = useState("home");
