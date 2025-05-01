@@ -1,5 +1,4 @@
 import { useState } from "react";
-import clsx from "clsx";
 
 interface Tab {
   id: string;
@@ -36,15 +35,14 @@ export default function BottomNavigationBar() {
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const baseClasses = "flex-1 flex flex-col items-center justify-center rounded-lg py-1";
+            const activeClasses = isActive ? `bg-gradient-to-tr text-white ${tab.gradient}` : "text-gray-600";
+            const classNames = [baseClasses, activeClasses].join(' ');
+
             return (
               <button
                 key={tab.id}
-                className={clsx(
-                  "flex-1 flex flex-col items-center justify-center rounded-lg py-1",
-                  isActive
-                    ? `bg-gradient-to-tr text-white ${tab.gradient}`
-                    : "text-gray-600"
-                )}
+                className={classNames}
                 onClick={() => setActiveTab(tab.id)}
               >
                 <Icon />
