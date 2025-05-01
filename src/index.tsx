@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom'
-import NavigationBarBottom from './navigation-bar-bottom'
+import NavigationBarBottom from './navigation-bar-bottom.tsx'
 import Profile from './profile'
-import VerticalFlashcardGallery from './VerticalFlashcardGallery'
+import VerticalFlashcardGallery from './VerticalFlashcardGallery.tsx'
 
 const App = () => {
   // state theo dõi tab đang active: 'home' | 'profile' | 'flashcards'
