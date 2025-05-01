@@ -12,7 +12,7 @@ const App = () => {
     <>
       {/* vùng content tùy tab */}
       {activeTab === 'home' && (
-        /* ... component Home cũ của bạn (nếu có) ... */
+        
       )}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'flashcards' && <VerticalFlashcardGallery />}
