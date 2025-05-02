@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
+// Import the background game component
+import ObstacleRunnerGame from './background-game.tsx'; // Adjust the path if necessary
+
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
 // Star Icon SVG
@@ -222,7 +225,8 @@ const TreasureChestGame = () => {
 
   return (
     // Main container
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-gradient-to-b from-blue-400 to-blue-600 relative overflow-hidden">
+    // Removed the background gradient here as it will be handled by the background game
+    <div className="flex flex-col items-center justify-center w-full h-screen relative overflow-hidden">
 
       {/* Header section */}
       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-20">
@@ -580,8 +584,19 @@ const TreasureChestGame = () => {
 // Standard App wrapper for rendering
 const App = () => {
   return (
-    <div className="App">
-      <TreasureChestGame />
+    // Wrap the entire content in a relative div for the background game
+    <div className="relative min-h-screen bg-white">
+      {/* 1) Background game */}
+      {/* ObstacleRunnerGame component will occupy the full background */}
+      <ObstacleRunnerGame className="absolute inset-0 z-0 opacity-50" />
+
+      {/* 2) Nội dung UI cũ của bạn, đẩy lên trên bằng z-index */}
+      {/* Wrap the existing UI content in a relative div with a higher z-index */}
+      <div className="relative z-10">
+        {/* Your existing UI components go here */}
+        <TreasureChestGame />
+        {/* ... if you have other UI sections (header, main, footer), copy them here */}
+      </div>
     </div>
   );
 };
