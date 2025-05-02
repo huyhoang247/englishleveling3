@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
 // Import các thành phần mới và CSS
-import DynamicBackground from './components/DynamicBackground';
+import DynamicBackground from './components/DynamicBackground.tsx';
 import './animations.css';
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
