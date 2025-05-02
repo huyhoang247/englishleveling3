@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
+import ObstacleRunnerGame from './background-game.tsx'; // Thêm import game nền
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
@@ -580,8 +581,27 @@ const TreasureChestGame = () => {
 // Standard App wrapper for rendering
 const App = () => {
   return (
-    <div className="App">
-      <TreasureChestGame />
+    <div className="relative w-screen h-screen overflow-hidden">
+      {/* Game nền */}
+      <ObstacleRunnerGame className="absolute inset-0 w-full h-full z-0 pointer-events-none" />
+
+      {/* ==== GIỮ NGUYÊN TOÀN BỘ UI GỐC ==== */}
+      {/* Header */}
+      <header className="p-4 flex justify-between items-center z-10 relative">
+        <h1 className="text-2xl font-bold text-white">My Home Screen</h1> {/* Added text-white for visibility */}
+        <div className="flex space-x-2">
+          {/* Placeholder buttons - replace with actual icons/buttons */}
+          <button className="p-2 rounded-full bg-blue-500 text-white">Icon1</button>
+          <button className="p-2 rounded-full bg-green-500 text-white">Icon2</button>
+        </div>
+      </header>
+
+      {/* Nội dung chính */}
+      <main className="p-4 z-10 relative">
+        {/* UI TreasureChestGame và các phần khác */}
+        <TreasureChestGame />
+      </main>
+      {/* =================================== */}
     </div>
   );
 };
