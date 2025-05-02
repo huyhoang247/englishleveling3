@@ -1,8 +1,45 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import VerticalFlashcardGallery from './home.tsx';
-import Profile from './profile.tsx';
+import React, { useState } from 'react';
+import { createRoot } from 'react-dom/client'; // Keep createRoot for rendering
+import Home from './home.tsx'; // Assuming home.tsx is now Home component
+import NavigationBarBottom from './navigation-bar-bottom.tsx'; // Import NavigationBarBottom component
 
+// Define the possible tab types
+type TabType = 'home' | 'other1' | 'other2';
+
+const App: React.FC = () => {
+  // Initialize state to keep track of the active tab, default is 'home'
+  const [activeTab, setActiveTab] = useState<TabType>('home');
+
+  // Function to handle tab changes
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+  };
+
+  return (
+    <div className="app-container">
+      {/* Conditionally render components based on the activeTab state */}
+      {activeTab === 'home' && <Home />}
+      
+
+      {/* Render the bottom navigation bar */}
+      {/* Pass the active tab and the tab change handler as props */}
+      <NavigationBarBottom
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
+    </div>
+  );
+};
+
+// Get the root element from the HTML
 const container = document.getElementById('root');
-if (!container) throw new Error('Root not found');
-createRoot(container).render(<VerticalFlashcardGallery />);
+// Throw an error if the root element is not found
+if (!container) {
+  throw new Error('Root element with ID "root" not found in the document.');
+}
+
+// Create a root and render the App component
+const root = createRoot(container);
+root.render(<App />);
+
+export default App;
