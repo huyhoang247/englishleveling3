@@ -2,18 +2,122 @@ import React, { useState, useEffect, useRef } from 'react';
 // Removed Trophy and Star icons as score and high score are removed
 // import { Trophy, Star } from 'lucide-react';
 
-// Define interface for component props
+// --- SVG Icon Components (Replacement for lucide-react) ---
+
+// Star Icon SVG
+const StarIcon = ({ size = 24, color = 'currentColor', fill = 'none', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={fill === 'currentColor' ? color : fill} // Use color prop for fill if fill is 'currentColor'
+    stroke={color} // Use color prop for stroke
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`} // Add a base class if needed + user className
+    {...props}
+  >
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+// Sword Icon SVG
+const SwordIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
+    <line x1="13" x2="19" y1="19" y2="13" />
+    <line x1="16" x2="20" y1="16" y2="20" />
+    <line x1="19" x2="21" y1="21" y2="19" />
+  </svg>
+);
+
+// Shield Icon SVG
+const ShieldIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+// Crown Icon SVG
+const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
+    <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
+  </svg>
+);
+
+// Gem Icon SVG
+const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M6 3h12l4 6-10 13L2 9l4-6z" />
+    <path d="M12 22L2 9" />
+    <path d="M12 22l10-13" />
+    <path d="M2 9h20" />
+  </svg>
+);
+
+
+// Define interface for component props (kept from background-game)
 interface ObstacleRunnerGameProps {
   className?: string;
 }
 
 // Update component signature to accept className prop
 export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
-  // Game states
+  // Game states (from background-game)
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
-  // Removed score state
-  // const [score, setScore] = useState(0); // Player's score
   const MAX_HEALTH = 3000; // Define max health
   const [health, setHealth] = useState(MAX_HEALTH); // Player's health, initialized to max
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
@@ -23,47 +127,87 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
-  // Removed isPaused state
-  // const [isPaused, setIsPaused] = useState(false); // Tracks if the game is paused
-  // Removed high score state
-  // const [highScore, setHighScore] = useState(0); // Stores the high score
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
+
+  // UI States (from home.tsx)
+  const [isChestOpen, setIsChestOpen] = useState(false);
+  const [showCard, setShowCard] = useState(false);
+  const [currentCard, setCurrentCard] = useState(null);
+  const [coins, setCoins] = useState(357);
+  const [displayedCoins, setDisplayedCoins] = useState(357);
+  const [gems, setGems] = useState(42);
+  const [showShine, setShowShine] = useState(false);
+  const [chestShake, setChestShake] = useState(false);
+  const [chestsRemaining, setChestsRemaining] = useState(3);
+  const [pendingCoinReward, setPendingCoinReward] = useState(0);
 
   // Define the new ground level percentage (Increased from 35% to 45%)
   const GROUND_LEVEL_PERCENT = 45;
 
-  // Refs for timers to manage intervals and timeouts
+  // Refs for timers to manage intervals and timeouts (from background-game)
   const gameRef = useRef(null); // Ref for the main game container div
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
-  // Removed scoreTimerRef
-  // const scoreTimerRef = useRef(null); // Timer for incrementing score
   const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
-  // cloudTimerRef is removed, no need to clear it here
 
-  // Character animation frames (simple representation of leg movement)
+  // Character animation frames (simple representation of leg movement) (from background-game)
   const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
-  // Obstacle types with properties (Removed 'bird' type)
+  // Obstacle types with properties (from background-game)
   const obstacleTypes = [
     { type: 'rock', height: 10, width: 10, color: 'from-gray-700 to-gray-500' },
     { type: 'cactus', height: 16, width: 8, color: 'from-green-800 to-green-600' },
   ];
 
-  // Function to start the game
+    // Updated cards array to use SVG components (from home.tsx)
+  const cards = [
+    { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
+    { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
+    { id: 3, name: "Vương Miện", rarity: "epic", icon: <CrownIcon size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
+    { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <GemIcon size={36} />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
+  ];
+
+  // Helper function to get rarity color (from home.tsx)
+  const getRarityColor = (rarity) => {
+    switch(rarity) {
+      case "common": return "text-gray-200";
+      case "rare": return "text-blue-400";
+      case "epic": return "text-purple-400";
+      case "legendary": return "text-amber-400";
+      default: return "text-white";
+    }
+  };
+
+  // Coin count animation function (from home.tsx)
+  const startCoinCountAnimation = (reward) => {
+      const oldCoins = coins;
+      const newCoins = oldCoins + reward;
+      let step = Math.ceil(reward / 30);
+      let current = oldCoins;
+      const countInterval = setInterval(() => {
+          current += step;
+          if (current >= newCoins) {
+              setDisplayedCoins(newCoins);
+              setCoins(newCoins);
+              clearInterval(countInterval);
+              setPendingCoinReward(0);
+          } else {
+              setDisplayedCoins(current);
+          }
+      }, 50);
+  };
+
+
+  // Function to start the game (from background-game, modified)
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
-    // Removed score reset
-    // setScore(0);
     setHealth(MAX_HEALTH); // Start with max health
     setCharacterPos(0); // Character starts on the ground (relative to ground level)
     setObstacles([]);
     setParticles([]);
     setIsRunning(true);
-    // Removed setIsPaused(false)
-    // setIsPaused(false);
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
 
@@ -98,49 +242,28 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Generate dust particles periodically
     particleTimerRef.current = setInterval(generateParticles, 300);
 
-    // Removed score incrementer
-    // scoreTimerRef.current = setInterval(() => {
-    //   if (!isPaused) { // Only increment score if not paused
-    //     setScore(prevScore => {
-    //       // Higher score increment as game progresses (score increases)
-    //       const increment = Math.floor(prevScore / 1000) + 1;
-    //       return prevScore + increment;
-    //     });
-    //   }
-    // }, 100); // Increment score every 100ms
-
     // Schedule the first obstacle after the initial ones
     scheduleNextObstacle();
   };
 
-  // ───────────────────────────────────────────────
-  // Auto-start the game as soon as component mounts
+  // Auto-start the game as soon as component mounts (from background-game)
   useEffect(() => {
     startGame();
   }, []);
-  // ───────────────────────────────────────────────
 
-  // Effect to handle game over state when health reaches zero
+  // Effect to handle game over state when health reaches zero (from background-game)
   useEffect(() => {
     if (health <= 0 && gameStarted) { // Game over when health is 0 or less
       setGameOver(true);
       setIsRunning(false);
       // Clear all active timers
-      // Removed scoreTimerRef clear
-      // clearInterval(scoreTimerRef.current);
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
-      // cloudTimerRef.current is removed, no need to clear it here
-
-      // Removed high score update logic
-      // if (score > highScore) {
-      //   setHighScore(score);
-      // }
     }
-  }, [health, gameStarted]); // Dependencies for this effect (removed score and highScore)
+  }, [health, gameStarted]);
 
-  // Generate initial cloud elements (called only once at game start)
+  // Generate initial cloud elements (called only once at game start) (from background-game)
   const generateInitialClouds = (count) => {
     const newClouds = [];
     for (let i = 0; i < count; i++) {
@@ -155,10 +278,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setClouds(newClouds);
   };
 
-
-  // Generate dust particles for visual effect
+  // Generate dust particles for visual effect (from background-game)
   const generateParticles = () => {
-    // Removed isPaused check
     if (!gameStarted || gameOver) return; // Only generate if game is active and not paused
 
     const newParticles = [];
@@ -178,24 +299,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setParticles(prev => [...prev, ...newParticles]);
   };
 
-  // Start the character run animation loop
+  // Start the character run animation loop (from background-game)
   const startRunAnimation = () => {
     if (runAnimationRef.current) clearInterval(runAnimationRef.current); // Clear any existing animation timer
 
     runAnimationRef.current = setInterval(() => {
-      // Removed isPaused check
       setRunFrame(prev => (prev + 1) % runFrames.length); // Cycle through run frames
     }, 150); // Update frame every 150ms
   };
 
-  // Schedule the next obstacle to appear
+  // Schedule the next obstacle to appear (from background-game)
   const scheduleNextObstacle = () => {
     if (gameOver) return; // Don't schedule if game is over
 
     // Random time delay before the next obstacle appears (between 5 and 20 seconds)
     const randomTime = Math.floor(Math.random() * 15000) + 5000;
     obstacleTimerRef.current = setTimeout(() => {
-      // Removed isPaused check
       // Create a group of 1 to 3 obstacles
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
       const newObstacles = [];
@@ -220,11 +339,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }, randomTime);
   };
 
-  // Handle character jump action
+  // Handle character jump action (from background-game)
   const jump = () => {
-    // Removed isPaused check
-    // Check if not already jumping, game is started, not over
-    if (!jumping && !gameOver && gameStarted) {
+    // Check if not already jumping, game is started, not over, AND card popup is not shown
+    if (!jumping && !gameOver && gameStarted && !showCard) {
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
@@ -240,24 +358,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   };
 
-  // Handle tap/click on the game area to start or jump
+  // Handle tap/click on the game area to start or jump (from background-game, modified)
   const handleTap = () => {
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver) { // Removed isPaused check
+    } else if (!gameOver && !showCard) { // Only allow jump if game is active and card is not shown
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
     }
+    // If showCard is true, taps on the game area are ignored, allowing interaction with the card popup
   };
 
-  // Removed togglePause function
-  // const togglePause = (e) => {
-  //   e.stopPropagation(); // Prevent event from bubbling up to the game area tap handler
-  //   setIsPaused(prev => !prev); // Toggle the pause state
-  // };
 
-  // Trigger health bar damage effect (still useful visual cue)
+  // Trigger health bar damage effect (from background-game)
   const triggerHealthDamageEffect = () => {
       setShowHealthDamageEffect(true);
       setTimeout(() => {
@@ -265,7 +379,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 300); // Effect duration
   };
 
-  // Trigger character damage effect (new effect)
+  // Trigger character damage effect (from background-game)
   const triggerCharacterDamageEffect = () => {
       setShowCharacterDamageEffect(true);
       setTimeout(() => {
@@ -274,9 +388,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
 
-  // Move obstacles, clouds, particles and detect collisions
+  // Move obstacles, clouds, particles and detect collisions (from background-game)
   useEffect(() => {
-    // Removed isPaused check
     if (!gameStarted || gameOver) return; // Only run if game is active and not paused
 
     // Game speed is now constant as score is removed
@@ -384,23 +497,41 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }, 30); // Interval for movement updates (30ms for smoother animation)
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
-    // Removed isPaused from dependencies
     return () => clearInterval(moveInterval);
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes]); // Dependencies for this effect (removed score)
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes]); // Dependencies for this effect
 
-  // Effect to clean up all timers when the component unmounts
+  // Effect to clean up all timers when the component unmounts (from background-game)
   useEffect(() => {
     return () => {
-      // Removed scoreTimerRef clear
-      // clearInterval(scoreTimerRef.current);
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
-      // cloudTimerRef.current is removed
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
-  // Render the character with animation and damage effect
+    // Effect for coin counter animation (from home.tsx)
+  useEffect(() => {
+    if (displayedCoins === coins && pendingCoinReward === 0) return;
+    const coinElement = document.querySelector('.coin-counter');
+    if (coinElement) {
+      coinElement.classList.add('number-changing');
+      const animationEndHandler = () => {
+        coinElement.classList.remove('number-changing');
+        coinElement.removeEventListener('animationend', animationEndHandler);
+      };
+      coinElement.addEventListener('animationend', animationEndHandler);
+      // Cleanup
+      return () => {
+        if (coinElement) { // Check again in case it was removed
+            coinElement.removeEventListener('animationend', animationEndHandler);
+            coinElement.classList.remove('number-changing'); // Ensure class is removed on unmount
+        }
+      };
+    }
+  }, [displayedCoins, coins, pendingCoinReward]);
+
+
+  // Render the character with animation and damage effect (from background-game)
   const renderCharacter = () => {
     const legPos = jumping ? 1 : runFrames[runFrame]; // Determine leg position based on jumping state and run frame
 
@@ -452,7 +583,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     );
   };
 
-  // Render obstacles based on their type
+  // Render obstacles based on their type (from background-game)
   const renderObstacle = (obstacle) => {
     let obstacleEl; // Element to render for the obstacle
 
@@ -499,7 +630,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     );
   };
 
-  // Render clouds
+  // Render clouds (from background-game)
   const renderClouds = () => {
     return clouds.map(cloud => (
       <div
@@ -535,7 +666,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // Render dust particles
+  // Render dust particles (from background-game)
   const renderParticles = () => {
     return particles.map(particle => (
       <div
@@ -552,14 +683,53 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // Calculate health bar width percentage
+  // Calculate health bar width percentage (from background-game)
   const healthBarWidth = (health / MAX_HEALTH) * 100;
 
+  // Function to open the chest (from home.tsx)
+  const openChest = () => {
+    if (isChestOpen || chestsRemaining <= 0) return;
+    setChestShake(true);
+    setTimeout(() => {
+      setChestShake(false);
+      setIsChestOpen(true);
+      setShowShine(true);
+      setChestsRemaining(prev => prev - 1);
+      setTimeout(() => {
+        const randomCard = cards[Math.floor(Math.random() * cards.length)];
+        setCurrentCard(randomCard);
+        setShowCard(true);
+        let coinReward = 0;
+        switch(randomCard.rarity) {
+          case "common": coinReward = 10; break;
+          case "rare": coinReward = 25; break;
+          case "epic": coinReward = 50; break;
+          case "legendary": coinReward = 100; break;
+        }
+        setPendingCoinReward(coinReward);
+        if (randomCard.rarity === "legendary" || randomCard.rarity === "epic") {
+          setGems(prev => prev + (randomCard.rarity === "legendary" ? 5 : 2));
+        }
+      }, 1500);
+    }, 600);
+  };
+
+  // Function to reset the chest state (from home.tsx)
+  const resetChest = () => {
+    setIsChestOpen(false);
+    setShowCard(false);
+    setCurrentCard(null);
+    setShowShine(false);
+    if (pendingCoinReward > 0) {
+        startCoinCountAnimation(pendingCoinReward);
+    }
+  };
+
+
   return (
-    // Main container for the entire game, now taking full screen
-    // Added className prop to the main container div
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden">
-      {/* Add Tailwind CSS animation for fadeOutUp */}
+    // Main container for the entire game and UI
+    <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
+      {/* Add Tailwind CSS animations (from background-game and home.tsx) */}
       <style>{`
         @keyframes fadeOutUp {
           0% {
@@ -574,14 +744,50 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         .animate-fadeOutUp {
           animation: fadeOutUp 0.5s ease-out forwards; /* Animation duration and easing */
         }
+        @keyframes float-card { 0% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } 25% { transform: translateY(-15px) rotate(2deg); filter: brightness(1.2); } 50% { transform: translateY(-20px) rotate(0deg); filter: brightness(1.3); } 75% { transform: translateY(-15px) rotate(-2deg); filter: brightness(1.2); } 100% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } }
+        @keyframes chest-shake { 0% { transform: translateX(0) rotate(0deg); } 10% { transform: translateX(-4px) rotate(-3deg); } 20% { transform: translateX(4px) rotate(3deg); } 30% { transform: translateX(-4px) rotate(-3deg); } 40% { transform: translateX(4px) rotate(3deg); } 50% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(2deg); } }
+        @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+        @keyframes pulse-fast { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.2); } }
+        @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
+        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes ray-rotate { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
+        @keyframes shine { 0% { transform: translateX(-200px) rotate(45deg); } 100% { transform: translateX(400px) rotate(45deg); } }
+        @keyframes slide-down { 0% { transform: translateY(-20px) translateX(-50%); opacity: 0; } 10% { transform: translateY(0) translateX(-50%); opacity: 1; } 90% { transform: translateY(0) translateX(-50%); opacity: 1; } 100% { transform: translateY(-20px) translateX(-50%); opacity: 0; } }
+        @keyframes gold-particle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 50% { opacity: 0.7; } 100% { transform: translate( calc(-50% + var(--random-x)), calc(-50% + var(--random-y)) ) scale(0); opacity: 0; } }
+        @keyframes lid-open { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-100%) rotate(60deg); } }
+        .animate-float-card { animation: float-card 3s ease-in-out infinite; }
+        .animate-chest-shake { animation: chest-shake 0.6s ease-in-out; }
+        .animate-twinkle { animation: twinkle 5s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+        .animate-pulse-fast { animation: pulse-fast 1s ease-in-out infinite; }
+        .animate-pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
+        .animate-bounce-subtle { animation: bounce-subtle 1.5s ease-in-out infinite; }
+        .animate-spin-slow { animation: spin-slow 10s linear infinite; }
+        .animate-ray-rotate { animation: ray-rotate 2s ease-in-out infinite; }
+        .animate-shine { animation: shine 2s linear infinite; }
+        .animate-gold-particle { animation: gold-particle 1.5s ease-out forwards; }
+        .animate-lid-open { animation: lid-open 0.5s ease-out forwards; }
+        .inventory-icon-text { font-size: 0.65rem; margin-top: 0.125rem; }
+        @keyframes pulse-button { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
+        .add-button-pulse { animation: pulse-button 1.5s infinite; }
+        @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
+        .number-changing { animation: number-change 0.3s ease-out; }
+      `}</style>
+       <style jsx global>{`
+        body {
+          overflow: hidden; /* Disable scrolling on the body */
+        }
       `}</style>
 
-      {/* Main Game Container, now full screen */}
+
+      {/* Main Game Container (from background-game) */}
       <div
         ref={gameRef} // Assign ref
         // Apply the passed className prop here
-        className={`${className ?? ''} relative w-full h-screen border-2 border-indigo-700 rounded-lg overflow-hidden shadow-2xl cursor-pointer`} // Adjusted width and height
-        onClick={handleTap} // Handle taps/clicks
+        className={`${className ?? ''} relative w-full h-screen border-2 border-indigo-700 rounded-lg overflow-hidden shadow-2xl`} // Adjusted width and height, removed cursor-pointer here
+        onClick={handleTap} // Handle taps/clicks for jumping/starting
       >
         {/* Background with gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
@@ -605,7 +811,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             </div>
         </div>
 
-
         {/* Character */}
         {renderCharacter()}
 
@@ -616,7 +821,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {renderParticles()}
 
         {/* Health Bar Display */}
-        <div className="absolute top-2 left-2 w-32 h-4 bg-gray-700 rounded-full overflow-hidden shadow-inner">
+        <div className="absolute top-2 left-2 w-32 h-4 bg-gray-700 rounded-full overflow-hidden shadow-inner z-10"> {/* Added z-index */}
           <div
             className={`h-full transition-all duration-300 ease-linear ${showHealthDamageEffect ? 'bg-red-500' : 'bg-gradient-to-r from-green-400 to-green-600'}`} // Change color on damage effect
             style={{ width: `${healthBarWidth}%` }} // Dynamic width based on health percentage
@@ -627,82 +832,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </span>
         </div>
 
-
-        {/* Removed score display */}
-        {/*
-        <div className="absolute top-2 right-2 bg-black bg-opacity-30 rounded-lg p-1 flex items-center">
-          <Trophy className="mr-1 h-4 w-4 text-yellow-400" />
-          <span className="font-bold">{score}</span>
-        </div>
-        */}
-
-        {/* Removed high score display */}
-        {/*
-        {highScore > 0 && (
-          <div className="absolute top-10 right-2 bg-black bg-opacity-30 rounded-lg p-1 flex items-center">
-            <Star className="mr-1 h-4 w-4 text-yellow-400" />
-            <span className="text-xs">{highScore}</span>
-          </div>
-        )}
-        */}
-
-        {/* Removed Pause button */}
-        {/*
-        {gameStarted && !gameOver && (
-          <button
-            className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center z-10" // Added z-10 to ensure button is clickable
-            onClick={togglePause} // Handle pause toggle
-          >
-            {isPaused ? (
-              // Play icon when paused
-              <div className="w-0 h-0 border-t-6 border-b-6 border-t-transparent border-b-transparent border-r-8 border-r-white ml-1"></div>
-            ) : (
-              // Pause icon when not paused
-              <div className="flex">
-                <div className="w-2 h-6 bg-white rounded-sm mr-1"></div>
-                <div className="w-2 h-6 bg-white rounded-sm"></div>
-              </div>
-            )}
-          </button>
-        )}
-        */}
-
-        {/* Start screen (shown when game is not started and not over) */}
-        {/* Removed the start screen as the game now auto-starts */}
-        {/*
-        {!gameStarted && !gameOver && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">Vượt Chướng Ngại Vật</h2>
-            <button
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-              onClick={startGame} // Start game on click
-            >
-              Bắt Đầu
-            </button>
-          </div>
-        )}
-        */}
-
         {/* Game over screen (shown when game is over) */}
         {gameOver && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-20"> {/* Added z-index */}
             <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
-            {/* Removed score display on game over screen */}
-            {/*
-            <div className="flex items-center mb-4">
-              <Trophy className="mr-2 text-yellow-400" />
-              <p className="text-xl">Điểm số: <span className="font-bold">{score}</span></p>
-            </div>
-            */}
-            {/* Removed new high score message */}
-            {/*
-            {score >= highScore && score > 0 && (
-              <div className="mb-4 py-1 px-3 bg-yellow-500 bg-opacity-30 rounded-full flex items-center">
-                <Star className="mr-1 text-yellow-400" />
-                <span className="text-yellow-300">Kỷ lục mới!</span>
-              </div>
-            )}
-            */}
             <button
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
               onClick={startGame} // Restart game on click
@@ -712,21 +845,319 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         )}
 
-        {/* Removed Pause screen */}
-        {/*
-        {isPaused && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm">
-            <h2 className="text-3xl font-bold mb-4">Tạm Dừng</h2>
-            <button
-              className="px-6 py-2 rounded-lg bg-blue-500 font-bold transform transition hover:scale-105"
-              onClick={togglePause} // Resume game on click
-            >
-              Tiếp Tục
+      </div>
+
+      {/* Header section (from home.tsx) - Positioned on top of the game */}
+      <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-30"> {/* Increased z-index */}
+        {/* Left placeholder */}
+        <div className="flex items-center">
+             {/* Placeholder for a potential menu button */}
+             <button className="p-2 rounded-full bg-blue-500 text-white text-xs">Menu</button>
+        </div>
+        {/* Currency display */}
+        <div className="flex items-center space-x-2 currency-display-container relative">
+          {/* Gems Container */}
+          <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-1 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Added cursor-pointer */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+            <div className="relative mr-1">
+              <div className="w-4 h-4 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center">
+                <div className="absolute top-0 left-0 w-1 h-1 bg-white/50 rounded-sm"></div>
+                <div className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-purple-800/50 rounded-br-lg"></div>
+              </div>
+              <div className="absolute top-2 left-1 w-1 h-1 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
+            </div>
+            <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div>
+             {/* Plus button for Gems - Functionality can be added later */}
+            <div className="ml-1 w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+              <span className="text-white font-bold text-xs">+</span>
+            </div>
+            <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full animate-pulse-fast"></div>
+            <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+          </div>
+          {/* Coins Container */}
+          <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-1 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Added cursor-pointer */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+            <div className="relative mr-1 flex">
+              <div className="w-4 h-4 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center">
+                <div className="absolute inset-1 bg-yellow-200 rounded-full opacity-60"></div>
+                <span className="text-amber-800 font-bold text-xs">$</span>
+              </div>
+              <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-1 top-0.5 z-10"></div>
+            </div>
+            <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter">
+              {displayedCoins.toLocaleString()}
+            </div>
+            {/* Plus button for Coins - Functionality can be added later */}
+            <div className="ml-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+              <span className="text-white font-bold text-xs">+</span>
+            </div>
+            <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full animate-pulse-fast"></div>
+            <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Left UI section (from home.tsx) - Positioned on top of the game */}
+      <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
+        {[
+          // Shop Icon
+          {
+            icon: (
+              <div className="relative">
+                <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
+                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
+                </div>
+                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+              </div>
+            ),
+            label: "Shop",
+            notification: true,
+            special: true,
+            centered: true
+          },
+          // Inventory icon
+          {
+            icon: (
+              <div className="relative">
+                <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
+                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full border-t border-amber-300"></div>
+                  <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-100/30 rounded-full animate-pulse-subtle"></div>
+                </div>
+                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+              </div>
+            ),
+            label: "Inventory",
+            notification: true,
+            special: true,
+            centered: true
+          }
+        ].map((item, index) => (
+          <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
+            {item.special && item.centered ? (
+              <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                {item.icon}
+                {item.label && (
+                  <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                )}
+              </div>
+            ) : (
+              <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
+                {item.icon}
+                {item.label && (
+                  <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Right UI section (from home.tsx) - Positioned on top of the game */}
+      <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
+        {[
+          // Mission icon
+          {
+            icon: (
+              <div className="relative">
+                <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
+                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                  <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
+                    <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
+                    <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
+                    <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+                  </div>
+                </div>
+                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+              </div>
+            ),
+            label: "Mission",
+            notification: true,
+            special: true,
+            centered: true
+          },
+          // Blacksmith icon
+          {
+            icon: (
+              <div className="relative">
+                <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
+                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                  <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
+                    <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
+                    <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
+                    <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
+                    <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
+                    <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
+                    <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+                  </div>
+                </div>
+                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+              </div>
+            ),
+            label: "Blacksmith",
+            notification: true,
+            special: true,
+            centered: true
+          },
+        ].map((item, index) => (
+          <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
+            {item.special && item.centered ? (
+                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                    {item.icon}
+                    {item.label && (
+                        <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                    )}
+                </div>
+            ) : (
+              <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                {item.icon}
+                <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Treasure chest and remaining chests count (from home.tsx) - Positioned on top of the game */}
+      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
+        <div
+          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
+          onClick={!isChestOpen && chestsRemaining > 0 ? openChest : null}
+          aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
+          role="button"
+          tabIndex={chestsRemaining > 0 ? 0 : -1}
+        >
+          <div className="flex items-center justify-center">
+            {/* Chest main body */}
+            <div className="flex flex-col items-center">
+              {/* Chest top part */}
+              <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
+                {/* Decorations */}
+                <div className="absolute inset-x-0 top-0 h-full">
+                  <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                  <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                  <div className="absolute top-1/4 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
+                  <div className="absolute top-2/3 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
+                </div>
+                <div className="absolute top-1 left-1 w-4 h-4 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-br border-b border-r border-yellow-600"></div>
+                <div className="absolute top-1 right-1 w-4 h-4 bg-gradient-to-bl from-yellow-300 to-yellow-500 rounded-bl border-b border-l border-yellow-600"></div>
+                <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
+                <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+
+                {/* Chest closed view */}
+                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
+                  <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
+                    <div className="relative">
+                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
+                        <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center h-full pt-7 pb-4">
+                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
+                      <div className="absolute inset-0 rounded-lg overflow-hidden">
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                      </div>
+                      <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
+                        <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
+                        <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chest open state */}
+                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className="bg-gradient-to-b from-amber-700 to-amber-900 h-10 w-full absolute top-0 rounded-t-xl transform origin-bottom animate-lid-open flex justify-center items-center overflow-hidden border-2 border-amber-600">
+                    <div className="absolute inset-0 bg-gradient-to-b from-amber-600/50 to-amber-800/50 flex justify-center items-center">
+                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                    </div>
+                    <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-300 to-yellow-500 rounded-tr border-t border-r border-yellow-600"></div>
+                    <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+                  </div>
+                  {showShine && (
+                    <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
+                      <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
+                      {[...Array(16)].map((_, i) => (
+                        <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
+                      ))}
+                      {[...Array(20)].map((_, i) => (
+                        <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="h-full flex justify-center items-center relative">
+                    <div className="absolute inset-2 top-7 bottom-4 bg-gradient-to-b from-amber-600/30 to-amber-800/30 rounded-lg shadow-inner shadow-amber-950/50"></div>
+                    <div className="absolute bottom-4 left-4 w-3 h-3 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
+                    <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
+                    <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
+                    {showCard ? (
+                      <div className={`w-16 h-22 mx-auto rounded-lg shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                        <div className="text-3xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                      </div>
+                    ) : (
+                      <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
+                        <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
+                  <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
+                </div>
+              </div>
+              {/* Chest base */}
+              <div className="flex flex-col items-center relative -mt-1 z-0"></div>
+            </div>
+          </div>
+
+          {/* Display remaining chests count */}
+          <div className="mt-4 flex flex-col items-center">
+            <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+              {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
+              <div className="flex items-center">
+                <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
+                <span className="text-amber-400/80 text-xs">/{3}</span>
+              </div>
+              {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Card info popup (from home.tsx) - Positioned on top of everything */}
+      {showCard && currentCard && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Increased z-index */}
+          <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
+            <div className="absolute -top-3 -right-3">
+              <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
+            </div>
+            <div className="text-xl font-bold text-white mb-6">Bạn nhận được</div>
+            <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background}`}>
+              <div className="absolute inset-0 overflow-hidden rounded-xl">
+                <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
+              </div>
+              <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
+              <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
+              <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
+              <div className="flex mt-3">
+                {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                  <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                ))}
+              </div>
+            </div>
+            <button onClick={resetChest} className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-8 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-600/50 hover:scale-105">
+              Tiếp tục
             </button>
           </div>
-        )}
-        */}
-      </div>
+        </div>
+      )}
+
     </div>
   );
 }
