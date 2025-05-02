@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
 // Import component game chạy nền
-import ObstacleRunnerGame from './background-game'; // Điều chỉnh đường dẫn nếu cần
+import ObstacleRunnerGame from './background-game.tsx'; // Điều chỉnh đường dẫn nếu cần
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
