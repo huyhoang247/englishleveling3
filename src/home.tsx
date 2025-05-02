@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
-// Import the background game component
-import ObstacleRunnerGame from './background-game.tsx'; // Adjust the path if necessary
+// Import component game chạy nền
+import ObstacleRunnerGame from './background-game'; // Điều chỉnh đường dẫn nếu cần
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
@@ -224,9 +224,10 @@ const TreasureChestGame = () => {
 
 
   return (
-    // Main container
-    // Removed the background gradient here as it will be handled by the background game
-    <div className="flex flex-col items-center justify-center w-full h-screen relative overflow-hidden">
+    // Main container for the TreasureChestGame UI
+    // This div was previously inside the App's return
+    // It now represents the "UI cũ của bạn" layer
+    <div className="flex flex-col items-center justify-center w-full h-screen bg-gradient-to-b from-blue-400 to-blue-600 relative overflow-hidden">
 
       {/* Header section */}
       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-20">
@@ -507,7 +508,6 @@ const TreasureChestGame = () => {
             </div>
           </div>
         </div>
-      </div>
 
 
       {/* Card info popup (unchanged) */}
@@ -584,18 +584,18 @@ const TreasureChestGame = () => {
 // Standard App wrapper for rendering
 const App = () => {
   return (
-    // Wrap the entire content in a relative div for the background game
+    // Bọc toàn bộ nội dung trong một div cha có class relative
     <div className="relative min-h-screen bg-white">
-      {/* 1) Background game */}
-      {/* ObstacleRunnerGame component will occupy the full background */}
+      {/* 1) Nền game chạy dưới cùng */}
+      {/* Component ObstacleRunnerGame chiếm toàn bộ không gian và nằm dưới cùng */}
       <ObstacleRunnerGame className="absolute inset-0 z-0 opacity-50" />
 
-      {/* 2) Nội dung UI cũ của bạn, đẩy lên trên bằng z-index */}
-      {/* Wrap the existing UI content in a relative div with a higher z-index */}
+      {/* 2) UI cũ của bạn (rương, 4 icon, gem, coin…) */}
+      {/* Bọc UI hiện tại trong div có class relative z-10 để đẩy lên trên */}
       <div className="relative z-10">
-        {/* Your existing UI components go here */}
+        {/* Component TreasureChestGame chứa toàn bộ UI hiện tại */}
         <TreasureChestGame />
-        {/* ... if you have other UI sections (header, main, footer), copy them here */}
+        {/* Nếu có các section UI khác (header, main, footer), copy chúng vào đây */}
       </div>
     </div>
   );
@@ -603,7 +603,7 @@ const App = () => {
 
 export default App;
 
-// Add rendering logic for the browser environment
+// Rendering cho môi trường browser (giữ nguyên)
 const rootElement = document.getElementById('root');
 if (rootElement) {
   ReactDOM.render(<App />, rootElement);
