@@ -270,8 +270,8 @@ const TreasureChestGame = () => {
       </div>
 
       {/* Left UI section - Adjusted bottom position */}
-      {/* Changed bottom-24 to bottom-16 */}
-      <div className="absolute left-4 bottom-16 flex flex-col space-y-4 z-20">
+      {/* Changed bottom-40 to bottom-24 */}
+      <div className="absolute left-4 bottom-24 flex flex-col space-y-4 z-20">
         {[
           // Shop Icon
           {
@@ -330,8 +330,8 @@ const TreasureChestGame = () => {
       </div>
 
       {/* Right UI section - Adjusted bottom position */}
-      {/* Changed bottom-24 to bottom-16 */}
-      <div className="absolute right-4 bottom-16 flex flex-col space-y-4 z-20">
+      {/* Changed bottom-40 to bottom-24 */}
+      <div className="absolute right-4 bottom-24 flex flex-col space-y-4 z-20">
         {[
           // Mission icon
           {
@@ -396,8 +396,8 @@ const TreasureChestGame = () => {
       </div>
 
       {/* Treasure chest and remaining chests count - Adjusted bottom position */}
-      {/* Changed bottom-24 to bottom-16 */}
-      <div className="absolute bottom-16 flex flex-col items-center justify-center w-full z-10">
+      {/* Changed bottom-40 to bottom-24 */}
+      <div className="absolute bottom-24 flex flex-col items-center justify-center w-full z-10">
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
           onClick={!isChestOpen && chestsRemaining > 0 ? openChest : null}
