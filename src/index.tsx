@@ -22,7 +22,7 @@ const App: React.FC = () => {
       {/* Conditionally render components based on the activeTab state */}
       {activeTab === 'home' && <Home />}
       {activeTab === 'profile' && <Profile />}
-      {activeTab === 'VerticalFlashcardGallery.tsx' && <Story />}
+      {activeTab === 'story' && <Story />}
       
 
       {/* Render the bottom navigation bar */}
