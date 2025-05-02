@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client'; // Keep createRoot for rendering
 import Home from './home.tsx'; // Assuming home.tsx is now Home component
 import NavigationBarBottom from './navigation-bar-bottom.tsx'; // Import NavigationBarBottom component
+import Profile from './profile.tsx'; 
 
 // Define the possible tab types
-type TabType = 'home' | 'other1' | 'other2';
+type TabType = 'home' | 'profile' | 'other2';
 
 const App: React.FC = () => {
   // Initialize state to keep track of the active tab, default is 'home'
@@ -19,6 +20,7 @@ const App: React.FC = () => {
     <div className="app-container">
       {/* Conditionally render components based on the activeTab state */}
       {activeTab === 'home' && <Home />}
+      {activeTab === 'profile' && <Profile />}
       
 
       {/* Render the bottom navigation bar */}
