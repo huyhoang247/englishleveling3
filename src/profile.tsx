@@ -261,8 +261,8 @@ const GameLevelSystem = () => {
 
 
   return (
-    // Removed min-h-screen to reduce top spacing
-    <div className="flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-indigo-950 text-white p-4">
+    // Removed justify-center to remove top spacing
+    <div className="flex flex-col items-center bg-gradient-to-b from-gray-900 to-indigo-950 text-white p-4">
       <div className="relative">
         {/* Level Up Animation */}
         {/* Removed */}
