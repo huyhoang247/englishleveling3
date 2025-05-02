@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 // Removed Trophy and Star icons as score and high score are removed
 // import { Trophy, Star } from 'lucide-react';
 
-export default function ObstacleRunnerGame() {
+// Define interface for component props
+interface ObstacleRunnerGameProps {
+  className?: string;
+}
+
+// Update component signature to accept className prop
+export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
   // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
@@ -544,6 +550,7 @@ export default function ObstacleRunnerGame() {
 
   return (
     // Main container for the entire game, now taking full screen
+    // Added className prop to the main container div
     <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden">
       {/* Add Tailwind CSS animation for fadeOutUp */}
       <style>{`
@@ -565,7 +572,8 @@ export default function ObstacleRunnerGame() {
       {/* Main Game Container, now full screen */}
       <div
         ref={gameRef} // Assign ref
-        className="relative w-full h-screen border-2 border-indigo-700 rounded-lg overflow-hidden shadow-2xl cursor-pointer" // Adjusted width and height
+        // Apply the passed className prop here
+        className={`${className ?? ''} relative w-full h-screen border-2 border-indigo-700 rounded-lg overflow-hidden shadow-2xl cursor-pointer`} // Adjusted width and height
         onClick={handleTap} // Handle taps/clicks
       >
         {/* Background with gradient */}
