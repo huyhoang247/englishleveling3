@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client'; // Keep createRoot for rendering
-import Home from './home.tsx'; // Assuming home.tsx is now Home component
+import Home from './background-game.tsx'; // Assuming home.tsx is now Home component
 import NavigationBarBottom from './navigation-bar-bottom.tsx'; // Import NavigationBarBottom component
 import Profile from './profile.tsx'; 
 import Story from './VerticalFlashcardGallery.tsx'; 
