@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
-// Import component game chạy nền
-import ObstacleRunnerGame from './background-game.tsx'; // Điều chỉnh đường dẫn nếu cần
-
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
 // Star Icon SVG
@@ -224,9 +221,7 @@ const TreasureChestGame = () => {
 
 
   return (
-    // Main container for the TreasureChestGame UI
-    // This div was previously inside the App's return
-    // It now represents the "UI cũ của bạn" layer
+    // Main container
     <div className="flex flex-col items-center justify-center w-full h-screen bg-gradient-to-b from-blue-400 to-blue-600 relative overflow-hidden">
 
       {/* Header section */}
@@ -508,6 +503,7 @@ const TreasureChestGame = () => {
             </div>
           </div>
         </div>
+      </div>
 
 
       {/* Card info popup (unchanged) */}
@@ -584,26 +580,15 @@ const TreasureChestGame = () => {
 // Standard App wrapper for rendering
 const App = () => {
   return (
-    // Bọc toàn bộ nội dung trong một div cha có class relative
-    <div className="relative min-h-screen bg-white">
-      {/* 1) Nền game chạy dưới cùng */}
-      {/* Component ObstacleRunnerGame chiếm toàn bộ không gian và nằm dưới cùng */}
-      <ObstacleRunnerGame className="absolute inset-0 z-0 opacity-50" />
-
-      {/* 2) UI cũ của bạn (rương, 4 icon, gem, coin…) */}
-      {/* Bọc UI hiện tại trong div có class relative z-10 để đẩy lên trên */}
-      <div className="relative z-10">
-        {/* Component TreasureChestGame chứa toàn bộ UI hiện tại */}
-        <TreasureChestGame />
-        {/* Nếu có các section UI khác (header, main, footer), copy chúng vào đây */}
-      </div>
+    <div className="App">
+      <TreasureChestGame />
     </div>
   );
 };
 
 export default App;
 
-// Rendering cho môi trường browser (giữ nguyên)
+// Add rendering logic for the browser environment
 const rootElement = document.getElementById('root');
 if (rootElement) {
   ReactDOM.render(<App />, rootElement);
