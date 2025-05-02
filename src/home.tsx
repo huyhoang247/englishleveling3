@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for rendering
 
+// Import các thành phần mới và CSS
+import DynamicBackground from './components/DynamicBackground';
+import './animations.css';
+
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
 // Star Icon SVG
@@ -222,323 +226,359 @@ const TreasureChestGame = () => {
 
   return (
     // Main container
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-gradient-to-b from-blue-400 to-blue-600 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Thêm DynamicBackground ở đây */}
+      <DynamicBackground />
 
-      {/* Header section */}
-      <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-20">
-        {/* Left placeholder */}
-        <div className="flex items-center"></div>
-        {/* Currency display */}
-        <div className="flex items-center space-x-2 currency-display-container relative">
-          {/* Gems Container */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-1 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300">
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-            <div className="relative mr-1">
-              <div className="w-4 h-4 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center">
-                <div className="absolute top-0 left-0 w-1 h-1 bg-white/50 rounded-sm"></div>
-                <div className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-purple-800/50 rounded-br-lg"></div>
+      {/* Bọc nội dung hiện tại trong div mới với z-index cao hơn */}
+      <div className="z-10 relative w-full flex flex-col items-center justify-center">
+
+        {/* Header section - Added fade-in animation */}
+        <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-20 animate-fade-in delay-100">
+          {/* Left placeholder */}
+          <div className="flex items-center"></div>
+          {/* Currency display - Added fade-in animation */}
+          <div className="flex items-center space-x-2 currency-display-container relative animate-fade-in delay-200">
+            {/* Gems Container - Added hover animation */}
+            <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-1 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 hover:animate-pulse-subtle">
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+              <div className="relative mr-1">
+                <div className="w-4 h-4 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center">
+                  <div className="absolute top-0 left-0 w-1 h-1 bg-white/50 rounded-sm"></div>
+                  <div className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-purple-800/50 rounded-br-lg"></div>
+                </div>
+                <div className="absolute top-2 left-1 w-1 h-1 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
               </div>
-              <div className="absolute top-2 left-1 w-1 h-1 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
-            </div>
-            <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div>
-            <div className="ml-1 w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-              <span className="text-white font-bold text-xs">+</span>
-            </div>
-            <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full animate-pulse-fast"></div>
-            <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-          </div>
-          {/* Coins Container */}
-          <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-1 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300">
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-            <div className="relative mr-1 flex">
-              <div className="w-4 h-4 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center">
-                <div className="absolute inset-1 bg-yellow-200 rounded-full opacity-60"></div>
-                <span className="text-amber-800 font-bold text-xs">$</span>
+              <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div>
+              <div className="ml-1 w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                <span className="text-white font-bold text-xs">+</span>
               </div>
-              <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-1 top-0.5 z-10"></div>
+              <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full animate-pulse-fast"></div>
+              <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
             </div>
-            <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter">
-              {displayedCoins.toLocaleString()}
+            {/* Coins Container - Added hover animation */}
+            <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-1 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 hover:animate-pulse-subtle">
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+              <div className="relative mr-1 flex">
+                <div className="w-4 h-4 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center">
+                  <div className="absolute inset-1 bg-yellow-200 rounded-full opacity-60"></div>
+                  <span className="text-amber-800 font-bold text-xs">$</span>
+                </div>
+                <div className="w-4 h-4 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-1 top-0.5 z-10"></div>
+              </div>
+              <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter">
+                {displayedCoins.toLocaleString()}
+              </div>
+              <div className="ml-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                <span className="text-white font-bold text-xs">+</span>
+              </div>
+              <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full animate-pulse-fast"></div>
+              <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
             </div>
-            <div className="ml-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-              <span className="text-white font-bold text-xs">+</span>
-            </div>
-            <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full animate-pulse-fast"></div>
-            <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
           </div>
         </div>
-      </div>
 
-      {/* Left UI section - Adjusted bottom position */}
-      {/* Changed bottom-16 to bottom-32 */}
-      <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-20">
-        {[
-          // Shop Icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
-                </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Shop",
-            notification: true,
-            special: true,
-            centered: true
-          },
-          // Inventory icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full border-t border-amber-300"></div>
-                  <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-100/30 rounded-full animate-pulse-subtle"></div>
-                </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Inventory",
-            notification: true,
-            special: true,
-            centered: true
-          }
-        ].map((item, index) => (
-          <div key={index} className="group">
-            {item.special && item.centered ? (
-              <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                {item.icon}
-                {item.label && (
-                  <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                )}
-              </div>
-            ) : (
-              <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
-                {item.icon}
-                {item.label && (
-                  <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Right UI section - Adjusted bottom position */}
-      {/* Changed bottom-16 to bottom-32 */}
-      <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-20">
-        {[
-          // Mission icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
-                    <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
-                    <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
-                    <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+        {/* Left UI section - Adjusted bottom position and added fade-in animation */}
+        <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-20 animate-fade-in delay-300">
+          {[
+            // Shop Icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
                   </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Mission",
-            notification: true,
-            special: true,
-            centered: true
-          },
-          // Blacksmith icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
-                    <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
-                    <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
-                    <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
-                    <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
-                    <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
-                    <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+              ),
+              label: "Shop",
+              notification: true,
+              special: true,
+              centered: true
+            },
+            // Inventory icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full border-t border-amber-300"></div>
+                    <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-100/30 rounded-full animate-pulse-subtle"></div>
                   </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Blacksmith",
-            notification: true,
-            special: true,
-            centered: true
-          },
-        ].map((item, index) => (
-          <div key={index} className="group">
-            {item.special && item.centered ? (
-                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                    {item.icon}
-                    {item.label && (
-                        <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                    )}
-                </div>
-            ) : (
-              <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                {item.icon}
-                <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Treasure chest and remaining chests count - Adjusted bottom position */}
-      {/* Changed bottom-16 to bottom-32 */}
-      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-10">
-        <div
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          onClick={!isChestOpen && chestsRemaining > 0 ? openChest : null}
-          aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
-          role="button"
-          tabIndex={chestsRemaining > 0 ? 0 : -1}
-        >
-          <div className="flex items-center justify-center">
-            {/* Chest main body */}
-            <div className="flex flex-col items-center">
-              {/* Chest top part */}
-              <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
-                {/* Decorations (unchanged) */}
-                <div className="absolute inset-x-0 top-0 h-full">
-                  <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
-                  <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
-                  <div className="absolute top-1/4 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
-                  <div className="absolute top-2/3 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
-                </div>
-                <div className="absolute top-1 left-1 w-4 h-4 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-br border-b border-r border-yellow-600"></div>
-                <div className="absolute top-1 right-1 w-4 h-4 bg-gradient-to-bl from-yellow-300 to-yellow-500 rounded-bl border-b border-l border-yellow-600"></div>
-                <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
-
-                {/* Chest closed view (unchanged) */}
-                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
-                  <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
-                    <div className="relative">
-                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
-                        <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center items-center h-full pt-7 pb-4">
-                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
-                      <div className="absolute inset-0 rounded-lg overflow-hidden">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                      </div>
-                      <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
-                        <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
-                        <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chest open state (unchanged) */}
-                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-100' : 'opacity-0'}`}>
-                  <div className="bg-gradient-to-b from-amber-700 to-amber-900 h-10 w-full absolute top-0 rounded-t-xl transform origin-bottom animate-lid-open flex justify-center items-center overflow-hidden border-2 border-amber-600">
-                    <div className="absolute inset-0 bg-gradient-to-b from-amber-600/50 to-amber-800/50 flex justify-center items-center">
-                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
-                    </div>
-                    <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-300 to-yellow-500 rounded-tr border-t border-r border-yellow-600"></div>
-                    <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
-                  </div>
-                  {showShine && (
-                    <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
-                      <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
-                      {[...Array(16)].map((_, i) => (
-                        <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
-                      ))}
-                      {[...Array(20)].map((_, i) => (
-                        <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
-                      ))}
-                    </div>
+              ),
+              label: "Inventory",
+              notification: true,
+              special: true,
+              centered: true
+            }
+          ].map((item, index) => (
+            <div key={index} className="group animate-fade-in" style={{ animationDelay: `${300 + index * 100}ms` }}> {/* Added delay */}
+              {item.special && item.centered ? (
+                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0 hover:animate-pulse"> {/* Added hover animation */}
+                  {item.icon}
+                  {item.label && (
+                    <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
                   )}
-                  <div className="h-full flex justify-center items-center relative">
-                    <div className="absolute inset-2 top-7 bottom-4 bg-gradient-to-b from-amber-600/30 to-amber-800/30 rounded-lg shadow-inner shadow-amber-950/50"></div>
-                    <div className="absolute bottom-4 left-4 w-3 h-3 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
-                    <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
-                    <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
-                    {showCard ? (
-                      <div className={`w-16 h-22 mx-auto rounded-lg shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
-                        <div className="text-3xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                </div>
+              ) : (
+                <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
+                  {item.icon}
+                  {item.label && (
+                    <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Right UI section - Adjusted bottom position and added fade-in animation */}
+        <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-20 animate-fade-in delay-400">
+          {[
+            // Mission icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
+                      <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
+                      <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
+                      <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+                    </div>
+                  </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+                </div>
+              ),
+              label: "Mission",
+              notification: true,
+              special: true,
+              centered: true
+            },
+            // Blacksmith icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
+                      <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
+                      <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
+                      <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
+                      <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
+                      <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
+                      <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+                    </div>
+                  </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+                </div>
+              ),
+              label: "Blacksmith",
+              notification: true,
+              special: true,
+              centered: true
+            },
+          ].map((item, index) => (
+            <div key={index} className="group animate-fade-in" style={{ animationDelay: `${400 + index * 100}ms` }}> {/* Added delay */}
+              {item.special && item.centered ? (
+                  <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0 hover:animate-pulse"> {/* Added hover animation */}
+                      {item.icon}
+                      {item.label && (
+                          <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                      )}
+                  </div>
+              ) : (
+                <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                  {item.icon}
+                  <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Treasure chest and remaining chests count - Adjusted bottom position and added fade-in animation */}
+        <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-10 animate-fade-in delay-500">
+          <div
+            className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
+            onClick={!isChestOpen && chestsRemaining > 0 ? openChest : null}
+            aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
+            role="button"
+            tabIndex={chestsRemaining > 0 ? 0 : -1}
+          >
+            <div className="flex items-center justify-center">
+              {/* Chest main body */}
+              <div className="flex flex-col items-center">
+                {/* Chest top part */}
+                <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
+                  {/* Decorations (unchanged) */}
+                  <div className="absolute inset-x-0 top-0 h-full">
+                    <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                    <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                    <div className="absolute top-1/4 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
+                    <div className="absolute top-2/3 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
+                  </div>
+                  <div className="absolute top-1 left-1 w-4 h-4 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-br border-b border-r border-yellow-600"></div>
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-gradient-to-bl from-yellow-300 to-yellow-500 rounded-bl border-b border-l border-yellow-600"></div>
+                  <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+
+                  {/* Chest closed view (unchanged) */}
+                  <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
+                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
+                      <div className="relative">
+                        <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
+                          <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
-                        <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                    </div>
+                    <div className="flex justify-center items-center h-full pt-7 pb-4">
+                      <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
+                        <div className="absolute inset-0 rounded-lg overflow-hidden">
+                          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                        </div>
+                        <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
+                          <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
+                          <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chest open state (unchanged) */}
+                  <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="bg-gradient-to-b from-amber-700 to-amber-900 h-10 w-full absolute top-0 rounded-t-xl transform origin-bottom animate-lid-open flex justify-center items-center overflow-hidden border-2 border-amber-600">
+                      <div className="absolute inset-0 bg-gradient-to-b from-amber-600/50 to-amber-800/50 flex justify-center items-center">
+                        <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                      </div>
+                      <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-300 to-yellow-500 rounded-tr border-t border-r border-yellow-600"></div>
+                      <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+                    </div>
+                    {showShine && (
+                      <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
+                        <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
+                        {[...Array(16)].map((_, i) => (
+                          <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
+                        ))}
+                        {[...Array(20)].map((_, i) => (
+                          <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
+                        ))}
                       </div>
                     )}
+                    <div className="h-full flex justify-center items-center relative">
+                      <div className="absolute inset-2 top-7 bottom-4 bg-gradient-to-b from-amber-600/30 to-amber-800/30 rounded-lg shadow-inner shadow-amber-950/50"></div>
+                      <div className="absolute bottom-4 left-4 w-3 h-3 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
+                      <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
+                      <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
+                      {showCard ? (
+                        <div className={`w-16 h-22 mx-auto rounded-lg shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                          <div className="text-3xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                        </div>
+                      ) : (
+                        <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
+                          <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
+                    <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
-                  <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
+                {/* Chest base (unchanged) */}
+                <div className="flex flex-col items-center relative -mt-1 z-0"></div>
+              </div>
+            </div>
+
+            {/* Display remaining chests count (unchanged) */}
+            <div className="mt-4 flex flex-col items-center animate-fade-in delay-600"> {/* Added fade-in animation */}
+              <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+                {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
+                <div className="flex items-center">
+                  <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
+                  <span className="text-amber-400/80 text-xs">/{3}</span>
+                </div>
+                {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Card info popup (unchanged) */}
+        {showCard && currentCard && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm animate-fade-in"> {/* Added fade-in animation */}
+            <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative animate-scale-up"> {/* Added scale-up animation */}
+              <div className="absolute -top-3 -right-3">
+                <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
+              </div>
+              <div className="text-xl font-bold text-white mb-6 animate-fade-in delay-100">Bạn nhận được</div> {/* Added fade-in with delay */}
+              <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background} animate-float-card delay-200`}> {/* Added float and delay */}
+                <div className="absolute inset-0 overflow-hidden rounded-xl">
+                  <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
+                </div>
+                <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                <h3 className="text-xl font-bold text-white mt-4 animate-fade-in delay-300">{currentCard.name}</h3> {/* Added fade-in with delay */}
+                <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium animate-fade-in delay-400`}>{currentCard.rarity}</p> {/* Added fade-in with delay */}
+                <div className="flex mt-3 animate-fade-in delay-500"> {/* Added fade-in with delay */}
+                  {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                    <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                  ))}
                 </div>
               </div>
-              {/* Chest base (unchanged) */}
-              <div className="flex flex-col items-center relative -mt-1 z-0"></div>
+              <button onClick={resetChest} className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-8 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-600/50 hover:scale-105 animate-fade-in delay-600 hover:animate-float"> {/* Added fade-in and hover float */}
+                Tiếp tục
+              </button>
             </div>
           </div>
+        )}
 
-          {/* Display remaining chests count (unchanged) */}
-          <div className="mt-4 flex flex-col items-center">
-            <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
-              {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
-              <div className="flex items-center">
-                <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-                <span className="text-amber-400/80 text-xs">/{3}</span>
-              </div>
-              {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Card info popup (unchanged) */}
-      {showCard && currentCard && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
-            <div className="absolute -top-3 -right-3">
-              <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
-            </div>
-            <div className="text-xl font-bold text-white mb-6">Bạn nhận được</div>
-            <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background}`}>
-              <div className="absolute inset-0 overflow-hidden rounded-xl">
-                <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
-              </div>
-              <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
-              <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
-              <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-              <div className="flex mt-3">
-                {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                  <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                ))}
-              </div>
-            </div>
-            <button onClick={resetChest} className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-8 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-600/50 hover:scale-105">
-              Tiếp tục
-            </button>
-          </div>
-        </div>
-      )}
+      </div> {/* Kết thúc div bọc nội dung */}
 
       {/* CSS Styles (unchanged, including global style for body overflow) */}
       <style jsx global>{`
         body {
           overflow: hidden; /* Disable scrolling on the body */
         }
+        /* Thêm các keyframes animation mới từ animations.css */
+        @keyframes fade-in {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+         @keyframes scale-up {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; opacity: 0; }
+        .animate-scale-up { animation: scale-up 0.3s ease-out forwards; opacity: 0; }
+        .animate-float { animation: float 1.5s ease-in-out infinite; }
+        .animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+        .delay-600 { animation-delay: 0.6s; }
+        /* Thêm các delay khác nếu cần */
+
+
       `}</style>
       <style jsx>{`
         .lucide-icon { display: inline-block; vertical-align: middle; }
