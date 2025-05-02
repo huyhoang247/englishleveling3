@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// Removed Trophy and Star icons as score and high score are removed
-// import { Trophy, Star } from 'lucide-react';
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
@@ -81,7 +79,7 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   >
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
     <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
-    <path d="M5 20a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
   </svg>
 );
 
@@ -108,14 +106,14 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
 );
 
 
-// Define interface for component props (kept from background-game)
+// Define interface for component props
 interface ObstacleRunnerGameProps {
   className?: string;
 }
 
 // Update component signature to accept className prop
 export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
-  // Game states (from background-game)
+  // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
   const MAX_HEALTH = 3000; // Define max health
@@ -130,7 +128,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
 
-  // UI States (from home.tsx)
+  // UI States
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [currentCard, setCurrentCard] = useState(null);
@@ -142,25 +140,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
 
-  // Define the new ground level percentage (Increased from 35% to 45%)
+  // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
 
-  // Refs for timers to manage intervals and timeouts (from background-game)
+  // Refs for timers to manage intervals and timeouts
   const gameRef = useRef(null); // Ref for the main game container div
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
   const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
 
-  // Character animation frames (simple representation of leg movement) (from background-game)
+  // Character animation frames (simple representation of leg movement)
   const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
-  // Obstacle types with properties (from background-game)
+  // Obstacle types with properties
   const obstacleTypes = [
     { type: 'rock', height: 10, width: 10, color: 'from-gray-700 to-gray-500' },
     { type: 'cactus', height: 16, width: 8, color: 'from-green-800 to-green-600' },
   ];
 
-    // Updated cards array to use SVG components (from home.tsx)
+    // Updated cards array to use SVG components
   const cards = [
     { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
     { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
@@ -168,7 +166,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <GemIcon size={36} />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
   ];
 
-  // Helper function to get rarity color (from home.tsx)
+  // Helper function to get rarity color
   const getRarityColor = (rarity) => {
     switch(rarity) {
       case "common": return "text-gray-200";
@@ -179,7 +177,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   };
 
-  // Coin count animation function (from home.tsx)
+  // Coin count animation function
   const startCoinCountAnimation = (reward) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
@@ -199,7 +197,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
 
-  // Function to start the game (from background-game, modified)
+  // Function to start the game
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
@@ -246,12 +244,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     scheduleNextObstacle();
   };
 
-  // Auto-start the game as soon as component mounts (from background-game)
+  // Auto-start the game as soon as component mounts
   useEffect(() => {
     startGame();
   }, []);
 
-  // Effect to handle game over state when health reaches zero (from background-game)
+  // Effect to handle game over state when health reaches zero
   useEffect(() => {
     if (health <= 0 && gameStarted) { // Game over when health is 0 or less
       setGameOver(true);
@@ -263,7 +261,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   }, [health, gameStarted]);
 
-  // Generate initial cloud elements (called only once at game start) (from background-game)
+  // Generate initial cloud elements (called only once at game start)
   const generateInitialClouds = (count) => {
     const newClouds = [];
     for (let i = 0; i < count; i++) {
@@ -278,7 +276,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setClouds(newClouds);
   };
 
-  // Generate dust particles for visual effect (from background-game)
+  // Generate dust particles for visual effect
   const generateParticles = () => {
     if (!gameStarted || gameOver) return; // Only generate if game is active and not paused
 
@@ -299,7 +297,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setParticles(prev => [...prev, ...newParticles]);
   };
 
-  // Start the character run animation loop (from background-game)
+  // Start the character run animation loop
   const startRunAnimation = () => {
     if (runAnimationRef.current) clearInterval(runAnimationRef.current); // Clear any existing animation timer
 
@@ -308,7 +306,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }, 150); // Update frame every 150ms
   };
 
-  // Schedule the next obstacle to appear (from background-game)
+  // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
     if (gameOver) return; // Don't schedule if game is over
 
@@ -339,7 +337,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }, randomTime);
   };
 
-  // Handle character jump action (from background-game)
+  // Handle character jump action
   const jump = () => {
     // Check if not already jumping, game is started, not over, AND card popup is not shown
     if (!jumping && !gameOver && gameStarted && !showCard) {
@@ -358,7 +356,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   };
 
-  // Handle tap/click on the game area to start or jump (from background-game, modified)
+  // Handle tap/click on the game area to start or jump
   const handleTap = () => {
     if (!gameStarted) {
       startGame(); // Start the game if not started
@@ -371,7 +369,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
 
-  // Trigger health bar damage effect (from background-game)
+  // Trigger health bar damage effect
   const triggerHealthDamageEffect = () => {
       setShowHealthDamageEffect(true);
       setTimeout(() => {
@@ -379,7 +377,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 300); // Effect duration
   };
 
-  // Trigger character damage effect (from background-game)
+  // Trigger character damage effect
   const triggerCharacterDamageEffect = () => {
       setShowCharacterDamageEffect(true);
       setTimeout(() => {
@@ -388,7 +386,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
 
-  // Move obstacles, clouds, particles and detect collisions (from background-game)
+  // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
     if (!gameStarted || gameOver) return; // Only run if game is active and not paused
 
@@ -500,7 +498,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     return () => clearInterval(moveInterval);
   }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes]); // Dependencies for this effect
 
-  // Effect to clean up all timers when the component unmounts (from background-game)
+  // Effect to clean up all timers when the component unmounts
   useEffect(() => {
     return () => {
       clearTimeout(obstacleTimerRef.current);
@@ -509,7 +507,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
-    // Effect for coin counter animation (from home.tsx)
+    // Effect for coin counter animation
   useEffect(() => {
     if (displayedCoins === coins && pendingCoinReward === 0) return;
     const coinElement = document.querySelector('.coin-counter');
@@ -531,9 +529,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   }, [displayedCoins, coins, pendingCoinReward]);
 
 
-  // Render the character with animation and damage effect (from background-game)
+  // Render the character with animation and damage effect
   const renderCharacter = () => {
-    const legPos = jumping ? 1 : runFrames[runFrame]; // Determine leg position based on jumping state and run frame
+    // Removed leg position logic as legs are removed
+    // const legPos = jumping ? 1 : runFrames[runFrame]; // Determine leg position based on jumping state and run frame
 
     return (
       <div
@@ -558,9 +557,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           <div className={`absolute top-4 right-0 w-2 h-4 bg-blue-700 rounded-full transform ${jumping ? '-rotate-45' : '-rotate-12'}`}></div>
         </div>
 
-        {/* Legs */}
+        {/* Legs - Removed */}
+        {/*
         <div className={`absolute bottom-0 left-2 w-3 h-5 bg-gradient-to-b from-yellow-600 to-yellow-800 rounded-b-lg transform ${legPos === 0 ? '' : legPos === 1 ? 'translate-x-1 -translate-y-1' : 'translate-x-2 -translate-y-2'}`}></div>
         <div className={`absolute bottom-0 right-2 w-3 h-5 bg-gradient-to-b from-yellow-600 to-yellow-800 rounded-b-lg transform ${legPos === 0 ? '' : legPos === 2 ? 'translate-x-1 -translate-y-1' : '-translate-x-2 -translate-y-2'}`}></div>
+        */}
 
         {/* Shadow */}
         <div
@@ -583,7 +584,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     );
   };
 
-  // Render obstacles based on their type (from background-game)
+  // Render obstacles based on their type
   const renderObstacle = (obstacle) => {
     let obstacleEl; // Element to render for the obstacle
 
@@ -630,7 +631,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     );
   };
 
-  // Render clouds (from background-game)
+  // Render clouds
   const renderClouds = () => {
     return clouds.map(cloud => (
       <div
@@ -666,7 +667,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // Render dust particles (from background-game)
+  // Render dust particles
   const renderParticles = () => {
     return particles.map(particle => (
       <div
@@ -683,10 +684,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // Calculate health bar width percentage (from background-game)
+  // Calculate health bar width percentage
   const healthBarWidth = (health / MAX_HEALTH) * 100;
 
-  // Function to open the chest (from home.tsx)
+  // Function to open the chest
   const openChest = () => {
     if (isChestOpen || chestsRemaining <= 0) return;
     setChestShake(true);
@@ -714,7 +715,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }, 600);
   };
 
-  // Function to reset the chest state (from home.tsx)
+  // Function to reset the chest state
   const resetChest = () => {
     setIsChestOpen(false);
     setShowCard(false);
@@ -729,7 +730,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   return (
     // Main container for the entire game and UI
     <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
-      {/* Add Tailwind CSS animations (from background-game and home.tsx) */}
+      {/* Add Tailwind CSS animations */}
       <style>{`
         @keyframes fadeOutUp {
           0% {
@@ -782,7 +783,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       `}</style>
 
 
-      {/* Main Game Container (from background-game) */}
+      {/* Main Game Container */}
       <div
         ref={gameRef} // Assign ref
         // Apply the passed className prop here
@@ -847,7 +848,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       </div>
 
-      {/* Header section (from home.tsx) - Positioned on top of the game */}
+      {/* Header section - Positioned on top of the game */}
       <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-center bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-30"> {/* Increased z-index */}
         {/* Left placeholder */}
         <div className="flex items-center">
@@ -897,7 +898,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         </div>
       </div>
 
-      {/* Left UI section (from home.tsx) - Positioned on top of the game */}
+      {/* Left UI section - Positioned on top of the game */}
       <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
         {[
           // Shop Icon
@@ -956,7 +957,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         ))}
       </div>
 
-      {/* Right UI section (from home.tsx) - Positioned on top of the game */}
+      {/* Right UI section - Positioned on top of the game */}
       <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
         {[
           // Mission icon
@@ -1021,7 +1022,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         ))}
       </div>
 
-      {/* Treasure chest and remaining chests count (from home.tsx) - Positioned on top of the game */}
+      {/* Treasure chest and remaining chests count - Positioned on top of the game */}
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
@@ -1030,7 +1031,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           role="button"
           tabIndex={chestsRemaining > 0 ? 0 : -1}
         >
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
             {/* Chest main body */}
             <div className="flex flex-col items-center">
               {/* Chest top part */}
@@ -1098,7 +1099,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
                     {showCard ? (
                       <div className={`w-16 h-22 mx-auto rounded-lg shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
-                        <div className="text-3xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                        <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
                       </div>
                     ) : (
                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
@@ -1130,7 +1131,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         </div>
       </div>
 
-      {/* Card info popup (from home.tsx) - Positioned on top of everything */}
+      {/* Card info popup - Positioned on top of everything */}
       {showCard && currentCard && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Increased z-index */}
           <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
