@@ -1,17 +1,29 @@
-import { useState } from "react";
-import VerticalFlashcardGallery from "./VerticalFlashcardGallery.tsx";
-import Profile from "./profile.tsx";
+import React, { useState } from "react"; // Import React and useState
+// import VerticalFlashcardGallery from "./VerticalFlashcardGallery.tsx"; // Keep or remove based on where this component is used
+// import Profile from "./profile.tsx"; // Keep or remove based on where this component is used
 
-export default function BottomNavigationBar() {
-  const [activeTab, setActiveTab] = useState("home");
+// Define the props interface for the component
+interface NavigationBarBottomProps {
+  // activeTab prop to receive the currently active tab ID from the parent component
+  activeTab: 'home' | 'quiz' | 'story' | 'game' | 'profile'; // Updated possible values based on the tabs array
+  // onTabChange prop to receive a function to call when a tab is clicked
+  onTabChange: (tab: 'home' | 'quiz' | 'story' | 'game' | 'profile') => void; // Updated possible values
+}
+
+// Define the NavigationBarBottom functional component, receiving the defined props
+const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
+  activeTab, // Destructure activeTab from props
+  onTabChange // Destructure onTabChange from props
+}) => {
+  // Keep the isVisible state and toggle logic if needed for the story tab feature
   const [isVisible, setIsVisible] = useState(true);
 
-  // Định nghĩa các tab của thanh điều hướng
+  // Define the tabs data
   const tabs = [
     {
       id: "home",
       label: "Trang chủ",
-      icon: (props) => (
+      icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={props.size}
@@ -32,7 +44,7 @@ export default function BottomNavigationBar() {
     {
       id: "quiz",
       label: "Trắc nghiệm",
-      icon: (props) => (
+      icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={props.size}
@@ -53,7 +65,7 @@ export default function BottomNavigationBar() {
     {
       id: "story",
       label: "Truyện",
-      icon: (props) => (
+      icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={props.size}
@@ -74,7 +86,7 @@ export default function BottomNavigationBar() {
     {
       id: "game",
       label: "Mini Game",
-      icon: (props) => (
+      icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={props.size}
@@ -98,7 +110,7 @@ export default function BottomNavigationBar() {
     {
       id: "profile",
       label: "Hồ sơ",
-      icon: (props) => (
+      icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width={props.size}
@@ -118,7 +130,7 @@ export default function BottomNavigationBar() {
     },
   ];
 
-  // Hàm xử lý ẩn/hiện thanh điều hướng
+  // Hàm xử lý ẩn/hiện thanh điều hướng (kept from original file)
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -129,7 +141,7 @@ export default function BottomNavigationBar() {
       {activeTab === 'story' && (
         <div
           className="relative flex justify-center"
-          onClick={toggleVisibility}
+          onClick={toggleVisibility} // Use toggleVisibility to hide/show the bar
         >
           <div className="absolute -top-3 w-12 h-6 bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-full flex justify-center items-center cursor-pointer shadow-lg border border-gray-800 transform transition-transform duration-300 hover:scale-105">
             <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 glow-sm"></div>
@@ -137,7 +149,6 @@ export default function BottomNavigationBar() {
           </div>
         </div>
       )}
-
 
       {/* Thanh tab với hiệu ứng ẩn hiện */}
       <div
@@ -148,40 +159,46 @@ export default function BottomNavigationBar() {
         <div className="mx-2 my-2 flex justify-between items-center">
           {tabs.map((tab, index) => {
             const Icon = tab.icon;
+            // Determine if the current tab is active based on the activeTab prop
             const isActive = activeTab === tab.id;
 
             return (
               <div key={tab.id} className="flex-1 relative flex justify-center items-center">
                 <button
                   className="w-full flex flex-col items-center relative group justify-center"
+                  // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
-                    setActiveTab(tab.id);
-                    // Khi chuyển tab, nếu không phải 'story', đảm bảo thanh điều hướng hiển thị
+                    onTabChange(tab.id); // Notify the parent component of the tab change
+                    // When changing tab, if not 'story', ensure the navigation bar is visible
                     if (tab.id !== 'story') {
                       setIsVisible(true);
                     }
                   }}
                 >
-                  {/* Hiệu ứng phát sáng nền luôn hiện nhưng chỉ hiển thị khi active */}
+                  {/* Background glow effect, visible only when active */}
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} rounded-xl blur-sm
                       transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-15' : 'opacity-0'}`}
                   />
 
-                  {/* Container icon với hiệu ứng chuyển động mượt mà */}
+                  {/* Icon container with smooth transition */}
                   <div
                     className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
-                      ${isActive ? `bg-gradient-to-br ${tab.gradient} shadow-lg` : 'bg-transparent'}`}
+                      ${isActive ? `bg-gradient-to-br ${tab.gradient} shadow-lg` : 'bg-transparent'}`} // Apply gradient and shadow if active
                   >
                     <Icon
                       size={20}
-                      color={isActive ? "#ffffff" : "#9ca3af"}
-                      strokeWidth={isActive ? 2.5 : 2}
+                      color={isActive ? "#ffffff" : "#9ca3af"} // White color for active icon, gray for inactive
+                      strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
                     />
                   </div>
+                  {/* Tab label - optional, uncomment if you want labels */}
+                  {/* <span className={`text-xs mt-1 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                    {tab.label}
+                  </span> */}
                 </button>
 
-                {/* Đường phân cách giữa các mục */}
+                {/* Separator line between tabs */}
                 {index < tabs.length - 1 && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-800"></div>
                 )}
@@ -190,15 +207,19 @@ export default function BottomNavigationBar() {
           })}
         </div>
 
+        {/* Bottom border */}
         <div className="h-1 w-full bg-gray-900"></div>
       </div>
 
-      {/* Thêm CSS tùy chỉnh cho hiệu ứng phát sáng */}
+      {/* Custom CSS for the glow effect */}
       <style jsx>{`
         .glow-sm {
-          box-shadow: 0 0 8px 1px rgba(59, 130, 246, 0.5);
+          box-shadow: 0 0 8px 1px rgba(59, 130, 246, 0.5); /* Example blue glow */
         }
       `}</style>
     </div>
   );
 }
+
+// Export the component
+export default NavigationBarBottom;
