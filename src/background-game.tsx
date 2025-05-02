@@ -113,6 +113,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     scheduleNextObstacle();
   };
 
+  // ───────────────────────────────────────────────
+  // Auto-start the game as soon as component mounts
+  useEffect(() => {
+    startGame();
+  }, []);
+  // ───────────────────────────────────────────────
+
   // Effect to handle game over state when health reaches zero
   useEffect(() => {
     if (health <= 0 && gameStarted) { // Game over when health is 0 or less
@@ -661,6 +668,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         */}
 
         {/* Start screen (shown when game is not started and not over) */}
+        {/* Removed the start screen as the game now auto-starts */}
+        {/*
         {!gameStarted && !gameOver && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70">
             <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">Vượt Chướng Ngại Vật</h2>
@@ -672,6 +681,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             </button>
           </div>
         )}
+        */}
 
         {/* Game over screen (shown when game is over) */}
         {gameOver && (
