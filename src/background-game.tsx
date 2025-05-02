@@ -2,9 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 // Removed Trophy and Star icons as score and high score are removed
 // import { Trophy, Star } from 'lucide-react';
 
-// Import file GIF cho người chơi
-import playerGif from 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/output-onlinegiftools.gif';
-
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
 // Star Icon SVG
@@ -126,9 +123,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [characterPos, setCharacterPos] = useState(0); // Vertical position of the character (0 is on the ground)
   const [obstacles, setObstacles] = useState([]); // Array of active obstacles
-  // Removed isRunning and runFrame states as they are for sprite animation
-  // const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
-  // const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
+  const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
+  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
@@ -152,13 +148,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Refs for timers to manage intervals and timeouts (from background-game)
   const gameRef = useRef(null); // Ref for the main game container div
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
-  // Removed runAnimationRef as it's for sprite animation
-  // const runAnimationRef = useRef(null); // Timer for character run animation
+  const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
 
   // Character animation frames (simple representation of leg movement) (from background-game)
-  // Removed runFrames as they are for sprite animation
-  // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
+  const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
   // Obstacle types with properties (from background-game)
   const obstacleTypes = [
@@ -204,16 +198,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 50);
   };
 
-  // Tạo một ref để lưu trữ đối tượng Image của GIF
-  const playerGifImageRef = useRef(new Image());
-
-  // Load GIF khi component mount
-  useEffect(() => {
-    playerGifImageRef.current.src = playerGif;
-    // Không cần lắng nghe sự kiện onload nếu GIF không cần kích thước chính xác ngay lập tức
-    // Nếu cần, có thể thêm: playerGifImageRef.current.onload = () => { /* code sau khi load */ };
-  }, []); // Chạy chỉ một lần khi component mount
-
 
   // Function to start the game (from background-game, modified)
   const startGame = () => {
@@ -223,8 +207,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setCharacterPos(0); // Character starts on the ground (relative to ground level)
     setObstacles([]);
     setParticles([]);
-    // Removed setIsRunning(true); as it's for sprite animation
-    // setIsRunning(true);
+    setIsRunning(true);
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
 
@@ -253,9 +236,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Generate initial clouds (a fixed, small number)
     generateInitialClouds(5); // Generate 5 clouds initially
 
-    // Removed startRunAnimation() as it's for sprite animation
     // Start the character run animation
-    // startRunAnimation();
+    startRunAnimation();
 
     // Generate dust particles periodically
     particleTimerRef.current = setInterval(generateParticles, 300);
@@ -273,12 +255,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   useEffect(() => {
     if (health <= 0 && gameStarted) { // Game over when health is 0 or less
       setGameOver(true);
-      // Removed setIsRunning(false); as it's for sprite animation
-      // setIsRunning(false);
+      setIsRunning(false);
       // Clear all active timers
       clearTimeout(obstacleTimerRef.current);
-      // Removed clearInterval(runAnimationRef.current); as it's for sprite animation
-      // clearInterval(runAnimationRef.current);
+      clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
     }
   }, [health, gameStarted]);
@@ -319,15 +299,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setParticles(prev => [...prev, ...newParticles]);
   };
 
-  // Removed startRunAnimation function as it's for sprite animation
   // Start the character run animation loop (from background-game)
-  // const startRunAnimation = () => {
-  //   if (runAnimationRef.current) clearInterval(runAnimationRef.current); // Clear any existing animation timer
+  const startRunAnimation = () => {
+    if (runAnimationRef.current) clearInterval(runAnimationRef.current); // Clear any existing animation timer
 
-  //   runAnimationRef.current = setInterval(() => {
-  //     setRunFrame(prev => (prev + 1) % runFrames.length); // Cycle through run frames
-  //   }, 150); // Update frame every 150ms
-  // };
+    runAnimationRef.current = setInterval(() => {
+      setRunFrame(prev => (prev + 1) % runFrames.length); // Cycle through run frames
+    }, 150); // Update frame every 150ms
+  };
 
   // Schedule the next obstacle to appear (from background-game)
   const scheduleNextObstacle = () => {
@@ -448,19 +427,19 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           })
           .filter(obstacle => {
             // Collision detection logic
-            const characterWidth = 12; // Kích thước vùng va chạm của nhân vật (có thể điều chỉnh)
-            const characterHeight = 16; // Kích thước vùng va chạm của nhân vật (có thể điều chỉnh)
-            const characterX = 10; // Vị trí X cố định của nhân vật
-            const characterY = characterPos; // Vị trí Y hiện tại của nhân vật (so với mặt đất)
-
-            const obstacleX = obstacle.position; // Vị trí X hiện tại của chướng ngại vật
-            // ObstacleY luôn là 0 cho chướng ngại vật trên mặt đất (so với mặt đất)
-            const obstacleY = 0;
-            const obstacleWidth = obstacle.width; // Chiều rộng của chướng ngại vật
-            const obstacleHeight = obstacle.height; // Chiều cao của chướng ngại vật
-
-            // Kiểm tra va chạm sử dụng bounding boxes
             let collisionDetected = false;
+            const characterWidth = 12;
+            const characterHeight = 16;
+            const characterX = 10; // Character's fixed X position
+            const characterY = characterPos; // Character's current Y position (relative to ground)
+
+            const obstacleX = obstacle.position; // Obstacle's current X position
+            // ObstacleY is always 0 for ground obstacles (relative to ground)
+            const obstacleY = 0;
+            const obstacleWidth = obstacle.width; // Obstacle's width
+            const obstacleHeight = obstacle.height; // Obstacle's height
+
+            // Check for collision using bounding boxes
             if (
               characterX < obstacleX + obstacleWidth &&
               characterX + characterWidth > obstacleX &&
@@ -468,14 +447,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               characterY + obstacleHeight > obstacleY
             ) {
               collisionDetected = true;
-              // Giảm 1 điểm máu khi va chạm
-              setHealth(prev => Math.max(0, prev - 1)); // Giảm máu đi 1, đảm bảo không dưới 0
-              triggerHealthDamageEffect(); // Kích hoạt hiệu ứng thanh máu
-              triggerCharacterDamageEffect(); // Kích hoạt hiệu ứng nhân vật
+              // Decrease health by 1 point on collision
+              setHealth(prev => Math.max(0, prev - 1)); // Decrease health by 1, ensuring it doesn't go below 0
+              triggerHealthDamageEffect(); // Trigger health bar damage effect
+              triggerCharacterDamageEffect(); // Trigger the new character damage effect
             }
 
-            // Giữ lại các chướng ngại vật chưa va chạm và vẫn hiển thị hoặc sẽ được lặp lại
-            return !collisionDetected && obstacle.position > -20; // Lọc bỏ các chướng ngại vật đã va chạm hoặc quá xa màn hình
+            // Keep obstacles that haven't collided and are still visible or will loop back
+            return !collisionDetected && obstacle.position > -20; // Filter out collided or far off-screen obstacles
           });
       });
 
@@ -525,8 +504,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   useEffect(() => {
     return () => {
       clearTimeout(obstacleTimerRef.current);
-      // Removed clearInterval(runAnimationRef.current); as it's for sprite animation
-      // clearInterval(runAnimationRef.current);
+      clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
@@ -553,30 +531,47 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   }, [displayedCoins, coins, pendingCoinReward]);
 
 
-  // Render the character using the GIF (Modified)
+  // Render the character with animation and damage effect (from background-game)
   const renderCharacter = () => {
-    // Kích thước hiển thị của GIF (có thể điều chỉnh)
-    const characterDisplayWidth = 48; // Tương đương w-12 (12 * 4px = 48px)
-    const characterDisplayHeight = 64; // Tương đương h-16 (16 * 4px = 64px)
+    const legPos = jumping ? 1 : runFrames[runFrame]; // Determine leg position based on jumping state and run frame
 
     return (
       <div
-        className="absolute transition-all duration-300 ease-out" // Base styles and transition
+        className="absolute w-12 h-16 transition-all duration-300 ease-out" // Base styles and transition
         style={{
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`, // Vertical position using characterPos state relative to new ground
           left: '10%', // Fixed horizontal position
-          width: `${characterDisplayWidth}px`, // Set width
-          height: `${characterDisplayHeight}px`, // Set height
           transition: jumping ? 'bottom 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)' : 'bottom 0.3s cubic-bezier(0.33, 1, 0.68, 1)' // Different transition for jumping
         }}
       >
-        {/* Sử dụng thẻ img để hiển thị GIF */}
-        <img
-          src={playerGifImageRef.current.src} // Sử dụng src từ ref
-          alt="Player Character"
-          className={`w-full h-full object-contain ${showCharacterDamageEffect ? 'animate-fadeOutUp' : ''}`} // Đảm bảo ảnh vừa với container và thêm hiệu ứng sát thương
-          // Loại bỏ các phần tử vẽ nhân vật cũ (body, eyes, mouth, arms, legs, shadow)
-        />
+        {/* Character Body */}
+        <div className="absolute w-10 h-12 bg-gradient-to-b from-blue-600 to-blue-800 rounded-t-lg left-1">
+          {/* Eyes */}
+          <div className="absolute top-2 left-2 w-2 h-2 bg-white rounded-full"></div>
+          <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full"></div>
+
+          {/* Mouth */}
+          <div className={`absolute top-6 left-2 w-6 h-1 ${jumping ? 'rounded-t-full bg-red-500' : 'rounded-full bg-white'}`}></div>
+
+          {/* Arms */}
+          <div className={`absolute top-4 left-0 w-2 h-4 bg-blue-700 rounded-full transform ${jumping ? 'rotate-45' : 'rotate-12'}`}></div>
+          <div className={`absolute top-4 right-0 w-2 h-4 bg-blue-700 rounded-full transform ${jumping ? '-rotate-45' : '-rotate-12'}`}></div>
+        </div>
+
+        {/* Legs */}
+        <div className={`absolute bottom-0 left-2 w-3 h-5 bg-gradient-to-b from-yellow-600 to-yellow-800 rounded-b-lg transform ${legPos === 0 ? '' : legPos === 1 ? 'translate-x-1 -translate-y-1' : 'translate-x-2 -translate-y-2'}`}></div>
+        <div className={`absolute bottom-0 right-2 w-3 h-5 bg-gradient-to-b from-yellow-600 to-yellow-800 rounded-b-lg transform ${legPos === 0 ? '' : legPos === 2 ? 'translate-x-1 -translate-y-1' : '-translate-x-2 -translate-y-2'}`}></div>
+
+        {/* Shadow */}
+        <div
+          className="absolute w-10 h-2 bg-black bg-opacity-20 rounded-full"
+          style={{
+            bottom: '-10px', // Position below the character
+            left: '1px',
+            transform: `scale(${1 - characterPos/100})`, // Scale shadow based on jump height
+            opacity: 1 - characterPos/100 // Fade shadow based on jump height
+          }}
+        ></div>
 
         {/* Damage Effect on Character */}
         {showCharacterDamageEffect && (
