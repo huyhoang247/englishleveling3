@@ -135,11 +135,11 @@ const GameLevelSystem = () => {
   const levelPercentage = (currentRankProgress / currentRankTotal) * 100;
 
   // Level up effects
-  const [glowing, setGlowing] = useState(false);
-  const [showLevelUp, setShowLevelUp] = useState(false);
-  const [floatingText, setFloatingText] = useState({ show: false, text: '', color: '' });
-  const [showRankUp, setShowRankUp] = useState(false);
-  const [oldRank, setOldRank] = useState('');
+  // const [glowing, setGlowing] = useState(false); // Removed
+  // const [showLevelUp, setShowLevelUp] = useState(false); // Removed
+  // const [floatingText, setFloatingText] = useState({ show: false, text: '', color: '' }); // Removed
+  // const [showRankUp, setShowRankUp] = useState(false); // Removed
+  // const [oldRank, setOldRank] = useState(''); // Removed
 
   // Simulate EXP gain
   const increaseExp = () => {
@@ -149,14 +149,14 @@ const GameLevelSystem = () => {
         exp: Math.min(prev.exp + 200, prev.maxExp)
       }));
 
-      showFloatingText('+200 EXP', 'text-blue-400');
+      // showFloatingText('+200 EXP', 'text-blue-400'); // Removed
     } else {
       // Check rank before level up
       const currentRank = getRank(playerStats.level).name;
 
       // Level up
-      setGlowing(true);
-      setShowLevelUp(true);
+      // setGlowing(true); // Removed
+      // setShowLevelUp(true); // Removed
 
       setPlayerStats(prev => {
         const newLevel = prev.level + 1;
@@ -164,13 +164,13 @@ const GameLevelSystem = () => {
         const newRank = getRank(newLevel).name;
 
         // If rank changed, show rank up notification
-        if (newRank !== currentRank) {
-          setOldRank(currentRank);
-          setShowRankUp(true);
-          setTimeout(() => {
-            setShowRankUp(false);
-          }, 3000);
-        }
+        // if (newRank !== currentRank) { // Removed
+        //   setOldRank(currentRank); // Removed
+        //   setShowRankUp(true); // Removed
+        //   setTimeout(() => { // Removed
+        //     setShowRankUp(false); // Removed
+        //   }, 3000); // Removed
+        // } // Removed
 
         return {
           ...prev,
@@ -181,12 +181,12 @@ const GameLevelSystem = () => {
         };
       });
 
-      setTimeout(() => {
-        setGlowing(false);
-        setShowLevelUp(false);
-      }, 2000);
+      // setTimeout(() => { // Removed
+      //   setGlowing(false); // Removed
+      //   setShowLevelUp(false); // Removed
+      // }, 2000); // Removed
 
-      showFloatingText('+50 Gems', 'text-purple-400', 500);
+      // showFloatingText('+50 Gems', 'text-purple-400', 500); // Removed
     }
   };
 
@@ -202,9 +202,11 @@ const GameLevelSystem = () => {
         stars: Math.min(prev.stars + 2, prev.maxStars)
       }));
 
-      showFloatingText('-10 Energy', 'text-yellow-400');
-      showFloatingText('+1 Floor', 'text-green-400', 300);
-      showFloatingText('+10 Gems', 'text-purple-400', 600);
+      // showFloatingText('-10 Energy', 'text-yellow-400'); // Removed
+      // showFloatingText('+1 Floor', 'text-green-400', 300); // Removed
+      // showFloatingText('+10 Gems', 'text-purple-400', 600); // Removed
+    } else {
+      // showFloatingText('Not enough gems!', 'text-red-400'); // Removed
     }
   };
 
@@ -217,94 +219,61 @@ const GameLevelSystem = () => {
         gems: prev.gems - 20
       }));
 
-      showFloatingText('+25 Energy', 'text-yellow-400');
-      showFloatingText('-20 Gems', 'text-purple-400', 300);
+      // showFloatingText('+25 Energy', 'text-yellow-400'); // Removed
+      // showFloatingText('-20 Gems', 'text-purple-400', 300); // Removed
     } else {
-      showFloatingText('Not enough gems!', 'text-red-400');
+      // showFloatingText('Not enough gems!', 'text-red-400'); // Removed
     }
   };
 
   // Show floating text animation
-  const showFloatingText = (text, color, delay = 0) => {
-    setTimeout(() => {
-      setFloatingText({ show: true, text, color });
-      setTimeout(() => setFloatingText({ show: false, text: '', color: '' }), 1000);
-    }, delay);
-  };
+  // const showFloatingText = (text, color, delay = 0) => { // Removed
+  //   setTimeout(() => { // Removed
+  //     setFloatingText({ show: true, text, color }); // Removed
+  //     setTimeout(() => setFloatingText({ show: false, text: '', color: '' }), 1000); // Removed
+  //   }, delay); // Removed
+  // }; // Removed
 
   // Particle effect on level up
-  const [particles, setParticles] = useState([]);
+  // const [particles, setParticles] = useState([]); // Removed
 
-  useEffect(() => {
-    if (glowing) {
-      const newParticles = [];
-      for (let i = 0; i < 20; i++) {
-        newParticles.push({
-          id: i,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          size: Math.random() * 6 + 2,
-          color: ['bg-yellow-400', 'bg-blue-400', 'bg-purple-400'][Math.floor(Math.random() * 3)]
-        });
-      }
-      setParticles(newParticles);
-    } else {
-      setParticles([]);
-    }
-  }, [glowing]);
+  // useEffect(() => { // Removed
+  //   if (glowing) { // Removed
+  //     const newParticles = []; // Removed
+  //     for (let i = 0; i < 20; i++) { // Removed
+  //       newParticles.push({ // Removed
+  //         id: i, // Removed
+  //         x: Math.random() * 100, // Removed
+  //         y: Math.random() * 100, // Removed
+  //         size: Math.random() * 6 + 2, // Removed
+  //         color: ['bg-yellow-400', 'bg-blue-400', 'bg-purple-400'][Math.floor(Math.random() * 3)] // Removed
+  //       }); // Removed
+  //     } // Removed
+  //     setParticles(newParticles); // Removed
+  //   } else { // Removed
+  //     setParticles([]); // Removed
+  //   } // Removed
+  // }, [glowing]); // Removed
+
+  // Determine if glowing effect should be applied based on level up or rank up (if they were still active)
+  // Since animations are removed, glowing is always false now.
+  const glowing = false;
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-indigo-950 text-white p-4">
       <div className="relative">
         {/* Level Up Animation */}
-        {showLevelUp && (
-          <div className="absolute -top-20 left-0 right-0 text-center">
-            <div className="text-yellow-300 text-2xl font-bold animate-bounce flex items-center justify-center">
-              {/* Thay thế ChevronUp bằng IconSVG */}
-              <IconSVG icon="chevronUp" size={24} />
-              <span>LEVEL UP!</span>
-              {/* Thay thế ChevronUp bằng IconSVG */}
-              <IconSVG icon="chevronUp" size={24} />
-            </div>
-          </div>
-        )}
+        {/* Removed */}
 
         {/* Rank Up Animation */}
-        {showRankUp && (
-          <div className="absolute -top-32 left-0 right-0 text-center">
-            <div className={`bg-gradient-to-r ${playerRank.color} px-4 py-2 rounded-lg shadow-lg animate-pulse-scale`}>
-              <div className="text-white text-xl font-bold flex items-center justify-center">
-                {/* Thay thế Award bằng IconSVG */}
-                <IconSVG icon="award" size={24} className="mr-2" />
-                <span>RANK UP: {oldRank} → {playerRank.name}!</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Removed */}
 
         {/* Floating text animation */}
-        {floatingText.show && (
-          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 animate-float">
-            <div className={`${floatingText.color} font-bold text-lg`}>
-              {floatingText.text}
-            </div>
-          </div>
-        )}
+        {/* Removed */}
 
         {/* Particle effect */}
-        {particles.map(p => (
-          <div
-            key={p.id}
-            className={`absolute rounded-full ${p.color} animate-particle opacity-70`}
-            style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              width: `${p.size}px`,
-              height: `${p.size}px`,
-              animationDelay: `${Math.random() * 2}s`
-            }}
-          />
-        ))}
+        {/* Removed */}
 
         <div className={`w-full max-w-lg bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-indigo-500/30 ${glowing ? 'ring-4 ring-yellow-400 animate-pulse shadow-yellow-400/50' : ''}`}>
 
