@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Star } from 'lucide-react'; // Removed Activity and Heart icons
+// Removed Trophy and Star icons as score and high score are removed
+// import { Trophy, Star } from 'lucide-react';
 
 export default function ObstacleRunnerGame() {
   // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
-  const [score, setScore] = useState(0); // Player's score
+  // Removed score state
+  // const [score, setScore] = useState(0); // Player's score
   const MAX_HEALTH = 3000; // Define max health
   const [health, setHealth] = useState(MAX_HEALTH); // Player's health, initialized to max
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
@@ -15,18 +17,21 @@ export default function ObstacleRunnerGame() {
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
-  const [isPaused, setIsPaused] = useState(false); // Tracks if the game is paused
-  const [highScore, setHighScore] = useState(0); // Stores the high score
+  // Removed isPaused state
+  // const [isPaused, setIsPaused] = useState(false); // Tracks if the game is paused
+  // Removed high score state
+  // const [highScore, setHighScore] = useState(0); // Stores the high score
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
 
-  // Define the new ground level percentage
-  const GROUND_LEVEL_PERCENT = 35; // Increased from 25%
+  // Define the new ground level percentage (Increased from 35% to 45%)
+  const GROUND_LEVEL_PERCENT = 45;
 
   // Refs for timers to manage intervals and timeouts
   const gameRef = useRef(null); // Ref for the main game container div
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
-  const scoreTimerRef = useRef(null); // Timer for incrementing score
+  // Removed scoreTimerRef
+  // const scoreTimerRef = useRef(null); // Timer for incrementing score
   const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
   // cloudTimerRef is removed, no need to clear it here
@@ -44,13 +49,15 @@ export default function ObstacleRunnerGame() {
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
-    setScore(0);
+    // Removed score reset
+    // setScore(0);
     setHealth(MAX_HEALTH); // Start with max health
     setCharacterPos(0); // Character starts on the ground (relative to ground level)
     setObstacles([]);
     setParticles([]);
     setIsRunning(true);
-    setIsPaused(false);
+    // Removed setIsPaused(false)
+    // setIsPaused(false);
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
 
@@ -85,16 +92,16 @@ export default function ObstacleRunnerGame() {
     // Generate dust particles periodically
     particleTimerRef.current = setInterval(generateParticles, 300);
 
-    // Score incrementer with increasing difficulty over time
-    scoreTimerRef.current = setInterval(() => {
-      if (!isPaused) { // Only increment score if not paused
-        setScore(prevScore => {
-          // Higher score increment as game progresses (score increases)
-          const increment = Math.floor(prevScore / 1000) + 1;
-          return prevScore + increment;
-        });
-      }
-    }, 100); // Increment score every 100ms
+    // Removed score incrementer
+    // scoreTimerRef.current = setInterval(() => {
+    //   if (!isPaused) { // Only increment score if not paused
+    //     setScore(prevScore => {
+    //       // Higher score increment as game progresses (score increases)
+    //       const increment = Math.floor(prevScore / 1000) + 1;
+    //       return prevScore + increment;
+    //     });
+    //   }
+    // }, 100); // Increment score every 100ms
 
     // Schedule the first obstacle after the initial ones
     scheduleNextObstacle();
@@ -106,18 +113,19 @@ export default function ObstacleRunnerGame() {
       setGameOver(true);
       setIsRunning(false);
       // Clear all active timers
-      clearInterval(scoreTimerRef.current);
+      // Removed scoreTimerRef clear
+      // clearInterval(scoreTimerRef.current);
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
       // cloudTimerRef.current is removed, no need to clear it here
 
-      // Update high score if the current score is higher
-      if (score > highScore) {
-        setHighScore(score);
-      }
+      // Removed high score update logic
+      // if (score > highScore) {
+      //   setHighScore(score);
+      // }
     }
-  }, [health, gameStarted, score, highScore]); // Dependencies for this effect
+  }, [health, gameStarted]); // Dependencies for this effect (removed score and highScore)
 
   // Generate initial cloud elements (called only once at game start)
   const generateInitialClouds = (count) => {
@@ -137,7 +145,8 @@ export default function ObstacleRunnerGame() {
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    if (!gameStarted || gameOver || isPaused) return; // Only generate if game is active and not paused
+    // Removed isPaused check
+    if (!gameStarted || gameOver) return; // Only generate if game is active and not paused
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) { // Generate 2 particles at a time
@@ -161,9 +170,8 @@ export default function ObstacleRunnerGame() {
     if (runAnimationRef.current) clearInterval(runAnimationRef.current); // Clear any existing animation timer
 
     runAnimationRef.current = setInterval(() => {
-      if (!isPaused) { // Only update animation frame if not paused
-        setRunFrame(prev => (prev + 1) % runFrames.length); // Cycle through run frames
-      }
+      // Removed isPaused check
+      setRunFrame(prev => (prev + 1) % runFrames.length); // Cycle through run frames
     }, 150); // Update frame every 150ms
   };
 
@@ -174,35 +182,36 @@ export default function ObstacleRunnerGame() {
     // Random time delay before the next obstacle appears (between 5 and 20 seconds)
     const randomTime = Math.floor(Math.random() * 15000) + 5000;
     obstacleTimerRef.current = setTimeout(() => {
-      if (!isPaused) { // Only generate obstacles if not paused
-        // Create a group of 1 to 3 obstacles
-        const obstacleCount = Math.floor(Math.random() * 3) + 1;
-        const newObstacles = [];
+      // Removed isPaused check
+      // Create a group of 1 to 3 obstacles
+      const obstacleCount = Math.floor(Math.random() * 3) + 1;
+      const newObstacles = [];
 
-        for (let i = 0; i < obstacleCount; i++) {
-          // Ensure we only pick from the remaining obstacle types
-          const randomObstacle = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-          // Add spacing between grouped obstacles
-          const spacing = i * (Math.random() * 10 + 10);
+      for (let i = 0; i < obstacleCount; i++) {
+        // Ensure we only pick from the remaining obstacle types
+        const randomObstacle = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+        // Add spacing between grouped obstacles
+        const spacing = i * (Math.random() * 10 + 10);
 
-          newObstacles.push({
-            id: Date.now() + i, // Unique ID
-            position: 100 + spacing, // Position off-screen to the right with spacing
-            ...randomObstacle // Include obstacle properties
-          });
-        }
-
-        // Add new obstacles to the existing array
-        setObstacles(prev => [...prev, ...newObstacles]);
+        newObstacles.push({
+          id: Date.now() + i, // Unique ID
+          position: 100 + spacing, // Position off-screen to the right with spacing
+          ...randomObstacle // Include obstacle properties
+        });
       }
+
+      // Add new obstacles to the existing array
+      setObstacles(prev => [...prev, ...newObstacles]);
+
       scheduleNextObstacle(); // Schedule the next obstacle recursively
     }, randomTime);
   };
 
   // Handle character jump action
   const jump = () => {
-    // Check if not already jumping, game is started, not over, and not paused
-    if (!jumping && !gameOver && gameStarted && !isPaused) {
+    // Removed isPaused check
+    // Check if not already jumping, game is started, not over
+    if (!jumping && !gameOver && gameStarted) {
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
@@ -222,18 +231,18 @@ export default function ObstacleRunnerGame() {
   const handleTap = () => {
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver && !isPaused) {
+    } else if (!gameOver) { // Removed isPaused check
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
     }
   };
 
-  // Toggle pause state
-  const togglePause = (e) => {
-    e.stopPropagation(); // Prevent event from bubbling up to the game area tap handler
-    setIsPaused(prev => !prev); // Toggle the pause state
-  };
+  // Removed togglePause function
+  // const togglePause = (e) => {
+  //   e.stopPropagation(); // Prevent event from bubbling up to the game area tap handler
+  //   setIsPaused(prev => !prev); // Toggle the pause state
+  // };
 
   // Trigger health bar damage effect (still useful visual cue)
   const triggerHealthDamageEffect = () => {
@@ -254,20 +263,18 @@ export default function ObstacleRunnerGame() {
 
   // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
-    if (!gameStarted || gameOver || isPaused) return; // Only run if game is active and not paused
+    // Removed isPaused check
+    if (!gameStarted || gameOver) return; // Only run if game is active and not paused
 
-    // Game speed increases with score
-    const baseSpeed = 2;
-    const speedMultiplier = 1 + Math.min(score / 1000, 1); // Speed increases up to 2x based on score
+    // Game speed is now constant as score is removed
+    const speed = 2;
 
     const moveInterval = setInterval(() => {
       // Move obstacles and handle endless loop effect
       setObstacles(prevObstacles => {
         return prevObstacles
           .map(obstacle => {
-            // Calculate speed based on obstacle type (birds are slightly faster) and game speed multiplier
             // Speed is now consistent for all ground obstacles
-            const speed = 2 * speedMultiplier;
             let newPosition = obstacle.position - speed; // Move obstacle left
 
             // Create infinite loop effect by resetting obstacles that move off-screen
@@ -364,13 +371,15 @@ export default function ObstacleRunnerGame() {
     }, 30); // Interval for movement updates (30ms for smoother animation)
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
+    // Removed isPaused from dependencies
     return () => clearInterval(moveInterval);
-  }, [gameStarted, gameOver, jumping, characterPos, isPaused, score, obstacleTypes]); // Dependencies for this effect
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes]); // Dependencies for this effect (removed score)
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
     return () => {
-      clearInterval(scoreTimerRef.current);
+      // Removed scoreTimerRef clear
+      // clearInterval(scoreTimerRef.current);
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
@@ -604,21 +613,26 @@ export default function ObstacleRunnerGame() {
         </div>
 
 
-        {/* Score display */}
+        {/* Removed score display */}
+        {/*
         <div className="absolute top-2 right-2 bg-black bg-opacity-30 rounded-lg p-1 flex items-center">
           <Trophy className="mr-1 h-4 w-4 text-yellow-400" />
           <span className="font-bold">{score}</span>
         </div>
+        */}
 
-        {/* High score display (only shown if high score is greater than 0) */}
+        {/* Removed high score display */}
+        {/*
         {highScore > 0 && (
           <div className="absolute top-10 right-2 bg-black bg-opacity-30 rounded-lg p-1 flex items-center">
             <Star className="mr-1 h-4 w-4 text-yellow-400" />
             <span className="text-xs">{highScore}</span>
           </div>
         )}
+        */}
 
-        {/* Pause button (only shown when game is started and not over) */}
+        {/* Removed Pause button */}
+        {/*
         {gameStarted && !gameOver && (
           <button
             className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center z-10" // Added z-10 to ensure button is clickable
@@ -636,6 +650,7 @@ export default function ObstacleRunnerGame() {
             )}
           </button>
         )}
+        */}
 
         {/* Start screen (shown when game is not started and not over) */}
         {!gameStarted && !gameOver && (
@@ -654,17 +669,22 @@ export default function ObstacleRunnerGame() {
         {gameOver && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm">
             <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+            {/* Removed score display on game over screen */}
+            {/*
             <div className="flex items-center mb-4">
               <Trophy className="mr-2 text-yellow-400" />
               <p className="text-xl">Điểm số: <span className="font-bold">{score}</span></p>
             </div>
-            {/* Display new high score message if applicable */}
+            */}
+            {/* Removed new high score message */}
+            {/*
             {score >= highScore && score > 0 && (
               <div className="mb-4 py-1 px-3 bg-yellow-500 bg-opacity-30 rounded-full flex items-center">
                 <Star className="mr-1 text-yellow-400" />
                 <span className="text-yellow-300">Kỷ lục mới!</span>
               </div>
             )}
+            */}
             <button
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
               onClick={startGame} // Restart game on click
@@ -674,7 +694,8 @@ export default function ObstacleRunnerGame() {
           </div>
         )}
 
-        {/* Pause screen (shown when game is paused) */}
+        {/* Removed Pause screen */}
+        {/*
         {isPaused && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 backdrop-filter backdrop-blur-sm">
             <h2 className="text-3xl font-bold mb-4">Tạm Dừng</h2>
@@ -686,6 +707,7 @@ export default function ObstacleRunnerGame() {
             </button>
           </div>
         )}
+        */}
       </div>
     </div>
   );
