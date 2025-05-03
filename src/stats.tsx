@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Import React
 
 // Custom Icon component using inline SVG
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -19,6 +19,12 @@ const Icon = ({ name, size = 24, className = '' }) => {
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
   };
+
+  // *** NEW: Check if the icon name exists ***
+  if (!icons[name]) {
+    console.warn(`Icon component: Icon with name "${name}" not found.`);
+    return null; // Return null if icon doesn't exist to prevent rendering errors
+  }
 
   return (
     <svg
@@ -289,9 +295,14 @@ export default function CharacterCard() {
           const isSpecial = stat.name === "HP"; // HP has different display/calculation
           // Check if the stat value has increased in edit mode
           const isIncreased = isEditMode && stats[stat.key] > character.stats[stat.key];
+          // *** NEW: Check if icon is valid before cloning ***
+          const statIconElement = stat.icon && React.isValidElement(stat.icon)
+              ? React.cloneElement(stat.icon, { size: 16 })
+              : null; // Render null if icon is invalid
 
           return (
-            <div key={index} className={`${index >= 4 ? "col-span-1" : ""} bg-white rounded-xl shadow-sm border ${isIncreased ? 'border-green-200' : 'border-gray-100'} overflow-hidden relative transition-all duration-300`}>
+            <div key={stat.key} // Use stat key for more stable key
+                 className={`${index >= 4 ? "col-span-1" : ""} bg-white rounded-xl shadow-sm border ${isIncreased ? 'border-green-200' : 'border-gray-100'} overflow-hidden relative transition-all duration-300`}>
               {/* Subtle background glow effect */}
               <div className={`absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-10 ${colorScheme.bg}`}></div>
 
@@ -307,7 +318,8 @@ export default function CharacterCard() {
                   {/* Icon container */}
                   <div className={`w-8 h-8 ${colorScheme.light} rounded-lg flex items-center justify-center mr-3 relative overflow-hidden`}>
                     <div className={`absolute -bottom-3 -right-3 w-6 h-6 ${colorScheme.bg} opacity-20 rounded-full`}></div>
-                    <span className={colorScheme.text}>{React.cloneElement(stat.icon, { size: 16 })}</span>
+                    {/* Render the validated icon element */}
+                    {statIconElement && <span className={colorScheme.text}>{statIconElement}</span>}
                   </div>
                   {/* Stat name */}
                   <h4 className="text-xs font-semibold text-gray-500">{stat.name}</h4>
@@ -366,16 +378,20 @@ export default function CharacterCard() {
       "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
       "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
     ];
+    // *** NEW: Get icon elements safely ***
+    let skillIcon = null;
+    if (index === 0) skillIcon = <Icon name="Sword" size={14} />;
+    if (index === 1) skillIcon = <Icon name="Shield" size={14} />;
+    if (index === 2) skillIcon = <Icon name="Zap" size={14} />;
+
 
     return (
       <span
         key={index}
         className={`${colors[index % colors.length]} px-4 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-1.5 transition-all hover:scale-105`}
       >
-        {/* Add specific icons based on skill index (example) */}
-        {index === 0 && <Icon name="Sword" size={14} />}
-        {index === 1 && <Icon name="Shield" size={14} />}
-        {index === 2 && <Icon name="Zap" size={14} />}
+        {/* Render the icon only if it's valid */}
+        {skillIcon}
         {skill}
       </span>
     );
