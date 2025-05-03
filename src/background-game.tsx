@@ -1,5 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Import component Stats (Giả định file stats.tsx nằm cùng cấp hoặc trong thư mục src)
+// Bạn sẽ cần thay thế nội dung của component Stats mẫu này bằng nội dung thực tế từ file stats.tsx của bạn.
+interface StatsProps {
+  onClose: () => void; // Prop để đóng màn hình Stats
+}
+
+const Stats: React.FC<StatsProps> = ({ onClose }) => {
+  // Đây là nội dung mẫu cho màn hình Stats.
+  // Bạn hãy thay thế bằng nội dung thực tế từ file stats.tsx của bạn.
+  return (
+    <div className="bg-gradient-to-b from-slate-700 to-slate-900 rounded-2xl p-8 max-w-md w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
+      <h2 className="text-2xl font-bold text-white mb-4">Thống Kê Game</h2>
+      <p className="text-slate-300 mb-6">
+        Đây là nơi hiển thị các số liệu thống kê của người chơi.
+        <br/>
+        (Nội dung này sẽ được thay thế bằng dữ liệu thực tế)
+      </p>
+      {/* Nút đóng màn hình Stats */}
+      <button
+        onClick={onClose}
+        className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white py-2 px-6 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-red-500/30 hover:shadow-red-600/50 hover:scale-105"
+      >
+        Đóng
+      </button>
+    </div>
+  );
+};
+
+
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
 // Star Icon SVG
@@ -105,6 +134,27 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
   </svg>
 );
 
+// Bar Chart 2 Icon SVG (For Stats)
+const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <line x1="18" x2="18" y1="20" y2="10"></line>
+    <line x1="12" x2="12" y1="20" y2="4"></line>
+    <line x1="6" x2="6" y1="20" y2="14"></line>
+  </svg>
+);
+
 
 // Define interface for component props
 interface ObstacleRunnerGameProps {
@@ -143,6 +193,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
+
+  // State để quản lý việc hiển thị màn hình Stats
+  const [showStats, setShowStats] = useState(false);
 
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
@@ -216,6 +269,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShowCharacterDamageEffect(false); // Reset character damage effect state
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
+    setShowStats(false); // Đảm bảo màn hình Stats ẩn khi bắt đầu game
 
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
@@ -286,7 +340,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    if (!gameStarted || gameOver) return; // Only generate if game is active and not paused
+    if (!gameStarted || gameOver || showStats) return; // Chỉ tạo nếu game đang hoạt động, không kết thúc và màn hình stats không hiển thị
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) { // Generate 2 particles at a time
@@ -316,7 +370,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver) return; // Don't schedule if game is over
+    if (gameOver || showStats) return; // Không lên lịch nếu game kết thúc hoặc màn hình stats hiển thị
 
     // Random time delay before the next obstacle appears (between 5 and 20 seconds)
     const randomTime = Math.floor(Math.random() * 15000) + 5000;
@@ -328,8 +382,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       for (let i = 0; i < obstacleCount; i++) {
         // Ensure we only pick from the remaining obstacle types
         const randomObstacle = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-        // Add spacing between grouped obstacles
-        const spacing = i * (Math.random() * 10 + 10);
+        const spacing = i * (Math.random() * 10 + 10); // Add spacing between grouped obstacles
 
         newObstacles.push({
           id: Date.now() + i, // Unique ID
@@ -347,13 +400,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Handle character jump action
   const jump = () => {
-    // Check if not already jumping, game is started, not over, AND card popup is not shown
-    if (!jumping && !gameOver && gameStarted && !showCard) {
+    // Check if not already jumping, game is started, not over, AND card popup or stats popup is not shown
+    if (!jumping && !gameOver && gameStarted && !showCard && !showStats) {
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
       setTimeout(() => {
-        if (gameStarted && !gameOver) { // Ensure game is still active
+        if (gameStarted && !gameOver && !showStats) { // Ensure game is still active and stats not shown
           setCharacterPos(0); // Move character back to ground
           // Schedule setting jumping state to false after a short delay
           setTimeout(() => {
@@ -368,12 +421,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const handleTap = () => {
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver && !showCard) { // Only allow jump if game is active and card is not shown
+    } else if (!gameOver && !showCard && !showStats) { // Chỉ cho phép nhảy nếu game đang hoạt động và popup không hiển thị
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
     }
-    // If showCard is true, taps on the game area are ignored, allowing interaction with the card popup
+    // Nếu showCard hoặc showStats là true, các lần chạm vào khu vực trò chơi sẽ bị bỏ qua
   };
 
 
@@ -402,7 +455,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
-    if (!gameStarted || gameOver) return; // Only run if game is active and not paused
+    if (!gameStarted || gameOver || showStats) return; // Chỉ chạy nếu game đang hoạt động, không kết thúc và màn hình stats không hiển thị
 
     // Game speed is now constant as score is removed
     const speed = 2;
@@ -511,7 +564,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes]); // Dependencies for this effect
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, showStats]); // Thêm showStats vào dependencies
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -1021,7 +1074,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             centered: true
           }
         ].map((item, index) => (
-          <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
+          <div key={index} className="group cursor-pointer" onClick={item.action}> {/* Thêm onClick */}
             {item.special && item.centered ? (
               <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
                 {item.icon}
@@ -1087,8 +1140,21 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             special: true,
             centered: true
           },
+           // Stats icon (NEW)
+          {
+            icon: (
+              <div className="relative">
+                {/* Icon hình biểu đồ/stats */}
+                <BarChart2Icon size={20} color="currentColor" className="text-blue-400" /> {/* Sử dụng BarChart2Icon */}
+              </div>
+            ),
+            label: "Stats",
+            special: true,
+            centered: true,
+            action: () => setShowStats(true) // Thêm action để hiển thị Stats
+          }
         ].map((item, index) => (
-          <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
+          <div key={index} className="group cursor-pointer" onClick={item.action}> {/* Thêm onClick */}
             {item.special && item.centered ? (
                 <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
                     {item.icon}
@@ -1250,6 +1316,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               Tiếp tục
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Màn hình Stats (Hiển thị khi showStats là true) */}
+      {showStats && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Lớp phủ nền */}
+          {/* Truyền hàm để đóng màn hình Stats vào component Stats */}
+          <Stats onClose={() => setShowStats(false)} />
         </div>
       )}
 
