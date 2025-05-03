@@ -1,5 +1,43 @@
 import { useState, useEffect } from 'react';
-import { Shield, Sword, Heart, Stars, Brain, Trophy, Sparkles, Crown, Zap, Target, Crosshair, Plus, Minus, AlertCircle, Gem, Coins, RotateCcw, ArrowRight } from 'lucide-react';
+
+// Custom Icon component using inline SVG
+const Icon = ({ name, size = 24, className = '' }) => {
+  const icons = {
+    Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>,
+    Sword: <path d="M14.5 17.5L3 6 6 3l11.5 11.5L22 11l-3-3 3-3-3-3-3 3-3-3L6 6l11.5 11.5zM14.5 17.5l-3-3M14.5 17.5L11 21l3.5-3.5z"></path>,
+    Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,
+    Stars: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>,
+    Brain: <path d="M12 15c.68-1.32 1-2.8 1-4.4C13 6.4 10.8 2 7.5 2 4.2 2 2 6.4 2 10.6c0 4.2 2.2 8.6 5.5 8.6 2.12 0 3.6-.8 4.5-2.4zM12 15c-.68-1.32-1-2.8-1-4.4C11 6.4 13.2 2 16.5 2c3.3 0 5.5 4.4 5.5 8.6 0 4.2-2.2 8.6-5.5 8.6-2.12 0-3.6-.8-4.5-2.4z"></path>,
+    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
+    Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>,
+    Crosshair: <g><circle cx="12" cy="12" r="10"></circle><path d="M22 12h-4"></path><path d="M6 12H2"></path><path d="M12 6V2"></path><path d="M12 22v-4"></path></g>,
+    Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
+    Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
+    AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
+    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M2 9l10 13 10-13"></path><path d="M12 2v20"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path></g>,
+    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
+    RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
+    ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
+  };
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`lucide lucide-${name.toLowerCase()} ${className}`}
+    >
+      {icons[name]}
+    </svg>
+  );
+};
+
 
 export default function CharacterCard() {
   const [character, setCharacter] = useState({
@@ -218,12 +256,12 @@ export default function CharacterCard() {
   const renderStats = (isEditMode = false) => {
     const stats = isEditMode ? tempStats : character.stats;
     const statsList = [
-      { name: "ATK", value: stats.atk, icon: <Sword size={18} />, color: "rose", key: "atk" },
-      { name: "DEF", value: stats.def, icon: <Shield size={18} />, color: "blue", key: "def" },
-      { name: "HP", value: stats.hp, icon: <Heart size={18} />, color: "red", key: "hp" },
-      { name: "LUCK", value: stats.luck, icon: <Stars size={18} />, color: "purple", key: "luck" },
-      { name: "INT", value: stats.wit, icon: <Brain size={18} />, color: "emerald", key: "wit" },
-      { name: "CRT", value: stats.crt, icon: <Crosshair size={18} />, color: "amber", key: "crt" }
+      { name: "ATK", value: stats.atk, icon: <Icon name="Sword" size={18} />, color: "rose", key: "atk" },
+      { name: "DEF", value: stats.def, icon: <Icon name="Shield" size={18} />, color: "blue", key: "def" },
+      { name: "HP", value: stats.hp, icon: <Icon name="Heart" size={18} />, color: "red", key: "hp" },
+      { name: "LUCK", value: stats.luck, icon: <Icon name="Stars" size={18} />, color: "purple", key: "luck" },
+      { name: "INT", value: stats.wit, icon: <Icon name="Brain" size={18} />, color: "emerald", key: "wit" },
+      { name: "CRT", value: stats.crt, icon: <Icon name="Crosshair" size={18} />, color: "amber", key: "crt" }
     ];
 
     const getStatColor = (statColor) => {
@@ -275,7 +313,7 @@ export default function CharacterCard() {
                       disabled={stats[stat.key] <= character.stats[stat.key]}
                       className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key] <= character.stats[stat.key] ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`} // Set fixed size and added flex centering
                     >
-                      <Minus size={16} /> {/* Increased icon size slightly for better touch target */}
+                      <Icon name="Minus" size={16} /> {/* Increased icon size slightly for better touch target */}
                     </button>
 
                     {/* Wrapper div for stat value to ensure centering */}
@@ -291,7 +329,7 @@ export default function CharacterCard() {
                       disabled={statPoints <= 0}
                       className={`flex items-center justify-center w-6 h-6 rounded-md ${statPoints <= 0 ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`} // Set fixed size and added flex centering
                     >
-                      <Plus size={16} /> {/* Increased icon size slightly */}
+                      <Icon name="Plus" size={16} /> {/* Increased icon size slightly */}
                     </button>
                   </div>
                 ) : (
@@ -323,9 +361,9 @@ export default function CharacterCard() {
         key={index}
         className={`${colors[index % colors.length]} px-4 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-1.5 transition-all hover:scale-105`}
       >
-        {index === 0 && <Sword size={14} />}
-        {index === 1 && <Shield size={14} />}
-        {index === 2 && <Zap size={14} />}
+        {index === 0 && <Icon name="Sword" size={14} />}
+        {index === 1 && <Icon name="Shield" size={14} />}
+        {index === 2 && <Icon name="Zap" size={14} />}
         {skill}
       </span>
     );
@@ -342,7 +380,7 @@ export default function CharacterCard() {
           <div className="bg-gradient-to-br from-purple-500 to-blue-600 text-white p-4 rounded-xl mb-4 shadow-lg">
             <div className="flex items-center">
               <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center mr-4">
-                <RotateCcw size={24} className="text-white" />
+                <Icon name="RotateCcw" size={24} className="text-white" />
               </div>
               <div>
                 <h3 className="font-bold text-xl">Reset Chỉ Số</h3>
@@ -353,7 +391,7 @@ export default function CharacterCard() {
 
           <div className="mb-4 bg-amber-50 p-4 rounded-lg border border-amber-200">
             <div className="flex">
-              <AlertCircle size={20} className="text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
+              <Icon name="AlertCircle" size={20} className="text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-bold text-amber-800 text-sm mb-1">Lưu ý quan trọng</h4>
                 <p className="text-amber-700 text-sm">
@@ -368,7 +406,7 @@ export default function CharacterCard() {
             <h4 className="text-sm font-medium text-gray-600 mb-2">Bạn sẽ nhận được:</h4>
             <div className="flex items-center bg-white p-3 rounded-lg border border-blue-100">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3">
-                <Gem size={16} className="text-white" />
+                <Icon name="Gem" size={16} className="text-white" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-gray-700">Điểm Tiềm Năng</p>
@@ -394,7 +432,7 @@ export default function CharacterCard() {
               {resetAnimation ?
                 'Đang reset...' :
                 <>
-                  <RotateCcw size={16} />
+                  <Icon name="RotateCcw" size={16} />
                   Reset
                 </>
               }
@@ -441,7 +479,7 @@ export default function CharacterCard() {
                   'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <Coins size={16} />
+                <Icon name="Coins" size={16} />
                 Coin → Point
               </button>
               <button
@@ -452,7 +490,7 @@ export default function CharacterCard() {
                   'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <Gem size={16} />
+                <Icon name="Gem" size={16} />
                 Point → Coin
               </button>
             </div>
@@ -479,7 +517,7 @@ export default function CharacterCard() {
                 onClick={() => adjustExchangeAmount(-100)}
                 className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
               >
-                <Minus size={18} />
+                <Icon name="Minus" size={18} />
               </button>
 
               <div className="flex-1 mx-2">
@@ -495,7 +533,7 @@ export default function CharacterCard() {
                 onClick={() => adjustExchangeAmount(100)}
                 className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
               >
-                <Plus size={18} />
+                <Icon name="Plus" size={18} />
               </button>
             </div>
 
@@ -514,12 +552,12 @@ export default function CharacterCard() {
                 {exchangeDirection === 'coinToPoint' ? (
                   <div className="w-full h-full relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
-                    <Gem size={24} className="absolute inset-0 m-auto text-white" />
+                    <Icon name="Gem" size={24} className="absolute inset-0 m-auto text-white" />
                   </div>
                 ) : (
                   <div className="w-full h-full relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 animate-pulse"></div>
-                    <Coins size={24} className="absolute inset-0 m-auto text-white" />
+                    <Icon name="Coins" size={24} className="absolute inset-0 m-auto text-white" />
                   </div>
                 )}
               </div>
@@ -540,7 +578,7 @@ export default function CharacterCard() {
           {!hasEnoughResources() && (
             <div className="mb-4 bg-red-50 p-3 rounded-lg border border-red-200">
               <div className="flex">
-                <AlertCircle size={20} className="text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                <Icon name="AlertCircle" size={20} className="text-red-500 mr-2 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-red-800 text-sm">Không đủ tài nguyên</h4>
                   <p className="text-red-700 text-xs">
@@ -590,15 +628,15 @@ export default function CharacterCard() {
         }}></div>
 
         {/* Coin and Points Badges container with glassmorphism */}
-        {/* Added z-10 to ensure this container is above the gradient overlay */}
-        <div className="absolute top-4 right-4 flex items-center space-x-2 overflow-hidden
+        {/* Adjusted top position from top-4 to top-2 */}
+        <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
                     backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
                     border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10"> {/* Added glassmorphism classes and z-10 */}
           {/* Coin Badge */}
           <div className="overflow-hidden">
             <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}> {/* Added pulse class */}
               <div className="w-4 h-4 mr-1.5 relative">
-                <Coins size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
+                <Icon name="Coins" size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
                 <div className="absolute inset-0 bg-yellow-200 blur-md opacity-30"></div>
               </div>
               <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
@@ -608,7 +646,7 @@ export default function CharacterCard() {
                   className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
                   title="Chuyển đổi Coin sang Point"
                 >
-                  <Plus size={10} className="text-white" />
+                  <Icon name="Plus" size={10} className="text-white" />
                 </button>
             </div>
           </div>
@@ -626,7 +664,7 @@ export default function CharacterCard() {
           <div className="overflow-hidden"> {/* Wrapped Points Badge in div */}
             <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}> {/* Added pulse class */}
               <div className="w-4 h-4 mr-1.5 relative">
-                <Gem size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
+                <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
                 <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
               </div>
               <span className="text-xs font-bold text-white">{statPoints}</span>
@@ -636,7 +674,7 @@ export default function CharacterCard() {
                 className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Added invisible and pointer-events-none
                 disabled={!(!showPointsPanel && statPoints > 0)} // Disable when invisible
               >
-                <Plus size={10} className="text-white" />
+                <Icon name="Plus" size={10} className="text-white" />
               </button>
             </div>
           </div>
@@ -656,7 +694,7 @@ export default function CharacterCard() {
         <div className="mb-8"> {/* Reverted bottom margin to mb-8 */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
-                <Trophy size={16} className="mr-2 text-gray-500" /> STATS
+                <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
               </h3>
 
               {statPoints > 0 && !showPointsPanel && (
@@ -664,16 +702,16 @@ export default function CharacterCard() {
                   onClick={() => setShowPointsPanel(true)}
                   className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-medium shadow-md transition-all hover:shadow-lg flex items-center gap-1.5"
                 >
-                  <Plus size={14} />
+                  <Icon name="Plus" size={14} />
                   Phân bổ {statPoints} điểm
                 </button>
               )}
 
               {!statPoints && !showPointsPanel && (
                 <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
+                  {/* Replaced SVG with a simple circle/dot representation */}
                   <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                    <path fillRule="evenodd" clipRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    <circle cx="10" cy="10" r="3"></circle>
                   </svg>
                   Chi tiết
                 </div>
@@ -686,7 +724,7 @@ export default function CharacterCard() {
                 {/* Header with icon and remaining points */}
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
-                    <Plus size={20} className="text-white" />
+                    <Icon name="Plus" size={20} className="text-white" />
                   </div>
                   <div>
                      {/* Removed "Phân Bổ Điểm Kỹ Năng" title */}
@@ -699,7 +737,7 @@ export default function CharacterCard() {
 
                 {/* Tip */}
                 <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start"> {/* Added mt-4 */}
-                  <AlertCircle size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-blue-800">
                     <p className="font-medium mb-1">Mẹo phân bổ điểm:</p>
                     <ul className="list-disc pl-4 space-y-1">
@@ -737,7 +775,7 @@ export default function CharacterCard() {
         {/* Skills */}
         <div className="mb-8"> {/* Reverted bottom margin to mb-8 */}
           <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
-            <Zap size={16} className="mr-2 text-gray-400" /> SKILLS
+            <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
           </h3>
           <div className="flex flex-wrap gap-3">
             {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
@@ -760,9 +798,9 @@ export default function CharacterCard() {
             <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
 
             <div className="flex items-center gap-2 relative">
-              <RotateCcw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+              <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
               <span>Reset Chỉ Số</span>
-              <ArrowRight size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+              <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
             </div>
 
             {/* Tooltip */}
