@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+// Import the CharacterCard component
+import CharacterCard from './stats'; // Assuming stats.tsx is in the same directory
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
@@ -105,6 +107,26 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
   </svg>
 );
 
+// X Icon SVG (for closing modal)
+const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
 
 // Define interface for component props
 interface ObstacleRunnerGameProps {
@@ -143,6 +165,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
+  const [showStatsModal, setShowStatsModal] = useState(false); // <-- NEW: State for stats modal visibility
 
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
@@ -216,6 +239,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShowCharacterDamageEffect(false); // Reset character damage effect state
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
+    setShowStatsModal(false); // <-- NEW: Ensure stats modal is closed on game start/restart
 
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
@@ -347,8 +371,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Handle character jump action
   const jump = () => {
-    // Check if not already jumping, game is started, not over, AND card popup is not shown
-    if (!jumping && !gameOver && gameStarted && !showCard) {
+    // Check if not already jumping, game is started, not over, AND card popup/stats modal is not shown
+    if (!jumping && !gameOver && gameStarted && !showCard && !showStatsModal) { // <-- NEW: Check showStatsModal
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
@@ -368,12 +392,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const handleTap = () => {
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver && !showCard) { // Only allow jump if game is active and card is not shown
+    } else if (!gameOver && !showCard && !showStatsModal) { // <-- NEW: Check showStatsModal
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
     }
-    // If showCard is true, taps on the game area are ignored, allowing interaction with the card popup
+    // If showCard or showStatsModal is true, taps on the game area are ignored
   };
 
 
@@ -402,7 +426,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
-    if (!gameStarted || gameOver) return; // Only run if game is active and not paused
+    // <-- NEW: Don't run movement if stats modal is open
+    if (!gameStarted || gameOver || showStatsModal) return;
 
     // Game speed is now constant as score is removed
     const speed = 2;
@@ -511,7 +536,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes]); // Dependencies for this effect
+    // <-- NEW: Add showStatsModal to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, showStatsModal]);
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -712,7 +738,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Function to open the chest
   const openChest = () => {
-    if (isChestOpen || chestsRemaining <= 0) return;
+    // <-- NEW: Prevent opening chest if stats modal is open
+    if (isChestOpen || chestsRemaining <= 0 || showStatsModal) return;
     setChestShake(true);
     setTimeout(() => {
       setChestShake(false);
@@ -747,6 +774,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     if (pendingCoinReward > 0) {
         startCoinCountAnimation(pendingCoinReward);
     }
+  };
+
+  // <-- NEW: Function to toggle stats modal
+  const toggleStatsModal = () => {
+    // Prevent opening if game over or card is shown
+    if (gameOver || showCard) return;
+    setShowStatsModal(!showStatsModal);
   };
 
 
@@ -862,8 +896,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Health Bar and Icon */}
           <div className="flex items-center">
               {/* ICON TRÒN - Round Icon */}
-              <div className="relative mr-2"> {/* Reduced margin-right */}
-                  <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg"> {/* Reduced size */}
+              {/* <-- NEW: Added onClick handler and cursor-pointer */}
+              <div
+                className="relative mr-2 cursor-pointer"
+                onClick={toggleStatsModal}
+                title="Xem chỉ số nhân vật" // Tooltip
+              >
+                  <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform"> {/* Reduced size, added hover effect */}
                       {/* Overlay for subtle effect */}
                       <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
                       {/* Inner icon elements */}
@@ -969,7 +1008,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* Game over screen (shown when game is over) */}
         {gameOver && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-20"> {/* Added z-index */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40"> {/* Increased z-index */}
             <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
             <button
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
@@ -1110,7 +1149,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          onClick={!isChestOpen && chestsRemaining > 0 ? openChest : null}
+          // <-- NEW: Disable click if stats modal is open
+          onClick={!isChestOpen && chestsRemaining > 0 && !showStatsModal ? openChest : null}
           aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
           tabIndex={chestsRemaining > 0 ? 0 : -1}
@@ -1251,6 +1291,26 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             </button>
           </div>
         </div>
+      )}
+
+      {/* <-- NEW: Stats Modal --> */}
+      {showStatsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+              {/* Modal Content */}
+              <div className="relative max-w-lg w-full"> {/* Container for CharacterCard and close button */}
+                  {/* Character Card Component */}
+                  <CharacterCard />
+
+                  {/* Close Button */}
+                  <button
+                      onClick={toggleStatsModal}
+                      className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-50"
+                      aria-label="Đóng cửa sổ chỉ số"
+                  >
+                      <XIcon size={20} />
+                  </button>
+              </div>
+          </div>
       )}
 
     </div>
