@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 // Import the CharacterCard component
-import CharacterCard from './stats'; // Assuming stats.tsx is in the same directory
+import CharacterCard from './stats.tsx'; // Assuming stats.tsx is in the same directory
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
