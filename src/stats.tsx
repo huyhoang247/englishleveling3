@@ -20,7 +20,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
   };
 
-  // *** NEW: Check if the icon name exists ***
+  // Check if the icon name exists
   if (!icons[name]) {
     console.warn(`Icon component: Icon with name "${name}" not found.`);
     return null; // Return null if icon doesn't exist to prevent rendering errors
@@ -295,7 +295,7 @@ export default function CharacterCard() {
           const isSpecial = stat.name === "HP"; // HP has different display/calculation
           // Check if the stat value has increased in edit mode
           const isIncreased = isEditMode && stats[stat.key] > character.stats[stat.key];
-          // *** NEW: Check if icon is valid before cloning ***
+          // Check if icon is valid before cloning
           const statIconElement = stat.icon && React.isValidElement(stat.icon)
               ? React.cloneElement(stat.icon, { size: 16 })
               : null; // Render null if icon is invalid
@@ -378,7 +378,7 @@ export default function CharacterCard() {
       "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
       "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
     ];
-    // *** NEW: Get icon elements safely ***
+    // Get icon elements safely
     let skillIcon = null;
     if (index === 0) skillIcon = <Icon name="Sword" size={14} />;
     if (index === 1) skillIcon = <Icon name="Shield" size={14} />;
@@ -664,12 +664,12 @@ export default function CharacterCard() {
 
 
   return (
-    // Main card container with conditional glow effect
-    <div className={`max-w-lg mx-auto rounded-3xl shadow-2xl overflow-hidden transition-all duration-700 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'}`}
+    // *** MODIFIED: Added overflow-y-auto and max-h ***
+    <div className={`max-w-lg mx-auto rounded-3xl shadow-2xl overflow-hidden transition-all duration-700 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-y-auto max-h-[85vh]`}
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
       {/* Header section with background pattern */}
-      <div className="h-32 relative bg-white">
+      <div className="h-32 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
         {/* Background pattern overlay */}
         <div className="absolute inset-0" style={{
           backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
@@ -731,7 +731,7 @@ export default function CharacterCard() {
       </div>
 
       {/* Main content area */}
-      <div className="px-8 pt-4">
+      <div className="px-8 pt-4"> {/* Removed flex-grow as scrolling is handled by parent */}
         {/* Empty div (previously held title/level) */}
         <div className="flex flex-col mb-2">
         </div>
@@ -834,7 +834,7 @@ export default function CharacterCard() {
       </div>
 
       {/* Footer Section */}
-      <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200">
+      <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
         <div className="flex justify-between items-center">
           {/* Character ID */}
           <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
