@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Time from './time';
+import Time from './time.tsx';
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
