@@ -18,6 +18,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
   // Check if the icon name exists
@@ -44,8 +45,14 @@ const Icon = ({ name, size = 24, className = '' }) => {
   );
 };
 
+// Define props interface, including the new onClose prop
+interface CharacterCardProps {
+  onClose?: () => void; // Optional function to call when closing
+}
 
-export default function CharacterCard() {
+
+// Update component signature to accept onClose prop
+export default function CharacterCard({ onClose }: CharacterCardProps) {
   // State for character data
   const [character, setCharacter] = useState({
     title: "Chiến Binh", // Giữ nguyên state nhưng không hiển thị
@@ -664,207 +671,226 @@ export default function CharacterCard() {
 
 
   return (
-    // *** MODIFIED: Added overflow-y-auto and max-h ***
-    <div className={`max-w-lg mx-auto rounded-3xl shadow-2xl overflow-hidden transition-all duration-700 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-y-auto max-h-[85vh]`}
+    // MODIFIED: Added absolute positioning and full size for fullscreen display
+    // Removed max-w-lg mx-auto for full screen
+    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-y-auto`}
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
-      {/* Header section with background pattern */}
-      <div className="h-32 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
-        {/* Background pattern overlay */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
-        }}></div>
+      {/* Container to limit the width of the content within the fullscreen view */}
+      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
-        {/* Top right badges container with glassmorphism effect */}
-        <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
-                    backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
-                    border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10">
-          {/* Coin Badge */}
-          <div className="overflow-hidden">
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}>
-              <div className="w-4 h-4 mr-1.5 relative">
-                <Icon name="Coins" size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
-                <div className="absolute inset-0 bg-yellow-200 blur-md opacity-30"></div>
+        {/* Close Button - NEW */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+            aria-label="Đóng cửa sổ chỉ số"
+          >
+            <Icon name="X" size={20} />
+          </button>
+        )}
+
+        {/* Header section with background pattern */}
+        <div className="h-32 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
+          {/* Background pattern overlay */}
+          <div className="absolute inset-0" style={{
+            backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
+          }}></div>
+
+          {/* Top right badges container with glassmorphism effect */}
+          <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
+                      backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
+                      border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10">
+            {/* Coin Badge */}
+            <div className="overflow-hidden">
+              <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}>
+                <div className="w-4 h-4 mr-1.5 relative">
+                  <Icon name="Coins" size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
+                  <div className="absolute inset-0 bg-yellow-200 blur-md opacity-30"></div>
+                </div>
+                <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
+                 {/* Plus button next to Coin badge (functionality removed) */}
+                 <button
+                    className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
+                    title="Chuyển đổi Coin sang Point" // Tooltip remains
+                  >
+                    <Icon name="Plus" size={10} className="text-white" />
+                  </button>
               </div>
-              <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
-               {/* Plus button next to Coin badge (functionality removed) */}
-               <button
-                  className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
-                  title="Chuyển đổi Coin sang Point" // Tooltip remains
+            </div>
+
+            {/* Exchange Button */}
+            <button
+              onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
+              className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300"
+              title="Chuyển đổi Coin/Point"
+            >
+              Exchange
+            </button>
+
+            {/* Points Badge */}
+            <div className="overflow-hidden">
+              <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}>
+                <div className="w-4 h-4 mr-1.5 relative">
+                  <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
+                  <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
+                </div>
+                <span className="text-xs font-bold text-white">{statPoints}</span>
+                {/* Plus button next to Points badge (conditionally visible) */}
+                <button
+                  onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
+                  className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
+                  disabled={!(!showPointsPanel && statPoints > 0)}
                 >
                   <Icon name="Plus" size={10} className="text-white" />
                 </button>
-            </div>
-          </div>
-
-          {/* Exchange Button */}
-          <button
-            onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
-            className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300"
-            title="Chuyển đổi Coin/Point"
-          >
-            Exchange
-          </button>
-
-          {/* Points Badge */}
-          <div className="overflow-hidden">
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}>
-              <div className="w-4 h-4 mr-1.5 relative">
-                <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
-                <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
               </div>
-              <span className="text-xs font-bold text-white">{statPoints}</span>
-              {/* Plus button next to Points badge (conditionally visible) */}
-              <button
-                onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
-                className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
-                disabled={!(!showPointsPanel && statPoints > 0)}
-              >
-                <Icon name="Plus" size={10} className="text-white" />
-              </button>
             </div>
           </div>
+
+          {/* Gradient overlay at the bottom of the header */}
+          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
         </div>
 
-        {/* Gradient overlay at the bottom of the header */}
-        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
-      </div>
+        {/* Main content area */}
+        {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
+        <div className="px-8 pt-4 overflow-y-auto flex-grow">
+          {/* Empty div (previously held title/level) */}
+          <div className="flex flex-col mb-2">
+          </div>
 
-      {/* Main content area */}
-      <div className="px-8 pt-4"> {/* Removed flex-grow as scrolling is handled by parent */}
-        {/* Empty div (previously held title/level) */}
-        <div className="flex flex-col mb-2">
-        </div>
+          {/* Stats Section */}
+          <div className="mb-8">
+              {/* Stats Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
+                  <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
+                </h3>
 
-        {/* Stats Section */}
-        <div className="mb-8">
-            {/* Stats Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
-                <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
-              </h3>
+                {/* "Allocate Points" button (visible if points > 0 and panel is closed) */}
+                {statPoints > 0 && !showPointsPanel && (
+                  <button
+                    onClick={() => setShowPointsPanel(true)}
+                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-medium shadow-md transition-all hover:shadow-lg flex items-center gap-1.5"
+                  >
+                    <Icon name="Plus" size={14} />
+                    Phân bổ {statPoints} điểm
+                  </button>
+                )}
 
-              {/* "Allocate Points" button (visible if points > 0 and panel is closed) */}
-              {statPoints > 0 && !showPointsPanel && (
-                <button
-                  onClick={() => setShowPointsPanel(true)}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-medium shadow-md transition-all hover:shadow-lg flex items-center gap-1.5"
-                >
-                  <Icon name="Plus" size={14} />
-                  Phân bổ {statPoints} điểm
-                </button>
+                {/* "Details" indicator (visible if no points or panel is open) */}
+                {!statPoints && !showPointsPanel && (
+                  <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <circle cx="10" cy="10" r="3"></circle>
+                    </svg>
+                    Chi tiết
+                  </div>
+                )}
+              </div>
+
+              {/* Point Allocation Panel (conditionally rendered) */}
+              {showPointsPanel ? (
+                <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
+                  {/* Panel Header */}
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
+                      <Icon name="Plus" size={20} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
+                    </div>
+                  </div>
+
+                  {/* Render stats in edit mode */}
+                  {renderStats(true)}
+
+                  {/* Allocation Tip */}
+                  <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start">
+                    <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-blue-800">
+                      <p className="font-medium mb-1">Mẹo phân bổ điểm:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>ATK, DEF, LUCK, INT, CRT: +2 cho mỗi điểm</li>
+                        <li>HP: +25 cho mỗi điểm</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                   {/* Action Buttons for Allocation Panel */}
+                  <div className="flex items-center justify-end space-x-2">
+                     {/* Cancel Button */}
+                     <button
+                        onClick={cancelChanges}
+                        className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
+                      >
+                        Hủy
+                      </button>
+                      {/* Apply Button */}
+                      <button
+                        onClick={applyChanges}
+                        className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
+                      >
+                        Áp dụng
+                      </button>
+                  </div>
+                </div>
+              ) : (
+                // Render stats in view mode (when allocation panel is closed)
+                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
+                  {renderStats()}
+                </div>
               )}
-
-              {/* "Details" indicator (visible if no points or panel is open) */}
-              {!statPoints && !showPointsPanel && (
-                <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
-                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <circle cx="10" cy="10" r="3"></circle>
-                  </svg>
-                  Chi tiết
-                </div>
-              )}
             </div>
 
-            {/* Point Allocation Panel (conditionally rendered) */}
-            {showPointsPanel ? (
-              <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
-                {/* Panel Header */}
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
-                    <Icon name="Plus" size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
-                  </div>
-                </div>
-
-                {/* Render stats in edit mode */}
-                {renderStats(true)}
-
-                {/* Allocation Tip */}
-                <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start">
-                  <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-blue-800">
-                    <p className="font-medium mb-1">Mẹo phân bổ điểm:</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      <li>ATK, DEF, LUCK, INT, CRT: +2 cho mỗi điểm</li>
-                      <li>HP: +25 cho mỗi điểm</li>
-                    </ul>
-                  </div>
-                </div>
-
-                 {/* Action Buttons for Allocation Panel */}
-                <div className="flex items-center justify-end space-x-2">
-                   {/* Cancel Button */}
-                   <button
-                      onClick={cancelChanges}
-                      className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
-                    >
-                      Hủy
-                    </button>
-                    {/* Apply Button */}
-                    <button
-                      onClick={applyChanges}
-                      className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
-                    >
-                      Áp dụng
-                    </button>
-                </div>
-              </div>
-            ) : (
-              // Render stats in view mode (when allocation panel is closed)
-              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
-                {renderStats()}
-              </div>
-            )}
-          </div>
-
-        {/* Skills Section */}
-        <div className="mb-8">
-          {/* Skills Header */}
-          <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
-            <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
-          </h3>
-          {/* Skill Badges */}
-          <div className="flex flex-wrap gap-3">
-            {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
+          {/* Skills Section */}
+          <div className="mb-8">
+            {/* Skills Header */}
+            <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
+              <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
+            </h3>
+            {/* Skill Badges */}
+            <div className="flex flex-wrap gap-3">
+              {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer Section */}
-      <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-        <div className="flex justify-between items-center">
-          {/* Character ID */}
-          <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
+        {/* Footer Section */}
+        <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
+          <div className="flex justify-between items-center">
+            {/* Character ID */}
+            <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
 
-          {/* Reset Stats Button */}
-          <button
-            onClick={() => setShowResetModal(true)} // Opens the reset modal
-            className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
-          >
-            {/* Background shine effect on hover */}
-            <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
-            {/* Button Text and Icons */}
-            <div className="flex items-center gap-2 relative">
-              <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
-              <span>Reset Chỉ Số</span>
-              <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
-            </div>
-            {/* Tooltip */}
-            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-              Thu hồi điểm tiềm năng
-            </div>
-          </button>
+            {/* Reset Stats Button */}
+            <button
+              onClick={() => setShowResetModal(true)} // Opens the reset modal
+              className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
+            >
+              {/* Background shine effect on hover */}
+              <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
+              {/* Button Text and Icons */}
+              <div className="flex items-center gap-2 relative">
+                <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+                <span>Reset Chỉ Số</span>
+                <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              {/* Tooltip */}
+              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                Thu hồi điểm tiềm năng
+              </div>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Render Reset Modal (conditionally) */}
-      {showResetModal && <ResetModal />}
+        {/* Render Reset Modal (conditionally) */}
+        {showResetModal && <ResetModal />}
 
-      {/* Render Exchange Modal (conditionally) */}
-      {showExchangeModal && <ExchangeModal />}
-    </div>
+        {/* Render Exchange Modal (conditionally) */}
+        {showExchangeModal && <ExchangeModal />}
+
+      </div> {/* End of content container */}
+    </div> // End of main CharacterCard container
   );
 }
+
