@@ -563,7 +563,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         <div className={`absolute bottom-0 right-2 w-3 h-5 bg-gradient-to-b from-yellow-600 to-yellow-800 rounded-b-lg transform ${legPos === 0 ? '' : legPos === 2 ? 'translate-x-1 -translate-y-1' : '-translate-x-2 -translate-y-2'}`}></div>
         */}
 
-        {/* Shadow */}
+        {/* Shadow - Removed */}
+        {/*
         <div
           className="absolute w-10 h-2 bg-black bg-opacity-20 rounded-full"
           style={{
@@ -573,6 +574,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             opacity: 1 - characterPos/100 // Fade shadow based on jump height
           }}
         ></div>
+        */}
 
         {/* Damage Effect on Character */}
         {showCharacterDamageEffect && (
@@ -853,7 +855,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Left placeholder */}
         <div className="flex items-center">
              {/* Placeholder for a potential menu button */}
-             <button className="p-2 rounded-full bg-blue-500 text-white text-xs">Menu</button>
+             {/* <button className="p-2 rounded-full bg-blue-500 text-white text-xs">Menu</button> */} {/* Removed Menu button */}
         </div>
         {/* Currency display */}
         <div className="flex items-center space-x-2 currency-display-container relative">
