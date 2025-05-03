@@ -15,7 +15,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
     AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
     Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M2 9l10 13 10-13"></path><path d="M12 2v20"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path></g>,
-    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
+    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
     X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
@@ -868,9 +868,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             <span className="text-xs text-gray-500 font-medium flex-shrink-0">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span> {/* Added flex-shrink-0 */}
 
             {/* Reset Stats Button */}
+            {/* MODIFIED: Added responsive padding classes (px-3 py-2) for smaller screens */}
             <button
               onClick={() => setShowResetModal(true)} // Opens the reset modal
-              className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden flex-shrink-0" // Added flex-shrink-0
+              className="group px-5 py-2.5 sm:px-3 sm:py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden flex-shrink-0" // Added flex-shrink-0
             >
               {/* Background shine effect on hover */}
               <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
