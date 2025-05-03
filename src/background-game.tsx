@@ -208,7 +208,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
-  const [showStatsModal, setShowStatsModal] = useState(false); // State for stats modal visibility
+  // REMOVED: showStatsModal state
+  // const [showStatsModal, setShowStatsModal] = useState(false); // State for stats modal visibility
+
+  // NEW: State for full-screen stats visibility
+  const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
+
 
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
@@ -282,7 +287,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShowCharacterDamageEffect(false); // Reset character damage effect state
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
-    setShowStatsModal(false); // Ensure stats modal is closed on game start/restart
+    // REMOVED: setShowStatsModal(false); // Ensure stats modal is closed on game start/restart
+    setIsStatsFullscreen(false); // NEW: Ensure full-screen stats is closed
 
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
@@ -353,7 +359,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    if (!gameStarted || gameOver) return; // Only generate if game is active and not paused
+    // Only generate if game is active, not over, and stats are NOT in fullscreen
+    if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) { // Generate 2 particles at a time
@@ -383,7 +390,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver) return; // Don't schedule if game is over
+    // Don't schedule if game is over or stats are in fullscreen
+    if (gameOver || isStatsFullscreen) return;
 
     // Random time delay before the next obstacle appears (between 5 and 20 seconds)
     const randomTime = Math.floor(Math.random() * 15000) + 5000;
@@ -414,13 +422,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Handle character jump action
   const jump = () => {
-    // Check if not already jumping, game is started, not over, AND card popup/stats modal is not shown
-    if (!jumping && !gameOver && gameStarted && !showCard && !showStatsModal) { // Check showStatsModal
+    // Check if not already jumping, game is started, not over, AND card popup/stats fullscreen is not shown
+    if (!jumping && !gameOver && gameStarted && !showCard && !isStatsFullscreen) { // Check isStatsFullscreen
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
       setTimeout(() => {
-        if (gameStarted && !gameOver) { // Ensure game is still active
+        if (gameStarted && !gameOver && !isStatsFullscreen) { // Ensure game is still active and stats NOT fullscreen
           setCharacterPos(0); // Move character back to ground
           // Schedule setting jumping state to false after a short delay
           setTimeout(() => {
@@ -433,14 +441,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
+    // Ignore taps if stats are in fullscreen
+    if (isStatsFullscreen) return;
+
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver && !showCard && !showStatsModal) { // Check showStatsModal
+    } else if (!gameOver && !showCard) { // Check showCard, isStatsFullscreen checked at the start
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
     }
-    // If showCard or showStatsModal is true, taps on the game area are ignored
+    // If showCard is true, taps on the game area are ignored
   };
 
 
@@ -469,8 +480,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
-    // Don't run movement if stats modal is open
-    if (!gameStarted || gameOver || showStatsModal) return;
+    // Don't run movement if game is not started, over, or stats are in fullscreen
+    if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     // Game speed is now constant as score is removed
     const speed = 2;
@@ -579,8 +590,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
-    // Add showStatsModal to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, showStatsModal]);
+    // Add isStatsFullscreen to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen]);
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -781,8 +792,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Function to open the chest
   const openChest = () => {
-    // Prevent opening chest if stats modal is open
-    if (isChestOpen || chestsRemaining <= 0 || showStatsModal) return;
+    // Prevent opening chest if stats are in fullscreen
+    if (isChestOpen || chestsRemaining <= 0 || isStatsFullscreen) return;
     setChestShake(true);
     setTimeout(() => {
       setChestShake(false);
@@ -819,11 +830,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   };
 
-  // Function to toggle stats modal
-  const toggleStatsModal = () => {
+  // REMOVED: Function to toggle stats modal
+  // const toggleStatsModal = () => {
+  //   // Prevent opening if game over or card is shown
+  //   if (gameOver || showCard) return;
+  //   setShowStatsModal(!showStatsModal);
+  // };
+
+  // NEW: Function to toggle full-screen stats
+  const toggleStatsFullscreen = () => {
     // Prevent opening if game over or card is shown
     if (gameOver || showCard) return;
-    setShowStatsModal(!showStatsModal);
+    setIsStatsFullscreen(!isStatsFullscreen);
   };
 
 
@@ -942,7 +960,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               {/* Added onClick handler and cursor-pointer */}
               <div
                 className="relative mr-2 cursor-pointer"
-                onClick={toggleStatsModal}
+                // MODIFIED: Call toggleStatsFullscreen instead of toggleStatsModal
+                onClick={toggleStatsFullscreen}
                 title="Xem chỉ số nhân vật" // Tooltip
               >
                   <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform"> {/* Reduced size, added hover effect */}
@@ -1062,251 +1081,274 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         )}
 
+        {/* NEW: Full-screen Stats Display */}
+        {isStatsFullscreen && (
+            // Use absolute inset-0 to cover the whole game container
+            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 backdrop-blur-sm p-4">
+                {/* Wrap CharacterCard in ErrorBoundary */}
+                <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
+                    {/* Pass a prop to CharacterCard to handle closing */}
+                    <CharacterCard onClose={toggleStatsFullscreen} />
+                </ErrorBoundary>
+            </div>
+        )}
+
+
       </div>
 
       {/* Left UI section - Positioned on top of the game */}
-      <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
-        {[
-          // Shop Icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
+      {/* HIDE UI sections when stats are in fullscreen */}
+      {!isStatsFullscreen && (
+        <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
+          {[
+            // Shop Icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
+                  </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Shop",
-            notification: true,
-            special: true,
-            centered: true
-          },
-          // Inventory icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full border-t border-amber-300"></div>
-                  <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-100/30 rounded-full animate-pulse-subtle"></div>
+              ),
+              label: "Shop",
+              notification: true,
+              special: true,
+              centered: true
+            },
+            // Inventory icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full border-t border-amber-300"></div>
+                    <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-100/30 rounded-full animate-pulse-subtle"></div>
+                  </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Inventory",
-            notification: true,
-            special: true,
-            centered: true
-          }
-        ].map((item, index) => (
-          <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
-            {item.special && item.centered ? (
-              <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                {item.icon}
-                {item.label && (
-                  <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                )}
-              </div>
-            ) : (
-              <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
-                {item.icon}
-                {item.label && (
-                  <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+              ),
+              label: "Inventory",
+              notification: true,
+              special: true,
+              centered: true
+            }
+          ].map((item, index) => (
+            <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
+              {item.special && item.centered ? (
+                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                  {item.icon}
+                  {item.label && (
+                    <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                  )}
+                </div>
+              ) : (
+                <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
+                  {item.icon}
+                  {item.label && (
+                    <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Right UI section - Positioned on top of the game */}
-      <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
-        {[
-          // Mission icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
-                    <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
-                    <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
-                    <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+       {/* HIDE UI sections when stats are in fullscreen */}
+      {!isStatsFullscreen && (
+        <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
+          {[
+            // Mission icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
+                      <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
+                      <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
+                      <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+                    </div>
                   </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Mission",
-            notification: true,
-            special: true,
-            centered: true
-          },
-          // Blacksmith icon
-          {
-            icon: (
-              <div className="relative">
-                <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
-                  <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
-                    <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
-                    <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
-                    <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
-                    <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
-                    <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
-                    <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+              ),
+              label: "Mission",
+              notification: true,
+              special: true,
+              centered: true
+            },
+            // Blacksmith icon
+            {
+              icon: (
+                <div className="relative">
+                  <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
+                    <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
+                      <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
+                      <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
+                      <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
+                      <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
+                      <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
+                      <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+                    </div>
                   </div>
+                  <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
-                <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-              </div>
-            ),
-            label: "Blacksmith",
-            notification: true,
-            special: true,
-            centered: true
-          },
-        ].map((item, index) => (
-          <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
-            {item.special && item.centered ? (
-                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                    {item.icon}
-                    {item.label && (
-                        <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                    )}
+              ),
+              label: "Blacksmith",
+              notification: true,
+              special: true,
+              centered: true
+            },
+          ].map((item, index) => (
+            <div key={index} className="group cursor-pointer"> {/* Added cursor-pointer */}
+              {item.special && item.centered ? (
+                  <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                      {item.icon}
+                      {item.label && (
+                          <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                      )}
+                  </div>
+              ) : (
+                <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                  {item.icon}
+                  <span className="text-white text-xs text-center block mt-1">{item.label}</span>
                 </div>
-            ) : (
-              <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                {item.icon}
-                <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {/* Treasure chest and remaining chests count - Positioned on top of the game */}
-      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
-        <div
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          // Disable click if stats modal is open
-          onClick={!isChestOpen && chestsRemaining > 0 && !showStatsModal ? openChest : null}
-          aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
-          role="button"
-          tabIndex={chestsRemaining > 0 ? 0 : -1}
-        >
-          <div className="flex flex-col items-center justify-center">
-            {/* Chest main body */}
-            <div className="flex flex-col items-center">
-              {/* Chest top part */}
-              <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
-                {/* Decorations */}
-                <div className="absolute inset-x-0 top-0 h-full">
-                  <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
-                  <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
-                  <div className="absolute top-1/4 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
-                  <div className="absolute top-2/3 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
-                </div>
-                <div className="absolute top-1 left-1 w-4 h-4 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-br border-b border-r border-yellow-600"></div>
-                <div className="absolute top-1 right-1 w-4 h-4 bg-gradient-to-bl from-yellow-300 to-yellow-500 rounded-bl border-b border-l border-yellow-600"></div>
-                <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+      {/* HIDE chest when stats are in fullscreen */}
+      {!isStatsFullscreen && (
+        <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
+          <div
+            className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
+            // Disable click if stats are in fullscreen
+            onClick={!isChestOpen && chestsRemaining > 0 && !isStatsFullscreen ? openChest : null}
+            aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
+            role="button"
+            tabIndex={chestsRemaining > 0 ? 0 : -1}
+          >
+            <div className="flex flex-col items-center justify-center">
+              {/* Chest main body */}
+              <div className="flex flex-col items-center">
+                {/* Chest top part */}
+                <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
+                  {/* Decorations */}
+                  <div className="absolute inset-x-0 top-0 h-full">
+                    <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                    <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                    <div className="absolute top-1/4 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
+                    <div className="absolute top-2/3 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
+                  </div>
+                  <div className="absolute top-1 left-1 w-4 h-4 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-br border-b border-r border-yellow-600"></div>
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-gradient-to-bl from-yellow-300 to-yellow-500 rounded-bl border-b border-l border-yellow-600"></div>
+                  <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
 
-                {/* Chest closed view */}
-                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
-                  <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
-                    <div className="relative">
-                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
-                        <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center items-center h-full pt-7 pb-4">
-                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
-                      <div className="absolute inset-0 rounded-lg overflow-hidden">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                      </div>
-                      <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
-                        <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
-                        <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chest open state */}
-                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-100' : 'opacity-0'}`}>
-                  <div className="bg-gradient-to-b from-amber-700 to-amber-900 h-10 w-full absolute top-0 rounded-t-xl transform origin-bottom animate-lid-open flex justify-center items-center overflow-hidden border-2 border-amber-600">
-                    <div className="absolute inset-0 bg-gradient-to-b from-amber-600/50 to-amber-800/50 flex justify-center items-center">
-                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
-                    </div>
-                    <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-300 to-yellow-500 rounded-tr border-t border-r border-yellow-600"></div>
-                    <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
-                  </div>
-                  {showShine && (
-                    <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
-                      <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
-                      {[...Array(16)].map((_, i) => (
-                        <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
-                      ))}
-                      {[...Array(20)].map((_, i) => (
-                        <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="h-full flex justify-center items-center relative">
-                    <div className="absolute inset-2 top-7 bottom-4 bg-gradient-to-b from-amber-600/30 to-amber-800/30 rounded-lg shadow-inner shadow-amber-950/50"></div>
-                    <div className="absolute bottom-4 left-4 w-3 h-3 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
-                    <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
-                    <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
-                    {showCard ? (
-                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
-                        <div className="absolute inset-0 overflow-hidden rounded-xl">
-                          <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
-                        </div>
-                        <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
-                        <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
-                        <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-                        <div className="flex mt-3">
-                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                          ))}
+                  {/* Chest closed view */}
+                  <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
+                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
+                      <div className="relative">
+                        <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
+                          <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
-                        <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                    </div>
+                    <div className="flex justify-center items-center h-full pt-7 pb-4">
+                      <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
+                        <div className="absolute inset-0 rounded-lg overflow-hidden">
+                          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                        </div>
+                        <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
+                          <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
+                          <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chest open state */}
+                  <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="bg-gradient-to-b from-amber-700 to-amber-900 h-10 w-full absolute top-0 rounded-t-xl transform origin-bottom animate-lid-open flex justify-center items-center overflow-hidden border-2 border-amber-600">
+                      <div className="absolute inset-0 bg-gradient-to-b from-amber-600/50 to-amber-800/50 flex justify-center items-center">
+                        <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                      </div>
+                      <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-300 to-yellow-500 rounded-tr border-t border-r border-yellow-600"></div>
+                      <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+                    </div>
+                    {showShine && (
+                      <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
+                        <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
+                        {[...Array(16)].map((_, i) => (
+                          <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
+                        ))}
+                        {[...Array(20)].map((_, i) => (
+                          <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
+                        ))}
                       </div>
                     )}
+                    <div className="h-full flex justify-center items-center relative">
+                      <div className="absolute inset-2 top-7 bottom-4 bg-gradient-to-b from-amber-600/30 to-amber-800/30 rounded-lg shadow-inner shadow-amber-950/50"></div>
+                      <div className="absolute bottom-4 left-4 w-3 h-3 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
+                      <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
+                      <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
+                      {showCard ? (
+                        <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                          <div className="absolute inset-0 overflow-hidden rounded-xl">
+                            <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
+                          </div>
+                          <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                          <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
+                          <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
+                          <div className="flex mt-3">
+                            {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                              <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
+                          <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
+                    <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
-                  <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-                </div>
+                {/* Chest base */}
+                <div className="flex flex-col items-center relative -mt-1 z-0"></div>
               </div>
-              {/* Chest base */}
-              <div className="flex flex-col items-center relative -mt-1 z-0"></div>
             </div>
-          </div>
 
-          {/* Display remaining chests count */}
-          <div className="mt-4 flex flex-col items-center">
-            <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
-              {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
-              <div className="flex items-center">
-                <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-                <span className="text-amber-400/80 text-xs">/{3}</span>
+            {/* Display remaining chests count */}
+            <div className="mt-4 flex flex-col items-center">
+              <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+                {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
+                <div className="flex items-center">
+                  <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
+                  <span className="text-amber-400/80 text-xs">/{3}</span>
+                </div>
+                {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
               </div>
-              {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Card info popup - Positioned on top of everything */}
       {showCard && currentCard && (
@@ -1336,28 +1378,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         </div>
       )}
 
-      {/* Stats Modal */}
-      {showStatsModal && (
+      {/* REMOVED: Stats Modal structure */}
+      {/* {showStatsModal && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-              {/* Modal Content */}
-              <div className="relative max-w-lg w-full"> {/* Container for CharacterCard and close button */}
-                  {/* --- NEW: Wrap CharacterCard in ErrorBoundary --- */}
+              <div className="relative max-w-lg w-full">
                   <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
                       <CharacterCard />
                   </ErrorBoundary>
-
-                  {/* Close Button */}
                   <button
                       onClick={toggleStatsModal}
-                      className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-[51]" /* Ensure close button is above error boundary if needed */
+                      className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-[51]"
                       aria-label="Đóng cửa sổ chỉ số"
                   >
                       <XIcon size={20} />
                   </button>
               </div>
           </div>
-      )}
+      )} */}
 
     </div>
   );
 }
+
