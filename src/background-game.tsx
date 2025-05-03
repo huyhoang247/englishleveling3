@@ -144,9 +144,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
 
-  // State for current time display
-  const [currentTime, setCurrentTime] = useState('');
-
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
 
@@ -271,28 +268,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(particleTimerRef.current);
     }
   }, [health, gameStarted]);
-
-    // Effect to update current time
-    useEffect(() => {
-        const updateTime = () => {
-            const now = new Date();
-            // Format time as HH:MM:SS
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            setCurrentTime(`${hours}:${minutes}:${seconds}`);
-        };
-
-        // Update time immediately on mount
-        updateTime();
-
-        // Update time every second
-        const timerId = setInterval(updateTime, 1000);
-
-        // Cleanup interval on component unmount
-        return () => clearInterval(timerId);
-    }, []); // Empty dependency array means this effect runs only on mount and unmount
-
 
   // Generate initial cloud elements (called only once at game start)
   const generateInitialClouds = (count) => {
@@ -564,7 +539,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             coinElement.removeEventListener('animationend', animationEndHandler);
             coinElement.classList.remove('number-changing'); // Ensure class is removed on unmount
         }
-      }
+      };
     }
   }, [displayedCoins, coins, pendingCoinReward]);
 
@@ -841,7 +816,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       `}</style>
 
 
-      {/* Main Game Container (This div wraps the game background and elements) */}
+      {/* Main Game Container */}
+      {/* Removed border classes */}
       <div
         ref={gameRef} // Assign ref
         // Apply the passed className prop here
@@ -880,6 +856,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {renderParticles()}
 
         {/* Header section - Positioned on top of the game */}
+        {/* Moved inside the game container */}
+        {/* Changed background to black with opacity */}
         <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
           {/* Health Bar and Icon */}
           <div className="flex items-center">
@@ -946,55 +924,48 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               </div>
           </div>
           {/* Currency display */}
-          <div className="flex flex-col items-end currency-display-container relative"> {/* Added flex-col and items-end */}
-            <div className="flex items-center space-x-1"> {/* Reduced space-x */}
-                {/* Gems Container */}
-                <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                <div className="relative mr-0.5"> {/* Reduced margin-right */}
-                    <div className="w-3 h-3 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center"> {/* Reduced size */}
-                    <div className="absolute top-0 left-0 w-0.5 h-0.5 bg-white/50 rounded-sm"></div>
-                    <div className="absolute bottom-0 right-0 w-1 h-1 bg-purple-800/50 rounded-br-lg"></div>
-                    </div>
-                    <div className="absolute top-1 left-0.5 w-0.5 h-0.5 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
+          <div className="flex items-center space-x-1 currency-display-container relative"> {/* Reduced space-x */}
+            {/* Gems Container */}
+            <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+              <div className="relative mr-0.5"> {/* Reduced margin-right */}
+                <div className="w-3 h-3 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center"> {/* Reduced size */}
+                  <div className="absolute top-0 left-0 w-0.5 h-0.5 bg-white/50 rounded-sm"></div>
+                  <div className="absolute bottom-0 right-0 w-1 h-1 bg-purple-800/50 rounded-br-lg"></div>
                 </div>
-                <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div> {/* Text size remains xs */}
-                {/* Plus button for Gems - Functionality can be added later */}
-                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
-                    <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+                <div className="absolute top-1 left-0.5 w-0.5 h-0.5 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
+              </div>
+              <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div> {/* Text size remains xs */}
+               {/* Plus button for Gems - Functionality can be added later */}
+              <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+                <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+              </div>
+              <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+              <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+            </div>
+            {/* Coins Container */}
+            <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+              <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
+                <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
+                  <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
+                  <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
                 </div>
-                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                </div>
-                {/* Coins Container */}
-                <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
-                    <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
-                    <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
-                    <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
-                    </div>
-                    <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
-                </div>
-                <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
-                    {displayedCoins.toLocaleString()}
-                </div>
-                {/* Plus button for Coins - Functionality can be added later */}
-                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
-                    <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
-                </div>
-                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
-                </div>
+                <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
+              </div>
+              <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
+                {displayedCoins.toLocaleString()}
+              </div>
+              {/* Plus button for Coins - Functionality can be added later */}
+              <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+                <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+              </div>
+              <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+              <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
             </div>
           </div>
         </div>
 
-        {/* Time Display - Positioned just below the header, on the right */}
-        {/* Adjusted top and right values */}
-        <div className="absolute top-14 right-4 text-white text-xs font-bold z-40 bg-black bg-opacity-50 px-2 py-0.5 rounded-md"> {/* Increased z-index, adjusted padding and text size */}
-            {currentTime}
-        </div>
 
         {/* Game over screen (shown when game is over) */}
         {gameOver && (
@@ -1211,11 +1182,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
                     <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
                     {showCard ? (
-                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background}`}>
+                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
                         <div className="absolute inset-0 overflow-hidden rounded-xl">
                           <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                         </div>
-                        <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
+                        <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
                         <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                         <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
                         <div className="flex mt-3">
