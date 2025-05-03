@@ -671,13 +671,15 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   return (
-    // MODIFIED: Added absolute positioning and full size for fullscreen display
-    // Removed max-w-lg mx-auto for full screen
-    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-y-auto`}
+    {/* MODIFIED: Removed overflow-y-auto and max-h from here.
+        This outer div will now be positioned by the parent (background-game)
+        and the parent will handle the fullscreen scrolling. */}
+    <div className={`relative w-full h-full rounded-none shadow-none transition-all duration-700 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'}`}
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
       {/* Container to limit the width of the content within the fullscreen view */}
-      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      {/* MODIFIED: Removed h-full and flex-grow. Added padding. */}
+      <div className="relative max-w-lg w-full mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col px-8 pt-4 pb-8"> {/* Added mx-auto for centering, added bottom padding */}
 
         {/* Close Button - NEW */}
         {onClose && (
@@ -753,8 +755,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
         {/* Main content area */}
-        {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
-        <div className="px-8 pt-4 overflow-y-auto flex-grow">
+        {/* MODIFIED: Removed overflow-y-auto and flex-grow from here */}
+        <div className="relative"> {/* Keep relative for absolute positioning of children if needed */}
           {/* Empty div (previously held title/level) */}
           <div className="flex flex-col mb-2">
           </div>
@@ -817,77 +819,77 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                     </div>
                   </div>
 
-                   {/* Action Buttons for Allocation Panel */}
-                  <div className="flex items-center justify-end space-x-2">
-                     {/* Cancel Button */}
-                     <button
-                        onClick={cancelChanges}
-                        className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
-                      >
-                        Hủy
-                      </button>
-                      {/* Apply Button */}
-                      <button
-                        onClick={applyChanges}
-                        className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
-                      >
-                        Áp dụng
-                      </button>
-                  </div>
+                 {/* Action Buttons for Allocation Panel */}
+                <div className="flex items-center justify-end space-x-2">
+                   {/* Cancel Button */}
+                   <button
+                      onClick={cancelChanges}
+                      className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    {/* Apply Button */}
+                    <button
+                      onClick={applyChanges}
+                      className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
+                    >
+                      Áp dụng
+                    </button>
                 </div>
-              ) : (
-                // Render stats in view mode (when allocation panel is closed)
-                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
-                  {renderStats()}
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              // Render stats in view mode (when allocation panel is closed)
+              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
+                {renderStats()}
+              </div>
+            )}
+          </div>
 
-          {/* Skills Section */}
-          <div className="mb-8">
-            {/* Skills Header */}
-            <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
-              <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
-            </h3>
-            {/* Skill Badges */}
-            <div className="flex flex-wrap gap-3">
-              {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
-            </div>
+        {/* Skills Section */}
+        <div className="mb-8">
+          {/* Skills Header */}
+          <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
+            <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
+          </h3>
+          {/* Skill Badges */}
+          <div className="flex flex-wrap gap-3">
+            {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
           </div>
         </div>
+      </div>
 
-        {/* Footer Section */}
-        <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          <div className="flex justify-between items-center">
-            {/* Character ID */}
-            <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
+      {/* Footer Section */}
+      <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
+        <div className="flex justify-between items-center">
+          {/* Character ID */}
+          <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
 
-            {/* Reset Stats Button */}
-            <button
-              onClick={() => setShowResetModal(true)} // Opens the reset modal
-              className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
-            >
-              {/* Background shine effect on hover */}
-              <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
-              {/* Button Text and Icons */}
-              <div className="flex items-center gap-2 relative">
-                <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
-                <span>Reset Chỉ Số</span>
-                <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
-              </div>
-              {/* Tooltip */}
-              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-                Thu hồi điểm tiềm năng
-              </div>
-            </button>
-          </div>
+          {/* Reset Stats Button */}
+          <button
+            onClick={() => setShowResetModal(true)} // Opens the reset modal
+            className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
+          >
+            {/* Background shine effect on hover */}
+            <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
+            {/* Button Text and Icons */}
+            <div className="flex items-center gap-2 relative">
+              <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+              <span>Reset Chỉ Số</span>
+              <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+            </div>
+            {/* Tooltip */}
+            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Thu hồi điểm tiềm năng
+            </div>
+          </button>
         </div>
+      </div>
 
-        {/* Render Reset Modal (conditionally) */}
-        {showResetModal && <ResetModal />}
+      {/* Render Reset Modal (conditionally) */}
+      {showResetModal && <ResetModal />}
 
-        {/* Render Exchange Modal (conditionally) */}
-        {showExchangeModal && <ExchangeModal />}
+      {/* Render Exchange Modal (conditionally) */}
+      {showExchangeModal && <ExchangeModal />}
 
       </div> {/* End of content container */}
     </div> // End of main CharacterCard container
