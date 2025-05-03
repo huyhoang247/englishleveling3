@@ -8,14 +8,14 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,
     Stars: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>,
     Brain: <path d="M12 15c.68-1.32 1-2.8 1-4.4C13 6.4 10.8 2 7.5 2 4.2 2 2 6.4 2 10.6c0 4.2 2.2 8.6 5.5 8.6 2.12 0 3.6-.8 4.5-2.4zM12 15c-.68-1.32-1-2.8-1-4.4C11 6.4 13.2 2 16.5 2c3.3 0 5.5 4.4 5.5 8.6 0 4.2-2.2 8.6-5.5 8.6-2.12 0-3.6-.8-4.5-2.4z"></path>,
-    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 0 0 1 2-2h6a2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
+    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
     Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>,
     Crosshair: <g><circle cx="12" cy="12" r="10"></circle><path d="M22 12h-4"></path><path d="M6 12H2"></path><path d="M12 6V2"></path><path d="M12 22v-4"></path></g>,
     Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
     Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
     AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
     Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M2 9l10 13 10-13"></path><path d="M12 2v20"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path></g>,
-    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 0 0 0 0-4h-.5"></path><path d="M15 22a6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
+    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
     X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
@@ -678,8 +678,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
       {/* Container to limit the width of the content within the fullscreen view */}
       {/* MODIFIED: Added flex flex-col h-full to enable flex layout for fixed header/footer */}
-      {/* MODIFIED: Added min-h-0 */}
-      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col min-h-0">
+      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
         {/* Close Button - NEW */}
         {onClose && (
@@ -758,8 +757,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         {/* Main content area - SCROLLABLE MIDDLE */}
         {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
         {/* MODIFIED: Reduced padding top from pt-2 to pt-1 */}
-        {/* MODIFIED: Added min-h-0 and pb-4 */}
-        <div className="px-8 pt-1 overflow-y-auto flex-grow min-h-0 pb-4">
+        <div className="px-8 pt-1 overflow-y-auto flex-grow">
           {/* REMOVED: Empty div that previously had mb-2 */}
           {/* <div className="flex flex-col mb-2"></div> */}
 
@@ -862,33 +860,31 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
         {/* Footer Section - FIXED BOTTOM */}
         {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
-        {/* MODIFIED: Added sticky bottom-0 */}
-        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0 sticky bottom-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          <div className="flex justify-between items-center">
+        {/* MODIFIED: Added flex-wrap and gap-2 to allow items to wrap and add spacing */}
+        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0">
+          {/* MODIFIED: Added flex-wrap and gap-2 */}
+          <div className="flex justify-between items-center flex-wrap gap-2">
             {/* Character ID */}
-            <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
+            <span className="text-xs text-gray-500 font-medium flex-shrink-0">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span> {/* Added flex-shrink-0 */}
 
-            {/* Reset Stats Button - WRAPPED IN DIV */}
-            {/* MODIFIED: Wrapped button in a div with flex-shrink-0 */}
-            <div className="flex-shrink-0">
-              <button
-                onClick={() => setShowResetModal(true)} // Opens the reset modal
-                className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
-              >
-                {/* Background shine effect on hover */}
-                <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
-                {/* Button Text and Icons */}
-                <div className="flex items-center gap-2 relative">
-                  <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
-                  <span>Reset Chỉ Số</span>
-                  <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
-                </div>
-                {/* Tooltip */}
-                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-                  Thu hồi điểm tiềm năng
-                </div>
-              </button>
-            </div> {/* End of flex-shrink-0 wrapper */}
+            {/* Reset Stats Button */}
+            <button
+              onClick={() => setShowResetModal(true)} // Opens the reset modal
+              className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden flex-shrink-0" // Added flex-shrink-0
+            >
+              {/* Background shine effect on hover */}
+              <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
+              {/* Button Text and Icons */}
+              <div className="flex items-center gap-2 relative">
+                <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+                <span>Reset Chỉ Số</span>
+                <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              {/* Tooltip */}
+              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                Thu hồi điểm tiềm năng
+              </div>
+            </button>
           </div>
         </div>
 
@@ -902,3 +898,4 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     </div> // End of main CharacterCard container
   );
 }
+
