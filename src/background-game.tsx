@@ -128,6 +128,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
 
+  // State for Health Bar visual display (integrated from original HealthBar)
+  const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
+  const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
+
   // UI States
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -208,6 +212,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsRunning(true);
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
+    setDamageAmount(0); // Reset damage amount display
+    setShowDamageNumber(false); // Hide damage number
 
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
@@ -377,12 +383,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 300); // Effect duration
   };
 
-  // Trigger character damage effect
-  const triggerCharacterDamageEffect = () => {
+  // Trigger character damage effect and floating number
+  const triggerCharacterDamageEffect = (amount) => {
       setShowCharacterDamageEffect(true);
+      setDamageAmount(amount); // Set the damage amount for display
+      setShowDamageNumber(true); // Show the damage number
+
       setTimeout(() => {
           setShowCharacterDamageEffect(false);
       }, 500); // Effect duration (slightly longer for visibility)
+      setTimeout(() => {
+          setShowDamageNumber(false); // Hide damage number
+      }, 800); // Hide damage number after animation
   };
 
 
@@ -392,6 +404,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Game speed is now constant as score is removed
     const speed = 2;
+    const damagePerCollision = 1; // Damage amount per collision
 
     const moveInterval = setInterval(() => {
       // Move obstacles and handle endless loop effect
@@ -445,10 +458,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               characterY + obstacleHeight > obstacleY
             ) {
               collisionDetected = true;
-              // Decrease health by 1 point on collision
-              setHealth(prev => Math.max(0, prev - 1)); // Decrease health by 1, ensuring it doesn't go below 0
+              // Decrease health by the defined amount on collision
+              setHealth(prev => Math.max(0, prev - damagePerCollision));
               triggerHealthDamageEffect(); // Trigger health bar damage effect
-              triggerCharacterDamageEffect(); // Trigger the new character damage effect
+              triggerCharacterDamageEffect(damagePerCollision); // Trigger character damage effect and show number
             }
 
             // Keep obstacles that haven't collided and are still visible or will loop back
@@ -528,6 +541,16 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   }, [displayedCoins, coins, pendingCoinReward]);
 
+  // Calculate health percentage for the bar
+  const healthPct = health / MAX_HEALTH;
+
+  // Determine health bar color based on health percentage (from original HealthBar)
+  const getColor = () => {
+    if (healthPct > 0.6) return 'bg-green-500'; // Green for high health
+    if (healthPct > 0.3) return 'bg-yellow-500'; // Yellow for medium health
+    return 'bg-red-500'; // Red for low health
+  };
+
 
   // Render the character with animation and damage effect
   const renderCharacter = () => {
@@ -576,11 +599,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         ></div>
         */}
 
-        {/* Damage Effect on Character */}
+        {/* Damage Effect on Character (Visual pulse/shake) */}
         {showCharacterDamageEffect && (
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full text-red-500 font-bold text-xl opacity-0 animate-fadeOutUp">
-                -1
-            </div>
+            <div className="absolute inset-0 bg-red-500 opacity-30 rounded-full animate-pulse-fast"></div>
         )}
       </div>
     );
@@ -686,9 +707,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // Calculate health bar width percentage
-  const healthBarWidth = (health / MAX_HEALTH) * 100;
-
   // Function to open the chest
   const openChest = () => {
     if (isChestOpen || chestsRemaining <= 0) return;
@@ -757,7 +775,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes ray-rotate { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
         @keyframes shine { 0% { transform: translateX(-200px) rotate(45deg); } 100% { transform: translateX(400px) rotate(45deg); } }
-        @keyframes slide-down { 0% { transform: translateY(-20px) translateX(-50%); opacity: 0; } 10% { transform: translateY(0) translateX(-50%); opacity: 1; } 90% { transform: translateY(0) translateX(-50%); opacity: 1; } 100% { transform: translateY(-20px) translateX(-50%); opacity: 0; } }
         @keyframes gold-particle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 50% { opacity: 0.7; } 100% { transform: translate( calc(-50% + var(--random-x)), calc(-50% + var(--random-y)) ) scale(0); opacity: 0; } }
         @keyframes lid-open { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-100%) rotate(60deg); } }
         .animate-float-card { animation: float-card 3s ease-in-out infinite; }
@@ -777,6 +794,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         .add-button-pulse { animation: pulse-button 1.5s infinite; }
         @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
         .number-changing { animation: number-change 0.3s ease-out; }
+
+        /* Animations from original HealthBar */
+        @keyframes pulse {
+          0% { opacity: 0; }
+          50% { opacity: 0.2; }
+          100% { opacity: 0; }
+        }
+        @keyframes floatUp {
+          0% { transform: translate(-50%, 0); opacity: 1; }
+          100% { transform: translate(-50%, -20px); opacity: 0; }
+        }
       `}</style>
        <style jsx global>{`
         body {
@@ -823,17 +851,73 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Particles */}
         {renderParticles()}
 
-        {/* Health Bar Display */}
-        <div className="absolute top-2 left-2 w-32 h-4 bg-gray-700 rounded-full overflow-hidden shadow-inner z-10"> {/* Added z-index */}
-          <div
-            className={`h-full transition-all duration-300 ease-linear ${showHealthDamageEffect ? 'bg-red-500' : 'bg-gradient-to-r from-green-400 to-green-600'}`} // Change color on damage effect
-            style={{ width: `${healthBarWidth}%` }} // Dynamic width based on health percentage
-          ></div>
-          {/* Optional: Health text inside the bar */}
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow-sm">
-             {health} / {MAX_HEALTH}
-          </span>
+        {/* Integrated Health Bar (from original HealthBar component) */}
+        <div className="absolute top-4 left-4 z-50"> {/* Fixed position at top-left */}
+            <div className="flex items-center">
+                {/* ICON TRÒN - Round Icon */}
+                <div className="relative mr-3">
+                    <div className="w-10 h-10 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg">
+                        {/* Overlay for subtle effect */}
+                        <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
+                        {/* Inner icon elements */}
+                        <div className="relative z-10 flex items-center justify-center">
+                            <div className="flex items-end">
+                                <div className="w-1.5 h-3 bg-white rounded-sm mr-0.5" />
+                                <div className="w-1.5 h-5 bg-white rounded-sm mr-0.5" />
+                                <div className="w-1.5 h-2 bg-white rounded-sm" />
+                            </div>
+                        </div>
+                        {/* Highlight effect */}
+                        <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" />
+                    </div>
+                </div>
+
+                {/* THANH MÁU - Health Bar */}
+                <div className="w-40 relative">
+                    <div className="h-5 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                        {/* Inner bar animated with scaleX */}
+                        <div className="h-full overflow-hidden">
+                            <div
+                                className={`${getColor()} h-full transform origin-left`}
+                                style={{
+                                    transform: `scaleX(${healthPct})`, // Scale the bar based on health percentage
+                                    transition: 'transform 0.5s ease-out', // Smooth transition for health changes
+                                }}
+                            >
+                                {/* Inner highlight */}
+                                <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                            </div>
+                        </div>
+
+                        {/* Fixed full-width light overlay (keeping this pulse effect for visual flair) */}
+                        <div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
+                            style={{ animation: 'pulse 3s infinite' }} // Apply pulse animation
+                        />
+
+                        {/* Health text display */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                                {Math.round(health)}/{MAX_HEALTH} {/* Display current/max health */}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Floating damage number */}
+                    <div className="absolute top-5 left-0 right-0 h-6 w-full overflow-hidden pointer-events-none">
+                        {showDamageNumber && ( // Only show if showDamageNumber is true
+                            <div
+                                className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-sm"
+                                style={{ animation: 'floatUp 0.8s ease-out forwards' }} // Apply float up animation
+                            >
+                                -{damageAmount} {/* Display the damage amount */}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
+
 
         {/* Game over screen (shown when game is over) */}
         {gameOver && (
@@ -1100,8 +1184,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
                     <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
                     {showCard ? (
-                      <div className={`w-16 h-22 mx-auto rounded-lg shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                        <div className="absolute inset-0 overflow-hidden rounded-xl">
+                          <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
+                        </div>
                         <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                        <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
+                        <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
+                        <div className="flex mt-3">
+                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
