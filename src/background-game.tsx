@@ -158,8 +158,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Obstacle types with properties
   const obstacleTypes = [
-    { type: 'rock', height: 10, width: 10, color: 'from-gray-700 to-gray-500' },
-    { type: 'cactus', height: 16, width: 8, color: 'from-green-800 to-green-600' },
+    // Reduced size for rock
+    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500' },
+    // Reduced size for cactus
+    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600' },
   ];
 
     // Updated cards array to use SVG components
@@ -614,21 +616,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     switch(obstacle.type) {
       case 'rock':
         obstacleEl = (
-          <div className={`w-10 h-10 bg-gradient-to-br ${obstacle.color} rounded-lg`}>
+          // Adjusted size for rock element
+          <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br ${obstacle.color} rounded-lg`}>
             {/* Rock details */}
-            <div className="w-3 h-2 bg-gray-600 rounded-full absolute top-2 left-1"></div>
-            <div className="w-2 h-1 bg-gray-600 rounded-full absolute top-5 right-2"></div>
+            <div className="w-2 h-1 bg-gray-600 rounded-full absolute top-1 left-0.5"></div> {/* Adjusted size and position */}
+            <div className="w-1.5 h-0.5 bg-gray-600 rounded-full absolute top-3 right-1"></div> {/* Adjusted size and position */}
           </div>
         );
         break;
       case 'cactus':
         obstacleEl = (
           <div className="relative">
-            {/* Cactus main body */}
-            <div className={`w-8 h-16 bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
-            {/* Cactus arms */}
-            <div className={`w-4 h-6 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-3 top-3 transform -rotate-45`}></div>
-            <div className={`w-4 h-6 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-3 top-5 transform rotate-45`}></div>
+            {/* Cactus main body - Adjusted size */}
+            <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
+            {/* Cactus arms - Adjusted size and position */}
+            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
+            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
           </div>
         );
         break;
