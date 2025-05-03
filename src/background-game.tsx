@@ -814,10 +814,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
       {/* Main Game Container */}
+      {/* Removed border classes */}
       <div
         ref={gameRef} // Assign ref
         // Apply the passed className prop here
-        className={`${className ?? ''} relative w-full h-screen border-2 border-indigo-700 rounded-lg overflow-hidden shadow-2xl`} // Adjusted width and height, removed cursor-pointer here
+        className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`} // Adjusted width and height, removed cursor-pointer here
         onClick={handleTap} // Handle taps/clicks for jumping/starting
       >
         {/* Background with gradient */}
@@ -853,7 +854,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* Header section - Positioned on top of the game */}
         {/* Moved inside the game container */}
-        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-gradient-to-b from-blue-900/80 to-blue-800/80 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
+        {/* Changed background to black with opacity */}
+        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
           {/* Health Bar and Icon */}
           <div className="flex items-center">
               {/* ICON TRÒN - Round Icon */}
@@ -1251,4 +1253,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
