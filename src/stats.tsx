@@ -859,8 +859,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
         {/* Footer Section - FIXED BOTTOM */}
-        {/* MODIFIED: Added flex-shrink-0 */}
-        <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
+        {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
+        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
           <div className="flex justify-between items-center">
             {/* Character ID */}
             <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
