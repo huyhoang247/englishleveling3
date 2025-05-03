@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Time from './time';
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 
@@ -963,6 +964,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
               <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
             </div>
+            {/* Time component added here */}
+            <Time />
           </div>
         </div>
 
@@ -1256,3 +1259,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
