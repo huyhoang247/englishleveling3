@@ -693,79 +693,11 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         )}
 
         {/* Header section with background pattern - FIXED TOP */}
-        {/* MODIFIED: Added flex-shrink-0 */}
-        <div className="h-20 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
-          {/* Background pattern overlay */}
-          <div className="absolute inset-0" style={{
-            backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
-          }}></div>
-
-          {/* Top right badges container with glassmorphism effect */}
-          <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
-                      backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
-                      border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10">
-            {/* Coin Badge */}
-            <div className="overflow-hidden">
-              <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}>
-                <div className="w-4 h-4 mr-1.5 relative">
-                  <Icon name="Coins" size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
-                  <div className="absolute inset-0 bg-yellow-200 blur-md opacity-30"></div>
-                </div>
-                <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
-                 {/* Plus button next to Coin badge (functionality removed) */}
-                 <button
-                    className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
-                    title="Chuyển đổi Coin sang Point" // Tooltip remains
-                  >
-                    <Icon name="Plus" size={10} className="text-white" />
-                  </button>
-              </div>
-            </div>
-
-            {/* Exchange Button */}
-            <button
-              onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
-              className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300"
-              title="Chuyển đổi Coin/Point"
-            >
-              Exchange
-            </button>
-
-            {/* Points Badge */}
-            <div className="overflow-hidden">
-              <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}>
-                <div className="w-4 h-4 mr-1.5 relative">
-                  <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
-                  <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
-                </div>
-                <span className="text-xs font-bold text-white">{statPoints}</span>
-                {/* Plus button next to Points badge (conditionally visible) */}
-                <button
-                  onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
-                  className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
-                  disabled={!(!showPointsPanel && statPoints > 0)}
-                >
-                  <Icon name="Plus" size={10} className="text-white" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Gradient overlay at the bottom of the header */}
-          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
-        </div>
-
-        {/* Main content area - SCROLLABLE MIDDLE */}
-        {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
-        {/* MODIFIED: Reduced padding top from pt-2 to pt-1 */}
-        <div className="flex-1 px-8 pt-1 overflow-y-auto">
-          {/* REMOVED: Empty div that previously had mb-2 */}
-          {/* <div className="flex flex-col mb-2"></div> */}
-
-          {/* Stats Section */}
-          <div className="mb-8">
-              {/* Stats Header */}
-              <div className="flex items-center justify-between mb-4">
+        {/* This div contains the "STATS" header and the "Allocate Points" button */}
+        {/* MODIFIED: Added flex-shrink-0 to prevent this header from shrinking */}
+        {/* MODIFIED: Added px-8 pt-6 to match the padding of the scrollable content below */}
+        <div className="flex-shrink-0 px-8 pt-6 bg-white"> {/* Added flex-shrink-0 */}
+             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
                   <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
                 </h3>
@@ -791,7 +723,21 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                   </div>
                 )}
               </div>
+              {/* Added border-b to separate from the scrollable content */}
+              <div className="border-b border-gray-200 mb-4"></div> {/* Added bottom border */}
+        </div>
 
+
+        {/* Main content area - SCROLLABLE MIDDLE */}
+        {/* This div contains the Stat items and the Skills section */}
+        {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
+        {/* MODIFIED: Removed px-8 pt-1 as padding is now in the fixed header */}
+        <div className="flex-1 px-8 overflow-y-auto"> {/* Removed pt-1, kept px-8 */}
+          {/* REMOVED: Empty div that previously had mb-2 */}
+          {/* <div className="flex flex-col mb-2"></div> */}
+
+          {/* Stats Section (excluding header moved above) */}
+          <div className="mb-8">
               {/* Point Allocation Panel (conditionally rendered) */}
               {showPointsPanel ? (
                 <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
@@ -849,7 +795,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           {/* Skills Section */}
           <div className="mb-8">
             {/* Skills Header */}
-            <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
+            {/* MODIFIED: Removed border-b as it's now in the fixed header */}
+            <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 pb-2 flex items-center"> {/* Removed border-b */}
               <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
             </h3>
             {/* Skill Badges */}
@@ -860,8 +807,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
         {/* Footer Section - FIXED BOTTOM */}
+        {/* This div contains the Character ID and the Reset Stats button */}
         {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
-        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
+        {/* MODIFIED: Added flex-shrink-0 to prevent footer shrinking */}
+        <div className="flex-shrink-0 px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200"> {/* Added flex-shrink-0 */}
           <div className="flex justify-between items-center">
             {/* Character ID */}
             <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
