@@ -40,6 +40,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
 
 
 export default function CharacterCard() {
+  // State for character data
   const [character, setCharacter] = useState({
     title: "Chiến Binh", // Giữ nguyên state nhưng không hiển thị
     level: 75, // Giữ nguyên state nhưng không hiển thị
@@ -57,7 +58,7 @@ export default function CharacterCard() {
     coins: 3850
   });
 
-  // State for stat points
+  // State for stat points allocation
   const [statPoints, setStatPoints] = useState(11);
   const [showPointsPanel, setShowPointsPanel] = useState(false);
   const [tempStats, setTempStats] = useState({...character.stats});
@@ -72,7 +73,7 @@ export default function CharacterCard() {
   const [exchangeAmount, setExchangeAmount] = useState(100);
   const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
 
-  // Effect for glow animation
+  // Effect for card glow animation
   useEffect(() => {
     const interval = setInterval(() => {
       setGlowEffect(prev => !prev);
@@ -80,22 +81,21 @@ export default function CharacterCard() {
     return () => clearInterval(interval);
   }, []);
 
-  // State for stat point animation
+  // State for stat point increase/decrease animation
   const [pointAnimation, setPointAnimation] = useState({
     active: false,
     stat: null
   });
 
-  // Effect for Points Badge pulse (removed pulsing)
+  // State for badge pulse animations (kept state, removed pulsing effect)
   const [pointBadgePulse, setPointBadgePulse] = useState(false);
-  // Effect for Coin Badge pulse (removed pulsing)
   const [coinBadgePulse, setCoinBadgePulse] = useState(false);
 
 
-  // Function to increase a stat
+  // Function to increase a stat value
   const increaseStat = (stat) => {
     if (statPoints > 0) {
-      // Trigger animation
+      // Trigger animation effect
       setPointAnimation({
         active: true,
         stat: stat
@@ -106,30 +106,29 @@ export default function CharacterCard() {
           active: false,
           stat: null
         });
-      }, 800);
+      }, 800); // Animation duration
 
-      // Update stats
+      // Update temporary stats based on stat type
       const newTempStats = {...tempStats};
-
-      // Increase stats at different rates
       if (stat === 'hp') {
-        newTempStats[stat] += 25; // HP increases more
+        newTempStats[stat] += 25; // HP increases by 25 per point
       } else {
-        newTempStats[stat] += 2; // Other stats increase less
+        newTempStats[stat] += 2; // Other stats increase by 2 per point
       }
 
       setTempStats(newTempStats);
-      setStatPoints(statPoints - 1);
+      setStatPoints(statPoints - 1); // Decrease available points
     }
   };
 
-  // Function to decrease a stat
+  // Function to decrease a stat value
   const decreaseStat = (stat) => {
-    const originalStat = character.stats[stat];
+    const originalStat = character.stats[stat]; // Get the original stat value before allocation
+    // Only allow decrease if the temporary stat is higher than the original
     if (tempStats[stat] > originalStat) {
       const newTempStats = {...tempStats};
 
-      // Decrease stats at corresponding rates
+      // Decrease stats based on the corresponding increase rate
       if (stat === 'hp') {
         newTempStats[stat] -= 25;
       } else {
@@ -137,49 +136,50 @@ export default function CharacterCard() {
       }
 
       setTempStats(newTempStats);
-      setStatPoints(statPoints + 1);
+      setStatPoints(statPoints + 1); // Increase available points back
     }
   };
 
-  // Function to apply changes
+  // Function to apply the allocated stat changes
   const applyChanges = () => {
+    // Update the main character stats with the temporary stats
     setCharacter({
       ...character,
       stats: {...tempStats}
     });
-    setShowPointsPanel(false);
+    setShowPointsPanel(false); // Hide the allocation panel
   };
 
-  // Function to cancel changes
+  // Function to cancel the stat allocation process
   const cancelChanges = () => {
-    setTempStats({...character.stats});
-    setStatPoints(statPoints + Object.entries(tempStats).reduce((total, [key, value]) => {
+    // Calculate how many points were added temporarily
+    const pointsAdded = Object.entries(tempStats).reduce((total, [key, value]) => {
         const originalValue = character.stats[key];
         if (key === 'hp') {
+          // Calculate points added for HP (1 point per 25 HP)
           return total + Math.floor((value - originalValue) / 25);
         } else {
+          // Calculate points added for other stats (1 point per 2 stat value)
           return total + Math.floor((value - originalValue) / 2);
-        }
-      }, 0)
-    );
-    setShowPointsPanel(false);
-  };
-
-  // Function to perform stats reset
-  const resetStats = () => {
-    setResetAnimation(true);
-
-    setTimeout(() => {
-      // Calculate total current stat points
-      const currentTotal = Object.entries(character.stats).reduce((total, [key, value]) => {
-        if (key === 'hp') {
-          return total + Math.floor(value / 25); // 1 point for every 25 HP
-        } else {
-          return total + Math.floor(value / 2); // 1 point for every 2 stat points
         }
       }, 0);
 
-      // Reset stats to 0 instead of 50
+    // Revert temporary stats to the original character stats
+    setTempStats({...character.stats});
+    // Add the temporarily used points back to the available points
+    setStatPoints(statPoints + pointsAdded);
+    setShowPointsPanel(false); // Hide the allocation panel
+  };
+
+  // Function to handle the stats reset process
+  const resetStats = () => {
+    setResetAnimation(true); // Start reset animation
+
+    setTimeout(() => {
+      // Calculate the total points to be refunded based on current stats
+      const pointsToRefund = calculateResetPoints();
+
+      // Define base stats (all set to 0)
       const baseStats = {
         atk: 0,
         def: 0,
@@ -189,72 +189,77 @@ export default function CharacterCard() {
         crt: 0
       };
 
+      // Update character stats to base stats
       setCharacter({
         ...character,
         stats: baseStats
       });
 
+      // Update temporary stats to base stats
       setTempStats(baseStats);
-      setStatPoints(statPoints + currentTotal);
-      setShowResetModal(false);
-      setResetAnimation(false);
-    }, 1500);
+      // Add the refunded points to the available stat points
+      setStatPoints(statPoints + pointsToRefund);
+      setShowResetModal(false); // Close the reset modal
+      setResetAnimation(false); // Stop reset animation
+    }, 1500); // Delay for animation effect
   };
 
-  // Calculate points to receive upon reset
+  // Function to calculate the total points invested in current stats
   const calculateResetPoints = () => {
     return Object.entries(character.stats).reduce((total, [key, value]) => {
       if (key === 'hp') {
-        return total + Math.floor(value / 25); // 1 point for every 25 HP
+        return total + Math.floor(value / 25); // 1 point refunded for every 25 HP
       } else {
-        return total + Math.floor(value / 2); // 1 point for every 2 stat points
+        return total + Math.floor(value / 2); // 1 point refunded for every 2 points in other stats
       }
     }, 0);
   };
 
-  // Function to handle exchange
+  // Function to handle the coin/point exchange
   const handleExchange = () => {
     if (exchangeDirection === 'coinToPoint') {
-      // Check if enough coins
-      if (character.coins >= exchangeAmount) {
+      // Exchange Coins for Points (100 Coins = 1 Point)
+      if (character.coins >= exchangeAmount) { // Check if enough coins
         setCharacter({
           ...character,
-          coins: character.coins - exchangeAmount
+          coins: character.coins - exchangeAmount // Deduct coins
         });
-        setStatPoints(statPoints + Math.floor(exchangeAmount / 100));
-        // Trigger point receive effect
+        setStatPoints(statPoints + Math.floor(exchangeAmount / 100)); // Add points
+        // Trigger point badge pulse effect
         setPointBadgePulse(true);
         setTimeout(() => setPointBadgePulse(false), 1500);
       }
     } else {
-      // Check if enough points
-      if (statPoints >= exchangeAmount) {
+      // Exchange Points for Coins (1 Point = 100 Coins)
+      if (statPoints >= exchangeAmount) { // Check if enough points
         setCharacter({
           ...character,
-          coins: character.coins + (exchangeAmount * 100)
+          coins: character.coins + (exchangeAmount * 100) // Add coins
         });
-        setStatPoints(statPoints - exchangeAmount);
-        // Trigger coin receive effect
+        setStatPoints(statPoints - exchangeAmount); // Deduct points
+        // Trigger coin badge pulse effect
         setCoinBadgePulse(true);
         setTimeout(() => setCoinBadgePulse(false), 1500);
       }
     }
-    // Close modal after completion
-    setShowExchangeModal(false);
+    setShowExchangeModal(false); // Close the exchange modal
   };
 
-  // Function to adjust exchange amount
+  // Function to adjust the amount for exchange
   const adjustExchangeAmount = (amount) => {
     const newAmount = exchangeAmount + amount;
+    // Ensure the amount doesn't go below 1
     if (newAmount >= 1) {
       setExchangeAmount(newAmount);
     }
   };
 
 
-  // Render stats section
+  // Function to render the stats display (view or edit mode)
   const renderStats = (isEditMode = false) => {
+    // Use temporary stats if in edit mode, otherwise use character stats
     const stats = isEditMode ? tempStats : character.stats;
+    // Define the list of stats to display
     const statsList = [
       { name: "ATK", value: stats.atk, icon: <Icon name="Sword" size={18} />, color: "rose", key: "atk" },
       { name: "DEF", value: stats.def, icon: <Icon name="Shield" size={18} />, color: "blue", key: "def" },
@@ -264,6 +269,7 @@ export default function CharacterCard() {
       { name: "CRT", value: stats.crt, icon: <Icon name="Crosshair" size={18} />, color: "amber", key: "crt" }
     ];
 
+    // Helper function to get color scheme based on stat type
     const getStatColor = (statColor) => {
       switch(statColor) {
         case "rose": return { bg: "bg-rose-500", text: "text-rose-500", light: "bg-rose-100" };
@@ -280,63 +286,67 @@ export default function CharacterCard() {
       <div className="grid grid-cols-2 gap-3">
         {statsList.map((stat, index) => {
           const colorScheme = getStatColor(stat.color);
-          const isSpecial = stat.name === "HP";
+          const isSpecial = stat.name === "HP"; // HP has different display/calculation
+          // Check if the stat value has increased in edit mode
           const isIncreased = isEditMode && stats[stat.key] > character.stats[stat.key];
 
           return (
             <div key={index} className={`${index >= 4 ? "col-span-1" : ""} bg-white rounded-xl shadow-sm border ${isIncreased ? 'border-green-200' : 'border-gray-100'} overflow-hidden relative transition-all duration-300`}>
-              {/* Glow effect in corner */}
+              {/* Subtle background glow effect */}
               <div className={`absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-10 ${colorScheme.bg}`}></div>
 
-              {/* Stat increase animation */}
+              {/* Animation overlay when stat increases */}
               {pointAnimation.active && pointAnimation.stat === stat.key && (
                 <div className="absolute inset-0 bg-green-400 opacity-20 animate-pulse"></div>
               )}
 
-              {/* Main container for Icon/Name and Value/Buttons */}
+              {/* Main content container */}
               <div className="p-3 flex flex-col relative">
-                {/* Top row: Icon and Name - Added justify-center */}
-                <div className="flex items-center justify-center mb-1"> {/* Added mb-1 for spacing */}
+                {/* Top row: Icon and Stat Name */}
+                <div className="flex items-center justify-center mb-1">
+                  {/* Icon container */}
                   <div className={`w-8 h-8 ${colorScheme.light} rounded-lg flex items-center justify-center mr-3 relative overflow-hidden`}>
                     <div className={`absolute -bottom-3 -right-3 w-6 h-6 ${colorScheme.bg} opacity-20 rounded-full`}></div>
                     <span className={colorScheme.text}>{React.cloneElement(stat.icon, { size: 16 })}</span>
                   </div>
+                  {/* Stat name */}
                   <h4 className="text-xs font-semibold text-gray-500">{stat.name}</h4>
                 </div>
 
-                {/* Bottom row: Value and Buttons */}
+                {/* Bottom row: Stat Value and Edit Buttons (if applicable) */}
                 {isEditMode ? (
-                  // Layout for edit mode: Minus - Value - Plus
-                  <div className="flex items-center justify-around w-full"> {/* Use justify-around for spacing */}
+                  // Edit Mode Layout: Minus Button - Value - Plus Button
+                  <div className="flex items-center justify-around w-full">
+                    {/* Decrease Button */}
                     <button
                       onClick={() => decreaseStat(stat.key)}
-                      disabled={stats[stat.key] <= character.stats[stat.key]}
-                      className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key] <= character.stats[stat.key] ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`} // Set fixed size and added flex centering
+                      disabled={stats[stat.key] <= character.stats[stat.key]} // Disable if value is at original or lower
+                      className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key] <= character.stats[stat.key] ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
                     >
-                      <Icon name="Minus" size={16} /> {/* Increased icon size slightly for better touch target */}
+                      <Icon name="Minus" size={16} />
                     </button>
 
-                    {/* Wrapper div for stat value to ensure centering */}
+                    {/* Stat Value Display */}
                     <div className="flex items-center justify-center">
                       <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
-                        {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]}
+                        {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                       </p>
                     </div>
 
-
+                    {/* Increase Button */}
                     <button
                       onClick={() => increaseStat(stat.key)}
-                      disabled={statPoints <= 0}
-                      className={`flex items-center justify-center w-6 h-6 rounded-md ${statPoints <= 0 ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`} // Set fixed size and added flex centering
+                      disabled={statPoints <= 0} // Disable if no points available
+                      className={`flex items-center justify-center w-6 h-6 rounded-md ${statPoints <= 0 ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
                     >
-                      <Icon name="Plus" size={16} /> {/* Increased icon size slightly */}
+                      <Icon name="Plus" size={16} />
                     </button>
                   </div>
                 ) : (
-                  // Original layout for view mode (centered value)
+                  // View Mode Layout: Centered Value
                   <div className="flex items-center justify-center">
                     <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
-                      {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]}
+                      {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                     </p>
                   </div>
                 )}
@@ -348,8 +358,9 @@ export default function CharacterCard() {
     );
   };
 
-  // Render skill badge
+  // Function to render a skill badge
   const renderSkillBadge = (skill, index) => {
+    // Define color gradients for badges
     const colors = [
       "bg-gradient-to-r from-blue-500 to-purple-500 text-white",
       "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
@@ -361,6 +372,7 @@ export default function CharacterCard() {
         key={index}
         className={`${colors[index % colors.length]} px-4 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-1.5 transition-all hover:scale-105`}
       >
+        {/* Add specific icons based on skill index (example) */}
         {index === 0 && <Icon name="Sword" size={14} />}
         {index === 1 && <Icon name="Shield" size={14} />}
         {index === 2 && <Icon name="Zap" size={14} />}
@@ -369,14 +381,15 @@ export default function CharacterCard() {
     );
   };
 
-  // Reset Stats Modal component
+  // Component for the Reset Stats Confirmation Modal
   const ResetModal = () => {
-    // Calculate actual points to receive upon reset
+    // Calculate points the user will receive upon reset
     const pointsToReceive = calculateResetPoints();
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetAnimation ? 'animate-pulse' : ''}`}>
+          {/* Modal Header */}
           <div className="bg-gradient-to-br from-purple-500 to-blue-600 text-white p-4 rounded-xl mb-4 shadow-lg">
             <div className="flex items-center">
               <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center mr-4">
@@ -389,6 +402,7 @@ export default function CharacterCard() {
             </div>
           </div>
 
+          {/* Important Note Section */}
           <div className="mb-4 bg-amber-50 p-4 rounded-lg border border-amber-200">
             <div className="flex">
               <Icon name="AlertCircle" size={20} className="text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -402,29 +416,36 @@ export default function CharacterCard() {
             </div>
           </div>
 
+          {/* Points Received Section */}
           <div className="bg-gray-50 p-3 rounded-lg mb-5">
             <h4 className="text-sm font-medium text-gray-600 mb-2">Bạn sẽ nhận được:</h4>
             <div className="flex items-center bg-white p-3 rounded-lg border border-blue-100">
+              {/* Point Icon */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3">
                 <Icon name="Gem" size={16} className="text-white" />
               </div>
+              {/* Point Description */}
               <div className="flex-1">
                 <p className="font-medium text-gray-700">Điểm Tiềm Năng</p>
                 <p className="text-xs text-gray-500">Dùng để nâng cấp chỉ số</p>
               </div>
+              {/* Points Amount */}
               <div className="bg-indigo-100 px-3 py-1 rounded-lg text-indigo-600 font-bold">
                 +{pointsToReceive}
               </div>
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex gap-3">
+            {/* Cancel Button */}
             <button
               onClick={() => setShowResetModal(false)}
               className="flex-1 px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
             >
               Hủy
             </button>
+            {/* Reset Button */}
             <button
               onClick={resetStats}
               className={`flex-1 px-4 py-3 rounded-xl font-medium text-white shadow-lg flex items-center justify-center gap-2 ${resetAnimation ? 'bg-purple-600 animate-pulse' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'} transition-all`}
@@ -443,18 +464,18 @@ export default function CharacterCard() {
     );
   };
 
-  // Coin and Point Exchange Modal component
+  // Component for the Coin/Point Exchange Modal
   const ExchangeModal = () => {
-    // Calculate the result of the exchange
+    // Calculate the result of the exchange based on direction and amount
     const getResult = () => {
       if (exchangeDirection === 'coinToPoint') {
-        return Math.floor(exchangeAmount / 100);
+        return Math.floor(exchangeAmount / 100); // 100 Coins = 1 Point
       } else {
-        return exchangeAmount * 100;
+        return exchangeAmount * 100; // 1 Point = 100 Coins
       }
     };
 
-    // Check if there are enough resources for the exchange
+    // Check if the user has enough resources for the selected exchange
     const hasEnoughResources = () => {
       if (exchangeDirection === 'coinToPoint') {
         return character.coins >= exchangeAmount;
@@ -465,18 +486,19 @@ export default function CharacterCard() {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        {/* Changed modal content background */}
+        {/* Modal Content Container */}
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all">
 
-          {/* Select exchange direction */}
+          {/* Exchange Direction Selection */}
           <div className="mb-5">
+            {/* Toggle Buttons */}
             <div className="bg-gray-100 p-1 rounded-lg flex mb-2">
               <button
                 onClick={() => setExchangeDirection('coinToPoint')}
                 className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                   exchangeDirection === 'coinToPoint' ?
-                  'bg-white shadow-sm text-indigo-600' :
-                  'text-gray-500 hover:bg-gray-50'
+                  'bg-white shadow-sm text-indigo-600' : // Active style
+                  'text-gray-500 hover:bg-gray-50' // Inactive style
                 }`}
               >
                 <Icon name="Coins" size={16} />
@@ -486,22 +508,23 @@ export default function CharacterCard() {
                 onClick={() => setExchangeDirection('pointToCoin')}
                 className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                   exchangeDirection === 'pointToCoin' ?
-                  'bg-white shadow-sm text-amber-600' :
-                  'text-gray-500 hover:bg-gray-50'
+                  'bg-white shadow-sm text-amber-600' : // Active style
+                  'text-gray-500 hover:bg-gray-50' // Inactive style
                 }`}
               >
                 <Icon name="Gem" size={16} />
                 Point → Coin
               </button>
             </div>
-
+            {/* Helper Text */}
             <div className="text-xs text-gray-500 italic text-center">
               Chọn loại tài nguyên bạn muốn chuyển đổi
             </div>
           </div>
 
-          {/* Select amount */}
+          {/* Amount Selection */}
           <div className="mb-5">
+            {/* Header with current resource amount */}
             <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
               <span>Số lượng chuyển đổi</span>
               <div className="ml-auto text-xs text-gray-500">
@@ -511,24 +534,25 @@ export default function CharacterCard() {
                 }
               </div>
             </h4>
-
+            {/* Input and Adjustment Buttons */}
             <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200">
+              {/* Decrease Button */}
               <button
                 onClick={() => adjustExchangeAmount(-100)}
                 className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
               >
                 <Icon name="Minus" size={18} />
               </button>
-
+              {/* Amount Input */}
               <div className="flex-1 mx-2">
                 <input
                   type="number"
                   value={exchangeAmount}
-                  onChange={(e) => setExchangeAmount(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setExchangeAmount(Math.max(1, parseInt(e.target.value) || 0))} // Ensure value is at least 1
                   className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-bold text-gray-700"
                 />
               </div>
-
+              {/* Increase Button */}
               <button
                 onClick={() => adjustExchangeAmount(100)}
                 className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
@@ -536,7 +560,7 @@ export default function CharacterCard() {
                 <Icon name="Plus" size={18} />
               </button>
             </div>
-
+            {/* Exchange Rate Info */}
             <div className="text-xs text-gray-500 italic text-center mt-1">
               {exchangeDirection === 'coinToPoint' ?
                 '100 Coin = 1 Point' :
@@ -545,27 +569,30 @@ export default function CharacterCard() {
             </div>
           </div>
 
-          {/* Exchange result */}
+          {/* Exchange Result Preview */}
           <div className="mb-5 bg-gray-50 p-4 rounded-lg">
             <div className="flex items-center">
+              {/* Result Icon */}
               <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3">
                 {exchangeDirection === 'coinToPoint' ? (
+                  // Point Icon with pulse effect
                   <div className="w-full h-full relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
                     <Icon name="Gem" size={24} className="absolute inset-0 m-auto text-white" />
                   </div>
                 ) : (
+                  // Coin Icon with pulse effect
                   <div className="w-full h-full relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 animate-pulse"></div>
                     <Icon name="Coins" size={24} className="absolute inset-0 m-auto text-white" />
                   </div>
                 )}
               </div>
-
+              {/* Result Text */}
               <div className="flex-1">
                 <div className="text-sm text-gray-500">Bạn sẽ nhận được:</div>
                 <div className="font-bold text-lg text-gray-800 flex items-center">
-                  {getResult().toLocaleString()}
+                  {getResult().toLocaleString()} {/* Format result with commas */}
                   <span className="ml-1 text-sm">
                     {exchangeDirection === 'coinToPoint' ? 'Point' : 'Coin'}
                   </span>
@@ -574,7 +601,7 @@ export default function CharacterCard() {
             </div>
           </div>
 
-          {/* Warning if not enough resources */}
+          {/* Warning Message (if not enough resources) */}
           {!hasEnoughResources() && (
             <div className="mb-4 bg-red-50 p-3 rounded-lg border border-red-200">
               <div className="flex">
@@ -592,21 +619,23 @@ export default function CharacterCard() {
             </div>
           )}
 
-          {/* Action buttons - Made smaller */}
+          {/* Action Buttons */}
           <div className="flex gap-3">
+            {/* Cancel Button */}
             <button
               onClick={() => setShowExchangeModal(false)}
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-colors" // Adjusted padding and text size
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-colors"
             >
               Hủy
             </button>
+            {/* Exchange Button */}
             <button
               onClick={handleExchange}
-              disabled={!hasEnoughResources()}
-              className={`flex-1 px-3 py-2 rounded-lg font-medium text-white text-sm shadow-lg flex items-center justify-center gap-2 transition-all ${ // Adjusted padding and text size
+              disabled={!hasEnoughResources()} // Disable if not enough resources
+              className={`flex-1 px-3 py-2 rounded-lg font-medium text-white text-sm shadow-lg flex items-center justify-center gap-2 transition-all ${
                 hasEnoughResources() ?
-                'bg-gradient-to-r from-indigo-600 to-amber-600 hover:from-indigo-700 hover:to-amber-700' :
-                'bg-gray-400 cursor-not-allowed'
+                'bg-gradient-to-r from-indigo-600 to-amber-600 hover:from-indigo-700 hover:to-amber-700' : // Enabled style
+                'bg-gray-400 cursor-not-allowed' // Disabled style
               }`}
             >
               Chuyển Đổi
@@ -619,60 +648,61 @@ export default function CharacterCard() {
 
 
   return (
+    // Main card container with conditional glow effect
     <div className={`max-w-lg mx-auto rounded-3xl shadow-2xl overflow-hidden transition-all duration-700 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'}`}
-          style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}>
-      {/* Premium Banner Header */}
+          style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
+
+      {/* Header section with background pattern */}
       <div className="h-32 relative bg-white">
+        {/* Background pattern overlay */}
         <div className="absolute inset-0" style={{
           backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
         }}></div>
 
-        {/* Coin and Points Badges container with glassmorphism */}
-        {/* Adjusted top position from top-4 to top-2 */}
+        {/* Top right badges container with glassmorphism effect */}
         <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
                     backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
-                    border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10"> {/* Added glassmorphism classes and z-10 */}
+                    border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10">
           {/* Coin Badge */}
           <div className="overflow-hidden">
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}> {/* Added pulse class */}
+            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}>
               <div className="w-4 h-4 mr-1.5 relative">
                 <Icon name="Coins" size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
                 <div className="absolute inset-0 bg-yellow-200 blur-md opacity-30"></div>
               </div>
               <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
-               {/* The Plus button next to Coin badge is kept but its onClick is removed */}
+               {/* Plus button next to Coin badge (functionality removed) */}
                <button
-                  // Removed onClick={() => { setShowExchangeModal(true); setExchangeDirection('coinToPoint'); }}
                   className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
-                  title="Chuyển đổi Coin sang Point"
+                  title="Chuyển đổi Coin sang Point" // Tooltip remains
                 >
                   <Icon name="Plus" size={10} className="text-white" />
                 </button>
             </div>
           </div>
 
-          {/* Exchange Button with text and border */}
+          {/* Exchange Button */}
           <button
-            onClick={() => setShowExchangeModal(true)}
-            className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300" // Adjusted padding and text styles, changed text color, added border
+            onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
+            className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300"
             title="Chuyển đổi Coin/Point"
           >
-            Exchange {/* Replaced SVG with text */}
+            Exchange
           </button>
 
           {/* Points Badge */}
-          <div className="overflow-hidden"> {/* Wrapped Points Badge in div */}
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}> {/* Added pulse class */}
+          <div className="overflow-hidden">
+            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}>
               <div className="w-4 h-4 mr-1.5 relative">
                 <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
                 <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
               </div>
               <span className="text-xs font-bold text-white">{statPoints}</span>
-              {/* Modified the button to always be present but conditionally invisible */}
+              {/* Plus button next to Points badge (conditionally visible) */}
               <button
-                onClick={() => setShowPointsPanel(true)}
-                className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Added invisible and pointer-events-none
-                disabled={!(!showPointsPanel && statPoints > 0)} // Disable when invisible
+                onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
+                className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
+                disabled={!(!showPointsPanel && statPoints > 0)}
               >
                 <Icon name="Plus" size={10} className="text-white" />
               </button>
@@ -680,23 +710,25 @@ export default function CharacterCard() {
           </div>
         </div>
 
-
+        {/* Gradient overlay at the bottom of the header */}
         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
       </div>
 
-      {/* Character Info */}
-      <div className="px-8 pt-4"> {/* Reverted top padding to pt-4 */}
+      {/* Main content area */}
+      <div className="px-8 pt-4">
+        {/* Empty div (previously held title/level) */}
         <div className="flex flex-col mb-2">
-           {/* This div is now empty after removing title and small indicators */}
         </div>
 
-        {/* Stats Section */} {/* Moved Stats section up */}
-        <div className="mb-8"> {/* Reverted bottom margin to mb-8 */}
+        {/* Stats Section */}
+        <div className="mb-8">
+            {/* Stats Header */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
                 <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
               </h3>
 
+              {/* "Allocate Points" button (visible if points > 0 and panel is closed) */}
               {statPoints > 0 && !showPointsPanel && (
                 <button
                   onClick={() => setShowPointsPanel(true)}
@@ -707,9 +739,9 @@ export default function CharacterCard() {
                 </button>
               )}
 
+              {/* "Details" indicator (visible if no points or panel is open) */}
               {!statPoints && !showPointsPanel && (
                 <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
-                  {/* Replaced SVG with a simple circle/dot representation */}
                   <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <circle cx="10" cy="10" r="3"></circle>
                   </svg>
@@ -718,25 +750,24 @@ export default function CharacterCard() {
               )}
             </div>
 
-            {/* Point Allocation Panel */}
+            {/* Point Allocation Panel (conditionally rendered) */}
             {showPointsPanel ? (
               <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
-                {/* Header with icon and remaining points */}
+                {/* Panel Header */}
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
                     <Icon name="Plus" size={20} className="text-white" />
                   </div>
                   <div>
-                     {/* Removed "Phân Bổ Điểm Kỹ Năng" title */}
                     <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
                   </div>
                 </div>
 
-                {/* Render stats for editing */}
+                {/* Render stats in edit mode */}
                 {renderStats(true)}
 
-                {/* Tip */}
-                <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start"> {/* Added mt-4 */}
+                {/* Allocation Tip */}
+                <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start">
                   <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-blue-800">
                     <p className="font-medium mb-1">Mẹo phân bổ điểm:</p>
@@ -747,14 +778,16 @@ export default function CharacterCard() {
                   </div>
                 </div>
 
-                 {/* Action buttons */}
-                <div className="flex items-center justify-end space-x-2"> {/* Added justify-end */}
+                 {/* Action Buttons for Allocation Panel */}
+                <div className="flex items-center justify-end space-x-2">
+                   {/* Cancel Button */}
                    <button
                       onClick={cancelChanges}
                       className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
                     >
                       Hủy
                     </button>
+                    {/* Apply Button */}
                     <button
                       onClick={applyChanges}
                       className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
@@ -762,47 +795,47 @@ export default function CharacterCard() {
                       Áp dụng
                     </button>
                 </div>
-
               </div>
             ) : (
+              // Render stats in view mode (when allocation panel is closed)
               <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
                 {renderStats()}
               </div>
             )}
           </div>
 
-
-        {/* Skills */}
-        <div className="mb-8"> {/* Reverted bottom margin to mb-8 */}
+        {/* Skills Section */}
+        <div className="mb-8">
+          {/* Skills Header */}
           <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
             <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
           </h3>
+          {/* Skill Badges */}
           <div className="flex flex-wrap gap-3">
             {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
           </div>
         </div>
       </div>
 
-
-      {/* Footer */}
+      {/* Footer Section */}
       <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200">
         <div className="flex justify-between items-center">
+          {/* Character ID */}
           <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
 
-          {/* Replace "Upgrade Character" button with "Reset Stats" */}
+          {/* Reset Stats Button */}
           <button
-            onClick={() => setShowResetModal(true)}
+            onClick={() => setShowResetModal(true)} // Opens the reset modal
             className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
           >
-            {/* Background glow effect */}
+            {/* Background shine effect on hover */}
             <div className="absolute top-0 left-0 h-full w-16 bg-white opacity-20 skew-x-30 transform -translate-x-20 transition-transform group-hover:translate-x-64 duration-1000"></div>
-
+            {/* Button Text and Icons */}
             <div className="flex items-center gap-2 relative">
               <Icon name="RotateCcw" size={16} className="group-hover:rotate-180 transition-transform duration-500" />
               <span>Reset Chỉ Số</span>
               <Icon name="ArrowRight" size={14} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
             </div>
-
             {/* Tooltip */}
             <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
               Thu hồi điểm tiềm năng
@@ -811,10 +844,10 @@ export default function CharacterCard() {
         </div>
       </div>
 
-      {/* Reset Modal */}
+      {/* Render Reset Modal (conditionally) */}
       {showResetModal && <ResetModal />}
 
-      {/* Exchange Modal */}
+      {/* Render Exchange Modal (conditionally) */}
       {showExchangeModal && <ExchangeModal />}
     </div>
   );
