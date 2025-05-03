@@ -671,14 +671,13 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   return (
-    // MODIFIED: Added absolute positioning and full size for fullscreen display
-    // Removed max-w-lg mx-auto for full screen
-    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
+    // MODIFIED: Removed overflow-hidden from the main container
+    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'}`} // Removed overflow-hidden here
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
       {/* Container to limit the width of the content within the fullscreen view */}
       {/* MODIFIED: Added flex flex-col h-full to enable flex layout for fixed header/footer */}
-      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"> {/* Kept overflow-hidden here for the rounded corners and shadow */}
 
         {/* Close Button - NEW */}
         {onClose && (
