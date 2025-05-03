@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component } from 'react';
 // Import the CharacterCard component
 import CharacterCard from './stats.tsx'; // Assuming stats.tsx is in the same directory
 
@@ -127,6 +127,49 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
+// --- NEW: Error Boundary Component ---
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode; // Optional fallback UI
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true, error: error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // You can also log the error to an error reporting service
+    console.error("Uncaught error in CharacterCard:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // You can render any custom fallback UI
+      return this.props.fallback || (
+        <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded">
+          <p>Có lỗi xảy ra khi hiển thị bảng chỉ số.</p>
+          <p>Chi tiết lỗi: {this.state.error?.message}</p>
+          <p>(Kiểm tra Console để biết thêm thông tin)</p>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 
 // Define interface for component props
 interface ObstacleRunnerGameProps {
@@ -165,7 +208,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
-  const [showStatsModal, setShowStatsModal] = useState(false); // <-- NEW: State for stats modal visibility
+  const [showStatsModal, setShowStatsModal] = useState(false); // State for stats modal visibility
 
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
@@ -239,7 +282,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShowCharacterDamageEffect(false); // Reset character damage effect state
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
-    setShowStatsModal(false); // <-- NEW: Ensure stats modal is closed on game start/restart
+    setShowStatsModal(false); // Ensure stats modal is closed on game start/restart
 
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
@@ -372,7 +415,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Handle character jump action
   const jump = () => {
     // Check if not already jumping, game is started, not over, AND card popup/stats modal is not shown
-    if (!jumping && !gameOver && gameStarted && !showCard && !showStatsModal) { // <-- NEW: Check showStatsModal
+    if (!jumping && !gameOver && gameStarted && !showCard && !showStatsModal) { // Check showStatsModal
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
@@ -392,7 +435,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const handleTap = () => {
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver && !showCard && !showStatsModal) { // <-- NEW: Check showStatsModal
+    } else if (!gameOver && !showCard && !showStatsModal) { // Check showStatsModal
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
@@ -426,7 +469,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
-    // <-- NEW: Don't run movement if stats modal is open
+    // Don't run movement if stats modal is open
     if (!gameStarted || gameOver || showStatsModal) return;
 
     // Game speed is now constant as score is removed
@@ -536,7 +579,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
-    // <-- NEW: Add showStatsModal to dependency array
+    // Add showStatsModal to dependency array
   }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, showStatsModal]);
 
   // Effect to clean up all timers when the component unmounts
@@ -738,7 +781,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Function to open the chest
   const openChest = () => {
-    // <-- NEW: Prevent opening chest if stats modal is open
+    // Prevent opening chest if stats modal is open
     if (isChestOpen || chestsRemaining <= 0 || showStatsModal) return;
     setChestShake(true);
     setTimeout(() => {
@@ -776,7 +819,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   };
 
-  // <-- NEW: Function to toggle stats modal
+  // Function to toggle stats modal
   const toggleStatsModal = () => {
     // Prevent opening if game over or card is shown
     if (gameOver || showCard) return;
@@ -896,7 +939,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Health Bar and Icon */}
           <div className="flex items-center">
               {/* ICON TRÒN - Round Icon */}
-              {/* <-- NEW: Added onClick handler and cursor-pointer */}
+              {/* Added onClick handler and cursor-pointer */}
               <div
                 className="relative mr-2 cursor-pointer"
                 onClick={toggleStatsModal}
@@ -1149,7 +1192,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          // <-- NEW: Disable click if stats modal is open
+          // Disable click if stats modal is open
           onClick={!isChestOpen && chestsRemaining > 0 && !showStatsModal ? openChest : null}
           aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
@@ -1293,18 +1336,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         </div>
       )}
 
-      {/* <-- NEW: Stats Modal --> */}
+      {/* Stats Modal */}
       {showStatsModal && (
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
               {/* Modal Content */}
               <div className="relative max-w-lg w-full"> {/* Container for CharacterCard and close button */}
-                  {/* Character Card Component */}
-                  <CharacterCard />
+                  {/* --- NEW: Wrap CharacterCard in ErrorBoundary --- */}
+                  <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
+                      <CharacterCard />
+                  </ErrorBoundary>
 
                   {/* Close Button */}
                   <button
                       onClick={toggleStatsModal}
-                      className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-50"
+                      className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-[51]" /* Ensure close button is above error boundary if needed */
                       aria-label="Đóng cửa sổ chỉ số"
                   >
                       <XIcon size={20} />
