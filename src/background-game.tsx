@@ -916,7 +916,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       <div
         ref={gameRef} // Assign ref
         // Apply the passed className prop here
-        // Keep overflow-hidden for game elements
         className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`} // Adjusted width and height, removed cursor-pointer here
         onClick={handleTap} // Handle taps/clicks for jumping/starting
       >
@@ -1084,8 +1083,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* NEW: Full-screen Stats Display */}
         {isStatsFullscreen && (
-            {/* MODIFIED: Removed items-center, justify-center, p-4. Added overflow-y-auto */}
-            <div className="absolute inset-0 bg-black bg-opacity-70 z-40 backdrop-blur-sm overflow-y-auto">
+            // Use absolute inset-0 to cover the whole game container
+            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 backdrop-blur-sm p-4">
                 {/* Wrap CharacterCard in ErrorBoundary */}
                 <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
                     {/* Pass a prop to CharacterCard to handle closing */}
