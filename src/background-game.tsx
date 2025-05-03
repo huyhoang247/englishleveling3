@@ -853,7 +853,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* Header section - Positioned on top of the game */}
         {/* Moved inside the game container */}
-        <div className="absolute top-2 left-0 w-full p-2 flex justify-between items-center bg-gradient-to-b from-blue-900/80 to-blue-800/80 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
+        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-gradient-to-b from-blue-900/80 to-blue-800/80 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
           {/* Health Bar and Icon */}
           <div className="flex items-center">
               {/* ICON TRÒN - Round Icon */}
