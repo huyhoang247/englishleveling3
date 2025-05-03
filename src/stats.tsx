@@ -14,10 +14,10 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
     Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
     AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
-    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2v20"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path></g>,
-    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
+    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M2 9l10 13 10-13"></path><path d="M12 2v20"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path></g>,
+    Coins: <g><circle cx="8" cy="16" r="6"></circle><path d="M18 9.5a6 6 0 0 0-6-6c-1.7 0-3.4.6-4.4 1.7"></path><path d="M17.5 16H18a2 2 0 0 0 0-4h-.5"></path><path d="M15 22a6 6 0 0 0 6-6c0-1.7-.6-3.4-1.7-4.4"></path><path d="M8.5 22H8a2 0 0 1 0-4h.5"></path><path d="M12 12v10"></path></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
-    ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></ArrowRight></g>,
+    ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
     X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
@@ -673,12 +673,11 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   return (
     // MODIFIED: Added absolute positioning and full size for fullscreen display
     // Removed max-w-lg mx-auto for full screen
-    // Added flex and flex-col to enable column layout
-    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex flex-col items-center justify-start p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden for the main container
+    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
       {/* Container to limit the width of the content within the fullscreen view */}
-      {/* MODIFIED: Added h-full to make the container take full height */}
+      {/* MODIFIED: Added flex flex-col h-full to enable flex layout for fixed header/footer */}
       <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
         {/* Close Button - NEW */}
@@ -692,9 +691,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </button>
         )}
 
-        {/* Header section with background pattern */}
-        {/* MODIFIED: Reduced header height from h-24 to h-20 */}
-        {/* Added flex-shrink-0 to prevent header shrinking */}
+        {/* Header section with background pattern - FIXED TOP */}
+        {/* MODIFIED: Added flex-shrink-0 */}
         <div className="h-20 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
           {/* Background pattern overlay */}
           <div className="absolute inset-0" style={{
@@ -756,7 +754,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
         </div>
 
-        {/* Main content area */}
+        {/* Main content area - SCROLLABLE MIDDLE */}
         {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
         {/* MODIFIED: Reduced padding top from pt-2 to pt-1 */}
         <div className="px-8 pt-1 overflow-y-auto flex-grow">
@@ -860,8 +858,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
         </div>
 
-        {/* Footer Section */}
-        {/* Added flex-shrink-0 to prevent footer shrinking */}
+        {/* Footer Section - FIXED BOTTOM */}
+        {/* MODIFIED: Added flex-shrink-0 */}
         <div className="px-8 py-5 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
           <div className="flex justify-between items-center">
             {/* Character ID */}
