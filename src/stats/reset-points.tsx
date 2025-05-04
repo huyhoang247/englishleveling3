@@ -100,7 +100,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
               {/* Spinner animation */}
               <div className="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mb-4"></div>
               {/* Processing message */}
-              <p className="text-gray-700 font-medium text-lg">Đang hoàn tác điểm tiềm năng...</p>
+              {/* Đã xóa dòng "Đang hoàn tác điểm tiềm năng..." */}
               <p className="text-gray-500 text-sm mt-1">Vui lòng chờ trong giây lát.</p>
             </div>
           ) : (
