@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Import React
+import React, { useState, useEffect, useRef, Component } from 'react'; // Import React, useRef
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
@@ -6,7 +6,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
   const icons = {
     Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>,
     Sword: <path d="M14.5 17.5L3 6 6 3l11.5 11.5L22 11l-3-3 3-3-3-3-3 3-3-3L6 6l11.5 11.5zM14.5 17.5l-3-3M14.5 17.5L11 21l3.5-3.5z"></path>,
-    Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,
+    Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,\
     Stars: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>,
     Brain: <path d="M12 15c.68-1.32 1-2.8 1-4.4C13 6.4 10.8 2 7.5 2 4.2 2 2 6.4 2 10.6c0 4.2 2.2 8.6 5.5 8.6 2.12 0 3.6-.8 4.5-2.4zM12 15c-.68-1.32-1-2.8-1-4.4C11 6.4 13.2 2 16.5 2c3.3 0 5.5 4.4 5.5 8.6 0 4.2-2.2 8.6-5.5 8.6-2.12 0-3.6-.8-4.5-2.4z"></path>,
     Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
@@ -82,6 +82,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [exchangeAmount, setExchangeAmount] = useState(100);
   const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
+
+  // NEW: Ref to store the character ID, initialized once
+  const characterIdRef = useRef(`#LEGEND-${Math.floor(Math.random() * 10000)}`);
 
   // Effect for card glow animation
   useEffect(() => {
@@ -758,8 +761,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
         <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
           <div className="flex justify-between items-center">
-            {/* Character ID */}
-            <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
+            {/* Character ID - MODIFIED to use characterIdRef */}
+            <span className="text-xs text-gray-500 font-medium">ID: {characterIdRef.current}</span>
 
             {/* NEW: Render the new ResetStatsControl component */}
             <ResetStatsControl
