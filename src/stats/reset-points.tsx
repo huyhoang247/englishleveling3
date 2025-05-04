@@ -62,16 +62,21 @@ const LoadingSpinner = ({ size = 48, color = 'currentColor' }) => {
       <Icon
         name="RotateCcw"
         size={size}
-        className={`text-${color} animate-spin-custom`} // Apply custom animation class
+        className={`text-${color} animate-spin-pulse-custom`} // Apply custom combined animation class
       />
-      {/* Define the custom keyframes for the animation */}
+      {/* Define the custom keyframes for the combined animation */}
       <style jsx>{`
         @keyframes spin-custom {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        .animate-spin-custom {
-          animation: spin-custom 1s linear infinite;
+        @keyframes pulse-custom {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .animate-spin-pulse-custom {
+          animation: spin-custom 1s linear infinite, pulse-custom 1.5s ease-in-out infinite; /* Combine animations */
+          transform-origin: 50% 50%; /* Explicitly set rotation origin to center */
         }
       `}</style>
     </div>
