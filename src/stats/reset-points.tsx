@@ -8,9 +8,6 @@ const Icon = ({ name, size = 24, className = '' }) => {
     AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
     Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></g>,
     X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
-    Star: <g><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></g>,
-    CheckCircle: <g><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></g>,
-    Loader: <g><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></g>,
   };
 
   if (!icons[name]) {
@@ -58,8 +55,6 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
   const [showResetModal, setShowResetModal] = useState(false);
   // State để điều khiển hiệu ứng animation khi reset
   const [resetAnimation, setResetAnimation] = useState(false);
-  // State để theo dõi tiến trình
-  const [progress, setProgress] = useState(0);
 
   // Hàm tính toán tổng điểm tiềm năng đã phân bổ dựa trên chỉ số hiện tại
   const calculateResetPoints = () => {
@@ -77,32 +72,17 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
   // Hàm xử lý khi người dùng bấm xác nhận reset trong modal
   const handleConfirmReset = () => {
     setResetAnimation(true); // Bắt đầu animation xử lý
-    setProgress(0); // Reset tiến trình về 0
 
-    // Sử dụng interval để tăng tiến trình trong thời gian đợi
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        // Tăng từ từ đến 95% trong suốt thời gian chờ
-        if (prev < 95) {
-          return prev + 5;
-        }
-        return prev;
-      });
-    }, 100);
+    // Tính toán số điểm sẽ hoàn trả
+    const pointsToRefund = calculateResetPoints();
 
     // Sử dụng setTimeout để tạo độ trễ cho animation trước khi thực hiện logic reset
     setTimeout(() => {
-      clearInterval(interval);
-      setProgress(100); // Hoàn thành 100%
-      
       // Gọi hàm callback từ component cha, truyền số điểm hoàn trả
-      setTimeout(() => {
-        const pointsToRefund = calculateResetPoints();
-        onStatsReset(pointsToRefund);
-        setShowResetModal(false); // Đóng modal
-        setResetAnimation(false); // Kết thúc animation xử lý
-      }, 500); // Thêm delay nhỏ sau khi tiến trình đạt 100%
-    }, 1500); // Độ trễ 1.5 giây
+      onStatsReset(pointsToRefund);
+      setShowResetModal(false); // Đóng modal
+      setResetAnimation(false); // Kết thúc animation xử lý
+    }, 2000); // Tăng nhẹ độ trễ để phù hợp với animation mới (2 giây)
   };
 
   // Component nội bộ cho Modal xác nhận Reset Chỉ Số
@@ -111,74 +91,27 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
     const pointsToReceive = calculateResetPoints();
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"> {/* Thêm backdrop-blur */}
         {/* Nội dung Modal */}
-        <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetAnimation ? 'scale-105' : ''}`}>
+        <div className={`bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-500 ${resetAnimation ? 'scale-105 opacity-90' : 'scale-100 opacity-100'}`}> {/* Thêm transition và opacity */}
           {/* Hiển thị giao diện xử lý nếu resetAnimation là true */}
           {resetAnimation ? (
             <div className="flex flex-col items-center justify-center py-8">
-              {/* Gradient Circle Spinner */}
-              <div className="relative mb-6">
-                {/* Background Circle */}
-                <div className="w-24 h-24 rounded-full border-4 border-gray-100"></div>
-                
-                {/* Progress Circle with Gradient */}
-                <div 
-                  className="absolute top-0 left-0 w-24 h-24 rounded-full border-4 border-transparent border-t-indigo-600 border-r-purple-600"
-                  style={{ 
-                    transform: `rotate(${progress * 3.6}deg)`,
-                    transition: 'transform 0.3s ease' 
-                  }}
-                ></div>
-                
-                {/* Percentage in center */}
+              {/* Enhanced Spinner animation */}
+              <div className="relative w-16 h-16 mb-6">
+                {/* Outer circle */}
+                <div className="absolute inset-0 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin-slow"></div> {/* spinner chậm */}
+                {/* Inner circle */}
+                 <div className="absolute inset-2 border-4 border-b-4 border-purple-500 border-dashed rounded-full animate-spin-reverse-slow"></div> {/* spinner ngược, chậm */}
+                {/* Center Icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    {progress}%
-                  </span>
+                     <Icon name="RotateCcw" size={32} className="text-gray-600" />
                 </div>
               </div>
-              
-              {/* Animated points icons */}
-              <div className="relative w-full h-12 mb-4">
-                <div className="absolute inset-0 flex justify-center">
-                  {[...Array(5)].map((_, i) => (
-                    <div 
-                      key={i}
-                      className="absolute transform -translate-y-1/2 opacity-0"
-                      style={{
-                        animation: `float-up-${i} 1.2s ease-out infinite ${i * 0.2}s`,
-                        left: `${30 + i * 10}%`
-                      }}
-                    >
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600">
-                        <Icon name="Gem" size={12} className="text-white" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <style jsx>{`
-                  @keyframes float-up-0 { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-20px); opacity: 0; } }
-                  @keyframes float-up-1 { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-25px); opacity: 0; } }
-                  @keyframes float-up-2 { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-20px); opacity: 0; } }
-                  @keyframes float-up-3 { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-22px); opacity: 0; } }
-                  @keyframes float-up-4 { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-18px); opacity: 0; } }
-                `}</style>
-              </div>
-              
-              {/* Processing message with gradient text */}
-              <div className="text-center">
-                <h3 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-1">
-                  Đang hoàn tác điểm tiềm năng
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {progress < 50 ? 'Đang tính toán...' : 
-                   progress < 80 ? 'Chuẩn bị hoàn trả điểm...' : 
-                   progress < 100 ? 'Sắp hoàn thành...' : 
-                   'Hoàn thành!'}
-                </p>
-              </div>
+
+              {/* Processing message */}
+              <p className="text-gray-800 font-semibold text-xl mb-2 animate-pulse">Đang hoàn tác điểm tiềm năng...</p> {/* Text lớn hơn, đậm hơn, thêm pulse */}
+              <p className="text-gray-600 text-sm italic">Vui lòng chờ trong giây lát.</p> {/* Text nhỏ hơn, nghiêng */}
             </div>
           ) : (
             // Hiển thị nội dung xác nhận reset nếu resetAnimation là false
