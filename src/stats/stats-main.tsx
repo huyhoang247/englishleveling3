@@ -76,6 +76,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const [statPoints, setStatPoints] = useState(11);
   const [showPointsPanel, setShowPointsPanel] = useState(false);
   const [tempStats, setTempStats] = useState({...character.stats});
+  // State cho hiệu ứng phát sáng, có thể là nguyên nhân gây nhảy nếu áp dụng không cẩn thận
   const [glowEffect, setGlowEffect] = useState(false);
 
   // State for Coin and Point exchange modal
@@ -84,6 +85,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
 
   // Effect for card glow animation
+  // Hiệu ứng này thay đổi lớp shadow, có thể gây tính toán lại bố cục và nhảy
   useEffect(() => {
     const interval = setInterval(() => {
       setGlowEffect(prev => !prev);
@@ -569,6 +571,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   return (
     // MODIFIED: Added absolute positioning and full size for fullscreen display
     // Removed max-w-lg mx-auto for full screen
+    // Chú thích: absolute inset-0 sẽ định vị component này so với phần tử cha ĐÃ ĐƯỢC ĐỊNH VỊ gần nhất.
+    // Nếu phần tử cha không được định vị, nó sẽ định vị so với viewport.
+    // Đảm bảo phần tử cha của component CharacterCard có position: relative; để tránh nhảy.
     <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
