@@ -508,7 +508,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     for (let i = 0; i < 2; i++) { // Generate 2 particles at a time
       newParticles.push({
         id: Date.now() + i, // Unique ID
-        x: 8 + Math.random() * 5, // MODIFIED: Starting X position (near character, using 8%)
+        x: 5 + Math.random() * 5, // MODIFIED: Starting X position (near character, using 5%)
         y: 0, // Starting Y position (relative to ground level)
         size: Math.random() * 4 + 2, // Size of the particle
         xVelocity: -Math.random() * 1 - 0.5, // Horizontal velocity (moving left)
@@ -795,7 +795,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
         const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
         // MODIFIED: Adjusted characterXPercent to move character backward
-        const characterXPercent = 6; // Character's fixed X position (in %)
+        const characterXPercent = 5; // Character's fixed X position (in %)
         const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
 
         // Character's vertical position relative to the top of the game container
@@ -947,7 +947,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
           const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
           // MODIFIED: Adjusted characterXPercent to move character backward
-          const characterXPercent = 6; // Character's fixed X position (in %)
+          const characterXPercent = 5; // Character's fixed X position (in %)
           const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
 
           // Character's vertical position relative to the top of the game container
@@ -1147,7 +1147,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           // Position based on characterPos state relative to new ground
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
           // MODIFIED: Adjusted left position to move character backward
-          left: '6%', // Fixed horizontal position
+          left: '5%', // Fixed horizontal position
           transition: jumping ? 'bottom 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)' : 'bottom 0.3s cubic-bezier(0.33, 1, 0.68, 1)' // Different transition for jumping
         }}
       >
@@ -1325,7 +1325,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           width: `${particle.size}px`, // Size based on particle state
           height: `${particle.size}px`,
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`, // Vertical position relative to new ground
-          left: `calc(6% + ${particle.x}px)`, // MODIFIED: Horizontal position relative to character (using 6%)
+          left: `calc(5% + ${particle.x}px)`, // MODIFIED: Horizontal position relative to character (using 5%)
           opacity: particle.opacity // Opacity for fading effect
         }}
       ></div>
@@ -1361,7 +1361,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     if (!isShieldActive) return null;
 
     // Position the shield above and slightly in front of the character.
-    // Character container is at bottom: calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px), left: 6%
+    // Character container is at bottom: calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px), left: 5%
     // We want the shield centered above the character, shifted slightly to the right (forward).
     const shieldSizePx = 80; // Approximate size of the shield Lottie container in pixels
 
@@ -1373,7 +1373,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           // Position shield above the character container and slightly to the right
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + 96px)`, // 96px is approx height of character container (w-24 h-24)
           // MODIFIED: Adjusted left position to move shield forward
-          left: '12%', // Adjusted horizontal position (slightly more than 6%)
+          left: '13%', // Adjusted horizontal position (slightly more than 5%)
           transform: 'translate(-50%, -50%)', // Center the shield container relative to its left position
           transition: 'bottom 0.3s ease-out, left 0.3s ease-out', // Smooth transition with character jump and movement
           width: `${shieldSizePx}px`,
@@ -2003,11 +2003,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                         <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                         <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-                        <div className="flex mt-3">
-                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                          ))}
-                        </div>
                       </div>
                     ) : (
                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
