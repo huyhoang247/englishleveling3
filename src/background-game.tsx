@@ -205,6 +205,15 @@ interface GameObstacle {
   maxHealth: number; // Maximum health of the obstacle
 }
 
+// --- NEW: Define interface for Coin ---
+interface GameCoin {
+  id: number;
+  x: number; // Horizontal position in %
+  y: number; // Vertical position in %
+  speedX: number; // Horizontal movement speed
+  speedY: number; // Vertical movement speed
+}
+
 
 // Update component signature to accept className prop
 export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
@@ -234,12 +243,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [activeBlackFires, setActiveBlackFires] = useState<BlackFireProjectile[]>([]); // Array of active Black Fire projectiles
   const BLACK_FIRE_DAMAGE = 150; // Damage dealt by Black Fire
 
+  // --- NEW: Coin States ---
+  const [coins, setCoins] = useState(357); // Player's coin count
+  const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
+  const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
+  const coinTimerRef = useRef(null); // Timer for scheduling new coins
+
+
   // UI States
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState(null); // Changed to null to store card object directly
   const [currentCard, setCurrentCard] = useState(null);
-  const [coins, setCoins] = useState(357);
-  const [displayedCoins, setDisplayedCoins] = useState(357);
   const [gems, setGems] = useState(42);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
@@ -324,6 +338,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setParticles([]);
     setActiveBlackFires([]); // Reset active Black Fires
     setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
+    setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
@@ -369,6 +384,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Schedule the first obstacle after the initial ones
     scheduleNextObstacle();
+
+    // NEW: Start coin generation
+    scheduleNextCoin();
   };
 
   // Auto-start the game as soon as component mounts
@@ -386,6 +404,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
       clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
+      clearInterval(coinTimerRef.current); // NEW: Clear coin timer
     }
   }, [health, gameStarted]);
 
@@ -468,6 +487,31 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       scheduleNextObstacle(); // Schedule the next obstacle recursively
     }, randomTime);
   };
+
+  // --- NEW: Schedule the next coin to appear ---
+  const scheduleNextCoin = () => {
+    // Don't schedule if game is over or stats are in fullscreen
+    if (gameOver || isStatsFullscreen) return;
+
+    // Random time delay before the next coin appears (between 1 and 5 seconds)
+    const randomTime = Math.floor(Math.random() * 4000) + 1000;
+    coinTimerRef.current = setTimeout(() => {
+      // Generate a new coin
+      const newCoin: GameCoin = {
+        id: Date.now(), // Unique ID
+        x: 110, // Start off-screen to the right (%)
+        y: Math.random() * 60, // Random vertical position from top (0%) to middle (60%)
+        speedX: Math.random() * 0.5 + 0.5, // Horizontal speed (move left)
+        speedY: Math.random() * 0.3 // Vertical speed (move downwards)
+      };
+
+      // Add the new coin to the active list
+      setActiveCoins(prev => [...prev, newCoin]);
+
+      scheduleNextCoin(); // Schedule the next coin recursively
+    }, randomTime);
+  };
+
 
   // Handle character jump action
   const jump = () => {
@@ -689,13 +733,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   }, [gameStarted, gameOver, isStatsFullscreen, obstacles]); // Add obstacles to dependency array
 
 
-  // Move obstacles, clouds, particles and detect collisions
+  // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   useEffect(() => {
     // Don't run movement if game is not started, over, or stats are in fullscreen
     if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     // Game speed is now constant as score is removed
-    const speed = 2;
+    const speed = 2; // Base speed for obstacles and particles
     const damagePerCollision = 1; // Damage amount per collision
 
     const moveInterval = setInterval(() => {
@@ -735,16 +779,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             let collisionDetected = false;
             // Adjust character collision box size for Lottie if needed, or keep it simple
             // Adjusted character dimensions to match the larger container
-            const characterWidth = 24; // Assuming Lottie is now roughly this wide
-            const characterHeight = 24; // Assuming Lottie is now roughly this tall
-            const characterX = 10; // Character's fixed X position (in %)
-            // Convert characterX from % to a comparable unit (e.g., use % for obstacle position as well)
-            // Let's assume characterX is fixed at 10% of the game width
-            const characterXPercent = 10;
-            const characterYPercent = (characterPos / gameRef.current?.offsetHeight) * 100; // CharacterY relative to ground level in %
+            const characterWidth = 24; // Assuming Lottie is now roughly this wide (in Tailwind units)
+            const characterHeight = 24; // Assuming Lottie is now roughly this tall (in Tailwind units)
+            const characterXPercent = 10; // Character's fixed X position (in %)
+            const characterYPercent = (characterPos / (gameRef.current?.offsetHeight || 1)) * 100; // CharacterY relative to ground level in %
 
             const obstacleXPercent = obstacle.position; // Obstacle's current X position in %
-            // ObstacleY is always 0 for ground obstacles (relative to ground)
             const obstacleYPercent = 0; // Obstacle Y relative to ground level in %
             // Need to approximate obstacle width and height in % relative to game container
             // This is tricky as Tailwind units are fixed. Let's use a simple approximation for now.
@@ -752,26 +792,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             const obstacleWidthPercent = obstacle.width * 0.5;
             const obstacleHeightPercent = obstacle.height * 0.5;
 
-
-            // Check for collision using bounding boxes (using percentages)
-            // Character bounding box: (characterXPercent, characterYPercent) to (characterXPercent + characterWidthPercent, characterYPercent + characterHeightPercent)
-            // Obstacle bounding box: (obstacleXPercent, obstacleYPercent) to (obstacleXPercent + obstacleWidthPercent, obstacleYPercent + obstacleHeightPercent)
-
-            // Collision occurs if:
-            // Character's right edge is past Obstacle's left edge AND
-            // Character's left edge is before Obstacle's right edge AND
-            // Character's top edge is below Obstacle's bottom edge AND
-            // Character's bottom edge is above Obstacle's top edge
-
-            // Note: CharacterYPercent is height *above* ground, obstacleYPercent is height *above* ground.
-            // So, characterYPercent = 0 means on the ground. ObstacleYPercent = 0 means on the ground.
-            // Character's bottom edge is at GROUND_LEVEL_PERCENT% + characterPos (converted to %)
-            // Character's top edge is at GROUND_LEVEL_PERCENT% + characterPos + characterHeight (converted to %)
-            // Obstacle's bottom edge is at GROUND_LEVEL_PERCENT% + 0 (converted to %)
-            // Obstacle's top edge is at GROUND_LEVEL_PERCENT% + obstacleHeight (converted to %)
-
-            // Let's simplify and use the original pixel-based collision check, assuming we can get pixel positions.
-            // We need to know the game container's dimensions to convert % to pixels.
+            // Get game container dimensions for pixel calculations
             const gameContainer = gameRef.current;
             if (gameContainer) {
                 const gameWidth = gameContainer.offsetWidth;
@@ -857,12 +878,78 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           .filter(particle => particle.opacity > 0 && particle.size > 0) // Remove particles that have faded or shrunk completely
       );
 
+      // --- NEW: Move coins and detect collisions ---
+      setActiveCoins(prevCoins => {
+          const gameContainer = gameRef.current;
+          if (!gameContainer) return prevCoins; // Return early if ref is not available
+
+          const gameWidth = gameContainer.offsetWidth;
+          const gameHeight = gameContainer.offsetHeight;
+
+          // Define character's bounding box in pixels (approximate)
+          const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
+          const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
+          const characterX_px = (10 / 100) * gameWidth; // Character's fixed X position in pixels
+          const characterY_px = (characterPos / 100) * gameHeight; // Character's Y position relative to ground in pixels
+          const characterBottom_px = characterY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)); // Character's bottom edge from top of game container
+          const characterTop_px = characterBottom_px + characterHeight_px; // Character's top edge from top of game container
+          const characterLeft_px = characterX_px; // Character's left edge from left of game container
+          const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
+
+
+          return prevCoins
+              .map(coin => {
+                  // Move coin diagonally
+                  const newX = coin.x - coin.speedX; // Move left
+                  const newY = coin.y + coin.speedY; // Move down
+
+                  // Approximate coin size in pixels (assuming a fixed size for the Lottie)
+                  const coinSize_px = 40; // Assuming coin Lottie is roughly 40x40px
+
+                  // Coin position in pixels relative to the top-left of the game container
+                  const coinX_px = (newX / 100) * gameWidth;
+                  const coinY_px = (newY / 100) * gameHeight;
+
+                  // Check for collision using bounding boxes in pixels
+                  // Coin bounding box: (coinX_px, coinY_px) to (coinX_px + coinSize_px, coinY_px + coinSize_px)
+                  // Character bounding box: (characterLeft_px, characterBottom_px) to (characterRight_px, characterTop_px)
+
+                  let collisionDetected = false;
+                  if (
+                      characterRight_px > coinX_px &&
+                      characterLeft_px < coinX_px + coinSize_px &&
+                      characterTop_px > coinY_px &&
+                      characterBottom_px < coinY_px + coinSize_px
+                  ) {
+                      collisionDetected = true;
+                      // Grant random coins (1-5)
+                      const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                      setCoins(prev => prev + awardedCoins);
+                      // You could add a visual effect here for coin collection
+                  }
+
+
+                  return {
+                      ...coin,
+                      x: newX,
+                      y: newY,
+                      collided: collisionDetected // Mark for removal if collided
+                  };
+              })
+              .filter(coin => {
+                  // Remove coin if it collided or moved off-screen (left or bottom)
+                  const isOffScreen = coin.x < -10 || coin.y > 110; // Off-screen if X < -10% or Y > 110%
+                  return !coin.collided && !isOffScreen; // Keep coin if not collided and not off-screen
+              });
+      });
+
+
     }, 30); // Interval for movement updates (30ms for smoother animation)
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
     // Add isStatsFullscreen to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen]);
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen]); // Added activeCoins to dependency array
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -871,6 +958,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
       clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
+      clearInterval(coinTimerRef.current); // NEW: Clear coin timer
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
@@ -1077,6 +1165,29 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
+  // --- NEW: Render Coins ---
+  const renderCoins = () => {
+    return activeCoins.map(coin => (
+      <div
+        key={coin.id} // Unique key
+        className="absolute w-10 h-10" // Container size for Lottie (adjust as needed)
+        style={{
+          top: `${coin.y}%`, // Position based on current Y (%)
+          left: `${coin.x}%`, // Position based on current X (%)
+          transform: 'translate(-50%, -50%)', // Center the Lottie container
+          pointerEvents: 'none' // Ensure clicks pass through
+        }}
+      >
+        <DotLottieReact
+          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie" // Coin Lottie URL
+          loop // Loop the animation
+          autoplay // Autoplay the animation
+          className="w-full h-full" // Make Lottie fill its container
+        />
+      </div>
+    ));
+  };
+
 
   // Function to open the chest
   const openChest = () => {
@@ -1237,6 +1348,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* --- NEW: Black Fire Projectiles --- */}
         {renderBlackFires()}
+
+        {/* --- NEW: Coins --- */}
+        {renderCoins()}
 
         {/* Particles */}
         {renderParticles()}
@@ -1415,9 +1529,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 <div className="relative">
                   <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
                     <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full border-t border-amber-300"></div>
-                    <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-yellow-100/30 rounded-full animate-pulse-subtle"></div>
+                    <div className="absolute inset-0.5 bg-amber-500/30 rounded-sm flex items-center justify-center">
+                      <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
+                    </div>
                   </div>
                   <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                 </div>
@@ -1713,4 +1827,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
