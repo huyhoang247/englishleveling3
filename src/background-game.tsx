@@ -188,7 +188,7 @@ interface BlackFireProjectile {
   targetY: number;
   currentX: number;
   currentY: number;
-  speed: number;
+  speed: number; // This will now represent a factor, not a fixed pixel step
   damage: number; // Damage the projectile deals
   targetObstacleId: number | null; // ID of the obstacle being targeted
 }
@@ -590,7 +590,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         targetY: targetY,
         currentX: startX,
         currentY: startY,
-        speed: 15, // Increased speed slightly for visibility
+        speed: 0.08, // MODIFIED: Reduced speed, this is now a factor (e.g., move 8% of remaining distance per frame)
         damage: BLACK_FIRE_DAMAGE, // Damage it deals
         targetObstacleId: targetObstacle.id // Target the specific obstacle
       };
@@ -626,10 +626,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     const dy = fire.targetY - fire.currentY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    // Calculate movement step
+                    // Calculate movement step based on a fraction of the remaining distance
+                    // This creates a smoother deceleration effect as it approaches the target
+                    const moveStep = distance * fire.speed;
+
                     // Avoid division by zero if distance is 0
-                    const moveX = distance === 0 ? 0 : (dx / distance) * fire.speed;
-                    const moveY = distance === 0 ? 0 : (dy / distance) * fire.speed;
+                    const moveX = distance === 0 ? 0 : (dx / distance) * moveStep;
+                    const moveY = distance === 0 ? 0 : (dy / distance) * moveStep;
 
 
                     // Update position
@@ -639,7 +642,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     // Check for collision with target obstacle or if it passed the target
                     let hitTarget = false;
                     // Check if the projectile is close enough to the target
-                    if (distance < fire.speed) {
+                    if (distance < 10) { // MODIFIED: Check if distance is less than a small threshold (e.g., 10 pixels)
                         hitTarget = true;
                     }
 
@@ -678,7 +681,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     };
 
     // Set up the interval for moving projectiles
-    blackFireTimerRef.current = setInterval(moveProjectiles, 50); // Adjust interval for speed
+    blackFireTimerRef.current = setInterval(moveProjectiles, 30); // MODIFIED: Reduced interval to 30ms for smoother animation
 
     // Cleanup function to clear the interval
     return () => clearInterval(blackFireTimerRef.current);
@@ -1617,7 +1620,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                       </div>
                     )}
                     {showCard ? (
-                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
                         <div className="absolute inset-0 overflow-hidden rounded-xl">
                           <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                         </div>
