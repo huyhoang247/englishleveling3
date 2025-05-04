@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; // Import React
-import ResetStatsControl from './ResetStatsControl'; // Import component mới
+import ResetStatsControl from './reset-point.tsx'; // Import component mới
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
