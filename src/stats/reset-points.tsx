@@ -82,7 +82,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
       onStatsReset(pointsToRefund);
       setShowResetModal(false); // Đóng modal
       setResetAnimation(false); // Kết thúc animation xử lý
-    }, 2000); // Tăng nhẹ độ trễ để phù hợp với animation mới (2 giây)
+    }, 1500); // Độ trễ 1.5 giây
   };
 
   // Component nội bộ cho Modal xác nhận Reset Chỉ Số
@@ -91,27 +91,17 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
     const pointsToReceive = calculateResetPoints();
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"> {/* Thêm backdrop-blur */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         {/* Nội dung Modal */}
-        <div className={`bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-500 ${resetAnimation ? 'scale-105 opacity-90' : 'scale-100 opacity-100'}`}> {/* Thêm transition và opacity */}
+        <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetAnimation ? 'scale-105' : ''}`}>
           {/* Hiển thị giao diện xử lý nếu resetAnimation là true */}
           {resetAnimation ? (
             <div className="flex flex-col items-center justify-center py-8">
-              {/* Enhanced Spinner animation */}
-              <div className="relative w-16 h-16 mb-6">
-                {/* Outer circle */}
-                <div className="absolute inset-0 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin-slow"></div> {/* spinner chậm */}
-                {/* Inner circle */}
-                 <div className="absolute inset-2 border-4 border-b-4 border-purple-500 border-dashed rounded-full animate-spin-reverse-slow"></div> {/* spinner ngược, chậm */}
-                {/* Center Icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                     <Icon name="RotateCcw" size={32} className="text-gray-600" />
-                </div>
-              </div>
-
+              {/* Spinner animation */}
+              <div className="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mb-4"></div>
               {/* Processing message */}
-              <p className="text-gray-800 font-semibold text-xl mb-2 animate-pulse">Đang hoàn tác điểm tiềm năng...</p> {/* Text lớn hơn, đậm hơn, thêm pulse */}
-              <p className="text-gray-600 text-sm italic">Vui lòng chờ trong giây lát.</p> {/* Text nhỏ hơn, nghiêng */}
+              <p className="text-gray-700 font-medium text-lg">Đang hoàn tác điểm tiềm năng...</p>
+              <p className="text-gray-500 text-sm mt-1">Vui lòng chờ trong giây lát.</p>
             </div>
           ) : (
             // Hiển thị nội dung xác nhận reset nếu resetAnimation là false
