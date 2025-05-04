@@ -623,7 +623,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
                     // Check for collision with target obstacle or if it passed the target
                     let hitTarget = false;
-                    if (distance < fire.speed || newY >= fire.targetY) { // Simple check if it's close or passed the target Y
+                    // Check if the projectile is close enough to the target
+                    if (distance < fire.speed) {
                         hitTarget = true;
                     }
 
@@ -699,7 +700,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   id: Date.now(), // Assign a new ID to ensure React re-renders
                   position: 120 + randomOffset, // Place it off-screen to the right with random offset
                   health: randomObstacleType.baseHealth, // Reset health for the new obstacle
-                  maxHealth: randomObstacleType.baseHealth // Reset max health
+                  maxHealth: randomObstacleType.baseHealth // Set max health
                 };
               } else {
                 // If not reusing, let it move off-screen to be filtered out
@@ -1047,7 +1048,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         }}
       >
         <DotLottieReact
-          src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie" // Black Fire Lottie URL
+          src="https://lottie.host/af898c1a-d385-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie" // Black Fire Lottie URL
           loop // Loop the animation (optional, depends on Lottie)
           autoplay // Autoplay the animation
           className="w-full h-full" // Make Lottie fill its container
@@ -1431,9 +1432,37 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       {/* Right UI section - Positioned on top of the game */}
        {/* HIDE UI sections when stats are in fullscreen */}
       {!isStatsFullscreen && (
+        // MODIFIED: Added Black Fire skill element here, above the Mission icon
         <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
+
+          {/* --- NEW: Black Fire Skill UI Element (Moved) --- */}
+          {/* Positioned within the right-side flex column */}
+          <div
+            className={`w-14 h-14 bg-gradient-to-br from-gray-700 to-black rounded-lg shadow-lg border-2 border-gray-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 ${blackFireCount <= 0 || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+            onClick={activateBlackFire} // Call activateBlackFire on click
+            title={blackFireCount > 0 ? `Quả cầu lửa đen (${blackFireCount} còn lại)` : "Hết Quả cầu lửa đen"}
+            aria-label="Sử dụng Quả cầu lửa đen"
+            role="button"
+            tabIndex={blackFireCount > 0 && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
+          >
+            {/* Black Fire Icon (Lottie) */}
+            <div className="w-10 h-10">
+               <DotLottieReact
+                  src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie"
+                  loop
+                  autoplay
+                  className="w-full h-full"
+               />
+            </div>
+            {/* Count of remaining uses */}
+            <div className="absolute bottom-1 right-1 bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold border border-blue-400 shadow-sm">
+              {blackFireCount}
+            </div>
+          </div>
+
+
           {[
-            // Mission icon
+            // Mission icon (Now below Black Fire skill)
             {
               icon: (
                 <div className="relative">
@@ -1495,6 +1524,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           ))}
         </div>
       )}
+
 
       {/* Treasure chest and remaining chests count - Positioned on top of the game */}
       {/* HIDE chest when stats are in fullscreen */}
@@ -1609,35 +1639,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- NEW: Black Fire Skill UI Element --- */}
-      {/* Positioned at the bottom right */}
-      {!isStatsFullscreen && ( // Hide skill icon when stats are fullscreen
-        <div
-          className={`absolute bottom-4 right-4 w-16 h-16 bg-gradient-to-br from-gray-700 to-black rounded-lg shadow-lg border-2 border-gray-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 ${blackFireCount <= 0 || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
-          onClick={activateBlackFire} // Call activateBlackFire on click
-          title={blackFireCount > 0 ? `Quả cầu lửa đen (${blackFireCount} còn lại)` : "Hết Quả cầu lửa đen"}
-          aria-label="Sử dụng Quả cầu lửa đen"
-          role="button"
-          tabIndex={blackFireCount > 0 && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
-        >
-          {/* Black Fire Icon (can be a simple SVG or image placeholder) */}
-          {/* Using a simple placeholder for now */}
-          <div className="w-10 h-10">
-             {/* Using the provided Lottie for the skill icon */}
-             <DotLottieReact
-                src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie"
-                loop
-                autoplay
-                className="w-full h-full"
-             />
-          </div>
-          {/* Count of remaining uses */}
-          <div className="absolute bottom-1 right-1 bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold border border-blue-400 shadow-sm">
-            {blackFireCount}
           </div>
         </div>
       )}
