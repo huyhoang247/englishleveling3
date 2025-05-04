@@ -179,19 +179,19 @@ interface ObstacleRunnerGameProps {
   className?: string;
 }
 
-// Define interface for Black Fire projectile
-interface BlackFireProjectile {
-  id: number;
-  startX: number;
-  startY: number;
-  targetX: number;
-  targetY: number;
-  currentX: number;
-  currentY: number;
-  speed: number; // This will now represent a factor, not a fixed pixel step
-  damage: number; // Damage the projectile deals
-  targetObstacleId: number | null; // ID of the obstacle being targeted
-}
+// Define interface for Black Fire projectile - REMOVED
+// interface BlackFireProjectile {
+//   id: number;
+//   startX: number;
+//   startY: number;
+//   targetX: number;
+//   targetY: number;
+//   currentX: number;
+//   currentY: number;
+//   speed: number; // This will now represent a factor, not a fixed pixel step
+//   damage: number; // Damage the projectile deals
+//   targetObstacleId: number | null; // ID of the obstacle being targeted
+// }
 
 // Define interface for Obstacle with health
 interface GameObstacle {
@@ -243,11 +243,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
-  // --- NEW: Black Fire Skill States ---
-  const INITIAL_BLACK_FIRE_COUNT = 25;
-  const [blackFireCount, setBlackFireCount] = useState(INITIAL_BLACK_FIRE_COUNT); // Number of Black Fire uses
-  const [activeBlackFires, setActiveBlackFires] = useState<BlackFireProjectile[]>([]); // Array of active Black Fire projectiles
-  const BLACK_FIRE_DAMAGE = 150; // Damage dealt by Black Fire
+  // --- REMOVED: Black Fire Skill States ---
+  // const INITIAL_BLACK_FIRE_COUNT = 25;
+  // const [blackFireCount, setBlackFireCount] = useState(INITIAL_BLACK_FIRE_COUNT); // Number of Black Fire uses
+  // const [activeBlackFires, setActiveBlackFires] = useState<BlackFireProjectile[]>([]); // Array of active Black Fire projectiles
+  // const BLACK_FIRE_DAMAGE = 150; // Damage dealt by Black Fire
+
+  // --- NEW: Shield Skill States ---
+  const SHIELD_MAX_HEALTH = 200; // Base health for the shield
+  const SHIELD_DURATION = 5000; // Shield active duration in ms (e.g., 5 seconds)
+  const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
+  const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active
+  const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
+  const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown
+  const [remainingCooldown, setRemainingCooldown] = useState(0); // Remaining cooldown time in seconds
 
   // --- NEW: Coin States ---
   const [coins, setCoins] = useState(357); // Player's coin count
@@ -287,7 +296,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
   const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
-  const blackFireTimerRef = useRef(null); // Timer for moving Black Fire projectiles
+  // REMOVED: blackFireTimerRef
+  // const blackFireTimerRef = useRef(null); // Timer for moving Black Fire projectiles
+  // NEW: Shield timers
+  const shieldCooldownTimerRef = useRef(null); // Timer for shield cooldown
+  const shieldActiveTimerRef = useRef(null); // Timer for shield active duration
+  const cooldownCountdownTimerRef = useRef(null); // Timer for cooldown countdown display
 
 
   // Character animation frames (simple representation of leg movement) - No longer needed for Lottie
@@ -380,8 +394,16 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Reset obstacles, adding initial health
     setObstacles([]);
     setParticles([]);
-    setActiveBlackFires([]); // Reset active Black Fires
-    setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
+    // REMOVED: Reset active Black Fires
+    // setActiveBlackFires([]); // Reset active Black Fires
+    // REMOVED: Reset Black Fire count
+    // setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
+    // NEW: Reset Shield states
+    setIsShieldActive(false);
+    setShieldHealth(SHIELD_MAX_HEALTH);
+    setIsShieldOnCooldown(false);
+    setRemainingCooldown(0);
+
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
@@ -450,7 +472,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
-      clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
+      // REMOVED: clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
+      // NEW: Clear Shield timers
+      clearTimeout(shieldCooldownTimerRef.current);
+      clearTimeout(shieldActiveTimerRef.current);
+      clearInterval(cooldownCountdownTimerRef.current);
+
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
       clearTimeout(coinEffectTimerRef.current); // Clear coin effect timer
@@ -623,168 +650,127 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 800); // Hide damage number after animation
   };
 
-  // --- Function to activate Black Fire skill ---
-  const activateBlackFire = () => {
-    // Check if game is active, not over, has uses remaining, and not showing card/stats
-    if (!gameStarted || gameOver || blackFireCount <= 0 || showCard || isStatsFullscreen) {
-      console.log("Cannot activate Black Fire:", { gameStarted, gameOver, blackFireCount, showCard, isStatsFullscreen });
+  // --- NEW: Function to activate Shield skill ---
+  const activateShield = () => {
+    // Check if game is active, not over, and not on cooldown, and not showing card/stats
+    if (!gameStarted || gameOver || isShieldOnCooldown || isShieldActive || showCard || isStatsFullscreen) {
+      console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldOnCooldown, isShieldActive, showCard, isStatsFullscreen });
       return;
     }
 
-    // Find the closest obstacle to target
-    const targetObstacle = obstacles.reduce((closest, current) => {
-        // Calculate distance based on horizontal position (simple approach)
-        const currentDistance = current.position - 10; // Distance from character's x (10%)
-        // Only consider obstacles that are to the right of the character and have health
-        if (currentDistance > 0 && current.health > 0 && (closest === null || currentDistance < closest.position - 10)) {
-            return current;
-        }
-        return closest;
-    }, null as GameObstacle | null); // Specify initial value type
+    console.log("Activating Shield!");
 
-    if (targetObstacle) {
-      console.log("Targeting obstacle:", targetObstacle); // Log target obstacle
+    // Activate the shield
+    setIsShieldActive(true);
+    setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to max
 
-      // Decrement Black Fire count
-      setBlackFireCount(prev => prev - 1);
+    // Set shield active duration timer
+    shieldActiveTimerRef.current = setTimeout(() => {
+        console.log("Shield duration ended.");
+        setIsShieldActive(false); // Deactivate shield after duration
+        setShieldHealth(0); // Set shield health to 0
+    }, SHIELD_DURATION);
 
-      // Get target obstacle's screen position (approximate)
-      // Obstacle position is in %, convert to px relative to game container
-      const gameContainer = gameRef.current;
-      if (!gameContainer) {
-        console.error("Game container ref is not available."); // Log error
-        return;
-      }
+    // Set shield cooldown timer
+    setIsShieldOnCooldown(true);
+    setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000); // Initialize remaining cooldown for display
 
-      const gameWidth = gameContainer.offsetWidth;
-      const gameHeight = gameContainer.offsetHeight;
+    shieldCooldownTimerRef.current = setTimeout(() => {
+        console.log("Shield cooldown ended.");
+        setIsShieldOnCooldown(false); // End cooldown
+        setRemainingCooldown(0); // Reset remaining cooldown display
+    }, SHIELD_COOLDOWN_TIME);
 
-      // Approximate obstacle center position in pixels
-      // Obstacle is positioned at 'bottom: GROUND_LEVEL_PERCENT%', 'left: obstacle.position%'
-      // Need to calculate its center relative to the top-left of the game container
-      const obstacleLeftPx = (targetObstacle.position / 100) * gameWidth;
-      const obstacleBottomPct = GROUND_LEVEL_PERCENT;
-      const obstacleBottomPx = (obstacleBottomPct / 100) * gameHeight;
-
-      // Calculate obstacle dimensions in pixels based on Tailwind units
-      // Assuming Tailwind h-unit and w-unit are roughly 4px per unit (e.g., h-8 is 32px)
-      const obstacleHeightPx = (targetObstacle.height / 4) * 16;
-      const obstacleWidthPx = (targetObstacle.width / 4) * 16;
-
-      // Approximate center of the obstacle
-      const targetX = obstacleLeftPx + obstacleWidthPx / 2;
-      const targetY = gameHeight - obstacleBottomPx - obstacleHeightPx / 2; // Y from top
-
-      // Starting position for Black Fire (above the screen)
-      const startX = targetX; // Start directly above the target
-      const startY = -50; // Start 50px above the top of the container
-
-      // Create a new Black Fire projectile
-      const newBlackFire: BlackFireProjectile = {
-        id: Date.now(),
-        startX: startX,
-        startY: startY,
-        targetX: targetX,
-        targetY: targetY,
-        currentX: startX,
-        currentY: startY,
-        speed: 0.08, // MODIFIED: Reduced speed, this is now a factor (e.g., move 8% of remaining distance per frame)
-        damage: BLACK_FIRE_DAMAGE, // Damage it deals
-        targetObstacleId: targetObstacle.id // Target the specific obstacle
-      };
-
-      console.log("Creating new Black Fire:", newBlackFire); // Log new projectile
-
-      // Add the new projectile to the active list
-      setActiveBlackFires(prev => [...prev, newBlackFire]);
-    } else {
-      console.log("No living obstacle found to target."); // Log if no target found
-    }
+    // Start cooldown countdown display
+    cooldownCountdownTimerRef.current = setInterval(() => {
+        setRemainingCooldown(prev => Math.max(0, prev - 1)); // Decrement every second
+    }, 1000);
   };
 
-  // --- Effect to move Black Fire projectiles ---
-  useEffect(() => {
-    // Don't run if game is not started, over, or stats are in fullscreen
-    if (!gameStarted || gameOver || isStatsFullscreen) return;
 
-    const moveProjectiles = () => {
-        setActiveBlackFires(prevFires => {
-            const gameContainer = gameRef.current;
-            if (!gameContainer) {
-                 console.error("Game container ref is not available during projectile movement."); // Log error
-                 return prevFires;
-            }
+  // --- REMOVED: Effect to move Black Fire projectiles ---
+  // useEffect(() => {
+  //   // Don't run if game is not started, over, or stats are in fullscreen
+  //   if (!gameStarted || gameOver || isStatsFullscreen) return;
 
-            const gameHeight = gameContainer.offsetHeight;
+  //   const moveProjectiles = () => {
+  //       setActiveBlackFires(prevFires => {
+  //           const gameContainer = gameRef.current;
+  //           if (!gameContainer) {
+  //                console.error("Game container ref is not available during projectile movement."); // Log error
+  //                return prevFires;
+  //           }
 
-            return prevFires
-                .map(fire => {
-                    // Calculate direction vector
-                    const dx = fire.targetX - fire.currentX;
-                    const dy = fire.targetY - fire.currentY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+  //           const gameHeight = gameContainer.offsetHeight;
 
-                    // Calculate movement step based on a fraction of the remaining distance
-                    // This creates a smoother deceleration effect as it approaches the target
-                    const moveStep = distance * fire.speed;
+  //           return prevFires
+  //               .map(fire => {
+  //                   // Calculate direction vector
+  //                   const dx = fire.targetX - fire.currentX;
+  //                   const dy = fire.targetY - fire.currentY;
+  //                   const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    // Avoid division by zero if distance is 0
-                    const moveX = distance === 0 ? 0 : (dx / distance) * moveStep;
-                    const moveY = distance === 0 ? 0 : (dy / distance) * moveStep;
+  //                   // Calculate movement step based on a fraction of the remaining distance
+  //                   // This creates a smoother deceleration effect as it approaches the target
+  //                   const moveStep = distance * fire.speed;
+
+  //                   // Avoid division by zero if distance is 0
+  //                   const moveX = distance === 0 ? 0 : (dx / distance) * moveStep;
+  //                   const moveY = distance === 0 ? 0 : (dy / distance) * moveStep;
 
 
-                    // Update position
-                    const newX = fire.currentX + moveX;
-                    const newY = fire.currentY + moveY;
+  //                   // Update position
+  //                   const newX = fire.currentX + moveX;
+  //                   const newY = fire.currentY + moveY;
 
-                    // Check for collision with target obstacle or if it passed the target
-                    let hitTarget = false;
-                    // Check if the projectile is close enough to the target
-                    if (distance < 10) { // MODIFIED: Check if distance is less than a small threshold (e.g., 10 pixels)
-                        hitTarget = true;
-                    }
+  //                   // Check for collision with target obstacle or if it passed the target
+  //                   let hitTarget = false;
+  //                   // Check if the projectile is close enough to the target
+  //                   if (distance < 10) { // MODIFIED: Check if distance is less than a small threshold (e.g., 10 pixels)
+  //                       hitTarget = true;
+  //                   }
 
-                    return {
-                        ...fire,
-                        currentX: newX,
-                        currentY: newY,
-                        hitTarget: hitTarget // Add a flag to mark for removal and damage application
-                    };
-                })
-                .filter(fire => {
-                    // Remove projectile if it hit the target or went off-screen (below ground)
-                    const isOffScreen = fire.currentY > gameHeight + 50; // Check if below the bottom of the game container + buffer
+  //                   return {
+  //                       ...fire,
+  //                       currentX: newX,
+  //                       currentY: newY,
+  //                       hitTarget: hitTarget // Add a flag to mark for removal and damage application
+  //                   };
+  //               })
+  //               .filter(fire => {
+  //                   // Remove projectile if it hit the target or went off-screen (below ground)
+  //                   const isOffScreen = fire.currentY > gameHeight + 50; // Check if below the bottom of the game container + buffer
 
-                    if (fire.hitTarget) {
-                        console.log("Black Fire hit target obstacle:", fire.targetObstacleId); // Log hit
-                        // Find the targeted obstacle and apply damage
-                        setObstacles(prevObstacles =>
-                            prevObstacles.map(obstacle => {
-                                if (obstacle.id === fire.targetObstacleId) {
-                                    const newHealth = Math.max(0, obstacle.health - fire.damage);
-                                    console.log(`Obstacle ${obstacle.id} health: ${obstacle.health} -> ${newHealth}`); // Log health change
-                                    // Trigger damage effect on the obstacle? (More complex, maybe later)
-                                    // For now, just update health and remove if dead
-                                    return { ...obstacle, health: newHealth };
-                                }
-                                return obstacle;
-                            }).filter(obstacle => obstacle.health > 0) // Remove obstacle if health is 0 or less
-                        );
-                        return false; // Remove the projectile
-                    }
+  //                   if (fire.hitTarget) {
+  //                       console.log("Black Fire hit target obstacle:", fire.targetObstacleId); // Log hit
+  //                       // Find the targeted obstacle and apply damage
+  //                       setObstacles(prevObstacles =>
+  //                           prevObstacles.map(obstacle => {
+  //                               if (obstacle.id === fire.targetObstacleId) {
+  //                                   const newHealth = Math.max(0, obstacle.health - fire.damage);
+  //                                   console.log(`Obstacle ${obstacle.id} health: ${obstacle.health} -> ${newHealth}`); // Log health change
+  //                                   // Trigger damage effect on the obstacle? (More complex, maybe later)
+  //                                   // For now, just update health and remove if dead
+  //                                   return { ...obstacle, health: newHealth };
+  //                               }
+  //                               return obstacle;
+  //                           }).filter(obstacle => obstacle.health > 0) // Remove obstacle if health is 0 or less
+  //                       );
+  //                       return false; // Remove the projectile
+  //                   }
 
-                    return !isOffScreen; // Keep projectile if not off-screen
-                });
-        });
-    };
+  //                   return !isOffScreen; // Keep projectile if not off-screen
+  //               });
+  //       });
+  //   };
 
-    // Set up the interval for moving projectiles
-    blackFireTimerRef.current = setInterval(moveProjectiles, 30); // MODIFIED: Reduced interval to 30ms for smoother animation
+  //   // Set up the interval for moving projectiles
+  //   blackFireTimerRef.current = setInterval(moveProjectiles, 30); // MODIFIED: Reduced interval to 30ms for smoother animation
 
-    // Cleanup function to clear the interval
-    return () => clearInterval(blackFireTimerRef.current);
+  //   // Cleanup function to clear the interval
+  //   return () => clearInterval(blackFireTimerRef.current);
 
-  }, [gameStarted, gameOver, isStatsFullscreen, obstacles]); // Add obstacles to dependency array
+  // }, [gameStarted, gameOver, isStatsFullscreen, obstacles]); // Add obstacles to dependency array
 
 
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
@@ -852,11 +838,26 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance // Character top is above obstacle bottom
             ) {
               collisionDetected = true;
-              // Decrease health by the obstacle's damage amount on collision
-              const damageTaken = obstacle.damage; // Use damage from obstacle type
-              setHealth(prev => Math.max(0, prev - damageTaken));
-              triggerHealthDamageEffect(); // Trigger health bar damage effect
-              triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
+              // Handle damage based on shield status
+              if (isShieldActive) {
+                  const damageToShield = obstacle.damage;
+                  setShieldHealth(prev => {
+                      const newShieldHealth = Math.max(0, prev - damageToShield);
+                      if (newShieldHealth <= 0) {
+                          console.log("Shield broken!");
+                          setIsShieldActive(false); // Deactivate shield if health is 0 or less
+                          clearTimeout(shieldActiveTimerRef.current); // Clear the active timer
+                      }
+                      return newShieldHealth;
+                  });
+                  // No damage to player if shield is active
+              } else {
+                  // Decrease player health if shield is not active
+                  const damageTaken = obstacle.damage; // Use damage from obstacle type
+                  setHealth(prev => Math.max(0, prev - damageTaken));
+                  triggerHealthDamageEffect(); // Trigger health bar damage effect
+                  triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
+              }
             }
 
 
@@ -891,7 +892,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           })
           .filter(obstacle => {
             // Keep obstacles that haven't collided and are still visible or will loop back
-            // Also filter out obstacles that have 0 or less health (killed by Black Fire)
+            // Also filter out obstacles that have 0 or less health (killed by Black Fire) - REMOVED Black Fire logic
             // Now also filter out obstacles that have the 'collided' flag set
             return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
           });
@@ -1069,7 +1070,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
     // Add isStatsFullscreen to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins]); // Added coins to dependency array to ensure startCoinCountAnimation uses the latest value
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive]); // Added isShieldActive to dependency array
+
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -1077,7 +1079,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
-      clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
+      // REMOVED: clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
+      // NEW: Clear Shield timers
+      clearTimeout(shieldCooldownTimerRef.current);
+      clearTimeout(shieldActiveTimerRef.current);
+      clearInterval(cooldownCountdownTimerRef.current);
+
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
       clearTimeout(coinEffectTimerRef.current); // Clear coin effect timer
@@ -1123,6 +1130,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     if (healthPct > 0.3) return 'bg-yellow-500'; // Yellow for medium health
     return 'bg-red-500'; // Red for low health
   };
+
+  // NEW: Calculate shield health percentage
+  const shieldHealthPct = shieldHealth / SHIELD_MAX_HEALTH;
 
 
   // Render the character with animation and damage effect
@@ -1319,28 +1329,72 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // --- Render Black Fire projectiles ---
-  const renderBlackFires = () => {
-    return activeBlackFires.map(fire => (
+  // --- REMOVED: Render Black Fire projectiles ---
+  // const renderBlackFires = () => {
+  //   return activeBlackFires.map(fire => (
+  //     <div
+  //       key={fire.id} // Unique key
+  //       className="absolute w-12 h-12" // Container size for Lottie
+  //       style={{
+  //         top: `${fire.currentY}px`, // Position based on current Y
+  //         left: `${fire.currentX}px`, // Position based on current X
+  //         transform: 'translate(-50%, -50%)', // Center the Lottie container
+  //         pointerEvents: 'none' // Ensure clicks pass through
+  //       }}
+  //     >
+  //       <DotLottieReact
+  //         src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie" // Black Fire Lottie URL
+  //         loop // Loop the animation (optional, depends on Lottie)
+  //         autoplay // Autoplay the animation
+  //         className="w-full h-full" // Make Lottie fill its container
+  //       />
+  //     </div>
+  //   ));
+  // };
+
+  // --- NEW: Render Shield ---
+  const renderShield = () => {
+    // Only render if shield is active
+    if (!isShieldActive) return null;
+
+    // Position the shield above the character. Adjust positioning as needed.
+    // Character container is at bottom: calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px), left: 10%
+    // We want the shield centered above the character.
+    const shieldSizePx = 80; // Approximate size of the shield Lottie container in pixels
+
+    return (
       <div
-        key={fire.id} // Unique key
-        className="absolute w-12 h-12" // Container size for Lottie
-        style={{
-          top: `${fire.currentY}px`, // Position based on current Y
-          left: `${fire.currentX}px`, // Position based on current X
-          transform: 'translate(-50%, -50%)', // Center the Lottie container
-          pointerEvents: 'none' // Ensure clicks pass through
+        key="character-shield" // Fixed key for the shield
+        className="absolute w-20 h-20 flex flex-col items-center justify-center pointer-events-none z-20" // Adjusted size, z-index
+         style={{
+          // Position shield above the character container
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + 96px)`, // 96px is approx height of character container (w-24 h-24)
+          left: '10%', // Same horizontal position as character
+          transform: 'translate(-50%, -50%)', // Center the shield container
+          transition: 'bottom 0.3s ease-out', // Smooth transition with character jump
+          width: `${shieldSizePx}px`,
+          height: `${shieldSizePx}px`,
         }}
       >
+        {/* Shield Health Bar */}
+        <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm mb-1"> {/* Adjusted size */}
+            <div
+                className={`h-full ${shieldHealthPct > 0.6 ? 'bg-green-500' : shieldHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                style={{ width: `${shieldHealthPct * 100}%` }}
+            ></div>
+        </div>
+
+        {/* Shield Lottie Icon */}
         <DotLottieReact
-          src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie" // Black Fire Lottie URL
-          loop // Loop the animation (optional, depends on Lottie)
-          autoplay // Autoplay the animation
+          src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie" // Shield Lottie URL
+          loop
+          autoplay
           className="w-full h-full" // Make Lottie fill its container
         />
       </div>
-    ));
+    );
   };
+
 
   // --- NEW: Render Coins ---
   const renderCoins = () => {
@@ -1522,6 +1576,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Character */}
         {renderCharacter()}
 
+        {/* NEW: Render Shield if active */}
+        {renderShield()}
+
+
         {/* --- NEW: Coin Collection Effect Lottie --- */}
         {isCoinEffectActive && (
             <div
@@ -1545,8 +1603,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Obstacles */}
         {obstacles.map(obstacle => renderObstacle(obstacle))}
 
-        {/* --- NEW: Black Fire Projectiles --- */}
-        {renderBlackFires()}
+        {/* --- REMOVED: Black Fire Projectiles --- */}
+        {/* {renderBlackFires()} */}
 
         {/* --- NEW: Coins --- */}
         {renderCoins()}
@@ -1765,37 +1823,38 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       {/* Right UI section - Positioned on top of the game */}
        {/* HIDE UI sections when stats are in fullscreen */}
       {!isStatsFullscreen && (
-        // MODIFIED: Added Black Fire skill element here, above the Mission icon
+        // MODIFIED: Added Shield skill element here, above the Mission icon
         <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30"> {/* Increased z-index */}
 
-          {/* --- NEW: Black Fire Skill UI Element (Moved) --- */}
-          {/* Positioned within the right-side flex column */}
-          <div
-            className={`w-14 h-14 bg-gradient-to-br from-gray-700 to-black rounded-lg shadow-lg border-2 border-gray-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 ${blackFireCount <= 0 || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
-            onClick={activateBlackFire} // Call activateBlackFire on click
-            title={blackFireCount > 0 ? `Quả cầu lửa đen (${blackFireCount} còn lại)` : "Hết Quả cầu lửa đen"}
-            aria-label="Sử dụng Quả cầu lửa đen"
+          {/* --- NEW: Shield Skill UI Element --- */}
+           <div
+            className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 relative ${isShieldOnCooldown || isShieldActive || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+            onClick={activateShield} // Call activateShield on click
+            title={isShieldActive ? "Khiên đang hoạt động" : isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` : "Kích hoạt Khiên chắn"}
+            aria-label="Sử dụng Khiên chắn"
             role="button"
-            tabIndex={blackFireCount > 0 && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
+            tabIndex={!isShieldOnCooldown && !isShieldActive && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
           >
-            {/* Black Fire Icon (Lottie) */}
+            {/* Shield Icon (Lottie) */}
             <div className="w-10 h-10">
                <DotLottieReact
-                  src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie"
+                  src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie" // Shield Lottie URL
                   loop
-                  autoplay
+                  autoplay={isShieldActive} // Autoplay only when shield is active
                   className="w-full h-full"
                />
             </div>
-            {/* Count of remaining uses */}
-            <div className="absolute bottom-1 right-1 bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold border border-blue-400 shadow-sm">
-              {blackFireCount}
-            </div>
+            {/* Cooldown display */}
+            {isShieldOnCooldown && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
+                {remainingCooldown}s
+              </div>
+            )}
           </div>
 
 
           {[
-            // Mission icon (Now below Black Fire skill)
+            // Mission icon (Now below Shield skill)
             {
               icon: (
                 <div className="relative">
