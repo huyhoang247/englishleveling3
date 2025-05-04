@@ -200,11 +200,12 @@ interface GameObstacle {
   type: string;
   height: number; // Height in Tailwind units (e.g., 8 for h-8)
   width: number; // Width in Tailwind units (e.g., 8 for w-8)
-  color: string; // Tailwind gradient class or Lottie URL
+  color: string; // Tailwind gradient class or other identifier
   baseHealth: number; // Base health for this obstacle type
   health: number; // Current health of the obstacle
   maxHealth: number; // Maximum health of the obstacle
-  lottieUrl?: string; // Optional Lottie URL for the obstacle
+  damage: number; // Damage the obstacle deals on collision
+  lottieSrc?: string; // Optional Lottie source URL for Lottie obstacles
 }
 
 // --- NEW: Define interface for Coin ---
@@ -291,14 +292,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Character animation frames (simple representation of leg movement) - No longer needed for Lottie
   // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
-  // Obstacle types with properties (added base health and Lottie URL)
-  const obstacleTypes = [
+  // Obstacle types with properties (added base health)
+  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
     // Reduced size for rock, added baseHealth
     { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
     // Reduced size for cactus, added baseHealth
     { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300, damage: 75 }, // Added damage
-    // NEW: Fire obstacle with Lottie icon
-    { type: 'fire', height: 16, width: 16, color: '', baseHealth: 400, damage: 100, lottieUrl: 'https://lottie.host/0840afb5-44ce-4872-9c10-1c7a7e985650/crikgFNWpz.lottie' }, // Added Lottie URL
+    // NEW: Lottie Obstacle Type
+    {
+      type: 'lottie-obstacle',
+      height: 16, // Approximate height in Tailwind units (h-16 = 64px)
+      width: 16,  // Approximate width in Tailwind units (w-16 = 64px)
+      color: 'transparent', // Color might not be used for Lottie, but keep a value
+      baseHealth: 500, // Higher health for a potentially larger/more significant obstacle
+      damage: 100, // Damage dealt on collision
+      lottieSrc: "https://lottie.host/c5b645bf-7a29-4471-a9ce-f1a2a7d5a4d9/7dneXvCDQg.lottie" // Lottie source URL
+    },
   ];
 
     // Updated cards array to use SVG components
@@ -357,7 +366,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setGameStarted(true);
     setGameOver(false);
     setHealth(MAX_HEALTH); // Start with max health
-    setCharacterPos(0); // Character starts on the ground (relative to ground level)
+    setCharacterPos(0); // Character starts on the ground (0 is on the ground relative to ground level)
     // Reset obstacles, adding initial health
     setObstacles([]);
     setParticles([]);
@@ -376,7 +385,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDisplayedCoins(357); // Reset displayed coin count
 
     // Generate initial obstacles to populate the screen at the start
-    const initialObstacles = [];
+    const initialObstacles: GameObstacle[] = [];
     // First obstacle placed a bit further to give the player time to react
     const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
     initialObstacles.push({
@@ -648,11 +657,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       const obstacleLeftPx = (targetObstacle.position / 100) * gameWidth;
       const obstacleBottomPct = GROUND_LEVEL_PERCENT;
       const obstacleBottomPx = (obstacleBottomPct / 100) * gameHeight;
-      // Approximate obstacle dimensions in pixels (rough conversion from Tailwind units)
-      // If it's a Lottie, use its defined width/height for calculation
-      const obstacleWidthPx = targetObstacle.lottieUrl ? (targetObstacle.width / 4) * 16 : (targetObstacle.width / 4) * 16;
-      const obstacleHeightPx = targetObstacle.lottieUrl ? (targetObstacle.height / 4) * 16 : (targetObstacle.height / 4) * 16;
 
+      // Calculate obstacle dimensions in pixels based on Tailwind units
+      // Assuming Tailwind h-unit and w-unit are roughly 4px per unit (e.g., h-8 is 32px)
+      const obstacleHeightPx = (targetObstacle.height / 4) * 16;
+      const obstacleWidthPx = (targetObstacle.width / 4) * 16;
 
       // Approximate center of the obstacle
       const targetX = obstacleLeftPx + obstacleWidthPx / 2;
@@ -815,19 +824,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             let collisionDetected = false;
             // Obstacle position in pixels relative to the bottom-left of the game container
             const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
-            // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
-            // If it's a Lottie, use its defined height for calculation
-            const obstacleHeightPx = obstacle.lottieUrl ? (obstacle.height / 4) * 16 : (obstacle.height / 4) * 16;
-            const obstacleWidthPx = obstacle.lottieUrl ? (obstacle.width / 4) * 16 : (obstacle.width / 4) * 16;
 
-            const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeightPx; // Obstacle top edge from top of container
+            // Calculate obstacle dimensions in pixels based on its type
+            let obstacleWidth_px, obstacleHeight_px;
+            // Assuming Tailwind h-unit and w-unit are roughly 4px per unit (e.g., h-8 is 32px)
+            obstacleWidth_px = (obstacle.width / 4) * 16;
+            obstacleHeight_px = (obstacle.height / 4) * 16;
+
+            // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
+            const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px; // Obstacle top edge from top of container
 
 
              // Check for collision using bounding boxes in pixels with tolerance
             const collisionTolerance = 5; // Added tolerance for collision detection
             if (
               characterRight_px > obstacleX_px - collisionTolerance &&
-              characterLeft_px < obstacleX_px + obstacleWidthPx + collisionTolerance &&
+              characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
               characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance && // Character bottom is below obstacle top
               characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance // Character top is above obstacle bottom
             ) {
@@ -848,12 +860,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 const randomOffset = Math.floor(Math.random() * 20);
 
                 return {
-                  ...obstacle,
-                  ...randomObstacleType,
+                  ...obstacle, // Keep existing properties like health if needed, but we reset health here
+                  ...randomObstacleType, // Override with new type properties
                   id: Date.now(),
                   position: 120 + randomOffset,
-                  health: randomObstacleType.baseHealth,
-                  maxHealth: randomObstacleType.baseHealth
+                  health: randomObstacleType.baseHealth, // Reset health
+                  maxHealth: randomObstacleType.baseHealth // Reset max health
                 };
               } else {
                 // If not reusing, let it move off-screen to be filtered out
@@ -1142,48 +1154,59 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const renderObstacle = (obstacle: GameObstacle) => {
     let obstacleEl; // Element to render for the obstacle
 
-    // Render Lottie if lottieUrl is provided
-    if (obstacle.lottieUrl) {
+    // Calculate obstacle dimensions in pixels based on its defined width and height (Tailwind units)
+    const obstacleWidthPx = (obstacle.width / 4) * 16; // Assuming Tailwind w-unit is 4px, w-8 is 32px
+    const obstacleHeightPx = (obstacle.height / 4) * 16; // Assuming Tailwind h-unit is 4px, h-8 is 32px
+
+
+    switch(obstacle.type) {
+      case 'rock':
         obstacleEl = (
-            <DotLottieReact
-                src={obstacle.lottieUrl}
+          // Adjusted size for rock element
+          <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br ${obstacle.color} rounded-lg`}>
+            {/* Rock details */}
+            <div className="w-2 h-1 bg-gray-600 rounded-full absolute top-1 left-0.5"></div> {/* Adjusted size and position */}
+            <div className="w-1.5 h-0.5 bg-gray-600 rounded-full absolute top-3 right-1"></div> {/* Adjusted size and position */}
+          </div>
+        );
+        break;
+      case 'cactus':
+        obstacleEl = (
+          <div className="relative">
+            {/* Cactus main body - Adjusted size */}
+            <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
+            {/* Cactus arms - Adjusted size and position */}
+            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
+            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
+          </div>
+        );
+        break;
+      // NEW: Case for Lottie Obstacle
+      case 'lottie-obstacle':
+        obstacleEl = (
+          // Container for the Lottie animation
+          <div
+            className="relative" // Needed for absolute positioning of Lottie if necessary
+            style={{ width: `${obstacleWidthPx}px`, height: `${obstacleHeightPx}px` }} // Set size based on calculated pixels
+          >
+            {/* DotLottieReact component for the Lottie obstacle */}
+            {obstacle.lottieSrc && (
+              <DotLottieReact
+                src={obstacle.lottieSrc} // Use the Lottie source from the obstacle object
                 loop
                 autoplay
-                className={`w-${obstacle.width} h-${obstacle.height}`} // Use Tailwind classes for size
-            />
+                className="w-full h-full" // Make Lottie fill its container
+              />
+            )}
+          </div>
         );
-    } else {
-        // Render standard div for rock/cactus
-        switch(obstacle.type) {
-          case 'rock':
-            obstacleEl = (
-              // Adjusted size for rock element
-              <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br ${obstacle.color} rounded-lg`}>
-                {/* Rock details */}
-                <div className="w-2 h-1 bg-gray-600 rounded-full absolute top-1 left-0.5"></div> {/* Adjusted size and position */}
-                <div className="w-1.5 h-0.5 bg-gray-600 rounded-full absolute top-3 right-1"></div> {/* Adjusted size and position */}
-              </div>
-            );
-            break;
-          case 'cactus':
-            obstacleEl = (
-              <div className="relative">
-                {/* Cactus main body - Adjusted size */}
-                <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
-                {/* Cactus arms - Adjusted size and position */}
-                <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
-                <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
-              </div>
-            );
-            break;
-          default:
-            // Default rendering if obstacle type is unknown
-            obstacleEl = (
-              <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}></div>
-            );
-        }
+        break;
+      default:
+        // Default rendering if obstacle type is unknown
+        obstacleEl = (
+          <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}></div>
+        );
     }
-
 
     // Calculate obstacle health percentage
     const obstacleHealthPct = obstacle.health / obstacle.maxHealth;
@@ -1972,4 +1995,5 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
 
