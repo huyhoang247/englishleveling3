@@ -198,11 +198,12 @@ interface GameObstacle {
   id: number;
   position: number; // Horizontal position in %
   type: string;
-  height: number; // Height in Tailwind units (e.g., 8 for h-8)
-  width: number; // Width in Tailwind units (e.g., 8 for w-8)
-  color: string; // Tailwind gradient class
+  height: number; // Height in Tailwind units (e.g., 8 for h-8) or a fixed pixel value for Lottie
+  width: number; // Width in Tailwind units (e.g., 8 for w-8) or a fixed pixel value for Lottie
+  color: string; // Tailwind gradient class (might not be used for Lottie)
   health: number; // Current health of the obstacle
   maxHealth: number; // Maximum health of the obstacle
+  lottieUrl?: string; // Optional Lottie URL for this obstacle type
 }
 
 // --- NEW: Define interface for Coin ---
@@ -290,9 +291,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
   // Obstacle types with properties (added base health)
-  // MODIFIED: Changed obstacle types to include only 'cow'
-  const obstacleTypes = [
-    { type: 'cow', height: 16, width: 20, color: 'from-gray-300 to-gray-500', baseHealth: 500, damage: 100 }, // Added damage
+  // MODIFIED: Changed obstacle types to include only 'cow' with Lottie URL
+  const obstacleTypes: GameObstacle[] = [
+    {
+      type: 'cow',
+      height: 80, // Approximate height in pixels for collision/positioning
+      width: 100, // Approximate width in pixels for collision/positioning
+      color: '', // Not used for Lottie
+      baseHealth: 500,
+      damage: 100,
+      lottieUrl: "https://lottie.host/0840afb5-44ce-4872-9c10-1c7a7e985650/crikgFNWpz.lottie" // Lottie URL for the cow
+    },
   ];
 
     // Updated cards array to use SVG components
@@ -370,7 +379,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDisplayedCoins(357); // Reset displayed coin count
 
     // Generate initial obstacles to populate the screen at the start
-    const initialObstacles = [];
+    const initialObstacles: GameObstacle[] = []; // Specify type
     // First obstacle placed a bit further to give the player time to react
     const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
     initialObstacles.push({
@@ -378,7 +387,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       position: 120, // Position off-screen to the right
       ...firstObstacleType, // Include obstacle properties
       health: firstObstacleType.baseHealth, // Initialize health
-      maxHealth: firstObstacleType.baseHealth // Set max health
+      maxHealth: firstObstacleType.baseHealth
     });
 
     // Add a few more obstacles with increasing distance
@@ -389,7 +398,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         position: 150 + (i * 50),
         ...obstacleType, // Include obstacle properties
         health: obstacleType.baseHealth, // Initialize health
-        maxHealth: obstacleType.baseHealth // Set max health
+        maxHealth: obstacleType.baseHealth
       });
     }
 
@@ -501,7 +510,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           position: 100 + spacing, // Position off-screen to the right with spacing
           ...randomObstacleType, // Include obstacle properties
           health: randomObstacleType.baseHealth, // Initialize health
-          maxHealth: randomObstacleType.baseHealth // Set max health
+          maxHealth: randomObstacleType.baseHealth
         });
       }
 
@@ -642,9 +651,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       const obstacleLeftPx = (targetObstacle.position / 100) * gameWidth;
       const obstacleBottomPct = GROUND_LEVEL_PERCENT;
       const obstacleBottomPx = (obstacleBottomPct / 100) * gameHeight;
-      // Approximate obstacle dimensions in pixels (rough conversion from Tailwind units)
-      const obstacleHeightPx = (targetObstacle.height / 4) * 16; // Assuming Tailwind h-unit is 4px, h-8 is 32px
-      const obstacleWidthPx = (targetObstacle.width / 4) * 16; // Assuming Tailwind w-unit is 4px, w-8 is 32px
+      // Approximate obstacle dimensions in pixels (using the fixed pixel size from obstacleTypes)
+      const obstacleHeightPx = targetObstacle.height;
+      const obstacleWidthPx = targetObstacle.width;
 
 
       // Approximate center of the obstacle
@@ -809,9 +818,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             // Obstacle position in pixels relative to the bottom-left of the game container
             const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
             // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
-            const obstacleTopFromTop_px = obstacleBottomFromTop_px - ((obstacle.height / 4) * 16); // Obstacle top edge from top of container
-            const obstacleWidth_px = (obstacle.width / 4) * 16; // Approximate obstacle width in pixels
-            const obstacleHeight_px = (obstacle.height / 4) * 16; // Approximate obstacle height in pixels
+            // Use the fixed pixel height from obstacleTypes for collision calculation
+            const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacle.height; // Obstacle top edge from top of container
+            // Use the fixed pixel width from obstacleTypes for collision calculation
+            const obstacleWidth_px = obstacle.width;
+            const obstacleHeight_px = obstacle.height;
 
 
              // Check for collision using bounding boxes in pixels with tolerance
@@ -1131,61 +1142,31 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Render obstacles based on their type
   const renderObstacle = (obstacle: GameObstacle) => {
-    let obstacleEl; // Element to render for the obstacle
+    // Use the fixed pixel dimensions from obstacleTypes for the container size
+    const obstacleStyle = {
+      bottom: `${GROUND_LEVEL_PERCENT}%`, // Position relative to ground
+      left: `${obstacle.position}%`, // Horizontal position
+      width: `${obstacle.width}px`, // Set container width based on obstacle type
+      height: `${obstacle.height}px`, // Set container height based on obstacle type
+      transform: 'translateY(0)', // Ensure it sits on the ground line
+    };
 
-    switch(obstacle.type) {
-      // MODIFIED: Added 'cow' case and removed 'rock' and 'cactus' cases
-      case 'cow':
-        obstacleEl = (
-          <div className="relative">
-            {/* Cow body - Adjusted size */}
-            <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br from-gray-300 to-gray-500 rounded-full relative`}>
-                {/* Cow spots */}
-                <div className="absolute top-4 left-6 w-4 h-4 bg-gray-800 rounded-full"></div>
-                <div className="absolute top-8 right-4 w-3 h-3 bg-gray-800 rounded-full"></div>
-                <div className="absolute bottom-4 left-10 w-5 h-5 bg-gray-800 rounded-full"></div>
-                {/* Cow head */}
-                <div className="absolute -top-6 right-2 w-10 h-8 bg-gray-300 rounded-t-full rounded-br-full border-2 border-gray-400">
-                    {/* Cow ears */}
-                    <div className="absolute -top-2 left-2 w-3 h-3 bg-gray-400 rounded-full transform rotate-45"></div>
-                    <div className="absolute -top-2 right-2 w-3 h-3 bg-gray-400 rounded-full transform -rotate-45"></div>
-                    {/* Cow eyes */}
-                    <div className="absolute top-2 left-3 w-1 h-1 bg-black rounded-full"></div>
-                    <div className="absolute top-2 right-3 w-1 h-1 bg-black rounded-full"></div>
-                    {/* Cow snout */}
-                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-5 h-3 bg-pink-300 rounded-b-full"></div>
-                </div>
-                 {/* Cow legs */}
-                <div className="absolute -bottom-4 left-4 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
-                <div className="absolute -bottom-4 left-10 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
-                <div className="absolute -bottom-4 right-10 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
-                <div className="absolute -bottom-4 right-4 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
-            </div>
-          </div>
-        );
-        break;
-      default:
-        // Default rendering if obstacle type is unknown (shouldn't happen with current obstacleTypes)
-        obstacleEl = (
-          <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}></div>
-        );
-    }
-
-    // Calculate obstacle health percentage
-    const obstacleHealthPct = obstacle.health / obstacle.maxHealth;
 
     return (
       <div
         key={obstacle.id} // Unique key for React list rendering
         className="absolute"
-        style={{
-          // ObstacleY is always relative to the new ground level
-          bottom: `${GROUND_LEVEL_PERCENT}%`,
-          left: `${obstacle.position}%` // Horizontal position
-        }}
+        style={obstacleStyle}
       >
-        {/* Obstacle Element */}
-        {obstacleEl} {/* Render the specific obstacle element */}
+        {/* Obstacle Element - Use DotLottieReact for the cow */}
+        {obstacle.type === 'cow' && obstacle.lottieUrl && (
+           <DotLottieReact
+              src={obstacle.lottieUrl} // Use the Lottie URL from obstacle type
+              loop
+              autoplay
+              className="w-full h-full" // Make Lottie fill its container
+           />
+        )}
 
         {/* --- NEW: Obstacle Health Bar --- */}
         {/* Position the health bar above the obstacle */}
