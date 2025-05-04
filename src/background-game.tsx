@@ -1357,9 +1357,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Only render if shield is active
     if (!isShieldActive) return null;
 
-    // Position the shield above the character. Adjust positioning as needed.
+    // Position the shield above and slightly in front of the character.
     // Character container is at bottom: calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px), left: 10%
-    // We want the shield centered above the character.
+    // We want the shield centered above the character, shifted slightly to the right (forward).
     const shieldSizePx = 80; // Approximate size of the shield Lottie container in pixels
 
     return (
@@ -1367,11 +1367,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         key="character-shield" // Fixed key for the shield
         className="absolute w-20 h-20 flex flex-col items-center justify-center pointer-events-none z-20" // Adjusted size, z-index
          style={{
-          // Position shield above the character container
+          // Position shield above the character container and slightly to the right
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + 96px)`, // 96px is approx height of character container (w-24 h-24)
-          left: '10%', // Same horizontal position as character
-          transform: 'translate(-50%, -50%)', // Center the shield container
-          transition: 'bottom 0.3s ease-out', // Smooth transition with character jump
+          left: '13%', // Adjusted horizontal position (slightly more than 10%)
+          transform: 'translate(-50%, -50%)', // Center the shield container relative to its left position
+          transition: 'bottom 0.3s ease-out, left 0.3s ease-out', // Smooth transition with character jump and movement
           width: `${shieldSizePx}px`,
           height: `${shieldSizePx}px`,
         }}
@@ -1388,7 +1388,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie" // Shield Lottie URL
           loop
-          autoplay
+          autoplay={isShieldActive} // Autoplay only when shield is active
           className="w-full h-full" // Make Lottie fill its container
         />
       </div>
@@ -2085,5 +2085,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
 
