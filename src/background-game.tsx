@@ -250,7 +250,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // const BLACK_FIRE_DAMAGE = 150; // Damage dealt by Black Fire
 
   // --- NEW: Shield Skill States ---
-  const SHIELD_MAX_HEALTH = 200; // Base health for the shield
+  const SHIELD_MAX_HEALTH = 2000; // Base health for the shield - Tăng lên 2000 theo yêu cầu người dùng
   const SHIELD_DURATION = 5000; // Shield active duration in ms (e.g., 5 seconds)
   const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active
@@ -400,7 +400,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
     // NEW: Reset Shield states
     setIsShieldActive(false);
-    setShieldHealth(SHIELD_MAX_HEALTH);
+    setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
     setIsShieldOnCooldown(false);
     setRemainingCooldown(0);
 
@@ -721,7 +721,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   //                   // Update position
   //                   const newX = fire.currentX + moveX;
-  //                   const newY = fire.currentY + moveY;
+  //                   newY = fire.currentY + moveY;
 
   //                   // Check for collision with target obstacle or if it passed the target
   //                   let hitTarget = false;
@@ -2084,4 +2084,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
