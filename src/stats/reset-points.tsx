@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState } from 'react';
 
 // Custom Icon component using inline SVG (Copied from original file for self-containment)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -53,6 +53,8 @@ interface ResetStatsControlProps {
 const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onStatsReset }) => {
   // State để điều khiển hiển thị modal xác nhận
   const [showResetModal, setShowResetModal] = useState(false);
+  // State để điều khiển hiệu ứng animation khi reset
+  const [resetAnimation, setResetAnimation] = useState(false);
 
   // Hàm tính toán tổng điểm tiềm năng đã phân bổ dựa trên chỉ số hiện tại
   const calculateResetPoints = () => {
@@ -67,96 +69,42 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
     }, 0);
   };
 
-  // Component nội bộ cho Modal xác nhận Reset Chỉ Số
-  const ResetModal = ({ onClose, onConfirm }) => {
-    // State để điều khiển hiệu ứng animation khi reset (spinner)
-    const [resetProcessing, setResetProcessing] = useState(false);
-    // State để điều khiển hiệu ứng animation điểm nhảy
-    const [showPointsAnimation, setShowPointsAnimation] = useState(false);
-    // State lưu số điểm để hiển thị trong animation
-    const [pointsToAnimate, setPointsToAnimate] = useState(0);
+  // Hàm xử lý khi người dùng bấm xác nhận reset trong modal
+  const handleConfirmReset = () => {
+    setResetAnimation(true); // Bắt đầu animation xử lý
 
+    // Tính toán số điểm sẽ hoàn trả
+    const pointsToRefund = calculateResetPoints();
+
+    // Sử dụng setTimeout để tạo độ trễ cho animation trước khi thực hiện logic reset
+    setTimeout(() => {
+      // Gọi hàm callback từ component cha, truyền số điểm hoàn trả
+      onStatsReset(pointsToRefund);
+      setShowResetModal(false); // Đóng modal
+      setResetAnimation(false); // Kết thúc animation xử lý
+    }, 1500); // Độ trễ 1.5 giây
+  };
+
+  // Component nội bộ cho Modal xác nhận Reset Chỉ Số
+  const ResetModal = () => {
     // Tính toán số điểm sẽ nhận được để hiển thị trong modal
     const pointsToReceive = calculateResetPoints();
 
-    // Hàm xử lý khi người dùng bấm xác nhận reset
-    const handleConfirm = () => {
-      setResetProcessing(true); // Bắt đầu animation xử lý (spinner)
-      setPointsToAnimate(pointsToReceive); // Lưu số điểm để animate
-
-      // Độ trễ cho spinner animation
-      setTimeout(() => {
-        setResetProcessing(false); // Kết thúc spinner
-        setShowPointsAnimation(true); // Bắt đầu animation điểm nhảy
-
-        // Độ trễ cho animation điểm nhảy
-        setTimeout(() => {
-          onConfirm(pointsToReceive); // Gọi hàm xác nhận từ component cha
-          // Modal sẽ đóng thông qua state showResetModal ở component cha
-          setShowPointsAnimation(false); // Kết thúc animation điểm nhảy
-        }, 1500); // Thời gian animation điểm nhảy (1.5 giây)
-
-      }, 1500); // Thời gian spinner animation (1.5 giây)
-    };
-
-    // CSS cho hiệu ứng điểm nhảy
-    // Sử dụng keyframes để tạo animation nhảy và mờ dần
-    const pointAnimationStyles = `
-      @keyframes jumpAndFade {
-        0% {
-          transform: translateY(0) translateX(0) scale(1);
-          opacity: 1;
-        }
-        50% {
-           transform: translateY(-50px) translateX(10px) scale(1.1); /* Nhảy lên và dịch nhẹ ngang */
-           opacity: 1;
-        }
-        100% {
-          transform: translateY(-100px) translateX(-10px) scale(0.8); /* Tiếp tục nhảy và dịch nhẹ ngang, nhỏ lại */
-          opacity: 0;
-        }
-      }
-
-      .point-animation {
-        position: absolute;
-        bottom: 50%; /* Bắt đầu từ giữa modal */
-        left: 50%;
-        transform: translate(-50%, 50%); /* Căn giữa */
-        animation: jumpAndFade 1.5s ease-out forwards; /* Áp dụng animation */
-        pointer-events: none; /* Không chặn click */
-        z-index: 60; /* Đảm bảo nằm trên các element khác */
-        font-weight: bold;
-        color: #4ADE80; /* Màu xanh lá cây */
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Thêm đổ bóng */
-        font-size: 1.5rem; /* Kích thước chữ */
-      }
-    `;
-
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        {/* Thêm style tag cho animation keyframes */}
-        <style>{pointAnimationStyles}</style>
-
         {/* Nội dung Modal */}
-        <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetProcessing ? 'scale-105' : ''}`}>
-          {/* Hiển thị giao diện xử lý (spinner) */}
-          {resetProcessing ? (
+        <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetAnimation ? 'scale-105' : ''}`}>
+          {/* Hiển thị giao diện xử lý nếu resetAnimation là true */}
+          {resetAnimation ? (
             <div className="flex flex-col items-center justify-center py-8">
+              {/* Spinner animation */}
               <div className="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mb-4"></div>
+              {/* Processing message */}
               <p className="text-gray-700 font-medium text-lg">Đang hoàn tác điểm tiềm năng...</p>
               <p className="text-gray-500 text-sm mt-1">Vui lòng chờ trong giây lát.</p>
             </div>
-          ) : showPointsAnimation ? (
-             // Hiển thị animation điểm nhảy
-             <div className="flex flex-col items-center justify-center py-8 relative h-40"> {/* Thêm relative và chiều cao để chứa animation */}
-                <p className="text-gray-700 font-medium text-lg mb-4">Hoàn tác thành công!</p>
-                {/* Element cho hiệu ứng điểm nhảy */}
-                <div className="point-animation">
-                  +{pointsToAnimate} Point
-                </div>
-             </div>
           ) : (
-            // Hiển thị nội dung xác nhận reset
+            // Hiển thị nội dung xác nhận reset nếu resetAnimation là false
             <>
               {/* Modal Header */}
               <div className="bg-gradient-to-br from-purple-500 to-blue-600 text-white p-4 rounded-xl mb-4 shadow-lg">
@@ -209,14 +157,14 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
               <div className="flex gap-3">
                 {/* Cancel Button */}
                 <button
-                  onClick={onClose} // Sử dụng hàm onClose từ props
+                  onClick={() => setShowResetModal(false)}
                   className="flex-1 px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors"
                 >
                   Hủy
                 </button>
                 {/* Reset Button */}
                 <button
-                  onClick={handleConfirm} // Gọi hàm xử lý xác nhận nội bộ
+                  onClick={handleConfirmReset} // Gọi hàm xử lý xác nhận
                   className={`flex-1 px-4 py-3 rounded-xl font-medium text-white shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all`}
                 >
                    <Icon name="RotateCcw" size={16} />
@@ -252,12 +200,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
       </button>
 
       {/* Render modal nếu showResetModal là true */}
-      {showResetModal && (
-        <ResetModal
-          onClose={() => setShowResetModal(false)} // Truyền hàm đóng modal
-          onConfirm={onStatsReset} // Truyền hàm xử lý xác nhận cuối cùng
-        />
-      )}
+      {showResetModal && <ResetModal />}
     </>
   );
 };
