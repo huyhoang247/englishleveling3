@@ -785,7 +785,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     // Game speed is now constant as score is removed
-    const speed = 2; // Base speed for obstacles and particles
+    const speed = 1; // Base speed for obstacles and particles - REDUCED SPEED HERE
     // Removed damagePerCollision here, will use damage from obstacleTypes
 
     const moveInterval = setInterval(() => {
