@@ -673,7 +673,6 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   return (
     // MODIFIED: Added absolute positioning and full size for fullscreen display
     // Removed max-w-lg mx-auto for full screen
-    // REMOVED: border border-gray-100 class
     <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
