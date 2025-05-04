@@ -236,7 +236,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
-  const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
+  // REMOVED: showCharacterDamageEffect state
+  // const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
 
   // State for Health Bar visual display (integrated from original HealthBar)
   const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
@@ -384,7 +385,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
-    setShowCharacterDamageEffect(false); // Reset character damage effect state
+    // REMOVED: setShowCharacterDamageEffect(false); // Reset character damage effect state
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
     // REMOVED: setShowStatsModal(false); // Ensure stats modal is closed on game start/restart
@@ -612,13 +613,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Trigger character damage effect and floating number
   const triggerCharacterDamageEffect = (amount) => {
-      setShowCharacterDamageEffect(true);
+      // REMOVED: setShowCharacterDamageEffect(true); // Removed setting this state
       setDamageAmount(amount); // Set the damage amount for display
       setShowDamageNumber(true); // Show the damage number
 
-      setTimeout(() => {
-          setShowCharacterDamageEffect(false);
-      }, 500); // Effect duration (slightly longer for visibility)
+      // REMOVED: setShowCharacterDamageEffect(false); // Removed setting this state
       setTimeout(() => {
           setShowDamageNumber(false); // Hide damage number
       }, 800); // Hide damage number after animation
@@ -1150,11 +1149,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           className="w-full h-full" // Make Lottie fill its container
         />
 
-        {/* Damage Effect on Character (Visual pulse/shake) */}
+        {/* REMOVED: Damage Effect on Character (Visual pulse/shake) */}
         {/* Apply damage effect as an overlay on the Lottie container */}
-        {showCharacterDamageEffect && (
+        {/* {showCharacterDamageEffect && (
             <div className="absolute inset-0 bg-red-500 opacity-30 rounded-full animate-pulse-fast"></div>
-        )}
+        )} */}
       </div>
     );
   };
@@ -1444,7 +1443,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         @keyframes chest-shake { 0% { transform: translateX(0) rotate(0deg); } 10% { transform: translateX(-4px) rotate(-3deg); } 20% { transform: translateX(4px) rotate(3deg); } 30% { transform: translateX(-4px) rotate(-3deg); } 40% { transform: translateX(4px) rotate(3deg); } 50% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(2deg); } }
         @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } }
         @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
-        @keyframes pulse-fast { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.2); } }
+        // REMOVED: pulse-fast keyframe
+        // @keyframes pulse-fast { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.2); } }
         @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -1456,7 +1456,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         .animate-chest-shake { animation: chest-shake 0.6s ease-in-out; }
         .animate-twinkle { animation: twinkle 5s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
-        .animate-pulse-fast { animation: pulse-fast 1s ease-in-out infinite; }
+        // REMOVED: animate-pulse-fast class
+        // .animate-pulse-fast { animation: pulse-fast 1s ease-in-out infinite; }
         .animate-pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
         .animate-bounce-subtle { animation: bounce-subtle 1.5s ease-in-out infinite; }
         .animate-spin-slow { animation: spin-slow 10s linear infinite; }
