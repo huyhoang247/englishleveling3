@@ -77,6 +77,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const [showPointsPanel, setShowPointsPanel] = useState(false);
   const [tempStats, setTempStats] = useState({...character.stats});
   // State cho hiệu ứng phát sáng, có thể là nguyên nhân gây nhảy nếu áp dụng không cẩn thận
+  // Giữ lại state nhưng sẽ điều chỉnh cách áp dụng hiệu ứng
   const [glowEffect, setGlowEffect] = useState(false);
 
   // State for Coin and Point exchange modal
@@ -86,6 +87,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
   // Effect for card glow animation
   // Hiệu ứng này thay đổi lớp shadow, có thể gây tính toán lại bố cục và nhảy
+  // Giữ nguyên logic này nhưng sẽ điều chỉnh CSS của div chính
   useEffect(() => {
     const interval = setInterval(() => {
       setGlowEffect(prev => !prev);
@@ -569,12 +571,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   return (
-    // MODIFIED: Added absolute positioning and full size for fullscreen display
-    // Removed max-w-lg mx-auto for full screen
-    // Chú thích: absolute inset-0 sẽ định vị component này so với phần tử cha ĐÃ ĐƯỢC ĐỊNH VỊ gần nhất.
-    // Nếu phần tử cha không được định vị, nó sẽ định vị so với viewport.
-    // Đảm bảo phần tử cha của component CharacterCard có position: relative; để tránh nhảy.
-    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
+    // MODIFIED: Removed transition-all duration-700 from the main div
+    // Added a specific transition for the shadow color if needed, but keeping it simple for now.
+    // The glow effect will now just toggle the shadow class directly.
+    <div className={`absolute inset-0 rounded-none shadow-none flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
       {/* Container to limit the width of the content within the fullscreen view */}
