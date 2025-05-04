@@ -210,8 +210,8 @@ interface GameCoin {
   id: number;
   x: number; // Horizontal position in %
   y: number; // Vertical position in %
-  speedX: number; // Horizontal movement speed
-  speedY: number; // Vertical movement speed
+  // Removed speedX, speedY - movement will be calculated towards character
+  speed: number; // Speed factor for moving towards the character
 }
 
 
@@ -247,7 +247,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [coins, setCoins] = useState(357); // Player's coin count
   const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
-  const coinTimerRef = useRef(null); // Timer for scheduling new coins
+  const coinScheduleTimerRef = useRef(null); // NEW: Timer for scheduling new coins (renamed)
+  const coinCountAnimationTimerRef = useRef(null); // NEW: Timer for coin count animation
+
 
   // --- NEW: Coin Effect States ---
   const [isCoinEffectActive, setIsCoinEffectActive] = useState(false); // State to show coin effect
@@ -313,16 +315,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
   // Coin count animation function
-  // Modified to update 'coins' state as well during animation steps
   const startCoinCountAnimation = (reward) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
       let current = oldCoins;
 
-      // Clear any existing interval to prevent overlapping animations
-      if (coinTimerRef.current) {
-          clearInterval(coinTimerRef.current);
+      // Clear any existing coin count animation interval
+      if (coinCountAnimationTimerRef.current) {
+          clearInterval(coinCountAnimationTimerRef.current);
       }
 
       const countInterval = setInterval(() => {
@@ -332,6 +333,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               setCoins(newCoins); // Ensure the actual coin count is updated at the end
               clearInterval(countInterval);
               setPendingCoinReward(0); // Reset pending reward after animation
+              coinCountAnimationTimerRef.current = null; // Clear the ref after animation
           } else {
               setDisplayedCoins(current);
               // Optionally update actual coins state during animation for responsiveness
@@ -339,8 +341,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           }
       }, 50);
 
-      // Store the interval ID to clear it later if needed
-      coinTimerRef.current = countInterval;
+      // Store the interval ID in the dedicated ref
+      coinCountAnimationTimerRef.current = countInterval;
   };
 
 
@@ -424,8 +426,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
       clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
-      clearInterval(coinTimerRef.current); // NEW: Clear coin timer
-      clearTimeout(coinEffectTimerRef.current); // NEW: Clear coin effect timer
+      clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
+      clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
+      clearTimeout(coinEffectTimerRef.current); // Clear coin effect timer
     }
   }, [health, gameStarted]);
 
@@ -516,18 +519,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Random time delay before the next coin appears (between 1 and 5 seconds)
     const randomTime = Math.floor(Math.random() * 4000) + 1000;
-    // Clear any existing timer before setting a new one
-    if (coinTimerRef.current) {
-        clearTimeout(coinTimerRef.current);
+    // Clear the coin scheduling timer before setting a new one
+    if (coinScheduleTimerRef.current) {
+        clearTimeout(coinScheduleTimerRef.current);
     }
-    coinTimerRef.current = setTimeout(() => {
+    coinScheduleTimerRef.current = setTimeout(() => {
       // Generate a new coin
       const newCoin: GameCoin = {
         id: Date.now(), // Unique ID
         x: 110, // Start off-screen to the right (%)
         y: Math.random() * 60, // Random vertical position from top (0%) to middle (60%)
-        speedX: Math.random() * 0.5 + 0.5, // Horizontal speed (move left)
-        speedY: Math.random() * 0.3 // Vertical speed (move downwards)
+        speed: Math.random() * 0.05 + 0.03 // Speed factor for moving towards character (adjusted)
       };
 
       // Add the new coin to the active list
@@ -926,34 +928,40 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           const characterLeft_px = characterX_px; // Character's left edge from left of game container
           const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
 
-          // console.log("Character Bounding Box (px):", {
-          //     left: characterLeft_px,
-          //     right: characterRight_px,
-          //     top: characterTopFromTop_px,
-          //     bottom: characterBottomFromTop_px
-          // });
+          // Get character's approximate center position in pixels (relative to top-left of game container)
+          const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
+          const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
 
 
           return prevCoins
               .map(coin => {
-                  // Move coin diagonally
-                  const newX = coin.x - coin.speedX; // Move left
-                  const newY = coin.y + coin.speedY; // Move down
-
                   // Approximate coin size in pixels (assuming a fixed size for the Lottie)
                   const coinSize_px = 40; // Assuming coin Lottie is roughly 40x40px
 
                   // Coin position in pixels relative to the top-left of the game container
-                  const coinX_px = (newX / 100) * gameWidth;
-                  const coinY_px = (newY / 100) * gameHeight;
+                  const coinX_px = (coin.x / 100) * gameWidth;
+                  const coinY_px = (coin.y / 100) * gameHeight;
 
-                  // console.log("Coin Bounding Box (px):", {
-                  //     id: coin.id,
-                  //     left: coinX_px,
-                  //     right: coinX_px + coinSize_px,
-                  //     top: coinY_px,
-                  //     bottom: coinY_px + coinSize_px
-                  // });
+                  // Calculate direction vector from coin to character center
+                  const dx = characterCenterX_px - coinX_px;
+                  const dy = characterCenterY_px - coinY_px;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+
+                  // Calculate movement step towards the character
+                  // Use coin.speed as a factor of the remaining distance
+                  const moveStep = distance * coin.speed;
+
+                  // Avoid division by zero if distance is 0
+                  const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
+                  const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
+
+                  // Update coin position in pixels
+                  const newCoinX_px = coinX_px + moveX_px;
+                  const newCoinY_px = coinY_px + moveY_px;
+
+                  // Convert updated pixel position back to percentage
+                  const newX = (newCoinX_px / gameWidth) * 100;
+                  const newY = (newCoinY_px / gameHeight) * 100;
 
 
                   // Check for collision using bounding boxes in pixels
@@ -961,45 +969,41 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   // Character bounding box: (characterLeft_px, characterTopFromTop_px) to (characterRight_px, characterBottomFromTop_px)
 
                   let collisionDetected = false;
-                  if (
-                      characterRight_px > coinX_px &&
-                      characterLeft_px < coinX_px + coinSize_px &&
-                      characterBottomFromTop_px > coinY_px && // Character bottom edge is below coin top edge
-                      characterTopFromTop_px < coinY_px + coinSize_px // Character top edge is above coin bottom edge
-                  ) {
-                      collisionDetected = true;
-                      // Grant random coins (1-5)
-                      const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                      // MODIFIED: Call startCoinCountAnimation to animate the coin count
-                      startCoinCountAnimation(awardedCoins);
+                   // Check if the coin is close enough to the character (using a small threshold)
+                   if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) { // Collision when centers are close
+                       collisionDetected = true;
+                       // Grant random coins (1-5)
+                       const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                       // MODIFIED: Call startCoinCountAnimation to animate the coin count
+                       startCoinCountAnimation(awardedCoins);
 
-                      console.log(`Coin collected! Awarded: ${awardedCoins}`); // Add logging
+                       console.log(`Coin collected! Awarded: ${awardedCoins}`); // Add logging
 
 
-                      // --- NEW: Trigger Coin Collection Effect ---
-                      // Calculate position for the effect relative to the character container
-                      const characterContainer = gameRef.current?.querySelector('.character-container'); // Get character container element
-                      if (characterContainer) {
-                          const charRect = characterContainer.getBoundingClientRect();
-                          const gameRect = gameContainer.getBoundingClientRect();
-                          // Position the effect slightly above the character's container
-                          setCoinEffectPosition({
-                              top: charRect.top - gameRect.top - 40, // 40px above character container top
-                              left: charRect.left - gameRect.left + charRect.width / 2 // Center horizontally above character
-                          });
-                          setIsCoinEffectActive(true); // Show the effect
+                       // --- NEW: Trigger Coin Collection Effect ---
+                       // Calculate position for the effect relative to the character container
+                       const characterContainer = gameRef.current?.querySelector('.character-container'); // Get character container element
+                       if (characterContainer) {
+                           const charRect = characterContainer.getBoundingClientRect();
+                           const gameRect = gameContainer.getBoundingClientRect();
+                           // Position the effect slightly above the character's container
+                           setCoinEffectPosition({
+                               top: charRect.top - gameRect.top - 40, // 40px above character container top
+                               left: charRect.left - gameRect.left + charRect.width / 2 // Center horizontally above character
+                           });
+                           setIsCoinEffectActive(true); // Show the effect
 
-                          // Clear any existing timer before starting a new one
-                          if (coinEffectTimerRef.current) {
-                              clearTimeout(coinEffectTimerRef.current);
-                          }
-                          // Hide the effect after a short duration
-                          coinEffectTimerRef.current = setTimeout(() => {
-                              setIsCoinEffectActive(false);
-                          }, 800); // Effect duration (e.g., 800ms)
-                      }
-                      // --- END NEW: Trigger Coin Collection Effect ---
-                  }
+                           // Clear any existing timer before starting a new one
+                           if (coinEffectTimerRef.current) {
+                               clearTimeout(coinEffectTimerRef.current);
+                           }
+                           // Hide the effect after a short duration
+                           coinEffectTimerRef.current = setTimeout(() => {
+                               setIsCoinEffectActive(false);
+                           }, 800); // Effect duration (e.g., 800ms)
+                       }
+                       // --- END NEW: Trigger Coin Collection Effect ---
+                   }
 
 
                   return {
@@ -1011,7 +1015,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               })
               .filter(coin => {
                   // Remove coin if it collided or moved off-screen (left or bottom)
-                  const isOffScreen = coin.x < -10 || coin.y > 110; // Off-screen if X < -10% or Y > 110%
+                  // Keep coins that are moving towards the character, even if they go slightly off-screen initially
+                  const isOffScreen = coin.x < -20 || coin.y > 120; // Use larger buffer for off-screen check
                   return !coin.collided && !isOffScreen; // Keep coin if not collided and not off-screen
               });
       });
@@ -1031,8 +1036,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
       clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
-      clearInterval(coinTimerRef.current); // NEW: Clear coin timer
-      clearTimeout(coinEffectTimerRef.current); // NEW: Clear coin effect timer
+      clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
+      clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
+      clearTimeout(coinEffectTimerRef.current); // Clear coin effect timer
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
@@ -1841,7 +1847,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         <div className="absolute inset-0 overflow-hidden rounded-xl">
                           <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                         </div>
-                        <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                        <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                         <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                         <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
                         <div className="flex mt-3">
