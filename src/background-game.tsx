@@ -292,9 +292,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Obstacle types with properties (added base health)
   const obstacleTypes = [
     // Reduced size for rock, added baseHealth
-    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200 },
+    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
     // Reduced size for cactus, added baseHealth
-    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300 },
+    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300, damage: 75 }, // Added damage
   ];
 
     // Updated cards array to use SVG components
@@ -772,31 +772,81 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Game speed is now constant as score is removed
     const speed = 2; // Base speed for obstacles and particles
-    const damagePerCollision = 1; // Damage amount per collision
+    // Removed damagePerCollision here, will use damage from obstacleTypes
 
     const moveInterval = setInterval(() => {
       // Move obstacles and handle endless loop effect
       setObstacles(prevObstacles => {
+        const gameContainer = gameRef.current;
+        if (!gameContainer) return prevObstacles; // Return early if ref is not available
+
+        const gameWidth = gameContainer.offsetWidth;
+        const gameHeight = gameContainer.offsetHeight;
+
+        // Define character's bounding box in pixels (approximate)
+        const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
+        const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
+        const characterXPercent = 10; // Character's fixed X position (in %)
+        const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
+
+        // Character's vertical position relative to the top of the game container
+        // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
+        const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+        const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
+        const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
+        const characterLeft_px = characterX_px; // Character's left edge from left of game container
+        const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
+
+        // Obstacle's vertical position relative to the top of the game container
+        // Obstacle is at GROUND_LEVEL_PERCENT from bottom
+        const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+
+
         return prevObstacles
           .map(obstacle => {
             // Speed is now consistent for all ground obstacles
             let newPosition = obstacle.position - speed; // Move obstacle left
 
-            // Create infinite loop effect by resetting obstacles that move off-screen
-            if (newPosition < -20) {
+            let collisionDetected = false;
+            // Obstacle position in pixels relative to the bottom-left of the game container
+            const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
+            // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
+            const obstacleTopFromTop_px = obstacleBottomFromTop_px - ((obstacle.height / 4) * 16); // Obstacle top edge from top of container
+            const obstacleWidth_px = (obstacle.width / 4) * 16; // Approximate obstacle width in pixels
+            const obstacleHeight_px = (obstacle.height / 4) * 16; // Approximate obstacle height in pixels
+
+
+             // Check for collision using bounding boxes in pixels with tolerance
+            const collisionTolerance = 5; // Added tolerance for collision detection
+            if (
+              characterRight_px > obstacleX_px - collisionTolerance &&
+              characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
+              characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance && // Character bottom is below obstacle top
+              characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance // Character top is above obstacle bottom
+            ) {
+              collisionDetected = true;
+              // Decrease health by the obstacle's damage amount on collision
+              const damageTaken = obstacle.damage; // Use damage from obstacle type
+              setHealth(prev => Math.max(0, prev - damageTaken));
+              triggerHealthDamageEffect(); // Trigger health bar damage effect
+              triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
+            }
+
+
+            // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided
+            if (newPosition < -20 && !collisionDetected) { // Only reuse if off-screen AND no collision
               // 70% chance to reuse the obstacle and loop it back
               if (Math.random() < 0.7) {
-                // Ensure we only pick from the remaining obstacle types
                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                const randomOffset = Math.floor(Math.random() * 20); // Add random offset to position
+                const randomOffset = Math.floor(Math.random() * 20);
 
                 return {
-                  ...obstacle, // Keep existing properties
-                  ...randomObstacleType, // Override with new random properties (type, color, height, width, baseHealth)
-                  id: Date.now(), // Assign a new ID to ensure React re-renders
-                  position: 120 + randomOffset, // Place it off-screen to the right with random offset
-                  health: randomObstacleType.baseHealth, // Reset health for the new obstacle
-                  maxHealth: randomObstacleType.baseHealth // Set max health
+                  ...obstacle,
+                  ...randomObstacleType,
+                  id: Date.now(),
+                  position: 120 + randomOffset,
+                  health: randomObstacleType.baseHealth,
+                  maxHealth: randomObstacleType.baseHealth
                 };
               } else {
                 // If not reusing, let it move off-screen to be filtered out
@@ -804,7 +854,19 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               }
             }
 
-            return { ...obstacle, position: newPosition }; // Return updated obstacle position
+            // If collided, mark for removal
+            if (collisionDetected) {
+                return { ...obstacle, position: newPosition, collided: true }; // Add a collided flag
+            }
+
+
+            return { ...obstacle, position: newPosition }; // Return updated obstacle position if no collision and not off-screen
+          })
+          .filter(obstacle => {
+            // Keep obstacles that haven't collided and are still visible or will loop back
+            // Also filter out obstacles that have 0 or less health (killed by Black Fire)
+            // Now also filter out obstacles that have the 'collided' flag set
+            return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
           });
       });
 
@@ -883,10 +945,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   let newX = coin.x;
                   let newY = coin.y;
                   let collisionDetected = false;
-                  let shouldBeAttracted = false;
+                  let shouldBeAttracted = coin.isAttracted; // Start with current attraction state
+
 
                   // Check for collision with character's bounding box *before* attraction
-                  if (!coin.isAttracted) {
+                  if (!shouldBeAttracted) { // Only check for initial collision if not already attracted
                       if (
                           characterRight_px > coinX_px &&
                           characterLeft_px < coinX_px + coinSize_px &&
@@ -898,8 +961,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   }
 
 
-                  if (coin.isAttracted || shouldBeAttracted) {
-                      // If attracted or should be attracted, move towards character center
+                  if (shouldBeAttracted) {
+                      // If attracted, move towards character center
                       const dx = characterCenterX_px - coinX_px;
                       const dy = characterCenterY_px - coinY_px;
                       const distance = Math.sqrt(dx * dx + dy * dy);
@@ -961,12 +1024,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                       ...coin,
                       x: newX,
                       y: newY,
-                      isAttracted: coin.isAttracted || shouldBeAttracted, // Set isAttracted if collision detected
+                      isAttracted: shouldBeAttracted, // Update attraction state
                       collided: collisionDetected // Mark for removal if collected
                   };
               })
               .filter(coin => {
                   // Remove coin if it was collected or moved far off-screen (left or bottom)
+                  // Keep coins that are moving towards the character, even if they go slightly off-screen initially
                   const isOffScreen = coin.x < -20 || coin.y > 120; // Use larger buffer for off-screen check
                   return !coin.collided && !isOffScreen; // Keep coin if not collected and not off-screen
               });
