@@ -84,7 +84,7 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   >
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
     <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
-    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
+    <path d="M5 20a1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
   </svg>
 );
 
@@ -212,6 +212,16 @@ interface GameCoin {
   y: number; // Vertical position in %
   speedX: number; // Horizontal movement speed
   speedY: number; // Vertical movement speed
+  // NEW: Add a flag to indicate if the coin has been collected
+  collected: boolean;
+}
+
+// --- NEW: Define interface for Collected Coin Visual Effect ---
+interface CollectedCoinEffect {
+  id: number;
+  x: number; // X position in pixels where the coin was collected
+  y: number; // Y position in pixels where the coin was collected
+  startTime: number; // Timestamp when the effect started
 }
 
 
@@ -248,6 +258,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
   const coinTimerRef = useRef(null); // Timer for scheduling new coins
+  // NEW: State for collected coin visual effects
+  const [collectedCoinEffects, setCollectedCoinEffects] = useState<CollectedCoinEffect[]>([]);
 
 
   // UI States
@@ -339,6 +351,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setActiveBlackFires([]); // Reset active Black Fires
     setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
     setActiveCoins([]); // NEW: Reset active coins
+    setCollectedCoinEffects([]); // NEW: Reset collected coin effects
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
@@ -502,7 +515,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         x: 110, // Start off-screen to the right (%)
         y: Math.random() * 60, // Random vertical position from top (0%) to middle (60%)
         speedX: Math.random() * 0.5 + 0.5, // Horizontal speed (move left)
-        speedY: Math.random() * 0.3 // Vertical speed (move downwards)
+        speedY: Math.random() * 0.3, // Vertical speed (move downwards)
+        collected: false // Initialize collected state
       };
 
       // Add the new coin to the active list
@@ -907,9 +921,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           //     bottom: characterBottomFromTop_px
           // });
 
+          // Array to hold coins that were just collected in this frame
+          const newlyCollectedCoins: CollectedCoinEffect[] = [];
 
-          return prevCoins
+
+          const updatedCoins = prevCoins
               .map(coin => {
+                  // If the coin is already collected, just return it (it will be filtered out later)
+                  if (coin.collected) return coin;
+
                   // Move coin diagonally
                   const newX = coin.x - coin.speedX; // Move left
                   const newY = coin.y + coin.speedY; // Move down
@@ -949,7 +969,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                           console.log(`Coin collected! Awarded: ${awardedCoins}, Total coins: ${newTotalCoins}`); // Add logging
                           return newTotalCoins;
                       });
-                      // You could add a visual effect here for coin collection
+
+                      // NEW: Add this coin's position to the collected effects state
+                      newlyCollectedCoins.push({
+                          id: coin.id, // Use coin id for effect id
+                          x: coinX_px + coinSize_px / 2, // Center of the coin in pixels
+                          y: coinY_px + coinSize_px / 2, // Center of the coin in pixels
+                          startTime: Date.now() // Record the time of collection
+                      });
                   }
 
 
@@ -957,14 +984,23 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                       ...coin,
                       x: newX,
                       y: newY,
-                      collided: collisionDetected // Mark for removal if collided
+                      // NEW: Mark as collected instead of removing immediately
+                      collected: collisionDetected ? true : coin.collected // Set to true if collided
                   };
               })
+              // Filter out coins that are either off-screen or have been collected
               .filter(coin => {
-                  // Remove coin if it collided or moved off-screen (left or bottom)
                   const isOffScreen = coin.x < -10 || coin.y > 110; // Off-screen if X < -10% or Y > 110%
-                  return !coin.collided && !isOffScreen; // Keep coin if not collided and not off-screen
+                  return !coin.collected && !isOffScreen; // Keep coin if not collected and not off-screen
               });
+
+            // NEW: Add the newly collected coin effects to the state
+            if (newlyCollectedCoins.length > 0) {
+                setCollectedCoinEffects(prevEffects => [...prevEffects, ...newlyCollectedCoins]);
+            }
+
+
+          return updatedCoins; // Return the filtered list of active coins
       });
 
 
@@ -974,6 +1010,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     return () => clearInterval(moveInterval);
     // Add isStatsFullscreen to dependency array
   }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen]); // Added activeCoins to dependency array
+
+  // NEW: Effect to manage collected coin visual effects
+  useEffect(() => {
+      // Don't run if no effects are active
+      if (collectedCoinEffects.length === 0) return;
+
+      const effectTimer = setInterval(() => {
+          const now = Date.now();
+          // Filter out effects that have been active for more than 500ms (or desired duration)
+          setCollectedCoinEffects(prevEffects =>
+              prevEffects.filter(effect => now - effect.startTime < 500) // Keep effects younger than 500ms
+          );
+      }, 50); // Check and remove effects every 50ms
+
+      // Cleanup function to clear the interval
+      return () => clearInterval(effectTimer);
+
+  }, [collectedCoinEffects]); // Rerun this effect when collectedCoinEffects changes
+
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -1003,9 +1058,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             coinElement.removeEventListener('animationend', animationEndHandler);
             coinElement.classList.remove('number-changing'); // Ensure class is removed on unmount
         }
+        // Also clear any pending coin reward if component unmounts during animation
+        if (pendingCoinReward > 0) {
+            setCoins(prev => prev + pendingCoinReward);
+            setPendingCoinReward(0);
+        }
       };
     }
   }, [displayedCoins, coins, pendingCoinReward]);
+
 
   // Calculate health percentage for the bar
   const healthPct = health / MAX_HEALTH;
@@ -1191,7 +1252,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // --- NEW: Render Coins ---
   const renderCoins = () => {
-    return activeCoins.map(coin => (
+    // Only render coins that have NOT been collected
+    return activeCoins.filter(coin => !coin.collected).map(coin => (
       <div
         key={coin.id} // Unique key
         className="absolute w-10 h-10" // Container size for Lottie (adjust as needed)
@@ -1210,6 +1272,24 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         />
       </div>
     ));
+  };
+
+  // --- NEW: Render Collected Coin Visual Effects ---
+  const renderCollectedCoinEffects = () => {
+      return collectedCoinEffects.map(effect => (
+          <div
+              key={effect.id} // Use effect id as key
+              className="absolute w-8 h-8 bg-yellow-400 rounded-full opacity-70 animate-fadeOutUp" // Simple fading/scaling effect
+              style={{
+                  top: `${effect.y}px`, // Position based on collected Y (pixels)
+                  left: `${effect.x}px`, // Position based on collected X (pixels)
+                  transform: 'translate(-50%, -50%)', // Center the effect
+                  pointerEvents: 'none' // Ensure clicks pass through
+              }}
+          >
+              {/* You could replace this div with a different icon or Lottie animation */}
+          </div>
+      ));
   };
 
 
@@ -1375,6 +1455,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* --- NEW: Coins --- */}
         {renderCoins()}
+
+        {/* --- NEW: Collected Coin Visual Effects --- */}
+        {renderCollectedCoinEffects()}
 
         {/* Particles */}
         {renderParticles()}
