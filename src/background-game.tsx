@@ -293,11 +293,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
   // Obstacle types with properties (added base health)
+  // REMOVED: cactus obstacle type
   const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
     // Reduced size for rock, added baseHealth
     { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
-    // Reduced size for cactus, added baseHealth
-    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300, damage: 75 }, // Added damage
     // NEW: Lottie Obstacle Type
     {
       type: 'lottie-obstacle',
@@ -785,7 +784,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     // Game speed is now constant as score is removed
-    const speed = 1; // Base speed for obstacles and particles - REDUCED SPEED HERE
+    const speed = 0.5; // Base speed for obstacles and particles - FURTHER REDUCED SPEED HERE
     // Removed damagePerCollision here, will use damage from obstacleTypes
 
     const moveInterval = setInterval(() => {
@@ -1170,17 +1169,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         );
         break;
-      case 'cactus':
-        obstacleEl = (
-          <div className="relative">
-            {/* Cactus main body - Adjusted size */}
-            <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
-            {/* Cactus arms - Adjusted size and position */}
-            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
-            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
-          </div>
-        );
-        break;
+      // REMOVED: cactus case
+      // case 'cactus':
+      //   obstacleEl = (
+      //     <div className="relative">
+      //       {/* Cactus main body - Adjusted size */}
+      //       <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
+      //       {/* Cactus arms - Adjusted size and position */}
+      //       <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
+      //       <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
+      //     </div>
+      //   );
+      //   break;
       // NEW: Case for Lottie Obstacle
       case 'lottie-obstacle':
         obstacleEl = (
@@ -1909,11 +1909,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                         <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                         <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-                        <div className="flex mt-3">
-                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                          ))}
-                        </div>
                       </div>
                     ) : (
                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
