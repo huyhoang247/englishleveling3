@@ -297,15 +297,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
     // Reduced size for rock, added baseHealth
     { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
-    // NEW: Lottie Obstacle Type
+    // Lottie Obstacle Type 1 (from previous request)
     {
-      type: 'lottie-obstacle',
+      type: 'lottie-obstacle-1', // Renamed type for clarity
       height: 16, // Approximate height in Tailwind units (h-16 = 64px)
       width: 16,  // Approximate width in Tailwind units (w-16 = 64px)
       color: 'transparent', // Color might not be used for Lottie, but keep a value
       baseHealth: 500, // Higher health for a potentially larger/more significant obstacle
       damage: 100, // Damage dealt on collision
       lottieSrc: "https://lottie.host/c5b645bf-7a29-4471-a9ce-f1a2a7d5a4d9/7dneXvCDQg.lottie" // Lottie source URL
+    },
+    // NEW: Lottie Obstacle Type 2 (from current request)
+    {
+      type: 'lottie-obstacle-2', // New type for the new Lottie
+      height: 20, // Adjust height as needed for the new Lottie
+      width: 20,  // Adjust width as needed for the new Lottie
+      color: 'transparent',
+      baseHealth: 700, // Adjust health as needed
+      damage: 150, // Adjust damage as needed
+      lottieSrc: "https://lottie.host/04726a23-b46c-4574-9d0d-570ea2281f00/ydAEtXnQRN.lottie" // New Lottie source URL
     },
   ];
 
@@ -784,7 +794,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     // Game speed is now constant as score is removed
-    const speed = 0.5; // Base speed for obstacles and particles - FURTHER REDUCED SPEED HERE
+    const speed = 0.5; // Base speed for obstacles and particles
     // Removed damagePerCollision here, will use damage from obstacleTypes
 
     const moveInterval = setInterval(() => {
@@ -1169,7 +1179,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         );
         break;
-      // REMOVED: cactus case
+      // Removed cactus case
       // case 'cactus':
       //   obstacleEl = (
       //     <div className="relative">
@@ -1181,8 +1191,28 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       //     </div>
       //   );
       //   break;
-      // NEW: Case for Lottie Obstacle
-      case 'lottie-obstacle':
+      // Case for Lottie Obstacle Type 1
+      case 'lottie-obstacle-1':
+        obstacleEl = (
+          // Container for the Lottie animation
+          <div
+            className="relative" // Needed for absolute positioning of Lottie if necessary
+            style={{ width: `${obstacleWidthPx}px`, height: `${obstacleHeightPx}px` }} // Set size based on calculated pixels
+          >
+            {/* DotLottieReact component for the Lottie obstacle */}
+            {obstacle.lottieSrc && (
+              <DotLottieReact
+                src={obstacle.lottieSrc} // Use the Lottie source from the obstacle object
+                loop
+                autoplay
+                className="w-full h-full" // Make Lottie fill its container
+              />
+            )}
+          </div>
+        );
+        break;
+      // NEW: Case for Lottie Obstacle Type 2
+      case 'lottie-obstacle-2':
         obstacleEl = (
           // Container for the Lottie animation
           <div
@@ -1909,6 +1939,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                         <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                         <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
+                        <div className="flex mt-3">
+                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
