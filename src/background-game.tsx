@@ -524,8 +524,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             // Collision detection logic
             let collisionDetected = false;
             // Adjust character collision box size for Lottie if needed, or keep it simple
-            const characterWidth = 12; // Assuming Lottie is roughly this wide
-            const characterHeight = 16; // Assuming Lottie is roughly this tall
+            // Adjusted character dimensions to match the larger container
+            const characterWidth = 24; // Assuming Lottie is now roughly this wide
+            const characterHeight = 24; // Assuming Lottie is now roughly this tall
             const characterX = 10; // Character's fixed X position
             const characterY = characterPos; // Character's current Y position (relative to ground)
 
@@ -643,7 +644,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Use a container div to position the Lottie animation
     return (
       <div
-        className="absolute w-20 h-20 transition-all duration-300 ease-out" // Adjust container size for Lottie
+        className="absolute w-24 h-24 transition-all duration-300 ease-out" // Adjusted container size for Lottie (increased from w-20 h-20)
         style={{
           // Position based on characterPos state relative to new ground
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
