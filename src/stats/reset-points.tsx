@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 
 // Custom Icon component using inline SVG (Copied from original file for self-containment)
-// This component is used to render various icons based on the 'name' prop.
 const Icon = ({ name, size = 24, className = '' }) => {
-  // Define SVG paths for different icons.
   const icons = {
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
@@ -12,13 +10,11 @@ const Icon = ({ name, size = 24, className = '' }) => {
     X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
-  // Warn if the requested icon name is not found.
   if (!icons[name]) {
     console.warn(`Icon component: Icon with name "${name}" not found.`);
     return null;
   }
 
-  // Render the SVG element with the specified icon path and styles.
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -37,9 +33,9 @@ const Icon = ({ name, size = 24, className = '' }) => {
   );
 };
 
-// Define interface for props
+// Định nghĩa interface cho props
 interface ResetStatsControlProps {
-  // Current character stats, needed to calculate refund points.
+  // Chỉ số hiện tại của nhân vật, cần để tính điểm hoàn trả
   currentStats: {
     atk: number;
     def: number;
@@ -48,97 +44,67 @@ interface ResetStatsControlProps {
     wit: number;
     crt: number;
   };
-  // Callback function called when the user confirms the reset.
-  // The number of refunded points will be passed to the parent component.
+  // Hàm callback được gọi khi người dùng xác nhận reset
+  // Sẽ truyền số điểm hoàn trả về component cha
   onStatsReset: (pointsRefunded: number) => void;
 }
 
-// Component for the enhanced loading spinner animation.
-const LoadingSpinner = ({ size = 48, color = 'currentColor' }) => {
-  return (
-    // Container for the spinner, centered and styled.
-    <div className="flex items-center justify-center">
-      {/* The Icon component is used here with a custom animation class. */}
-      <Icon
-        name="RotateCcw"
-        size={size}
-        className={`text-${color} animate-spin-pulse-custom`} // Apply custom combined animation class
-      />
-      {/* Define the custom keyframes for the combined animation */}
-      <style jsx>{`
-        @keyframes spin-custom {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes pulse-custom {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-        .animate-spin-pulse-custom {
-          animation: spin-custom 1s linear infinite, pulse-custom 1.5s ease-in-out infinite; /* Combine animations */
-          transform-origin: 50% 50%; /* Explicitly set rotation origin to center */
-        }
-      `}</style>
-    </div>
-  );
-};
-
-
-// Component to control the Reset Stats functionality.
+// Component điều khiển chức năng Reset Chỉ Số
 const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onStatsReset }) => {
-  // State to control the visibility of the confirmation modal.
+  // State để điều khiển hiển thị modal xác nhận
   const [showResetModal, setShowResetModal] = useState(false);
-  // State to control the animation effect during the reset process.
+  // State để điều khiển hiệu ứng animation khi reset
   const [resetAnimation, setResetAnimation] = useState(false);
 
-  // Function to calculate the total potential points allocated based on current stats.
+  // Hàm tính toán tổng điểm tiềm năng đã phân bổ dựa trên chỉ số hiện tại
   const calculateResetPoints = () => {
     return Object.entries(currentStats).reduce((total, [key, value]) => {
-      // Calculate refund points for HP (1 point / 25 HP).
+      // Tính điểm hoàn trả cho HP (1 điểm / 25 HP)
       if (key === 'hp') {
         return total + Math.floor(value / 25);
       } else {
-        // Calculate refund points for other stats (1 point / 2 value).
+        // Tính điểm hoàn trả cho các chỉ số khác (1 điểm / 2 giá trị)
         return total + Math.floor(value / 2);
       }
     }, 0);
   };
 
-  // Function to handle the user confirming the reset in the modal.
+  // Hàm xử lý khi người dùng bấm xác nhận reset trong modal
   const handleConfirmReset = () => {
-    setResetAnimation(true); // Start the processing animation.
+    setResetAnimation(true); // Bắt đầu animation xử lý
 
-    // Calculate the number of points to be refunded.
+    // Tính toán số điểm sẽ hoàn trả
     const pointsToRefund = calculateResetPoints();
 
-    // Use setTimeout to create a delay for the animation before executing the reset logic.
+    // Sử dụng setTimeout để tạo độ trễ cho animation trước khi thực hiện logic reset
     setTimeout(() => {
-      // Call the callback function from the parent component, passing the refunded points.
+      // Gọi hàm callback từ component cha, truyền số điểm hoàn trả
       onStatsReset(pointsToRefund);
-      setShowResetModal(false); // Close the modal.
-      setResetAnimation(false); // End the processing animation.
-    }, 1500); // 1.5 seconds delay.
+      setShowResetModal(false); // Đóng modal
+      setResetAnimation(false); // Kết thúc animation xử lý
+    }, 1500); // Độ trễ 1.5 giây
   };
 
-  // Internal Component for the Reset Stats Confirmation Modal.
+  // Component nội bộ cho Modal xác nhận Reset Chỉ Số
   const ResetModal = () => {
-    // Calculate the points to be received to display in the modal.
+    // Tính toán số điểm sẽ nhận được để hiển thị trong modal
     const pointsToReceive = calculateResetPoints();
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        {/* Modal Content */}
+        {/* Nội dung Modal */}
         <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetAnimation ? 'scale-105' : ''}`}>
-          {/* Display the processing interface if resetAnimation is true. */}
+          {/* Hiển thị giao diện xử lý nếu resetAnimation là true */}
           {resetAnimation ? (
             <div className="flex flex-col items-center justify-center py-8">
-              {/* Enhanced Loading Spinner Component */}
-              <LoadingSpinner size={60} color="blue-500" /> {/* Use the new spinner */}
+              {/* Spinner animation */}
+              <div className="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mb-4"></div>
               {/* Processing message */}
-              <p className="text-gray-500 text-sm mt-4">Vui lòng chờ trong giây lát.</p>
+              {/* Đã xóa dòng "Đang hoàn tác điểm tiềm năng..." */}
+              <p className="text-gray-500 text-sm mt-1">Vui lòng chờ trong giây lát.</p>
             </div>
           ) : (
-            // Display the reset confirmation content if resetAnimation is false.
+            // Hiển thị nội dung xác nhận reset nếu resetAnimation là false
             <>
               {/* Modal Header */}
               <div className="bg-gradient-to-br from-purple-500 to-blue-600 text-white p-4 rounded-xl mb-4 shadow-lg">
@@ -198,7 +164,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
                 </button>
                 {/* Reset Button */}
                 <button
-                  onClick={handleConfirmReset} // Call the confirmation handler function.
+                  onClick={handleConfirmReset} // Gọi hàm xử lý xác nhận
                   className={`flex-1 px-4 py-3 rounded-xl font-medium text-white shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all`}
                 >
                    <Icon name="RotateCcw" size={16} />
@@ -214,9 +180,9 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
 
   return (
     <>
-      {/* "Reset Stats" button in the footer */}
+      {/* Nút "Reset Chỉ Số" ở footer */}
       <button
-        onClick={() => setShowResetModal(true)} // Open the modal on click.
+        onClick={() => setShowResetModal(true)} // Mở modal khi click
         className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
       >
         {/* Background shine effect on hover */}
@@ -233,7 +199,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
         </div>
       </button>
 
-      {/* Render the modal if showResetModal is true. */}
+      {/* Render modal nếu showResetModal là true */}
       {showResetModal && <ResetModal />}
     </>
   );
