@@ -1279,7 +1279,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       return collectedCoinEffects.map(effect => (
           <div
               key={effect.id} // Use effect id as key
-              className="absolute w-8 h-8 bg-yellow-400 rounded-full opacity-70 animate-fadeOutUp" // Simple fading/scaling effect
+              // Use the user's provided Lottie URL for the effect
+              className="absolute w-10 h-10 animate-fadeOutUp" // Container size for Lottie, apply fadeOutUp animation
               style={{
                   top: `${effect.y}px`, // Position based on collected Y (pixels)
                   left: `${effect.x}px`, // Position based on collected X (pixels)
@@ -1287,7 +1288,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   pointerEvents: 'none' // Ensure clicks pass through
               }}
           >
-              {/* You could replace this div with a different icon or Lottie animation */}
+              <DotLottieReact
+                src="https://lottie.host/9b34322c-fd64-46e0-a2f6-d88c2e549eba/ASRazGgOzY.lottie" // User's provided Lottie URL
+                loop={false} // Don't loop the effect animation
+                autoplay
+                className="w-full h-full" // Make Lottie fill its container
+              />
           </div>
       ));
   };
