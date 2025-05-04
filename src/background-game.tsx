@@ -130,6 +130,43 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
+// --- NEW: Simple SVG Icons for Obstacles ---
+
+// Simple Rock Icon SVG
+const RockIcon = ({ size = 32, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 32 32" // Adjusted viewBox
+    fill={color} // Use fill for solid shape
+    className={className}
+    {...props}
+  >
+    <path d="M16 2C9.373 2 4 7.373 4 14c0 4.243 2.121 8.096 5.314 10.243L16 30l6.686-5.757C25.879 22.096 28 18.243 28 14c0-6.627-5.373-12-12-12zM16 4c5.514 0 10 4.486 10 10 0 3.182-1.406 6.07-3.657 8.05L16 26.121l-6.343-4.07C7.406 20.07 6 17.182 6 14c0-5.514 4.486-10 10-10z" />
+    <circle cx="10" cy="12" r="2" fill="#fff" fillOpacity="0.2"/> {/* Highlight */}
+    <circle cx="22" cy="16" r="1.5" fill="#fff" fillOpacity="0.2"/> {/* Highlight */}
+    <circle cx="16" cy="18" r="1" fill="#fff" fillOpacity="0.2"/> {/* Highlight */}
+  </svg>
+);
+
+// Simple Cactus Icon SVG
+const CactusIcon = ({ size = 32, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 32 32" // Adjusted viewBox
+    fill={color} // Use fill for solid shape
+    className={className}
+    {...props}
+  >
+    <path d="M14 2h4v16h-4zM10 8h4v4h-4zM18 8h4v4h-4zM10 12h2v4h-2zM20 12h2v4h-2zM14 18h4v12h-4z" />
+    <path d="M8 12h2v4h-2zM22 12h2v4h-2z" fillOpacity="0.5"/> {/* Side arms */}
+  </svg>
+);
+
+
 // --- NEW: Error Boundary Component ---
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -198,12 +235,13 @@ interface GameObstacle {
   id: number;
   position: number; // Horizontal position in %
   type: string;
-  height: number; // Height in Tailwind units (e.g., 8 for h-8) or a fixed pixel value for Lottie
-  width: number; // Width in Tailwind units (e.g., 8 for w-8) or a fixed pixel value for Lottie
-  color: string; // Tailwind gradient class (might not be used for Lottie)
+  height: number; // Height in Tailwind units (e.g., 8 for h-8) - Keep for collision calc if needed, but not for rendering size
+  width: number; // Width in Tailwind units (e.g., 8 for w-8) - Keep for collision calc if needed, but not for rendering size
+  color: string; // Tailwind gradient class - Keep for health bar color if needed
+  baseHealth: number; // Base health from obstacle type
   health: number; // Current health of the obstacle
   maxHealth: number; // Maximum health of the obstacle
-  lottieUrl?: string; // Optional Lottie URL for this obstacle type
+  damage: number; // Damage the obstacle deals
 }
 
 // --- NEW: Define interface for Coin ---
@@ -291,17 +329,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
   // Obstacle types with properties (added base health)
-  // MODIFIED: Changed obstacle types to include only 'cow' with Lottie URL
-  const obstacleTypes: GameObstacle[] = [
-    {
-      type: 'cow',
-      height: 80, // Approximate height in pixels for collision/positioning
-      width: 100, // Approximate width in pixels for collision/positioning
-      color: '', // Not used for Lottie
-      baseHealth: 500,
-      damage: 100,
-      lottieUrl: "https://lottie.host/0840afb5-44ce-4872-9c10-1c7a7e985650/crikgFNWpz.lottie" // Lottie URL for the cow
-    },
+  const obstacleTypes = [
+    // Added baseHealth and damage
+    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
+    // Added baseHealth and damage
+    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300, damage: 75 }, // Added damage
   ];
 
     // Updated cards array to use SVG components
@@ -379,7 +411,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDisplayedCoins(357); // Reset displayed coin count
 
     // Generate initial obstacles to populate the screen at the start
-    const initialObstacles: GameObstacle[] = []; // Specify type
+    const initialObstacles = [];
     // First obstacle placed a bit further to give the player time to react
     const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
     initialObstacles.push({
@@ -387,7 +419,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       position: 120, // Position off-screen to the right
       ...firstObstacleType, // Include obstacle properties
       health: firstObstacleType.baseHealth, // Initialize health
-      maxHealth: firstObstacleType.baseHealth
+      maxHealth: firstObstacleType.baseHealth // Set max health
     });
 
     // Add a few more obstacles with increasing distance
@@ -398,7 +430,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         position: 150 + (i * 50),
         ...obstacleType, // Include obstacle properties
         health: obstacleType.baseHealth, // Initialize health
-        maxHealth: obstacleType.baseHealth
+        maxHealth: obstacleType.baseHealth // Set max health
       });
     }
 
@@ -510,7 +542,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           position: 100 + spacing, // Position off-screen to the right with spacing
           ...randomObstacleType, // Include obstacle properties
           health: randomObstacleType.baseHealth, // Initialize health
-          maxHealth: randomObstacleType.baseHealth
+          maxHealth: randomObstacleType.baseHealth, // Set max health
+          damage: randomObstacleType.damage // Set damage
         });
       }
 
@@ -651,14 +684,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       const obstacleLeftPx = (targetObstacle.position / 100) * gameWidth;
       const obstacleBottomPct = GROUND_LEVEL_PERCENT;
       const obstacleBottomPx = (obstacleBottomPct / 100) * gameHeight;
-      // Approximate obstacle dimensions in pixels (using the fixed pixel size from obstacleTypes)
-      const obstacleHeightPx = targetObstacle.height;
-      const obstacleWidthPx = targetObstacle.width;
+      // Approximate obstacle dimensions in pixels (rough conversion from Tailwind units)
+      // Use a fixed size for icon rendering, let's say 40px for calculation purposes
+      const obstacleRenderSizePx = 40;
 
 
-      // Approximate center of the obstacle
-      const targetX = obstacleLeftPx + obstacleWidthPx / 2;
-      const targetY = gameHeight - obstacleBottomPx - obstacleHeightPx / 2; // Y from top
+      // Approximate center of the obstacle (using render size for centering)
+      const targetX = obstacleLeftPx + obstacleRenderSizePx / 2;
+      const targetY = gameHeight - obstacleBottomPx - obstacleRenderSizePx / 2; // Y from top
 
       // Starting position for Black Fire (above the screen)
       const startX = targetX; // Start directly above the target
@@ -808,6 +841,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         // Obstacle is at GROUND_LEVEL_PERCENT from bottom
         const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
 
+        // Use a fixed size for icon rendering for collision calculation
+        const obstacleRenderWidth_px = 40; // Approximate width of the icon
+        const obstacleRenderHeight_px = 40; // Approximate height of the icon
+
 
         return prevObstacles
           .map(obstacle => {
@@ -816,22 +853,21 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
             let collisionDetected = false;
             // Obstacle position in pixels relative to the bottom-left of the game container
-            const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
+            // Use newPosition for collision check
+            const obstacleX_px = (newPosition / 100) * gameWidth;
+
             // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
-            // Use the fixed pixel height from obstacleTypes for collision calculation
-            const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacle.height; // Obstacle top edge from top of container
-            // Use the fixed pixel width from obstacleTypes for collision calculation
-            const obstacleWidth_px = obstacle.width;
-            const obstacleHeight_px = obstacle.height;
+            // Calculate obstacle top based on the *render* height
+            const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleRenderHeight_px;
 
 
              // Check for collision using bounding boxes in pixels with tolerance
-            const collisionTolerance = 5; // Added tolerance for collision detection
+            const collisionTolerance = 10; // Increased tolerance for collision detection with icons
             if (
               characterRight_px > obstacleX_px - collisionTolerance &&
-              characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
+              characterLeft_px < obstacleX_px + obstacleRenderWidth_px + collisionTolerance &&
               characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance && // Character bottom is below obstacle top
-              characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance // Character top is above obstacle bottom
+              characterTopFromTop_px < obstacleBottomFromTop_px + obstacleRenderHeight_px + collisionTolerance // Character top is above obstacle bottom
             ) {
               collisionDetected = true;
               // Decrease health by the obstacle's damage amount on collision
@@ -855,7 +891,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   id: Date.now(),
                   position: 120 + randomOffset,
                   health: randomObstacleType.baseHealth,
-                  maxHealth: randomObstacleType.baseHealth
+                  maxHealth: randomObstacleType.baseHealth,
+                  damage: randomObstacleType.damage // Ensure damage is carried over
                 };
               } else {
                 // If not reusing, let it move off-screen to be filtered out
@@ -998,7 +1035,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                            const awardedCoins = Math.floor(Math.random() * 5) + 1;
                            startCoinCountAnimation(awardedCoins);
 
-                           console.log(`Coin collected! Awarded: ${awardedCoins}`);
+                           console.log(`Coin collected! Awarded: ${awumedCoins}`);
 
 
                            // --- Trigger Coin Collection Effect ---
@@ -1142,40 +1179,54 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Render obstacles based on their type
   const renderObstacle = (obstacle: GameObstacle) => {
-    // Use the fixed pixel dimensions from obstacleTypes for the container size
-    const obstacleStyle = {
-      bottom: `${GROUND_LEVEL_PERCENT}%`, // Position relative to ground
-      left: `${obstacle.position}%`, // Horizontal position
-      width: `${obstacle.width}px`, // Set container width based on obstacle type
-      height: `${obstacle.height}px`, // Set container height based on obstacle type
-      transform: 'translateY(0)', // Ensure it sits on the ground line
-    };
+    let obstacleIcon; // Element to render for the obstacle icon
+    let iconColor = 'currentColor'; // Default color
 
+    switch(obstacle.type) {
+      case 'rock':
+        // Use the new RockIcon component
+        obstacleIcon = <RockIcon size={40} color="#a3a3a3" />; // Set size and color
+        iconColor = '#a3a3a3'; // Gray color for rock
+        break;
+      case 'cactus':
+        // Use the new CactusIcon component
+        obstacleIcon = <CactusIcon size={40} color="#16a34a" />; // Set size and color
+        iconColor = '#16a34a'; // Green color for cactus
+        break;
+      default:
+        // Default rendering if obstacle type is unknown (maybe a question mark icon?)
+        obstacleIcon = <GemIcon size={40} />; // Use GemIcon as a fallback
+        iconColor = 'currentColor'; // Default color
+    }
+
+    // Calculate obstacle health percentage
+    const obstacleHealthPct = obstacle.health / obstacle.maxHealth;
 
     return (
       <div
         key={obstacle.id} // Unique key for React list rendering
-        className="absolute"
-        style={obstacleStyle}
+        className="absolute flex flex-col items-center" // Use flex to stack icon and health bar
+        style={{
+          // ObstacleY is always relative to the new ground level
+          bottom: `${GROUND_LEVEL_PERCENT}%`,
+          left: `${obstacle.position}%`, // Horizontal position
+          transform: 'translate(-50%, 0)' // Center the container horizontally
+        }}
       >
-        {/* Obstacle Element - Use DotLottieReact for the cow */}
-        {obstacle.type === 'cow' && obstacle.lottieUrl && (
-           <DotLottieReact
-              src={obstacle.lottieUrl} // Use the Lottie URL from obstacle type
-              loop
-              autoplay
-              className="w-full h-full" // Make Lottie fill its container
-           />
-        )}
-
         {/* --- NEW: Obstacle Health Bar --- */}
-        {/* Position the health bar above the obstacle */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+        {/* Position the health bar above the icon */}
+        <div className="mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
             {/* Inner health bar */}
             <div
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
+        </div>
+
+        {/* Obstacle Icon Element */}
+        {/* Wrap the icon in a div to control size and position */}
+        <div className="w-10 h-10 flex items-center justify-center"> {/* Fixed size container for the icon */}
+          {obstacleIcon} {/* Render the specific obstacle icon */}
         </div>
       </div>
     );
@@ -1939,3 +1990,5 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
+
