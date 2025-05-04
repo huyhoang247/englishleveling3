@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import Lottie from 'lottie-react'; // Import lottie-react
+import React, { useState } from 'react';
+// Import component Lottie từ thư viện lottie-react
+import Lottie from 'lottie-react';
+// Import file JSON icon của bạn
+// Đảm bảo đường dẫn này đúng với vị trí file loading.json của bạn so với file component này
+import loadingAnimationData from './loading.json';
 
 // Custom Icon component using inline SVG (Copied from original file for self-containment)
-// Note: This component is kept but the loading spinner will use Lottie instead.
 const Icon = ({ name, size = 24, className = '' }) => {
   const icons = {
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
@@ -35,9 +38,9 @@ const Icon = ({ name, size = 24, className = '' }) => {
   );
 };
 
-// Define interface for props
+// Định nghĩa interface cho props
 interface ResetStatsControlProps {
-  // Current character stats, needed to calculate refund points
+  // Chỉ số hiện tại của nhân vật, cần để tính điểm hoàn trả
   currentStats: {
     atk: number;
     def: number;
@@ -46,102 +49,71 @@ interface ResetStatsControlProps {
     wit: number;
     crt: number;
   };
-  // Callback function called when user confirms reset
-  // Will pass the refunded points back to the parent component
+  // Hàm callback được gọi khi người dùng xác nhận reset
+  // Sẽ truyền số điểm hoàn trả về component cha
   onStatsReset: (pointsRefunded: number) => void;
 }
 
-// Component for controlling the Reset Stats functionality
+// Component điều khiển chức năng Reset Chỉ Số
 const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onStatsReset }) => {
-  // State to control modal visibility
+  // State để điều khiển hiển thị modal xác nhận
   const [showResetModal, setShowResetModal] = useState(false);
-  // State to control reset animation effect
+  // State để điều khiển hiệu ứng animation khi reset
   const [resetAnimation, setResetAnimation] = useState(false);
-  // State to store Lottie animation data
-  const [lottieAnimationData, setLottieAnimationData] = useState(null);
-  // State to track if Lottie data is loading
-  const [isLottieLoading, setIsLottieLoading] = useState(true);
-  // State to track if Lottie data failed to load
-  const [lottieError, setLottieError] = useState(false);
 
-  // Fetch Lottie animation data on component mount
-  useEffect(() => {
-    const fetchLottieData = async () => {
-      try {
-        const response = await fetch('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/loading.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setLottieAnimationData(data);
-        setIsLottieLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch Lottie animation:", error);
-        setLottieError(true);
-        setIsLottieLoading(false);
-      }
-    };
-
-    fetchLottieData();
-  }, []); // Empty dependency array means this runs once on mount
-
-  // Function to calculate total allocated potential points based on current stats
+  // Hàm tính toán tổng điểm tiềm năng đã phân bổ dựa trên chỉ số hiện tại
   const calculateResetPoints = () => {
     return Object.entries(currentStats).reduce((total, [key, value]) => {
-      // Calculate refund points for HP (1 point / 25 HP)
+      // Tính điểm hoàn trả cho HP (1 điểm / 25 HP)
       if (key === 'hp') {
         return total + Math.floor(value / 25);
       } else {
-        // Calculate refund points for other stats (1 point / 2 value)
+        // Tính điểm hoàn trả cho các chỉ số khác (1 điểm / 2 giá trị)
         return total + Math.floor(value / 2);
       }
     }, 0);
   };
 
-  // Handler when user confirms reset in the modal
+  // Hàm xử lý khi người dùng bấm xác nhận reset trong modal
   const handleConfirmReset = () => {
-    setResetAnimation(true); // Start processing animation
+    setResetAnimation(true); // Bắt đầu animation xử lý
 
-    // Calculate points to refund
+    // Tính toán số điểm sẽ hoàn trả
     const pointsToRefund = calculateResetPoints();
 
-    // Use setTimeout to create a delay for the animation before performing reset logic
+    // Sử dụng setTimeout để tạo độ trễ cho animation trước khi thực hiện logic reset
     setTimeout(() => {
-      // Call the callback function from the parent component, passing the refunded points
+      // Gọi hàm callback từ component cha, truyền số điểm hoàn trả
       onStatsReset(pointsToRefund);
-      setShowResetModal(false); // Close modal
-      setResetAnimation(false); // End processing animation
-    }, 1500); // 1.5 second delay
+      setShowResetModal(false); // Đóng modal
+      setResetAnimation(false); // Kết thúc animation xử lý
+    }, 1500); // Độ trễ 1.5 giây
   };
 
-  // Internal Component for Reset Stats Confirmation Modal
+  // Component nội bộ cho Modal xác nhận Reset Chỉ Số
   const ResetModal = () => {
-    // Calculate points to receive to display in the modal
+    // Tính toán số điểm sẽ nhận được để hiển thị trong modal
     const pointsToReceive = calculateResetPoints();
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        {/* Modal Content */}
+        {/* Nội dung Modal */}
         <div className={`bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all ${resetAnimation ? 'scale-105' : ''}`}>
-          {/* Display processing interface if resetAnimation is true */}
+          {/* Hiển thị giao diện xử lý nếu resetAnimation là true */}
           {resetAnimation ? (
             <div className="flex flex-col items-center justify-center py-8">
-              {/* Display Lottie animation if loaded, otherwise show fallback */}
-              {isLottieLoading ? (
-                // Fallback spinner while Lottie is loading
-                <div className="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mb-4"></div>
-              ) : lottieAnimationData ? (
-                // Lottie animation
-                <Lottie animationData={lottieAnimationData} loop={true} className="w-24 h-24 mb-4" />
-              ) : (
-                // Fallback message if Lottie failed to load
-                <div className="text-red-500 mb-4">Lỗi tải animation.</div>
-              )}
+              {/* Thay thế spinner bằng Lottie animation */}
+              <Lottie
+                animationData={loadingAnimationData} // Dữ liệu animation từ file loading.json
+                loop={true} // Lặp lại animation
+                autoplay={true} // Tự động phát animation
+                style={{ width: 100, height: 100 }} // Tùy chỉnh kích thước animation
+              />
               {/* Processing message */}
-              <p className="text-gray-500 text-sm mt-1">Vui lòng chờ trong giây lát.</p>
+              <p className="text-gray-500 text-sm mt-4">Đang xử lý, vui lòng chờ...</p> {/* Cập nhật lại thông báo */}
             </div>
           ) : (
-            // Display reset confirmation content if resetAnimation is false
+            // Hiển thị nội dung xác nhận reset nếu resetAnimation là false
             <>
               {/* Modal Header */}
               <div className="bg-gradient-to-br from-purple-500 to-blue-600 text-white p-4 rounded-xl mb-4 shadow-lg">
@@ -201,7 +173,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
                 </button>
                 {/* Reset Button */}
                 <button
-                  onClick={handleConfirmReset} // Call confirmation handler
+                  onClick={handleConfirmReset} // Gọi hàm xử lý xác nhận
                   className={`flex-1 px-4 py-3 rounded-xl font-medium text-white shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all`}
                 >
                    <Icon name="RotateCcw" size={16} />
@@ -217,9 +189,9 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
 
   return (
     <>
-      {/* "Reset Stats" button in the footer */}
+      {/* Nút "Reset Chỉ Số" ở footer */}
       <button
-        onClick={() => setShowResetModal(true)} // Open modal on click
+        onClick={() => setShowResetModal(true)} // Mở modal khi click
         className="group px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-medium rounded-lg shadow-md transition-all hover:shadow-lg hover:scale-105 relative overflow-hidden"
       >
         {/* Background shine effect on hover */}
@@ -236,7 +208,7 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
         </div>
       </button>
 
-      {/* Render modal if showResetModal is true */}
+      {/* Render modal nếu showResetModal là true */}
       {showResetModal && <ResetModal />}
     </>
   );
