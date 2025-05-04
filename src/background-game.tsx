@@ -179,6 +179,33 @@ interface ObstacleRunnerGameProps {
   className?: string;
 }
 
+// Define interface for Black Fire projectile
+interface BlackFireProjectile {
+  id: number;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  currentX: number;
+  currentY: number;
+  speed: number;
+  damage: number; // Damage the projectile deals
+  targetObstacleId: number | null; // ID of the obstacle being targeted
+}
+
+// Define interface for Obstacle with health
+interface GameObstacle {
+  id: number;
+  position: number; // Horizontal position in %
+  type: string;
+  height: number; // Height in Tailwind units (e.g., 8 for h-8)
+  width: number; // Width in Tailwind units (e.g., 8 for w-8)
+  color: string; // Tailwind gradient class
+  health: number; // Current health of the obstacle
+  maxHealth: number; // Maximum health of the obstacle
+}
+
+
 // Update component signature to accept className prop
 export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
   // Game states
@@ -188,7 +215,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [health, setHealth] = useState(MAX_HEALTH); // Player's health, initialized to max
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [characterPos, setCharacterPos] = useState(0); // Vertical position of the character (0 is on the ground)
-  const [obstacles, setObstacles] = useState([]); // Array of active obstacles
+  // Updated obstacles state to use GameObstacle interface
+  const [obstacles, setObstacles] = useState<GameObstacle[]>([]); // Array of active obstacles with health
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
@@ -200,9 +228,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
+  // --- NEW: Black Fire Skill States ---
+  const INITIAL_BLACK_FIRE_COUNT = 25;
+  const [blackFireCount, setBlackFireCount] = useState(INITIAL_BLACK_FIRE_COUNT); // Number of Black Fire uses
+  const [activeBlackFires, setActiveBlackFires] = useState<BlackFireProjectile[]>([]); // Array of active Black Fire projectiles
+  const BLACK_FIRE_DAMAGE = 150; // Damage dealt by Black Fire
+
   // UI States
   const [isChestOpen, setIsChestOpen] = useState(false);
-  const [showCard, setShowCard] = useState(false);
+  const [showCard, setShowCard] = useState(null); // Changed to null to store card object directly
   const [currentCard, setCurrentCard] = useState(null);
   const [coins, setCoins] = useState(357);
   const [displayedCoins, setDisplayedCoins] = useState(357);
@@ -226,16 +260,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
   const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
+  const blackFireTimerRef = useRef(null); // Timer for moving Black Fire projectiles
+
 
   // Character animation frames (simple representation of leg movement) - No longer needed for Lottie
   // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
-  // Obstacle types with properties
+  // Obstacle types with properties (added base health)
   const obstacleTypes = [
-    // Reduced size for rock
-    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500' },
-    // Reduced size for cactus
-    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600' },
+    // Reduced size for rock, added baseHealth
+    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200 },
+    // Reduced size for cactus, added baseHealth
+    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300 },
   ];
 
     // Updated cards array to use SVG components
@@ -283,8 +319,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setGameOver(false);
     setHealth(MAX_HEALTH); // Start with max health
     setCharacterPos(0); // Character starts on the ground (relative to ground level)
+    // Reset obstacles, adding initial health
     setObstacles([]);
     setParticles([]);
+    setActiveBlackFires([]); // Reset active Black Fires
+    setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
     setShowCharacterDamageEffect(false); // Reset character damage effect state
@@ -296,20 +335,24 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
     // First obstacle placed a bit further to give the player time to react
+    const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
     initialObstacles.push({
       id: Date.now(), // Unique ID for React key
       position: 120, // Position off-screen to the right
-      // Ensure we only pick from the remaining obstacle types
-      ...obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
+      ...firstObstacleType, // Include obstacle properties
+      health: firstObstacleType.baseHealth, // Initialize health
+      maxHealth: firstObstacleType.baseHealth // Set max health
     });
 
     // Add a few more obstacles with increasing distance
     for (let i = 1; i < 5; i++) {
+      const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
       initialObstacles.push({
         id: Date.now() + i,
         position: 150 + (i * 50),
-        // Ensure we only pick from the remaining obstacle types
-        ...obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
+        ...obstacleType, // Include obstacle properties
+        health: obstacleType.baseHealth, // Initialize health
+        maxHealth: obstacleType.baseHealth // Set max health
       });
     }
 
@@ -342,6 +385,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
+      clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
     }
   }, [health, gameStarted]);
 
@@ -401,18 +445,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     obstacleTimerRef.current = setTimeout(() => {
       // Create a group of 1 to 3 obstacles
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
-      const newObstacles = [];
+      const newObstacles: GameObstacle[] = []; // Specify type
 
       for (let i = 0; i < obstacleCount; i++) {
         // Ensure we only pick from the remaining obstacle types
-        const randomObstacle = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+        const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
         // Add spacing between grouped obstacles
         const spacing = i * (Math.random() * 10 + 10);
 
         newObstacles.push({
           id: Date.now() + i, // Unique ID
           position: 100 + spacing, // Position off-screen to the right with spacing
-          ...randomObstacle // Include obstacle properties
+          ...randomObstacleType, // Include obstacle properties
+          health: randomObstacleType.baseHealth, // Initialize health
+          maxHealth: randomObstacleType.baseHealth // Set max health
         });
       }
 
@@ -444,12 +490,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
-    // Ignore taps if stats are in fullscreen
-    if (isStatsFullscreen) return;
+    // Ignore taps if stats are in fullscreen or card is shown
+    if (isStatsFullscreen || showCard) return;
 
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver && !showCard) { // Check showCard, isStatsFullscreen checked at the start
+    } else if (!gameOver) { // isStatsFullscreen and showCard checked at the start
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
@@ -480,6 +526,147 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 800); // Hide damage number after animation
   };
 
+  // --- NEW: Function to activate Black Fire skill ---
+  const activateBlackFire = () => {
+    // Check if game is active, not over, has uses remaining, and not showing card/stats
+    if (!gameStarted || gameOver || blackFireCount <= 0 || showCard || isStatsFullscreen) {
+      console.log("Cannot activate Black Fire:", { gameStarted, gameOver, blackFireCount, showCard, isStatsFullscreen });
+      return;
+    }
+
+    // Find the closest obstacle to target
+    const targetObstacle = obstacles.reduce((closest, current) => {
+        // Calculate distance based on horizontal position (simple approach)
+        const currentDistance = current.position - 10; // Distance from character's x (10%)
+        if (currentDistance > 0 && (closest === null || currentDistance < closest.position - 10)) {
+            return current;
+        }
+        return closest;
+    }, null as GameObstacle | null); // Specify initial value type
+
+    if (targetObstacle) {
+      // Decrement Black Fire count
+      setBlackFireCount(prev => prev - 1);
+
+      // Get target obstacle's screen position (approximate)
+      // Obstacle position is in %, convert to px relative to game container
+      const gameContainer = gameRef.current;
+      if (!gameContainer) return;
+
+      const gameWidth = gameContainer.offsetWidth;
+      const gameHeight = gameContainer.offsetHeight;
+
+      // Approximate obstacle center position in pixels
+      // Obstacle is positioned at 'bottom: GROUND_LEVEL_PERCENT%', 'left: obstacle.position%'
+      // Need to calculate its center relative to the top-left of the game container
+      const obstacleLeftPx = (targetObstacle.position / 100) * gameWidth;
+      const obstacleBottomPct = GROUND_LEVEL_PERCENT;
+      const obstacleBottomPx = (obstacleBottomPct / 100) * gameHeight;
+      const obstacleHeightPx = (targetObstacle.height / 4) * 16; // Assuming Tailwind h-unit is 4px, h-8 is 32px
+      const obstacleWidthPx = (targetObstacle.width / 4) * 16; // Assuming Tailwind w-unit is 4px, w-8 is 32px
+
+      // Approximate center of the obstacle
+      const targetX = obstacleLeftPx + obstacleWidthPx / 2;
+      const targetY = gameHeight - obstacleBottomPx - obstacleHeightPx / 2; // Y from top
+
+      // Starting position for Black Fire (above the screen)
+      const startX = targetX; // Start directly above the target
+      const startY = -50; // Start 50px above the top of the container
+
+      // Create a new Black Fire projectile
+      const newBlackFire: BlackFireProjectile = {
+        id: Date.now(),
+        startX: startX,
+        startY: startY,
+        targetX: targetX,
+        targetY: targetY,
+        currentX: startX,
+        currentY: startY,
+        speed: 10, // Speed of the projectile
+        damage: BLACK_FIRE_DAMAGE, // Damage it deals
+        targetObstacleId: targetObstacle.id // Target the specific obstacle
+      };
+
+      // Add the new projectile to the active list
+      setActiveBlackFires(prev => [...prev, newBlackFire]);
+    } else {
+      console.log("No obstacle found to target.");
+    }
+  };
+
+  // --- NEW: Effect to move Black Fire projectiles ---
+  useEffect(() => {
+    // Don't run if game is not started, over, or stats are in fullscreen
+    if (!gameStarted || gameOver || isStatsFullscreen) return;
+
+    const moveProjectiles = () => {
+        setActiveBlackFires(prevFires => {
+            const gameContainer = gameRef.current;
+            if (!gameContainer) return prevFires;
+
+            const gameHeight = gameContainer.offsetHeight;
+
+            return prevFires
+                .map(fire => {
+                    // Calculate direction vector
+                    const dx = fire.targetX - fire.currentX;
+                    const dy = fire.targetY - fire.currentY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Calculate movement step
+                    const moveX = (dx / distance) * fire.speed;
+                    const moveY = (dy / distance) * fire.speed;
+
+                    // Update position
+                    const newX = fire.currentX + moveX;
+                    const newY = fire.currentY + moveY;
+
+                    // Check for collision with target obstacle or if it passed the target
+                    let hitTarget = false;
+                    if (distance < fire.speed || newY >= fire.targetY) { // Simple check if it's close or passed the target Y
+                        hitTarget = true;
+                    }
+
+                    return {
+                        ...fire,
+                        currentX: newX,
+                        currentY: newY,
+                        hitTarget: hitTarget // Add a flag to mark for removal and damage application
+                    };
+                })
+                .filter(fire => {
+                    // Remove projectile if it hit the target or went off-screen (below ground)
+                    const isOffScreen = fire.currentY > gameHeight; // Check if below the bottom of the game container
+
+                    if (fire.hitTarget) {
+                        // Find the targeted obstacle and apply damage
+                        setObstacles(prevObstacles =>
+                            prevObstacles.map(obstacle => {
+                                if (obstacle.id === fire.targetObstacleId) {
+                                    const newHealth = Math.max(0, obstacle.health - fire.damage);
+                                    // Trigger damage effect on the obstacle? (More complex, maybe later)
+                                    // For now, just update health and remove if dead
+                                    return { ...obstacle, health: newHealth };
+                                }
+                                return obstacle;
+                            }).filter(obstacle => obstacle.health > 0) // Remove obstacle if health is 0 or less
+                        );
+                        return false; // Remove the projectile
+                    }
+
+                    return !isOffScreen; // Keep projectile if not off-screen
+                });
+        });
+    };
+
+    // Set up the interval for moving projectiles
+    blackFireTimerRef.current = setInterval(moveProjectiles, 50); // Adjust interval for speed
+
+    // Cleanup function to clear the interval
+    return () => clearInterval(blackFireTimerRef.current);
+
+  }, [gameStarted, gameOver, isStatsFullscreen, obstacles]); // Add obstacles to dependency array
+
 
   // Move obstacles, clouds, particles and detect collisions
   useEffect(() => {
@@ -503,14 +690,16 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               // 70% chance to reuse the obstacle and loop it back
               if (Math.random() < 0.7) {
                 // Ensure we only pick from the remaining obstacle types
-                const randomObstacle = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                 const randomOffset = Math.floor(Math.random() * 20); // Add random offset to position
 
                 return {
                   ...obstacle, // Keep existing properties
-                  ...randomObstacle, // Override with new random properties (type, color, height, width)
+                  ...randomObstacleType, // Override with new random properties (type, color, height, width, baseHealth)
                   id: Date.now(), // Assign a new ID to ensure React re-renders
-                  position: 120 + randomOffset // Place it off-screen to the right with random offset
+                  position: 120 + randomOffset, // Place it off-screen to the right with random offset
+                  health: randomObstacleType.baseHealth, // Reset health for the new obstacle
+                  maxHealth: randomObstacleType.baseHealth // Reset max health
                 };
               } else {
                 // If not reusing, let it move off-screen to be filtered out
@@ -521,37 +710,93 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             return { ...obstacle, position: newPosition }; // Return updated obstacle position
           })
           .filter(obstacle => {
-            // Collision detection logic
+            // Collision detection logic (Player vs Obstacle)
             let collisionDetected = false;
             // Adjust character collision box size for Lottie if needed, or keep it simple
             // Adjusted character dimensions to match the larger container
             const characterWidth = 24; // Assuming Lottie is now roughly this wide
             const characterHeight = 24; // Assuming Lottie is now roughly this tall
-            const characterX = 10; // Character's fixed X position
-            const characterY = characterPos; // Character's current Y position (relative to ground)
+            const characterX = 10; // Character's fixed X position (in %)
+            // Convert characterX from % to a comparable unit (e.g., use % for obstacle position as well)
+            // Let's assume characterX is fixed at 10% of the game width
+            const characterXPercent = 10;
+            const characterYPercent = (characterPos / gameRef.current?.offsetHeight) * 100; // CharacterY relative to ground level in %
 
-            const obstacleX = obstacle.position; // Obstacle's current X position
+            const obstacleXPercent = obstacle.position; // Obstacle's current X position in %
             // ObstacleY is always 0 for ground obstacles (relative to ground)
-            const obstacleY = 0;
-            const obstacleWidth = obstacle.width; // Obstacle's width
-            const obstacleHeight = obstacle.height; // Obstacle's height
+            const obstacleYPercent = 0; // Obstacle Y relative to ground level in %
+            // Need to approximate obstacle width and height in % relative to game container
+            // This is tricky as Tailwind units are fixed. Let's use a simple approximation for now.
+            // Assume 1 Tailwind unit (e.g., w-1) is roughly 0.5% of game width/height for collision
+            const obstacleWidthPercent = obstacle.width * 0.5;
+            const obstacleHeightPercent = obstacle.height * 0.5;
 
-            // Check for collision using bounding boxes
-            if (
-              characterX < obstacleX + obstacleWidth &&
-              characterX + characterWidth > obstacleX &&
-              characterY < obstacleY + obstacleHeight &&
-              characterY + obstacleHeight > obstacleY
-            ) {
-              collisionDetected = true;
-              // Decrease health by the defined amount on collision
-              setHealth(prev => Math.max(0, prev - damagePerCollision));
-              triggerHealthDamageEffect(); // Trigger health bar damage effect
-              triggerCharacterDamageEffect(damagePerCollision); // Trigger character damage effect and show number
+
+            // Check for collision using bounding boxes (using percentages)
+            // Character bounding box: (characterXPercent, characterYPercent) to (characterXPercent + characterWidthPercent, characterYPercent + characterHeightPercent)
+            // Obstacle bounding box: (obstacleXPercent, obstacleYPercent) to (obstacleXPercent + obstacleWidthPercent, obstacleYPercent + obstacleHeightPercent)
+
+            // Collision occurs if:
+            // Character's right edge is past Obstacle's left edge AND
+            // Character's left edge is before Obstacle's right edge AND
+            // Character's top edge is below Obstacle's bottom edge AND
+            // Character's bottom edge is above Obstacle's top edge
+
+            // Note: CharacterYPercent is height *above* ground, obstacleYPercent is height *above* ground.
+            // So, characterYPercent = 0 means on the ground. ObstacleYPercent = 0 means on the ground.
+            // Character's bottom edge is at GROUND_LEVEL_PERCENT% + characterPos (converted to %)
+            // Character's top edge is at GROUND_LEVEL_PERCENT% + characterPos + characterHeight (converted to %)
+            // Obstacle's bottom edge is at GROUND_LEVEL_PERCENT% + 0 (converted to %)
+            // Obstacle's top edge is at GROUND_LEVEL_PERCENT% + obstacleHeight (converted to %)
+
+            // Let's simplify and use the original pixel-based collision check, assuming we can get pixel positions.
+            // We need to know the game container's dimensions to convert % to pixels.
+            const gameContainer = gameRef.current;
+            if (gameContainer) {
+                const gameWidth = gameContainer.offsetWidth;
+                const gameHeight = gameContainer.offsetHeight;
+
+                // Character position in pixels relative to the bottom-left of the game container
+                const characterX_px = (characterXPercent / 100) * gameWidth;
+                const characterY_px = (characterPos / 100) * gameHeight; // characterPos is already in a unit relative to ground
+
+                // Obstacle position in pixels relative to the bottom-left of the game container
+                const obstacleX_px = (obstacleXPercent / 100) * gameWidth;
+                const obstacleY_px = (obstacleYPercent / 100) * gameHeight; // obstacleYPercent is 0
+
+                // Approximate obstacle dimensions in pixels (rough conversion from Tailwind units)
+                const obstacleWidth_px = (obstacle.width / 4) * 16; // Assuming w-4 is 16px
+                const obstacleHeight_px = (obstacle.height / 4) * 16; // Assuming h-4 is 16px
+
+                 // Character dimensions in pixels (rough estimate)
+                 const characterWidth_px = (characterWidth / 4) * 16; // Assuming w-4 is 16px
+                 const characterHeight_px = (characterHeight / 4) * 16; // Assuming h-4 is 16px
+
+
+                // Check for collision using bounding boxes in pixels
+                if (
+                  characterX_px < obstacleX_px + obstacleWidth_px &&
+                  characterX_px + characterWidth_px > obstacleX_px &&
+                  // Character's bottom edge (relative to bottom of game) vs Obstacle's top edge (relative to bottom of game)
+                  // Character's bottom is at characterY_px above the ground. Ground is at GROUND_LEVEL_PERCENT% from bottom.
+                  // Obstacle's bottom is at obstacleY_px above the ground (which is 0).
+                  // Obstacle's top is at obstacleHeight_px above the ground.
+                  // Collision if character's bottom is below obstacle's top AND character's top is above obstacle's bottom
+                  (characterY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100))) < (obstacleY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)) + obstacleHeight_px) &&
+                  (characterY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)) + characterHeight_px) > (obstacleY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)))
+                ) {
+                  collisionDetected = true;
+                  // Decrease health by the defined amount on collision
+                  setHealth(prev => Math.max(0, prev - damagePerCollision));
+                  triggerHealthDamageEffect(); // Trigger health bar damage effect
+                  triggerCharacterDamageEffect(damagePerCollision); // Trigger character damage effect and show number
+                }
             }
 
+
             // Keep obstacles that haven't collided and are still visible or will loop back
-            return !collisionDetected && obstacle.position > -20; // Filter out collided or far off-screen obstacles
+            // Also filter out obstacles that have 0 or less health (killed by Black Fire)
+            return !collisionDetected && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
           });
       });
 
@@ -604,6 +849,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
+      clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
@@ -673,7 +919,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
   // Render obstacles based on their type
-  const renderObstacle = (obstacle) => {
+  const renderObstacle = (obstacle: GameObstacle) => {
     let obstacleEl; // Element to render for the obstacle
 
     switch(obstacle.type) {
@@ -705,6 +951,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         );
     }
 
+    // Calculate obstacle health percentage
+    const obstacleHealthPct = obstacle.health / obstacle.maxHealth;
+
     return (
       <div
         key={obstacle.id} // Unique key for React list rendering
@@ -715,7 +964,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           left: `${obstacle.position}%` // Horizontal position
         }}
       >
+        {/* Obstacle Element */}
         {obstacleEl} {/* Render the specific obstacle element */}
+
+        {/* --- NEW: Obstacle Health Bar --- */}
+        {/* Position the health bar above the obstacle */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+            {/* Inner health bar */}
+            <div
+                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                style={{ width: `${obstacleHealthPct * 100}%` }}
+            ></div>
+        </div>
       </div>
     );
   };
@@ -773,9 +1033,33 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
+  // --- NEW: Render Black Fire projectiles ---
+  const renderBlackFires = () => {
+    return activeBlackFires.map(fire => (
+      <div
+        key={fire.id} // Unique key
+        className="absolute w-12 h-12" // Container size for Lottie
+        style={{
+          top: `${fire.currentY}px`, // Position based on current Y
+          left: `${fire.currentX}px`, // Position based on current X
+          transform: 'translate(-50%, -50%)', // Center the Lottie container
+          pointerEvents: 'none' // Ensure clicks pass through
+        }}
+      >
+        <DotLottieReact
+          src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie" // Black Fire Lottie URL
+          loop // Loop the animation (optional, depends on Lottie)
+          autoplay // Autoplay the animation
+          className="w-full h-full" // Make Lottie fill its container
+        />
+      </div>
+    ));
+  };
+
+
   // Function to open the chest
   const openChest = () => {
-    // Prevent opening chest if stats are in fullscreen
+    // Prevent opening chest if stats are in fullscreen, already open, or no chests left
     if (isChestOpen || chestsRemaining <= 0 || isStatsFullscreen) return;
     setChestShake(true);
     setTimeout(() => {
@@ -786,7 +1070,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       setTimeout(() => {
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
         setCurrentCard(randomCard);
-        setShowCard(true);
+        setShowCard(randomCard); // Set showCard to the card object
         let coinReward = 0;
         switch(randomCard.rarity) {
           case "common": coinReward = 10; break;
@@ -805,7 +1089,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Function to reset the chest state
   const resetChest = () => {
     setIsChestOpen(false);
-    setShowCard(false);
+    setShowCard(null); // Reset showCard to null
     setCurrentCard(null);
     setShowShine(false);
     if (pendingCoinReward > 0) {
@@ -929,6 +1213,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* Obstacles */}
         {obstacles.map(obstacle => renderObstacle(obstacle))}
+
+        {/* --- NEW: Black Fire Projectiles --- */}
+        {renderBlackFires()}
 
         {/* Particles */}
         {renderParticles()}
@@ -1209,14 +1496,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         </div>
       )}
 
-
       {/* Treasure chest and remaining chests count - Positioned on top of the game */}
       {/* HIDE chest when stats are in fullscreen */}
       {!isStatsFullscreen && (
         <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
           <div
             className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-            // Disable click if stats are in fullscreen
+            // Disable click if stats are in fullscreen, already open, or no chests left
             onClick={!isChestOpen && chestsRemaining > 0 && !isStatsFullscreen ? openChest : null}
             aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
             role="button"
@@ -1283,32 +1569,26 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         ))}
                       </div>
                     )}
-                    <div className="h-full flex justify-center items-center relative">
-                      <div className="absolute inset-2 top-7 bottom-4 bg-gradient-to-b from-amber-600/30 to-amber-800/30 rounded-lg shadow-inner shadow-amber-950/50"></div>
-                      <div className="absolute bottom-4 left-4 w-3 h-3 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
-                      <div className="absolute bottom-5 left-8 w-2 h-2 bg-yellow-300 rounded-full shadow-md shadow-amber-950/50"></div>
-                      <div className="absolute bottom-4 right-6 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-md shadow-amber-950/50"></div>
-                      {showCard ? (
-                        <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
-                          <div className="absolute inset-0 overflow-hidden rounded-xl">
-                            <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
-                          </div>
-                          <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
-                          <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
-                          <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-                          <div className="flex mt-3">
-                            {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                              <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                            ))}
-                          </div>
+                    {showCard ? (
+                      <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl animate-float-card flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                        <div className="absolute inset-0 overflow-hidden rounded-xl">
+                          <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                         </div>
-                      ) : (
-                        <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
-                          <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                        <div className="text-6xl mb-2" style={{ color: currentCard?.color }}>{currentCard?.icon}</div>
+                        <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
+                        <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
+                        <div className="flex mt-3">
+                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    ) : (
+                      <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
+                        <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                      </div>
+                    )}
                     </div>
-                  </div>
                   <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
                     <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
                   </div>
@@ -1332,6 +1612,36 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         </div>
       )}
+
+      {/* --- NEW: Black Fire Skill UI Element --- */}
+      {/* Positioned at the bottom right */}
+      {!isStatsFullscreen && ( // Hide skill icon when stats are fullscreen
+        <div
+          className={`absolute bottom-4 right-4 w-16 h-16 bg-gradient-to-br from-gray-700 to-black rounded-lg shadow-lg border-2 border-gray-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 ${blackFireCount <= 0 || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+          onClick={activateBlackFire} // Call activateBlackFire on click
+          title={blackFireCount > 0 ? `Quả cầu lửa đen (${blackFireCount} còn lại)` : "Hết Quả cầu lửa đen"}
+          aria-label="Sử dụng Quả cầu lửa đen"
+          role="button"
+          tabIndex={blackFireCount > 0 && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
+        >
+          {/* Black Fire Icon (can be a simple SVG or image placeholder) */}
+          {/* Using a simple placeholder for now */}
+          <div className="w-10 h-10">
+             {/* Using the provided Lottie for the skill icon */}
+             <DotLottieReact
+                src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie"
+                loop
+                autoplay
+                className="w-full h-full"
+             />
+          </div>
+          {/* Count of remaining uses */}
+          <div className="absolute bottom-1 right-1 bg-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs font-bold border border-blue-400 shadow-sm">
+            {blackFireCount}
+          </div>
+        </div>
+      )}
+
 
       {/* Card info popup - Positioned on top of everything */}
       {showCard && currentCard && (
@@ -1382,3 +1692,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
