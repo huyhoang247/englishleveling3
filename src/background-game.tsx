@@ -313,22 +313,34 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
   // Coin count animation function
+  // Modified to update 'coins' state as well during animation steps
   const startCoinCountAnimation = (reward) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
       let current = oldCoins;
+
+      // Clear any existing interval to prevent overlapping animations
+      if (coinTimerRef.current) {
+          clearInterval(coinTimerRef.current);
+      }
+
       const countInterval = setInterval(() => {
           current += step;
           if (current >= newCoins) {
               setDisplayedCoins(newCoins);
-              setCoins(newCoins);
+              setCoins(newCoins); // Ensure the actual coin count is updated at the end
               clearInterval(countInterval);
-              setPendingCoinReward(0);
+              setPendingCoinReward(0); // Reset pending reward after animation
           } else {
               setDisplayedCoins(current);
+              // Optionally update actual coins state during animation for responsiveness
+              // setCoins(current); // This might make the number jump slightly, depending on step size
           }
       }, 50);
+
+      // Store the interval ID to clear it later if needed
+      coinTimerRef.current = countInterval;
   };
 
 
@@ -352,6 +364,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // REMOVED: setShowStatsModal(false); // Ensure stats modal is closed on game start/restart
     setIsStatsFullscreen(false); // NEW: Ensure full-screen stats is closed
     setIsCoinEffectActive(false); // NEW: Reset coin effect state
+    setCoins(357); // Reset coin count to initial value
+    setDisplayedCoins(357); // Reset displayed coin count
 
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles = [];
@@ -502,6 +516,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Random time delay before the next coin appears (between 1 and 5 seconds)
     const randomTime = Math.floor(Math.random() * 4000) + 1000;
+    // Clear any existing timer before setting a new one
+    if (coinTimerRef.current) {
+        clearTimeout(coinTimerRef.current);
+    }
     coinTimerRef.current = setTimeout(() => {
       // Generate a new coin
       const newCoin: GameCoin = {
@@ -836,9 +854,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 ) {
                   collisionDetected = true;
                   // Decrease health by the defined amount on collision
-                  setHealth(prev => Math.max(0, prev - damagePerCollision));
+                  const damageTaken = damagePerCollision;
+                  setHealth(prev => Math.max(0, prev - damageTaken));
                   triggerHealthDamageEffect(); // Trigger health bar damage effect
-                  triggerCharacterDamageEffect(damagePerCollision); // Trigger character damage effect and show number
+                  triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
                 }
             }
 
@@ -951,11 +970,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                       collisionDetected = true;
                       // Grant random coins (1-5)
                       const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                      setCoins(prev => {
-                          const newTotalCoins = prev + awardedCoins;
-                          console.log(`Coin collected! Awarded: ${awardedCoins}, Total coins: ${newTotalCoins}`); // Add logging
-                          return newTotalCoins;
-                      });
+                      // MODIFIED: Call startCoinCountAnimation to animate the coin count
+                      startCoinCountAnimation(awardedCoins);
+
+                      console.log(`Coin collected! Awarded: ${awardedCoins}`); // Add logging
+
 
                       // --- NEW: Trigger Coin Collection Effect ---
                       // Calculate position for the effect relative to the character container
@@ -1003,7 +1022,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
     return () => clearInterval(moveInterval);
     // Add isStatsFullscreen to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen]); // Added activeCoins to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins]); // Added coins to dependency array to ensure startCoinCountAnimation uses the latest value
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -1019,7 +1038,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Effect for coin counter animation
   useEffect(() => {
-    if (displayedCoins === coins && pendingCoinReward === 0) return;
+    // This effect now primarily controls the visual 'number-changing' class
+    // The startCoinCountAnimation function drives the actual displayedCoins state change
+    if (displayedCoins === coins && pendingCoinReward === 0) return; // Only trigger if coins are different or pending reward exists
+
     const coinElement = document.querySelector('.coin-counter');
     if (coinElement) {
       coinElement.classList.add('number-changing');
@@ -1027,16 +1049,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         coinElement.classList.remove('number-changing');
         coinElement.removeEventListener('animationend', animationEndHandler);
       };
+      // Add event listener for animation end to remove the class
       coinElement.addEventListener('animationend', animationEndHandler);
-      // Cleanup
+
+      // Cleanup function to remove the event listener if the component unmounts
       return () => {
-        if (coinElement) { // Check again in case it was removed
+        if (coinElement) { // Check if the element still exists
             coinElement.removeEventListener('animationend', animationEndHandler);
-            coinElement.classList.remove('number-changing'); // Ensure class is removed on unmount
+            // Ensure the class is removed on unmount or before adding again
+             coinElement.classList.remove('number-changing');
         }
       };
     }
-  }, [displayedCoins, coins, pendingCoinReward]);
+     // No cleanup needed if coinElement is not found
+     return () => {}; // Return an empty cleanup function
+  }, [displayedCoins, coins, pendingCoinReward]); // Dependencies remain the same
+
 
   // Calculate health percentage for the bar
   const healthPct = health / MAX_HEALTH;
