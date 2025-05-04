@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-// Import component Lottie từ thư viện lottie-react
-import Lottie from 'lottie-react';
-// Import file JSON icon của bạn
-// Đảm bảo đường dẫn này đúng với vị trí file loading.json của bạn so với file component này
-import loadingAnimationData from './loading.json';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react'; // Import DotLottieReact
 
 // Custom Icon component using inline SVG (Copied from original file for self-containment)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -102,15 +98,16 @@ const ResetStatsControl: React.FC<ResetStatsControlProps> = ({ currentStats, onS
           {/* Hiển thị giao diện xử lý nếu resetAnimation là true */}
           {resetAnimation ? (
             <div className="flex flex-col items-center justify-center py-8">
-              {/* Thay thế spinner bằng Lottie animation */}
-              <Lottie
-                animationData={loadingAnimationData} // Dữ liệu animation từ file loading.json
-                loop={true} // Lặp lại animation
-                autoplay={true} // Tự động phát animation
-                style={{ width: 100, height: 100 }} // Tùy chỉnh kích thước animation
-              />
+              {/* Thay thế spinner bằng DotLottieReact */}
+              <div className="w-24 h-24 mb-4"> {/* Điều chỉnh kích thước container nếu cần */}
+                 <DotLottieReact
+                    src="https://lottie.host/789512ee-6fd5-4ae0-b1ab-0640fdcb56ae/E4S6Bh55sj.lottie"
+                    loop
+                    autoplay
+                  />
+              </div>
               {/* Processing message */}
-              <p className="text-gray-500 text-sm mt-4">Đang xử lý, vui lòng chờ...</p> {/* Cập nhật lại thông báo */}
+              <p className="text-gray-500 text-sm mt-1">Vui lòng chờ trong giây lát.</p>
             </div>
           ) : (
             // Hiển thị nội dung xác nhận reset nếu resetAnimation là false
