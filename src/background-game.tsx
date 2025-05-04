@@ -526,7 +526,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       }, 800); // Hide damage number after animation
   };
 
-  // --- NEW: Function to activate Black Fire skill ---
+  // --- Function to activate Black Fire skill ---
   const activateBlackFire = () => {
     // Check if game is active, not over, has uses remaining, and not showing card/stats
     if (!gameStarted || gameOver || blackFireCount <= 0 || showCard || isStatsFullscreen) {
@@ -538,20 +538,26 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     const targetObstacle = obstacles.reduce((closest, current) => {
         // Calculate distance based on horizontal position (simple approach)
         const currentDistance = current.position - 10; // Distance from character's x (10%)
-        if (currentDistance > 0 && (closest === null || currentDistance < closest.position - 10)) {
+        // Only consider obstacles that are to the right of the character and have health
+        if (currentDistance > 0 && current.health > 0 && (closest === null || currentDistance < closest.position - 10)) {
             return current;
         }
         return closest;
     }, null as GameObstacle | null); // Specify initial value type
 
     if (targetObstacle) {
+      console.log("Targeting obstacle:", targetObstacle); // Log target obstacle
+
       // Decrement Black Fire count
       setBlackFireCount(prev => prev - 1);
 
       // Get target obstacle's screen position (approximate)
       // Obstacle position is in %, convert to px relative to game container
       const gameContainer = gameRef.current;
-      if (!gameContainer) return;
+      if (!gameContainer) {
+        console.error("Game container ref is not available."); // Log error
+        return;
+      }
 
       const gameWidth = gameContainer.offsetWidth;
       const gameHeight = gameContainer.offsetHeight;
@@ -562,8 +568,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       const obstacleLeftPx = (targetObstacle.position / 100) * gameWidth;
       const obstacleBottomPct = GROUND_LEVEL_PERCENT;
       const obstacleBottomPx = (obstacleBottomPct / 100) * gameHeight;
+      // Approximate obstacle dimensions in pixels (rough conversion from Tailwind units)
       const obstacleHeightPx = (targetObstacle.height / 4) * 16; // Assuming Tailwind h-unit is 4px, h-8 is 32px
       const obstacleWidthPx = (targetObstacle.width / 4) * 16; // Assuming Tailwind w-unit is 4px, w-8 is 32px
+
 
       // Approximate center of the obstacle
       const targetX = obstacleLeftPx + obstacleWidthPx / 2;
@@ -582,19 +590,21 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         targetY: targetY,
         currentX: startX,
         currentY: startY,
-        speed: 10, // Speed of the projectile
+        speed: 15, // Increased speed slightly for visibility
         damage: BLACK_FIRE_DAMAGE, // Damage it deals
         targetObstacleId: targetObstacle.id // Target the specific obstacle
       };
 
+      console.log("Creating new Black Fire:", newBlackFire); // Log new projectile
+
       // Add the new projectile to the active list
       setActiveBlackFires(prev => [...prev, newBlackFire]);
     } else {
-      console.log("No obstacle found to target.");
+      console.log("No living obstacle found to target."); // Log if no target found
     }
   };
 
-  // --- NEW: Effect to move Black Fire projectiles ---
+  // --- Effect to move Black Fire projectiles ---
   useEffect(() => {
     // Don't run if game is not started, over, or stats are in fullscreen
     if (!gameStarted || gameOver || isStatsFullscreen) return;
@@ -602,7 +612,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     const moveProjectiles = () => {
         setActiveBlackFires(prevFires => {
             const gameContainer = gameRef.current;
-            if (!gameContainer) return prevFires;
+            if (!gameContainer) {
+                 console.error("Game container ref is not available during projectile movement."); // Log error
+                 return prevFires;
+            }
 
             const gameHeight = gameContainer.offsetHeight;
 
@@ -614,8 +627,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     // Calculate movement step
-                    const moveX = (dx / distance) * fire.speed;
-                    const moveY = (dy / distance) * fire.speed;
+                    // Avoid division by zero if distance is 0
+                    const moveX = distance === 0 ? 0 : (dx / distance) * fire.speed;
+                    const moveY = distance === 0 ? 0 : (dy / distance) * fire.speed;
+
 
                     // Update position
                     const newX = fire.currentX + moveX;
@@ -637,14 +652,16 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 })
                 .filter(fire => {
                     // Remove projectile if it hit the target or went off-screen (below ground)
-                    const isOffScreen = fire.currentY > gameHeight; // Check if below the bottom of the game container
+                    const isOffScreen = fire.currentY > gameHeight + 50; // Check if below the bottom of the game container + buffer
 
                     if (fire.hitTarget) {
+                        console.log("Black Fire hit target obstacle:", fire.targetObstacleId); // Log hit
                         // Find the targeted obstacle and apply damage
                         setObstacles(prevObstacles =>
                             prevObstacles.map(obstacle => {
                                 if (obstacle.id === fire.targetObstacleId) {
                                     const newHealth = Math.max(0, obstacle.health - fire.damage);
+                                    console.log(`Obstacle ${obstacle.id} health: ${obstacle.health} -> ${newHealth}`); // Log health change
                                     // Trigger damage effect on the obstacle? (More complex, maybe later)
                                     // For now, just update health and remove if dead
                                     return { ...obstacle, health: newHealth };
@@ -1034,7 +1051,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // --- NEW: Render Black Fire projectiles ---
+  // --- Render Black Fire projectiles ---
   const renderBlackFires = () => {
     return activeBlackFires.map(fire => (
       <div
@@ -1048,7 +1065,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         }}
       >
         <DotLottieReact
-          src="https://lottie.host/af898c1a-d385-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie" // Black Fire Lottie URL
+          src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie" // Black Fire Lottie URL
           loop // Loop the animation (optional, depends on Lottie)
           autoplay // Autoplay the animation
           className="w-full h-full" // Make Lottie fill its container
