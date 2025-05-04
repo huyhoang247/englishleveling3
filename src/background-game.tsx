@@ -290,11 +290,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
 
   // Obstacle types with properties (added base health)
+  // MODIFIED: Changed obstacle types to include only 'cow'
   const obstacleTypes = [
-    // Reduced size for rock, added baseHealth
-    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
-    // Reduced size for cactus, added baseHealth
-    { type: 'cactus', height: 14, width: 6, color: 'from-green-800 to-green-600', baseHealth: 300, damage: 75 }, // Added damage
+    { type: 'cow', height: 16, width: 20, color: 'from-gray-300 to-gray-500', baseHealth: 500, damage: 100 }, // Added damage
   ];
 
     // Updated cards array to use SVG components
@@ -1136,29 +1134,38 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     let obstacleEl; // Element to render for the obstacle
 
     switch(obstacle.type) {
-      case 'rock':
-        obstacleEl = (
-          // Adjusted size for rock element
-          <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br ${obstacle.color} rounded-lg`}>
-            {/* Rock details */}
-            <div className="w-2 h-1 bg-gray-600 rounded-full absolute top-1 left-0.5"></div> {/* Adjusted size and position */}
-            <div className="w-1.5 h-0.5 bg-gray-600 rounded-full absolute top-3 right-1"></div> {/* Adjusted size and position */}
-          </div>
-        );
-        break;
-      case 'cactus':
+      // MODIFIED: Added 'cow' case and removed 'rock' and 'cactus' cases
+      case 'cow':
         obstacleEl = (
           <div className="relative">
-            {/* Cactus main body - Adjusted size */}
-            <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
-            {/* Cactus arms - Adjusted size and position */}
-            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
-            <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
+            {/* Cow body - Adjusted size */}
+            <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br from-gray-300 to-gray-500 rounded-full relative`}>
+                {/* Cow spots */}
+                <div className="absolute top-4 left-6 w-4 h-4 bg-gray-800 rounded-full"></div>
+                <div className="absolute top-8 right-4 w-3 h-3 bg-gray-800 rounded-full"></div>
+                <div className="absolute bottom-4 left-10 w-5 h-5 bg-gray-800 rounded-full"></div>
+                {/* Cow head */}
+                <div className="absolute -top-6 right-2 w-10 h-8 bg-gray-300 rounded-t-full rounded-br-full border-2 border-gray-400">
+                    {/* Cow ears */}
+                    <div className="absolute -top-2 left-2 w-3 h-3 bg-gray-400 rounded-full transform rotate-45"></div>
+                    <div className="absolute -top-2 right-2 w-3 h-3 bg-gray-400 rounded-full transform -rotate-45"></div>
+                    {/* Cow eyes */}
+                    <div className="absolute top-2 left-3 w-1 h-1 bg-black rounded-full"></div>
+                    <div className="absolute top-2 right-3 w-1 h-1 bg-black rounded-full"></div>
+                    {/* Cow snout */}
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-5 h-3 bg-pink-300 rounded-b-full"></div>
+                </div>
+                 {/* Cow legs */}
+                <div className="absolute -bottom-4 left-4 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
+                <div className="absolute -bottom-4 left-10 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
+                <div className="absolute -bottom-4 right-10 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
+                <div className="absolute -bottom-4 right-4 w-3 h-6 bg-gray-400 rounded-t-sm"></div>
+            </div>
           </div>
         );
         break;
       default:
-        // Default rendering if obstacle type is unknown
+        // Default rendering if obstacle type is unknown (shouldn't happen with current obstacleTypes)
         obstacleEl = (
           <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}></div>
         );
@@ -1951,4 +1958,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
