@@ -673,6 +673,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   return (
     // MODIFIED: Added absolute positioning and full size for fullscreen display
     // Removed max-w-lg mx-auto for full screen
+    // REMOVED: border border-gray-100 class
     <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
           style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
 
@@ -859,8 +860,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
         {/* Footer Section - FIXED BOTTOM */}
-        {/* MODIFIED: Changed py-5 to py-2 to reduce bottom padding */}
-        <div className="px-8 py-2 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
+        {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
+        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
           <div className="flex justify-between items-center">
             {/* Character ID */}
             <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span>
