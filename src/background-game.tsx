@@ -889,12 +889,23 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           // Define character's bounding box in pixels (approximate)
           const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
           const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
-          const characterX_px = (10 / 100) * gameWidth; // Character's fixed X position in pixels
-          const characterY_px = (characterPos / 100) * gameHeight; // Character's Y position relative to ground in pixels
-          const characterBottom_px = characterY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)); // Character's bottom edge from top of game container
-          const characterTop_px = characterBottom_px + characterHeight_px; // Character's top edge from top of game container
+          const characterXPercent = 10; // Character's fixed X position (in %)
+          const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
+
+          // Character's vertical position relative to the top of the game container
+          // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
+          const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+          const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
+          const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
           const characterLeft_px = characterX_px; // Character's left edge from left of game container
           const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
+
+          // console.log("Character Bounding Box (px):", {
+          //     left: characterLeft_px,
+          //     right: characterRight_px,
+          //     top: characterTopFromTop_px,
+          //     bottom: characterBottomFromTop_px
+          // });
 
 
           return prevCoins
@@ -910,21 +921,34 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   const coinX_px = (newX / 100) * gameWidth;
                   const coinY_px = (newY / 100) * gameHeight;
 
+                  // console.log("Coin Bounding Box (px):", {
+                  //     id: coin.id,
+                  //     left: coinX_px,
+                  //     right: coinX_px + coinSize_px,
+                  //     top: coinY_px,
+                  //     bottom: coinY_px + coinSize_px
+                  // });
+
+
                   // Check for collision using bounding boxes in pixels
                   // Coin bounding box: (coinX_px, coinY_px) to (coinX_px + coinSize_px, coinY_px + coinSize_px)
-                  // Character bounding box: (characterLeft_px, characterBottom_px) to (characterRight_px, characterTop_px)
+                  // Character bounding box: (characterLeft_px, characterTopFromTop_px) to (characterRight_px, characterBottomFromTop_px)
 
                   let collisionDetected = false;
                   if (
                       characterRight_px > coinX_px &&
                       characterLeft_px < coinX_px + coinSize_px &&
-                      characterTop_px > coinY_px &&
-                      characterBottom_px < coinY_px + coinSize_px
+                      characterBottomFromTop_px > coinY_px && // Character bottom edge is below coin top edge
+                      characterTopFromTop_px < coinY_px + coinSize_px // Character top edge is above coin bottom edge
                   ) {
                       collisionDetected = true;
                       // Grant random coins (1-5)
                       const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                      setCoins(prev => prev + awardedCoins);
+                      setCoins(prev => {
+                          const newTotalCoins = prev + awardedCoins;
+                          console.log(`Coin collected! Awarded: ${awardedCoins}, Total coins: ${newTotalCoins}`); // Add logging
+                          return newTotalCoins;
+                      });
                       // You could add a visual effect here for coin collection
                   }
 
