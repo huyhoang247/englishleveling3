@@ -210,8 +210,10 @@ interface GameCoin {
   id: number;
   x: number; // Horizontal position in %
   y: number; // Vertical position in %
-  // Removed speedX, speedY - movement will be calculated towards character
-  speed: number; // Speed factor for moving towards the character
+  initialSpeedX: number; // Speed for initial horizontal movement (left)
+  initialSpeedY: number; // Speed for initial vertical movement (down)
+  attractSpeed: number; // Speed factor for moving towards the character after collision
+  isAttracted: boolean; // Flag to indicate if the coin is moving towards the character
 }
 
 
@@ -247,8 +249,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [coins, setCoins] = useState(357); // Player's coin count
   const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
-  const coinScheduleTimerRef = useRef(null); // NEW: Timer for scheduling new coins (renamed)
-  const coinCountAnimationTimerRef = useRef(null); // NEW: Timer for coin count animation
+  const coinScheduleTimerRef = useRef(null); // Timer for scheduling new coins
+  const coinCountAnimationTimerRef = useRef(null); // Timer for coin count animation
 
 
   // --- NEW: Coin Effect States ---
@@ -529,7 +531,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         id: Date.now(), // Unique ID
         x: 110, // Start off-screen to the right (%)
         y: Math.random() * 60, // Random vertical position from top (0%) to middle (60%)
-        speed: Math.random() * 0.05 + 0.03 // Speed factor for moving towards character (adjusted)
+        initialSpeedX: Math.random() * 0.5 + 0.5, // Speed for initial horizontal movement (move left)
+        initialSpeedY: Math.random() * 0.3, // Speed for initial vertical movement (move downwards)
+        attractSpeed: Math.random() * 0.05 + 0.03, // Speed factor for moving towards character
+        isAttracted: false // Initially not attracted
       };
 
       // Add the new coin to the active list
@@ -800,73 +805,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             }
 
             return { ...obstacle, position: newPosition }; // Return updated obstacle position
-          })
-          .filter(obstacle => {
-            // Collision detection logic (Player vs Obstacle)
-            let collisionDetected = false;
-            // Adjust character collision box size for Lottie if needed, or keep it simple
-            // Adjusted character dimensions to match the larger container
-            const characterWidth = 24; // Assuming Lottie is now roughly this wide (in Tailwind units)
-            const characterHeight = 24; // Assuming Lottie is now roughly this tall (in Tailwind units)
-            const characterXPercent = 10; // Character's fixed X position (in %)
-            const characterYPercent = (characterPos / (gameRef.current?.offsetHeight || 1)) * 100; // CharacterY relative to ground level in %
-
-            const obstacleXPercent = obstacle.position; // Obstacle's current X position in %
-            const obstacleYPercent = 0; // Obstacle Y relative to ground level in %
-            // Need to approximate obstacle width and height in % relative to game container
-            // This is tricky as Tailwind units are fixed. Let's use a simple approximation for now.
-            // Assume 1 Tailwind unit (e.g., w-1) is roughly 0.5% of game width/height for collision
-            const obstacleWidthPercent = obstacle.width * 0.5;
-            const obstacleHeightPercent = obstacle.height * 0.5;
-
-            // Get game container dimensions for pixel calculations
-            const gameContainer = gameRef.current;
-            if (gameContainer) {
-                const gameWidth = gameContainer.offsetWidth;
-                const gameHeight = gameContainer.offsetHeight;
-
-                // Character position in pixels relative to the bottom-left of the game container
-                const characterX_px = (characterXPercent / 100) * gameWidth;
-                const characterY_px = (characterPos / 100) * gameHeight; // characterPos is already in a unit relative to ground
-
-                // Obstacle position in pixels relative to the bottom-left of the game container
-                const obstacleX_px = (obstacleXPercent / 100) * gameWidth;
-                const obstacleY_px = (obstacleYPercent / 100) * gameHeight; // obstacleYPercent is 0
-
-                // Approximate obstacle dimensions in pixels (rough conversion from Tailwind units)
-                const obstacleWidth_px = (obstacle.width / 4) * 16; // Assuming w-4 is 16px
-                const obstacleHeight_px = (obstacle.height / 4) * 16; // Assuming h-4 is 16px
-
-                 // Character dimensions in pixels (rough estimate)
-                 const characterWidth_px = (characterWidth / 4) * 16; // Assuming w-4 is 16px
-                 const characterHeight_px = (characterHeight / 4) * 16; // Assuming h-4 is 16px
-
-
-                // Check for collision using bounding boxes in pixels
-                if (
-                  characterX_px < obstacleX_px + obstacleWidth_px &&
-                  characterX_px + characterWidth_px > obstacleX_px &&
-                  // Character's bottom edge (relative to bottom of game) vs Obstacle's top edge (relative to bottom of game)
-                  // Character's bottom is at characterY_px above the ground. Ground is at GROUND_LEVEL_PERCENT% from bottom.
-                  // Obstacle's bottom is at obstacleY_px above the ground (which is 0).
-                  // Obstacle's top is at obstacleHeight_px above the ground.
-                  // Collision if character's bottom is below obstacle's top AND character's top is above obstacle's bottom
-                  (characterY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100))) < (obstacleY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)) + obstacleHeight_px) &&
-                  (characterY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)) + characterHeight_px) > (obstacleY_px + (gameHeight * (GROUND_LEVEL_PERCENT / 100)))
-                ) {
-                  collisionDetected = true;
-                  // Decrease health by the defined amount on collision
-                  const damageTaken = damagePerCollision;
-                  setHealth(prev => Math.max(0, prev - damageTaken));
-                  triggerHealthDamageEffect(); // Trigger health bar damage effect
-                  triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
-                }
-            }
-
-
-            // Keep obstacles that haven't collided and are still visible or will loop back
-            // Also filter out obstacles that have 0 or less health (killed by Black Fire)
-            return !collisionDetected && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
           });
       });
 
@@ -942,82 +880,95 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   const coinX_px = (coin.x / 100) * gameWidth;
                   const coinY_px = (coin.y / 100) * gameHeight;
 
-                  // Calculate direction vector from coin to character center
-                  const dx = characterCenterX_px - coinX_px;
-                  const dy = characterCenterY_px - coinY_px;
-                  const distance = Math.sqrt(dx * dx + dy * dy);
-
-                  // Calculate movement step towards the character
-                  // Use coin.speed as a factor of the remaining distance
-                  const moveStep = distance * coin.speed;
-
-                  // Avoid division by zero if distance is 0
-                  const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
-                  const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
-
-                  // Update coin position in pixels
-                  const newCoinX_px = coinX_px + moveX_px;
-                  const newCoinY_px = coinY_px + moveY_px;
-
-                  // Convert updated pixel position back to percentage
-                  const newX = (newCoinX_px / gameWidth) * 100;
-                  const newY = (newCoinY_px / gameHeight) * 100;
-
-
-                  // Check for collision using bounding boxes in pixels
-                  // Coin bounding box: (coinX_px, coinY_px) to (coinX_px + coinSize_px, coinY_px + coinSize_px)
-                  // Character bounding box: (characterLeft_px, characterTopFromTop_px) to (characterRight_px, characterBottomFromTop_px)
-
+                  let newX = coin.x;
+                  let newY = coin.y;
                   let collisionDetected = false;
-                   // Check if the coin is close enough to the character (using a small threshold)
-                   if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) { // Collision when centers are close
-                       collisionDetected = true;
-                       // Grant random coins (1-5)
-                       const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                       // MODIFIED: Call startCoinCountAnimation to animate the coin count
-                       startCoinCountAnimation(awardedCoins);
+                  let shouldBeAttracted = false;
 
-                       console.log(`Coin collected! Awarded: ${awardedCoins}`); // Add logging
+                  // Check for collision with character's bounding box *before* attraction
+                  if (!coin.isAttracted) {
+                      if (
+                          characterRight_px > coinX_px &&
+                          characterLeft_px < coinX_px + coinSize_px &&
+                          characterBottomFromTop_px > coinY_px && // Character bottom edge is below coin top edge
+                          characterTopFromTop_px < coinY_px + coinSize_px // Character top edge is above coin bottom edge
+                      ) {
+                          shouldBeAttracted = true; // Mark coin to be attracted
+                      }
+                  }
 
 
-                       // --- NEW: Trigger Coin Collection Effect ---
-                       // Calculate position for the effect relative to the character container
-                       const characterContainer = gameRef.current?.querySelector('.character-container'); // Get character container element
-                       if (characterContainer) {
-                           const charRect = characterContainer.getBoundingClientRect();
-                           const gameRect = gameContainer.getBoundingClientRect();
-                           // Position the effect slightly above the character's container
-                           setCoinEffectPosition({
-                               top: charRect.top - gameRect.top - 40, // 40px above character container top
-                               left: charRect.left - gameRect.left + charRect.width / 2 // Center horizontally above character
-                           });
-                           setIsCoinEffectActive(true); // Show the effect
+                  if (coin.isAttracted || shouldBeAttracted) {
+                      // If attracted or should be attracted, move towards character center
+                      const dx = characterCenterX_px - coinX_px;
+                      const dy = characterCenterY_px - coinY_px;
+                      const distance = Math.sqrt(dx * dx + dy * dy);
 
-                           // Clear any existing timer before starting a new one
-                           if (coinEffectTimerRef.current) {
-                               clearTimeout(coinEffectTimerRef.current);
+                      // Calculate movement step towards the character
+                      const moveStep = distance * coin.attractSpeed;
+
+                      // Avoid division by zero if distance is 0
+                      const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
+                      const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
+
+                      // Update coin position in pixels
+                      const newCoinX_px = coinX_px + moveX_px;
+                      const newCoinY_px = coinY_px + moveY_px;
+
+                      // Convert updated pixel position back to percentage
+                      newX = (newCoinX_px / gameWidth) * 100;
+                      newY = (newCoinY_px / gameHeight) * 100;
+
+                       // Check for collection (close proximity to character center)
+                       if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) { // Collision when centers are close
+                           collisionDetected = true;
+                           // Grant random coins (1-5)
+                           const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                           startCoinCountAnimation(awardedCoins);
+
+                           console.log(`Coin collected! Awarded: ${awardedCoins}`);
+
+
+                           // --- Trigger Coin Collection Effect ---
+                           const characterContainer = gameRef.current?.querySelector('.character-container');
+                           if (characterContainer) {
+                               const charRect = characterContainer.getBoundingClientRect();
+                               const gameRect = gameContainer.getBoundingClientRect();
+                               setCoinEffectPosition({
+                                   top: charRect.top - gameRect.top - 40,
+                                   left: charRect.left - gameRect.left + charRect.width / 2
+                               });
+                               setIsCoinEffectActive(true);
+
+                               if (coinEffectTimerRef.current) {
+                                   clearTimeout(coinEffectTimerRef.current);
+                               }
+                               coinEffectTimerRef.current = setTimeout(() => {
+                                   setIsCoinEffectActive(false);
+                               }, 800);
                            }
-                           // Hide the effect after a short duration
-                           coinEffectTimerRef.current = setTimeout(() => {
-                               setIsCoinEffectActive(false);
-                           }, 800); // Effect duration (e.g., 800ms)
+                           // --- END Trigger Coin Collection Effect ---
                        }
-                       // --- END NEW: Trigger Coin Collection Effect ---
-                   }
+
+                  } else {
+                      // If not attracted, move based on initial random speeds
+                      newX = coin.x - coin.initialSpeedX; // Move left
+                      newY = coin.y + coin.initialSpeedY; // Move down
+                  }
 
 
                   return {
                       ...coin,
                       x: newX,
                       y: newY,
-                      collided: collisionDetected // Mark for removal if collided
+                      isAttracted: coin.isAttracted || shouldBeAttracted, // Set isAttracted if collision detected
+                      collided: collisionDetected // Mark for removal if collected
                   };
               })
               .filter(coin => {
-                  // Remove coin if it collided or moved off-screen (left or bottom)
-                  // Keep coins that are moving towards the character, even if they go slightly off-screen initially
+                  // Remove coin if it was collected or moved far off-screen (left or bottom)
                   const isOffScreen = coin.x < -20 || coin.y > 120; // Use larger buffer for off-screen check
-                  return !coin.collided && !isOffScreen; // Keep coin if not collided and not off-screen
+                  return !coin.collided && !isOffScreen; // Keep coin if not collected and not off-screen
               });
       });
 
