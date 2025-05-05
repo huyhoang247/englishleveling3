@@ -1428,8 +1428,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
               {/* Thay đổi gradient từ xanh lá sang xám cho vỉa hè */}
+              {/* Changed from-green-900 to from-gray-700 and to-green-700 to to-gray-600 */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-700 to-gray-600">
                   {/* Các chi tiết trên mặt đất - thay đổi màu sang xám đậm hơn */}
+                  {/* Changed bg-green-800 to bg-gray-800 and bg-gray-700 */}
                   <div className="w-full h-1 bg-gray-800 absolute top-0"></div>
                   <div className="w-3 h-3 bg-gray-700 rounded-full absolute top-6 left-20"></div>
                   <div className="w-4 h-2 bg-gray-700 rounded-full absolute top-10 left-40"></div>
