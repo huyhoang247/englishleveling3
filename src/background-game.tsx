@@ -279,6 +279,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // NEW: Ref for the main game loop interval
   const gameLoopIntervalRef = useRef(null);
 
+  // NEW: Ref to store the timestamp when shield cooldown started
+  const shieldCooldownStartTimeRef = useRef(null);
+
 
   // Obstacle types with properties (added base health)
   // REMOVED: The 'rock' obstacle type
@@ -370,6 +373,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
     setIsShieldOnCooldown(false); // Reset cooldown state
     setRemainingCooldown(0); // Reset remaining cooldown display
+    shieldCooldownStartTimeRef.current = null; // Reset cooldown start time
 
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
@@ -659,26 +663,23 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsShieldOnCooldown(true);
     setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000); // Initialize remaining cooldown for display
 
-    // Clear any existing cooldown timer before setting a new one
+    // Store the start time of the cooldown
+    shieldCooldownStartTimeRef.current = Date.now();
+
+    // Clear any existing main cooldown timer before setting a new one
     if (shieldCooldownTimerRef.current) {
         clearTimeout(shieldCooldownTimerRef.current);
     }
+    // Set the main cooldown timer
     shieldCooldownTimerRef.current = setTimeout(() => {
         console.log("Shield cooldown ended.");
-        // isShieldOnCooldown will be set to false here, allowing the button to be re-enabled
-        // ONLY IF isShieldActive is also false (meaning shield health is 0)
-        setIsShieldOnCooldown(false); // End cooldown state
-        setRemainingCooldown(0); // Reset remaining cooldown display
+        setIsShieldOnCooldown(false);
+        setRemainingCooldown(0);
+        shieldCooldownStartTimeRef.current = null; // Clear start time
     }, SHIELD_COOLDOWN_TIME);
 
-    // Start cooldown countdown display timer
-    // Clear any existing countdown timer before setting a new one
-     if (cooldownCountdownTimerRef.current) {
-        clearInterval(cooldownCountdownTimerRef.current);
-    }
-    cooldownCountdownTimerRef.current = setInterval(() => {
-        setRemainingCooldown(prev => Math.max(0, prev - 1)); // Decrement every second
-    }, 1000);
+    // Start cooldown countdown display timer - This will be managed by a separate effect now
+    // The useEffect below will handle starting the countdown when isShieldOnCooldown becomes true
   };
 
 
@@ -692,7 +693,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null; // Reset the ref
         }
-        // Also clear particle timer when paused
+         // Also clear particle timer when paused
         if (particleTimerRef.current) {
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
@@ -1050,6 +1051,49 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       };
   }, [gameStarted, gameOver, isStatsFullscreen]); // Dependencies include game state and fullscreen state
 
+  // NEW Effect to manage shield cooldown countdown display timer
+  useEffect(() => {
+      let countdownInterval = null;
+
+      // Start countdown if shield is on cooldown and game is not over and not fullscreen
+      if (isShieldOnCooldown && !gameOver && !isStatsFullscreen) {
+          // Calculate remaining time based on start time
+          const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
+          const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+          const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000);
+          setRemainingCooldown(initialRemainingSeconds);
+
+          // Start the countdown interval
+          countdownInterval = setInterval(() => {
+              setRemainingCooldown(prev => {
+                  const newRemaining = Math.max(0, prev - 1);
+                  // The main shieldCooldownTimerRef will handle setting isShieldOnCooldown to false
+                  // when the full duration is complete. This countdown is just for display.
+                  if (newRemaining === 0) {
+                      clearInterval(countdownInterval);
+                      cooldownCountdownTimerRef.current = null; // Clear ref
+                  }
+                  return newRemaining;
+              });
+          }, 1000);
+          cooldownCountdownTimerRef.current = countdownInterval; // Store interval ID
+      } else {
+          // Clear the interval if game is over, not on cooldown, or is fullscreen
+          if (cooldownCountdownTimerRef.current) {
+              clearInterval(cooldownCountdownTimerRef.current);
+              cooldownCountdownTimerRef.current = null; // Clear ref
+          }
+      }
+
+      // Cleanup function to clear the interval
+      return () => {
+          if (countdownInterval) {
+              clearInterval(countdownInterval);
+          }
+      };
+
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen]); // Dependencies include shield cooldown state, game over, and fullscreen state
+
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
@@ -1252,27 +1296,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           top: `${cloud.y}%`, // Vertical position (relative to top of game container)
           left: `${cloud.x}%` // Horizontal position
         }}
-      >
-        {/* Additional cloud shapes for variation */}
-        <div
-          className="absolute bg-white rounded-full"
-          style={{
-            width: `${cloud.size * 0.7}px`,
-            height: `${cloud.size * 0.7}px`,
-            top: `-${cloud.size * 0.1}px`,
-            left: `${cloud.size * 0.1}px`
-          }}
-        ></div>
-        <div
-          className="absolute bg-white rounded-full"
-          style={{
-            width: `${cloud.size * 0.8}px`,
-            height: `${cloud.size * 0.8}px`,
-            top: `-${cloud.size * 0.15}px`,
-            left: `${cloud.size * 0.3}px`
-          }}
-        ></div>
-      </div>
+      ></div>
     ));
   };
 
