@@ -120,7 +120,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Updated obstacles state to use GameObstacle interface
   const [obstacles, setObstacles] = useState<GameObstacle[]>([]); // Array of active obstacles with health
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
-  const [runFrame, setRunFrame] useState(0); // Current frame for run animation
+  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation // FIX: Corrected useState syntax
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
