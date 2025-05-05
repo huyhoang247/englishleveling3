@@ -18,7 +18,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></g>,
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
-    ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
+    ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></polyline></g>,
     X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
@@ -571,15 +571,21 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     // Added z-50 for layering and bg-white p-4 overflow-auto for styling
     <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
 
-      {/* Close Button - NEW */}
+      {/* Close Button - NEW ICON AND POSITION */}
       {/* Positioned absolutely within the full-screen container */}
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+          // MODIFIED: Changed right-4 to left-4 for positioning
+          className="absolute top-4 left-4 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-600 transition-colors z-10"
           aria-label="Đóng cửa sổ chỉ số"
         >
-          <Icon name="X" size={20} />
+          {/* MODIFIED: Replaced Icon component with img tag */}
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/return.png"
+            alt="Return Icon"
+            className="w-full h-full object-contain p-1" // Added padding to fit icon nicely
+          />
         </button>
       )}
 
@@ -758,15 +764,20 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         {/* Footer Section - FIXED BOTTOM */}
         {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
         <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          <div className="flex justify-between items-center">
-            {/* Character ID */}
-            {/* Removed: <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span> */}
+          {/* MODIFIED: Added flex justify-end to push content to the right */}
+          <div className="flex justify-end items-center">
+            {/* Character ID - REMOVED */}
+            {/* <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span> */}
 
-            {/* NEW: Render the new ResetStatsControl component */}
-            <ResetStatsControl
-               currentStats={character.stats} // Truyền chỉ số hiện tại
-               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
-            />
+            {/* NEW: Render the new ResetStatsControl component - WRAPPED IN DIV WITH ml-auto */}
+            {/* MODIFIED: Wrapped in a div with ml-auto to push it to the right */}
+            <div className="ml-auto">
+              <ResetStatsControl
+                 currentStats={character.stats} // Truyền chỉ số hiện tại
+                 onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
+              />
+            </div>
+
 
           </div>
         </div>
