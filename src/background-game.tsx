@@ -580,7 +580,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     } else if (!gameOver) { // isStatsFullscreen and showCard checked at the start
       jump(); // Jump if game is active and not paused
     } else if (gameOver) {
-      startGame(); // Restart the game if game is over
+      // The restart logic is now handled by the "Hồi Sinh" button
+      // startGame(); // Restart the game if game is over
     }
     // If showCard is true, taps on the game area are ignored
   };
@@ -1493,7 +1494,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               <div className="relative mr-0.5"> {/* Reduced margin-right */}
                 <div className="w-3 h-3 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center"> {/* Reduced size */}
                   <div className="absolute top-0 left-0 w-0.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute bottom-0 right-0 w-1 h-1 bg-purple-800/50 rounded-br-lg"></div>
+                  <div className="absolute bottom-0 right-0 bg-purple-800/50 rounded-br-lg w-1 h-1"></div> {/* Adjusted size */}
                 </div>
                 <div className="absolute top-1 left-0.5 w-0.5 h-0.5 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
               </div>
@@ -1532,13 +1533,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Game over screen (shown when game is over) */}
         {gameOver && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40"> {/* Increased z-index */}
-            <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+            <h2 className="text-3xl font-bold mb-4 text-red-500 drop-shadow-lg">Game Over</h2> {/* Increased bottom margin, added drop shadow */}
             <button
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
+              className="px-8 py-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 font-bold text-white text-lg transform transition hover:scale-105 shadow-xl shadow-green-500/30 mb-2" // Changed gradient, increased padding, font size, added shadow, increased bottom margin
               onClick={startGame} // Restart game on click
             >
-              Chơi Lại
+              Hồi Sinh {/* Changed text to Hồi Sinh */}
             </button>
+            {/* Added text for resurrection cost */}
+            <p className="text-amber-300 text-sm font-semibold drop-shadow-md flex items-center"> {/* Styled text, added flex and items-center for icon */}
+                Cần <span className="mx-1 font-bold text-amber-100">100</span> {/* Added spacing and bolding for number */}
+                 {/* Coin Icon */}
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-amber-400 mr-0.5"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-2.5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2H16l-2 3"></path><path d="M8 16h2.5a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H8l2-3"></path></svg> {/* Added coin SVG icon */}
+                 vàng
+            </p>
           </div>
         )}
 
@@ -1897,4 +1905,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
