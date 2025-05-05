@@ -562,7 +562,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             {/* MODIFIED: Adjusted colors for dark mode */}
             <button
               onClick={() => setShowExchangeModal(false)}
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-600 text-gray-300 font-medium text-sm hover:bg-gray-700 transition-colors"
+              className="flex-1 px-3 py-2 rounded-lg bg-gray-600 text-gray-300 text-xs font-medium hover:bg-gray-500 transition-colors"
             >
               Hủy
             </button>
@@ -783,10 +783,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             {onClose && (
               <button
                 onClick={onClose}
-                // ADDED glassmorphism and shadow classes
+                // MODIFIED: Changed background to black with 20% opacity and adjusted border color
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-colors p-1
-                           backdrop-filter backdrop-blur-lg bg-white bg-opacity-10
-                           border border-white border-opacity-20 shadow-lg hover:bg-opacity-20" // Adjusted size (w-10 h-10) and hover effect
+                           backdrop-filter backdrop-blur-lg bg-black bg-opacity-20
+                           border border-gray-700 border-opacity-50 shadow-lg hover:bg-opacity-30" // Adjusted background, border, and hover effect
                 aria-label="Quay lại" // Updated aria-label
                 title="Quay lại" // Added tooltip
               >
