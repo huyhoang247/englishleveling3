@@ -581,7 +581,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         }
          // Also clear particle timer when paused
         if (particleTimerRef.current) {
-            clearInterval(particleTimerRef.current);
+            clearInterval(particleTimerTimerRef.current);
             particleTimerRef.current = null;
         }
         return; // Exit the effect if game should not be running
@@ -872,7 +872,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null; // Reset the ref
         }
-         // Also clear particle timer when paused
+         // Also clear particle timer on cleanup
         if (particleTimerRef.current) {
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
@@ -894,11 +894,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-           // Also clear particle timer when paused
-           if (particleTimerRef.current) {
-               clearInterval(particleTimerRef.current);
-               particleTimerRef.current = null;
-           }
       } else if (gameStarted && !gameOver && !isStatsFullscreen) {
           // Start/restart timers if game is active and not fullscreen, and timers are not already running
           if (!obstacleTimerRef.current) {
@@ -1427,17 +1422,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Ground */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Thay đổi gradient từ xanh lá sang xám cho vỉa hè */}
-              {/* Changed from-green-900 to from-gray-700 and to-green-700 to to-gray-600 */}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-700 to-gray-600">
-                  {/* Các chi tiết trên mặt đất - thay đổi màu sang xám đậm hơn */}
-                  {/* Changed bg-green-800 to bg-gray-800 and bg-gray-700 */}
+              {/* Changed ground gradient to gray for sidewalk color */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-700 to-gray-500">
+                  {/* Ground details (small elements on the ground) - Changed colors to gray shades */}
                   <div className="w-full h-1 bg-gray-800 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-gray-700 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-gray-700 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-gray-700 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-gray-700 rounded-full absolute top-12 right-32"></div>
-                  {/* Bạn cũng có thể thêm các đường kẻ hoặc chi tiết khác cho giống vỉa hè */}
+                  <div className="w-3 h-3 bg-gray-800 rounded-full absolute top-6 left-20"></div>
+                  <div className="w-4 h-2 bg-gray-800 rounded-full absolute top-10 left-40"></div>
+                  <div className="w-6 h-3 bg-gray-800 rounded-full absolute top-8 right-10"></div>
+                  <div className="w-3 h-1 bg-gray-800 rounded-full absolute top-12 right-32"></div>
               </div>
           </div>
 
@@ -1621,11 +1613,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                           )}
                       </div>
                   ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
+                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
                       {item.icon}
-                      {item.label && (
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      )}
+                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
                     </div>
                   )}
                 </div>
