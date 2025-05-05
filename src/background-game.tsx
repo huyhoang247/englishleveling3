@@ -1387,6 +1387,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           0% { transform: translate(-50%, 0); opacity: 1; }
           100% { transform: translate(-50%, -20px); opacity: 0; }
         }
+
+        /* NEW: Sidewalk animation */
+        @keyframes sidewalk-scroll {
+            0% { background-position-x: 0; }
+            100% { background-position-x: -100%; } /* Scroll left by 100% of the image width */
+        }
+
+        .animate-sidewalk-scroll {
+            animation: sidewalk-scroll 10s linear infinite; /* Adjust duration for speed */
+        }
+
       `}</style>
        <style jsx global>{`
         body {
@@ -1424,7 +1435,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Road Layer */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT (bottom of road) */}
           <div className="absolute bottom-0 w-full" style={{ height: `${ROAD_HEIGHT_PERCENT}%`, bottom: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Changed road gradient to light gray */}
+              {/* Road gradient (light gray) */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-600 to-gray-400">
                   {/* Road markings (example: dashed white lines) */}
                   <div className="absolute inset-y-0 left-0 w-full flex justify-around items-center">
@@ -1436,18 +1447,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               </div>
           </div>
 
-          {/* Sidewalk Layer */}
+          {/* Sidewalk Layer with Texture */}
           {/* Positioned below the road layer */}
-          <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Changed ground gradient to light green for sidewalk color */}
-              <div className="absolute inset-0 bg-gradient-to-t from-green-500 to-green-300">
-                  {/* Ground details (small elements on the ground) - Changed colors to gray shades */}
-                  <div className="w-full h-1 bg-gray-800 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-gray-800 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-gray-800 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-gray-800 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-gray-800 rounded-full absolute top-12 right-32"></div>
-              </div>
+          <div
+              className="absolute bottom-0 w-full animate-sidewalk-scroll" // Apply animation class
+              style={{
+                  height: `${GROUND_LEVEL_PERCENT}%`,
+                  backgroundImage: `url(https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cartoon-stone-texture_1110-576.jpg)`, // Use the image URL
+                  backgroundSize: 'auto 100%', // Fit height, maintain aspect ratio
+                  backgroundRepeat: 'repeat-x', // Repeat horizontally
+                  backgroundPositionX: '0', // Initial position
+              }}
+          >
+              {/* Ground details (small elements on the ground) - REMOVED as texture is used */}
+              {/* You can add small elements on top of the texture if needed */}
           </div>
 
 
