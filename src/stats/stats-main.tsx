@@ -746,8 +746,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         {/* Footer Section - FIXED BOTTOM */}
         {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
         <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          {/* MODIFIED: Added flex items-center space-x-4 to align items and add space */}
-          <div className="flex items-center space-x-4">
+          {/* MODIFIED: Changed flex items-center space-x-4 to flex justify-between items-center */}
+          <div className="flex justify-between items-center">
             {/* Return Button - MOVED AND STYLED */}
             {onClose && (
               <button
