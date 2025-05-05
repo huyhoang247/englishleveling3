@@ -179,20 +179,6 @@ interface ObstacleRunnerGameProps {
   className?: string;
 }
 
-// Define interface for Black Fire projectile - REMOVED
-// interface BlackFireProjectile {
-//   id: number;
-//   startX: number;
-//   startY: number;
-//   targetX: number;
-//   targetY: number;
-//   currentX: number;
-//   currentY: number;
-//   speed: number; // This will now represent a factor, not a fixed pixel step
-//   damage: number; // Damage the projectile deals
-//   targetObstacleId: number | null; // ID of the obstacle being targeted
-// }
-
 // Define interface for Obstacle with health
 interface GameObstacle {
   id: number;
@@ -236,22 +222,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
-  // REMOVED: showCharacterDamageEffect state
-  // const [showCharacterDamageEffect, setShowCharacterDamageEffect] = useState(false); // State to trigger character damage effect
 
   // State for Health Bar visual display (integrated from original HealthBar)
   const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
-  // --- REMOVED: Black Fire Skill States ---
-  // const INITIAL_BLACK_FIRE_COUNT = 25;
-  // const [blackFireCount, setBlackFireCount] = useState(INITIAL_BLACK_FIRE_COUNT); // Number of Black Fire uses
-  // const [activeBlackFires, setActiveBlackFires] = useState<BlackFireProjectile[]>([]); // Array of active Black Fire projectiles
-  // const BLACK_FIRE_DAMAGE = 150; // Damage dealt by Black Fire
-
   // --- NEW: Shield Skill States ---
   const SHIELD_MAX_HEALTH = 2000; // Base health for the shield - Tăng lên 2000 theo yêu cầu người dùng
-  const SHIELD_DURATION = 5000; // Shield active duration in ms (e.g., 5 seconds)
+  // REMOVED: SHIELD_DURATION = 5000; // Shield active duration in ms (e.g., 5 seconds)
   const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active
   const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
@@ -281,8 +259,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(3);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
-  // REMOVED: showStatsModal state
-  // const [showStatsModal, setShowStatsModal] = useState(false); // State for stats modal visibility
 
   // NEW: State for full-screen stats visibility
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
@@ -296,19 +272,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
   const runAnimationRef = useRef(null); // Timer for character run animation
   const particleTimerRef = useRef(null); // Timer for generating particles
-  // REMOVED: blackFireTimerRef
-  // const blackFireTimerRef = useRef(null); // Timer for moving Black Fire projectiles
   // NEW: Shield timers
   const shieldCooldownTimerRef = useRef(null); // Timer for shield cooldown
-  const shieldActiveTimerRef = useRef(null); // Timer for shield active duration
+  // REMOVED: shieldActiveTimerRef = useRef(null); // Timer for shield active duration
   const cooldownCountdownTimerRef = useRef(null); // Timer for cooldown countdown display
 
 
-  // Character animation frames (simple representation of leg movement) - No longer needed for Lottie
-  // const runFrames = [0, 1, 2, 1]; // Different leg positions for animation
-
   // Obstacle types with properties (added base health)
-  // REMOVED: cactus obstacle type
   const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
     // Reduced size for rock, added baseHealth
     { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
@@ -394,10 +364,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Reset obstacles, adding initial health
     setObstacles([]);
     setParticles([]);
-    // REMOVED: Reset active Black Fires
-    // setActiveBlackFires([]); // Reset active Black Fires
-    // REMOVED: Reset Black Fire count
-    // setBlackFireCount(INITIAL_BLACK_FIRE_COUNT); // Reset Black Fire count
     // NEW: Reset Shield states
     setIsShieldActive(false);
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
@@ -407,10 +373,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
-    // REMOVED: setShowCharacterDamageEffect(false); // Reset character damage effect state
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
-    // REMOVED: setShowStatsModal(false); // Ensure stats modal is closed on game start/restart
     setIsStatsFullscreen(false); // NEW: Ensure full-screen stats is closed
     setIsCoinEffectActive(false); // NEW: Reset coin effect state
     setCoins(357); // Reset coin count to initial value
@@ -445,9 +409,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Generate initial clouds (a fixed, small number)
     generateInitialClouds(5); // Generate 5 clouds initially
 
-    // Start the character run animation - No longer needed for Lottie autoplay
-    // startRunAnimation();
-
     // Generate dust particles periodically
     particleTimerRef.current = setInterval(generateParticles, 300);
 
@@ -472,10 +433,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
-      // REMOVED: clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
       // NEW: Clear Shield timers
       clearTimeout(shieldCooldownTimerRef.current);
-      clearTimeout(shieldActiveTimerRef.current);
+      // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer
       clearInterval(cooldownCountdownTimerRef.current);
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
@@ -520,15 +480,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Add new particles to the existing array
     setParticles(prev => [...prev, ...newParticles]);
   };
-
-  // Start the character run animation loop - No longer needed for Lottie autoplay
-  // const startRunAnimation = () => {
-  //   if (runAnimationRef.current) clearInterval(runAnimationRef.current); // Clear any existing animation timer
-
-  //   runAnimationRef.current = setInterval(() => {
-  //     setRunFrame(prev => (prev + 1) % runFrames.length); // Cycle through run frames
-  //   }, 150); // Update frame every 150ms
-  // };
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
@@ -640,11 +591,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Trigger character damage effect and floating number
   const triggerCharacterDamageEffect = (amount) => {
-      // REMOVED: setShowCharacterDamageEffect(true); // Removed setting this state
       setDamageAmount(amount); // Set the damage amount for display
       setShowDamageNumber(true); // Show the damage number
 
-      // REMOVED: setShowCharacterDamageEffect(false); // Removed setting this state
       setTimeout(() => {
           setShowDamageNumber(false); // Hide damage number
       }, 800); // Hide damage number after animation
@@ -664,12 +613,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsShieldActive(true);
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to max
 
-    // Set shield active duration timer
-    shieldActiveTimerRef.current = setTimeout(() => {
-        console.log("Shield duration ended.");
-        setIsShieldActive(false); // Deactivate shield after duration
-        setShieldHealth(0); // Set shield health to 0
-    }, SHIELD_DURATION);
+    // REMOVED: Set shield active duration timer
+    // shieldActiveTimerRef.current = setTimeout(() => {
+    //     console.log("Shield duration ended.");
+    //     setIsShieldActive(false); // Deactivate shield after duration
+    //     setShieldHealth(0); // Set shield health to 0
+    // }, SHIELD_DURATION);
 
     // Set shield cooldown timer
     setIsShieldOnCooldown(true);
@@ -688,91 +637,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
 
-  // --- REMOVED: Effect to move Black Fire projectiles ---
-  // useEffect(() => {
-  //   // Don't run if game is not started, over, or stats are in fullscreen
-  //   if (!gameStarted || gameOver || isStatsFullscreen) return;
-
-  //   const moveProjectiles = () => {
-  //       setActiveBlackFires(prevFires => {
-  //           const gameContainer = gameRef.current;
-  //           if (!gameContainer) {
-  //                console.error("Game container ref is not available during projectile movement."); // Log error
-  //                return prevFires;
-  //           }
-
-  //           const gameHeight = gameContainer.offsetHeight;
-
-  //           return prevFires
-  //               .map(fire => {
-  //                   // Calculate direction vector
-  //                   const dx = fire.targetX - fire.currentX;
-  //                   const dy = fire.targetY - fire.currentY;
-  //                   const distance = Math.sqrt(dx * dx + dy * dy);
-
-  //                   // Calculate movement step based on a fraction of the remaining distance
-  //                   // This creates a smoother deceleration effect as it approaches the target
-  //                   const moveStep = distance * fire.speed;
-
-  //                   // Avoid division by zero if distance is 0
-  //                   const moveX = distance === 0 ? 0 : (dx / distance) * moveStep;
-  //                   const moveY = distance === 0 ? 0 : (dy / distance) * moveStep;
-
-
-  //                   // Update position
-  //                   const newX = fire.currentX + moveX;
-  //                   newY = fire.currentY + moveY;
-
-  //                   // Check for collision with target obstacle or if it passed the target
-  //                   let hitTarget = false;
-  //                   // Check if the projectile is close enough to the target
-  //                   if (distance < 10) { // MODIFIED: Check if distance is less than a small threshold (e.g., 10 pixels)
-  //                       hitTarget = true;
-  //                   }
-
-  //                   return {
-  //                       ...fire,
-  //                       currentX: newX,
-  //                       currentY: newY,
-  //                       hitTarget: hitTarget // Add a flag to mark for removal and damage application
-  //                   };
-  //               })
-  //               .filter(fire => {
-  //                   // Remove projectile if it hit the target or went off-screen (below ground)
-  //                   const isOffScreen = fire.currentY > gameHeight + 50; // Check if below the bottom of the game container + buffer
-
-  //                   if (fire.hitTarget) {
-  //                       console.log("Black Fire hit target obstacle:", fire.targetObstacleId); // Log hit
-  //                       // Find the targeted obstacle and apply damage
-  //                       setObstacles(prevObstacles =>
-  //                           prevObstacles.map(obstacle => {
-  //                               if (obstacle.id === fire.targetObstacleId) {
-  //                                   const newHealth = Math.max(0, obstacle.health - fire.damage);
-  //                                   console.log(`Obstacle ${obstacle.id} health: ${obstacle.health} -> ${newHealth}`); // Log health change
-  //                                   // Trigger damage effect on the obstacle? (More complex, maybe later)
-  //                                   // For now, just update health and remove if dead
-  //                                   return { ...obstacle, health: newHealth };
-  //                               }
-  //                               return obstacle;
-  //                           }).filter(obstacle => obstacle.health > 0) // Remove obstacle if health is 0 or less
-  //                       );
-  //                       return false; // Remove the projectile
-  //                   }
-
-  //                   return !isOffScreen; // Keep projectile if not off-screen
-  //               });
-  //       });
-  //   };
-
-  //   // Set up the interval for moving projectiles
-  //   blackFireTimerRef.current = setInterval(moveProjectiles, 30); // MODIFIED: Reduced interval to 30ms for smoother animation
-
-  //   // Cleanup function to clear the interval
-  //   return () => clearInterval(blackFireTimerRef.current);
-
-  // }, [gameStarted, gameOver, isStatsFullscreen, obstacles]); // Add obstacles to dependency array
-
-
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   useEffect(() => {
     // Don't run movement if game is not started, over, or stats are in fullscreen
@@ -780,7 +644,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Game speed is now constant as score is removed
     const speed = 0.5; // Base speed for obstacles and particles
-    // Removed damagePerCollision here, will use damage from obstacleTypes
 
     const moveInterval = setInterval(() => {
       // Move obstacles and handle endless loop effect
@@ -844,10 +707,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   const damageToShield = obstacle.damage;
                   setShieldHealth(prev => {
                       const newShieldHealth = Math.max(0, prev - damageToShield);
+                      // Shield breaks if health is 0 or less
                       if (newShieldHealth <= 0) {
                           console.log("Shield broken!");
                           setIsShieldActive(false); // Deactivate shield if health is 0 or less
-                          clearTimeout(shieldActiveTimerRef.current); // Clear the active timer
+                          // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer (no longer used)
                       }
                       return newShieldHealth;
                   });
@@ -893,7 +757,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           })
           .filter(obstacle => {
             // Keep obstacles that haven't collided and are still visible or will loop back
-            // Also filter out obstacles that have 0 or less health (killed by Black Fire) - REMOVED Black Fire logic
             // Now also filter out obstacles that have the 'collided' flag set
             return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
           });
@@ -1081,10 +944,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
-      // REMOVED: clearInterval(blackFireTimerRef.current); // Clear Black Fire timer
       // NEW: Clear Shield timers
       clearTimeout(shieldCooldownTimerRef.current);
-      clearTimeout(shieldActiveTimerRef.current);
+      // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer
       clearInterval(cooldownCountdownTimerRef.current);
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
@@ -1161,12 +1023,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           autoplay
           className="w-full h-full" // Make Lottie fill its container
         />
-
-        {/* REMOVED: Damage Effect on Character (Visual pulse/shake) */}
-        {/* Apply damage effect as an overlay on the Lottie container */}
-        {/* {showCharacterDamageEffect && (
-            <div className="absolute inset-0 bg-red-500 opacity-30 rounded-full animate-pulse-fast"></div>
-        )} */}
       </div>
     );
   };
@@ -1191,18 +1047,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         );
         break;
-      // Removed cactus case
-      // case 'cactus':
-      //   obstacleEl = (
-      //     <div className="relative">
-      //       {/* Cactus main body - Adjusted size */}
-      //       <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-b ${obstacle.color} rounded-lg`}></div>
-      //       {/* Cactus arms - Adjusted size and position */}
-      //       <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -left-2 top-2 transform -rotate-45`}></div>
-      //       <div className={`w-3 h-5 bg-gradient-to-b ${obstacle.color} rounded-lg absolute -right-2 top-3 transform rotate-45`}></div>
-      //     </div>
-      //   );
-      //   break;
       // Case for Lottie Obstacle Type 1
       case 'lottie-obstacle-1':
         obstacleEl = (
@@ -1332,29 +1176,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-  // --- REMOVED: Render Black Fire projectiles ---
-  // const renderBlackFires = () => {
-  //   return activeBlackFires.map(fire => (
-  //     <div
-  //       key={fire.id} // Unique key
-  //       className="absolute w-12 h-12" // Container size for Lottie
-  //       style={{
-  //         top: `${fire.currentY}px`, // Position based on current Y
-  //         left: `${fire.currentX}px`, // Position based on current X
-  //         transform: 'translate(-50%, -50%)', // Center the Lottie container
-  //         pointerEvents: 'none' // Ensure clicks pass through
-  //       }}
-  //     >
-  //       <DotLottieReact
-  //         src="https://lottie.host/af898c1a-d385-4e8f-82c2-5fa9afd0a187/SKboS7lHdj.lottie" // Black Fire Lottie URL
-  //         loop // Loop the animation (optional, depends on Lottie)
-  //         autoplay // Autoplay the animation
-  //         className="w-full h-full" // Make Lottie fill its container
-  //       />
-  //     </div>
-  //   ));
-  // };
-
   // --- NEW: Render Shield ---
   const renderShield = () => {
     // Only render if shield is active
@@ -1464,13 +1285,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
   };
 
-  // REMOVED: Function to toggle stats modal
-  // const toggleStatsModal = () => {
-  //   // Prevent opening if game over or card is shown
-  //   if (gameOver || showCard) return;
-  //   setShowStatsModal(!showStatsModal);
-  // };
-
   // NEW: Function to toggle full-screen stats
   const toggleStatsFullscreen = () => {
     // Prevent opening if game over or card is shown
@@ -1501,8 +1315,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         @keyframes chest-shake { 0% { transform: translateX(0) rotate(0deg); } 10% { transform: translateX(-4px) rotate(-3deg); } 20% { transform: translateX(4px) rotate(3deg); } 30% { transform: translateX(-4px) rotate(-3deg); } 40% { transform: translateX(4px) rotate(3deg); } 50% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(2deg); } }
         @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } }
         @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
-        // REMOVED: pulse-fast keyframe
-        // @keyframes pulse-fast { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.2); } }
         @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -1514,8 +1326,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         .animate-chest-shake { animation: chest-shake 0.6s ease-in-out; }
         .animate-twinkle { animation: twinkle 5s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
-        // REMOVED: animate-pulse-fast class
-        // .animate-pulse-fast { animation: pulse-fast 1s ease-in-out infinite; }
         .animate-pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
         .animate-bounce-subtle { animation: bounce-subtle 1.5s ease-in-out infinite; }
         .animate-spin-slow { animation: spin-slow 10s linear infinite; }
@@ -1548,7 +1358,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
       {/* Main Game Container */}
-      {/* Removed border classes */}
       <div
         ref={gameRef} // Assign ref
         // Apply the passed className prop here
@@ -1606,9 +1415,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* Obstacles */}
         {obstacles.map(obstacle => renderObstacle(obstacle))}
-
-        {/* --- REMOVED: Black Fire Projectiles --- */}
-        {/* {renderBlackFires()} */}
 
         {/* --- NEW: Coins --- */}
         {renderCoins()}
@@ -1834,7 +1640,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
            <div
             className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 relative ${isShieldOnCooldown || isShieldActive || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
             onClick={activateShield} // Call activateShield on click
-            title={isShieldActive ? "Khiên đang hoạt động" : isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` : "Kích hoạt Khiên chắn"}
+            title={isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` : isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` : "Kích hoạt Khiên chắn"} // Updated tooltip
             aria-label="Sử dụng Khiên chắn"
             role="button"
             tabIndex={!isShieldOnCooldown && !isShieldActive && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
@@ -2003,6 +1809,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                         <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                         <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
+                        <div className="flex mt-3">
+                          {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
+                            <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
@@ -2062,25 +1873,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           </div>
         </div>
       )}
-
-      {/* REMOVED: Stats Modal structure */}
-      {/* {showStatsModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-              <div className="relative max-w-lg w-full">
-                  <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-                      <CharacterCard />
-                  </ErrorBoundary>
-                  <button
-                      onClick={toggleStatsModal}
-                      className="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-[51]"
-                      aria-label="Đóng cửa sổ chỉ số"
-                  >
-                      <XIcon size={20} />
-                  </button>
-              </div>
-          </div>
-      )} */}
-
     </div>
   );
 }
+
