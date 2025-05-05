@@ -571,23 +571,6 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     // Added z-50 for layering and bg-white p-4 overflow-auto for styling
     <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
 
-      {/* Close Button - NEW */}
-      {/* Positioned absolutely within the full-screen container */}
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10 p-1" // Added p-1 for padding around the image
-          aria-label="Đóng cửa sổ chỉ số"
-        >
-          {/* Replaced Icon name="X" with img tag */}
-          <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/return.png"
-            alt="Return icon" // Added alt text for accessibility
-            className="w-full h-full object-contain" // Ensure image fits and maintains aspect ratio
-          />
-        </button>
-      )}
-
       {/* Container to limit the width of the content within the fullscreen view */}
       {/* MODIFIED: Added flex flex-col h-full to enable flex layout for fixed header/footer */}
       {/* Removed absolute positioning and full size from this inner container */}
@@ -763,9 +746,23 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         {/* Footer Section - FIXED BOTTOM */}
         {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
         <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          <div className="flex justify-between items-center">
-            {/* Character ID */}
-            {/* Removed: <span className="text-xs text-gray-500 font-medium">ID: #LEGEND-{Math.floor(Math.random() * 10000)}</span> */}
+          {/* MODIFIED: Added flex items-center space-x-4 to align items and add space */}
+          <div className="flex items-center space-x-4">
+            {/* Return Button - MOVED AND STYLED */}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors p-1" // Adjusted size and padding
+                aria-label="Quay lại" // Updated aria-label
+                title="Quay lại" // Added tooltip
+              >
+                <img
+                  src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/return.png"
+                  alt="Return icon" // Added alt text for accessibility
+                  className="w-full h-full object-contain" // Ensure image fits and maintains aspect ratio
+                />
+              </button>
+            )}
 
             {/* NEW: Render the new ResetStatsControl component */}
             <ResetStatsControl
