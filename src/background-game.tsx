@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, Component } from 'react';
 // Import the CharacterCard component
 // Ensure the path is correct relative to this file
 // Assuming stats-main.tsx is in a 'stats' subfolder and exports a default component
-import CharacterCard from './stats/stats-main'; // Updated import path
+import CharacterCard from './stats/stats-main.tsx'; // Updated import path
 
 // Import DotLottieReact component
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
