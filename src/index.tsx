@@ -4,6 +4,7 @@ import Home from './background-game.tsx'; // Assuming home.tsx is now Home compo
 import NavigationBarBottom from './navigation-bar-bottom.tsx'; // Import NavigationBarBottom component
 import Profile from './profile.tsx'; 
 import Story from './VerticalFlashcardGallery.tsx'; 
+import Quiz from './stats/reset-point.tsx'; 
 
 // Define the possible tab types
 type TabType = 'home' | 'profile' | 'story';
@@ -23,6 +24,7 @@ const App: React.FC = () => {
       {activeTab === 'home' && <Home />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story />}
+      {activeTab === 'quiz' && <Quiz />}
       
 
       {/* Render the bottom navigation bar */}
