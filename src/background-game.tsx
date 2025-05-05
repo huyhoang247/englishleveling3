@@ -1220,16 +1220,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* --- NEW: Obstacle Health Bar --- */}
         {/* Position the health bar above the obstacle */}
-        {/* Only show health bar if health is less than max health */}
-        {obstacle.health < obstacle.maxHealth && (
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
-                {/* Inner health bar */}
-                <div
-                    className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
-                    style={{ width: `${obstacleHealthPct * 100}%` }}
-                ></div>
-            </div>
-        )}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+            {/* Inner health bar */}
+            <div
+                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                style={{ width: `${obstacleHealthPct * 100}%` }}
+            ></div>
+        </div>
       </div>
     );
   };
@@ -1425,20 +1422,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Ground */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-green-900 to-green-700">
+              {/* Changed ground gradient to brown */}
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-900 to-amber-700">
                   {/* Ground details (small elements on the ground) */}
-                  <div className="w-full h-1 bg-green-800 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-green-800 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-green-800 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-green-800 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-green-800 rounded-full absolute top-12 right-32"></div>
-
-                  {/* --- NEW: The Path --- */}
-                  {/* Positioned slightly above the ground, centered horizontally */}
-                  <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-b from-gray-600 to-gray-700 rounded-t-lg">
-                       {/* Path details (optional) */}
-                       <div className="absolute inset-0 border-t-2 border-dashed border-gray-500 opacity-50"></div>
-                  </div>
+                  {/* Changed ground detail colors to brown */}
+                  <div className="w-full h-1 bg-amber-800 absolute top-0"></div>
+                  <div className="w-3 h-3 bg-amber-800 rounded-full absolute top-6 left-20"></div>
+                  <div className="w-4 h-2 bg-amber-800 rounded-full absolute top-10 left-40"></div>
+                  <div className="w-6 h-3 bg-amber-800 rounded-full absolute top-8 right-10"></div>
+                  <div className="w-3 h-1 bg-amber-800 rounded-full absolute top-12 right-32"></div>
               </div>
           </div>
 
