@@ -366,7 +366,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsShieldActive(false);
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
     setIsShieldOnCooldown(false); // Reset cooldown state
-    setRemainingCooldown(0); // Reset cooldown display
+    setRemainingCooldown(0); // Reset remaining cooldown display
 
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
@@ -554,6 +554,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Handle character jump action
   const jump = () => {
     // Check if not already jumping, game is started, not over, AND card popup/stats fullscreen is not shown
+    // ADDED check for isStatsFullscreen
     if (!jumping && !gameOver && gameStarted && !showCard && !isStatsFullscreen) { // Check isStatsFullscreen
       setJumping(true); // Set jumping state to true
       setCharacterPos(80); // Move character up (jump height relative to ground)
@@ -573,6 +574,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
     // Ignore taps if stats are in fullscreen or card is shown
+    // ADDED check for isStatsFullscreen
     if (isStatsFullscreen || showCard) return;
 
     if (!gameStarted) {
@@ -608,6 +610,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const activateShield = () => {
     // Check if game is active, not over, AND shield is NOT active AND NOT on cooldown, and not showing card/stats
     // Nút chỉ hoạt động khi shield không active VÀ không trong thời gian cooldown VÀ game đang chạy, chưa over, không popup/stats
+    // ADDED check for isStatsFullscreen
     if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || showCard || isStatsFullscreen) {
       console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldActive, isShieldOnCooldown, showCard, isStatsFullscreen });
       return;
@@ -649,6 +652,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   useEffect(() => {
     // Don't run movement if game is not started, over, or stats are in fullscreen
+    // ADDED check for isStatsFullscreen
     if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     // Game speed is now constant as score is removed
@@ -901,7 +905,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                            // --- Trigger Coin Collection Effect near Chest ---
                            // Clear any existing chest coin effect timer
                            if (chestCoinEffectTimerRef.current) {
-                               clearTimeout(chestCoinEffectTimerRef.current);
+                               clearTimeout(chestCoinEffectTimerRefRef.current);
                            }
                            // Activate the chest coin effect
                            setIsChestCoinEffectActive(true);
@@ -1257,6 +1261,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Function to open the chest
   const openChest = () => {
     // Prevent opening chest if stats are in fullscreen, already open, or no chests left
+    // ADDED check for isStatsFullscreen
     if (isChestOpen || chestsRemaining <= 0 || isStatsFullscreen) return;
     setChestShake(true);
     setTimeout(() => {
@@ -1414,119 +1419,122 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Header section - Positioned on top of the game */}
         {/* Moved inside the game container */}
         {/* Changed background to black with opacity */}
-        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
-          {/* Health Bar and Icon */}
-          <div className="flex items-center">
-              {/* ICON TRÒN - Round Icon */}
-              {/* Added onClick handler and cursor-pointer */}
-              <div
-                className="relative mr-2 cursor-pointer"
-                // MODIFIED: Call toggleStatsFullscreen instead of toggleStatsModal
-                onClick={toggleStatsFullscreen}
-                title="Xem chỉ số nhân vật" // Tooltip
-              >
-                  <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform"> {/* Reduced size, added hover effect */}
-                      {/* Overlay for subtle effect */}
-                      <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
-                      {/* Inner icon elements */}
-                      <div className="relative z-10 flex items-center justify-center">
-                          <div className="flex items-end">
-                              <div className="w-1 h-2 bg-white rounded-sm mr-0.5" /> {/* Reduced size */}
-                              <div className="w-1 h-3 bg-white rounded-sm mr-0.5" /> {/* Reduced size */}
-                              <div className="w-1 h-1.5 bg-white rounded-sm" /> {/* Reduced size */}
-                          </div>
-                      </div>
-                      {/* Highlight effect */}
-                      <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" />
-                  </div>
-              </div>
-
-              {/* THANH MÁU - Health Bar */}
-              <div className="w-32 relative"> {/* Reduced width */}
-                  <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner"> {/* Reduced height */}
-                      {/* Inner bar animated with scaleX */}
-                      <div className="h-full overflow-hidden">
-                          <div
-                              className={`${getColor()} h-full transform origin-left`}
-                              style={{
-                                  transform: `scaleX(${healthPct})`, // Scale the bar based on health percentage
-                                  transition: 'transform 0.5s ease-out', // Smooth transition for health changes
-                              }}
-                          >
-                              {/* Inner highlight */}
-                              <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                          </div>
-                      </div>
-
-                      {/* Fixed full-width light overlay (keeping this pulse effect for visual flair) */}
-                      <div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                          style={{ animation: 'pulse 3s infinite' }} // Apply pulse animation
-                      />
-
-                      {/* Health text display */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                              {Math.round(health)}/{MAX_HEALTH} {/* Display current/max health */}
-                          </span>
-                      </div>
-                  </div>
-
-                  {/* Floating damage number */}
-                  <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none"> {/* Adjusted top and height */}
-                      {showDamageNumber && ( // Only show if showDamageNumber is true
-                          <div
-                              className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs" // Reduced text size
-                              style={{ animation: 'floatUp 0.8s ease-out forwards' }} // Apply float up animation
-                          >
-                              -{damageAmount} {/* Display the damage amount */}
-                          </div>
-                      )}
-                  </div>
-              </div>
-          </div>
-          {/* Currency display */}
-          <div className="flex items-center space-x-1 currency-display-container relative"> {/* Reduced space-x */}
-            {/* Gems Container */}
-            <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-              <div className="relative mr-0.5"> {/* Reduced margin-right */}
-                <div className="w-3 h-3 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center"> {/* Reduced size */}
-                  <div className="absolute top-0 left-0 w-0.5 h-0.5 bg-white/50 rounded-sm"></div>
-                  <div className="absolute bottom-0 right-0 w-1 h-1 bg-purple-800/50 rounded-br-lg"></div>
+        {/* HIDE Header when stats are in fullscreen */}
+        {!isStatsFullscreen && (
+          <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30"> {/* Increased z-index, reduced padding, added opacity */}
+            {/* Health Bar and Icon */}
+            <div className="flex items-center">
+                {/* ICON TRÒN - Round Icon */}
+                {/* Added onClick handler and cursor-pointer */}
+                <div
+                  className="relative mr-2 cursor-pointer"
+                  // MODIFIED: Call toggleStatsFullscreen instead of toggleStatsModal
+                  onClick={toggleStatsFullscreen}
+                  title="Xem chỉ số nhân vật" // Tooltip
+                >
+                    <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform"> {/* Reduced size, added hover effect */}
+                        {/* Overlay for subtle effect */}
+                        <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
+                        {/* Inner icon elements */}
+                        <div className="relative z-10 flex items-center justify-center">
+                            <div className="flex items-end">
+                                <div className="w-1 h-2 bg-white rounded-sm mr-0.5" /> {/* Reduced size */}
+                                <div className="w-1 h-3 bg-white rounded-sm mr-0.5" /> {/* Reduced size */}
+                                <div className="w-1 h-1.5 bg-white rounded-sm" /> {/* Reduced size */}
+                            </div>
+                        </div>
+                        {/* Highlight effect */}
+                        <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" />
+                    </div>
                 </div>
-                <div className="absolute top-1 left-0.5 w-0.5 h-0.5 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
-              </div>
-              <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div> {/* Text size remains xs */}
-               {/* Plus button for Gems - Functionality can be added later */}
-              <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
-                <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
-              </div>
-              <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-              <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-            </div>
-            {/* Coins Container */}
-            <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-              <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
-                <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
-                  <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
-                  <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
+
+                {/* THANH MÁU - Health Bar */}
+                <div className="w-32 relative"> {/* Reduced width */}
+                    <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner"> {/* Reduced height */}
+                        {/* Inner bar animated with scaleX */}
+                        <div className="h-full overflow-hidden">
+                            <div
+                                className={`${getColor()} h-full transform origin-left`}
+                                style={{
+                                    transform: `scaleX(${healthPct})`, // Scale the bar based on health percentage
+                                    transition: 'transform 0.5s ease-out', // Smooth transition for health changes
+                                }}
+                            >
+                                {/* Inner highlight */}
+                                <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                            </div>
+                        </div>
+
+                        {/* Fixed full-width light overlay (keeping this pulse effect for visual flair) */}
+                        <div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
+                            style={{ animation: 'pulse 3s infinite' }} // Apply pulse animation
+                        />
+
+                        {/* Health text display */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                                {Math.round(health)}/{MAX_HEALTH} {/* Display current/max health */}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Floating damage number */}
+                    <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none"> {/* Adjusted top and height */}
+                        {showDamageNumber && ( // Only show if showDamageNumber is true
+                            <div
+                                className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs" // Reduced text size
+                                style={{ animation: 'floatUp 0.8s ease-out forwards' }} // Apply float up animation
+                            >
+                                -{damageAmount} {/* Display the damage amount */}
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
+            </div>
+            {/* Currency display */}
+            <div className="flex items-center space-x-1 currency-display-container relative"> {/* Reduced space-x */}
+              {/* Gems Container */}
+              <div className="bg-gradient-to-br from-purple-500 to-purple-800 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                <div className="relative mr-0.5"> {/* Reduced margin-right */}
+                  <div className="w-3 h-3 bg-gradient-to-br from-purple-300 to-purple-600 transform rotate-45 border-2 border-purple-700 shadow-md relative z-10 flex items-center justify-center"> {/* Reduced size */}
+                    <div className="absolute top-0 left-0 w-0.5 h-0.5 bg-white/50 rounded-sm"></div>
+                    <div className="absolute bottom-0 right-0 w-1 h-1 bg-purple-800/50 rounded-br-lg"></div>
+                  </div>
+                  <div className="absolute top-1 left-0.5 w-0.5 h-0.5 bg-purple-200/80 rotate-45 animate-pulse-fast z-20"></div>
+                </div>
+                <div className="font-bold text-purple-100 text-xs tracking-wide">{gems}</div> {/* Text size remains xs */}
+                 {/* Plus button for Gems - Functionality can be added later */}
+                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+                  <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+                </div>
+                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
               </div>
-              <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
-                {displayedCoins.toLocaleString()}
+              {/* Coins Container */}
+              <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
+                  <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
+                    <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
+                    <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
+                  </div>
+                  <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
+                </div>
+                <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
+                  {displayedCoins.toLocaleString()}
+                </div>
+                {/* Plus button for Coins - Functionality can be added later */}
+                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+                  <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+                </div>
+                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
               </div>
-              {/* Plus button for Coins - Functionality can be added later */}
-              <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
-                <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
-              </div>
-              <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-              <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
             </div>
           </div>
-        </div>
+        )}
 
 
         {/* Game over screen (shown when game is over) */}
@@ -1543,12 +1551,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         )}
 
         {/* NEW: Full-screen Stats Display */}
+        {/* Conditionally render CharacterCard when isStatsFullscreen is true */}
         {isStatsFullscreen && (
             // Use absolute inset-0 to cover the whole game container
-            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 backdrop-blur-sm p-4">
+            // REMOVED p-4 padding here to allow CharacterCard to be truly full screen
+            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 backdrop-blur-sm">
                 {/* Wrap CharacterCard in ErrorBoundary */}
                 <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
                     {/* Pass a prop to CharacterCard to handle closing */}
+                    {/* NOTE: Ensure that the CharacterCard component itself (in stats-main.tsx) */}
+                    {/* does NOT have fixed widths, max-widths, or excessive padding/margins */}
+                    {/* that prevent it from expanding to fill its parent container (this div). */}
                     <CharacterCard onClose={toggleStatsFullscreen} />
                 </ErrorBoundary>
             </div>
@@ -1628,6 +1641,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* --- NEW: Shield Skill UI Element --- */}
            <div
             // Nút bị vô hiệu hóa nếu game chưa bắt đầu, đã kết thúc, khiên đang active, hoặc đang trong thời gian cooldown, hoặc đang hiển thị popup/stats
+            // ADDED check for isStatsFullscreen
             className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || showCard || isStatsFullscreen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`}
             onClick={activateShield} // Call activateShield on click
             title={
@@ -1733,6 +1747,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           <div
             className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
             // Disable click if stats are in fullscreen, already open, or no chests left
+            // ADDED check for isStatsFullscreen
             onClick={!isChestOpen && chestsRemaining > 0 && !isStatsFullscreen ? openChest : null}
             aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
             role="button"
