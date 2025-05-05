@@ -229,31 +229,32 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // --- NEW: Shield Skill States ---
   const SHIELD_MAX_HEALTH = 2000; // Base health for the shield
-  const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
+  // MODIFIED: Increased cooldown time for testing pause/resume
+  const SHIELD_COOLDOWN_TIME_SECONDS = 20; // Shield cooldown time in seconds (20 seconds)
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active (có máu và đang hiển thị)
   const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
-  const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
+  const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 20s đang chạy)
   const [remainingCooldown, setRemainingCooldown] = useState(0); // Remaining cooldown time in seconds
 
   // --- NEW: Coin States ---
   const [coins, setCoins] = useState(357); // Player's coin count
   const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
-  const coinScheduleTimerRef = useRef(null); // Timer for scheduling new coins
-  const coinCountAnimationTimerRef = useRef(null); // Timer for coin count animation
+  const coinScheduleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new coins
+  const coinCountAnimationTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for coin count animation
 
 
   // --- NEW: Coin Effect States ---
   // NEW: State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
   // NEW: Timer for chest coin effect
-  const chestCoinEffectTimerRef = useRef(null);
+  const chestCoinEffectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
   // UI States
   const [isChestOpen, setIsChestOpen] = useState(false);
-  const [showCard, setShowCard] = useState(null); // Changed to null to store card object directly
-  const [currentCard, setCurrentCard] = useState(null);
+  const [showCard, setShowCard] = useState<any>(null); // Changed to null to store card object directly
+  const [currentCard, setCurrentCard] = useState<any>(null);
   const [gems, setGems] = useState(42);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
@@ -268,19 +269,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const GROUND_LEVEL_PERCENT = 45;
 
   // Refs for timers to manage intervals and timeouts
-  const gameRef = useRef(null); // Ref for the main game container div
-  const obstacleTimerRef = useRef(null); // Timer for scheduling new obstacles
-  const runAnimationRef = useRef(null); // Timer for character run animation
-  const particleTimerRef = useRef(null); // Timer for generating particles
-  // NEW: Shield timers
-  const shieldCooldownTimerRef = useRef(null); // Timer for shield cooldown (200s)
-  const cooldownCountdownTimerRef = useRef(null); // Timer for cooldown countdown display
+  const gameRef = useRef<HTMLDivElement>(null); // Ref for the main game container div
+  const obstacleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new obstacles
+  const runAnimationRef = useRef<NodeJS.Timeout | null>(null); // Timer for character run animation
+  const particleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for generating particles
+
+  // MODIFIED: Removed shieldCooldownTimerRef and shieldCooldownStartTimeRef
+  // const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for shield cooldown (200s)
+  const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for cooldown countdown display
 
   // NEW: Ref for the main game loop interval
-  const gameLoopIntervalRef = useRef(null);
+  const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // NEW: Ref to store the timestamp when shield cooldown started
-  const shieldCooldownStartTimeRef = useRef(null);
+  // MODIFIED: Removed ref to store the timestamp when shield cooldown started
+  // const shieldCooldownStartTimeRef = useRef<number | null>(null);
 
 
   // Obstacle types with properties (added base health)
@@ -317,7 +319,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   ];
 
   // Helper function to get rarity color
-  const getRarityColor = (rarity) => {
+  const getRarityColor = (rarity: string) => {
     switch(rarity) {
       case "common": return "text-gray-200";
       case "rare": return "text-blue-400";
@@ -328,7 +330,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
   // Coin count animation function
-  const startCoinCountAnimation = (reward) => {
+  const startCoinCountAnimation = (reward: number) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
@@ -373,7 +375,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
     setIsShieldOnCooldown(false); // Reset cooldown state
     setRemainingCooldown(0); // Reset remaining cooldown display
-    shieldCooldownStartTimeRef.current = null; // Reset cooldown start time
+    // MODIFIED: Removed shieldCooldownStartTimeRef reset
+    // shieldCooldownStartTimeRef.current = null; // Reset cooldown start time
 
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
@@ -452,8 +455,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
-      // NEW: Clear Shield timers
-      clearTimeout(shieldCooldownTimerRef.current);
+      // MODIFIED: Clear Shield timers - Removed shieldCooldownTimerRef
+      // clearTimeout(shieldCooldownTimerRef.current);
       clearInterval(cooldownCountdownTimerRef.current);
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
@@ -468,7 +471,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   }, [health, gameStarted]);
 
   // Generate initial cloud elements (called only once at game start)
-  const generateInitialClouds = (count) => {
+  const generateInitialClouds = (count: number) => {
     const newClouds = [];
     for (let i = 0; i < count; i++) {
       newClouds.push({
@@ -635,7 +638,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
   // Trigger character damage effect and floating number
-  const triggerCharacterDamageEffect = (amount) => {
+  const triggerCharacterDamageEffect = (amount: number) => {
       setDamageAmount(amount); // Set the damage amount for display
       setShowDamageNumber(true); // Show the damage number
 
@@ -659,27 +662,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsShieldActive(true);
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to max
 
-    // Start cooldown timer immediately
+    // MODIFIED: Set cooldown state and remaining time, but DO NOT start a full setTimeout here
     setIsShieldOnCooldown(true);
-    setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000); // Initialize remaining cooldown for display
+    setRemainingCooldown(SHIELD_COOLDOWN_TIME_SECONDS); // Initialize remaining cooldown for display in seconds
 
-    // Store the start time of the cooldown
-    shieldCooldownStartTimeRef.current = Date.now();
-
-    // Clear any existing main cooldown timer before setting a new one
-    if (shieldCooldownTimerRef.current) {
-        clearTimeout(shieldCooldownTimerRef.current);
-    }
-    // Set the main cooldown timer
-    shieldCooldownTimerRef.current = setTimeout(() => {
-        console.log("Shield cooldown ended.");
-        setIsShieldOnCooldown(false);
-        setRemainingCooldown(0);
-        shieldCooldownStartTimeRef.current = null; // Clear start time
-    }, SHIELD_COOLDOWN_TIME);
-
-    // Start cooldown countdown display timer - This will be managed by a separate effect now
-    // The useEffect below will handle starting the countdown when isShieldOnCooldown becomes true
+    // The useEffect below will handle starting the countdown interval
   };
 
 
@@ -1051,41 +1038,49 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       };
   }, [gameStarted, gameOver, isStatsFullscreen]); // Dependencies include game state and fullscreen state
 
-  // NEW Effect to manage shield cooldown countdown display timer
+  // MODIFIED Effect to manage shield cooldown countdown display timer and actual cooldown
   useEffect(() => {
-      let countdownInterval = null;
+      let countdownInterval: NodeJS.Timeout | null = null;
 
       // Start countdown if shield is on cooldown and game is not over and not fullscreen
       if (isShieldOnCooldown && !gameOver && !isStatsFullscreen) {
-          // Calculate remaining time based on start time
-          const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
-          const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-          const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000);
-          setRemainingCooldown(initialRemainingSeconds);
-
-          // Start the countdown interval
-          countdownInterval = setInterval(() => {
-              setRemainingCooldown(prev => {
-                  const newRemaining = Math.max(0, prev - 1);
-                  // The main shieldCooldownTimerRef will handle setting isShieldOnCooldown to false
-                  // when the full duration is complete. This countdown is just for display.
-                  if (newRemaining === 0) {
-                      clearInterval(countdownInterval);
-                      cooldownCountdownTimerRef.current = null; // Clear ref
-                  }
-                  return newRemaining;
-              });
-          }, 1000);
-          cooldownCountdownTimerRef.current = countdownInterval; // Store interval ID
+          // Only start the interval if it's not already running
+          if (!cooldownCountdownTimerRef.current) {
+              console.log("Starting shield cooldown countdown.");
+              countdownInterval = setInterval(() => {
+                  setRemainingCooldown(prev => {
+                      const newRemaining = Math.max(0, prev - 1);
+                      if (newRemaining <= 0) {
+                          console.log("Shield cooldown finished.");
+                          // Clear the interval when countdown finishes
+                          if (cooldownCountdownTimerRef.current) {
+                              clearInterval(cooldownCountdownTimerRef.current);
+                              cooldownCountdownTimerRef.current = null; // Clear ref
+                          }
+                          // Set states to indicate cooldown is over and shield is inactive
+                          setIsShieldOnCooldown(false);
+                          setIsShieldActive(false); // Deactivate shield when cooldown ends
+                          return 0; // Ensure remaining is 0
+                      }
+                      return newRemaining; // Return decremented value
+                  });
+              }, 1000); // Update every 1 second
+              cooldownCountdownTimerRef.current = countdownInterval; // Store interval ID
+          }
       } else {
           // Clear the interval if game is over, not on cooldown, or is fullscreen
           if (cooldownCountdownTimerRef.current) {
+              console.log("Pausing/Stopping shield cooldown countdown.");
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null; // Clear ref
           }
+          // If cooldown is active but paused (by fullscreen/game over),
+          // the remainingCooldown state will hold the paused value.
+          // When !isStatsFullscreen becomes true again (and game is not over),
+          // the interval will restart from the current remainingCooldown value.
       }
 
-      // Cleanup function to clear the interval
+      // Cleanup function to clear the interval when dependencies change or component unmounts
       return () => {
           if (countdownInterval) {
               clearInterval(countdownInterval);
@@ -1101,8 +1096,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
       clearInterval(particleTimerRef.current);
-      // NEW: Clear Shield timers
-      clearTimeout(shieldCooldownTimerRef.current);
+      // MODIFIED: Clear Shield timers - Removed shieldCooldownTimerRef
+      // clearTimeout(shieldCooldownTimerRef.current);
       clearInterval(cooldownCountdownTimerRef.current);
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
