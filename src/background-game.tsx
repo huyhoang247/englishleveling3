@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 // Import the CharacterCard component
-import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in the same directory
+import CharacterCard from './VerticalFlashcardGallery.tsx'; // Assuming stats.tsx is in the same directory
 
 // Import DotLottieReact component
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
