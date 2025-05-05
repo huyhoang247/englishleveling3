@@ -894,6 +894,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
+           // Also clear particle timer when paused
+           if (particleTimerRef.current) {
+               clearInterval(particleTimerRef.current);
+               particleTimerRef.current = null;
+           }
       } else if (gameStarted && !gameOver && !isStatsFullscreen) {
           // Start/restart timers if game is active and not fullscreen, and timers are not already running
           if (!obstacleTimerRef.current) {
@@ -1422,15 +1427,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Ground */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Changed ground gradient to brown */}
-              <div className="absolute inset-0 bg-gradient-to-t from-amber-900 to-amber-700">
-                  {/* Ground details (small elements on the ground) */}
-                  {/* Changed ground detail colors to brown */}
-                  <div className="w-full h-1 bg-amber-800 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-amber-800 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-amber-800 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-amber-800 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-amber-800 rounded-full absolute top-12 right-32"></div>
+              {/* Thay đổi gradient từ xanh lá sang xám cho vỉa hè */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-700 to-gray-600">
+                  {/* Các chi tiết trên mặt đất - thay đổi màu sang xám đậm hơn */}
+                  <div className="w-full h-1 bg-gray-800 absolute top-0"></div>
+                  <div className="w-3 h-3 bg-gray-700 rounded-full absolute top-6 left-20"></div>
+                  <div className="w-4 h-2 bg-gray-700 rounded-full absolute top-10 left-40"></div>
+                  <div className="w-6 h-3 bg-gray-700 rounded-full absolute top-8 right-10"></div>
+                  <div className="w-3 h-1 bg-gray-700 rounded-full absolute top-12 right-32"></div>
+                  {/* Bạn cũng có thể thêm các đường kẻ hoặc chi tiết khác cho giống vỉa hè */}
               </div>
           </div>
 
