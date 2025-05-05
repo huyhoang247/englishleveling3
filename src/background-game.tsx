@@ -244,9 +244,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
   // --- NEW: Coin Effect States ---
-  const [isCoinEffectActive, setIsCoinEffectActive] = useState(false); // State to show coin effect
-  const [coinEffectPosition, setCoinEffectPosition] = useState({ top: 0, left: 0 }); // Position for the coin effect Lottie
-  const coinEffectTimerRef = useRef(null); // Timer to hide the coin effect
+  // REMOVED: isCoinEffectActive and coinEffectPosition states for character effect
+  // NEW: State for chest coin effect
+  const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
+  // REMOVED: coinEffectTimerRef for character effect
+  // NEW: Timer for chest coin effect
+  const chestCoinEffectTimerRef = useRef(null);
 
 
   // UI States
@@ -373,7 +376,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
     setIsStatsFullscreen(false); // NEW: Ensure full-screen stats is closed
-    setIsCoinEffectActive(false); // NEW: Reset coin effect state
+    // REMOVED: setIsCoinEffectActive(false); // Reset character coin effect state
+    setIsChestCoinEffectActive(false); // NEW: Reset chest coin effect state
     setCoins(357); // Reset coin count to initial value
     setDisplayedCoins(357); // Reset displayed coin count
 
@@ -440,7 +444,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
-      clearTimeout(coinEffectTimerRef.current); // Clear coin effect timer
+      // REMOVED: clearTimeout(coinEffectTimerRef.current); // Clear character coin effect timer
+      clearTimeout(chestCoinEffectTimerRef.current); // NEW: Clear chest coin effect timer
     };
   }, [health, gameStarted]);
 
@@ -897,25 +902,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                            console.log(`Coin collected! Awarded: ${awardedCoins}`);
 
 
-                           // --- Trigger Coin Collection Effect ---
-                           const characterContainer = gameRef.current?.querySelector('.character-container');
-                           if (characterContainer) {
-                               const charRect = characterContainer.getBoundingClientRect();
-                               const gameRect = gameContainer.getBoundingClientRect();
-                               setCoinEffectPosition({
-                                   top: charRect.top - gameRect.top - 40,
-                                   left: charRect.left - gameRect.left + charRect.width / 2
-                               });
-                               setIsCoinEffectActive(true);
-
-                               if (coinEffectTimerRef.current) {
-                                   clearTimeout(coinEffectTimerRef.current);
-                               }
-                               coinEffectTimerRef.current = setTimeout(() => {
-                                   setIsCoinEffectActive(false);
-                               }, 800);
+                           // --- Trigger Coin Collection Effect near Chest ---
+                           // Clear any existing chest coin effect timer
+                           if (chestCoinEffectTimerRef.current) {
+                               clearTimeout(chestCoinEffectTimerRef.current);
                            }
-                           // --- END Trigger Coin Collection Effect ---
+                           // Activate the chest coin effect
+                           setIsChestCoinEffectActive(true);
+                           // Set a timer to deactivate the chest coin effect after a duration
+                           chestCoinEffectTimerRef.current = setTimeout(() => {
+                               setIsChestCoinEffectActive(false);
+                           }, 800); // Effect duration
+                           // --- END Trigger Coin Collection Effect near Chest ---
                        }
 
                   } else {
@@ -962,7 +960,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
-      clearTimeout(coinEffectTimerRef.current); // Clear coin effect timer
+      // REMOVED: clearTimeout(coinEffectTimerRef.current); // Clear character coin effect timer
+      clearTimeout(chestCoinEffectTimerRef.current); // NEW: Clear chest coin effect timer
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
@@ -1408,8 +1407,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {renderShield()}
 
 
-        {/* --- NEW: Coin Collection Effect Lottie --- */}
-        {isCoinEffectActive && (
+        {/* REMOVED: Coin Collection Effect Lottie near Character */}
+        {/* {isCoinEffectActive && (
             <div
                 className="absolute w-16 h-16 pointer-events-none" // Adjust size as needed
                 style={{
@@ -1426,7 +1425,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     className="w-full h-full"
                 />
             </div>
-        )}
+        )} */}
+
 
         {/* Obstacles */}
         {obstacles.map(obstacle => renderObstacle(obstacle))}
@@ -1764,7 +1764,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             role="button"
             tabIndex={chestsRemaining > 0 ? 0 : -1}
           >
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
               {/* Chest main body */}
               <div className="flex flex-col items-center">
                 {/* Chest top part */}
@@ -1852,6 +1852,29 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 {/* Chest base */}
                 <div className="flex flex-col items-center relative -mt-1 z-0"></div>
               </div>
+
+              {/* --- NEW: Coin Collection Effect Lottie near Chest --- */}
+              {/* Position this absolutely relative to the chest container */}
+              {isChestCoinEffectActive && (
+                  <div
+                      className="absolute w-16 h-16 pointer-events-none z-50" // Adjust size and z-index as needed
+                      style={{
+                          // Position relative to the center-top of the chest container
+                          top: '-20px', // Adjust vertical position above the chest
+                          left: '50%', // Center horizontally
+                          transform: 'translate(-50%, -50%)', // Ensure perfect centering
+                      }}
+                  >
+                      <DotLottieReact
+                          src="https://lottie.host/07b8de00-e2ad-4d17-af12-9cbb13149269/vjmhfykbUL.lottie" // Lottie URL provided by user
+                          loop={false} // Play once
+                          autoplay
+                          className="w-full h-full"
+                      />
+                  </div>
+              )}
+
+
             </div>
 
             {/* Display remaining chests count */}
