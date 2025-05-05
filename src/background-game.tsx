@@ -164,7 +164,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded">
           <p>Có lỗi xảy ra khi hiển thị bảng chỉ số.</p>
           <p>Chi tiết lỗi: {this.state.error?.message}</p>
-          <p>(Kiểm tra Console để biết thêm thông tin)</p>
+          <p>(Kiểm tra Console để biết thêm thêm thông tin)</p>
         </div>
       );
     }
@@ -229,7 +229,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // --- NEW: Shield Skill States ---
   const SHIELD_MAX_HEALTH = 2000; // Base health for the shield
-  const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds) - Đặt lại 200s theo yêu cầu người dùng
+  const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active (có máu và đang hiển thị)
   const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
@@ -277,9 +277,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
   // Obstacle types with properties (added base health)
+  // REMOVED: The 'rock' obstacle type
   const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
-    // Reduced size for rock, added baseHealth
-    { type: 'rock', height: 8, width: 8, color: 'from-gray-700 to-gray-500', baseHealth: 200, damage: 50 }, // Added damage
     // Lottie Obstacle Type 1 (from previous request)
     {
       type: 'lottie-obstacle-1', // Renamed type for clarity
@@ -381,26 +380,30 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Generate initial obstacles to populate the screen at the start
     const initialObstacles: GameObstacle[] = [];
     // First obstacle placed a bit further to give the player time to react
-    const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-    initialObstacles.push({
-      id: Date.now(), // Unique ID for React key
-      position: 120, // Position off-screen to the right
-      ...firstObstacleType, // Include obstacle properties
-      health: firstObstacleType.baseHealth, // Initialize health
-      maxHealth: firstObstacleType.baseHealth // Set max health
-    });
+    // Ensure obstacleTypes is not empty before trying to access elements
+    if (obstacleTypes.length > 0) {
+        const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+        initialObstacles.push({
+          id: Date.now(), // Unique ID for React key
+          position: 120, // Position off-screen to the right
+          ...firstObstacleType, // Include obstacle properties
+          health: firstObstacleType.baseHealth, // Initialize health
+          maxHealth: firstObstacleType.baseHealth // Set max health
+        });
 
-    // Add a few more obstacles with increasing distance
-    for (let i = 1; i < 5; i++) {
-      const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-      initialObstacles.push({
-        id: Date.now() + i,
-        position: 150 + (i * 50),
-        ...obstacleType, // Include obstacle properties
-        health: obstacleType.baseHealth, // Initialize health
-        maxHealth: obstacleType.baseHealth // Set max health
-      });
+        // Add a few more obstacles with increasing distance
+        for (let i = 1; i < 5; i++) {
+          const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+          initialObstacles.push({
+            id: Date.now() + i,
+            position: 150 + (i * 50),
+            ...obstacleType, // Include obstacle properties
+            health: obstacleType.baseHealth, // Initialize health
+            maxHealth: obstacleType.baseHealth // Set max health
+          });
+        }
     }
+
 
     setObstacles(initialObstacles);
 
@@ -490,20 +493,24 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
       const newObstacles: GameObstacle[] = []; // Specify type
 
-      for (let i = 0; i < obstacleCount; i++) {
-        // Ensure we only pick from the remaining obstacle types
-        const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-        // Add spacing between grouped obstacles
-        const spacing = i * (Math.random() * 10 + 10);
+      // Ensure obstacleTypes is not empty before trying to generate obstacles
+      if (obstacleTypes.length > 0) {
+          for (let i = 0; i < obstacleCount; i++) {
+            // Ensure we only pick from the remaining obstacle types
+            const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            // Add spacing between grouped obstacles
+            const spacing = i * (Math.random() * 10 + 10);
 
-        newObstacles.push({
-          id: Date.now() + i, // Unique ID
-          position: 100 + spacing, // Position off-screen to the right with spacing
-          ...randomObstacleType, // Include obstacle properties
-          health: randomObstacleType.baseHealth, // Initialize health
-          maxHealth: randomObstacleType.baseHealth // Set max health
-        });
+            newObstacles.push({
+              id: Date.now() + i, // Unique ID
+              position: 100 + spacing, // Position off-screen to the right with spacing
+              ...randomObstacleType, // Include obstacle properties
+              health: randomObstacleType.baseHealth, // Initialize health
+              maxHealth: randomObstacleType.baseHealth // Set max health
+            });
+          }
       }
+
 
       // Add new obstacles to the existing array
       setObstacles(prev => [...prev, ...newObstacles]);
@@ -621,10 +628,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
     shieldCooldownTimerRef.current = setTimeout(() => {
         console.log("Shield cooldown ended.");
+        // isShieldOnCooldown will be set to false here, allowing the button to be re-enabled
+        // ONLY IF isShieldActive is also false (meaning shield health is 0)
         setIsShieldOnCooldown(false); // End cooldown state
         setRemainingCooldown(0); // Reset remaining cooldown display
-        // Nút sẽ được kích hoạt lại khi isShieldActive = false VÀ isShieldOnCooldown = false
-        // isShieldActive sẽ chỉ false khi máu khiên về 0
     }, SHIELD_COOLDOWN_TIME);
 
     // Start cooldown countdown display timer
@@ -731,6 +738,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             if (newPosition < -20 && !collisionDetected) { // Only reuse if off-screen AND no collision
               // 70% chance to reuse the obstacle and loop it back
               if (Math.random() < 0.7) {
+                // Ensure obstacleTypes is not empty before picking a random type
+                if (obstacleTypes.length === 0) return obstacle; // Keep the current obstacle if no types available
+
                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                 const randomOffset = Math.floor(Math.random() * 20);
 
@@ -1038,7 +1048,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
     switch(obstacle.type) {
-      case 'rock':
+      case 'rock': // Keep the case, but this type won't be generated anymore
         obstacleEl = (
           // Adjusted size for rock element
           <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br ${obstacle.color} rounded-lg`}>
