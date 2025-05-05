@@ -581,7 +581,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         }
          // Also clear particle timer when paused
         if (particleTimerRef.current) {
-            clearInterval(particleTimerTimerRef.current);
+            clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
         }
         return; // Exit the effect if game should not be running
