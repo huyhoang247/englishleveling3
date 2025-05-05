@@ -377,7 +377,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsShieldOnCooldown(false); // Reset cooldown state
     setRemainingCooldown(0); // Reset remaining cooldown display
     shieldCooldownStartTimeRef.current = null; // Reset cooldown start time
-    pausedShieldCooldownRemainingRef.current = null; // *** NEW: Reset paused cooldown time ***
+    pausedShieldCooldownRemainingRef.current = null; // *** NEW: Reset paused time on game over ***
 
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
@@ -623,11 +623,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     if (!gameStarted) {
       startGame(); // Start the game if not started
-    } else if (!gameOver) { // isStatsFullscreen and showCard checked at the start
-      jump(); // Jump if game is active and not paused
     } else if (gameOver) {
       startGame(); // Restart the game if game is over
     }
+    // The jump() call is removed from here.
     // If showCard is true, taps on the game area are ignored
   };
 
@@ -1094,7 +1093,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   setIsShieldOnCooldown(false);
                   setRemainingCooldown(0);
                   shieldCooldownStartTimeRef.current = null; // Clear start time
-                  pausedShieldCooldownRemainingRef.current = null; // Clear paused time
+                  pausedShieldCooldownRemainingRef.current = null; // *** NEW: Clear paused time on completion ***
               }, remainingTimeToResume); // Restart with remaining time
 
               // Update start time to reflect the pause (needed for display countdown)
@@ -2099,3 +2098,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
