@@ -872,7 +872,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null; // Reset the ref
         }
-         // Also clear particle timer on cleanup
+         // Also clear particle timer when paused
         if (particleTimerRef.current) {
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
