@@ -276,6 +276,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const shieldCooldownTimerRef = useRef(null); // Timer for shield cooldown (200s)
   const cooldownCountdownTimerRef = useRef(null); // Timer for cooldown countdown display
 
+  // NEW: Ref for the main game loop interval
+  const gameLoopIntervalRef = useRef(null);
+
 
   // Obstacle types with properties (added base health)
   // REMOVED: The 'rock' obstacle type
@@ -412,13 +415,23 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     generateInitialClouds(5); // Generate 5 clouds initially
 
     // Generate dust particles periodically
+    // This timer should only run when the game is active and not paused
+    if (particleTimerRef.current) clearInterval(particleTimerRef.current);
     particleTimerRef.current = setInterval(generateParticles, 300);
 
+
     // Schedule the first obstacle after the initial ones
+    // This timer should only run when the game is active and not paused
     scheduleNextObstacle();
 
     // NEW: Start coin generation
+    // This timer should only run when the game is active and not paused
     scheduleNextCoin();
+
+    // Start the main game loop interval
+    // This interval handles movement and collisions
+    // It will be controlled by the isStatsFullscreen state within the effect
+    // No need to clear/set it here, the useEffect handles it
   };
 
   // Auto-start the game as soon as component mounts
@@ -442,6 +455,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
       clearTimeout(chestCoinEffectTimerRef.current); // NEW: Clear chest coin effect timer
+
+      // NEW: Clear the main game loop interval on game over
+      if (gameLoopIntervalRef.current) {
+          clearInterval(gameLoopIntervalRef.current);
+      }
     };
   }, [health, gameStarted]);
 
@@ -471,7 +489,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         id: Date.now() + i, // Unique ID
         x: 5 + Math.random() * 5, // MODIFIED: Starting X position (near character, using 5%)
         y: 0, // Starting Y position (relative to ground level)
-        size: Math.random() * 4 + 2, // Size of the particle
         xVelocity: -Math.random() * 1 - 0.5, // Horizontal velocity (moving left)
         yVelocity: Math.random() * 2 - 1, // Vertical velocity (random up/down)
         opacity: 1, // Initial opacity
@@ -485,7 +502,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
     // Don't schedule if game is over or stats are in fullscreen
-    if (gameOver || isStatsFullscreen) return;
+    if (gameOver || isStatsFullscreen) {
+        // Clear the timer if scheduling is stopped
+        if (obstacleTimerRef.current) {
+            clearTimeout(obstacleTimerRef.current);
+            obstacleTimerRef.current = null; // Reset the ref
+        }
+        return;
+    }
 
     // Random time delay before the next obstacle appears (between 5 and 20 seconds)
     const randomTime = Math.floor(Math.random() * 15000) + 5000;
@@ -523,7 +547,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
     // Don't schedule if game is over or stats are in fullscreen
-    if (gameOver || isStatsFullscreen) return;
+    if (gameOver || isStatsFullscreen) {
+        // Clear the timer if scheduling is stopped
+        if (coinScheduleTimerRef.current) {
+            clearTimeout(coinScheduleTimerRef.current);
+            coinScheduleTimerRef.current = null; // Reset the ref
+        }
+        return;
+    }
 
     // Random time delay before the next coin appears (between 1 and 5 seconds)
     const randomTime = Math.floor(Math.random() * 4000) + 1000;
@@ -559,12 +590,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       setCharacterPos(80); // Move character up (jump height relative to ground)
       // Schedule landing after a delay
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen) { // Ensure game is still active and stats NOT fullscreen
+        // Ensure game is still active and stats NOT fullscreen before landing
+        if (gameStarted && !gameOver && !isStatsFullscreen) {
           setCharacterPos(0); // Move character back to ground
           // Schedule setting jumping state to false after a short delay
           setTimeout(() => {
             setJumping(false);
           }, 100);
+        } else {
+             // If game paused or over while jumping, ensure character lands when unpaused/restarted
+             setCharacterPos(0);
+             setJumping(false);
         }
       }, 600); // Jump duration
     }
@@ -647,301 +683,372 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
+  // This useEffect is the main game loop for movement and collision detection
   useEffect(() => {
     // Don't run movement if game is not started, over, or stats are in fullscreen
-    if (!gameStarted || gameOver || isStatsFullscreen) return;
+    if (!gameStarted || gameOver || isStatsFullscreen) {
+        // Clear the interval if the game is paused or stopped
+        if (gameLoopIntervalRef.current) {
+            clearInterval(gameLoopIntervalRef.current);
+            gameLoopIntervalRef.current = null; // Reset the ref
+        }
+        // Also clear particle timer when paused
+        if (particleTimerRef.current) {
+            clearInterval(particleTimerRef.current);
+            particleTimerRef.current = null;
+        }
+        return; // Exit the effect if game should not be running
+    }
 
-    // Game speed is now constant as score is removed
-    const speed = 0.5; // Base speed for obstacles and particles
+    // If game is active and not fullscreen, start/ensure the loop is running
+    if (!gameLoopIntervalRef.current) {
+        gameLoopIntervalRef.current = setInterval(() => {
+            // Game speed is now constant as score is removed
+            const speed = 0.5; // Base speed for obstacles and particles
 
-    const moveInterval = setInterval(() => {
-      // Move obstacles and handle endless loop effect
-      setObstacles(prevObstacles => {
-        const gameContainer = gameRef.current;
-        if (!gameContainer) return prevObstacles; // Return early if ref is not available
+            // Move obstacles and handle endless loop effect
+            setObstacles(prevObstacles => {
+                const gameContainer = gameRef.current;
+                if (!gameContainer) return prevObstacles; // Return early if ref is not available
 
-        const gameWidth = gameContainer.offsetWidth;
-        const gameHeight = gameContainer.offsetHeight;
+                const gameWidth = gameContainer.offsetWidth;
+                const gameHeight = gameContainer.offsetHeight;
 
-        // Define character's bounding box in pixels (approximate)
-        const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
-        const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
-        // MODIFIED: Adjusted characterXPercent to move character backward
-        const characterXPercent = 5; // Character's fixed X position (in %)
-        const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
+                // Define character's bounding box in pixels (approximate)
+                const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
+                const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
+                // MODIFIED: Adjusted characterXPercent to move character backward
+                const characterXPercent = 5; // Character's fixed X position (in %)
+                const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
 
-        // Character's vertical position relative to the top of the game container
-        // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
-        const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-        const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
-        const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
-        const characterLeft_px = characterX_px; // Character's left edge from left of game container
-        const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
+                // Character's vertical position relative to the top of the game container
+                // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
+                const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
+                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
+                const characterLeft_px = characterX_px; // Character's left edge from left of game container
+                const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
 
-        // Obstacle's vertical position relative to the top of the game container
-        // Obstacle is at GROUND_LEVEL_PERCENT from bottom
-        const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-
-
-        return prevObstacles
-          .map(obstacle => {
-            // Speed is now consistent for all ground obstacles
-            let newPosition = obstacle.position - speed; // Move obstacle left
-
-            let collisionDetected = false;
-            // Obstacle position in pixels relative to the bottom-left of the game container
-            const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
-
-            // Calculate obstacle dimensions in pixels based on its type
-            let obstacleWidth_px, obstacleHeight_px;
-            // Assuming Tailwind h-unit and w-unit are roughly 4px per unit (e.g., h-8 is 32px)
-            obstacleWidth_px = (obstacle.width / 4) * 16;
-            obstacleHeight_px = (obstacle.height / 4) * 16;
-
-            // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
-            const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px; // Obstacle top edge from top of container
+                // Obstacle's vertical position relative to the top of the game container
+                // Obstacle is at GROUND_LEVEL_PERCENT from bottom
+                const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
 
 
-             // Check for collision using bounding boxes in pixels with tolerance
-            const collisionTolerance = 5; // Added tolerance for collision detection
-            if (
-              characterRight_px > obstacleX_px - collisionTolerance &&
-              characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
-              characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance && // Character bottom is below obstacle top
-              characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance // Character top is above obstacle bottom
-            ) {
-              collisionDetected = true;
-              // Handle damage based on shield status
-              if (isShieldActive) {
-                  setShieldHealth(prev => {
-                      const damageToShield = obstacle.damage;
-                      const newShieldHealth = Math.max(0, prev - damageToShield);
-                      // Shield becomes inactive if health is 0 or less
-                      if (newShieldHealth <= 0) {
-                          console.log("Shield health depleted.");
-                          setIsShieldActive(false); // Deactivate shield if health is 0 or less
-                          // Cooldown is already running from activation
-                      }
-                      return newShieldHealth;
-                  });
-                  // No damage to player if shield is active
-              } else {
-                  // Decrease player health if shield is not active
-                  const damageTaken = obstacle.damage; // Use damage from obstacle type
-                  setHealth(prev => Math.max(0, prev - damageTaken));
-                  triggerHealthDamageEffect(); // Trigger health bar damage effect
-                  triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
-              }
-            }
+                return prevObstacles
+                    .map(obstacle => {
+                        // Speed is now consistent for all ground obstacles
+                        let newPosition = obstacle.position - speed; // Move obstacle left
+
+                        let collisionDetected = false;
+                        // Obstacle position in pixels relative to the bottom-left of the game container
+                        const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
+
+                        // Calculate obstacle dimensions in pixels based on its type
+                        let obstacleWidth_px, obstacleHeight_px;
+                        // Assuming Tailwind h-unit and w-unit are roughly 4px per unit (e.g., h-8 is 32px)
+                        obstacleWidth_px = (obstacle.width / 4) * 16;
+                        obstacleHeight_px = (obstacle.height / 4) * 16;
+
+                        // Obstacle Y relative to ground level is 0, so its bottom from top is obstacleBottomFromTop_px
+                        const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px; // Obstacle top edge from top of container
 
 
-            // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided
-            if (newPosition < -20 && !collisionDetected) { // Only reuse if off-screen AND no collision
-              // 70% chance to reuse the obstacle and loop it back
-              if (Math.random() < 0.7) {
-                // Ensure obstacleTypes is not empty before picking a random type
-                if (obstacleTypes.length === 0) return obstacle; // Keep the current obstacle if no types available
-
-                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                const randomOffset = Math.floor(Math.random() * 20);
-
-                return {
-                  ...obstacle, // Keep existing properties like health if needed, but we reset health here
-                  ...randomObstacleType, // Override with new type properties
-                  id: Date.now(),
-                  position: 120 + randomOffset,
-                  health: randomObstacleType.baseHealth, // Reset health
-                  maxHealth: randomObstacleType.baseHealth // Set max health
-                };
-              } else {
-                // If not reusing, let it move off-screen to be filtered out
-                return { ...obstacle, position: newPosition };
-              }
-            }
-
-            // If collided, mark for removal
-            if (collisionDetected) {
-                return { ...obstacle, position: newPosition, collided: true }; // Add a collided flag
-            }
-
-
-            return { ...obstacle, position: newPosition }; // Return updated obstacle position if no collision and not off-screen
-          })
-          .filter(obstacle => {
-            // Keep obstacles that haven't collided and are still visible or will loop back
-            // Now also filter out obstacles that have the 'collided' flag set
-            // Obstacles are removed if collided OR if health is 0 or less (if they didn't die from shield damage)
-            return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
-          });
-      });
-
-      // Move clouds and handle infinite loop effect
-      setClouds(prevClouds => {
-        return prevClouds
-          .map(cloud => {
-            const newX = cloud.x - cloud.speed; // Move cloud left
-
-            // Loop clouds back to the right side when they go off-screen
-            if (newX < -50) {
-              return {
-                ...cloud,
-                id: Date.now() + Math.random(), // New ID
-                x: 120 + Math.random() * 30, // New position off-screen to the right
-                y: Math.random() * 40 + 10, // New random height
-                size: Math.random() * 20 + 30, // New random size
-                speed: Math.random() * 0.2 + 0.1 // New random speed
-              };
-            }
-
-            return { ...cloud, x: newX }; // Return updated cloud position
-          });
-          // No filtering needed for clouds, they are recycled
-      });
-
-      // Update particles (move and fade)
-      setParticles(prevParticles =>
-        prevParticles
-          .map(particle => ({
-            ...particle,
-            x: particle.x + particle.xVelocity, // Move particle horizontally
-            y: particle.y + particle.yVelocity, // Move particle vertically
-            opacity: particle.opacity - 0.03, // Decrease opacity (fade out)
-            size: particle.size - 0.1 // Decrease size (shrink)
-          }))
-          .filter(particle => particle.opacity > 0 && particle.size > 0) // Remove particles that have faded or shrunk completely
-      );
-
-      // --- NEW: Move coins and detect collisions ---
-      setActiveCoins(prevCoins => {
-          const gameContainer = gameRef.current;
-          if (!gameContainer) return prevCoins; // Return early if ref is not available
-
-          const gameWidth = gameContainer.offsetWidth;
-          const gameHeight = gameContainer.offsetHeight;
-
-          // Define character's bounding box in pixels (approximate)
-          const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
-          const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
-          // MODIFIED: Adjusted characterXPercent to move character backward
-          const characterXPercent = 5; // Character's fixed X position (in %)
-          const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
-
-          // Character's vertical position relative to the top of the game container
-          // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
-          const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-          const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
-          const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
-          const characterLeft_px = characterX_px; // Character's left edge from left of game container
-          const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
-
-          // Get character's approximate center position in pixels (relative to top-left of game container)
-          const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
-          const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
+                        // Check for collision using bounding boxes in pixels with tolerance
+                        const collisionTolerance = 5; // Added tolerance for collision detection
+                        if (
+                            characterRight_px > obstacleX_px - collisionTolerance &&
+                            characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
+                            characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance && // Character bottom is below obstacle top
+                            characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance // Character top is above obstacle bottom
+                        ) {
+                            collisionDetected = true;
+                            // Handle damage based on shield status
+                            if (isShieldActive) {
+                                setShieldHealth(prev => {
+                                    const damageToShield = obstacle.damage;
+                                    const newShieldHealth = Math.max(0, prev - damageToShield);
+                                    // Shield becomes inactive if health is 0 or less
+                                    if (newShieldHealth <= 0) {
+                                        console.log("Shield health depleted.");
+                                        setIsShieldActive(false); // Deactivate shield if health is 0 or less
+                                        // Cooldown is already running from activation
+                                    }
+                                    return newShieldHealth;
+                                });
+                                // No damage to player if shield is active
+                            } else {
+                                // Decrease player health if shield is not active
+                                const damageTaken = obstacle.damage; // Use damage from obstacle type
+                                setHealth(prev => Math.max(0, prev - damageTaken));
+                                triggerHealthDamageEffect(); // Trigger health bar damage effect
+                                triggerCharacterDamageEffect(damageTaken); // Trigger character damage effect and show number
+                            }
+                        }
 
 
-          return prevCoins
-              .map(coin => {
-                  // Approximate coin size in pixels (assuming a fixed size for the Lottie)
-                  const coinSize_px = 40; // Assuming coin Lottie is roughly 40x40px
+                        // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided
+                        if (newPosition < -20 && !collisionDetected) { // Only reuse if off-screen AND no collision
+                            // 70% chance to reuse the obstacle and loop it back
+                            if (Math.random() < 0.7) {
+                                // Ensure obstacleTypes is not empty before picking a random type
+                                if (obstacleTypes.length === 0) return obstacle; // Keep the current obstacle if no types available
 
-                  // Coin position in pixels relative to the top-left of the game container
-                  const coinX_px = (coin.x / 100) * gameWidth;
-                  const coinY_px = (coin.y / 100) * gameHeight;
+                                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                                const randomOffset = Math.floor(Math.random() * 20);
 
-                  let newX = coin.x;
-                  let newY = coin.y;
-                  let collisionDetected = false;
-                  let shouldBeAttracted = coin.isAttracted; // Start with current attraction state
+                                return {
+                                    ...obstacle, // Keep existing properties like health if needed, but we reset health here
+                                    ...randomObstacleType, // Override with new type properties
+                                    id: Date.now(),
+                                    position: 120 + randomOffset,
+                                    health: randomObstacleType.baseHealth, // Reset health
+                                    maxHealth: randomObstacleType.baseHealth // Set max health
+                                };
+                            } else {
+                                // If not reusing, let it move off-screen to be filtered out
+                                return { ...obstacle, position: newPosition };
+                            }
+                        }
 
-
-                  // Check for collision with character's bounding box *before* attraction
-                  if (!shouldBeAttracted) { // Only check for initial collision if not already attracted
-                      if (
-                          characterRight_px > coinX_px &&
-                          characterLeft_px < coinX_px + coinSize_px &&
-                          characterBottomFromTop_px > coinY_px && // Character bottom edge is below coin top edge
-                          characterTopFromTop_px < coinY_px + coinSize_px // Character top edge is above coin bottom edge
-                      ) {
-                          shouldBeAttracted = true; // Mark coin to be attracted
-                      }
-                  }
-
-
-                  if (shouldBeAttracted) {
-                      // If attracted, move towards character center
-                      const dx = characterCenterX_px - coinX_px;
-                      const dy = characterCenterY_px - coinY_px;
-                      const distance = Math.sqrt(dx * dx + dy * dy);
-
-                      // Calculate movement step towards the character
-                      const moveStep = distance * coin.attractSpeed;
-
-                      // Avoid division by zero if distance is 0
-                      const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
-                      const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
-
-                      // Update coin position in pixels
-                      const newCoinX_px = coinX_px + moveX_px;
-                      const newCoinY_px = coinY_px + moveY_px;
-
-                      // Convert updated pixel position back to percentage
-                      newX = (newCoinX_px / gameWidth) * 100;
-                      newY = (newCoinY_px / gameHeight) * 100;
-
-                       // Check for collection (close proximity to character center)
-                       if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) { // Collision when centers are close
-                           collisionDetected = true;
-                           // Grant random coins (1-5)
-                           const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                           startCoinCountAnimation(awardedCoins);
-
-                           console.log(`Coin collected! Awarded: ${awardedCoins}`);
+                        // If collided, mark for removal
+                        if (collisionDetected) {
+                            return { ...obstacle, position: newPosition, collided: true }; // Add a collided flag
+                        }
 
 
-                           // --- Trigger Coin Collection Effect near Chest ---
-                           // Clear any existing chest coin effect timer
-                           if (chestCoinEffectTimerRef.current) {
-                               clearTimeout(chestCoinEffectTimerRef.current);
-                           }
-                           // Activate the chest coin effect
-                           setIsChestCoinEffectActive(true);
-                           // Set a timer to deactivate the chest coin effect after a duration
-                           chestCoinEffectTimerRef.current = setTimeout(() => {
-                               setIsChestCoinEffectActive(false);
-                           }, 800); // Effect duration
-                           // --- END Trigger Coin Collection Effect near Chest ---
-                       }
+                        return { ...obstacle, position: newPosition }; // Return updated obstacle position if no collision and not off-screen
+                    })
+                    .filter(obstacle => {
+                        // Keep obstacles that haven't collided and are still visible or will loop back
+                        // Now also filter out obstacles that have the 'collided' flag set
+                        // Obstacles are removed if collided OR if health is 0 or less (if they didn't die from shield damage)
+                        return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
+                    });
+            });
 
-                  } else {
-                      // If not attracted, move based on initial random speeds
-                      newX = coin.x - coin.initialSpeedX; // Move left
-                      newY = coin.y + coin.initialSpeedY; // Move down
-                  }
+            // Move clouds and handle infinite loop effect
+            setClouds(prevClouds => {
+                return prevClouds
+                    .map(cloud => {
+                        const newX = cloud.x - cloud.speed; // Move cloud left
+
+                        // Loop clouds back to the right side when they go off-screen
+                        if (newX < -50) {
+                            return {
+                                ...cloud,
+                                id: Date.now() + Math.random(), // New ID
+                                x: 120 + Math.random() * 30, // New position off-screen to the right
+                                y: Math.random() * 40 + 10, // New random height
+                                size: Math.random() * 20 + 30, // New random size
+                                speed: Math.random() * 0.2 + 0.1 // New random speed
+                            };
+                        }
+
+                        return { ...cloud, x: newX }; // Return updated cloud position
+                    });
+                // No filtering needed for clouds, they are recycled
+            });
+
+            // Update particles (move and fade)
+            setParticles(prevParticles =>
+                prevParticles
+                    .map(particle => ({
+                        ...particle,
+                        x: particle.x + particle.xVelocity, // Move particle horizontally
+                        y: particle.y + particle.yVelocity, // Move particle vertically
+                        opacity: particle.opacity - 0.03, // Decrease opacity (fade out)
+                        size: particle.size - 0.1 // Decrease size (shrink)
+                    }))
+                    .filter(particle => particle.opacity > 0 && particle.size > 0) // Remove particles that have faded or shrunk completely
+            );
+
+            // --- NEW: Move coins and detect collisions ---
+            setActiveCoins(prevCoins => {
+                const gameContainer = gameRef.current;
+                if (!gameContainer) return prevCoins; // Return early if ref is not available
+
+                const gameWidth = gameContainer.offsetWidth;
+                const gameHeight = gameContainer.offsetHeight;
+
+                // Define character's bounding box in pixels (approximate)
+                const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
+                const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
+                // MODIFIED: Adjusted characterXPercent to move character backward
+                const characterXPercent = 5; // Character's fixed X position (in %)
+                const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
+
+                // Character's vertical position relative to the top of the game container
+                // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
+                const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
+                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
+                const characterLeft_px = characterX_px; // Character's left edge from left of game container
+                const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
+
+                // Get character's approximate center position in pixels (relative to top-left of game container)
+                const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
+                const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
 
 
-                  return {
-                      ...coin,
-                      x: newX,
-                      y: newY,
-                      isAttracted: shouldBeAttracted, // Update attraction state
-                      collided: collisionDetected // Mark for removal if collected
-                  };
-              })
-              .filter(coin => {
-                  // Remove coin if it was collected or moved far off-screen (left or bottom)
-                  // Keep coins that are moving towards the character, even if they go slightly off-screen initially
-                  const isOffScreen = coin.x < -20 || coin.y > 120; // Use larger buffer for off-screen check
-                  return !coin.collided && !isOffScreen; // Keep coin if not collected and not off-screen
-              });
-      });
+                return prevCoins
+                    .map(coin => {
+                        // Approximate coin size in pixels (assuming a fixed size for the Lottie)
+                        const coinSize_px = 40; // Assuming coin Lottie is roughly 40x40px
+
+                        // Coin position in pixels relative to the top-left of the game container
+                        const coinX_px = (coin.x / 100) * gameWidth;
+                        const coinY_px = (coin.y / 100) * gameHeight;
+
+                        let newX = coin.x;
+                        let newY = coin.y;
+                        let collisionDetected = false;
+                        let shouldBeAttracted = coin.isAttracted; // Start with current attraction state
 
 
-    }, 30); // Interval for movement updates (30ms for smoother animation)
+                        // Check for collision with character's bounding box *before* attraction
+                        if (!shouldBeAttracted) { // Only check for initial collision if not already attracted
+                            if (
+                                characterRight_px > coinX_px &&
+                                characterLeft_px < coinX_px + coinSize_px &&
+                                characterBottomFromTop_px > coinY_px && // Character bottom edge is below coin top edge
+                                characterTopFromTop_px < coinY_px + coinSize_px // Character top edge is above coin bottom edge
+                            ) {
+                                shouldBeAttracted = true; // Mark coin to be attracted
+                            }
+                        }
+
+
+                        if (shouldBeAttracted) {
+                            // If attracted, move towards character center
+                            const dx = characterCenterX_px - coinX_px;
+                            const dy = characterCenterY_px - coinY_px;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+
+                            // Calculate movement step towards the character
+                            const moveStep = distance * coin.attractSpeed;
+
+                            // Avoid division by zero if distance is 0
+                            const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
+                            const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
+
+                            // Update coin position in pixels
+                            const newCoinX_px = coinX_px + moveX_px;
+                            const newCoinY_px = coinY_px + moveY_px;
+
+                            // Convert updated pixel position back to percentage
+                            newX = (newCoinX_px / gameWidth) * 100;
+                            newY = (newCoinY_px / gameHeight) * 100;
+
+                            // Check for collection (close proximity to character center)
+                            if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) { // Collision when centers are close
+                                collisionDetected = true;
+                                // Grant random coins (1-5)
+                                const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                                startCoinCountAnimation(awardedCoins);
+
+                                console.log(`Coin collected! Awarded: ${awardedCoins}`);
+
+
+                                // --- Trigger Coin Collection Effect near Chest ---
+                                // Clear any existing chest coin effect timer
+                                if (chestCoinEffectTimerRef.current) {
+                                    clearTimeout(chestCoinEffectTimerRef.current);
+                                }
+                                // Activate the chest coin effect
+                                setIsChestCoinEffectActive(true);
+                                // Set a timer to deactivate the chest coin effect after a duration
+                                chestCoinEffectTimerRef.current = setTimeout(() => {
+                                    setIsChestCoinEffectActive(false);
+                                }, 800); // Effect duration
+                                // --- END Trigger Coin Collection Effect near Chest ---
+                            }
+
+                        } else {
+                            // If not attracted, move based on initial random speeds
+                            newX = coin.x - coin.initialSpeedX; // Move left
+                            newY = coin.y + coin.initialSpeedY; // Move down
+                        }
+
+
+                        return {
+                            ...coin,
+                            x: newX,
+                            y: newY,
+                            isAttracted: shouldBeAttracted, // Update attraction state
+                            collided: collisionDetected // Mark for removal if collected
+                        };
+                    })
+                    .filter(coin => {
+                        // Remove coin if it was collected or moved far off-screen (left or bottom)
+                        // Keep coins that are moving towards the character, even if they go slightly off-screen initially
+                        const isOffScreen = coin.x < -20 || coin.y > 120; // Use larger buffer for off-screen check
+                        return !coin.collided && !isOffScreen; // Keep coin if not collected and not off-screen
+                    });
+            });
+
+
+        }, 30); // Interval for movement updates (30ms for smoother animation)
+    }
+
 
     // Cleanup function to clear the interval when the effect dependencies change or component unmounts
-    return () => clearInterval(moveInterval);
+    return () => {
+        if (gameLoopIntervalRef.current) {
+            clearInterval(gameLoopIntervalRef.current);
+            gameLoopIntervalRef.current = null; // Reset the ref
+        }
+         // Also clear particle timer on cleanup
+        if (particleTimerRef.current) {
+            clearInterval(particleTimerRef.current);
+            particleTimerRef.current = null;
+        }
+    };
     // Add isStatsFullscreen to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive]); // Added isShieldActive to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive]); // Added isStatsFullscreen to dependency array
+
+
+  // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
+  useEffect(() => {
+      // Clear timers when game is over or stats are in fullscreen
+      if (gameOver || isStatsFullscreen) {
+          if (obstacleTimerRef.current) {
+              clearTimeout(obstacleTimerRef.current);
+              obstacleTimerRef.current = null;
+          }
+          if (coinScheduleTimerRef.current) {
+              clearTimeout(coinScheduleTimerRef.current);
+              coinScheduleTimerRef.current = null;
+          }
+      } else if (gameStarted && !gameOver && !isStatsFullscreen) {
+          // Start/restart timers if game is active and not fullscreen, and timers are not already running
+          if (!obstacleTimerRef.current) {
+              scheduleNextObstacle();
+          }
+          if (!coinScheduleTimerRef.current) {
+              scheduleNextCoin();
+          }
+           // Also restart particle timer if not running
+           if (!particleTimerRef.current) {
+               particleTimerRef.current = setInterval(generateParticles, 300);
+           }
+      }
+
+      // Cleanup function to clear timers when dependencies change or component unmounts
+      return () => {
+          if (obstacleTimerRef.current) {
+              clearTimeout(obstacleTimerRef.current);
+              obstacleTimerRef.current = null;
+          }
+          if (coinScheduleTimerRef.current) {
+              clearTimeout(coinScheduleTimerRef.current);
+              coinScheduleTimerRef.current = null;
+          }
+           if (particleTimerRef.current) {
+               clearInterval(particleTimerRef.current);
+               particleTimerRef.current = null;
+           }
+      };
+  }, [gameStarted, gameOver, isStatsFullscreen]); // Dependencies include game state and fullscreen state
 
 
   // Effect to clean up all timers when the component unmounts
@@ -957,6 +1064,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
       clearTimeout(chestCoinEffectTimerRef.current); // NEW: Clear chest coin effect timer
+
+      // NEW: Clear the main game loop interval on unmount
+      if (gameLoopIntervalRef.current) {
+          clearInterval(gameLoopIntervalRef.current);
+      }
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
@@ -1025,7 +1137,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         <DotLottieReact
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
-          autoplay
+          autoplay={!isStatsFullscreen} // Autoplay only when game is not fullscreen
           className="w-full h-full" // Make Lottie fill its container
         />
       </div>
@@ -1065,7 +1177,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               <DotLottieReact
                 src={obstacle.lottieSrc} // Use the Lottie source from the obstacle object
                 loop
-                autoplay
+                autoplay={!isStatsFullscreen} // Autoplay only when game is not fullscreen
                 className="w-full h-full" // Make Lottie fill its container
               />
             )}
@@ -1085,7 +1197,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               <DotLottieReact
                 src={obstacle.lottieSrc} // Use the Lottie source from the obstacle object
                 loop
-                autoplay
+                autoplay={!isStatsFullscreen} // Autoplay only when game is not fullscreen
                 className="w-full h-full" // Make Lottie fill its container
               />
             )}
@@ -1222,7 +1334,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie" // Shield Lottie URL
           loop
-          autoplay={isShieldActive} // Autoplay only when shield is active
+          autoplay={isShieldActive && !isStatsFullscreen} // Autoplay only when shield is active AND game is not fullscreen
           className="w-full h-full" // Make Lottie fill its container
         />
       </div>
@@ -1246,7 +1358,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         <DotLottieReact
           src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie" // Coin Lottie URL
           loop // Loop the animation
-          autoplay // Autoplay the animation
+          autoplay={!isStatsFullscreen} // Autoplay only when game is not fullscreen
           className="w-full h-full" // Make Lottie fill its container
         />
       </div>
@@ -1642,7 +1754,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                    <DotLottieReact
                       src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie" // Shield Lottie URL
                       loop
-                      autoplay={isShieldActive} // Autoplay only when shield is active
+                      autoplay={isShieldActive && !isStatsFullscreen} // Autoplay only when shield is active AND game is not fullscreen
                       className="w-full h-full"
                    />
                 </div>
