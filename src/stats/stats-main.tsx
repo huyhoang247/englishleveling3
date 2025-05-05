@@ -567,25 +567,26 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   return (
-    // MODIFIED: Added absolute positioning and full size for fullscreen display
-    // Removed max-w-lg mx-auto for full screen
-    <div className={`absolute inset-0 rounded-none shadow-none transition-all duration-700 flex items-center justify-center p-4 ${glowEffect ? 'shadow-purple-200' : 'shadow-blue-100'} overflow-hidden`} // Changed overflow-y-auto to overflow-hidden here
-          style={{background: "linear-gradient(to bottom, #ffffff, #f8f9fa)"}}> {/* Background gradient */}
+    // MODIFIED: Added fixed inset-0 for fullscreen display
+    // Added z-50 for layering and bg-white p-4 overflow-auto for styling
+    <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
+
+      {/* Close Button - NEW */}
+      {/* Positioned absolutely within the full-screen container */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
+          aria-label="Đóng cửa sổ chỉ số"
+        >
+          <Icon name="X" size={20} />
+        </button>
+      )}
 
       {/* Container to limit the width of the content within the fullscreen view */}
       {/* MODIFIED: Added flex flex-col h-full to enable flex layout for fixed header/footer */}
-      <div className="relative max-w-lg w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-
-        {/* Close Button - NEW */}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-10"
-            aria-label="Đóng cửa sổ chỉ số"
-          >
-            <Icon name="X" size={20} />
-          </button>
-        )}
+      {/* Removed absolute positioning and full size from this inner container */}
+      <div className="relative max-w-lg mx-auto w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
         {/* Header section with background pattern - FIXED TOP */}
         {/* MODIFIED: Added flex-shrink-0 */}
