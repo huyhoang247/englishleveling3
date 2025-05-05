@@ -135,7 +135,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active (có máu và đang hiển thị)
   const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
-  const [remainingCooldown, setRemainingCooldown] = useState(0); // Remaining cooldown time in seconds
+  const [remainingCooldown, setRemainingCooldown, ] = useState(0); // Remaining cooldown time in seconds
 
   // --- NEW: Coin States (Kept in main game file) ---
   const [coins, setCoins] = useState(357); // Player's coin count
@@ -1422,13 +1422,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Ground */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-green-900 to-green-700">
-                  {/* Ground details (small elements on the ground) */}
-                  <div className="w-full h-1 bg-green-800 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-green-800 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-green-800 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-green-800 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-green-800 rounded-full absolute top-12 right-32"></div>
+              {/* Updated ground color to sidewalk gray gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
+                  {/* Ground details (small elements on the ground) - Updated colors to match gray theme */}
+                  <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
+                  <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
+                  <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
+                  <div className="w-6 h-3 bg-gray-900 rounded-full absolute top-8 right-10"></div>
+                  <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
               </div>
           </div>
 
@@ -1612,11 +1613,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                           )}
                       </div>
                   ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
+                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
                       {item.icon}
-                      {item.label && (
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      )}
+                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
                     </div>
                   )}
                 </div>
