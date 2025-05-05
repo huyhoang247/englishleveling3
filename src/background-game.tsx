@@ -6,7 +6,7 @@ import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in 
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 // NEW: Import the TreasureChest component
-import TreasureChest from './TreasureChest.tsx';
+import TreasureChest from './treasure.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
