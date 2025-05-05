@@ -286,8 +286,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
               : null; // Render null if icon is invalid
 
           return (
+            // MODIFIED: Adjusted background and border colors for dark mode
             <div key={stat.key} // Use stat key for more stable key
-                 className={`${index >= 4 ? "col-span-1" : ""} bg-white rounded-xl shadow-sm border ${isIncreased ? 'border-green-200' : 'border-gray-100'} overflow-hidden relative transition-all duration-300`}>
+                 className={`${index >= 4 ? "col-span-1" : ""} bg-gray-700 rounded-xl shadow-sm border ${isIncreased ? 'border-green-600' : 'border-gray-600'} overflow-hidden relative transition-all duration-300`}>
               {/* Subtle background glow effect */}
               <div className={`absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-10 ${colorScheme.bg}`}></div>
 
@@ -301,13 +302,15 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 {/* Top row: Icon and Stat Name */}
                 <div className="flex items-center justify-center mb-1">
                   {/* Icon container */}
-                  <div className={`w-8 h-8 ${colorScheme.light} rounded-lg flex items-center justify-center mr-3 relative overflow-hidden`}>
+                  {/* MODIFIED: Adjusted light background color for dark mode */}
+                  <div className={`w-8 h-8 ${colorScheme.light.replace('100', '800')} rounded-lg flex items-center justify-center mr-3 relative overflow-hidden`}>
                     <div className={`absolute -bottom-3 -right-3 w-6 h-6 ${colorScheme.bg} opacity-20 rounded-full`}></div>
                     {/* Render the validated icon element */}
                     {statIconElement && <span className={colorScheme.text}>{statIconElement}</span>}
                   </div>
                   {/* Stat name */}
-                  <h4 className="text-xs font-semibold text-gray-500">{stat.name}</h4>
+                  {/* MODIFIED: Adjusted text color for dark mode */}
+                  <h4 className="text-xs font-semibold text-gray-300">{stat.name}</h4>
                 </div>
 
                 {/* Bottom row: Stat Value and Edit Buttons (if applicable) */}
@@ -318,14 +321,15 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                     <button
                       onClick={() => decreaseStat(stat.key)}
                       disabled={stats[stat.key] <= character.stats[stat.key]} // Disable if value is at original or lower
-                      className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key] <= character.stats[stat.key] ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
+                      className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key] <= character.stats[stat.key] ? 'text-gray-600 cursor-not-allowed' : 'hover:bg-gray-600 text-gray-300'}`} // Adjusted colors
                     >
                       <Icon name="Minus" size={16} />
                     </button>
 
                     {/* Stat Value Display */}
+                    {/* MODIFIED: Adjusted background and border colors for dark mode */}
                     <div className="flex items-center justify-center">
-                      <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
+                      <p className={`text-sm font-bold ${isIncreased ? 'text-green-400' : colorScheme.text} bg-gray-600 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-500' : isSpecial ? 'border-red-600' : 'border-gray-500'}`}>
                         {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                       </p>
                     </div>
@@ -334,7 +338,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                     <button
                       onClick={() => increaseStat(stat.key)}
                       disabled={statPoints <= 0} // Disable if no points available
-                      className={`flex items-center justify-center w-6 h-6 rounded-md ${statPoints <= 0 ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
+                      className={`flex items-center justify-center w-6 h-6 rounded-md ${statPoints <= 0 ? 'text-gray-600 cursor-not-allowed' : 'hover:bg-gray-600 text-gray-300'}`} // Adjusted colors
                     >
                       <Icon name="Plus" size={16} />
                     </button>
@@ -342,7 +346,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 ) : (
                   // View Mode Layout: Centered Value
                   <div className="flex items-center justify-center">
-                    <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
+                    {/* MODIFIED: Adjusted background and border colors for dark mode */}
+                    <p className={`text-sm font-bold ${isIncreased ? 'text-green-400' : colorScheme.text} bg-gray-600 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-500' : isSpecial ? 'border-red-600' : 'border-gray-500'}`}>
                       {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                     </p>
                   </div>
@@ -406,18 +411,20 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         {/* Modal Content Container */}
-        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all">
+        {/* MODIFIED: Adjusted background gradient and text colors for dark mode */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all text-gray-300">
 
           {/* Exchange Direction Selection */}
           <div className="mb-5">
             {/* Toggle Buttons */}
-            <div className="bg-gray-100 p-1 rounded-lg flex mb-2">
+            {/* MODIFIED: Adjusted background colors for dark mode */}
+            <div className="bg-gray-700 p-1 rounded-lg flex mb-2">
               <button
                 onClick={() => setExchangeDirection('coinToPoint')}
                 className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                   exchangeDirection === 'coinToPoint' ?
-                  'bg-white shadow-sm text-indigo-600' : // Active style
-                  'text-gray-500 hover:bg-gray-50' // Inactive style
+                  'bg-gray-600 shadow-sm text-indigo-400' : // Active style
+                  'text-gray-400 hover:bg-gray-600' // Inactive style
                 }`}
               >
                 <Icon name="Coins" size={16} />
@@ -427,8 +434,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 onClick={() => setExchangeDirection('pointToCoin')}
                 className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
                   exchangeDirection === 'pointToCoin' ?
-                  'bg-white shadow-sm text-amber-600' : // Active style
-                  'text-gray-500 hover:bg-gray-50' // Inactive style
+                  'bg-gray-600 shadow-sm text-amber-400' : // Active style
+                  'text-gray-400 hover:bg-gray-600' // Inactive style
                 }`}
               >
                 <Icon name="Gem" size={16} />
@@ -436,7 +443,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
               </button>
             </div>
             {/* Helper Text */}
-            <div className="text-xs text-gray-500 italic text-center">
+            {/* MODIFIED: Adjusted text color for dark mode */}
+            <div className="text-xs text-gray-400 italic text-center">
               Chọn loại tài nguyên bạn muốn chuyển đổi
             </div>
           </div>
@@ -444,9 +452,11 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           {/* Amount Selection */}
           <div className="mb-5">
             {/* Header with current resource amount */}
-            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+            {/* MODIFIED: Adjusted text color for dark mode */}
+            <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center">
               <span>Số lượng chuyển đổi</span>
-              <div className="ml-auto text-xs text-gray-500">
+              {/* MODIFIED: Adjusted text color for dark mode */}
+              <div className="ml-auto text-xs text-gray-400">
                 {exchangeDirection === 'coinToPoint' ?
                   `Hiện có: ${character.coins.toLocaleString()} Coin` :
                   `Hiện có: ${statPoints} Point`
@@ -454,33 +464,38 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
               </div>
             </h4>
             {/* Input and Adjustment Buttons */}
-            <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200">
+            {/* MODIFIED: Adjusted background and border colors for dark mode */}
+            <div className="flex items-center bg-gray-700 rounded-lg p-1 border border-gray-600">
               {/* Decrease Button */}
+              {/* MODIFIED: Adjusted colors for dark mode */}
               <button
                 onClick={() => adjustExchangeAmount(-100)}
-                className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+                className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-600 text-gray-400 transition-colors"
               >
                 <Icon name="Minus" size={18} />
               </button>
               {/* Amount Input */}
+              {/* MODIFIED: Adjusted background, border, and text colors for dark mode */}
               <div className="flex-1 mx-2">
                 <input
                   type="number"
                   value={exchangeAmount}
                   onChange={(e) => setExchangeAmount(Math.max(1, parseInt(e.target.value) || 0))} // Ensure value is at least 1
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-bold text-gray-700"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-center font-bold text-gray-200"
                 />
               </div>
               {/* Increase Button */}
+              {/* MODIFIED: Adjusted colors for dark mode */}
               <button
                 onClick={() => adjustExchangeAmount(100)}
-                className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+                className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-600 text-gray-400 transition-colors"
               >
                 <Icon name="Plus" size={18} />
               </button>
             </div>
             {/* Exchange Rate Info */}
-            <div className="text-xs text-gray-500 italic text-center mt-1">
+            {/* MODIFIED: Adjusted text color for dark mode */}
+            <div className="text-xs text-gray-400 italic text-center mt-1">
               {exchangeDirection === 'coinToPoint' ?
                 '100 Coin = 1 Point' :
                 '1 Point = 100 Coin'
@@ -489,7 +504,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
 
           {/* Exchange Result Preview */}
-          <div className="mb-5 bg-gray-50 p-4 rounded-lg">
+          {/* MODIFIED: Adjusted background color for dark mode */}
+          <div className="mb-5 bg-gray-700 p-4 rounded-lg">
             <div className="flex items-center">
               {/* Result Icon */}
               <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3">
@@ -508,9 +524,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 )}
               </div>
               {/* Result Text */}
+              {/* MODIFIED: Adjusted text color for dark mode */}
               <div className="flex-1">
-                <div className="text-sm text-gray-500">Bạn sẽ nhận được:</div>
-                <div className="font-bold text-lg text-gray-800 flex items-center">
+                <div className="text-sm text-gray-400">Bạn sẽ nhận được:</div>
+                <div className="font-bold text-lg text-gray-100 flex items-center">
                   {getResult().toLocaleString()} {/* Format result with commas */}
                   <span className="ml-1 text-sm">
                     {exchangeDirection === 'coinToPoint' ? 'Point' : 'Coin'}
@@ -521,13 +538,14 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
 
           {/* Warning Message (if not enough resources) */}
+          {/* MODIFIED: Adjusted background and border colors for dark mode */}
           {!hasEnoughResources() && (
-            <div className="mb-4 bg-red-50 p-3 rounded-lg border border-red-200">
+            <div className="mb-4 bg-red-900 p-3 rounded-lg border border-red-700">
               <div className="flex">
-                <Icon name="AlertCircle" size={20} className="text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                <Icon name="AlertCircle" size={20} className="text-red-400 mr-2 flex-shrink-0 mt-0.5" /> {/* Adjusted text color */}
                 <div>
-                  <h4 className="font-bold text-red-800 text-sm">Không đủ tài nguyên</h4>
-                  <p className="text-red-700 text-xs">
+                  <h4 className="font-bold text-red-300 text-sm">Không đủ tài nguyên</h4> {/* Adjusted text color */}
+                  <p className="text-red-400 text-xs"> {/* Adjusted text color */}
                     {exchangeDirection === 'coinToPoint' ?
                       `Bạn cần tối thiểu ${exchangeAmount.toLocaleString()} Coin để thực hiện chuyển đổi này.` :
                       `Bạn cần tối thiểu ${exchangeAmount.toLocaleString()} Point để thực hiện chuyển đổi này.`
@@ -541,20 +559,22 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           {/* Action Buttons */}
           <div className="flex gap-3">
             {/* Cancel Button */}
+            {/* MODIFIED: Adjusted colors for dark mode */}
             <button
               onClick={() => setShowExchangeModal(false)}
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-colors"
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-600 text-gray-300 font-medium text-sm hover:bg-gray-700 transition-colors"
             >
               Hủy
             </button>
             {/* Exchange Button */}
+            {/* MODIFIED: Adjusted disabled background color for dark mode */}
             <button
               onClick={handleExchange}
               disabled={!hasEnoughResources()} // Disable if not enough resources
               className={`flex-1 px-3 py-2 rounded-lg font-medium text-white text-sm shadow-lg flex items-center justify-center gap-2 transition-all ${
                 hasEnoughResources() ?
                 'bg-gradient-to-r from-indigo-600 to-amber-600 hover:from-indigo-700 hover:to-amber-700' : // Enabled style
-                'bg-gray-400 cursor-not-allowed' // Disabled style
+                'bg-gray-600 cursor-not-allowed' // Disabled style - Adjusted color
               }`}
             >
               Chuyển Đổi
@@ -567,27 +587,27 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   return (
-    // MODIFIED: Added fixed inset-0 for fullscreen display
-    // Added z-50 for layering and bg-white p-4 overflow-auto for styling
-    <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
+    // MODIFIED: Changed background to dark gray
+    <div className="fixed inset-0 z-50 bg-gray-900 p-4 overflow-auto">
 
       {/* Container to limit the width of the content within the fullscreen view */}
-      {/* MODIFIED: Added flex flex-col h-full to enable flex layout for fixed header/footer */}
-      {/* Removed absolute positioning and full size from this inner container */}
-      <div className="relative max-w-lg mx-auto w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      {/* MODIFIED: Changed background to dark gray */}
+      <div className="relative max-w-lg mx-auto w-full h-full bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
 
         {/* Header section with background pattern - FIXED TOP */}
-        {/* MODIFIED: Added flex-shrink-0 */}
-        <div className="h-20 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
+        {/* MODIFIED: Changed background to dark gray */}
+        <div className="h-20 relative bg-gray-800 flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
           {/* Background pattern overlay */}
+          {/* MODIFIED: Changed fill color in SVG for dark mode */}
           <div className="absolute inset-0" style={{
-            backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
+            backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23374151' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
           }}></div>
 
           {/* Top right badges container with glassmorphism effect */}
+          {/* MODIFIED: Adjusted border color for dark mode */}
           <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
-                      backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
-                      border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10">
+                      backdrop-filter backdrop-blur-lg bg-white bg-opacity-10
+                      border border-white border-opacity-20 rounded-xl p-2 shadow-lg z-10"> {/* Reduced opacity slightly */}
             {/* Coin Badge */}
             <div className="overflow-hidden">
               <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}>
@@ -597,6 +617,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 </div>
                 <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
                  {/* Plus button next to Coin badge (functionality removed) */}
+                 {/* MODIFIED: Adjusted background opacity for dark mode */}
                  <button
                     className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
                     title="Chuyển đổi Coin sang Point" // Tooltip remains
@@ -607,9 +628,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             </div>
 
             {/* Exchange Button */}
+            {/* MODIFIED: Adjusted colors for dark mode */}
             <button
               onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
-              className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300"
+              className="px-3 py-1.5 rounded-lg bg-white bg-opacity-10 text-gray-200 text-xs font-medium transition-colors hover:bg-opacity-20 flex items-center justify-center border border-gray-700" // Adjusted colors
               title="Chuyển đổi Coin/Point"
             >
               Exchange
@@ -624,6 +646,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 </div>
                 <span className="text-xs font-bold text-white">{statPoints}</span>
                 {/* Plus button next to Points badge (conditionally visible) */}
+                {/* MODIFIED: Adjusted background opacity for dark mode */}
                 <button
                   onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
                   className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
@@ -636,7 +659,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
 
           {/* Gradient overlay at the bottom of the header */}
-          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
+          {/* MODIFIED: Adjusted gradient colors for dark mode */}
+          <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-gray-800 to-transparent"></div>
         </div>
 
         {/* Main content area - SCROLLABLE MIDDLE */}
@@ -649,9 +673,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           {/* Stats Section */}
           <div className="mb-8">
               {/* Stats Header */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
-                  <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
+              {/* MODIFIED: Adjusted text and border colors for dark mode */}
+              <div className="flex items-center justify-between mb-4 border-b border-gray-700 pb-2">
+                <h3 className="text-sm uppercase tracking-wider font-bold text-gray-300 flex items-center">
+                  <Icon name="Trophy" size={16} className="mr-2 text-gray-400" /> STATS
                 </h3>
 
                 {/* "Allocate Points" button (visible if points > 0 and panel is closed) */}
@@ -666,8 +691,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 )}
 
                 {/* "Details" indicator (visible if no points or panel is open) */}
+                {/* MODIFIED: Adjusted colors for dark mode */}
                 {!statPoints && !showPointsPanel && (
-                  <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
+                  <div className="px-2 py-1 rounded-md bg-indigo-900 text-indigo-400 text-xs font-medium flex items-center">
                     <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <circle cx="10" cy="10" r="3"></circle>
                     </svg>
@@ -678,24 +704,27 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
               {/* Point Allocation Panel (conditionally rendered) */}
               {showPointsPanel ? (
-                <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
+                // MODIFIED: Adjusted background and border colors for dark mode
+                <div className="bg-gray-700 rounded-2xl shadow-lg border border-indigo-900 p-5 mb-4">
                   {/* Panel Header */}
+                  {/* MODIFIED: Adjusted text color for dark mode */}
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
                       <Icon name="Plus" size={20} className="text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
-                    </div>
+                      <p className="text-sm text-gray-300">Còn lại: <span className="font-medium text-indigo-400">{statPoints} điểm</span></p>
+                    </div> {/* Adjusted text color */}
                   </div>
 
                   {/* Render stats in edit mode */}
                   {renderStats(true)}
 
                   {/* Allocation Tip */}
-                  <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start">
-                    <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <div className="text-xs text-blue-800">
+                  {/* MODIFIED: Adjusted background and text colors for dark mode */}
+                  <div className="bg-blue-900 rounded-lg p-3 mt-4 mb-4 flex items-start">
+                    <Icon name="AlertCircle" size={16} className="text-blue-400 mr-2 mt-0.5 flex-shrink-0" /> {/* Adjusted text color */}
+                    <div className="text-xs text-blue-300"> {/* Adjusted text color */}
                       <p className="font-medium mb-1">Mẹo phân bổ điểm:</p>
                       <ul className="list-disc pl-4 space-y-1">
                         <li>ATK, DEF, LUCK, INT, CRT: +2 cho mỗi điểm</li>
@@ -707,9 +736,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                    {/* Action Buttons for Allocation Panel */}
                   <div className="flex items-center justify-end space-x-2">
                      {/* Cancel Button */}
+                     {/* MODIFIED: Adjusted colors for dark mode */}
                      <button
                         onClick={cancelChanges}
-                        className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
+                        className="px-3 py-1.5 rounded-lg bg-gray-600 text-gray-300 text-xs font-medium hover:bg-gray-500 transition-colors"
                       >
                         Hủy
                       </button>
@@ -724,7 +754,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 </div>
               ) : (
                 // Render stats in view mode (when allocation panel is closed)
-                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
+                // MODIFIED: Adjusted background and border colors for dark mode
+                <div className="bg-gray-700 rounded-2xl shadow-md border border-gray-600 p-5">
                   {renderStats()}
                 </div>
               )}
@@ -733,8 +764,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           {/* Skills Section */}
           <div className="mb-8">
             {/* Skills Header */}
-            <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
-              <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
+            {/* MODIFIED: Adjusted text and border colors for dark mode */}
+            <h3 className="text-sm uppercase tracking-wider font-bold text-gray-400 mb-4 border-b border-gray-700 pb-2 flex items-center">
+              <Icon name="Zap" size={16} className="mr-2 text-gray-500" /> SKILLS
             </h3>
             {/* Skill Badges */}
             <div className="flex flex-wrap gap-3">
@@ -744,9 +776,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
         {/* Footer Section - FIXED BOTTOM */}
-        {/* MODIFIED: Changed py-5 to py-3 to reduce bottom padding */}
-        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          {/* MODIFIED: Changed flex items-center space-x-4 to flex justify-between items-center */}
+        {/* MODIFIED: Adjusted background gradient and border color for dark mode */}
+        <div className="px-8 py-3 bg-gradient-to-br from-gray-800 to-gray-900 border-t border-gray-700 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
           <div className="flex justify-between items-center">
             {/* Return Button - MOVED AND STYLED */}
             {onClose && (
@@ -754,8 +785,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 onClick={onClose}
                 // ADDED glassmorphism and shadow classes
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-colors p-1
-                           backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
-                           border border-white border-opacity-30 shadow-lg hover:bg-opacity-30" // Adjusted size (w-10 h-10) and hover effect
+                           backdrop-filter backdrop-blur-lg bg-white bg-opacity-10
+                           border border-white border-opacity-20 shadow-lg hover:bg-opacity-20" // Adjusted size (w-10 h-10) and hover effect
                 aria-label="Quay lại" // Updated aria-label
                 title="Quay lại" // Added tooltip
               >
