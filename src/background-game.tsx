@@ -244,10 +244,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
   // --- NEW: Coin Effect States ---
-  // REMOVED: isCoinEffectActive and coinEffectPosition states for character effect
   // NEW: State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
-  // REMOVED: coinEffectTimerRef for character effect
   // NEW: Timer for chest coin effect
   const chestCoinEffectTimerRef = useRef(null);
 
@@ -376,7 +374,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDamageAmount(0); // Reset damage amount display
     setShowDamageNumber(false); // Hide damage number
     setIsStatsFullscreen(false); // NEW: Ensure full-screen stats is closed
-    // REMOVED: setIsCoinEffectActive(false); // Reset character coin effect state
     setIsChestCoinEffectActive(false); // NEW: Reset chest coin effect state
     setCoins(357); // Reset coin count to initial value
     setDisplayedCoins(357); // Reset displayed coin count
@@ -444,7 +441,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
-      // REMOVED: clearTimeout(coinEffectTimerRef.current); // Clear character coin effect timer
       clearTimeout(chestCoinEffectTimerRef.current); // NEW: Clear chest coin effect timer
     };
   }, [health, gameStarted]);
@@ -755,7 +751,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   id: Date.now(),
                   position: 120 + randomOffset,
                   health: randomObstacleType.baseHealth, // Reset health
-                  maxHealth: randomObstacleType.baseHealth // Reset max health
+                  maxHealth: randomObstacleType.baseHealth // Set max health
                 };
               } else {
                 // If not reusing, let it move off-screen to be filtered out
@@ -960,7 +956,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
       clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
-      // REMOVED: clearTimeout(coinEffectTimerRef.current); // Clear character coin effect timer
       clearTimeout(chestCoinEffectTimerRef.current); // NEW: Clear chest coin effect timer
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
@@ -1405,27 +1400,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* NEW: Render Shield if active */}
         {renderShield()}
-
-
-        {/* REMOVED: Coin Collection Effect Lottie near Character */}
-        {/* {isCoinEffectActive && (
-            <div
-                className="absolute w-16 h-16 pointer-events-none" // Adjust size as needed
-                style={{
-                    top: `${coinEffectPosition.top}px`,
-                    left: `${coinEffectPosition.left}px`,
-                    transform: 'translate(-50%, -50%)', // Center the Lottie
-                    zIndex: 50 // Ensure it's above other game elements
-                }}
-            >
-                <DotLottieReact
-                    src="https://lottie.host/7e241642-f1f1-459d-87fa-deac99b6ac36/W5RvbVAXk1.lottie" // Lottie URL for the effect
-                    loop={false} // Play once
-                    autoplay
-                    className="w-full h-full"
-                />
-            </div>
-        )} */}
 
 
         {/* Obstacles */}
