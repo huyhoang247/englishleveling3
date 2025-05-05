@@ -120,7 +120,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Updated obstacles state to use GameObstacle interface
   const [obstacles, setObstacles] = useState<GameObstacle[]>([]); // Array of active obstacles with health
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
-  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
+  const [runFrame, setRunFrame] useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
@@ -1454,7 +1454,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               style={{
                   height: `${GROUND_LEVEL_PERCENT}%`,
                   backgroundImage: `url(https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cartoon-stone-texture_1110-576.jpg)`, // Use the image URL
-                  backgroundSize: 'auto 100%', // Fit height, maintain aspect ratio
+                  backgroundSize: 'auto 70%', // Adjusted size to make the texture smaller (70% of container height)
                   backgroundRepeat: 'repeat-x', // Repeat horizontally
                   backgroundPositionX: '0', // Initial position
               }}
