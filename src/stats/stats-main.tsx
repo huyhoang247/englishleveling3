@@ -752,7 +752,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             {onClose && (
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors p-1" // Adjusted size and padding
+                // ADDED glassmorphism and shadow classes
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-colors p-1
+                           backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
+                           border border-white border-opacity-30 shadow-lg hover:bg-opacity-30" // Adjusted size (w-10 h-10) and hover effect
                 aria-label="Quay lại" // Updated aria-label
                 title="Quay lại" // Added tooltip
               >
