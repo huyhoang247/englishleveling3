@@ -785,10 +785,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             {onClose && (
               <button
                 onClick={onClose}
-                // KEPT: background to black with 20% opacity, glassmorphism, shadow, and border
+                // MODIFIED: Changed bg-opacity-20 to bg-opacity-70 and hover:bg-opacity-30 to hover:bg-opacity-80
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-colors p-1
-                           backdrop-filter backdrop-blur-lg bg-black bg-opacity-20
-                           border border-gray-700 border-opacity-50 shadow-lg hover:bg-opacity-30" // Kept styling for the button itself
+                           backdrop-filter backdrop-blur-lg bg-black bg-opacity-70
+                           border border-gray-700 border-opacity-50 shadow-lg hover:bg-opacity-80" // Updated opacity
                 aria-label="Quay lại" // Updated aria-label
                 title="Quay lại" // Added tooltip
               >
