@@ -120,7 +120,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Updated obstacles state to use GameObstacle interface
   const [obstacles, setObstacles] = useState<GameObstacle[]>([]); // Array of active obstacles with health
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
-  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation // FIX: Corrected useState syntax
+  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
   const [clouds, setClouds] = useState([]); // Array of active clouds
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
@@ -151,10 +151,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
 
 
-  // Define the new ground level percentage (This will now be the bottom of the ROAD)
+  // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
-  // Define the height of the road layer
-  const ROAD_HEIGHT_PERCENT = 10; // Example: Road is 10% of the screen height
 
   // Refs for timers to manage intervals and timeouts
   const gameRef = useRef<HTMLDivElement | null>(null); // Ref for the main game container div - Specify type
@@ -611,7 +609,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
 
                 // Character's vertical position relative to the top of the game container
-                // characterPos is pixels above the GROUND_LEVEL_PERCENT (bottom of road)
+                // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
                 const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
                 const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
                 const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
@@ -619,7 +617,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 const characterRight_px = characterX_px + characterWidth_px; // Character's right edge from left of game container
 
                 // Obstacle's vertical position relative to the top of the game container
-                // Obstacle is at GROUND_LEVEL_PERCENT (bottom of road)
+                // Obstacle is at GROUND_LEVEL_PERCENT from bottom
                 const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
 
 
@@ -767,7 +765,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
 
                 // Character's vertical position relative to the top of the game container
-                // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom (bottom of road)
+                // characterPos is pixels above the GROUND_LEVEL_PERCENT from bottom
                 const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
                 const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx); // Character bottom edge from top of container
                 const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px; // Character top edge from top of container
@@ -1116,7 +1114,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       <div
         className="character-container absolute w-24 h-24 transition-all duration-300 ease-out" // Added class for easier targeting
         style={{
-          // Position based on characterPos state relative to new ground (bottom of road)
+          // Position based on characterPos state relative to new ground
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
           // MODIFIED: Adjusted left position to move character backward
           left: '5%', // Fixed horizontal position
@@ -1212,8 +1210,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         key={obstacle.id} // Unique key for React list rendering
         className="absolute"
         style={{
-          // ObstacleY is always relative to the new ground level (bottom of road)
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${obstacleHeightPx}px)`, // Position obstacles on top of the road
+          // ObstacleY is always relative to the new ground level
+          bottom: `${GROUND_LEVEL_PERCENT}%`,
           left: `${obstacle.position}%` // Horizontal position
         }}
       >
@@ -1258,7 +1256,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         style={{
           width: `${particle.size}px`, // Size based on particle state
           height: `${particle.size}px`,
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`, // Vertical position relative to new ground (bottom of road)
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`, // Vertical position relative to new ground
           left: `calc(5% + ${particle.x}px)`, // MODIFIED: Horizontal position relative to character (using 5%)
           opacity: particle.opacity // Opacity for fading effect
         }}
@@ -1387,17 +1385,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           0% { transform: translate(-50%, 0); opacity: 1; }
           100% { transform: translate(-50%, -20px); opacity: 0; }
         }
-
-        /* NEW: Sidewalk animation */
-        @keyframes sidewalk-scroll {
-            0% { background-position-x: 0; }
-            100% { background-position-x: -100%; } /* Scroll left by 100% of the image width */
-        }
-
-        .animate-sidewalk-scroll {
-            animation: sidewalk-scroll 10s linear infinite; /* Adjust duration for speed */
-        }
-
       `}</style>
        <style jsx global>{`
         body {
@@ -1432,37 +1419,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Clouds */}
           {renderClouds()}
 
-          {/* Road Layer */}
-          {/* Positioned relative to the new GROUND_LEVEL_PERCENT (bottom of road) */}
-          <div className="absolute bottom-0 w-full" style={{ height: `${ROAD_HEIGHT_PERCENT}%`, bottom: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Road gradient (light gray) */}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-600 to-gray-400">
-                  {/* Road markings (example: dashed white lines) */}
-                  <div className="absolute inset-y-0 left-0 w-full flex justify-around items-center">
-                      {/* Add dashed lines */}
-                      {[...Array(10)].map((_, i) => (
-                          <div key={i} className="w-1 h-4 bg-white opacity-70 rounded-sm"></div> // Adjust size and spacing as needed
-                      ))}
-                  </div>
+          {/* Ground */}
+          {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
+          <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
+              <div className="absolute inset-0 bg-gradient-to-t from-green-900 to-green-700">
+                  {/* Ground details (small elements on the ground) */}
+                  <div className="w-full h-1 bg-green-800 absolute top-0"></div>
+                  <div className="w-3 h-3 bg-green-800 rounded-full absolute top-6 left-20"></div>
+                  <div className="w-4 h-2 bg-green-800 rounded-full absolute top-10 left-40"></div>
+                  <div className="w-6 h-3 bg-green-800 rounded-full absolute top-8 right-10"></div>
+                  <div className="w-3 h-1 bg-green-800 rounded-full absolute top-12 right-32"></div>
               </div>
           </div>
-
-          {/* Sidewalk Layer with Texture */}
-          {/* Positioned below the road layer */}
-          <div
-              className="absolute bottom-0 w-full animate-sidewalk-scroll" // Apply animation class
-              style={{
-                  height: `${GROUND_LEVEL_PERCENT}%`,
-                  backgroundImage: `url(https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cartoon-stone-texture_1110-576.jpg)`, // Use the image URL
-                  backgroundSize: 'auto 70%', // Adjusted size to make the texture smaller (70% of container height)
-                  backgroundRepeat: 'repeat-x', // Repeat horizontally
-                  backgroundPositionX: '0', // Initial position
-              }}
-          >
-              {/* Ground details (small elements on the ground) - REMOVED as texture is used */}
-              {/* You can add small elements on top of the texture if needed */}
-          </div>
-
 
           {/* Character */}
           {renderCharacter()}
@@ -1644,9 +1612,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                           )}
                       </div>
                   ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
                       {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                      {item.label && (
+                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                      )}
                     </div>
                   )}
                 </div>
