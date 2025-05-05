@@ -1213,7 +1213,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         className="absolute"
         style={{
           // ObstacleY is always relative to the new ground level (bottom of road)
-          bottom: `${GROUND_LEVEL_PERCENT}%`,
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${obstacleHeightPx}px)`, // Position obstacles on top of the road
           left: `${obstacle.position}%` // Horizontal position
         }}
       >
@@ -1424,7 +1424,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Road Layer */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT (bottom of road) */}
           <div className="absolute bottom-0 w-full" style={{ height: `${ROAD_HEIGHT_PERCENT}%`, bottom: `${GROUND_LEVEL_PERCENT}%` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-gray-700">
+              {/* Changed road gradient to light gray */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-600 to-gray-400">
                   {/* Road markings (example: dashed white lines) */}
                   <div className="absolute inset-y-0 left-0 w-full flex justify-around items-center">
                       {/* Add dashed lines */}
@@ -1438,8 +1439,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Sidewalk Layer */}
           {/* Positioned below the road layer */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Ground gradient for sidewalk color */}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-700 to-gray-500">
+              {/* Changed ground gradient to light green for sidewalk color */}
+              <div className="absolute inset-0 bg-gradient-to-t from-green-500 to-green-300">
                   {/* Ground details (small elements on the ground) - Changed colors to gray shades */}
                   <div className="w-full h-1 bg-gray-800 absolute top-0"></div>
                   <div className="w-3 h-3 bg-gray-800 rounded-full absolute top-6 left-20"></div>
