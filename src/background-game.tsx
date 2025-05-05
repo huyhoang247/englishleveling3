@@ -229,8 +229,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // --- NEW: Shield Skill States ---
   const SHIELD_MAX_HEALTH = 2000; // Base health for the shield - Tăng lên 2000 theo yêu cầu người dùng
-  // REMOVED: SHIELD_DURATION = 5000; // Shield active duration in ms (e.g., 5 seconds)
-  const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
+  const SHIELD_COOLDOWN_TIME = 20000; // Shield cooldown time in ms (20 seconds) - Giảm xuống 20s để dễ test
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active
   const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown
@@ -274,7 +273,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const particleTimerRef = useRef(null); // Timer for generating particles
   // NEW: Shield timers
   const shieldCooldownTimerRef = useRef(null); // Timer for shield cooldown
-  // REMOVED: shieldActiveTimerRef = useRef(null); // Timer for shield active duration
+  // REMOVED: shieldActiveTimerRef = useRef(null); // Timer for shield active duration - REMOVED
   const cooldownCountdownTimerRef = useRef(null); // Timer for cooldown countdown display
 
 
@@ -367,8 +366,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // NEW: Reset Shield states
     setIsShieldActive(false);
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
-    setIsShieldOnCooldown(false);
-    setRemainingCooldown(0);
+    setIsShieldOnCooldown(false); // Reset cooldown
+    setRemainingCooldown(0); // Reset cooldown display
 
     setActiveCoins([]); // NEW: Reset active coins
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
@@ -435,7 +434,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(particleTimerRef.current);
       // NEW: Clear Shield timers
       clearTimeout(shieldCooldownTimerRef.current);
-      // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer
+      // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer - REMOVED
       clearInterval(cooldownCountdownTimerRef.current);
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
@@ -601,9 +600,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // --- NEW: Function to activate Shield skill ---
   const activateShield = () => {
-    // Check if game is active, not over, and not on cooldown, and not showing card/stats
-    if (!gameStarted || gameOver || isShieldOnCooldown || isShieldActive || showCard || isStatsFullscreen) {
-      console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldOnCooldown, isShieldActive, showCard, isStatsFullscreen });
+    // Check if game is active, not over, AND shield is NOT active AND NOT on cooldown, and not showing card/stats
+    if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || showCard || isStatsFullscreen) {
+      console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldActive, isShieldOnCooldown, showCard, isStatsFullscreen });
       return;
     }
 
@@ -613,27 +612,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setIsShieldActive(true);
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to max
 
-    // REMOVED: Set shield active duration timer
-    // shieldActiveTimerRef.current = setTimeout(() => {
-    //     console.log("Shield duration ended.");
-    //     setIsShieldActive(false); // Deactivate shield after duration
-    //     setShieldHealth(0); // Set shield health to 0
-    // }, SHIELD_DURATION);
-
-    // Set shield cooldown timer
-    setIsShieldOnCooldown(true);
-    setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000); // Initialize remaining cooldown for display
-
-    shieldCooldownTimerRef.current = setTimeout(() => {
-        console.log("Shield cooldown ended.");
-        setIsShieldOnCooldown(false); // End cooldown
-        setRemainingCooldown(0); // Reset remaining cooldown display
-    }, SHIELD_COOLDOWN_TIME);
-
-    // Start cooldown countdown display
-    cooldownCountdownTimerRef.current = setInterval(() => {
-        setRemainingCooldown(prev => Math.max(0, prev - 1)); // Decrement every second
-    }, 1000);
+    // Cooldown and countdown timers are now started when shield health reaches 0
   };
 
 
@@ -704,14 +683,27 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               collisionDetected = true;
               // Handle damage based on shield status
               if (isShieldActive) {
-                  const damageToShield = obstacle.damage;
                   setShieldHealth(prev => {
+                      const damageToShield = obstacle.damage;
                       const newShieldHealth = Math.max(0, prev - damageToShield);
                       // Shield breaks if health is 0 or less
                       if (newShieldHealth <= 0) {
-                          console.log("Shield broken!");
+                          console.log("Shield broken! Starting cooldown.");
                           setIsShieldActive(false); // Deactivate shield if health is 0 or less
-                          // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer (no longer used)
+                          // Start cooldown timer
+                          setIsShieldOnCooldown(true);
+                          setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000); // Initialize remaining cooldown for display
+
+                          shieldCooldownTimerRef.current = setTimeout(() => {
+                              console.log("Shield cooldown ended.");
+                              setIsShieldOnCooldown(false); // End cooldown
+                              setRemainingCooldown(0); // Reset remaining cooldown display
+                          }, SHIELD_COOLDOWN_TIME);
+
+                          // Start cooldown countdown display
+                          cooldownCountdownTimerRef.current = setInterval(() => {
+                              setRemainingCooldown(prev => Math.max(0, prev - 1)); // Decrement every second
+                          }, 1000);
                       }
                       return newShieldHealth;
                   });
@@ -758,6 +750,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           .filter(obstacle => {
             // Keep obstacles that haven't collided and are still visible or will loop back
             // Now also filter out obstacles that have the 'collided' flag set
+            // Obstacles are removed if collided OR if health is 0 or less (if they didn't die from shield damage)
             return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
           });
       });
@@ -946,7 +939,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       clearInterval(particleTimerRef.current);
       // NEW: Clear Shield timers
       clearTimeout(shieldCooldownTimerRef.current);
-      // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer
+      // REMOVED: clearTimeout(shieldActiveTimerRef.current); // Clear the active timer - REMOVED
       clearInterval(cooldownCountdownTimerRef.current);
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
@@ -1178,8 +1171,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // --- NEW: Render Shield ---
   const renderShield = () => {
-    // Only render if shield is active
-    if (!isShieldActive) return null;
+    // Only render if shield is active AND has health
+    if (!isShieldActive || shieldHealth <= 0) return null;
 
     // Position the shield above and slightly in front of the character.
     // Character container is at bottom: calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px), left: 5%
@@ -1230,7 +1223,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         style={{
           top: `${coin.y}%`, // Position based on current Y (%)
           left: `${coin.x}%`, // Position based on current X (%)
-          transform: 'translate(-50%, -50%)', // Center the Lottie container
+          transform: 'translate(-50%, -50%)', // Center the Lottie
           pointerEvents: 'none' // Ensure clicks pass through
         }}
       >
@@ -1638,12 +1631,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
           {/* --- NEW: Shield Skill UI Element --- */}
            <div
-            className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 relative ${isShieldOnCooldown || isShieldActive || !gameStarted || gameOver || showCard ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+            // Disable button if game is not started, over, shield is active, on cooldown, or showing card/stats
+            className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || showCard || isStatsFullscreen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`}
             onClick={activateShield} // Call activateShield on click
-            title={isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` : isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` : "Kích hoạt Khiên chắn"} // Updated tooltip
+            title={
+              !gameStarted || gameOver ? "Không khả dụng" :
+              isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
+              isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
+              showCard || isStatsFullscreen ? "Không khả dụng" :
+              "Kích hoạt Khiên chắn"
+            } // Updated tooltip based on state
             aria-label="Sử dụng Khiên chắn"
             role="button"
-            tabIndex={!isShieldOnCooldown && !isShieldActive && gameStarted && !gameOver && !showCard && !isStatsFullscreen ? 0 : -1} // Make focusable only when usable
+            // Make focusable only when usable
+            tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || showCard || isStatsFullscreen ? -1 : 0}
           >
             {/* Shield Icon (Lottie) */}
             <div className="w-10 h-10">
