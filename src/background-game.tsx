@@ -1422,14 +1422,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {/* Ground */}
           {/* Positioned relative to the new GROUND_LEVEL_PERCENT */}
           <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              {/* Changed ground gradient to gray for sidewalk color */}
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-700 to-gray-500">
-                  {/* Ground details (small elements on the ground) - Changed colors to gray shades */}
-                  <div className="w-full h-1 bg-gray-800 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-gray-800 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-gray-800 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-gray-800 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-gray-800 rounded-full absolute top-12 right-32"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-green-900 to-green-700">
+                  {/* Ground details (small elements on the ground) */}
+                  <div className="w-full h-1 bg-green-800 absolute top-0"></div>
+                  <div className="w-3 h-3 bg-green-800 rounded-full absolute top-6 left-20"></div>
+                  <div className="w-4 h-2 bg-green-800 rounded-full absolute top-10 left-40"></div>
+                  <div className="w-6 h-3 bg-green-800 rounded-full absolute top-8 right-10"></div>
+                  <div className="w-3 h-1 bg-green-800 rounded-full absolute top-12 right-32"></div>
               </div>
           </div>
 
@@ -1613,9 +1612,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                           )}
                       </div>
                   ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 relative shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 flex flex-col items-center justify-center`}>
                       {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                      {item.label && (
+                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                      )}
                     </div>
                   )}
                 </div>
