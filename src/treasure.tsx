@@ -117,7 +117,7 @@ const KeyIcon = () => (
 
 // Define interface for component props
 interface TreasureChestProps {
-  initialChests?: number; // Initial number of chests
+  initialChests?: number; // Initial number of chests (still needed for logic)
   keyCount?: number; // NEW: Number of keys collected
   onKeyCollect?: (amount: number) => void; // NEW: Callback for when a key is collected (used for unlocking chests)
   onCoinReward: (amount: number) => void; // Callback function to add coins
@@ -171,6 +171,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
   // State for chests remaining - This state will now represent chests that can be opened with keys
+  // It's still needed for the openChest logic, but won't be displayed directly as a number
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
   // NEW: State to hold pending gem reward
@@ -190,6 +191,8 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         if (keyCount < 1) {
             console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
             // You could add a state here to briefly show a "Not enough keys" message on the UI
+        } else if (chestsRemaining <= 0) {
+             console.log("Hết rương để mở!"); // Log or show a message if no chests are left
         }
         return;
     }
@@ -202,7 +205,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       // Decrease chests remaining and use one key
       setChestsRemaining(prev => prev - 1);
       if (onKeyCollect) {
-          onKeyCollect(1); // Signal that 1 key was used
+          onKeyCollect(1); // Signal that 1 key was used (e.g., to decrease key count in parent)
       }
 
       setTimeout(() => {
@@ -421,18 +424,9 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
         </div>
 
-        {/* Display remaining chests and keys */}
+        {/* Display only keys */}
+        {/* Removed the chests remaining display div */}
         <div className="mt-4 flex space-x-3 items-center justify-center">
-          {/* Chests (now showing count only) */}
-          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
-            {chestsRemaining > 0 && (
-              <div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>
-            )}
-            {/* Removed KeyIcon from here */}
-            <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-             {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
-          </div>
-
           {/* Keys */}
           <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
             {keyCount > 0 && (
