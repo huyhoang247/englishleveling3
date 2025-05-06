@@ -41,7 +41,7 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke={color}
+    stroke="currentColor" // Use currentColor for dynamic color
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -1584,12 +1584,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     {/* Coins Container (Kept in main game file) */}
                     <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
                       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                      <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
-                        <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
-                          <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
-                          <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
-                        </div>
-                        <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
+                      {/* Replaced the old coin icon div with the new image tag */}
+                      <div className="relative mr-0.5 flex items-center justify-center"> {/* Container for the image */}
+                        <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+                          alt="Dollar Coin Icon" // Add alt text
+                          className="w-4 h-4" // Adjust size as needed
+                        />
                       </div>
                       <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
                         {displayedCoins.toLocaleString()}
@@ -1803,3 +1804,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
