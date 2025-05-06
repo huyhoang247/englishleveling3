@@ -33,7 +33,7 @@ const sampleFlashcards = [
   },
   {
     id: 3,
-    imageUrl: "https://placehold.co/1024x1536/C0C0C0/333333?text=Flashcard+3",
+    imageUrl: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3", // Corrected placeholder text color
     isFavorite: false,
     vocabulary: {
       word: "Ubiquitous",
@@ -47,7 +47,7 @@ const sampleFlashcards = [
   },
   {
     id: 4,
-    imageUrl: "https://placehold.co/1024x1536/B0B0B0/333333?text=Flashcard+4",
+    imageUrl: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4", // Corrected placeholder text color
     isFavorite: true,
     vocabulary: {
       word: "Quintessential",
@@ -80,8 +80,8 @@ const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1", // Placeholder example images
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
   "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
-  "https://placehold.co/1024x153FF/A133FF/FFFFFF?text=Example+4",
-  "https://placehold.co/1024x1536/A0A0A0/333330?text=Example+5", // Using the same placeholder as Flashcard 5 for consistency
+  "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
+  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
   // Add more images if needed
 ];
 
@@ -158,7 +158,7 @@ export default function VerticalFlashcardGallery() {
 
   // State to manage vocabulary modal
   const [showVocabDetail, setShowVocabDetail] = useState(false);
-  const [selectedVocab, setSelectedVocab] = useState(null); // Keep this state if needed elsewhere, but using selectedCard for modal content
+  const [selectedVocab, setSelectedVocab] = useState(null); // This state seems unused now, using selectedCard instead
 
   // State to manage the selected card for detail view
   const [selectedCard, setSelectedCard] = useState(null);
@@ -186,29 +186,29 @@ export default function VerticalFlashcardGallery() {
     setTimeout(() => setShowFavoriteToast(false), 2000);
   };
 
-  // Function to open vocabulary detail modal
+  // Function to open vocabulary detail modal (now fullscreen)
   const openVocabDetail = (card) => {
     setSelectedCard(card); // Set the selected card
     setShowVocabDetail(true);
   };
+
+  // Removed useEffect to close settings on outside click as per user's code
 
   // Function to render modal content based on detailType
   const renderModalContent = () => {
     if (!selectedCard) return null;
 
     // Find the original index of the selected card in the flashcards array
-    // This is needed to select the correct example image
     const originalIndex = flashcards.findIndex(card => card.id === selectedCard.id);
 
     if (imageDetail === 'basic' && selectedCard.imageUrl) {
       return (
-        <div className="flex justify-center items-center h-full p-4"> {/* Added padding */}
+        // Content for Basic Image
+        <div className="flex justify-center items-center flex-grow p-4 overflow-hidden"> {/* Added flex-grow, overflow-hidden */}
           <img
             src={selectedCard.imageUrl}
             alt="Card"
             className="max-h-full max-w-full object-contain rounded-lg shadow-md" // Added rounded corners and shadow
-            // Ensure image itself is responsive within its container
-            style={{ maxWidth: '100%', maxHeight: '100%' }}
           />
         </div>
       );
@@ -219,247 +219,147 @@ export default function VerticalFlashcardGallery() {
       const exampleImageUrl = exampleImages[exampleIndex];
 
       return (
-        <div className="flex justify-center items-center h-full p-4"> {/* Added padding */}
+        // Content for Example Image
+        <div className="flex justify-center items-center flex-grow p-4 overflow-hidden"> {/* Added flex-grow, overflow-hidden */}
           <img
             src={exampleImageUrl}
             alt="Example"
             className="max-h-full max-w-full object-contain rounded-lg shadow-md" // Added rounded corners and shadow
-             // Ensure image itself is responsive within its container
-            style={{ maxWidth: '100%', maxHeight: '100%' }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Example+Image+Error`;
-            }}
           />
         </div>
       );
-    } else if (imageDetail === 'phrase' && selectedCard.vocabulary) { // Check if vocabulary exists
+    } else if (imageDetail === 'phrase' && selectedCard.vocabulary?.phrases) {
        return (
-        <div className="p-5 overflow-y-auto flex-grow">
+         // Content for Phrase/Basic Vocabulary Info
+        <div className="p-5 overflow-y-auto flex-grow"> {/* Added flex-grow */}
           <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
            {/* Cụm từ */}
-           {selectedCard.vocabulary.phrases && selectedCard.vocabulary.phrases.length > 0 && ( // Check if phrases exist and is not empty
-             <div className="mb-5">
-               <div className="inline-block bg-purple-50 dark:bg-purple-900 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 dark:text-purple-300 mb-2"> {/* Added dark mode styles */}
-                 Cụm từ phổ biến
-               </div>
-               <div className="flex flex-wrap gap-2">
-                 {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                   <span key={index} className="bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-sm"> {/* Added dark mode styles */}
-                     {phrase}
-                   </span>
-                 ))}
-               </div>
+           <div className="mb-5">
+             <div className="inline-block bg-purple-50 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 mb-2">
+               Cụm từ phổ biến
              </div>
-           )}
-
-            {/* Nghĩa */}
-            {selectedCard.vocabulary.meaning && ( // Check if meaning exists
-              <div className="mb-5">
-                <div className="inline-block bg-blue-50 dark:bg-blue-900 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-300 mb-2"> {/* Added dark mode styles */}
-                  Nghĩa
-                </div>
-                <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
+             <div className="flex flex-wrap gap-2">
+               {selectedCard.vocabulary.phrases.map((phrase, index) => (
+                 <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-sm">
+                   {phrase}
+                 </span>
+               ))}
+             </div>
+           </div>
+            {/* You could add more vocabulary details here if needed */}
+            <div className="mb-5">
+              <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
+                Nghĩa
               </div>
-            )}
-
-            {/* Ví dụ */}
-            {selectedCard.vocabulary.example && ( // Check if example exists
-              <div className="mb-5">
-                <div className="inline-block bg-green-50 dark:bg-green-900 rounded-full px-3 py-1 text-xs font-semibold text-green-600 dark:text-green-300 mb-2"> {/* Added dark mode styles */}
-                  Ví dụ
-                </div>
-                 <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
-                  "{selectedCard.vocabulary.example}"
-                </p>
+              <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
+            </div>
+            <div className="mb-5">
+              <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
+                Ví dụ
               </div>
-            )}
-
-             {/* Phổ biến */}
-             {selectedCard.vocabulary.popularity && ( // Check if popularity exists
-              <div className="mb-5">
-                <div className="inline-block bg-amber-50 dark:bg-amber-900 rounded-full px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-300 mb-2"> {/* Added dark mode styles */}
-                  Mức độ phổ biến
-                </div>
-                <div className="flex items-center">
-                  <span className={`
-                    px-2 py-1 rounded-lg text-sm font-medium
-                    ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200" : // Added dark mode styles
-                      selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-200" : // Added dark mode styles
-                      "bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200"} // Added dark mode styles
-                  `}>
-                    {selectedCard.vocabulary.popularity}
-                  </span>
-
-                  {/* Hiển thị biểu đồ mức độ phổ biến */}
-                  <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"> {/* Added dark mode styles */}
-                    <div
-                      className={`h-full rounded-full ${
-                        selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
-                        selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
-                        selectedCard.vocabulary.popularity === "Thấp" ? "bg-red-500 w-1/5" : "" // Added condition for "Thấp"
-                      }`}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-             )}
-
-
-             {/* Synonyms & Antonyms */}
-             {(selectedCard.vocabulary.synonyms || selectedCard.vocabulary.antonyms) && ( // Check if synonyms or antonyms exist
-               <div className="grid grid-cols-2 gap-4">
-                 {/* Từ đồng nghĩa */}
-                 {selectedCard.vocabulary.synonyms && selectedCard.vocabulary.synonyms.length > 0 && ( // Check if synonyms exist and is not empty
-                   <div>
-                     <div className="inline-block bg-indigo-50 dark:bg-indigo-900 rounded-full px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 mb-2"> {/* Added dark mode styles */}
-                       Từ đồng nghĩa
-                     </div>
-                     <div className="flex flex-col gap-1">
-                       {selectedCard.vocabulary.synonyms.map((word, index) => (
-                         <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
-                           {word}
-                         </span>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                 {/* Từ trái nghĩa */}
-                 {selectedCard.vocabulary.antonyms && selectedCard.vocabulary.antonyms.length > 0 && ( // Check if antonyms exist and is not empty
-                   <div>
-                     <div className="inline-block bg-pink-50 dark:bg-pink-900 rounded-full px-3 py-1 text-xs font-semibold text-pink-600 dark:text-pink-300 mb-2"> {/* Added dark mode styles */}
-                       Từ trái nghĩa
-                     </div>
-                     <div className="flex flex-col gap-1">
-                       {selectedCard.vocabulary.antonyms.map((word, index) => (
-                         <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-pink-50 dark:bg-pink-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
-                           {word}
-                         </span>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-               </div>
-             )}
+               <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
+                "{selectedCard.vocabulary.example}"
+              </p>
+            </div>
         </div>
        );
     }
     else {
-      // Default to text detail if image or example not available or basic/example/phrase not selected
-      // This will show all available vocabulary details
+      // Default to Text Detail (full vocabulary info) if image or example not available or basic/example not selected
       return (
-        <div className="p-5 overflow-y-auto flex-grow">
-           {/* Check if vocabulary exists before accessing its properties */}
-           {selectedCard.vocabulary && (
-             <>
-               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
-               {/* Nghĩa */}
-               {selectedCard.vocabulary.meaning && (
-                 <div className="mb-5">
-                   <div className="inline-block bg-blue-50 dark:bg-blue-900 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-300 mb-2"> {/* Added dark mode styles */}
-                     Nghĩa
-                   </div>
-                   <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
-                 </div>
-               )}
+         // Content for Full Vocabulary Info
+        <div className="p-5 overflow-y-auto flex-grow"> {/* Added flex-grow */}
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
+          {/* Nghĩa */}
+          <div className="mb-5">
+            <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
+              Nghĩa
+            </div>
+            <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
+          </div>
 
-               {/* Ví dụ */}
-               {selectedCard.vocabulary.example && (
-                 <div className="mb-5">
-                   <div className="inline-block bg-green-50 dark:bg-green-900 rounded-full px-3 py-1 text-xs font-semibold text-green-600 dark:text-green-300 mb-2"> {/* Added dark mode styles */}
-                     Ví dụ
-                   </div>
-                   <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
-                     "{selectedCard.vocabulary.example}"
-                   </p>
-                 </div>
-               )}
+          {/* Ví dụ */}
+          <div className="mb-5">
+            <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
+              Ví dụ
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
+              "{selectedCard.vocabulary.example}"
+            </p>
+          </div>
 
-               {/* Cụm từ */}
-               {selectedCard.vocabulary.phrases && selectedCard.vocabulary.phrases.length > 0 && (
-                 <div className="mb-5">
-                   <div className="inline-block bg-purple-50 dark:bg-purple-900 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 dark:text-purple-300 mb-2"> {/* Added dark mode styles */}
-                     Cụm từ phổ biến
-                   </div>
-                   <div className="flex flex-wrap gap-2">
-                     {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                       <span key={index} className="bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-sm"> {/* Added dark mode styles */}
-                         {phrase}
-                       </span>
-                     ))}
-                   </div>
-                 </div>
-               )}
+          {/* Cụm từ */}
+          <div className="mb-5">
+            <div className="inline-block bg-purple-50 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 mb-2">
+              Cụm từ phổ biến
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selectedCard.vocabulary.phrases.map((phrase, index) => (
+                <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-sm">
+                  {phrase}
+                </span>
+              ))}
+            </div>
+          </div>
 
-                {/* Phổ biến */}
-                {selectedCard.vocabulary.popularity && (
-                  <div className="mb-5">
-                    <div className="inline-block bg-amber-50 dark:bg-amber-900 rounded-full px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-300 mb-2"> {/* Added dark mode styles */}
-                      Mức độ phổ biến
-                    </div>
-                    <div className="flex items-center">
-                      <span className={`
-                        px-2 py-1 rounded-lg text-sm font-medium
-                        ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200" : // Added dark mode styles
-                          selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-200" : // Added dark mode styles
-                          "bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200"} // Added dark mode styles
-                      `}>
-                        {selectedCard.vocabulary.popularity}
-                      </span>
+           {/* Phổ biến */}
+           <div className="mb-5">
+             <div className="inline-block bg-amber-50 rounded-full px-3 py-1 text-xs font-semibold text-amber-600 mb-2">
+               Mức độ phổ biến
+             </div>
+             <div className="flex items-center">
+               <span className={`
+                 px-2 py-1 rounded-lg text-sm font-medium
+                 ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200" : // Added dark mode styles
+                   selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-200" : // Added dark mode styles
+                   "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200"} // Added condition and dark mode styles for "Thấp"
+               `}>
+                 {selectedCard.vocabulary.popularity}
+               </span>
 
-                      {/* Hiển thị biểu đồ mức độ phổ biến */}
-                      <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"> {/* Added dark mode styles */}
-                        <div
-                          className={`h-full rounded-full ${
-                            selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
-                            selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
-                            selectedCard.vocabulary.popularity === "Thấp" ? "bg-red-500 w-1/5" : "" // Added condition for "Thấp"
-                          }`}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+               {/* Hiển thị biểu đồ mức độ phổ biến */}
+               <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"> {/* Added dark mode styles */}
+                 <div
+                   className={`h-full rounded-full ${
+                     selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
+                     selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
+                     selectedCard.vocabulary.popularity === "Thấp" ? "bg-red-500 w-1/5" : "" // Added condition for "Thấp"
+                   }`}
+                 ></div>
+               </div>
+             </div>
+           </div>
 
-                {/* Synonyms & Antonyms */}
-                {(selectedCard.vocabulary.synonyms || selectedCard.vocabulary.antonyms) && (
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Từ đồng nghĩa */}
-                    {selectedCard.vocabulary.synonyms && selectedCard.vocabulary.synonyms.length > 0 && (
-                      <div>
-                        <div className="inline-block bg-indigo-50 dark:bg-indigo-900 rounded-full px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-300 mb-2"> {/* Added dark mode styles */}
-                          Từ đồng nghĩa
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          {selectedCard.vocabulary.synonyms.map((word, index) => (
-                            <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
-                              {word}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+           {/* Synonyms & Antonyms */}
+           <div className="grid grid-cols-2 gap-4">
+             {/* Từ đồng nghĩa */}
+             <div>
+               <div className="inline-block bg-indigo-50 rounded-full px-3 py-1 text-xs font-semibold text-indigo-600 mb-2">
+                 Từ đồng nghĩa
+               </div>
+               <div className="flex flex-col gap-1">
+                 {selectedCard.vocabulary.synonyms.map((word, index) => (
+                   <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
+                     {word}
+                   </span>
+                 ))}
+               </div>
+             </div>
 
-                    {/* Từ trái nghĩa */}
-                    {selectedCard.vocabulary.antonyms && selectedCard.vocabulary.antonyms.length > 0 && (
-                      <div>
-                        <div className="inline-block bg-pink-50 dark:bg-pink-900 rounded-full px-3 py-1 text-xs font-semibold text-pink-600 dark:text-pink-300 mb-2"> {/* Added dark mode styles */}
-                          Từ trái nghĩa
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          {selectedCard.vocabulary.antonyms.map((word, index) => (
-                            <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-pink-50 dark:bg-pink-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
-                              {word}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-             </>
-           )}
+             {/* Từ trái nghĩa */}
+             <div>
+               <div className="inline-block bg-pink-50 rounded-full px-3 py-1 text-xs font-semibold text-pink-600 mb-2">
+                 Từ trái nghĩa
+               </div>
+               <div className="flex flex-col gap-1">
+                 {selectedCard.vocabulary.antonyms.map((word, index) => (
+                   <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-pink-50 dark:bg-pink-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
+                     {word}
+                   </span>
+                 ))}
+               </div>
+             </div>
+           </div>
         </div>
       );
     }
@@ -648,6 +548,9 @@ export default function VerticalFlashcardGallery() {
                           }}
                         />
 
+                        {/* Image Detail Overlay based on setting - Removed the overlay */}
+                        {/* The overlay for image detail is now completely removed */}
+
                       </div>
                     </div>
                   </div>
@@ -787,7 +690,7 @@ export default function VerticalFlashcardGallery() {
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         visualStyle === 'anime'
-                          ? 'border-pink-500 bg-pink-50 dark:border-pink-900' // Added dark mode styles
+                          ? 'border-pink-500 bg-pink-50 dark:border-pink-400 dark:bg-pink-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-600 hover:bg-pink-50/30 dark:hover:bg-pink-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setVisualStyle('anime')}
@@ -807,7 +710,7 @@ export default function VerticalFlashcardGallery() {
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         visualStyle === 'comic'
-                          ? 'border-blue-500 bg-blue-50 dark:border-blue-900' // Added dark mode styles
+                          ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setVisualStyle('comic')}
@@ -826,7 +729,7 @@ export default function VerticalFlashcardGallery() {
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         visualStyle === 'realistic'
-                          ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' // Added dark mode styles
+                          ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-600 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setVisualStyle('realistic')}
@@ -878,7 +781,7 @@ export default function VerticalFlashcardGallery() {
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         imageDetail === 'phrase'
-                          ? 'border-purple-500 bg-purple-50 dark:border-purple-900' // Added dark mode styles
+                          ? 'border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-600 hover:bg-purple-50/30 dark:hover:bg-purple-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setImageDetail('phrase')}
@@ -898,7 +801,7 @@ export default function VerticalFlashcardGallery() {
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         imageDetail === 'example'
-                          ? 'border-teal-500 bg-teal-50 dark:border-teal-900' // Added dark mode styles
+                          ? 'border-teal-500 bg-teal-50 dark:border-teal-400 dark:bg-teal-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-teal-200 dark:hover:border-teal-600 hover:bg-teal-50/30 dark:hover:bg-teal-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setImageDetail('example')}
@@ -964,22 +867,20 @@ export default function VerticalFlashcardGallery() {
         </div>
       )}
 
-      {/* Modal chi tiết từ vựng */}
+      {/* Modal chi tiết từ vựng - Modified for Fullscreen */}
       {showVocabDetail && selectedCard && (
         <>
-          {/* Overlay */}
+          {/* Overlay - Still needed for background dimming */}
           <div
             className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300"
             style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}
-            onClick={() => setShowVocabDetail(false)}
+            onClick={() => setShowVocabDetail(false)} // Click overlay to close
           ></div>
 
-          {/* Modal Vocabulary Detail - Adjusted positioning and height */}
-          <div className="fixed inset-x-0 bottom-0 top-0 z-50 flex items-start justify-center px-4 py-8"> {/* Changed inset-0 to inset-x-0 bottom-0 top-0, added py-8, changed items-center to items-start */}
-            <div
-              className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-full" // Removed max-h-[90vh], added max-h-full
-              style={{ animation: 'scaleIn 0.3s ease-out forwards' }}
-            >
+          {/* Fullscreen Modal Content */}
+          <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900" // Changed to fullscreen classes
+               style={{ animation: 'fadeIn 0.3s ease-out forwards' }} // Simple fade in for fullscreen
+          >
               {/* Header */}
               <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0">
                 <div className="flex justify-between items-center">
@@ -1002,11 +903,7 @@ export default function VerticalFlashcardGallery() {
               </div>
 
               {/* Body - Render content based on renderModalContent function */}
-              {/* Ensure this div allows scrolling */}
-              <div className="overflow-y-auto flex-grow"> {/* Added overflow-y-auto and flex-grow */}
-                {renderModalContent()}
-              </div>
-
+              {renderModalContent()}
 
               {/* Footer */}
               <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
@@ -1017,7 +914,6 @@ export default function VerticalFlashcardGallery() {
                   Đóng
                 </button>
               </div>
-            </div>
           </div>
         </>
       )}
@@ -1026,3 +922,4 @@ export default function VerticalFlashcardGallery() {
     </div>
   );
 }
+
