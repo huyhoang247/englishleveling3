@@ -1366,10 +1366,10 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 alt="Key"
                 className="absolute w-4 h-4" // Base size
                 style={{
-                    // Adjusted bottom to create a gap above the health bar
-                    bottom: 'calc(100% + 4px)', // Position 4px above the top edge
-                    left: '50%', // Center horizontally relative to the health bar container
-                    transform: 'translateX(-50%)', // Center horizontally only (removed vertical translate)
+                    // Chỉnh sửa bottom và transform để tạo khoảng cách và căn giữa ngang
+                    bottom: 'calc(100% + 4px)', // Đưa đáy ảnh lên trên 100% (đỉnh thanh máu), rồi cộng thêm 4px khoảng trống
+                    left: '50%', // Căn giữa theo chiều ngang
+                    transform: 'translateX(-50%)', // Chỉ dịch chuyển ngang để căn tâm ảnh vào giữa
                 }}
               />
             )}
