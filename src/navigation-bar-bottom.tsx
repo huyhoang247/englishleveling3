@@ -33,7 +33,7 @@ const sampleFlashcards = [
   },
   {
     id: 3,
-    imageUrl: "https://placehold.co/1024x1536/C0C0C0/333333?text=Flashcard+3",
+    imageUrl: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3", // Corrected placeholder text color
     isFavorite: false,
     vocabulary: {
       word: "Ubiquitous",
@@ -47,7 +47,7 @@ const sampleFlashcards = [
   },
   {
     id: 4,
-    imageUrl: "https://placehold.co/1024x1536/B0B0B0/333333?text=Flashcard+4",
+    imageUrl: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4", // Corrected placeholder text color
     isFavorite: true,
     vocabulary: {
       word: "Quintessential",
@@ -81,7 +81,7 @@ const exampleImages = [
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
   "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
   "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
-  "https://placehold.co/1024x153FF/A133FF/FFFFFF?text=Example+5",
+  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
   // Add more images if needed
 ];
 
@@ -158,7 +158,7 @@ export default function VerticalFlashcardGallery() {
 
   // State to manage vocabulary modal
   const [showVocabDetail, setShowVocabDetail] = useState(false);
-  const [selectedVocab, setSelectedVocab] = useState(null);
+  const [selectedVocab, setSelectedVocab] = useState(null); // This state seems unused now, using selectedCard instead
 
   // State to manage the selected card for detail view
   const [selectedCard, setSelectedCard] = useState(null);
@@ -186,7 +186,7 @@ export default function VerticalFlashcardGallery() {
     setTimeout(() => setShowFavoriteToast(false), 2000);
   };
 
-  // Function to open vocabulary detail modal
+  // Function to open vocabulary detail modal (now fullscreen)
   const openVocabDetail = (card) => {
     setSelectedCard(card); // Set the selected card
     setShowVocabDetail(true);
@@ -203,7 +203,8 @@ export default function VerticalFlashcardGallery() {
 
     if (imageDetail === 'basic' && selectedCard.imageUrl) {
       return (
-        <div className="flex justify-center items-center h-full p-4"> {/* Added padding */}
+        // Content for Basic Image
+        <div className="flex justify-center items-center flex-grow p-4 overflow-hidden"> {/* Added flex-grow, overflow-hidden */}
           <img
             src={selectedCard.imageUrl}
             alt="Card"
@@ -218,19 +219,20 @@ export default function VerticalFlashcardGallery() {
       const exampleImageUrl = exampleImages[exampleIndex];
 
       return (
-        <div className="flex justify-center items-center h-full p-4"> {/* Added padding */}
+        // Content for Example Image
+        <div className="flex justify-center items-center flex-grow p-4 overflow-hidden"> {/* Added flex-grow, overflow-hidden */}
           <img
             src={exampleImageUrl}
             alt="Example"
             className="max-h-full max-w-full object-contain rounded-lg shadow-md" // Added rounded corners and shadow
-            // Removed fixed width and height to make it responsive
           />
         </div>
       );
     } else if (imageDetail === 'phrase' && selectedCard.vocabulary?.phrases) {
        return (
-        <div className="p-5 overflow-y-auto flex-grow">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">{selectedCard.vocabulary.word}</h3>
+         // Content for Phrase/Basic Vocabulary Info
+        <div className="p-5 overflow-y-auto flex-grow"> {/* Added flex-grow */}
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
            {/* Cụm từ */}
            <div className="mb-5">
              <div className="inline-block bg-purple-50 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 mb-2">
@@ -249,13 +251,13 @@ export default function VerticalFlashcardGallery() {
               <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
                 Nghĩa
               </div>
-              <p className="text-gray-800">{selectedCard.vocabulary.meaning}</p>
+              <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
             </div>
             <div className="mb-5">
               <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
                 Ví dụ
               </div>
-               <p className="text-gray-700 italic bg-green-50 p-3 rounded-lg border-l-4 border-green-300">
+               <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
                 "{selectedCard.vocabulary.example}"
               </p>
             </div>
@@ -263,16 +265,17 @@ export default function VerticalFlashcardGallery() {
        );
     }
     else {
-      // Default to text detail if image or example not available or basic/example not selected
+      // Default to Text Detail (full vocabulary info) if image or example not available or basic/example not selected
       return (
-        <div className="p-5 overflow-y-auto flex-grow">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">{selectedCard.vocabulary.word}</h3>
+         // Content for Full Vocabulary Info
+        <div className="p-5 overflow-y-auto flex-grow"> {/* Added flex-grow */}
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
           {/* Nghĩa */}
           <div className="mb-5">
             <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
               Nghĩa
             </div>
-            <p className="text-gray-800">{selectedCard.vocabulary.meaning}</p>
+            <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
           </div>
 
           {/* Ví dụ */}
@@ -280,7 +283,7 @@ export default function VerticalFlashcardGallery() {
             <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
               Ví dụ
             </div>
-            <p className="text-gray-700 italic bg-green-50 p-3 rounded-lg border-l-4 border-green-300">
+            <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
               "{selectedCard.vocabulary.example}"
             </p>
           </div>
@@ -307,15 +310,15 @@ export default function VerticalFlashcardGallery() {
              <div className="flex items-center">
                <span className={`
                  px-2 py-1 rounded-lg text-sm font-medium
-                 ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-700" :
-                   selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-700" :
-                   "bg-red-100 text-red-700"}
+                 ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200" : // Added dark mode styles
+                   selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-200" : // Added dark mode styles
+                   "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200"} // Added condition and dark mode styles for "Thấp"
                `}>
                  {selectedCard.vocabulary.popularity}
                </span>
 
                {/* Hiển thị biểu đồ mức độ phổ biến */}
-               <div className="ml-3 flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+               <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"> {/* Added dark mode styles */}
                  <div
                    className={`h-full rounded-full ${
                      selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
@@ -336,7 +339,7 @@ export default function VerticalFlashcardGallery() {
                </div>
                <div className="flex flex-col gap-1">
                  {selectedCard.vocabulary.synonyms.map((word, index) => (
-                   <span key={index} className="text-gray-700 text-sm bg-indigo-50 px-2 py-1 rounded">
+                   <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
                      {word}
                    </span>
                  ))}
@@ -350,7 +353,7 @@ export default function VerticalFlashcardGallery() {
                </div>
                <div className="flex flex-col gap-1">
                  {selectedCard.vocabulary.antonyms.map((word, index) => (
-                   <span key={index} className="text-gray-700 text-sm bg-pink-50 px-2 py-1 rounded">
+                   <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-pink-50 dark:bg-pink-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
                      {word}
                    </span>
                  ))}
@@ -394,7 +397,7 @@ export default function VerticalFlashcardGallery() {
               strokeLinejoin="round"
             >
               <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
           </div>
         </div>
@@ -598,10 +601,10 @@ export default function VerticalFlashcardGallery() {
                   <h3 className="text-lg font-semibold text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l-.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                     Cài đặt hiển thị
-                  </h4>
+                  </h3>
                   <button
                     onClick={() => setShowSettings(false)}
                     className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"
@@ -864,22 +867,20 @@ export default function VerticalFlashcardGallery() {
         </div>
       )}
 
-      {/* Modal chi tiết từ vựng */}
-      {showVocabDetail && selectedCard && ( // Changed selectedVocab to selectedCard
+      {/* Modal chi tiết từ vựng - Modified for Fullscreen */}
+      {showVocabDetail && selectedCard && (
         <>
-          {/* Overlay */}
+          {/* Overlay - Still needed for background dimming */}
           <div
             className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300"
             style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}
-            onClick={() => setShowVocabDetail(false)}
+            onClick={() => setShowVocabDetail(false)} // Click overlay to close
           ></div>
 
-          {/* Modal Vocabulary Detail */}
-          <div className="fixed inset-0 z-50 w-full h-full m-0 p-0">
-            <div
-              className="bg-white dark:bg-gray-800 w-full h-full max-w-none rounded-none overflow-auto flex flex-col"
-              style={{ animation: 'scaleIn 0.3s ease-out forwards' }}
-            >
+          {/* Fullscreen Modal Content */}
+          <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900" // Changed to fullscreen classes
+               style={{ animation: 'fadeIn 0.3s ease-out forwards' }} // Simple fade in for fullscreen
+          >
               {/* Header */}
               <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0">
                 <div className="flex justify-between items-center">
@@ -913,7 +914,6 @@ export default function VerticalFlashcardGallery() {
                   Đóng
                 </button>
               </div>
-            </div>
           </div>
         </>
       )}
@@ -922,3 +922,4 @@ export default function VerticalFlashcardGallery() {
     </div>
   );
 }
+
