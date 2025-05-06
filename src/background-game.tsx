@@ -131,6 +131,7 @@ interface GameObstacle {
   maxHealth: number; // Maximum health of the obstacle
   damage: number; // Damage the obstacle deals on collision
   lottieSrc?: string; // Optional Lottie source URL for Lottie obstacles
+  hasKey: boolean; // NEW: Indicates if this obstacle carries a key
 }
 
 // --- NEW: Define interface for Coin ---
@@ -210,9 +211,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // --- NEW: Key States ---
   const [keysCollected, setKeysCollected] = useState(0); // Player's key count
   const [activeKeys, setActiveKeys] = useState<GameKey[]>([]); // Array of active keys
-  const [enemiesDefeatedSinceLastKey, setEnemiesDefeatedSinceLastKey] = useState(0); // Counter for key drops
-  // NEW: Ref to store the target number of enemies for the next key drop
-  const keyDropTargetRef = useRef<number | null>(null);
+  // MODIFIED: Renamed counter and target for key drop logic
+  const [obstaclesScheduledSinceLastKeyCarrier, setObstaclesScheduledSinceLastKeyCarrier] = useState(0); // Counter for obstacles scheduled since last key carrier
+  const [nextKeyCarrierTarget, setNextKeyCarrierTarget] = useState<number | null>(null); // Target number of obstacles for the next key carrier
 
 
   // UI States
@@ -247,7 +248,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Obstacle types with properties (added base health)
   // REMOVED: The 'rock' obstacle type
-  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
+  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[] = [ // Exclude hasKey from type definition
     // Lottie Obstacle Type 1 (from previous request)
     {
       type: 'lottie-obstacle-1', // Renamed type for clarity
@@ -346,8 +347,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setActiveCoins([]); // NEW: Reset active coins
     setActiveKeys([]); // NEW: Reset active keys
     setKeysCollected(0); // NEW: Reset key count
-    setEnemiesDefeatedSinceLastKey(0); // NEW: Reset enemy defeated counter for keys
-    keyDropTargetRef.current = null; // NEW: Reset key drop target
+    // MODIFIED: Reset key drop counters/targets
+    setObstaclesScheduledSinceLastKeyCarrier(0);
+    setNextKeyCarrierTarget(Math.floor(Math.random() * 6) + 5); // Set initial target between 5 and 10
 
 
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
@@ -373,7 +375,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           position: 120, // Position off-screen to the right
           ...firstObstacleType, // Include obstacle properties
           health: firstObstacleType.baseHealth, // Initialize health
-          maxHealth: firstObstacleType.baseHealth // Set max health
+          maxHealth: firstObstacleType.baseHealth, // Set max health
+          hasKey: false // Initial obstacles don't have keys
         });
 
         // Add a few more obstacles with increasing distance
@@ -384,10 +387,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             position: 150 + (i * 50),
             ...obstacleType, // Include obstacle properties
             health: obstacleType.baseHealth, // Initialize health
-            maxHealth: obstacleType.baseHealth // Set max health
+            maxHealth: obstacleType.baseHealth, // Set max health
+            hasKey: false // Initial obstacles don't have keys
           });
         }
     }
+
+    // MODIFIED: Assign key carrier for the initial obstacles if the target is met
+    setObstaclesScheduledSinceLastKeyCarrier(prev => {
+        const newCount = prev + initialObstacles.length;
+        if (nextKeyCarrierTarget !== null && newCount >= nextKeyCarrierTarget) {
+            // Randomly select one of the initial obstacles to be the key carrier
+            const carrierIndex = Math.floor(Math.random() * initialObstacles.length);
+            initialObstacles[carrierIndex].hasKey = true;
+            console.log(`Initial obstacle ${carrierIndex} is the key carrier.`);
+            setNextKeyCarrierTarget(null); // Reset target
+            return 0; // Reset counter
+        }
+        return newCount;
+    });
 
 
     setObstacles(initialObstacles);
@@ -506,24 +524,50 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       // Ensure obstacleTypes is not empty before trying to generate obstacles
       if (obstacleTypes.length > 0) {
+          // MODIFIED: Logic to assign key carrier based on scheduled count
+          let assignKeyToThisBatch = false;
+          setObstaclesScheduledSinceLastKeyCarrier(prev => {
+              const newCount = prev + obstacleCount;
+              // If target is not set, set it now (should be set in startGame, but safety check)
+               if (nextKeyCarrierTarget === null) {
+                   setNextKeyCarrierTarget(Math.floor(Math.random() * 6) + 5); // Random number between 5 and 10
+                   console.log(`Initial target set to ${nextKeyCarrierTarget} (from scheduleNextObstacle).`);
+               }
+
+              // Check if the new count meets or exceeds the target
+              if (nextKeyCarrierTarget !== null && newCount >= nextKeyCarrierTarget) {
+                  assignKeyToThisBatch = true; // Flag to assign key in this batch
+                  console.log(`Target ${nextKeyCarrierTarget} reached. Assigning key carrier.`);
+                  setNextKeyCarrierTarget(null); // Reset target
+                  return 0; // Reset counter
+              }
+
+              // If no key assigned, return the new count
+              return newCount;
+          });
+
           for (let i = 0; i < obstacleCount; i++) {
-            // Ensure we only pick from the remaining obstacle types
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-            // Add spacing between grouped obstacles
             const spacing = i * (Math.random() * 10 + 10);
+
+            // Assign key to the first obstacle in this batch if assignKeyToThisBatch is true
+            const hasKey = assignKeyToThisBatch && i === 0;
 
             newObstacles.push({
               id: Date.now() + i, // Unique ID
               position: 100 + spacing, // Position off-screen to the right with spacing
               ...randomObstacleType, // Include obstacle properties
               health: randomObstacleType.baseHealth, // Initialize health
-              maxHealth: randomObstacleType.baseHealth // Set max health
+              maxHealth: randomObstacleType.baseHealth, // Set max health
+              hasKey: hasKey // Assign hasKey property
             });
+             if (hasKey) {
+                 console.log(`Obstacle ${newObstacles[newObstacles.length - 1].id} is the key carrier.`);
+             }
           }
       }
 
 
-      // Add new obstacles to the existing array
       setObstacles(prev => [...prev, ...newObstacles]);
 
       scheduleNextObstacle(); // Schedule the next obstacle recursively
@@ -792,36 +836,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         if (obstacle.health <= 0 && !obstacle.collided) { // Check if health is zero or less AND it wasn't already marked as collided/defeated
                              obstacleDefeated = true; // Mark as defeated
                              console.log("Obstacle defeated!");
-                             // Increment defeated enemy counter for key drops
-                             setEnemiesDefeatedSinceLastKey(prev => {
-                                 const newCount = prev + 1;
 
-                                 // NEW KEY DROP LOGIC
-                                 // If keyDropTarget is not set and we've defeated at least 5 enemies, set the target
-                                 if (keyDropTargetRef.current === null && newCount >= 5) {
-                                     // Set the target for key drop between 5 and 10 enemies
-                                     keyDropTargetRef.current = Math.floor(Math.random() * 6) + 5; // Random number between 5 and 10
-                                     console.log(`Next key will drop after ${keyDropTargetRef.current} enemies.`);
-                                 }
-
-                                 // If the current count reaches the target, spawn a key and reset
-                                 if (keyDropTargetRef.current !== null && newCount === keyDropTargetRef.current) {
-                                     spawnKey(obstacle.position); // Spawn key at obstacle's position
-                                     keyDropTargetRef.current = null; // Reset target
-                                     return 0; // Reset counter
-                                 }
-
-                                 // If the count exceeds 10 without a drop (shouldn't happen with logic above, but as a fallback)
-                                 // Or if the count reaches 10 and the target was 10
-                                 if (newCount >= 10 && keyDropTargetRef.current === null) { // This case might happen if target was 10
-                                      spawnKey(obstacle.position); // Force spawn key
-                                      return 0; // Reset counter
-                                 }
-
-
-                                 // If no key dropped, return the new count
-                                 return newCount;
-                             });
+                             // MODIFIED KEY DROP LOGIC:
+                             // If this defeated obstacle has a key, spawn the key
+                             if (obstacle.hasKey) {
+                                 spawnKey(obstacle.position); // Spawn key at obstacle's position
+                             }
+                             // No need to increment/reset counters here anymore, that's handled in scheduleNextObstacle
                         }
 
 
@@ -835,13 +856,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
+                                // MODIFIED: When reusing, the obstacle does NOT have a key
                                 return {
                                     ...obstacle, // Keep existing properties like health if needed, but we reset health here
                                     ...randomObstacleType, // Override with new type properties
                                     id: Date.now(),
                                     position: 120 + randomOffset,
                                     health: randomObstacleType.baseHealth, // Reset health
-                                    maxHealth: randomObstacleType.baseHealth // Set max health
+                                    maxHealth: randomObstacleType.baseHealth, // Set max health
+                                    hasKey: false // Reused obstacles do NOT have keys initially
                                 };
                             } else {
                                 // If not reusing, let it move off-screen to be filtered out
@@ -1131,7 +1154,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         }
     };
     // Add isStatsFullscreen to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive]); // Added isStatsFullscreen to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive, nextKeyCarrierTarget]); // Added nextKeyCarrierTarget to dependency array
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1175,7 +1198,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen]); // Dependencies include game state and fullscreen state
+  }, [gameStarted, gameOver, isStatsFullscreen, nextKeyCarrierTarget]); // Added nextKeyCarrierTarget to dependency array
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -1472,19 +1495,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
         {/* --- NEW: Obstacle Health Bar and Key Icon --- */}
         {/* Position the health bar and icon above the obstacle */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 flex items-center space-x-1"> {/* Added flex and space-x */}
-            {/* Inner health bar */}
-            <div className="w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
-                <div
-                    className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
-                    style={{ width: `${obstacleHealthPct * 100}%` }}
-                ></div>
+        {/* Only show the health bar and icon if the obstacle is not defeated */}
+        {obstacle.health > 0 && (
+             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 flex items-center space-x-1"> {/* Added flex and space-x */}
+                {/* Inner health bar */}
+                <div className="w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+                    <div
+                        className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                        style={{ width: `${obstacleHealthPct * 100}%` }}
+                    ></div>
+                </div>
+                {/* Key Icon next to health bar - Only show if the obstacle hasKey */}
+                 {obstacle.hasKey && (
+                     <KeyIcon size={12} className="text-yellow-400"/> // Adjusted size for icon next to health bar
+                 )}
             </div>
-            {/* Key Icon next to health bar - Only show if obstacle is not defeated */}
-             {obstacle.health > 0 && (
-                 <KeyIcon size={12} className="text-yellow-400"/> // Adjusted size for icon next to health bar
-             )}
-        </div>
+        )}
       </div>
     );
   };
