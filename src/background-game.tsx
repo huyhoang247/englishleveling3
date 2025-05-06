@@ -164,7 +164,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [characterPos, setCharacterPos] = useState(0); // Vertical position of the character (0 is on the ground)
   const [obstacles, setObstacles] = useState<GameObstacle[]>([]); // Array of active obstacles with health
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
-  // const [runFrame, setRunFrame] = useState(0); // Current frame for run animation (can be removed if not used)
+  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState<any[]>([]); // Array of active particles (dust) - Added 'any' for simplicity, can be typed better
   const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
@@ -204,7 +204,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Refs for timers to manage intervals and timeouts
   const gameRef = useRef<HTMLDivElement | null>(null);
   const obstacleTimerRef = useRef<NodeJS.Timeout | null>(null);
-  // const runAnimationRef = useRef<NodeJS.Timeout | null>(null); // Can be removed if not used
+  const runAnimationRef = useRef<NodeJS.Timeout | null>(null);
   const particleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -348,15 +348,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   useEffect(() => {
     startGame();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // startGame should only run on mount
+  }, []);
 
   useEffect(() => {
     if (health <= 0 && gameStarted) {
       setGameOver(true);
       setIsRunning(false);
       if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
-      // if(runAnimationRef.current) clearInterval(runAnimationRef.current); // Removed as runAnimationRef is removed
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
       if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
@@ -476,36 +475,33 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }, randomTime);
   };
 
-  // MODIFIED: Jump function is now separate and can be called by a button if needed
-  const performJump = () => {
+  const jump = () => {
     if (!jumping && !gameOver && gameStarted && !isStatsFullscreen) {
       setJumping(true);
-      setCharacterPos(80); // Jump height
+      setCharacterPos(80);
       setTimeout(() => {
         if (gameStarted && !gameOver && !isStatsFullscreen) {
-          setCharacterPos(0); // Land
+          setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
-          }, 100); // Short delay to reset jumping state
+          }, 100);
         } else {
-             // If game paused or over while jumping, ensure character lands
              setCharacterPos(0);
              setJumping(false);
         }
-      }, 600); // Jump duration
+      }, 600);
     }
   };
 
-  // MODIFIED: Handle tap/click on the game area - NO LONGER TRIGGERS JUMP
   const handleTap = () => {
-    if (isStatsFullscreen) return; // Ignore taps if stats are in fullscreen
-
+    if (isStatsFullscreen) return;
     if (!gameStarted) {
-      startGame(); // Start the game if not started
+      startGame();
     } else if (gameOver) {
-      startGame(); // Restart the game if game is over
+      startGame();
+    } else {
+      jump(); // Allow jump on tap if game is running
     }
-    // The jump() call has been removed from here.
   };
 
   const triggerHealthDamageEffect = () => {
@@ -583,7 +579,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 const characterRight_px = characterX_px + characterWidth_px;
                 const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
 
-                let newObstaclesList = prevObstacles.map(obstacle => {
+                let newObstacles = prevObstacles.map(obstacle => {
                     let newPosition = obstacle.position - speed;
                     let collisionDetected = false;
                     const obstacleX_px = (newPosition / 100) * gameWidth;
@@ -615,19 +611,23 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             triggerCharacterDamageEffect(damageTaken);
                         }
 
+                        // NEW: Award key if enemy has one and is defeated by collision
                         if (obstacle.hasKey) {
                             addKeys(1);
-                            // Mark as collided and remove key to prevent re-awarding or respawning with key
+                            // Optionally, you might want to ensure the key isn't awarded again if the obstacle somehow persists
+                            // For this setup, collision = defeat, so it's fine.
+                            // We'll also mark it so it doesn't try to respawn with a key
                             return { ...obstacle, position: newPosition, collided: true, hasKey: false };
                         }
                     }
 
                     if (newPosition < -20 && !collisionDetected) {
                         if (Math.random() < 0.7) {
-                            if (obstacleTypes.length === 0) return {...obstacle, position: newPosition}; // Keep moving if no types
+                            if (obstacleTypes.length === 0) return obstacle;
                             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                             const randomOffset = Math.floor(Math.random() * 20);
 
+                            // Determine if the respawned obstacle has a key
                             enemiesSinceLastKeyRef.current++;
                             let carriesKeyOnRespawn = false;
                             if (enemiesSinceLastKeyRef.current >= nextKeySpawnCountRef.current) {
@@ -639,15 +639,15 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             return {
                                 ...obstacle,
                                 ...randomObstacleType,
-                                id: Date.now() + Math.random(), // Ensure unique ID on respawn
+                                id: Date.now(),
                                 position: 120 + randomOffset,
                                 health: randomObstacleType.baseHealth,
                                 maxHealth: randomObstacleType.baseHealth,
-                                hasKey: carriesKeyOnRespawn,
-                                collided: false
+                                hasKey: carriesKeyOnRespawn, // Key status for respawned
+                                collided: false // Reset collided flag
                             };
                         } else {
-                            return { ...obstacle, position: newPosition }; // Let it move off-screen
+                            return { ...obstacle, position: newPosition };
                         }
                     }
                     if (collisionDetected) {
@@ -656,7 +656,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     return { ...obstacle, position: newPosition };
                 });
 
-                return newObstaclesList.filter(obstacle => !obstacle.collided && obstacle.position > -20);
+                // Filter out collided obstacles
+                return newObstacles.filter(obstacle => !obstacle.collided && obstacle.position > -20);
             });
 
             setClouds(prevClouds => {
@@ -773,7 +774,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, characterPos, isStatsFullscreen, coins, isShieldActive, health]); // Added health to deps for collision key award
+  }, [gameStarted, gameOver, characterPos, isStatsFullscreen, coins, isShieldActive]); // Removed jumping, obstacleTypes from deps as they don't directly control this loop's core logic
 
   useEffect(() => {
       if (gameOver || isStatsFullscreen) {
@@ -881,7 +882,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   useEffect(() => {
     return () => {
       if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
-      // if(runAnimationRef.current) clearInterval(runAnimationRef.current); // Removed
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
       if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
@@ -1124,7 +1125,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         <div
           ref={gameRef}
           className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-          onClick={handleTap} // onClick still calls handleTap, but handleTap no longer calls jump()
+          onClick={handleTap}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
           <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
@@ -1143,19 +1144,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           {obstacles.map(obstacle => renderObstacle(obstacle))}
           {renderCoins()}
           {renderParticles()}
-
-          {/* Jump Button - Example of how you might add a dedicated jump button */}
-          {/* This is optional and can be styled and positioned as needed */}
-          {!isStatsFullscreen && gameStarted && !gameOver && (
-            <button
-                onClick={performJump} // Call performJump directly
-                className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-40 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"
-                title="Nhảy"
-            >
-                Nhảy
-            </button>
-          )}
-
 
           <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30">
             <div className="flex items-center">
@@ -1416,7 +1404,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           )}
 
           <TreasureChest
-            initialChests={3} // You can adjust this initial value as needed
+            initialChests={3}
             initialKeys={keys} // Pass current keys
             onCoinReward={startCoinCountAnimation}
             onGemReward={handleGemReward}
