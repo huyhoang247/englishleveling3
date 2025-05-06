@@ -211,6 +211,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [keysCollected, setKeysCollected] = useState(0); // Player's key count
   const [activeKeys, setActiveKeys] = useState<GameKey[]>([]); // Array of active keys
   const [enemiesDefeatedSinceLastKey, setEnemiesDefeatedSinceLastKey] = useState(0); // Counter for key drops
+  // NEW: Ref to store the target number of enemies for the next key drop
+  const keyDropTargetRef = useRef<number | null>(null);
 
 
   // UI States
@@ -345,6 +347,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setActiveKeys([]); // NEW: Reset active keys
     setKeysCollected(0); // NEW: Reset key count
     setEnemiesDefeatedSinceLastKey(0); // NEW: Reset enemy defeated counter for keys
+    keyDropTargetRef.current = null; // NEW: Reset key drop target
+
 
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
@@ -789,7 +793,35 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                              obstacleDefeated = true; // Mark as defeated
                              console.log("Obstacle defeated!");
                              // Increment defeated enemy counter for key drops
-                             setEnemiesDefeatedSinceLastKey(prev => prev + 1);
+                             setEnemiesDefeatedSinceLastKey(prev => {
+                                 const newCount = prev + 1;
+
+                                 // NEW KEY DROP LOGIC
+                                 // If keyDropTarget is not set and we've defeated at least 5 enemies, set the target
+                                 if (keyDropTargetRef.current === null && newCount >= 5) {
+                                     // Set the target for key drop between 5 and 10 enemies
+                                     keyDropTargetRef.current = Math.floor(Math.random() * 6) + 5; // Random number between 5 and 10
+                                     console.log(`Next key will drop after ${keyDropTargetRef.current} enemies.`);
+                                 }
+
+                                 // If the current count reaches the target, spawn a key and reset
+                                 if (keyDropTargetRef.current !== null && newCount === keyDropTargetRef.current) {
+                                     spawnKey(obstacle.position); // Spawn key at obstacle's position
+                                     keyDropTargetRef.current = null; // Reset target
+                                     return 0; // Reset counter
+                                 }
+
+                                 // If the count exceeds 10 without a drop (shouldn't happen with logic above, but as a fallback)
+                                 // Or if the count reaches 10 and the target was 10
+                                 if (newCount >= 10 && keyDropTargetRef.current === null) { // This case might happen if target was 10
+                                      spawnKey(obstacle.position); // Force spawn key
+                                      return 0; // Reset counter
+                                 }
+
+
+                                 // If no key dropped, return the new count
+                                 return newCount;
+                             });
                         }
 
 
@@ -819,24 +851,6 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
                         // If collided or defeated, mark for removal
                         if (collisionDetected || obstacleDefeated) {
-                            // NEW: If defeated, check if a key should drop
-                             if (obstacleDefeated) {
-                                 // Check if it's time to drop a key (between 5 and 10 enemies defeated)
-                                 setEnemiesDefeatedSinceLastKey(prev => {
-                                     const newCount = prev + 1;
-                                     // Check if the new count is within the key drop range (5-10)
-                                     if (newCount >= 5 && newCount <= 10) {
-                                         // Random chance to drop a key
-                                         // Let's say a 50% chance within this range
-                                         if (Math.random() < 0.5) {
-                                             spawnKey(obstacle.position); // Spawn key at obstacle's position
-                                             return 0; // Reset counter after dropping a key
-                                         }
-                                     }
-                                     // If no key dropped, return the new count
-                                     return newCount;
-                                 });
-                             }
                             return { ...obstacle, position: newPosition, remove: true }; // Add a remove flag
                         }
 
@@ -1024,7 +1038,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 return prevKeys
                     .map(key => {
                         // Approximate key size in pixels (assuming a fixed size for the icon)
-                        const keySize_px = 30; // Assuming key icon is roughly 30x30px
+                        const keySizePx = 30; // Assuming key icon is roughly 30x30px
 
                         // Key position in pixels relative to the top-left of the game container
                         const keyX_px = (key.x / 100) * gameWidth;
@@ -1040,9 +1054,9 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                              // Check collision with character's bounding box
                              if (
                                 characterRight_px > keyX_px &&
-                                characterLeft_px < keyX_px + keySize_px &&
+                                characterLeft_px < keyX_px + keySizePx &&
                                 characterBottomFromTop_px > keyY_px &&
-                                characterTopFromTop_px < keyY_px + keySize_px
+                                characterTopFromTop_px < keyY_px + keySizePx
                              ) {
                                  shouldBeAttracted = true; // Mark key to be attracted
                              }
@@ -1071,7 +1085,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             newY = (newKeyY_px / gameHeight) * 100;
 
                             // Check for collection (close proximity to character center)
-                            if (distance < (characterWidth_px / 2 + keySize_px / 2) * 0.8) { // Collision when centers are close
+                            if (distance < (characterWidth_px / 2 + keySizePx / 2) * 0.8) { // Collision when centers are close
                                 collisionDetected = true;
                                 handleKeyCollected(); // Call the key collected handler
                             }
