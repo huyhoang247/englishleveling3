@@ -423,15 +423,14 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
         {/* Display remaining chests and keys */}
         <div className="mt-4 flex space-x-3 items-center justify-center">
-          {/* Chests (now showing count + key icon) */}
+          {/* Chests (now showing count only) */}
           <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
             {chestsRemaining > 0 && (
               <div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>
             )}
+            {/* Removed KeyIcon from here */}
             <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-            {/* Replaced "/initialChests" with KeyIcon */}
-            <KeyIcon />
-            {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
+             {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
 
           {/* Keys */}
@@ -439,7 +438,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
             {keyCount > 0 && (
               <div className="absolute inset-0 bg-green-500/10 rounded-lg animate-pulse-slow"></div>
             )}
-            <KeyIcon />
+            <KeyIcon /> {/* Kept KeyIcon here */}
             <span className="text-green-200 font-bold text-xs">{keyCount}</span>
              {keyCount > 0 && (<div className="absolute -inset-0.5 bg-green-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
