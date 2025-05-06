@@ -33,26 +33,22 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// NEW: Gem Icon SVG (Moved from treasure.tsx)
+// NEW: Gem Icon Component using Image
+// Replaced the SVG with an <img> tag using the provided URL
 const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor" // Use currentColor for dynamic color
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide-icon ${className}`}
-    {...props}
-  >
-    <path d="M6 3h12l4 6-10 13L2 9l4-6z" />
-    <path d="M12 22L2 9" />
-    <path d="M12 22l10-13" />
-    <path d="M2 9h20" />
-  </svg>
+  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/tourmaline.png"
+      alt="Tourmaline Gem Icon" // Added alt text
+      className="w-full h-full object-contain" // Make image fit the container
+      // Optional: Add onerror to handle broken image link
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.onerror = null; // Prevent infinite loop
+        target.src = "https://placehold.co/24x24/8a2be2/ffffff?text=Gem"; // Placeholder image
+      }}
+    />
+  </div>
 );
 
 
@@ -1568,7 +1564,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center"> {/* Reduced margin-right */}
                             {/* Gem Icon */}
-                            <GemIcon size={14} color="#a78bfa" className="relative z-20" /> {/* Adjusted size and color */}
+                            {/* Used the updated GemIcon component */}
+                            <GemIcon size={16} color="#a78bfa" className="relative z-20" /> {/* Adjusted size to 16 */}
                         </div>
                         <div className="font-bold text-purple-200 text-xs tracking-wide"> {/* Text size remains xs */}
                             {gems.toLocaleString()} {/* Display gems count */}
@@ -1590,6 +1587,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
                           alt="Dollar Coin Icon" // Add alt text
                           className="w-4 h-4" // Adjust size as needed
+                           // Optional: Add onerror to handle broken image link
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; // Prevent infinite loop
+                            target.src = "https://placehold.co/16x16/ffd700/000000?text=$"; // Placeholder image
+                          }}
                         />
                       </div>
                       <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
@@ -1804,4 +1807,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
