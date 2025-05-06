@@ -1348,31 +1348,31 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           left: `${obstacle.position}%` // Horizontal position
         }}
       >
-        {/* --- NEW: Obstacle Health Bar --- */}
+        {/* --- Obstacle Health Bar --- */}
         {/* Position the health bar above the obstacle */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+        {/* Added relative position to contain the key icon */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm relative"> {/* Adjusted size, Added relative */}
             {/* Inner health bar */}
             <div
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
-        </div>
 
-        {/* NEW: Key icon on health bar if obstacle has a key */}
-        {/* Moved outside the health bar container */}
-        {obstacle.hasKey && (
-          <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-            alt="Key"
-            className="absolute w-4 h-4" // Base size
-             // Adjusted positioning relative to the main obstacle container
-            style={{
-                top: '-20px', // Position above the health bar (adjust as needed)
-                right: '0px', // Position at the right edge of the obstacle container (adjust as needed)
-                transform: 'translateY(-50%)', // Vertically center relative to its top edge
-            }}
-          />
-        )}
+             {/* NEW: Key icon on health bar if obstacle has a key */}
+             {/* Positioned absolute inside the health bar container */}
+            {obstacle.hasKey && (
+              <img
+                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+                alt="Key"
+                className="absolute w-4 h-4" // Base size
+                style={{
+                    bottom: '100%', // Position at the top edge of the health bar container
+                    left: '50%', // Center horizontally relative to the health bar container
+                    transform: 'translateX(-50%) translateY(-4px)', // Center horizontally and adjust up by 4px
+                }}
+              />
+            )}
+        </div>
 
         {/* Obstacle Element */}
         {obstacleEl} {/* Render the specific obstacle element */}
