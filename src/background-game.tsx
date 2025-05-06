@@ -129,6 +129,7 @@ interface GameObstacle {
   damage: number; // Damage the obstacle deals on collision
   lottieSrc?: string; // Optional Lottie source URL for Lottie obstacles
   hasKey?: boolean; // NEW: Indicates if the obstacle carries a key
+  collided?: boolean; // Optional: to mark if obstacle has collided, for filtering
 }
 
 // --- NEW: Define interface for Coin ---
@@ -140,6 +141,7 @@ interface GameCoin {
   initialSpeedY: number; // Speed for initial vertical movement (down)
   attractSpeed: number; // Speed factor for moving towards the character after collision
   isAttracted: boolean; // Flag to indicate if the coin is moving towards the character
+  collided?: boolean; // Optional: to mark if coin has been collected
 }
 
 // --- NEW: Define interface for Cloud with image source ---
@@ -218,7 +220,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
   // Obstacle types with properties
-  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[] = [
+  // Note: Omit 'collided' as it's a runtime state, not a type definition.
+  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey' | 'collided'>[] = [
     {
       type: 'lottie-obstacle-1',
       height: 16,
@@ -250,11 +253,19 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const startCoinCountAnimation = (reward: number) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
-      let step = Math.ceil(reward / 30);
+      let step = Math.ceil(reward / 30); // Ensure step is at least 1 if reward is small but > 0
+      if (reward > 0 && step === 0) step = 1;
       let current = oldCoins;
 
       if (coinCountAnimationTimerRef.current) {
           clearInterval(coinCountAnimationTimerRef.current);
+      }
+
+      // Only start interval if there's a reward
+      if (reward === 0) {
+          setDisplayedCoins(newCoins); // Update immediately if no reward
+          setCoins(newCoins);
+          return;
       }
 
       const countInterval = setInterval(() => {
@@ -290,7 +301,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setGameOver(false);
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
-    setObstacles([]);
+    setObstacles([]); // Start with empty obstacles, scheduleNextObstacle will populate
     setParticles([]);
     setIsShieldActive(false);
     setShieldHealth(SHIELD_MAX_HEALTH);
@@ -304,78 +315,104 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDamageAmount(0);
     setShowDamageNumber(false);
     setIsStatsFullscreen(false);
-    setCoins(357);
+    setCoins(357); // Reset coins or load from storage
     setDisplayedCoins(357);
-    setGems(42);
-    setKeys(1); // Reset keys
+    setGems(42);   // Reset gems or load from storage
+    setKeys(1);    // Reset keys or load from storage
     enemiesSinceLastKeyRef.current = 0; // Reset key spawn counter
     nextKeySpawnCountRef.current = Math.floor(Math.random() * 6) + 5; // Reset next key spawn target
 
 
+    // Initial obstacles are now primarily handled by scheduleNextObstacle
+    // to ensure a continuous flow from the beginning.
+    // However, you might want a few starting obstacles immediately.
     const initialObstacles: GameObstacle[] = [];
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
         initialObstacles.push({
           id: Date.now(),
-          position: 120,
+          position: 120, // Start off-screen
           ...firstObstacleType,
           health: firstObstacleType.baseHealth,
           maxHealth: firstObstacleType.baseHealth,
-          hasKey: false, // Initial obstacles don't have keys
+          hasKey: false,
         });
 
-        for (let i = 1; i < 5; i++) {
+        // Optionally add a few more initial obstacles spaced out
+        for (let i = 1; i < 3; i++) { // Reduced from 5 to 3 for a less crowded start
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           initialObstacles.push({
             id: Date.now() + i,
-            position: 150 + (i * 50),
+            position: 120 + (i * (Math.random()*20 + 30)), // Random spacing
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
-            hasKey: false, // Initial obstacles don't have keys
+            hasKey: false,
           });
         }
     }
     setObstacles(initialObstacles);
+
     generateInitialClouds(5);
 
     if (particleTimerRef.current) clearInterval(particleTimerRef.current);
     particleTimerRef.current = setInterval(generateParticles, 300);
 
+    // Clear any existing timers before starting new ones
+    if (obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+    obstacleTimerRef.current = null; // Ensure it's null so scheduleNextObstacle runs
+    if (coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
+    coinScheduleTimerRef.current = null; // Ensure it's null
+
     scheduleNextObstacle();
     scheduleNextCoin();
   };
 
+  // Call startGame when component mounts
   useEffect(() => {
     startGame();
-  }, []);
+    // Cleanup function for when the component unmounts
+    return () => {
+      if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
+      if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
+      if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+      if(coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
+      if(coinCountAnimationTimerRef.current) clearInterval(coinCountAnimationTimerRef.current);
+      if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
+    };
+  }, []); // Empty dependency array means this runs once on mount and cleanup on unmount
 
   useEffect(() => {
-    if (health <= 0 && gameStarted) {
+    if (health <= 0 && gameStarted && !gameOver) { // Added !gameOver to prevent multiple triggers
       setGameOver(true);
       setIsRunning(false);
+      // Clear all game-related intervals and timeouts
       if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+      obstacleTimerRef.current = null; // Important to allow restart
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
       if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
       pausedShieldCooldownRemainingRef.current = null;
-      if(coinScheduleTimerRef.current) clearInterval(coinScheduleTimerRef.current);
+      if(coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
+      coinScheduleTimerRef.current = null; // Important to allow restart
       if(coinCountAnimationTimerRef.current) clearInterval(coinCountAnimationTimerRef.current);
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
           gameLoopIntervalRef.current = null;
       }
     };
-  }, [health, gameStarted]);
+  }, [health, gameStarted, gameOver]); // gameOver added to dependencies
 
   const generateInitialClouds = (count: number) => {
     const newClouds: GameCloud[] = [];
     for (let i = 0; i < count; i++) {
       const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
       newClouds.push({
-        id: Date.now() + i,
-        x: Math.random() * 120 + 100,
+        id: Date.now() + i + Math.random(), // Ensure unique ID
+        x: Math.random() * 120 + 100, // Start off-screen
         y: Math.random() * 40 + 10,
         size: Math.random() * 40 + 30,
         speed: Math.random() * 0.3 + 0.15,
@@ -390,7 +427,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     const newParticles: any[] = []; // Can be typed better
     for (let i = 0; i < 2; i++) {
       newParticles.push({
-        id: Date.now() + i,
+        id: Date.now() + i + Math.random(), // Ensure unique ID
         x: 5 + Math.random() * 5,
         y: 0,
         xVelocity: -Math.random() * 1 - 0.5,
@@ -400,12 +437,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         color: Math.random() > 0.5 ? 'bg-yellow-600' : 'bg-yellow-700'
       });
     }
-    setParticles(prev => [...prev, ...newParticles]);
+    setParticles(prev => [...prev, ...newParticles].slice(-50)); // Keep particle count manageable
   };
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || !gameStarted) { // Added !gameStarted
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -413,92 +450,105 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         return;
     }
 
+    // Clear existing timer before setting a new one to prevent multiple timers
+    if (obstacleTimerRef.current) {
+        clearTimeout(obstacleTimerRef.current);
+    }
+    
     const randomTime = Math.floor(Math.random() * 15000) + 5000; // Between 5-20 seconds
-    if (obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current); // Clear previous before setting new
     obstacleTimerRef.current = setTimeout(() => {
-      const obstacleCount = Math.floor(Math.random() * 3) + 1;
-      const newObstacles: GameObstacle[] = [];
+      if (gameOver || isStatsFullscreen || !gameStarted) return; // Double check conditions before spawning
+
+      const obstacleCount = Math.floor(Math.random() * 2) + 1; // Spawn 1 or 2 obstacles
+      const newObstaclesBatch: GameObstacle[] = [];
 
       if (obstacleTypes.length > 0) {
           for (let i = 0; i < obstacleCount; i++) {
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-            const spacing = i * (Math.random() * 10 + 10);
+            // Ensure enough spacing for multiple obstacles in a batch
+            const spacing = i * (Math.random() * 20 + 40); // Increased spacing
 
-            // NEW: Key spawning logic
             enemiesSinceLastKeyRef.current++;
             let carriesKey = false;
             if (enemiesSinceLastKeyRef.current >= nextKeySpawnCountRef.current) {
                 carriesKey = true;
-                enemiesSinceLastKeyRef.current = 0; // Reset counter
-                nextKeySpawnCountRef.current = Math.floor(Math.random() * 6) + 5; // Set next target (5-10)
+                enemiesSinceLastKeyRef.current = 0;
+                nextKeySpawnCountRef.current = Math.floor(Math.random() * 6) + 5;
             }
 
-            newObstacles.push({
-              id: Date.now() + i,
-              position: 100 + spacing,
+            newObstaclesBatch.push({
+              id: Date.now() + i + Math.random(), // Ensure unique ID
+              position: 100 + spacing, // Start off-screen to the right
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
-              hasKey: carriesKey, // Assign key status
+              hasKey: carriesKey,
             });
           }
       }
-      setObstacles(prev => [...prev, ...newObstacles]);
-      scheduleNextObstacle();
+      setObstacles(prev => [...prev, ...newObstaclesBatch]);
+      scheduleNextObstacle(); // Recursively call to schedule the next batch
     }, randomTime);
   };
 
   const scheduleNextCoin = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || !gameStarted) { // Added !gameStarted
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
         }
         return;
     }
-    const randomTime = Math.floor(Math.random() * 4000) + 1000;
+
     if (coinScheduleTimerRef.current) {
         clearTimeout(coinScheduleTimerRef.current);
     }
+
+    const randomTime = Math.floor(Math.random() * 4000) + 1000; // Between 1-5 seconds
     coinScheduleTimerRef.current = setTimeout(() => {
+      if (gameOver || isStatsFullscreen || !gameStarted) return; // Double check
+
       const newCoin: GameCoin = {
-        id: Date.now(),
-        x: 110,
-        y: Math.random() * 60,
+        id: Date.now() + Math.random(), // Ensure unique ID
+        x: 110, // Start off-screen to the right
+        y: Math.random() * 60, // Random vertical position
         initialSpeedX: Math.random() * 0.5 + 0.5,
-        initialSpeedY: Math.random() * 0.3,
+        initialSpeedY: Math.random() * 0.3, // Slight downward drift
         attractSpeed: Math.random() * 0.05 + 0.03,
         isAttracted: false
       };
       setActiveCoins(prev => [...prev, newCoin]);
-      scheduleNextCoin();
+      scheduleNextCoin(); // Recursively call
     }, randomTime);
   };
 
   const jump = () => {
     if (!jumping && !gameOver && gameStarted && !isStatsFullscreen) {
       setJumping(true);
-      setCharacterPos(80);
+      setCharacterPos(80); // Jump height
       setTimeout(() => {
+        // Check game state again before resetting position, in case game ended mid-jump
         if (gameStarted && !gameOver && !isStatsFullscreen) {
-          setCharacterPos(0);
+          setCharacterPos(0); // Land
           setTimeout(() => {
             setJumping(false);
-          }, 100);
+          }, 100); // Short delay to allow landing animation/state
         } else {
+             // If game ended or paused, ensure character is reset properly without further state changes
              setCharacterPos(0);
              setJumping(false);
         }
-      }, 600);
+      }, 600); // Jump duration
     }
   };
 
   const handleTap = () => {
-    if (isStatsFullscreen) return;
+    if (isStatsFullscreen) return; // Don't interact with game if stats are fullscreen
+
     if (!gameStarted) {
       startGame();
     } else if (gameOver) {
-      startGame();
+      startGame(); // Restart game on tap if game over
     } else {
       jump(); // Allow jump on tap if game is running
     }
@@ -508,7 +558,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       setShowHealthDamageEffect(true);
       setTimeout(() => {
           setShowHealthDamageEffect(false);
-      }, 300);
+      }, 300); // Duration of the visual effect
   };
 
   const triggerCharacterDamageEffect = (amount: number) => {
@@ -516,7 +566,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       setShowDamageNumber(true);
       setTimeout(() => {
           setShowDamageNumber(false);
-      }, 800);
+      }, 800); // Duration of the damage number display
   };
 
   const activateShield = () => {
@@ -526,13 +576,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     }
     console.log("Kích hoạt Khiên!");
     setIsShieldActive(true);
-    setShieldHealth(SHIELD_MAX_HEALTH);
+    setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health on activation
     setIsShieldOnCooldown(true);
     setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000);
     shieldCooldownStartTimeRef.current = Date.now();
-    pausedShieldCooldownRemainingRef.current = null;
+    pausedShieldCooldownRemainingRef.current = null; // Clear any paused state
 
-    if (shieldCooldownTimerRef.current) {
+    if (shieldCooldownTimerRef.current) { // Clear any existing cooldown timer
         clearTimeout(shieldCooldownTimerRef.current);
     }
     shieldCooldownTimerRef.current = setTimeout(() => {
@@ -540,67 +590,89 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         setIsShieldOnCooldown(false);
         setRemainingCooldown(0);
         shieldCooldownStartTimeRef.current = null;
-        pausedShieldCooldownRemainingRef.current = null;
+        // Shield deactivates naturally when health is 0 or by player action, not by cooldown end.
     }, SHIELD_COOLDOWN_TIME);
   };
 
 
+  // Main Game Loop Effect
   useEffect(() => {
+    // If game not started, or is over, or stats are fullscreen, pause the game loop.
     if (!gameStarted || gameOver || isStatsFullscreen) {
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
+        // Also pause particle generation if it's running via its own timer
         if (particleTimerRef.current) {
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
         }
-        return;
+        return; // Exit the effect
     }
 
+    // Start particle generation if not already running
+    if (!particleTimerRef.current) {
+        particleTimerRef.current = setInterval(generateParticles, 300);
+    }
+
+    // Start the main game loop if not already running
     if (!gameLoopIntervalRef.current) {
         gameLoopIntervalRef.current = setInterval(() => {
-            const speed = 0.5;
+            const speed = 0.5; // Base speed for obstacles
 
+            // Update Obstacles
             setObstacles(prevObstacles => {
                 const gameContainer = gameRef.current;
-                if (!gameContainer) return prevObstacles;
+                if (!gameContainer) return prevObstacles; // Should not happen if game started
 
                 const gameWidth = gameContainer.offsetWidth;
                 const gameHeight = gameContainer.offsetHeight;
-                const characterWidth_px = (24 / 4) * 16;
-                const characterHeight_px = (24 / 4) * 16;
-                const characterXPercent = 5;
+
+                // Character dimensions and position (simplified for collision logic)
+                const characterWidth_px = (24 / 4) * 16; // Approx character width from Lottie size
+                const characterHeight_px = (24 / 4) * 16; // Approx character height
+                const characterXPercent = 5; // Character's fixed X position percentage
                 const characterX_px = (characterXPercent / 100) * gameWidth;
-                const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
-                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
+                
+                const groundPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+                // Character's bounding box, Y is from top of screen
+                const characterTop_px = gameHeight - groundPx - characterPos - characterHeight_px;
+                const characterBottom_px = gameHeight - groundPx - characterPos;
                 const characterLeft_px = characterX_px;
                 const characterRight_px = characterX_px + characterWidth_px;
-                const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+
 
                 let newObstacles = prevObstacles.map(obstacle => {
-                    let newPosition = obstacle.position - speed;
-                    let collisionDetected = false;
-                    const obstacleX_px = (newPosition / 100) * gameWidth;
-                    let obstacleWidth_px = (obstacle.width / 4) * 16;
-                    let obstacleHeight_px = (obstacle.height / 4) * 16;
-                    const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px;
-                    const collisionTolerance = 5;
+                    if (obstacle.collided) return obstacle; // Already processed for removal
 
+                    let newPosition = obstacle.position - speed;
+                    let collisionDetectedThisFrame = false;
+
+                    const obstacleWidth_px = (obstacle.width / 4) * 16; // Convert Tailwind units to approx px
+                    const obstacleHeight_px = (obstacle.height / 4) * 16;
+                    const obstacleX_px = (newPosition / 100) * gameWidth; // Current X of obstacle
+                    
+                    // Obstacle's bounding box, Y is from top of screen
+                    const obstacleTop_px = gameHeight - groundPx - obstacleHeight_px;
+                    const obstacleBottom_px = gameHeight - groundPx;
+
+                    const collisionTolerance = 5; // px tolerance for collision
+
+                    // Collision check
                     if (
                         characterRight_px > obstacleX_px - collisionTolerance &&
                         characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
-                        characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance &&
-                        characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance
+                        characterBottom_px > obstacleTop_px - collisionTolerance &&
+                        characterTop_px < obstacleBottom_px + collisionTolerance
                     ) {
-                        collisionDetected = true;
+                        collisionDetectedThisFrame = true;
                         if (isShieldActive) {
                             setShieldHealth(prev => {
                                 const damageToShield = obstacle.damage;
                                 const newShieldHealth = Math.max(0, prev - damageToShield);
                                 if (newShieldHealth <= 0) {
-                                    setIsShieldActive(false);
+                                    setIsShieldActive(false); // Shield breaks
                                 }
                                 return newShieldHealth;
                             });
@@ -611,74 +683,80 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             triggerCharacterDamageEffect(damageTaken);
                         }
 
-                        // NEW: Award key if enemy has one and is defeated by collision
                         if (obstacle.hasKey) {
                             addKeys(1);
-                            // Optionally, you might want to ensure the key isn't awarded again if the obstacle somehow persists
-                            // For this setup, collision = defeat, so it's fine.
-                            // We'll also mark it so it doesn't try to respawn with a key
+                            // Mark as no longer having a key to prevent multiple awards if somehow not removed
                             return { ...obstacle, position: newPosition, collided: true, hasKey: false };
                         }
+                        return { ...obstacle, position: newPosition, collided: true }; // Mark for removal
                     }
 
-                    if (newPosition < -20 && !collisionDetected) {
-                        if (Math.random() < 0.7) {
-                            if (obstacleTypes.length === 0) return obstacle;
-                            const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                            const randomOffset = Math.floor(Math.random() * 20);
-
-                            // Determine if the respawned obstacle has a key
-                            enemiesSinceLastKeyRef.current++;
-                            let carriesKeyOnRespawn = false;
-                            if (enemiesSinceLastKeyRef.current >= nextKeySpawnCountRef.current) {
-                                carriesKeyOnRespawn = true;
-                                enemiesSinceLastKeyRef.current = 0;
-                                nextKeySpawnCountRef.current = Math.floor(Math.random() * 6) + 5;
-                            }
-
-                            return {
-                                ...obstacle,
-                                ...randomObstacleType,
-                                id: Date.now(),
-                                position: 120 + randomOffset,
-                                health: randomObstacleType.baseHealth,
-                                maxHealth: randomObstacleType.baseHealth,
-                                hasKey: carriesKeyOnRespawn, // Key status for respawned
-                                collided: false // Reset collided flag
-                            };
-                        } else {
-                            return { ...obstacle, position: newPosition };
+                    // --- FIX: Obstacle Respawn Logic ---
+                    if (newPosition < -20 && !collisionDetectedThisFrame) { // Obstacle is off-screen and did not collide this frame
+                        if (obstacleTypes.length === 0) {
+                             // Should not happen if obstacleTypes is populated. Mark for removal.
+                            return { ...obstacle, position: newPosition, collided: true };
                         }
+                        const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                        const randomOffset = Math.floor(Math.random() * 20) + 20; // e.g., 120 to 140
+
+                        enemiesSinceLastKeyRef.current++;
+                        let carriesKeyOnRespawn = false;
+                        if (enemiesSinceLastKeyRef.current >= nextKeySpawnCountRef.current) {
+                            carriesKeyOnRespawn = true;
+                            enemiesSinceLastKeyRef.current = 0;
+                            nextKeySpawnCountRef.current = Math.floor(Math.random() * 6) + 5;
+                        }
+                        // Return a NEW obstacle object to replace the old one
+                        return {
+                          // Base properties from the type
+                          type: randomObstacleType.type,
+                          height: randomObstacleType.height,
+                          width: randomObstacleType.width,
+                          color: randomObstacleType.color,
+                          baseHealth: randomObstacleType.baseHealth,
+                          damage: randomObstacleType.damage,
+                          lottieSrc: randomObstacleType.lottieSrc,
+                          // New instance properties
+                          id: Date.now() + Math.random(), // Ensure unique ID
+                          position: 100 + randomOffset,    // Start off-screen to the right
+                          health: randomObstacleType.baseHealth,
+                          maxHealth: randomObstacleType.baseHealth,
+                          hasKey: carriesKeyOnRespawn,
+                          collided: false, // Explicitly not collided for a new/recycled obstacle
+                        };
                     }
-                    if (collisionDetected) {
-                        return { ...obstacle, position: newPosition, collided: true };
-                    }
-                    return { ...obstacle, position: newPosition };
+                    // --- END FIX ---
+
+                    return { ...obstacle, position: newPosition }; // Update position if still on screen or not recycled
                 });
 
-                // Filter out collided obstacles
-                return newObstacles.filter(obstacle => !obstacle.collided && obstacle.position > -20);
+                // Filter out collided obstacles or those that somehow still ended up too far left without recycling
+                // (though the fix above should prevent non-collided ones from being simply filtered out)
+                return newObstacles.filter(obs => !obs.collided || obs.position > -25);
             });
 
+            // Update Clouds
             setClouds(prevClouds => {
                 return prevClouds.map(cloud => {
                     const newX = cloud.x - cloud.speed;
-                    if (newX < -50) {
+                    if (newX < -50) { // Cloud is off-screen
                         const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
-                        return {
+                        return { // Recycle cloud
                             ...cloud,
-                            id: Date.now() + Math.random(),
-                            x: 120 + Math.random() * 30,
-                            y: Math.random() * 40 + 10,
-                            size: Math.random() * 40 + 30,
-                            speed: Math.random() * 0.3 + 0.15,
+                            id: Date.now() + Math.random(), // New ID for recycled cloud
+                            x: 120 + Math.random() * 30, // Reset position to the right
+                            y: Math.random() * 40 + 10, // Random new Y
+                            size: Math.random() * 40 + 30, // Random new size
+                            speed: Math.random() * 0.3 + 0.15, // Random new speed
                             imgSrc: randomImgSrc
                         };
                     }
-                    return { ...cloud, x: newX };
-                });
+                    return { ...cloud, x: newX }; // Move existing cloud
+                }).slice(0, 10); // Limit max clouds to prevent performance issues
             });
 
+            // Update Particles
             setParticles(prevParticles =>
                 prevParticles
                     .map(particle => ({
@@ -686,43 +764,53 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         x: particle.x + particle.xVelocity,
                         y: particle.y + particle.yVelocity,
                         opacity: particle.opacity - 0.03,
-                        size: particle.size - 0.1
+                        size: Math.max(0, particle.size - 0.1) // Ensure size doesn't go negative
                     }))
-                    .filter(particle => particle.opacity > 0 && particle.size > 0)
+                    .filter(particle => particle.opacity > 0 && particle.size > 0) // Remove invisible/tiny particles
             );
 
+            // Update Active Coins
             setActiveCoins(prevCoins => {
                 const gameContainer = gameRef.current;
                 if (!gameContainer) return prevCoins;
                 const gameWidth = gameContainer.offsetWidth;
                 const gameHeight = gameContainer.offsetHeight;
+
                 const characterWidth_px = (24 / 4) * 16;
                 const characterHeight_px = (24 / 4) * 16;
                 const characterXPercent = 5;
                 const characterX_px = (characterXPercent / 100) * gameWidth;
-                const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
-                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
+                const groundPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+                const characterTop_px = gameHeight - groundPx - characterPos - characterHeight_px;
+                const characterBottom_px = gameHeight - groundPx - characterPos;
                 const characterLeft_px = characterX_px;
                 const characterRight_px = characterX_px + characterWidth_px;
                 const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
-                const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
+                const characterCenterY_px = characterTop_px + characterHeight_px / 2;
+
 
                 return prevCoins.map(coin => {
-                    const coinSize_px = 40;
+                    if (coin.collided) return coin; // Already collected
+
+                    const coinSize_px = 40; // Approximate size of coin Lottie
                     const coinX_px = (coin.x / 100) * gameWidth;
                     const coinY_px = (coin.y / 100) * gameHeight;
+
                     let newX = coin.x;
                     let newY = coin.y;
-                    let collisionDetected = false;
                     let shouldBeAttracted = coin.isAttracted;
+                    let collectedThisFrame = false;
 
+                    // Check for initial attraction (player runs into coin's general area)
                     if (!shouldBeAttracted) {
+                        // Wider attraction box than strict collision
+                        const attractionBoxWidth = coinSize_px * 2;
+                        const attractionBoxHeight = coinSize_px * 2;
                         if (
-                            characterRight_px > coinX_px &&
-                            characterLeft_px < coinX_px + coinSize_px &&
-                            characterBottomFromTop_px > coinY_px &&
-                            characterTopFromTop_px < coinY_px + coinSize_px
+                            characterRight_px > coinX_px - attractionBoxWidth / 2 &&
+                            characterLeft_px < coinX_px + coinSize_px + attractionBoxWidth / 2 &&
+                            characterBottom_px > coinY_px - attractionBoxHeight / 2 &&
+                            characterTop_px < coinY_px + coinSize_px + attractionBoxHeight / 2
                         ) {
                             shouldBeAttracted = true;
                         }
@@ -732,52 +820,59 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                         const dx = characterCenterX_px - coinX_px;
                         const dy = characterCenterY_px - coinY_px;
                         const distance = Math.sqrt(dx * dx + dy * dy);
-                        const moveStep = distance * coin.attractSpeed;
-                        const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
-                        const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
-                        const newCoinX_px = coinX_px + moveX_px;
-                        const newCoinY_px = coinY_px + moveY_px;
-                        newX = (newCoinX_px / gameWidth) * 100;
-                        newY = (newCoinY_px / gameHeight) * 100;
-
-                        if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
-                            collisionDetected = true;
-                            const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                        
+                        // If very close, collect it
+                        if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.6) { // Tighter collection radius
+                            collectedThisFrame = true;
+                            const awardedCoins = Math.floor(Math.random() * 5) + 1; // 1 to 5 coins
                             startCoinCountAnimation(awardedCoins);
+                        } else {
+                            // Move towards character
+                            const moveStep = distance * coin.attractSpeed; // Speed proportional to distance
+                            const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
+                            const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
+                            const newCoinX_px = coinX_px + moveX_px;
+                            const newCoinY_px = coinY_px + moveY_px;
+                            newX = (newCoinX_px / gameWidth) * 100;
+                            newY = (newCoinY_px / gameHeight) * 100;
                         }
                     } else {
+                        // Move normally if not attracted
                         newX = coin.x - coin.initialSpeedX;
-                        newY = coin.y + coin.initialSpeedY;
+                        newY = coin.y + coin.initialSpeedY; // Optional: slight vertical drift
                     }
                     return {
                         ...coin,
                         x: newX,
                         y: newY,
                         isAttracted: shouldBeAttracted,
-                        collided: collisionDetected
+                        collided: collectedThisFrame
                     };
                 })
-                .filter(coin => {
-                    const isOffScreen = coin.x < -20 || coin.y > 120;
+                .filter(coin => { // Remove collected coins or those far off-screen
+                    const isOffScreen = coin.x < -20 || coin.x > 120 || coin.y < -20 || coin.y > 120;
                     return !coin.collided && !isOffScreen;
                 });
             });
-        }, 30);
+        }, 30); // Game loop interval (approx 33 FPS)
     }
+    // Cleanup function for this effect
     return () => {
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-        if (particleTimerRef.current) {
+        if (particleTimerRef.current) { // Also clear particle timer if game stops
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, characterPos, isStatsFullscreen, coins, isShieldActive]); // Removed jumping, obstacleTypes from deps as they don't directly control this loop's core logic
+  }, [gameStarted, gameOver, characterPos, isStatsFullscreen, coins, isShieldActive, health]); // Added health to deps for collision logic re-evaluation
 
+  // Effect for managing obstacle and coin scheduling based on game state
   useEffect(() => {
-      if (gameOver || isStatsFullscreen) {
+      if (!gameStarted || gameOver || isStatsFullscreen) {
+          // Game is paused or over, clear scheduling timers
           if (obstacleTimerRef.current) {
               clearTimeout(obstacleTimerRef.current);
               obstacleTimerRef.current = null;
@@ -786,213 +881,210 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-      } else if (gameStarted && !gameOver && !isStatsFullscreen) {
+      } else {
+          // Game is active, ensure schedulers are running if not already
           if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
           }
           if (!coinScheduleTimerRef.current) {
               scheduleNextCoin();
           }
-           if (!particleTimerRef.current) {
-               particleTimerRef.current = setInterval(generateParticles, 300);
-           }
       }
+      // Cleanup for this effect (will also run if dependencies change)
       return () => {
           if (obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
           if (coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
-          if (particleTimerRef.current) clearInterval(particleTimerRef.current);
       };
-  }, [gameStarted, gameOver, isStatsFullscreen]);
+  }, [gameStarted, gameOver, isStatsFullscreen]); // Dependencies that control game activity
 
+  // Effect for shield cooldown timer management
   useEffect(() => {
       let countdownInterval: NodeJS.Timeout | null = null;
-      if (isStatsFullscreen) {
+
+      if (isStatsFullscreen || gameOver || !gameStarted) { // Pause cooldown if stats fullscreen, game over, or not started
           if (shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current) {
+              // Calculate remaining time and pause
               const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
               pausedShieldCooldownRemainingRef.current = remainingTimeMs;
               clearTimeout(shieldCooldownTimerRef.current);
               shieldCooldownTimerRef.current = null;
           }
-          if (cooldownCountdownTimerRef.current) {
+          if (cooldownCountdownTimerRef.current) { // Clear the 1-second interval
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null;
           }
-      }
-      else if (isShieldOnCooldown && !gameOver) {
-          if (pausedShieldCooldownRemainingRef.current !== null) {
-              const remainingTimeToResume = pausedShieldCooldownRemainingRef.current;
+      } else if (isShieldOnCooldown) { // Shield is on cooldown and game is active
+          let resumeTimeMs = SHIELD_COOLDOWN_TIME;
+          if (pausedShieldCooldownRemainingRef.current !== null) { // Resuming from a paused state
+              resumeTimeMs = pausedShieldCooldownRemainingRef.current;
+              shieldCooldownStartTimeRef.current = Date.now() - (SHIELD_COoldown_TIME - resumeTimeMs); // Adjust start time
+              pausedShieldCooldownRemainingRef.current = null; // Clear paused state
+          } else if (shieldCooldownStartTimeRef.current) { // Normal continuation or initial start
+              const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
+              resumeTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+          } else { // Should have a start time if on cooldown, but as a fallback:
+              shieldCooldownStartTimeRef.current = Date.now();
+          }
+
+
+          if (resumeTimeMs > 0) {
+              if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current); // Clear any old one
               shieldCooldownTimerRef.current = setTimeout(() => {
                   setIsShieldOnCooldown(false);
                   setRemainingCooldown(0);
-                  shieldCooldownStartTimeRef.current = null;
-                  pausedShieldCooldownRemainingRef.current = null;
-              }, remainingTimeToResume);
-              shieldCooldownStartTimeRef.current = Date.now() - (SHIELD_COOLDOWN_TIME - remainingTimeToResume);
-              pausedShieldCooldownRemainingRef.current = null;
-          } else if (!shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current) {
-              const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
-              const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-              if (remainingTimeMs > 0) {
-                   shieldCooldownTimerRef.current = setTimeout(() => {
-                      setIsShieldOnCooldown(false);
-                      setRemainingCooldown(0);
-                      shieldCooldownStartTimeRef.current = null;
-                   }, remainingTimeMs);
-              } else {
-                  setIsShieldOnCooldown(false);
-                  setRemainingCooldown(0);
-                  shieldCooldownStartTimeRef.current = null;
-              }
-          }
+                  shieldCooldownStartTimeRef.current = null; // Cooldown finished
+              }, resumeTimeMs);
 
-          if (!cooldownCountdownTimerRef.current && shieldCooldownStartTimeRef.current) {
-              const currentElapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
-              const currentRemainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - currentElapsedTime);
-              const initialRemainingSeconds = Math.ceil(currentRemainingTimeMs / 1000);
+              // Countdown for display
+              const initialRemainingSeconds = Math.ceil(resumeTimeMs / 1000);
+              setRemainingCooldown(initialRemainingSeconds);
 
-              if (initialRemainingSeconds > 0) {
-                  setRemainingCooldown(initialRemainingSeconds);
-                  countdownInterval = setInterval(() => {
-                      if (isStatsFullscreen) {
-                          if(countdownInterval) clearInterval(countdownInterval);
+              if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+              cooldownCountdownTimerRef.current = setInterval(() => {
+                  setRemainingCooldown(prev => {
+                      const newRemaining = Math.max(0, prev - 1);
+                      if (newRemaining === 0) {
+                          if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
                           cooldownCountdownTimerRef.current = null;
-                          return;
                       }
-                      setRemainingCooldown(prev => {
-                          const newRemaining = Math.max(0, prev - 1);
-                          if (newRemaining === 0) {
-                              if(countdownInterval) clearInterval(countdownInterval);
-                              cooldownCountdownTimerRef.current = null;
-                          }
-                          return newRemaining;
-                      });
-                  }, 1000);
-                  cooldownCountdownTimerRef.current = countdownInterval;
-              } else {
-                  setRemainingCooldown(0);
-              }
+                      return newRemaining;
+                  });
+              }, 1000);
+          } else { // Cooldown already finished
+              setIsShieldOnCooldown(false);
+              setRemainingCooldown(0);
+              shieldCooldownStartTimeRef.current = null;
+              if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
           }
+      } else { // Shield is not on cooldown (or game not active for it)
+            if (cooldownCountdownTimerRef.current) {
+                clearInterval(cooldownCountdownTimerRef.current);
+                cooldownCountdownTimerRef.current = null;
+            }
+            if (shieldCooldownTimerRef.current) {
+                clearTimeout(shieldCooldownTimerRef.current);
+                shieldCooldownTimerRef.current = null;
+            }
       }
-      return () => {
-          if (countdownInterval) clearInterval(countdownInterval);
+      return () => { // Cleanup for this effect
+          if (countdownInterval) clearInterval(countdownInterval); // From old logic, ensure it's cleared if it was used
+          if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+          if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       };
-  }, [isShieldOnCooldown, gameOver, isStatsFullscreen]);
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, gameStarted]); // Dependencies for cooldown logic
 
-  useEffect(() => {
-    return () => {
-      if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
-      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
-      if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
-      if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-      pausedShieldCooldownRemainingRef.current = null;
-      if(coinScheduleTimerRef.current) clearInterval(coinScheduleTimerRef.current);
-      if(coinCountAnimationTimerRef.current) clearInterval(coinCountAnimationTimerRef.current);
-      if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
-    };
-  }, []);
 
+  // Coin counter animation effect
   useEffect(() => {
-    if (displayedCoins === coins) return;
+    if (displayedCoins === coins) return; // No change needed
+
     const coinElement = document.querySelector('.coin-counter');
     if (coinElement) {
       coinElement.classList.add('number-changing');
-      const animationEndHandler = () => {
+      // Use a timer to remove the class, as 'animationend' can be unreliable
+      const timer = setTimeout(() => {
         coinElement.classList.remove('number-changing');
-        coinElement.removeEventListener('animationend', animationEndHandler);
-      };
-      coinElement.addEventListener('animationend', animationEndHandler);
+      }, 300); // Match animation duration
+
       return () => {
-        if (coinElement) {
-            coinElement.removeEventListener('animationend', animationEndHandler);
+        clearTimeout(timer);
+        if (coinElement) { // Check again in case element is gone
              coinElement.classList.remove('number-changing');
         }
       };
     }
-     return () => {};
-  }, [displayedCoins, coins]);
+     return () => {}; // Default return if element not found
+  }, [displayedCoins, coins]); // Rerun when displayedCoins or actual coins change
 
-  const healthPct = health / MAX_HEALTH;
+  // Calculate health percentage for health bar
+  const healthPct = Math.max(0, health / MAX_HEALTH); // Ensure not negative
   const getColor = () => {
     if (healthPct > 0.6) return 'bg-green-500';
     if (healthPct > 0.3) return 'bg-yellow-500';
     return 'bg-red-500';
   };
-  const shieldHealthPct = isShieldActive ? shieldHealth / SHIELD_MAX_HEALTH : 0;
+  const shieldHealthPct = isShieldActive ? Math.max(0, shieldHealth / SHIELD_MAX_HEALTH) : 0;
 
+  // Render Character Lottie
   const renderCharacter = () => {
     return (
       <div
-        className="character-container absolute w-24 h-24 transition-all duration-300 ease-out"
+        className="character-container absolute w-24 h-24 transition-all duration-300 ease-out z-10" // Added z-10
         style={{
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
-          left: '5%',
+          left: '5%', // Character's horizontal position
+          // Smooth transition for jumping and landing
           transition: jumping ? 'bottom 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)' : 'bottom 0.3s cubic-bezier(0.33, 1, 0.68, 1)'
         }}
       >
         <DotLottieReact
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
-          autoplay={!isStatsFullscreen}
+          autoplay={!isStatsFullscreen && gameStarted && !gameOver} // Autoplay only if game is active
           className="w-full h-full"
         />
       </div>
     );
   };
 
+  // Render individual obstacle
   const renderObstacle = (obstacle: GameObstacle) => {
     let obstacleEl;
-    const obstacleWidthPx = (obstacle.width / 4) * 16;
-    const obstacleHeightPx = (obstacle.height / 4) * 16;
+    const obstacleWidthPx = (obstacle.width / 4) * 16; // Convert Tailwind units (w-X) to approx pixels
+    const obstacleHeightPx = (obstacle.height / 4) * 16; // Convert Tailwind units (h-X) to approx pixels
 
     switch(obstacle.type) {
       case 'lottie-obstacle-1':
       case 'lottie-obstacle-2':
         obstacleEl = (
           <div
-            className="relative"
+            className="relative" // For positioning health bar and key icon
             style={{ width: `${obstacleWidthPx}px`, height: `${obstacleHeightPx}px` }}
           >
             {obstacle.lottieSrc && (
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                autoplay={!isStatsFullscreen}
+                autoplay={!isStatsFullscreen && gameStarted && !gameOver} // Autoplay Lottie
                 className="w-full h-full"
               />
             )}
           </div>
         );
         break;
-      default:
+      default: // Fallback for non-Lottie obstacles if any
         obstacleEl = (
-          <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}></div>
+          <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}
+               style={{ width: `${obstacleWidthPx}px`, height: `${obstacleHeightPx}px` }}>
+          </div>
         );
     }
 
-    const obstacleHealthPct = obstacle.health / obstacle.maxHealth;
+    const obstacleHealthPct = Math.max(0, obstacle.health / obstacle.maxHealth);
 
     return (
       <div
         key={obstacle.id}
-        className="absolute"
+        className="absolute" // Positioned by left and bottom %
         style={{
-          bottom: `${GROUND_LEVEL_PERCENT}%`,
-          left: `${obstacle.position}%`
+          bottom: `${GROUND_LEVEL_PERCENT}%`, // Align with ground
+          left: `${obstacle.position}%`, // Dynamic horizontal position
+          // Add a transition for smoother movement if desired, though interval updates handle it
+          // transition: 'left 0.05s linear',
         }}
       >
         {obstacleEl}
-        {/* Health Bar Container */}
+        {/* Health Bar for Obstacle */}
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm">
             <div
-                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-all duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
         </div>
-        {/* NEW: Key Icon above health bar if obstacle has key */}
+        {/* Key Icon above health bar if obstacle has key */}
         {obstacle.hasKey && (
-            <div className="absolute bottom-[calc(100%+0.75rem)] left-1/2 transform -translate-x-1/2"> {/* Position above health bar */}
+            <div className="absolute bottom-[calc(100%+0.75rem)] left-1/2 transform -translate-x-1/2 animate-bounce"> {/* Position above health bar, added bounce */}
                 <KeyIcon size={16} />
             </div>
         )}
@@ -1000,29 +1092,32 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     );
   };
 
+  // Render Clouds
   const renderClouds = () => {
     return clouds.map(cloud => (
       <img
         key={cloud.id}
         src={cloud.imgSrc}
         alt="Biểu tượng Đám mây"
-        className="absolute object-contain"
+        className="absolute object-contain" // Ensure image scales correctly
         style={{
           width: `${cloud.size}px`,
-          height: `${cloud.size * 0.6}px`,
+          height: `${cloud.size * 0.6}px`, // Maintain aspect ratio for cloud images
           top: `${cloud.y}%`,
           left: `${cloud.x}%`,
-          opacity: 0.8
+          opacity: 0.8, // Slight transparency for clouds
+          zIndex: 0 // Ensure clouds are behind other elements
         }}
-        onError={(e) => {
+        onError={(e) => { // Fallback for broken image links
           const target = e.target as HTMLImageElement;
-          target.onerror = null;
+          target.onerror = null; // Prevent infinite loop on placeholder error
           target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
         }}
       />
     ));
   };
 
+  // Render Dust Particles
   const renderParticles = () => {
     return particles.map(particle => (
       <div
@@ -1031,107 +1126,124 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         style={{
           width: `${particle.size}px`,
           height: `${particle.size}px`,
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`,
-          left: `calc(5% + ${particle.x}px)`,
-          opacity: particle.opacity
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`, // Relative to ground
+          left: `calc(5% + ${particle.x}px)`, // Relative to character's general area
+          opacity: particle.opacity,
+          zIndex: 1 // Particles above ground, below character if needed
         }}
       ></div>
     ));
   };
 
+  // Render Shield Lottie around character
   const renderShield = () => {
-    if (!isShieldActive) return null;
-    const shieldSizePx = 80;
+    if (!isShieldActive || shieldHealth <= 0) return null; // Don't render if not active or no health
+
+    const shieldSizePx = 96; // Slightly larger than character Lottie (w-24 h-24)
     return (
       <div
         key="character-shield"
-        className="absolute w-20 h-20 flex flex-col items-center justify-center pointer-events-none z-20"
+        className="absolute flex flex-col items-center justify-center pointer-events-none z-20" // Shield above character
          style={{
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + 96px)`,
-          left: '13%',
-          transform: 'translate(-50%, -50%)',
-          transition: 'bottom 0.3s ease-out, left 0.3s ease-out',
+          // Center shield on character, characterPos is offset from ground
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + (${24*4 - shieldSizePx}/2)px)`, // 24*4 is character h-24 in px
+          left: `calc(5% + (${24*4 - shieldSizePx}/2)px)`, // 5% is character left, 24*4 is character w-24 in px
           width: `${shieldSizePx}px`,
           height: `${shieldSizePx}px`,
+          transition: 'bottom 0.3s ease-out, opacity 0.3s ease-out', // Smooth transition with jump
         }}
       >
-        {shieldHealth > 0 && (
-            <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm mb-1">
-                <div
-                    className={`h-full ${shieldHealthPct > 0.6 ? 'bg-green-500' : shieldHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
-                    style={{ width: `${shieldHealthPct * 100}%` }}
-                ></div>
-            </div>
-        )}
+        {/* Shield Health Bar (optional, can be above shield Lottie) */}
+        <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm mb-1">
+            <div
+                className={`h-full ${shieldHealthPct > 0.6 ? 'bg-green-400' : shieldHealthPct > 0.3 ? 'bg-yellow-400' : 'bg-red-400'} transform origin-left transition-transform duration-200 ease-linear`}
+                style={{ width: `${shieldHealthPct * 100}%` }}
+            ></div>
+        </div>
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
           loop
-          autoplay={isShieldActive && !isStatsFullscreen}
+          autoplay={!isStatsFullscreen && gameStarted && !gameOver && isShieldActive} // Autoplay if shield is active and game running
           className="w-full h-full"
         />
       </div>
     );
   };
 
+  // Render Collectible Coins
   const renderCoins = () => {
     return activeCoins.map(coin => (
       <div
         key={coin.id}
-        className="absolute w-10 h-10"
+        className="absolute w-10 h-10" // Size of the coin Lottie
         style={{
-          top: `${coin.y}%`,
+          top: `${coin.y}%`, // Dynamic position
           left: `${coin.x}%`,
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none'
+          transform: 'translate(-50%, -50%)', // Center Lottie on its coordinates
+          pointerEvents: 'none', // Coins don't block clicks
+          zIndex: 5 // Coins above most elements but below UI
         }}
       >
         <DotLottieReact
           src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
           loop
-          autoplay={!isStatsFullscreen}
+          autoplay={!isStatsFullscreen && gameStarted && !gameOver} // Autoplay if game active
           className="w-full h-full"
         />
       </div>
     ));
   };
 
+  // Toggle fullscreen stats view
   const toggleStatsFullscreen = () => {
-    if (gameOver) return;
+    if (gameOver && !isStatsFullscreen) return; // Don't open stats if game over and not already open
     setIsStatsFullscreen(!isStatsFullscreen);
+    // Game loop and schedulers will pause/resume based on isStatsFullscreen state via useEffect hooks
   };
 
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
+    <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative select-none"> {/* Added select-none */}
+      {/* Embedded CSS for animations and global styles */}
       <style>{`
         @keyframes fadeOutUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
         .animate-fadeOutUp { animation: fadeOutUp 0.5s ease-out forwards; }
         @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .animate-bounce { animation: bounce-subtle 1.5s ease-in-out infinite; } /* General bounce for icons like keys */
         @keyframes pulse-button { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
         .add-button-pulse { animation: pulse-button 1.5s infinite; }
         @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
         .number-changing { animation: number-change 0.3s ease-out; }
-        @keyframes pulse { 0% { opacity: 0; } 50% { opacity: 0.2; } 100% { opacity: 0; } }
-        @keyframes floatUp { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -20px); opacity: 0; } }
+        @keyframes pulse { 0% { opacity: 0; } 50% { opacity: 0.2; } 100% { opacity: 0; } } /* For health bar shine */
+        @keyframes floatUp { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -20px); opacity: 0; } } /* For damage numbers */
       `}</style>
-       <style jsx global>{` body { overflow: hidden; } `}</style>
+       <style jsx global>{` body { overflow: hidden; -webkit-user-select: none; -ms-user-select: none; user-select: none; } `}</style> {/* Prevent text selection globally */}
 
+      {/* Conditional rendering for Stats Screen or Game Screen */}
       {isStatsFullscreen ? (
         <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
             <CharacterCard onClose={toggleStatsFullscreen} />
         </ErrorBoundary>
       ) : (
+        // Main Game Container
         <div
-          ref={gameRef}
-          className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-          onClick={handleTap}
+          ref={gameRef} // Ref for game area dimensions
+          className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer`} // Use h-full, tap on whole screen
+          onClick={handleTap} // Handle game interactions
+          role="button" // Accessibility
+          tabIndex={0} // Accessibility
+          aria-label="Game Area"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
-          <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600 z-0"></div> {/* Sky */}
+          <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10 z-0"></div> {/* Sun */}
           {renderClouds()}
-          <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
+
+          {/* Ground Element */}
+          <div className="absolute bottom-0 w-full z-0" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600"> {/* Ground gradient */}
+                  {/* Decorative ground elements */}
                   <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
                   <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
                   <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
@@ -1139,59 +1251,69 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                   <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
               </div>
           </div>
+
+          {/* Game Entities - Render order matters for layering */}
+          {renderParticles()}
           {renderCharacter()}
           {renderShield()}
           {obstacles.map(obstacle => renderObstacle(obstacle))}
           {renderCoins()}
-          {renderParticles()}
 
+
+          {/* Top UI Bar: Stats, Health, Currency */}
           <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30">
+            {/* Left side: Character Stats Button & Health Bar */}
             <div className="flex items-center">
                 <div
                   className="relative mr-2 cursor-pointer"
-                  onClick={toggleStatsFullscreen}
+                  onClick={(e) => { e.stopPropagation(); toggleStatsFullscreen(); }} // Prevent game tap
                   title="Xem chỉ số nhân vật"
+                  role="button"
+                  aria-label="Xem chỉ số nhân vật"
                 >
                     <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform">
                         <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
-                        <div className="relative z-10 flex items-center justify-center">
+                        <div className="relative z-10 flex items-center justify-center"> {/* Icon for stats */}
                             <div className="flex items-end">
                                 <div className="w-1 h-2 bg-white rounded-sm mr-0.5" />
                                 <div className="w-1 h-3 bg-white rounded-sm mr-0.5" />
                                 <div className="w-1 h-1.5 bg-white rounded-sm" />
                             </div>
                         </div>
-                        <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" />
+                        <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" /> {/* Shine effect */}
                     </div>
                 </div>
-                <div className="w-32 relative">
+                {/* Health Bar */}
+                <div className="w-32 relative"> {/* Container for health bar and damage numbers */}
                     <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                        <div className="h-full overflow-hidden">
+                        <div className="h-full overflow-hidden"> {/* Inner container for scaling */}
                             <div
                                 className={`${getColor()} h-full transform origin-left`}
                                 style={{
                                     transform: `scaleX(${healthPct})`,
-                                    transition: 'transform 0.5s ease-out',
+                                    transition: 'transform 0.5s ease-out, background-color 0.5s ease-out', // Smooth transitions
                                 }}
                             >
-                                <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                                <div className="w-full h-1/2 bg-white bg-opacity-20" /> {/* Subtle shine on health bar */}
                             </div>
                         </div>
+                        {/* Pulsing shine effect on health bar */}
                         <div
                             className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
                             style={{ animation: 'pulse 3s infinite' }}
                         />
+                        {/* Health text */}
                         <div className="absolute inset-0 flex items-center justify-center">
                             <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
                                 {Math.round(health)}/{MAX_HEALTH}
                             </span>
                         </div>
                     </div>
+                    {/* Damage Number Display Area */}
                     <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
                         {showDamageNumber && (
                             <div
-                                className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                style={{ animation: 'floatUp 0.8s ease-out forwards' }}
+                                className="absolute top-0 left-1/2 text-red-500 font-bold text-xs animate-fadeOutUp" // Uses defined animation
                             >
                                 -{damageAmount}
                             </div>
@@ -1199,219 +1321,152 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     </div>
                 </div>
             </div>
-            {!isStatsFullscreen && (
+
+            {/* Right side: Currency Display (Gems & Coins) */}
+            {!isStatsFullscreen && ( // Hide currency if stats are fullscreen
                 <div className="flex items-center space-x-1 currency-display-container relative">
-                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center">
-                            <GemIcon size={16} color="#a78bfa" className="relative z-20" />
+                    {/* Gems Display */}
+                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 pr-1.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer" title="Số Ngọc hiện có">
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> {/* Shine on hover */}
+                        <div className="relative mr-0.5 flex items-center justify-center p-0.5">
+                            <GemIcon size={16} className="relative z-20" />
                         </div>
                         <div className="font-bold text-purple-200 text-xs tracking-wide">
                             {gems.toLocaleString()}
                         </div>
-                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                        {/* Placeholder for "add gems" button or interaction */}
+                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse opacity-50" title="Nạp Ngọc (chưa hoạt động)">
                             <span className="text-white font-bold text-xs">+</span>
                         </div>
-                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-ping opacity-50 group-hover:opacity-100"></div> {/* Subtle ping */}
                     </div>
 
-                    <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                      <div className="relative mr-0.5 flex items-center justify-center">
+                    {/* Coins Display */}
+                    <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 pr-1.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer" title="Số Vàng hiện có">
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> {/* Shine on hover */}
+                      <div className="relative mr-0.5 flex items-center justify-center p-0.5">
                         <img
                           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
                           alt="Biểu tượng Đồng xu Đô la"
-                          className="w-4 h-4"
+                          className="w-4 h-4" // Consistent icon size
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/16x16/ffd700/000000?text=$";
+                            target.src = "https://placehold.co/16x16/ffd700/000000?text=$"; // Fallback
                           }}
                         />
                       </div>
-                      <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter">
+                      <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Class for animation target */}
                         {displayedCoins.toLocaleString()}
                       </div>
-                      <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                       {/* Placeholder for "add coins" button or interaction */}
+                      <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse opacity-50" title="Nạp Vàng (chưa hoạt động)">
                         <span className="text-white font-bold text-xs">+</span>
                       </div>
-                      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+                       <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-ping opacity-50 group-hover:opacity-100"></div> {/* Subtle ping */}
                     </div>
                 </div>
              )}
           </div>
 
+          {/* Game Over Screen */}
           {gameOver && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
-              <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+              <h2 className="text-4xl font-bold mb-4 text-red-500 drop-shadow-lg">Game Over</h2>
               <button
-                className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                onClick={startGame}
+                className="px-8 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-lg transform transition hover:scale-105 shadow-lg hover:shadow-blue-400/50 active:scale-95"
+                onClick={(e) => { e.stopPropagation(); startGame(); }} // Prevent game tap, restart game
               >
                 Chơi Lại
               </button>
             </div>
           )}
 
-          {!isStatsFullscreen && (
-            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+          {/* Left Side Action Buttons (Shop, Inventory) - Example */}
+          {!isStatsFullscreen && !gameOver && ( // Hide if stats are fullscreen or game over
+            <div className="absolute left-4 bottom-32 flex flex-col space-y-3 z-30">
               {[
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute top-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
-                      </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Shop",
-                  notification: true,
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute inset-0.5 bg-amber-500/30 rounded-sm flex items-center justify-center">
-                          <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                        </div>
-                      </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Inventory",
-                  notification: true,
-                  special: true,
-                  centered: true
-                }
+                { icon: "🛍️", label: "Shop", action: () => console.log("Open Shop") },
+                { icon: "🎒", label: "Túi đồ", action: () => console.log("Open Inventory") },
               ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                  {item.special && item.centered ? (
-                      <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                          {item.icon}
-                          {item.label && (
-                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                          )}
-                      </div>
-                  ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                      {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                    </div>
-                  )}
-                </div>
+                <button
+                  key={index}
+                  onClick={(e) => { e.stopPropagation(); item.action(); }}
+                  className="w-14 h-14 bg-black bg-opacity-60 p-1 rounded-lg shadow-lg hover:bg-opacity-80 transition-all duration-200 flex flex-col items-center justify-center text-white hover:scale-105 active:scale-95"
+                  title={item.label}
+                >
+                  <span className="text-2xl">{item.icon}</span>
+                  <span className="text-xs mt-0.5" style={{fontSize: '0.6rem'}}>{item.label}</span>
+                </button>
               ))}
             </div>
           )}
 
-          {!isStatsFullscreen && (
-            <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-               <div
-                className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`}
-                onClick={activateShield}
+          {/* Right Side Action Buttons (Shield, Mission, Blacksmith) - Example */}
+          {!isStatsFullscreen && !gameOver && ( // Hide if stats are fullscreen or game over
+            <div className="absolute right-4 bottom-32 flex flex-col space-y-3 z-30">
+               {/* Shield Button */}
+               <button
+                className={`w-14 h-14 bg-gradient-to-br rounded-lg shadow-lg border-2 flex flex-col items-center justify-center transition-all duration-200 relative overflow-hidden
+                            ${!gameStarted || isShieldActive || isShieldOnCooldown
+                                ? 'from-gray-600 to-gray-800 border-gray-500 opacity-60 cursor-not-allowed'
+                                : 'from-blue-700 to-indigo-900 border-blue-600 hover:scale-105 active:scale-95 cursor-pointer'}`}
+                onClick={(e) => { e.stopPropagation(); activateShield(); }}
+                disabled={!gameStarted || isShieldActive || isShieldOnCooldown}
                 title={
-                  !gameStarted || gameOver ? "Không khả dụng" :
                   isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
                   isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
-                  isStatsFullscreen ? "Không khả dụng" :
-                  "Kích hoạt Khiên chắn"
+                  "Kích hoạt Khiên"
                 }
                 aria-label="Sử dụng Khiên chắn"
-                role="button"
-                tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen ? -1 : 0}
               >
-                <div className="w-10 h-10">
+                <div className="w-10 h-10"> {/* Lottie container */}
                    <DotLottieReact
                       src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                       loop
-                      autoplay={isShieldActive && !isStatsFullscreen}
-                      className="w-full h-full"
+                      autoplay={isShieldActive && !isStatsFullscreen && gameStarted && !gameOver}
+                      className="w-full h-full filter drop-shadow-lg" // Added filter for better visibility
                    />
                 </div>
-                {isShieldOnCooldown && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
+                {isShieldOnCooldown && ( // Cooldown timer text
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold pointer-events-none">
                     {remainingCooldown}s
                   </div>
                 )}
-              </div>
+                 {!isShieldActive && !isShieldOnCooldown && ( // "Ready" indicator
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-ping"></div>
+                 )}
+              </button>
+              {/* Other action buttons */}
               {[
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
-                          <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
-                          <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
-                          <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
-                        </div>
-                      </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Mission",
-                  notification: true,
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
-                          <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
-                          <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
-                          <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
-                          <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
-                          <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
-                          <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
-                        </div>
-                      </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Blacksmith",
-                  notification: true,
-                  special: true,
-                  centered: true
-                },
+                { icon: "🎯", label: "N.Vụ", action: () => console.log("Open Missions") },
+                { icon: "🛠️", label: "Rèn", action: () => console.log("Open Blacksmith") },
               ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                  {item.special && item.centered ? (
-                      <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                          {item.icon}
-                          {item.label && (
-                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                          )}
-                      </div>
-                  ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                      {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                    </div>
-                  )}
-                </div>
+                <button
+                  key={index}
+                  onClick={(e) => { e.stopPropagation(); item.action(); }}
+                  className="w-14 h-14 bg-black bg-opacity-60 p-1 rounded-lg shadow-lg hover:bg-opacity-80 transition-all duration-200 flex flex-col items-center justify-center text-white hover:scale-105 active:scale-95"
+                  title={item.label}
+                >
+                  <span className="text-2xl">{item.icon}</span>
+                  <span className="text-xs mt-0.5" style={{fontSize: '0.6rem'}}>{item.label}</span>
+                </button>
               ))}
             </div>
           )}
 
-          <TreasureChest
-            initialChests={3}
-            initialKeys={keys} // Pass current keys
-            onCoinReward={startCoinCountAnimation}
-            onGemReward={handleGemReward}
-            onKeyUsed={() => setKeys(prev => Math.max(0, prev -1))} // Function to decrement keys
-            isGamePaused={gameOver || !gameStarted}
-            isStatsFullscreen={isStatsFullscreen}
-          />
+          {/* Treasure Chest Component - Positioned at bottom center */}
+          {!gameOver && !isStatsFullscreen && gameStarted && ( // Only show if game active
+            <TreasureChest
+              initialChests={3} // Example: Max 3 chests per game or session
+              initialKeys={keys} // Pass current keys from game state
+              onCoinReward={startCoinCountAnimation}
+              onGemReward={handleGemReward}
+              onKeyUsed={() => setKeys(prev => Math.max(0, prev -1))} // Decrement keys in parent
+              isGamePaused={gameOver || !gameStarted || isStatsFullscreen} // Pass paused state
+              isStatsFullscreen={isStatsFullscreen} // To hide chest if stats are open
+            />
+          )}
         </div>
       )}
     </div>
