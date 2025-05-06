@@ -81,7 +81,7 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   >
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
     <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
-    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
   </svg>
 );
 
@@ -105,19 +105,12 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// --- NEW: Key Icon Component using Image ---
-const KeyIcon = ({ size = 24, className = '' }) => (
+// NEW: Key Icon Component
+const KeyIcon = () => (
   <img
     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
     alt="Key Icon"
-    className={`${className}`}
-    style={{ width: size, height: size }}
-    // Optional: Add onerror to handle broken image link
-    onError={(e) => {
-      const target = e.target as HTMLImageElement;
-      target.onerror = null; // Prevent infinite loop
-      target.src = "https://placehold.co/24x24/ffcc00/000000?text=Key"; // Placeholder image
-    }}
+    className="w-4 h-4 object-contain"
   />
 );
 
@@ -125,9 +118,10 @@ const KeyIcon = ({ size = 24, className = '' }) => (
 // Define interface for component props
 interface TreasureChestProps {
   initialChests?: number; // Initial number of chests
-  keyCount?: number;              // thêm
+  keyCount?: number; // NEW: Number of keys collected
+  onKeyCollect?: (amount: number) => void; // NEW: Callback for when a key is collected (used for unlocking chests)
   onCoinReward: (amount: number) => void; // Callback function to add coins
-  onGemReward: (amount: number) => void; // NEW: Callback function to add gems
+  onGemReward: (amount: number) => void; // Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
 }
@@ -168,7 +162,7 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, keyCount, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
+export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState<Card | null>(null); // Changed to null to store card object directly
@@ -414,23 +408,26 @@ export default function TreasureChest({ initialChests = 3, keyCount, onCoinRewar
 
         </div>
 
-        {/* Display remaining chests count */}
-        <div className="mt-4 flex flex-col items-center">
+        {/* Display remaining chests and keys */}
+        <div className="mt-4 flex space-x-3 items-center justify-center">
+          {/* Chests */}
           <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
-            {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
-            <div className="flex items-center space-x-1"> {/* Added space-x-1 here */}
-              <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-              <span className="text-amber-400/80 text-xs">/{initialChests}</span> {/* Use initialChests for total count */}
-              {/* --- NEW: Key Count Display --- */}
-              {typeof keyCount === 'number' && (
-                <div className="flex items-center ml-2">
-                  <KeyIcon size={14} className="mr-0.5" />
-                  <span className="text-amber-200 font-bold text-xs">{keyCount}</span>
-                </div>
-              )}
-              {/* --- END NEW: Key Count Display --- */}
-            </div>
+            {chestsRemaining > 0 && (
+              <div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>
+            )}
+            <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
+            <span className="text-amber-400/80 text-xs">/{initialChests}</span>
             {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
+          </div>
+
+          {/* Keys */}
+          <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+            {keyCount > 0 && (
+              <div className="absolute inset-0 bg-green-500/10 rounded-lg animate-pulse-slow"></div>
+            )}
+            <KeyIcon />
+            <span className="text-green-200 font-bold text-xs">{keyCount}</span>
+             {keyCount > 0 && (<div className="absolute -inset-0.5 bg-green-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
         </div>
       </div>
