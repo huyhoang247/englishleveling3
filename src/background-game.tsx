@@ -1351,7 +1351,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* --- Obstacle Health Bar --- */}
         {/* Position the health bar above the obstacle */}
         {/* Added relative position to contain the key icon */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm relative"> {/* Adjusted size, Added relative */}
+        {/* Changed overflow-hidden to overflow-visible */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-visible border border-gray-600 shadow-sm relative"> {/* Adjusted size, Added relative, Changed overflow-hidden to overflow-visible */}
             {/* Inner health bar */}
             <div
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
