@@ -170,6 +170,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   // REMOVED: gems state
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
+  // State for chests remaining - This state will now represent chests that can be opened with keys
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
   // NEW: State to hold pending gem reward
@@ -183,15 +184,27 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
   // Function to open the chest
   const openChest = () => {
-    // Prevent opening chest if game is paused, already open, or no chests left
-    if (isGamePaused || isChestOpen || chestsRemaining <= 0) return;
+    // Prevent opening chest if game is paused, already open, no chests left, or not enough keys
+    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1) {
+        // Optional: Add visual feedback if not enough keys
+        if (keyCount < 1) {
+            console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
+            // You could add a state here to briefly show a "Not enough keys" message on the UI
+        }
+        return;
+    }
 
     setChestShake(true);
     setTimeout(() => {
       setChestShake(false);
       setIsChestOpen(true);
       setShowShine(true);
+      // Decrease chests remaining and use one key
       setChestsRemaining(prev => prev - 1);
+      if (onKeyCollect) {
+          onKeyCollect(1); // Signal that 1 key was used
+      }
+
       setTimeout(() => {
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
         setCurrentCard(randomCard);
@@ -298,11 +311,11 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          // Disable click if game is paused, already open, or no chests left
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 ? openChest : null}
+          // Disable click if game is paused, already open, no chests left, or not enough keys
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keyCount >= 1 ? openChest : null}
           aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 ? 0 : -1} // Make focusable only when usable
+          tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 ? 0 : -1} // Make focusable only when usable
         >
           <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
             {/* Chest main body */}
@@ -410,13 +423,14 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
         {/* Display remaining chests and keys */}
         <div className="mt-4 flex space-x-3 items-center justify-center">
-          {/* Chests */}
+          {/* Chests (now showing count + key icon) */}
           <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
             {chestsRemaining > 0 && (
               <div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>
             )}
             <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-            <span className="text-amber-400/80 text-xs">/{initialChests}</span>
+            {/* Replaced "/initialChests" with KeyIcon */}
+            <KeyIcon />
             {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
 
