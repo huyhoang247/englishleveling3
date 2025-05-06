@@ -1356,15 +1356,23 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
-            {/* NEW: Key icon on health bar if obstacle has a key */}
-            {obstacle.hasKey && (
-              <img
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-                alt="Key"
-                className="absolute -top-4 right-0 w-4 h-4" // Position above the health bar
-              />
-            )}
         </div>
+
+        {/* NEW: Key icon on health bar if obstacle has a key */}
+        {/* Moved outside the health bar container */}
+        {obstacle.hasKey && (
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+            alt="Key"
+            className="absolute w-4 h-4" // Base size
+             // Adjusted positioning relative to the main obstacle container
+            style={{
+                top: '-20px', // Position above the health bar (adjust as needed)
+                right: '0px', // Position at the right edge of the obstacle container (adjust as needed)
+                transform: 'translateY(-50%)', // Vertically center relative to its top edge
+            }}
+          />
+        )}
 
         {/* Obstacle Element */}
         {obstacleEl} {/* Render the specific obstacle element */}
