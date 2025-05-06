@@ -13,7 +13,7 @@ const SwordIcon = ({ size = 24, color = 'currentColor', className = '', ...props
     <line x1="13" x2="19" y1="19" y2="13" /><line x1="16" x2="20" y1="16" y2="20" /><line x1="19" x2="21" y1="21" y2="19" />
   </svg>
 );
-const ShieldIconSvg = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( // Renamed to avoid conflict
+const ShieldIconSvg = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( // Renamed to avoid conflict if another ShieldIcon is imported/defined
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
@@ -29,7 +29,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// NEW: Key Icon Component
+// NEW: Key Icon Component (copied from background-game.tsx for use here)
 const KeyIcon = ({ size = 24, className = '', ...props }) => (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
         <img
@@ -48,11 +48,11 @@ const KeyIcon = ({ size = 24, className = '', ...props }) => (
 
 // Define interface for component props
 interface TreasureChestProps {
-  initialChests?: number; // Number of chests available to be opened (if keys are present)
-  initialKeys?: number;
+  initialChests?: number;
+  initialKeys?: number; // NEW: Initial number of keys
   onCoinReward: (amount: number) => void;
   onGemReward: (amount: number) => void;
-  onKeyUsed: () => void;
+  onKeyUsed: () => void; // NEW: Callback when a key is used to open a chest
   isGamePaused?: boolean;
   isStatsFullscreen?: boolean;
 }
@@ -86,11 +86,11 @@ const getRarityColor = (rarity: Card['rarity']) => {
 
 
 export default function TreasureChest({
-    initialChests = 3, // This prop now represents the number of "physical" chests available if you have keys
-    initialKeys = 0,
+    initialChests = 3,
+    initialKeys = 0, // Default to 0 keys
     onCoinReward,
     onGemReward,
-    onKeyUsed,
+    onKeyUsed, // Get the callback
     isGamePaused = false,
     isStatsFullscreen = false
 }: TreasureChestProps) {
@@ -99,21 +99,22 @@ export default function TreasureChest({
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
-  // This state now tracks how many times a chest can be *attempted* to be opened.
-  // It will only successfully open if initialKeys > 0.
-  const [chestsAvailableToOpen, setChestsAvailableToOpen] = useState(initialChests);
+  const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
   const [pendingGemReward, setPendingGemReward] = useState(0);
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
   const chestCoinEffectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Use initialKeys prop to reflect keys from parent game state
+  // This component doesn't manage the total number of keys, it just displays what's passed in.
+  // The parent (ObstacleRunnerGame) will manage the actual key count.
 
   const openChest = () => {
-    if (isGamePaused || isChestOpen || chestsAvailableToOpen <= 0 || initialKeys <= 0) {
-        if (initialKeys <= 0 && chestsAvailableToOpen > 0) {
+    // Prevent opening if game paused, already open, no chests, OR NO KEYS
+    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || initialKeys <= 0) {
+        if (initialKeys <= 0 && chestsRemaining > 0) {
             console.log("Không đủ chìa khóa để mở rương!");
-        } else if (chestsAvailableToOpen <= 0) {
-            console.log("Không còn rương để mở.");
+            // Optionally, show a message to the user that they need keys
         }
         return;
     }
@@ -123,8 +124,8 @@ export default function TreasureChest({
       setChestShake(false);
       setIsChestOpen(true);
       setShowShine(true);
-      setChestsAvailableToOpen(prev => prev - 1); // Decrement available attempts
-      onKeyUsed(); // Consume a key
+      setChestsRemaining(prev => prev - 1);
+      onKeyUsed(); // Call the callback to decrement keys in the parent state
 
       setTimeout(() => {
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
@@ -167,11 +168,6 @@ export default function TreasureChest({
   };
 
   useEffect(() => {
-      // Update available chests if the initialChests prop changes (e.g. game restart)
-      setChestsAvailableToOpen(initialChests);
-  }, [initialChests]);
-
-  useEffect(() => {
       return () => {
           if (chestCoinEffectTimerRef.current) clearTimeout(chestCoinEffectTimerRef.current);
       };
@@ -206,21 +202,16 @@ export default function TreasureChest({
       <style>{chestAnimations}</style>
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20">
         <div
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${(initialKeys <= 0 && chestsAvailableToOpen > 0) || chestsAvailableToOpen <= 0 ? 'opacity-70' : ''}`}
-          onClick={!isGamePaused && !isChestOpen && chestsAvailableToOpen > 0 && initialKeys > 0 ? openChest : null}
-          title={
-            chestsAvailableToOpen <= 0 ? "Hết rương để mở" :
-            initialKeys <= 0 ? "Cần chìa khóa để mở" :
-            "Mở rương báu"
-          }
-          aria-label={chestsAvailableToOpen > 0 && initialKeys > 0 ? "Mở rương báu" : "Không thể mở rương"}
+          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${initialKeys <= 0 && chestsRemaining > 0 ? 'opacity-70' : ''}`}
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && initialKeys > 0 ? openChest : null}
+          title={initialKeys <= 0 && chestsRemaining > 0 ? "Cần chìa khóa để mở" : chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
+          aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
-          tabIndex={!isGamePaused && chestsAvailableToOpen > 0 && initialKeys > 0 ? 0 : -1}
+          tabIndex={!isGamePaused && chestsRemaining > 0 && initialKeys > 0 ? 0 : -1}
         >
           <div className="flex flex-col items-center justify-center relative">
             <div className="flex flex-col items-center">
               <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
-                {/* Chest decorations */}
                 <div className="absolute inset-x-0 top-0 h-full">
                   <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
                   <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
@@ -232,7 +223,6 @@ export default function TreasureChest({
                 <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
                 <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
 
-                {/* Chest closed view */}
                 <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
                   <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
                     <div className="relative">
@@ -255,7 +245,6 @@ export default function TreasureChest({
                     </div>
                   </div>
                 </div>
-                {/* Shine and card display logic */}
                 {showShine && (
                   <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
                     <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
@@ -267,7 +256,7 @@ export default function TreasureChest({
                     ))}
                   </div>
                 )}
-                {showCard && currentCard ? (
+                {showCard && currentCard ? ( // Check currentCard as well
                   <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
                     <div className="absolute inset-0 overflow-hidden rounded-xl">
                       <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
@@ -282,7 +271,8 @@ export default function TreasureChest({
                     </div>
                   </div>
                 ) : (
-                  !isChestOpen && chestsAvailableToOpen > 0 && initialKeys > 0 &&
+                  // Only show bounce animation if chest is not open and has keys/chests
+                  !isChestOpen && chestsRemaining > 0 && initialKeys > 0 &&
                   <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
                     <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
                   </div>
@@ -300,29 +290,34 @@ export default function TreasureChest({
           )}
         </div>
 
-        {/* MODIFIED: Display only keys count, or a message if no chests/keys */}
+        {/* Display remaining chests and keys count */}
         <div className="mt-4 flex flex-col items-center">
-          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative min-h-[28px]"> {/* Ensure a minimum height */}
-            {chestsAvailableToOpen > 0 && initialKeys > 0 ? (
-                <>
-                    {/* Keys count */}
-                    <div className="flex items-center space-x-1">
-                        <span className="text-yellow-300 font-bold text-xs">{initialKeys}</span>
-                        <KeyIcon size={14} />
-                    </div>
-                    <div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow -z-10"></div>
-                    <div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-20"></div>
-                </>
-            ) : chestsAvailableToOpen <= 0 ? (
-                <span className="text-gray-400 text-xs">Hết rương</span>
-            ) : ( // No keys, but chests might be available
-                <span className="text-red-400 text-xs">Cần chìa khóa</span>
-            )}
+          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-3 relative"> {/* Increased space-x */}
+            {/* Chests count */}
+            <div className="flex items-center space-x-1">
+                <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
+                <span className="text-amber-400/80 text-xs">/{initialChests}</span>
+                {/* Simple chest icon (can be replaced with a Lottie or better SVG if desired) */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-300">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+            </div>
+
+            {/* Separator */}
+            <div className="w-px h-4 bg-gray-600"></div>
+
+            {/* Keys count */}
+            <div className="flex items-center space-x-1">
+                <span className="text-yellow-300 font-bold text-xs">{initialKeys}</span>
+                <KeyIcon size={14} /> {/* Use the KeyIcon component */}
+            </div>
+
+            {(chestsRemaining > 0 || initialKeys > 0) && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow -z-10"></div>)}
+            {(chestsRemaining > 0 || initialKeys > 0) && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-20"></div>)}
           </div>
         </div>
       </div>
 
-      {/* Card info popup */}
       {showCard && currentCard && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
