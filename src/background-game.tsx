@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in the same directory
 
 // Import DotLottieReact component
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { DotLottieReact } from '@lottiefpaces-react';
 
 // NEW: Import the TreasureChest component
 import TreasureChest from './treasure.tsx';
@@ -1562,7 +1562,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             {!isStatsFullscreen && (
                 <div className="flex items-center space-x-1 currency-display-container relative"> {/* Reduced space-x */}
                     {/* Gems Container */}
-                    <div className="bg-black bg-opacity-60 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-600 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+                    {/* MODIFIED: Updated background and border for gem counter */}
+                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center"> {/* Reduced margin-right */}
                             {/* Gem Icon */}
@@ -1801,4 +1802,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
