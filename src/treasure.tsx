@@ -106,7 +106,8 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 );
 
 // NEW: Key Icon Component using Image
-const KeyIcon = ({ size = 24, className = '', ...props }) => (
+// ADDED export keyword here
+export const KeyIcon = ({ size = 24, className = '', ...props }) => (
   <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
     <img
       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
@@ -426,7 +427,7 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
             <div className="relative mr-0.5 flex items-center justify-center"> {/* Container for the image */}
               {/* Key Icon */}
-              <KeyIcon size={16} className="relative z-20" /> {/* Adjusted size to 16 */}
+              <KeyIcon size={16} className="relative z-20" /> {/* Use the KeyIcon component */}
             </div>
             <div className="font-bold text-amber-100 text-xs tracking-wide"> {/* Text size remains xs */}
               {keysCollected} {/* Display keys collected */}
