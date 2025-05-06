@@ -2,59 +2,115 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 // --- SVG Icon Components ---
+// Star Icon SVG
 const StarIcon = ({ size = 24, color = 'currentColor', fill = 'none', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill === 'currentColor' ? color : fill} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={fill === 'currentColor' ? color : fill}
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
+
+// Sword Icon SVG
 const SwordIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
     <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
-    <line x1="13" x2="19" y1="19" y2="13" /><line x1="16" x2="20" y1="16" y2="20" /><line x1="19" x2="21" y1="21" y2="19" />
+    <line x1="13" x2="19" y1="19" y2="13" />
+    <line x1="16" x2="20" y1="16" y2="20" />
+    <line x1="19" x2="21" y1="21" y2="19" />
   </svg>
 );
-const ShieldIconSvg = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( // Renamed to avoid conflict if another ShieldIcon is imported/defined
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
+
+// Shield Icon SVG
+const ShieldIconSvg = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( // Renamed to avoid conflict if another ShieldIcon exists
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
+
+// Crown Icon SVG
 const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
-    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" /><path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" /><path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
+    <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
   </svg>
 );
+
+// X Icon SVG
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
-
-// NEW: Key Icon Component (copied from background-game.tsx for use here)
-const KeyIcon = ({ size = 24, className = '', ...props }) => (
-    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-        <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-            alt="Biểu tượng Chìa khóa"
-            className="w-full h-full object-contain"
-            onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.src = `https://placehold.co/${size}x${size}/goldenrod/ffffff?text=Key`;
-            }}
-        />
-    </div>
-);
-
 
 // Define interface for component props
 interface TreasureChestProps {
   initialChests?: number;
-  initialKeys?: number; // NEW: Initial number of keys
   onCoinReward: (amount: number) => void;
   onGemReward: (amount: number) => void;
-  onKeyUsed: () => void; // NEW: Callback when a key is used to open a chest
   isGamePaused?: boolean;
   isStatsFullscreen?: boolean;
+  currentKeys: number; // NEW: Prop for current key count
 }
 
 // Define interface for card data
@@ -85,14 +141,13 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({
-    initialChests = 3,
-    initialKeys = 0, // Default to 0 keys
-    onCoinReward,
-    onGemReward,
-    onKeyUsed, // Get the callback
-    isGamePaused = false,
-    isStatsFullscreen = false
+export default function TreasureChest({ 
+    initialChests = 3, 
+    onCoinReward, 
+    onGemReward, 
+    isGamePaused = false, 
+    isStatsFullscreen = false,
+    currentKeys // NEW: Destructure currentKeys
 }: TreasureChestProps) {
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState<Card | null>(null);
@@ -105,19 +160,8 @@ export default function TreasureChest({
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
   const chestCoinEffectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Use initialKeys prop to reflect keys from parent game state
-  // This component doesn't manage the total number of keys, it just displays what's passed in.
-  // The parent (ObstacleRunnerGame) will manage the actual key count.
-
   const openChest = () => {
-    // Prevent opening if game paused, already open, no chests, OR NO KEYS
-    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || initialKeys <= 0) {
-        if (initialKeys <= 0 && chestsRemaining > 0) {
-            console.log("Không đủ chìa khóa để mở rương!");
-            // Optionally, show a message to the user that they need keys
-        }
-        return;
-    }
+    if (isGamePaused || isChestOpen || chestsRemaining <= 0) return;
 
     setChestShake(true);
     setTimeout(() => {
@@ -125,8 +169,6 @@ export default function TreasureChest({
       setIsChestOpen(true);
       setShowShine(true);
       setChestsRemaining(prev => prev - 1);
-      onKeyUsed(); // Call the callback to decrement keys in the parent state
-
       setTimeout(() => {
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
         setCurrentCard(randomCard);
@@ -143,7 +185,9 @@ export default function TreasureChest({
         setPendingCoinReward(coinReward);
         setPendingGemReward(gemReward);
 
-        if (chestCoinEffectTimerRef.current) clearTimeout(chestCoinEffectTimerRef.current);
+        if (chestCoinEffectTimerRef.current) {
+            clearTimeout(chestCoinEffectTimerRef.current);
+        }
         setIsChestCoinEffectActive(true);
         chestCoinEffectTimerRef.current = setTimeout(() => {
             setIsChestCoinEffectActive(false);
@@ -169,10 +213,11 @@ export default function TreasureChest({
 
   useEffect(() => {
       return () => {
-          if (chestCoinEffectTimerRef.current) clearTimeout(chestCoinEffectTimerRef.current);
+          if (chestCoinEffectTimerRef.current) {
+              clearTimeout(chestCoinEffectTimerRef.current);
+          }
       };
   }, []);
-
 
   const chestAnimations = `
     @keyframes float-card { 0% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } 25% { transform: translateY(-15px) rotate(2deg); filter: brightness(1.2); } 50% { transform: translateY(-20px) rotate(0deg); filter: brightness(1.3); } 75% { transform: translateY(-15px) rotate(-2deg); filter: brightness(1.2); } 100% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } }
@@ -202,12 +247,11 @@ export default function TreasureChest({
       <style>{chestAnimations}</style>
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20">
         <div
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${initialKeys <= 0 && chestsRemaining > 0 ? 'opacity-70' : ''}`}
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && initialKeys > 0 ? openChest : null}
-          title={initialKeys <= 0 && chestsRemaining > 0 ? "Cần chìa khóa để mở" : chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
+          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 ? openChest : undefined}
           aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 && initialKeys > 0 ? 0 : -1}
+          tabIndex={!isGamePaused && chestsRemaining > 0 ? 0 : -1}
         >
           <div className="flex flex-col items-center justify-center relative">
             <div className="flex flex-col items-center">
@@ -252,16 +296,16 @@ export default function TreasureChest({
                       <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
                     ))}
                     {[...Array(20)].map((_, i) => (
-                      <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
+                      <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` } as React.CSSProperties}></div>
                     ))}
                   </div>
                 )}
-                {showCard && currentCard ? ( // Check currentCard as well
-                  <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
+                {showCard && currentCard ? ( // Ensure currentCard is not null
+                  <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard.background} animate-float-card`}>
                     <div className="absolute inset-0 overflow-hidden rounded-xl">
                       <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                     </div>
-                    <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
+                    <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard.icon}</div>
                     <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                     <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
                     <div className="flex mt-3">
@@ -271,10 +315,9 @@ export default function TreasureChest({
                     </div>
                   </div>
                 ) : (
-                  // Only show bounce animation if chest is not open and has keys/chests
-                  !isChestOpen && chestsRemaining > 0 && initialKeys > 0 &&
-                  <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
-                    <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                  // Placeholder for when chest is open but card not yet revealed, or chest is closed
+                  <div className={`flex justify-center items-center h-full pt-7 pb-4 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
+                     {/* Content for closed chest or pre-card reveal can go here if different from above */}
                   </div>
                 )}
                 </div>
@@ -282,38 +325,52 @@ export default function TreasureChest({
                 <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
               </div>
             </div>
+            <div className="flex flex-col items-center relative -mt-1 z-0"></div>
           </div>
+
           {isChestCoinEffectActive && (
-              <div className="absolute w-16 h-16 pointer-events-none z-50" style={{ top: '-20px', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                  <DotLottieReact src="https://lottie.host/07b8de00-e2ad-4d17-af12-9cbb13149269/vjmhfykbUL.lottie" loop={false} autoplay className="w-full h-full" />
+              <div
+                  className="absolute w-16 h-16 pointer-events-none z-50"
+                  style={{
+                      top: '-20px',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                  }}
+              >
+                  <DotLottieReact
+                      src="https://lottie.host/07b8de00-e2ad-4d17-af12-9cbb13149269/vjmhfykbUL.lottie"
+                      loop={false}
+                      autoplay
+                      className="w-full h-full"
+                  />
               </div>
           )}
         </div>
 
-        {/* Display remaining chests and keys count */}
+        {/* Display remaining chests count AND NEW: Key count */}
         <div className="mt-4 flex flex-col items-center">
-          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-3 relative"> {/* Increased space-x */}
-            {/* Chests count */}
-            <div className="flex items-center space-x-1">
-                <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-                <span className="text-amber-400/80 text-xs">/{initialChests}</span>
-                {/* Simple chest icon (can be replaced with a Lottie or better SVG if desired) */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-300">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
+          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-3 relative"> {/* Increased space-x for key */}
+            {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
+            {/* Chest Count */}
+            <div className="flex items-center">
+              <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
+              <span className="text-amber-400/80 text-xs">/{initialChests}</span>
             </div>
-
-            {/* Separator */}
-            <div className="w-px h-4 bg-gray-600"></div>
-
-            {/* Keys count */}
+            {/* NEW: Key Icon and Count */}
             <div className="flex items-center space-x-1">
-                <span className="text-yellow-300 font-bold text-xs">{initialKeys}</span>
-                <KeyIcon size={14} /> {/* Use the KeyIcon component */}
+                <img
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+                    alt="Key Icon"
+                    className="w-4 h-4" // Adjust size as needed
+                    onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null; // Prevent infinite loop
+                        target.src = "https://placehold.co/16x16/ffff00/000000?text=K"; // Placeholder
+                    }}
+                />
+                <span className="text-yellow-300 font-bold text-xs">{currentKeys}</span>
             </div>
-
-            {(chestsRemaining > 0 || initialKeys > 0) && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow -z-10"></div>)}
-            {(chestsRemaining > 0 || initialKeys > 0) && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-20"></div>)}
+            {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
         </div>
       </div>
@@ -325,11 +382,11 @@ export default function TreasureChest({
               <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
             </div>
             <div className="text-xl font-bold text-white mb-6">Bạn nhận được</div>
-            <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background}`}>
+            <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background} animate-float-card`}>
               <div className="absolute inset-0 overflow-hidden rounded-xl">
                 <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
               </div>
-              <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
+              <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard.icon}</div>
               <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
               <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
               <div className="flex mt-3">
