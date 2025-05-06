@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in the same directory
 
 // Import DotLottieReact component
-import { DotLottieReact } from '@lottiefpaces-react';
+// Corrected import path for DotLottieReact
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 // NEW: Import the TreasureChest component
 import TreasureChest from './treasure.tsx';
@@ -905,7 +906,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null; // Reset the ref
         }
-         // Also clear particle timer on cleanup
+         // Also clear particle timer when paused
         if (particleTimerRef.current) {
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
