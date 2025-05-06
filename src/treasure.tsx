@@ -81,7 +81,7 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   >
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
     <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
-    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
   </svg>
 );
 
@@ -105,33 +105,31 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// NEW: Key Icon Component using Image
-// ADDED export keyword here
-export const KeyIcon = ({ size = 24, className = '', ...props }) => (
-  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-    <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-      alt="Key Icon" // Added alt text
-      className="w-full h-full object-contain" // Make image fit the container
-      // Optional: Add onerror to handle broken image link
-      onError={(e) => {
-        const target = e.target as HTMLImageElement;
-        target.onerror = null; // Prevent infinite loop
-        target.src = "https://placehold.co/24x24/FFD700/000000?text=Key"; // Placeholder image
-      }}
-    />
-  </div>
+// --- NEW: Key Icon Component using Image ---
+const KeyIcon = ({ size = 24, className = '' }) => (
+  <img
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+    alt="Key Icon"
+    className={`${className}`}
+    style={{ width: size, height: size }}
+    // Optional: Add onerror to handle broken image link
+    onError={(e) => {
+      const target = e.target as HTMLImageElement;
+      target.onerror = null; // Prevent infinite loop
+      target.src = "https://placehold.co/24x24/ffcc00/000000?text=Key"; // Placeholder image
+    }}
+  />
 );
 
 
 // Define interface for component props
 interface TreasureChestProps {
   initialChests?: number; // Initial number of chests
+  keyCount?: number;              // thêm
   onCoinReward: (amount: number) => void; // Callback function to add coins
-  onGemReward: (amount: number) => void; // Callback function to add gems
+  onGemReward: (amount: number) => void; // NEW: Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
-  keysCollected: number; // NEW: Prop to receive the number of keys collected
 }
 
 // Define interface for card data
@@ -149,7 +147,12 @@ const cards: Card[] = [
   { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
   { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
   { id: 3, name: "Vương Miện", rarity: "epic", icon: <CrownIcon size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
-  // Using StarIcon for legendary card icon as a placeholder.
+  // GemIcon is now in background-game.tsx, so we can't use it directly here for the card icon.
+  // For now, let's use a placeholder or a different icon if needed, or assume GemIcon is imported (but it shouldn't be if it's moved).
+  // Let's keep the GemIcon here for now, assuming it's needed *only* for the card display within TreasureChest.
+  // If GemIcon is needed in background-game.tsx for the header display, it should be moved there.
+  // Let's move GemIcon to background-game.tsx as requested by the user's goal.
+  // We will need to update the legendary card icon here. Let's use StarIcon for legendary card icon as a placeholder.
   { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <StarIcon size={36} color="#FFD700" fill="currentColor" />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
 ];
 
@@ -165,17 +168,19 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, keysCollected }: TreasureChestProps) {
+export default function TreasureChest({ initialChests = 3, keyCount, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState<Card | null>(null); // Changed to null to store card object directly
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
+  // REMOVED: gems state
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
-  // State to hold pending gem reward
+  // NEW: State to hold pending gem reward
   const [pendingGemReward, setPendingGemReward] = useState(0);
+
 
   // State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
@@ -243,7 +248,7 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
         onCoinReward(pendingCoinReward);
         setPendingCoinReward(0); // Reset pending reward after giving it to the parent
     }
-     // Call the parent's function to add gems if there's a pending reward
+     // NEW: Call the parent's function to add gems if there's a pending reward
     if (pendingGemReward > 0) {
         onGemReward(pendingGemReward);
         setPendingGemReward(0); // Reset pending gem reward
@@ -409,35 +414,23 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
 
         </div>
 
-        {/* Display remaining chests count and key count */}
-        <div className="mt-4 flex items-center justify-center space-x-4"> {/* Added space-x for spacing */}
-          {/* Chest count */}
+        {/* Display remaining chests count */}
+        <div className="mt-4 flex flex-col items-center">
           <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
             {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
-            <div className="flex items-center">
+            <div className="flex items-center space-x-1"> {/* Added space-x-1 here */}
               <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
               <span className="text-amber-400/80 text-xs">/{initialChests}</span> {/* Use initialChests for total count */}
+              {/* --- NEW: Key Count Display --- */}
+              {typeof keyCount === 'number' && (
+                <div className="flex items-center ml-2">
+                  <KeyIcon size={14} className="mr-0.5" />
+                  <span className="text-amber-200 font-bold text-xs">{keyCount}</span>
+                </div>
+              )}
+              {/* --- END NEW: Key Count Display --- */}
             </div>
             {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
-          </div>
-
-          {/* NEW: Key count */}
-          {/* MODIFIED: Updated background and border for key counter */}
-          <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-            <div className="relative mr-0.5 flex items-center justify-center"> {/* Container for the image */}
-              {/* Key Icon */}
-              <KeyIcon size={16} className="relative z-20" /> {/* Use the KeyIcon component */}
-            </div>
-            <div className="font-bold text-amber-100 text-xs tracking-wide"> {/* Text size remains xs */}
-              {keysCollected} {/* Display keys collected */}
-            </div>
-             {/* Plus button for Keys - Functionality can be added later */}
-            <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
-              <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
-            </div>
-            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
           </div>
         </div>
       </div>
