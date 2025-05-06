@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-// --- SVG Icon Components (Moved from background-game.tsx) ---
-// These icons are used in the card popup, so they are moved here.
+// --- SVG Icon Components ---
+// These icons are used in the card popup, so they are kept here.
 
 // Star Icon SVG
 const StarIcon = ({ size = 24, color = 'currentColor', fill = 'none', className = '', ...props }) => (
@@ -81,29 +81,7 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   >
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
     <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
-    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
-  </svg>
-);
-
-// Gem Icon SVG
-const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide-icon ${className}`}
-    {...props}
-  >
-    <path d="M6 3h12l4 6-10 13L2 9l4-6z" />
-    <path d="M12 22L2 9" />
-    <path d="M12 22l10-13" />
-    <path d="M2 9h20" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
   </svg>
 );
 
@@ -131,8 +109,9 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 // Define interface for component props
 interface TreasureChestProps {
   initialChests?: number; // Initial number of chests
-  initialGems?: number; // Initial number of gems
+  // REMOVED: initialGems prop
   onCoinReward: (amount: number) => void; // Callback function to add coins
+  onGemReward: (amount: number) => void; // NEW: Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
 }
@@ -147,15 +126,21 @@ interface Card {
   background: string;
 }
 
-// Updated cards array to use SVG components (Moved from background-game.tsx)
+// Updated cards array to use SVG components
 const cards: Card[] = [
   { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
   { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
   { id: 3, name: "Vương Miện", rarity: "epic", icon: <CrownIcon size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
-  { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <GemIcon size={36} />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
+  // GemIcon is now in background-game.tsx, so we can't use it directly here for the card icon.
+  // For now, let's use a placeholder or a different icon if needed, or assume GemIcon is imported (but it shouldn't be if it's moved).
+  // Let's keep the GemIcon here for now, assuming it's needed *only* for the card display within TreasureChest.
+  // If GemIcon is needed in background-game.tsx for the header display, it should be moved there.
+  // Let's move GemIcon to background-game.tsx as requested by the user's goal.
+  // We will need to update the legendary card icon here. Let's use StarIcon for legendary card icon as a placeholder.
+  { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <StarIcon size={36} color="#FFD700" fill="currentColor" />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
 ];
 
-// Helper function to get rarity color (Moved from background-game.tsx)
+// Helper function to get rarity color
 const getRarityColor = (rarity: Card['rarity']) => {
   switch(rarity) {
     case "common": return "text-gray-200";
@@ -167,23 +152,26 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, initialGems = 42, onCoinReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
-  // States for chest and popup (Moved from background-game.tsx)
+export default function TreasureChest({ initialChests = 3, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
+  // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState<Card | null>(null); // Changed to null to store card object directly
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
-  const [gems, setGems] = useState(initialGems);
+  // REMOVED: gems state
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
+  // NEW: State to hold pending gem reward
+  const [pendingGemReward, setPendingGemReward] = useState(0);
 
-  // State for chest coin effect (Moved from background-game.tsx)
+
+  // State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
-  // Timer for chest coin effect (Moved from background-game.tsx)
+  // Timer for chest coin effect
   const chestCoinEffectTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Function to open the chest (Moved from background-game.tsx)
+  // Function to open the chest
   const openChest = () => {
     // Prevent opening chest if game is paused, already open, or no chests left
     if (isGamePaused || isChestOpen || chestsRemaining <= 0) return;
@@ -199,16 +187,22 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
         setCurrentCard(randomCard);
         setShowCard(randomCard); // Set showCard to the card object
         let coinReward = 0;
+        let gemReward = 0; // Initialize gem reward
+
         switch(randomCard.rarity) {
           case "common": coinReward = 10; break;
           case "rare": coinReward = 25; break;
-          case "epic": coinReward = 50; break;
-          case "legendary": coinReward = 100; break;
+          case "epic":
+              coinReward = 50;
+              gemReward = 2; // Award 2 gems for Epic
+              break;
+          case "legendary":
+              coinReward = 100;
+              gemReward = 5; // Award 5 gems for Legendary
+              break;
         }
         setPendingCoinReward(coinReward);
-        if (randomCard.rarity === "legendary" || randomCard.rarity === "epic") {
-          setGems(prev => prev + (randomCard.rarity === "legendary" ? 5 : 2));
-        }
+        setPendingGemReward(gemReward); // Store pending gem reward
 
         // --- Trigger Coin Collection Effect near Chest ---
         // Clear any existing chest coin effect timer
@@ -227,7 +221,7 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
     }, 600); // Duration of shake animation
   };
 
-  // Function to reset the chest state and collect reward (Modified from background-game.tsx)
+  // Function to reset the chest state and collect reward
   const resetChest = () => {
     setIsChestOpen(false);
     setShowCard(null); // Reset showCard to null
@@ -237,6 +231,11 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
         // Call the parent's function to add coins
         onCoinReward(pendingCoinReward);
         setPendingCoinReward(0); // Reset pending reward after giving it to the parent
+    }
+     // NEW: Call the parent's function to add gems if there's a pending reward
+    if (pendingGemReward > 0) {
+        onGemReward(pendingGemReward);
+        setPendingGemReward(0); // Reset pending gem reward
     }
   };
 
@@ -250,7 +249,7 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
 
-  // CSS Animations (Moved from background-game.tsx - only chest/card related)
+  // CSS Animations (only chest/card related)
   const chestAnimations = `
     @keyframes float-card { 0% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } 25% { transform: translateY(-15px) rotate(2deg); filter: brightness(1.2); } 50% { transform: translateY(-20px) rotate(0deg); filter: brightness(1.3); } 75% { transform: translateY(-15px) rotate(-2deg); filter: brightness(1.2); } 100% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } }
     @keyframes chest-shake { 0% { transform: translateX(0) rotate(0deg); } 10% { transform: translateX(-4px) rotate(-3deg); } 20% { transform: translateX(4px) rotate(3deg); } 30% { transform: translateX(-4px) rotate(-3deg); } 40% { transform: translateX(4px) rotate(3deg); } 50% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(2deg); } }
@@ -351,6 +350,7 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
                     <div className="absolute inset-0 overflow-hidden rounded-xl">
                       <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                     </div>
+                    {/* Render the card icon */}
                     <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                     <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                     <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
@@ -424,6 +424,7 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
               <div className="absolute inset-0 overflow-hidden rounded-xl">
                 <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
               </div>
+              {/* Render the card icon */}
               <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
               <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
               <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
@@ -442,3 +443,4 @@ export default function TreasureChest({ initialChests = 3, initialGems = 42, onC
     </>
   );
 }
+
