@@ -32,6 +32,29 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
+// NEW: Gem Icon SVG (Moved from treasure.tsx)
+const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M6 3h12l4 6-10 13L2 9l4-6z" />
+    <path d="M12 22L2 9" />
+    <path d="M12 22l10-13" />
+    <path d="M2 9h20" />
+  </svg>
+);
+
+
 // --- NEW: Error Boundary Component ---
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -137,16 +160,19 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
   const [remainingCooldown, setRemainingCooldown, ] = useState(0); // Remaining cooldown time in seconds
 
-  // --- NEW: Coin States (Kept in main game file) ---
+  // --- NEW: Coin and Gem States (Kept in main game file) ---
   const [coins, setCoins] = useState(357); // Player's coin count
   const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
   const coinScheduleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new coins
   const coinCountAnimationTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for coin count animation
 
+  // NEW: Gems state (Moved from TreasureChest)
+  const [gems, setGems] = useState(42); // Player's gem count, initialized
+
 
   // UI States
-  // REMOVED: isChestOpen, showCard, currentCard, gems, showShine, chestShake, chestsRemaining, pendingCoinReward, isChestCoinEffectActive
+  // REMOVED: isChestOpen, showCard, currentCard, showShine, chestShake, chestsRemaining, pendingCoinReward, isChestCoinEffectActive
   // NEW: State for full-screen stats visibility
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
 
@@ -172,7 +198,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // *** NEW: Ref to store remaining cooldown time when paused ***
   const pausedShieldCooldownRemainingRef = useRef<number | null>(null);
 
-  // REMOVED: chestCoinEffectTimerRef
+  // REMOVED: chestCoinEffectTimerRef (This is now in TreasureChest)
 
 
   // Obstacle types with properties (added base health)
@@ -234,6 +260,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       coinCountAnimationTimerRef.current = countInterval;
   };
 
+  // NEW: Function to handle gem rewards received from TreasureChest
+  const handleGemReward = (amount: number) => {
+      setGems(prev => prev + amount);
+      console.log(`Received ${amount} gems from chest.`);
+      // You could add a visual effect for gem collection here if desired
+  };
+
 
   // Function to start the game
   const startGame = () => {
@@ -262,7 +295,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setCoins(357); // Reset coin count to initial value
     setDisplayedCoins(357); // Reset displayed coin count
     // REMOVED: setChestsRemaining(3); // This state is now in TreasureChest
-    // REMOVED: setGems(42); // This state is now in TreasureChest
+    setGems(42); // NEW: Reset gems count to initial value
 
 
     // Generate initial obstacles to populate the screen at the start
@@ -1524,29 +1557,50 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 </div>
             </div>
             {/* Currency display */}
-            {/* REMOVED Gems container - Gems state is now in TreasureChest */}
-            <div className="flex items-center space-x-1 currency-display-container relative"> {/* Reduced space-x */}
-              {/* Coins Container (Kept in main game file) */}
-              <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
-                  <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
-                    <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
-                    <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
-                  </div>
-                  <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
+             {/* NEW: Gems container (Moved from TreasureChest) */}
+             {/* HIDE currency display when stats are in fullscreen */}
+            {!isStatsFullscreen && (
+                <div className="flex items-center space-x-1 currency-display-container relative"> {/* Reduced space-x */}
+                    {/* Gems Container */}
+                    <div className="bg-black bg-opacity-60 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-600 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                        <div className="relative mr-0.5 flex items-center justify-center"> {/* Reduced margin-right */}
+                            {/* Gem Icon */}
+                            <GemIcon size={14} color="#a78bfa" className="relative z-20" /> {/* Adjusted size and color */}
+                        </div>
+                        <div className="font-bold text-purple-200 text-xs tracking-wide"> {/* Text size remains xs */}
+                            {gems.toLocaleString()} {/* Display gems count */}
+                        </div>
+                         {/* Plus button for Gems - Functionality can be added later */}
+                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+                            <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+                        </div>
+                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                    </div>
+
+                    {/* Coins Container (Kept in main game file) */}
+                    <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                      <div className="relative mr-0.5 flex"> {/* Reduced margin-right */}
+                        <div className="w-3 h-3 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full border-2 border-amber-600 shadow-md relative z-20 flex items-center justify-center"> {/* Reduced size */}
+                          <div className="absolute inset-0.5 bg-yellow-200 rounded-full opacity-60"></div>
+                          <span className="text-amber-800 font-bold text-xs">$</span> {/* Text size remains xs */}
+                        </div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full border-2 border-amber-700 shadow-md absolute -left-0.5 top-0.5 z-10"></div> {/* Reduced size and adjusted position */}
+                      </div>
+                      <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
+                        {displayedCoins.toLocaleString()}
+                      </div>
+                      {/* Plus button for Coins - Functionality can be added later */}
+                      <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+                        <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+                      </div>
+                      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+                    </div>
                 </div>
-                <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Text size remains xs */}
-                  {displayedCoins.toLocaleString()}
-                </div>
-                {/* Plus button for Coins - Functionality can be added later */}
-                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
-                  <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
-                </div>
-                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
-              </div>
-            </div>
+             )}
           </div>
 
 
@@ -1574,7 +1628,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     <div className="relative">
                       <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
                         <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
+                        <div className="absolute top-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
                         <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
                       </div>
                       <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
@@ -1730,11 +1784,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           )}
 
           {/* NEW: Render the TreasureChest component */}
-          {/* Pass necessary props: initial chests, initial gems, coin reward callback, and game state */}
+          {/* Pass necessary props: initial chests, initial gems (removed), coin reward callback, gem reward callback, and game state */}
           <TreasureChest
             initialChests={3}
-            initialGems={42}
             onCoinReward={startCoinCountAnimation} // Pass the coin animation function as a callback
+            onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted} // Pass game paused state
             isStatsFullscreen={isStatsFullscreen} // Pass fullscreen state
           />
@@ -1747,3 +1801,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
