@@ -81,7 +81,7 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   >
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
     <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
-    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v0z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
   </svg>
 );
 
@@ -105,21 +105,21 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// NEW: Key Icon Component
+// NEW: Key Icon Component using Image
 const KeyIcon = ({ size = 24, className = '', ...props }) => (
-  <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-    alt="Key Icon"
-    className={className}
-    style={{ width: size, height: size }}
-    onError={(e) => {
-      const target = e.target as HTMLImageElement;
-      target.onerror = null; // Prevent infinite loop
-      // Fallback placeholder for key icon
-      target.src = `https://placehold.co/${size}x${size}/FBBF24/000000?text=K`;
-    }}
-    {...props}
-  />
+  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+      alt="Key Icon" // Added alt text
+      className="w-full h-full object-contain" // Make image fit the container
+      // Optional: Add onerror to handle broken image link
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.onerror = null; // Prevent infinite loop
+        target.src = "https://placehold.co/24x24/FFD700/000000?text=Key"; // Placeholder image
+      }}
+    />
+  </div>
 );
 
 
@@ -127,10 +127,10 @@ const KeyIcon = ({ size = 24, className = '', ...props }) => (
 interface TreasureChestProps {
   initialChests?: number; // Initial number of chests
   onCoinReward: (amount: number) => void; // Callback function to add coins
-  onGemReward: (amount: number) => void; // NEW: Callback function to add gems
+  onGemReward: (amount: number) => void; // Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
-  keysCollected: number; // NEW: Number of keys collected by the player
+  keysCollected: number; // NEW: Prop to receive the number of keys collected
 }
 
 // Define interface for card data
@@ -148,6 +148,7 @@ const cards: Card[] = [
   { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
   { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
   { id: 3, name: "Vương Miện", rarity: "epic", icon: <CrownIcon size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
+  // Using StarIcon for legendary card icon as a placeholder.
   { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <StarIcon size={36} color="#FFD700" fill="currentColor" />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
 ];
 
@@ -163,24 +164,17 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({
-  initialChests = 3,
-  onCoinReward,
-  onGemReward,
-  isGamePaused = false,
-  isStatsFullscreen = false,
-  keysCollected // NEW: Destructure keysCollected
-}: TreasureChestProps) {
+export default function TreasureChest({ initialChests = 3, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, keysCollected }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
-  const [showCard, setShowCard] = useState<Card | null>(null);
+  const [showCard, setShowCard] = useState<Card | null>(null); // Changed to null to store card object directly
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
+  // State to hold pending gem reward
   const [pendingGemReward, setPendingGemReward] = useState(0);
-
 
   // State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
@@ -189,6 +183,7 @@ export default function TreasureChest({
 
   // Function to open the chest
   const openChest = () => {
+    // Prevent opening chest if game is paused, already open, or no chests left
     if (isGamePaused || isChestOpen || chestsRemaining <= 0) return;
 
     setChestShake(true);
@@ -200,50 +195,57 @@ export default function TreasureChest({
       setTimeout(() => {
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
         setCurrentCard(randomCard);
-        setShowCard(randomCard);
+        setShowCard(randomCard); // Set showCard to the card object
         let coinReward = 0;
-        let gemReward = 0;
+        let gemReward = 0; // Initialize gem reward
 
         switch(randomCard.rarity) {
           case "common": coinReward = 10; break;
           case "rare": coinReward = 25; break;
           case "epic":
               coinReward = 50;
-              gemReward = 2;
+              gemReward = 2; // Award 2 gems for Epic
               break;
           case "legendary":
               coinReward = 100;
-              gemReward = 5;
+              gemReward = 5; // Award 5 gems for Legendary
               break;
         }
         setPendingCoinReward(coinReward);
-        setPendingGemReward(gemReward);
+        setPendingGemReward(gemReward); // Store pending gem reward
 
+        // --- Trigger Coin Collection Effect near Chest ---
+        // Clear any existing chest coin effect timer
         if (chestCoinEffectTimerRef.current) {
             clearTimeout(chestCoinEffectTimerRef.current);
         }
+        // Activate the chest coin effect
         setIsChestCoinEffectActive(true);
+        // Set a timer to deactivate the chest coin effect after a duration
         chestCoinEffectTimerRef.current = setTimeout(() => {
             setIsChestCoinEffectActive(false);
-        }, 800);
+        }, 800); // Effect duration
+        // --- END Trigger Coin Collection Effect near Chest ---
 
-      }, 1500);
-    }, 600);
+      }, 1500); // Delay before showing card
+    }, 600); // Duration of shake animation
   };
 
   // Function to reset the chest state and collect reward
   const resetChest = () => {
     setIsChestOpen(false);
-    setShowCard(null);
+    setShowCard(null); // Reset showCard to null
     setCurrentCard(null);
     setShowShine(false);
     if (pendingCoinReward > 0) {
+        // Call the parent's function to add coins
         onCoinReward(pendingCoinReward);
-        setPendingCoinReward(0);
+        setPendingCoinReward(0); // Reset pending reward after giving it to the parent
     }
+     // Call the parent's function to add gems if there's a pending reward
     if (pendingGemReward > 0) {
         onGemReward(pendingGemReward);
-        setPendingGemReward(0);
+        setPendingGemReward(0); // Reset pending gem reward
     }
   };
 
@@ -254,7 +256,7 @@ export default function TreasureChest({
               clearTimeout(chestCoinEffectTimerRef.current);
           }
       };
-  }, []);
+  }, []); // Empty dependency array means this effect runs only on mount and unmount
 
 
   // CSS Animations (only chest/card related)
@@ -267,6 +269,7 @@ export default function TreasureChest({
     @keyframes ray-rotate { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
     @keyframes shine { 0% { transform: translateX(-200px) rotate(45deg); } 100% { transform: translateX(400px) rotate(45deg); } }
     @keyframes gold-particle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 50% { opacity: 0.7; } 100% { transform: translate( calc(-50% + var(--random-x)), calc(-50% + var(--random-y)) ) scale(0); opacity: 0; } }
+    @keyframes lid-open { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-100%) rotate(60deg); } } /* This animation might not be used directly with Lottie */
     .animate-float-card { animation: float-card 3s ease-in-out infinite; }
     .animate-chest-shake { animation: chest-shake 0.6s ease-in-out; }
     .animate-twinkle { animation: twinkle 5s ease-in-out infinite; }
@@ -275,28 +278,38 @@ export default function TreasureChest({
     .animate-ray-rotate { animation: ray-rotate 2s ease-in-out infinite; }
     .animate-shine { animation: shine 2s linear infinite; }
     .animate-gold-particle { animation: gold-particle 1.5s ease-out forwards; }
+    .animate-lid-open { animation: lid-open 0.5s ease-out forwards; }
   `;
 
 
+  // Render the treasure chest and related UI
+  // HIDE chest when stats are in fullscreen
   if (isStatsFullscreen) {
-      return null;
+      return null; // Don't render anything if stats are fullscreen
   }
 
 
   return (
     <>
+      {/* Add chest-specific CSS animations */}
       <style>{chestAnimations}</style>
-      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20">
+
+      {/* Treasure chest and remaining chests count - Positioned on top of the game */}
+      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 ? openChest : undefined}
+          // Disable click if game is paused, already open, or no chests left
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 ? openChest : null}
           aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 ? 0 : -1}
+          tabIndex={!isGamePaused && chestsRemaining > 0 ? 0 : -1} // Make focusable only when usable
         >
-          <div className="flex flex-col items-center justify-center relative">
+          <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
+            {/* Chest main body */}
             <div className="flex flex-col items-center">
+              {/* Chest top part */}
               <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
+                {/* Decorations */}
                 <div className="absolute inset-x-0 top-0 h-full">
                   <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
                   <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
@@ -308,31 +321,28 @@ export default function TreasureChest({
                 <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
                 <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
 
-                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'} flex justify-center items-center`}>
-                  {!isChestOpen && ( // Show closed chest content only if not open
-                    <>
-                      <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
-                        <div className="relative">
-                          <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
-                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
-                            <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
-                          </div>
-                        </div>
+                {/* Chest closed view */}
+                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
+                  <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
+                    <div className="relative">
+                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
+                        <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
                       </div>
-                      <div className="flex justify-center items-center h-full pt-7 pb-4">
-                        <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
-                          <div className="absolute inset-0 rounded-lg overflow-hidden">
-                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                            <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                          </div>
-                          <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
-                            <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
-                            <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
-                          </div>
-                        </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center h-full pt-7 pb-4">
+                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
+                      <div className="absolute inset-0 rounded-lg overflow-hidden">
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
+                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
                       </div>
-                    </>
-                  )}
+                      <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
+                        <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
+                        <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 {showShine && (
                   <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
@@ -345,11 +355,12 @@ export default function TreasureChest({
                     ))}
                   </div>
                 )}
-                {showCard && currentCard ? ( // Check currentCard as well
-                  <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard?.background} animate-float-card`}>
+                {showCard ? (
+                  <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
                     <div className="absolute inset-0 overflow-hidden rounded-xl">
                       <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
                     </div>
+                    {/* Render the card icon */}
                     <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
                     <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
                     <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
@@ -359,72 +370,73 @@ export default function TreasureChest({
                       ))}
                     </div>
                   </div>
-                ) : isChestOpen ? ( // If chest is open but card not yet shown (during shine animation)
-                    // You can put a placeholder here or just let the shine effect play
-                    <div className="w-full h-full flex items-center justify-center">
-                         {/* Optionally, add a subtle loading indicator or just keep it empty for shine */}
-                    </div>
-                ) : ( // If chest is closed
-                  // This part was for the bounce animation when chest is closed, ensure it's not rendered when opening
-                  !isChestOpen && (
-                    <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10 self-center mt-6">
-                      <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
-                    </div>
-                  )
+                ) : (
+                  <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
+                    <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                  </div>
                 )}
                 </div>
               <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
                 <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
               </div>
             </div>
+            {/* Chest base */}
             <div className="flex flex-col items-center relative -mt-1 z-0"></div>
           </div>
 
+          {/* --- Coin Collection Effect Lottie near Chest --- */}
+          {/* Position this absolutely relative to the chest container */}
           {isChestCoinEffectActive && (
               <div
-                  className="absolute w-16 h-16 pointer-events-none z-50"
+                  className="absolute w-16 h-16 pointer-events-none z-50" // Adjust size and z-index as needed
                   style={{
-                      top: '-20px',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
+                      // Position relative to the center-top of the chest container
+                      top: '-20px', // Adjust vertical position above the chest
+                      left: '50%', // Center horizontally
+                      transform: 'translate(-50%, -50%)', // Ensure perfect centering
                   }}
               >
                   <DotLottieReact
-                      src="https://lottie.host/07b8de00-e2ad-4d17-af12-9cbb13149269/vjmhfykbUL.lottie"
-                      loop={false}
+                      src="https://lottie.host/07b8de00-e2ad-4d17-af12-9cbb13149269/vjmhfykbUL.lottie" // Lottie URL provided by user
+                      loop={false} // Play once
                       autoplay
                       className="w-full h-full"
                   />
               </div>
           )}
+
+
         </div>
 
-        {/* Display remaining chests count AND NEW: Keys collected count */}
-        <div className="mt-4 flex flex-col items-center">
-          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-3 relative"> {/* Increased space-x for key */}
-            {/* Chest Count */}
+        {/* Display remaining chests count and key count */}
+        <div className="mt-4 flex items-center justify-center space-x-4"> {/* Added space-x for spacing */}
+          {/* Chest count */}
+          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+            {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
             <div className="flex items-center">
-              {/* Using a chest icon image for better visuals */}
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/treasure-chest.png" alt="Chest" className="w-4 h-4 mr-1" 
-                onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null; 
-                    target.src = "https://placehold.co/16x16/D1A05F/000000?text=C";
-                }}
-              />
               <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
-              <span className="text-amber-400/80 text-xs">/{initialChests}</span>
+              <span className="text-amber-400/80 text-xs">/{initialChests}</span> {/* Use initialChests for total count */}
             </div>
+            {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
+          </div>
 
-            {/* NEW: Key Count Display */}
-            <div className="flex items-center">
-              <KeyIcon size={16} className="mr-1 text-yellow-400" /> {/* Key icon */}
-              <span className="text-yellow-300 font-bold text-xs">{keysCollected}</span>
-              {/* Optionally, you can add a total key capacity if needed, e.g., /10 */}
+          {/* NEW: Key count */}
+          {/* MODIFIED: Updated background and border for key counter */}
+          <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> {/* Reduced padding */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+            <div className="relative mr-0.5 flex items-center justify-center"> {/* Container for the image */}
+              {/* Key Icon */}
+              <KeyIcon size={16} className="relative z-20" /> {/* Adjusted size to 16 */}
             </div>
-
-            {(chestsRemaining > 0 || keysCollected > 0) && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow -z-10"></div>)}
-            {(chestsRemaining > 0 || keysCollected > 0) && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-20"></div>)}
+            <div className="font-bold text-amber-100 text-xs tracking-wide"> {/* Text size remains xs */}
+              {keysCollected} {/* Display keys collected */}
+            </div>
+             {/* Plus button for Keys - Functionality can be added later */}
+            <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"> {/* Reduced size and margin */}
+              <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+            </div>
+            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
           </div>
         </div>
       </div>
@@ -432,11 +444,8 @@ export default function TreasureChest({
 
       {/* Card info popup - Positioned on top of everything */}
       {showCard && currentCard && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Increased z-index */}
           <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
-            <button onClick={resetChest} className="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors">
-              <XIcon size={20} />
-            </button>
             <div className="absolute -top-3 -right-3">
               <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
             </div>
@@ -445,6 +454,7 @@ export default function TreasureChest({
               <div className="absolute inset-0 overflow-hidden rounded-xl">
                 <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
               </div>
+              {/* Render the card icon */}
               <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
               <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
               <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
