@@ -201,6 +201,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // NEW: State to track defeated enemies for key drop logic
   const [enemiesDefeatedCount, setEnemiesDefeatedCount] = useState(0);
+  // NEW: State to indicate if the next generated obstacle should have a key
+  const [nextObstacleHasKey, setNextObstacleHasKey] = useState(false);
 
 
   // UI States
@@ -344,6 +346,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setGems(42); // NEW: Reset gems count to initial value
     setKeysCollected(0); // NEW: Reset keys collected
     setEnemiesDefeatedCount(0); // NEW: Reset defeated enemy count
+    setNextObstacleHasKey(false); // NEW: Reset next obstacle key flag
 
 
     // Generate initial obstacles to populate the screen at the start
@@ -498,25 +501,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             // Add spacing between grouped obstacles
             const spacing = i * (Math.random() * 10 + 10);
 
-            // NEW: Determine if this obstacle should have a key
-            let shouldHaveKey = false;
-            // Increment defeated enemy count for each obstacle generated
-            setEnemiesDefeatedCount(prev => {
-                const newCount = prev + 1;
-                // Check if the count is within the key drop range (10-20)
-                if (newCount >= 10 && newCount <= 20) {
-                    // 50% chance to drop a key in this range
-                    if (Math.random() < 0.5) {
-                        shouldHaveKey = true;
-                        return 0; // Reset count after assigning a key
-                    }
-                } else if (newCount > 20) {
-                    // Force a key drop if the count exceeds 20
-                     shouldHaveKey = true;
-                     return 0; // Reset count after assigning a key
-                }
-                 return newCount; // Keep counting
-            });
+            // Determine if this obstacle should have a key based on the state flag
+            const shouldHaveKey = nextObstacleHasKey;
+            // Reset the flag if a key is assigned
+            if (shouldHaveKey) {
+                setNextObstacleHasKey(false);
+            }
 
 
             newObstacles.push({
@@ -525,7 +515,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               ...randomObstacleType, // Include obstacle properties
               health: randomObstacleType.baseHealth, // Initialize health
               maxHealth: randomObstacleType.baseHealth, // Set max health
-              hasKey: shouldHaveKey // Assign the hasKey property
+              hasKey: shouldHaveKey // Assign the hasKey property based on the flag
             });
           }
       }
@@ -661,7 +651,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Clear any existing main cooldown timer before setting a new one
     if (shieldCooldownTimerRef.current) {
-        clearTimeout(shieldCooldownTimerRef.current);
+        clearTimeout(shieldCooldownTimerRefRef.current);
     }
     // Set the main cooldown timer
     shieldCooldownTimerRef.current = setTimeout(() => {
@@ -780,21 +770,40 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             }
                         }
 
+                        // Check if obstacle is defeated (health <= 0)
+                        const isDefeated = obstacle.health <= 0;
 
-                        // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided
-                        // MODIFIED: Also check if obstacle health is 0 or less for removal/key drop
-                        if (newPosition < -20 || obstacle.health <= 0 || collisionDetected) {
-                            // If health is 0 or less, or collided, handle key drop
-                            if (obstacle.health <= 0 || collisionDetected) {
-                                // If the obstacle had a key and is defeated, grant the key
-                                if (obstacle.hasKey) {
-                                    handleKeyReward(); // Grant the key
+                        // If defeated, handle key drop and increment defeated count
+                        if (isDefeated) {
+                            // If the obstacle had a key and is defeated, grant the key
+                            if (obstacle.hasKey) {
+                                handleKeyReward(); // Grant the key
+                            }
+                            // Increment defeated enemy count
+                            setEnemiesDefeatedCount(prev => {
+                                const newCount = prev + 1;
+                                // Check if the defeated count is >= 10 to mark the next obstacle for a key
+                                if (newCount >= 10) {
+                                     // Random chance (e.g., 50%) within the 10-20 range, guaranteed after 20
+                                     const shouldAssignKeyNow = newCount >= 20 || (newCount >= 10 && Math.random() < 0.5);
+                                     if(shouldAssignKeyNow) {
+                                        setNextObstacleHasKey(true); // Mark the next obstacle
+                                        return 0; // Reset count after marking
+                                     }
                                 }
-                                // Obstacle is defeated or collided, remove it
+                                return newCount; // Keep counting
+                            });
+                        }
+
+
+                        // Create infinite loop effect by resetting obstacles that move off-screen OR are defeated
+                        if (newPosition < -20 || isDefeated) {
+                             // If defeated, just filter it out
+                            if (isDefeated) {
                                 return null; // Filter this obstacle out
                             }
 
-                             // If off-screen and not collided/defeated, potentially reuse
+                             // If off-screen and not defeated, potentially reuse
                             // 70% chance to reuse the obstacle and loop it back
                             if (Math.random() < 0.7) {
                                 // Ensure obstacleTypes is not empty before picking a random type
@@ -803,24 +812,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // NEW: Determine if the reused obstacle should have a key
-                                let shouldHaveKey = false;
-                                // Increment defeated enemy count for each obstacle generated (including reused ones)
-                                setEnemiesDefeatedCount(prev => {
-                                    const newCount = prev + 1;
-                                    if (newCount >= 10 && newCount <= 20) {
-                                        if (Math.random() < 0.5) {
-                                            shouldHaveKey = true;
-                                            return 0; // Reset count
-                                        }
-                                    } else if (newCount > 20) {
-                                         shouldHaveKey = true;
-                                         return 0; // Reset count
-                                    }
-                                     return newCount; // Keep counting
-                                });
-
-
+                                // The hasKey property is now determined by the nextObstacleHasKey state when scheduling, not here.
                                 return {
                                     ...obstacle, // Keep existing properties like health if needed, but we reset health here
                                     ...randomObstacleType, // Override with new type properties
@@ -828,7 +820,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                                     position: 120 + randomOffset,
                                     health: randomObstacleType.baseHealth, // Reset health
                                     maxHealth: randomObstacleType.baseHealth, // Set max health
-                                    hasKey: shouldHaveKey // Assign the hasKey property
+                                    hasKey: false // New obstacles generated here don't get a key immediately, it's handled by scheduleNextObstacle
                                 };
                             } else {
                                 // If not reusing, let it move off-screen to be filtered out
@@ -846,7 +838,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
                         return { ...obstacle, position: newPosition }; // Return updated obstacle position if no collision and not off-screen
                     })
-                    // Filter out obstacles marked for removal (health <= 0 or collided)
+                    // Filter out obstacles marked for removal (isDefeated)
                     .filter(obstacle => obstacle !== null); // Remove null entries
             });
 
@@ -1019,7 +1011,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         }
     };
     // Add isStatsFullscreen to dependency array
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive]); // Added isStatsFullscreen to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive, nextObstacleHasKey]); // Added nextObstacleHasKey to dependency array
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
