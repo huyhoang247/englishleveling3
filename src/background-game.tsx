@@ -127,6 +127,16 @@ interface GameCoin {
   isAttracted: boolean; // Flag to indicate if the coin is moving towards the character
 }
 
+// --- NEW: Define interface for Cloud with image source ---
+interface GameCloud {
+  id: number;
+  x: number; // Horizontal position in %
+  y: number; // Vertical position in %
+  size: number; // Size of the cloud (in pixels)
+  speed: number; // Speed of the cloud
+  imgSrc: string; // Source URL for the cloud image
+}
+
 
 // Update component signature to accept className prop
 export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
@@ -142,7 +152,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
-  const [clouds, setClouds] = useState([]); // Array of active clouds
+  // Updated clouds state to use GameCloud interface
+  const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
 
   // State for Health Bar visual display (integrated from original HealthBar)
@@ -224,6 +235,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   ];
 
   // REMOVED: cards array and getRarityColor helper function
+
+  // --- NEW: Array of Cloud Image URLs ---
+  const cloudImageUrls = [
+      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png",
+      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/clouds.png",
+      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud.png"
+  ];
 
 
   // Coin count animation function (Kept in main game file)
@@ -381,14 +399,17 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Generate initial cloud elements (called only once at game start)
   const generateInitialClouds = (count: number) => { // Added type for count
-    const newClouds = [];
+    const newClouds: GameCloud[] = []; // Specify type
     for (let i = 0; i < count; i++) {
+      // Randomly select a cloud image URL
+      const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
       newClouds.push({
         id: Date.now() + i, // Unique ID
         x: Math.random() * 120 + 100, // Start off-screen to the right
         y: Math.random() * 40 + 10, // Vertical position
-        size: Math.random() * 20 + 30, // Size of the cloud
-        speed: Math.random() * 0.2 + 0.1 // Speed of the cloud
+        size: Math.random() * 40 + 30, // Size of the cloud (increased size range)
+        speed: Math.random() * 0.3 + 0.15, // Speed of the cloud (adjusted speed range)
+        imgSrc: randomImgSrc // Store the selected image source
       });
     }
     setClouds(newClouds);
@@ -751,13 +772,16 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
                         // Loop clouds back to the right side when they go off-screen
                         if (newX < -50) {
+                            // Randomly select a new cloud image URL
+                            const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
                             return {
                                 ...cloud,
                                 id: Date.now() + Math.random(), // New ID
                                 x: 120 + Math.random() * 30, // New position off-screen to the right
                                 y: Math.random() * 40 + 10, // New random height
-                                size: Math.random() * 20 + 30, // New random size
-                                speed: Math.random() * 0.2 + 0.1 // New random speed
+                                size: Math.random() * 40 + 30, // New random size
+                                speed: Math.random() * 0.3 + 0.15, // New random speed
+                                imgSrc: randomImgSrc // Assign the new random image source
                             };
                         }
 
@@ -1264,16 +1288,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // Render clouds
   const renderClouds = () => {
     return clouds.map(cloud => (
-      <div
+      <img
         key={cloud.id} // Unique key
-        className="absolute bg-white rounded-full opacity-60" // Base cloud styles
+        src={cloud.imgSrc} // Use the image source from the cloud object
+        alt="Cloud Icon" // Add alt text
+        className="absolute object-contain" // Base cloud styles, object-contain to maintain aspect ratio
         style={{
           width: `${cloud.size}px`, // Size based on cloud state
-          height: `${cloud.size * 0.6}px`, // Aspect ratio
+          height: `${cloud.size * 0.6}px`, // Maintain aspect ratio (adjust as needed based on image)
           top: `${cloud.y}%`, // Vertical position (relative to top of game container)
-          left: `${cloud.x}%` // Horizontal position
+          left: `${cloud.x}%`, // Horizontal position
+          opacity: 0.8 // Adjust opacity as needed
         }}
-      ></div>
+         // Optional: Add onerror to handle broken image link
+        onError={(e) => {
+          const target = e.target as HTMLImageElement;
+          target.onerror = null; // Prevent infinite loop
+          target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud"; // Placeholder image
+        }}
+      />
     ));
   };
 
