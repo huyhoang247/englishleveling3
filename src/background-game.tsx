@@ -51,6 +51,23 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
   </div>
 );
 
+// NEW: Key Icon Component using Image
+const KeyIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+      alt="Key Icon" // Added alt text
+      className="w-full h-full object-contain drop-shadow-lg" // Make image fit the container, add shadow
+      // Optional: Add onerror to handle broken image link
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.onerror = null; // Prevent infinite loop
+        target.src = "https://placehold.co/24x24/ffcc00/000000?text=Key"; // Placeholder image
+      }}
+    />
+  </div>
+);
+
 
 // --- NEW: Error Boundary Component ---
 interface ErrorBoundaryProps {
@@ -101,7 +118,7 @@ interface ObstacleRunnerGameProps {
   className?: string;
 }
 
-// Define interface for Obstacle with health
+// Define interface for Obstacle with health and hasKey property
 interface GameObstacle {
   id: number;
   position: number; // Horizontal position in %
@@ -114,6 +131,7 @@ interface GameObstacle {
   maxHealth: number; // Maximum health of the obstacle
   damage: number; // Damage the obstacle deals on collision
   lottieSrc?: string; // Optional Lottie source URL for Lottie obstacles
+  hasKey?: boolean; // NEW: Indicates if this obstacle drops a key
 }
 
 // --- NEW: Define interface for Coin ---
@@ -178,6 +196,12 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // NEW: Gems state (Moved from TreasureChest)
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
+  // NEW: Keys state
+  const [keysCollected, setKeysCollected] = useState(0); // Player's key count
+
+  // NEW: State to track defeated enemies for key drop logic
+  const [enemiesDefeatedCount, setEnemiesDefeatedCount] = useState(0);
+
 
   // UI States
   // REMOVED: isChestOpen, showCard, currentCard, showShine, chestShake, chestsRemaining, pendingCoinReward, isChestCoinEffectActive
@@ -211,7 +235,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Obstacle types with properties (added base health)
   // REMOVED: The 'rock' obstacle type
-  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
+  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[] = [
     // Lottie Obstacle Type 1 (from previous request)
     {
       type: 'lottie-obstacle-1', // Renamed type for clarity
@@ -282,6 +306,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       // You could add a visual effect for gem collection here if desired
   };
 
+    // NEW: Function to handle key rewards received from defeating enemies
+    const handleKeyReward = () => {
+        setKeysCollected(prev => prev + 1);
+        console.log("Received 1 key from enemy.");
+        // You could add a visual effect for key collection here if desired
+    };
+
 
   // Function to start the game
   const startGame = () => {
@@ -311,6 +342,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setDisplayedCoins(357); // Reset displayed coin count
     // REMOVED: setChestsRemaining(3); // This state is now in TreasureChest
     setGems(42); // NEW: Reset gems count to initial value
+    setKeysCollected(0); // NEW: Reset keys collected
+    setEnemiesDefeatedCount(0); // NEW: Reset defeated enemy count
 
 
     // Generate initial obstacles to populate the screen at the start
@@ -324,7 +357,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           position: 120, // Position off-screen to the right
           ...firstObstacleType, // Include obstacle properties
           health: firstObstacleType.baseHealth, // Initialize health
-          maxHealth: firstObstacleType.baseHealth // Set max health
+          maxHealth: firstObstacleType.baseHealth, // Set max health
+          hasKey: false // Initial obstacles don't have keys
         });
 
         // Add a few more obstacles with increasing distance
@@ -335,7 +369,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             position: 150 + (i * 50),
             ...obstacleType, // Include obstacle properties
             health: obstacleType.baseHealth, // Initialize health
-            maxHealth: obstacleType.baseHealth // Set max health
+            maxHealth: obstacleType.baseHealth, // Set max health
+            hasKey: false // Initial obstacles don't have keys
           });
         }
     }
@@ -463,12 +498,34 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             // Add spacing between grouped obstacles
             const spacing = i * (Math.random() * 10 + 10);
 
+            // NEW: Determine if this obstacle should have a key
+            let shouldHaveKey = false;
+            // Increment defeated enemy count for each obstacle generated
+            setEnemiesDefeatedCount(prev => {
+                const newCount = prev + 1;
+                // Check if the count is within the key drop range (10-20)
+                if (newCount >= 10 && newCount <= 20) {
+                    // 50% chance to drop a key in this range
+                    if (Math.random() < 0.5) {
+                        shouldHaveKey = true;
+                        return 0; // Reset count after assigning a key
+                    }
+                } else if (newCount > 20) {
+                    // Force a key drop if the count exceeds 20
+                     shouldHaveKey = true;
+                     return 0; // Reset count after assigning a key
+                }
+                 return newCount; // Keep counting
+            });
+
+
             newObstacles.push({
               id: Date.now() + i, // Unique ID
               position: 100 + spacing, // Position off-screen to the right with spacing
               ...randomObstacleType, // Include obstacle properties
               health: randomObstacleType.baseHealth, // Initialize health
-              maxHealth: randomObstacleType.baseHealth // Set max health
+              maxHealth: randomObstacleType.baseHealth, // Set max health
+              hasKey: shouldHaveKey // Assign the hasKey property
             });
           }
       }
@@ -725,7 +782,19 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
 
                         // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided
-                        if (newPosition < -20 && !collisionDetected) { // Only reuse if off-screen AND no collision
+                        // MODIFIED: Also check if obstacle health is 0 or less for removal/key drop
+                        if (newPosition < -20 || obstacle.health <= 0 || collisionDetected) {
+                            // If health is 0 or less, or collided, handle key drop
+                            if (obstacle.health <= 0 || collisionDetected) {
+                                // If the obstacle had a key and is defeated, grant the key
+                                if (obstacle.hasKey) {
+                                    handleKeyReward(); // Grant the key
+                                }
+                                // Obstacle is defeated or collided, remove it
+                                return null; // Filter this obstacle out
+                            }
+
+                             // If off-screen and not collided/defeated, potentially reuse
                             // 70% chance to reuse the obstacle and loop it back
                             if (Math.random() < 0.7) {
                                 // Ensure obstacleTypes is not empty before picking a random type
@@ -734,13 +803,32 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
+                                // NEW: Determine if the reused obstacle should have a key
+                                let shouldHaveKey = false;
+                                // Increment defeated enemy count for each obstacle generated (including reused ones)
+                                setEnemiesDefeatedCount(prev => {
+                                    const newCount = prev + 1;
+                                    if (newCount >= 10 && newCount <= 20) {
+                                        if (Math.random() < 0.5) {
+                                            shouldHaveKey = true;
+                                            return 0; // Reset count
+                                        }
+                                    } else if (newCount > 20) {
+                                         shouldHaveKey = true;
+                                         return 0; // Reset count
+                                    }
+                                     return newCount; // Keep counting
+                                });
+
+
                                 return {
                                     ...obstacle, // Keep existing properties like health if needed, but we reset health here
                                     ...randomObstacleType, // Override with new type properties
                                     id: Date.now(),
                                     position: 120 + randomOffset,
                                     health: randomObstacleType.baseHealth, // Reset health
-                                    maxHealth: randomObstacleType.baseHealth // Set max health
+                                    maxHealth: randomObstacleType.baseHealth, // Set max health
+                                    hasKey: shouldHaveKey // Assign the hasKey property
                                 };
                             } else {
                                 // If not reusing, let it move off-screen to be filtered out
@@ -748,20 +836,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             }
                         }
 
-                        // If collided, mark for removal
-                        if (collisionDetected) {
-                            return { ...obstacle, position: newPosition, collided: true }; // Add a collided flag
-                        }
+                        // If collided but not defeated (e.g., shield absorbed damage), keep it but update position
+                         if (collisionDetected) {
+                             // If shield was active and absorbed the damage, the obstacle is not defeated yet
+                             // Keep the obstacle but update its position
+                             return { ...obstacle, position: newPosition };
+                         }
 
 
                         return { ...obstacle, position: newPosition }; // Return updated obstacle position if no collision and not off-screen
                     })
-                    .filter(obstacle => {
-                        // Keep obstacles that haven't collided and are still visible or will loop back
-                        // Now also filter out obstacles that have the 'collided' flag set
-                        // Obstacles are removed if collided OR if health is 0 or less (if they didn't die from shield damage)
-                        return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0; // Filter out collided, far off-screen, or dead obstacles
-                    });
+                    // Filter out obstacles marked for removal (health <= 0 or collided)
+                    .filter(obstacle => obstacle !== null); // Remove null entries
             });
 
             // Move clouds and handle infinite loop effect
@@ -1266,21 +1352,32 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         style={{
           // ObstacleY is always relative to the new ground level
           bottom: `${GROUND_LEVEL_PERCENT}%`,
-          left: `${obstacle.position}%` // Horizontal position
+          left: `${obstacle.position}%`, // Horizontal position
+          // Add a slight z-index to ensure the key icon is above the obstacle
+          zIndex: 10
         }}
       >
         {/* Obstacle Element */}
         {obstacleEl} {/* Render the specific obstacle element */}
 
-        {/* --- NEW: Obstacle Health Bar --- */}
+        {/* --- NEW: Key Icon above the obstacle if hasKey is true --- */}
+        {obstacle.hasKey && (
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-6 h-6"> {/* Position and size for the key icon */}
+                <KeyIcon size={24} /> {/* Render the KeyIcon component */}
+            </div>
+        )}
+
+        {/* --- Obstacle Health Bar (Hidden if hasKey is true) --- */}
         {/* Position the health bar above the obstacle */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
-            {/* Inner health bar */}
-            <div
-                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
-                style={{ width: `${obstacleHealthPct * 100}%` }}
-            ></div>
-        </div>
+        {!obstacle.hasKey && ( // Only show health bar if the obstacle does NOT have a key
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+                {/* Inner health bar */}
+                <div
+                    className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                    style={{ width: `${obstacleHealthPct * 100}%` }}
+                ></div>
+            </div>
+        )}
       </div>
     );
   };
@@ -1823,13 +1920,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           )}
 
           {/* NEW: Render the TreasureChest component */}
-          {/* Pass necessary props: initial chests, initial gems (removed), coin reward callback, gem reward callback, and game state */}
+          {/* Pass necessary props: initial chests, initial gems (removed), coin reward callback, gem reward callback, game state, and keys collected */}
           <TreasureChest
             initialChests={3}
             onCoinReward={startCoinCountAnimation} // Pass the coin animation function as a callback
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted} // Pass game paused state
             isStatsFullscreen={isStatsFullscreen} // Pass fullscreen state
+            keysCollected={keysCollected} // NEW: Pass the keys collected count
           />
 
           {/* REMOVED: Treasure chest and remaining chests count section */}
@@ -1840,3 +1938,4 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
