@@ -228,6 +228,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   const pausedShieldCooldownRemainingRef = useRef<number | null>(null);
 
   // NEW: Ref to the TreasureChest component instance to call its methods
+  // MODIFIED: Added type for the ref to include the addKey function
   const treasureChestRef = useRef<{ addKey: () => void } | null>(null);
 
 
@@ -300,11 +301,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       // You could add a visual effect for gem collection here if desired
   };
 
-  // NEW: Function to handle key collected from TreasureChest (This will be passed down)
-  // This function is called by TreasureChest when the user opens a chest and gets a key card.
-  // The user's request is to get keys from enemies, so this function is not directly used for the enemy key drop.
-  // We need a function that the enemy defeat logic calls to update the key count in TreasureChest.
-  // Let's define a new function here that calls the addKey function in TreasureChest via ref.
+  // NEW: Function to handle key collected from enemy
   const handleEnemyKeyCollected = () => {
       if (treasureChestRef.current && treasureChestRef.current.addKey) {
           treasureChestRef.current.addKey(); // Call the addKey function in TreasureChest
@@ -502,9 +499,21 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             // Increment the counter for enemies generated since the last key
             setEnemiesSinceLastKey(prev => {
                 const newCount = prev + 1;
-                // Check if a key should be dropped (randomly between 5 and 10 enemies)
-                if (newCount >= 5 && Math.random() < 1 / (10 - (newCount - 5) + 1)) { // Probability increases as count approaches 10
+                let shouldDropKey = false;
+
+                // Check if it's within the 5-10 enemy range
+                if (newCount >= 5) {
+                    // Calculate probability: increases from 1/6 at 5 enemies to 1 (guaranteed) at 10 enemies
+                    const dropProbability = (newCount - 4) / 6; // (5-4)/6 = 1/6, (10-4)/6 = 6/6 = 1
+
+                    if (Math.random() < dropProbability || newCount >= 10) {
+                         shouldDropKey = true;
+                    }
+                }
+
+                if (shouldDropKey) {
                     hasKey = true;
+                    console.log(`Key assigned to obstacle ID: ${Date.now() + i}. Enemies since last key: ${newCount}`); // Log key drop
                     return 0; // Reset counter after dropping a key
                 }
                 return newCount;
@@ -649,7 +658,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     // Clear any existing main cooldown timer before setting a new one
     if (shieldCooldownTimerRef.current) {
-        clearTimeout(shieldCooldownTimerRefRef.current);
+        clearTimeout(shieldCooldownTimerRef.current);
     }
     // Set the main cooldown timer
     shieldCooldownTimerRef.current = setTimeout(() => {
@@ -784,9 +793,22 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                                 let hasKey = false;
                                 setEnemiesSinceLastKey(prev => {
                                     const newCount = prev + 1;
-                                    if (newCount >= 5 && Math.random() < 1 / (10 - (newCount - 5) + 1)) {
+                                    let shouldDropKey = false;
+
+                                    // Check if it's within the 5-10 enemy range
+                                    if (newCount >= 5) {
+                                        // Calculate probability: increases from 1/6 at 5 enemies to 1 (guaranteed) at 10 enemies
+                                        const dropProbability = (newCount - 4) / 6; // (5-4)/6 = 1/6, (10-4)/6 = 6/6 = 1
+
+                                        if (Math.random() < dropProbability || newCount >= 10) {
+                                             shouldDropKey = true;
+                                        }
+                                    }
+
+                                    if (shouldDropKey) {
                                         hasKey = true;
-                                        return 0;
+                                        console.log(`Key assigned to obstacle ID: ${Date.now() + i}. Enemies since last key: ${newCount}`); // Log key drop
+                                        return 0; // Reset counter after dropping a key
                                     }
                                     return newCount;
                                 });
@@ -1897,7 +1919,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             onGemReward={handleGemReward} // Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted} // Pass game paused state
             isStatsFullscreen={isStatsFullscreen} // Pass fullscreen state
-            onKeyCollected={handleEnemyKeyCollected} // Pass the handler for enemy key collection
+            // Removed onKeyCollected prop here as the parent (this component) calls addKey directly via ref
           />
 
         </div>
