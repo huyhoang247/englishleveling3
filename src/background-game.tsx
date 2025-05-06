@@ -52,20 +52,20 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
 );
 
 // NEW: Key Icon Component using Image
-const KeyIcon = ({ size = 24, className = '', ...props }) => (
-    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-        <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-            alt="Key Icon" // Added alt text
-            className="w-full h-full object-contain" // Make image fit the container
-            // Optional: Add onerror to handle broken image link
-            onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null; // Prevent infinite loop
-                target.src = "https://placehold.co/24x24/FFD700/000000?text=Key"; // Placeholder image
-            }}
-        />
-    </div>
+const KeyIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+      alt="Key Icon" // Added alt text
+      className="w-full h-full object-contain" // Make image fit the container
+      // Optional: Add onerror to handle broken image link
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.onerror = null; // Prevent infinite loop
+        target.src = "https://placehold.co/24x24/FFD700/000000?text=Key"; // Placeholder image
+      }}
+    />
+  </div>
 );
 
 
@@ -131,7 +131,6 @@ interface GameObstacle {
   maxHealth: number; // Maximum health of the obstacle
   damage: number; // Damage the obstacle deals on collision
   lottieSrc?: string; // Optional Lottie source URL for Lottie obstacles
-  hasKey?: boolean; // NEW: Flag if this obstacle drops a key
 }
 
 // --- NEW: Define interface for Coin ---
@@ -145,13 +144,15 @@ interface GameCoin {
   isAttracted: boolean; // Flag to indicate if the coin is moving towards the character
 }
 
-// --- NEW: Define interface for Key ---
+// --- NEW: Define interface for Key (similar to Coin) ---
 interface GameKey {
-    id: number;
-    x: number; // Horizontal position in %
-    y: number; // Vertical position in % (relative to ground)
-    attractSpeed: number; // Speed factor for moving towards the character after collision
-    isAttracted: boolean; // Flag to indicate if the key is moving towards the character
+  id: number;
+  x: number; // Horizontal position in %
+  y: number; // Vertical position in %
+  initialSpeedX: number; // Speed for initial horizontal movement (left)
+  initialSpeedY: number; // Speed for initial vertical movement (down)
+  attractSpeed: number; // Speed factor for moving towards the character after collection
+  isAttracted: boolean; // Flag to indicate if the key is moving towards the character
 }
 
 
@@ -206,9 +207,11 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   // NEW: Gems state (Moved from TreasureChest)
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
-  // NEW: Key States
-  const [collectedKeys, setCollectedKeys] = useState(0); // Player's key count
-  const [activeKeys, setActiveKeys] = useState<GameKey[]>([]); // Array of active keys on the ground
+  // --- NEW: Key States ---
+  const [keysCollected, setKeysCollected] = useState(0); // Player's key count
+  const [activeKeys, setActiveKeys] = useState<GameKey[]>([]); // Array of active keys
+  const [enemiesDefeatedSinceLastKey, setEnemiesDefeatedSinceLastKey] = useState(0); // Counter for key drops
+
 
   // UI States
   // REMOVED: isChestOpen, showCard, currentCard, showShine, chestShake, chestsRemaining, pendingCoinReward, isChestCoinEffectActive
@@ -242,7 +245,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
   // Obstacle types with properties (added base health)
   // REMOVED: The 'rock' obstacle type
-  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[] = [
+  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth'>[] = [
     // Lottie Obstacle Type 1 (from previous request)
     {
       type: 'lottie-obstacle-1', // Renamed type for clarity
@@ -313,6 +316,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
       // You could add a visual effect for gem collection here if desired
   };
 
+  // NEW: Function to handle key collection
+  const handleKeyCollected = () => {
+      setKeysCollected(prev => prev + 1);
+      console.log("Key collected!");
+      // You could add a visual effect for key collection here if desired
+  };
+
 
   // Function to start the game
   const startGame = () => {
@@ -333,7 +343,8 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
     setActiveCoins([]); // NEW: Reset active coins
     setActiveKeys([]); // NEW: Reset active keys
-    setCollectedKeys(0); // NEW: Reset collected keys
+    setKeysCollected(0); // NEW: Reset key count
+    setEnemiesDefeatedSinceLastKey(0); // NEW: Reset enemy defeated counter for keys
 
     setIsRunning(true); // Keep isRunning for potential Lottie state control if needed
     setShowHealthDamageEffect(false); // Reset health damage effect state
@@ -358,8 +369,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           position: 120, // Position off-screen to the right
           ...firstObstacleType, // Include obstacle properties
           health: firstObstacleType.baseHealth, // Initialize health
-          maxHealth: firstObstacleType.baseHealth, // Set max health
-          hasKey: Math.random() < 0.15 // 15% chance to have a key initially
+          maxHealth: firstObstacleType.baseHealth // Set max health
         });
 
         // Add a few more obstacles with increasing distance
@@ -370,8 +380,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
             position: 150 + (i * 50),
             ...obstacleType, // Include obstacle properties
             health: obstacleType.baseHealth, // Initialize health
-            maxHealth: obstacleType.baseHealth, // Set max health
-            hasKey: Math.random() < 0.15 // 15% chance to have a key
+            maxHealth: obstacleType.baseHealth // Set max health
           });
         }
     }
@@ -504,8 +513,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
               position: 100 + spacing, // Position off-screen to the right with spacing
               ...randomObstacleType, // Include obstacle properties
               health: randomObstacleType.baseHealth, // Initialize health
-              maxHealth: randomObstacleType.baseHealth, // Set max health
-              hasKey: Math.random() < 0.15 // 15% chance to have a key
+              maxHealth: randomObstacleType.baseHealth // Set max health
             });
           }
       }
@@ -553,6 +561,21 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
 
       scheduleNextCoin(); // Schedule the next coin recursively
     }, randomTime);
+  };
+
+  // NEW: Function to spawn a key
+  const spawnKey = (obstaclePositionX: number) => {
+      const newKey: GameKey = {
+          id: Date.now(), // Unique ID
+          x: obstaclePositionX, // Start at the defeated obstacle's X position
+          y: GROUND_LEVEL_PERCENT - 5, // Start slightly above the ground
+          initialSpeedX: 0, // Keys don't move horizontally initially
+          initialSpeedY: 0, // Keys don't move vertically initially
+          attractSpeed: Math.random() * 0.05 + 0.03, // Speed factor for moving towards character
+          isAttracted: false // Initially not attracted
+      };
+      setActiveKeys(prev => [...prev, newKey]);
+      console.log("Key spawned!");
   };
 
 
@@ -657,7 +680,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
   };
 
 
-  // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
+  // Move obstacles, clouds, particles, and NEW: Coins, and NEW: Keys, and detect collisions
   // This useEffect is the main game loop for movement and collision detection
   useEffect(() => {
     // Don't run movement if game is not started, over, or stats are in fullscreen
@@ -709,12 +732,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
 
 
-                const updatedObstacles = prevObstacles
+                return prevObstacles
                     .map(obstacle => {
                         // Speed is now consistent for all ground obstacles
                         let newPosition = obstacle.position - speed; // Move obstacle left
 
                         let collisionDetected = false;
+                        let obstacleDefeated = false; // Flag to check if obstacle is defeated in this frame
                         // Obstacle position in pixels relative to the bottom-left of the game container
                         const obstacleX_px = (newPosition / 100) * gameWidth; // Use newPosition for collision check
 
@@ -760,63 +784,66 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             }
                         }
 
-
-                        // If collided, mark for removal
-                        if (collisionDetected) {
-                            // If the obstacle had a key, spawn a key at its position
-                            if (obstacle.hasKey) {
-                                const keyXPercent = (obstacleX_px / gameWidth) * 100;
-                                const keyYPercent = (obstacleTopFromTop_px / gameHeight) * 100; // Position key above ground
-                                const newKey: GameKey = {
-                                    id: Date.now() + Math.random(), // Unique ID
-                                    x: keyXPercent,
-                                    y: 100 - GROUND_LEVEL_PERCENT - (obstacleHeight_px / gameHeight) * 100, // Position key just above the obstacle's top, relative to bottom
-                                    attractSpeed: 0.08, // Speed factor for moving towards character
-                                    isAttracted: false // Initially not attracted
-                                };
-                                setActiveKeys(prev => [...prev, newKey]);
-                                console.log("Key dropped!");
-                            }
-                            return { ...obstacle, position: newPosition, collided: true }; // Add a collided flag
+                        // NEW: Check if obstacle is defeated (health <= 0)
+                        if (obstacle.health <= 0 && !obstacle.collided) { // Check if health is zero or less AND it wasn't already marked as collided/defeated
+                             obstacleDefeated = true; // Mark as defeated
+                             console.log("Obstacle defeated!");
+                             // Increment defeated enemy counter for key drops
+                             setEnemiesDefeatedSinceLastKey(prev => prev + 1);
                         }
 
-                         // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided
-                        if (newPosition < -20) { // Check if off-screen
-                             // If not reusing, let it move off-screen to be filtered out
-                             return { ...obstacle, position: newPosition };
+
+                        // Create infinite loop effect by resetting obstacles that move off-screen AND haven't collided/defeated
+                        if (newPosition < -20 && !collisionDetected && !obstacleDefeated) { // Only reuse if off-screen AND no collision AND not defeated
+                            // 70% chance to reuse the obstacle and loop it back
+                            if (Math.random() < 0.7) {
+                                // Ensure obstacleTypes is not empty before picking a random type
+                                if (obstacleTypes.length === 0) return obstacle; // Keep the current obstacle if no types available
+
+                                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                                const randomOffset = Math.floor(Math.random() * 20);
+
+                                return {
+                                    ...obstacle, // Keep existing properties like health if needed, but we reset health here
+                                    ...randomObstacleType, // Override with new type properties
+                                    id: Date.now(),
+                                    position: 120 + randomOffset,
+                                    health: randomObstacleType.baseHealth, // Reset health
+                                    maxHealth: randomObstacleType.baseHealth // Set max health
+                                };
+                            } else {
+                                // If not reusing, let it move off-screen to be filtered out
+                                return { ...obstacle, position: newPosition };
+                            }
+                        }
+
+                        // If collided or defeated, mark for removal
+                        if (collisionDetected || obstacleDefeated) {
+                            // NEW: If defeated, check if a key should drop
+                             if (obstacleDefeated) {
+                                 // Check if it's time to drop a key (between 5 and 10 enemies defeated)
+                                 setEnemiesDefeatedSinceLastKey(prev => {
+                                     const newCount = prev + 1;
+                                     // Check if the new count is within the key drop range (5-10)
+                                     if (newCount >= 5 && newCount <= 10) {
+                                         // Random chance to drop a key
+                                         // Let's say a 50% chance within this range
+                                         if (Math.random() < 0.5) {
+                                             spawnKey(obstacle.position); // Spawn key at obstacle's position
+                                             return 0; // Reset counter after dropping a key
+                                         }
+                                     }
+                                     // If no key dropped, return the new count
+                                     return newCount;
+                                 });
+                             }
+                            return { ...obstacle, position: newPosition, remove: true }; // Add a remove flag
                         }
 
 
                         return { ...obstacle, position: newPosition }; // Return updated obstacle position if no collision and not off-screen
                     })
-                    .filter(obstacle => {
-                        // Keep obstacles that haven't collided and are still visible or will loop back
-                        // Now also filter out obstacles that have the 'collided' flag set
-                        // Obstacles are removed if collided OR if health is 0 or less (if they didn't die from shield damage)
-                        // Also remove if far off-screen
-                        return !obstacle.collided && obstacle.position > -20; // Filter out collided or far off-screen
-                    });
-
-                    // After filtering, if the number of obstacles is less than a threshold, add new ones with a chance of having a key
-                    if (updatedObstacles.length < 5 && obstacleTypes.length > 0) {
-                         const obstaclesToAdd = 5 - updatedObstacles.length;
-                         const newObstacles: GameObstacle[] = [];
-                         for(let i = 0; i < obstaclesToAdd; i++) {
-                            const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                             newObstacles.push({
-                                id: Date.now() + Math.random(), // Unique ID
-                                position: 120 + Math.random() * 30, // Position off-screen to the right
-                                ...randomObstacleType, // Include obstacle properties
-                                health: randomObstacleType.baseHealth, // Initialize health
-                                maxHealth: randomObstacleType.baseHealth, // Set max health
-                                hasKey: Math.random() < 0.15 // 15% chance to have a key
-                            });
-                         }
-                         return [...updatedObstacles, ...newObstacles];
-                    }
-
-
-                return updatedObstacles;
+                    .filter(obstacle => !obstacle.remove); // Filter out obstacles marked for removal
             });
 
             // Move clouds and handle infinite loop effect
@@ -970,28 +997,26 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                     });
             });
 
-             // --- NEW: Move keys and detect collisions ---
-            setActiveKeys(prevKeys => {
+            // --- NEW: Move keys and detect collisions ---
+             setActiveKeys(prevKeys => {
                 const gameContainer = gameRef.current;
                 if (!gameContainer) return prevKeys; // Return early if ref is not available
 
                 const gameWidth = gameContainer.offsetWidth;
                 const gameHeight = gameContainer.offsetHeight;
 
-                // Define character's bounding box in pixels (approximate)
+                 // Define character's bounding box in pixels (approximate) - Reuse from coin logic
                 const characterWidth_px = (24 / 4) * 16; // Assuming w-24 is 96px
                 const characterHeight_px = (24 / 4) * 16; // Assuming h-24 is 96px
                 const characterXPercent = 5; // Character's fixed X position (in %)
                 const characterX_px = (characterXPercent / 100) * gameWidth; // Character's fixed X position in pixels
-
-                // Character's vertical position relative to the top of the game container
                 const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
                 const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
                 const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
                 const characterLeft_px = characterX_px;
                 const characterRight_px = characterX_px + characterWidth_px;
 
-                 // Get character's approximate center position in pixels (relative to top-left of game container)
+                 // Get character's approximate center position in pixels
                 const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
                 const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
 
@@ -999,29 +1024,28 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                 return prevKeys
                     .map(key => {
                         // Approximate key size in pixels (assuming a fixed size for the icon)
-                        const keySize_px = 24; // Assuming key icon is roughly 24x24px
+                        const keySize_px = 30; // Assuming key icon is roughly 30x30px
 
                         // Key position in pixels relative to the top-left of the game container
                         const keyX_px = (key.x / 100) * gameWidth;
-                        // Key Y is relative to the bottom, convert to top-relative
-                        const keyY_px = gameHeight - ((key.y / 100) * gameHeight + (GROUND_LEVEL_PERCENT / 100) * gameHeight);
-
+                        const keyY_px = (key.y / 100) * gameHeight;
 
                         let newX = key.x;
                         let newY = key.y;
                         let collisionDetected = false;
                         let shouldBeAttracted = key.isAttracted; // Start with current attraction state
 
-                         // Check for collision with character's bounding box *before* attraction
+                        // Check for collision with character's bounding box *before* attraction
                         if (!shouldBeAttracted) { // Only check for initial collision if not already attracted
-                            if (
+                             // Check collision with character's bounding box
+                             if (
                                 characterRight_px > keyX_px &&
                                 characterLeft_px < keyX_px + keySize_px &&
-                                characterBottomFromTop_px > keyY_px && // Character bottom edge is below key top edge
-                                characterTopFromTop_px < keyY_px + keySize_px // Character top edge is above key bottom edge
-                            ) {
-                                shouldBeAttracted = true; // Mark key to be attracted
-                            }
+                                characterBottomFromTop_px > keyY_px &&
+                                characterTopFromTop_px < keyY_px + keySize_px
+                             ) {
+                                 shouldBeAttracted = true; // Mark key to be attracted
+                             }
                         }
 
 
@@ -1042,25 +1066,20 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             const newKeyX_px = keyX_px + moveX_px;
                             const newKeyY_px = keyY_px + moveY_px;
 
-                            // Convert updated pixel position back to percentage (relative to top-left)
+                            // Convert updated pixel position back to percentage
                             newX = (newKeyX_px / gameWidth) * 100;
-                            // Convert updated pixel position back to percentage (relative to bottom, above ground)
-                            newY = ((gameHeight - newKeyY_px) / gameHeight) * 100 - GROUND_LEVEL_PERCENT;
-
+                            newY = (newKeyY_px / gameHeight) * 100;
 
                             // Check for collection (close proximity to character center)
                             if (distance < (characterWidth_px / 2 + keySize_px / 2) * 0.8) { // Collision when centers are close
                                 collisionDetected = true;
-                                // Collect the key
-                                setCollectedKeys(prev => prev + 1);
-                                console.log("Key collected!");
+                                handleKeyCollected(); // Call the key collected handler
                             }
 
                         } else {
-                             // If not attracted, move left with the ground speed
-                            newX = key.x - speed;
-                            // Y position remains the same (relative to ground)
-                            newY = key.y;
+                             // If not attracted, apply initial movement (if any, though initial speed is 0 for keys)
+                             newX = key.x + key.initialSpeedX;
+                             newY = key.y + key.initialSpeedY;
                         }
 
 
@@ -1072,12 +1091,13 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
                             collided: collisionDetected // Mark for removal if collected
                         };
                     })
-                     .filter(key => {
-                        // Remove key if it was collected or moved far off-screen (left)
-                        const isOffScreen = key.x < -20; // Use larger buffer for off-screen check
+                    .filter(key => {
+                        // Remove key if it was collected or moved far off-screen (left or bottom)
+                        // Keep keys that are moving towards the character, even if they go slightly off-screen initially
+                        const isOffScreen = key.x < -20 || key.y > 120; // Use larger buffer for off-screen check
                         return !key.collided && !isOffScreen; // Keep key if not collected and not off-screen
                     });
-            });
+             });
 
 
         }, 30); // Interval for movement updates (30ms for smoother animation)
@@ -1436,23 +1456,21 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Obstacle Element */}
         {obstacleEl} {/* Render the specific obstacle element */}
 
-        {/* --- NEW: Obstacle Health Bar --- */}
-        {/* Position the health bar above the obstacle */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+        {/* --- NEW: Obstacle Health Bar and Key Icon --- */}
+        {/* Position the health bar and icon above the obstacle */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 flex items-center space-x-1"> {/* Added flex and space-x */}
             {/* Inner health bar */}
-            <div
-                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
-                style={{ width: `${obstacleHealthPct * 100}%` }}
-            ></div>
+            <div className="w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm"> {/* Adjusted size */}
+                <div
+                    className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                    style={{ width: `${obstacleHealthPct * 100}%` }}
+                ></div>
+            </div>
+            {/* Key Icon next to health bar - Only show if obstacle is not defeated */}
+             {obstacle.health > 0 && (
+                 <KeyIcon size={12} className="text-yellow-400"/> // Adjusted size for icon next to health bar
+             )}
         </div>
-
-        {/* --- NEW: Key Icon above Obstacle --- */}
-        {/* Only show if the obstacle has a key */}
-        {obstacle.hasKey && (
-             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-6 h-6"> {/* Positioned above health bar */}
-                 <KeyIcon size={24} />
-             </div>
-        )}
       </div>
     );
   };
@@ -1571,22 +1589,28 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     ));
   };
 
-   // --- NEW: Render Keys ---
+  // --- NEW: Render Keys ---
   const renderKeys = () => {
-    return activeKeys.map(key => (
-      <div
-        key={key.id} // Unique key
-        className="absolute w-6 h-6" // Container size for Key Icon (adjust as needed)
-        style={{
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${key.y}px)`, // Position based on current Y (relative to ground)
-          left: `${key.x}%`, // Position based on current X (%)
-          transform: 'translate(-50%, -50%)', // Center the icon
-          pointerEvents: 'none' // Ensure clicks pass through
-        }}
-      >
-        <KeyIcon size={24} />
-      </div>
-    ));
+      // Approximate key icon size in pixels
+      const keySizePx = 30;
+
+      return activeKeys.map(key => (
+          <div
+              key={key.id} // Unique key
+              className="absolute flex items-center justify-center" // Container for the image
+              style={{
+                  top: `${key.y}%`, // Position based on current Y (%)
+                  left: `${key.x}%`, // Position based on current X (%)
+                  transform: 'translate(-50%, -50%)', // Center the container
+                  pointerEvents: 'none', // Ensure clicks pass through
+                  width: `${keySizePx}px`, // Set container size
+                  height: `${keySizePx}px`,
+              }}
+          >
+              {/* Use the KeyIcon component */}
+              <KeyIcon size={keySizePx} className="text-yellow-400" /> {/* Pass size and color */}
+          </div>
+      ));
   };
 
 
@@ -2017,15 +2041,14 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
           )}
 
           {/* NEW: Render the TreasureChest component */}
-          {/* Pass necessary props: initial chests, initial gems (removed), coin reward callback, gem reward callback, and game state */}
-          {/* Also pass collectedKeys */}
+          {/* Pass necessary props: initial chests, initial gems (removed), coin reward callback, gem reward callback, game state, and KEY COUNT */}
           <TreasureChest
             initialChests={3}
             onCoinReward={startCoinCountAnimation} // Pass the coin animation function as a callback
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted} // Pass game paused state
             isStatsFullscreen={isStatsFullscreen} // Pass fullscreen state
-            collectedKeys={collectedKeys} // NEW: Pass the collected keys count
+            keyCount={keysCollected} // NEW: Pass the collected key count
           />
 
           {/* REMOVED: Treasure chest and remaining chests count section */}
@@ -2036,4 +2059,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
