@@ -105,21 +105,21 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// NEW: Key Icon Component using Image (Duplicated from background-game.tsx for use here)
-const KeyIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-    <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-      alt="Key Icon" // Added alt text
-      className="w-full h-full object-contain drop-shadow-lg" // Make image fit the container, add shadow
-      // Optional: Add onerror to handle broken image link
-      onError={(e) => {
-        const target = e.target as HTMLImageElement;
-        target.onerror = null; // Prevent infinite loop
-        target.src = "https://placehold.co/24x24/ffcc00/000000?text=Key"; // Placeholder image
-      }}
-    />
-  </div>
+// NEW: Key Icon Component using Image (Copied from background-game.tsx)
+const KeyIcon = ({ size = 24, className = '', ...props }) => (
+    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+        <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+            alt="Key Icon" // Added alt text
+            className="w-full h-full object-contain" // Make image fit the container
+            // Optional: Add onerror to handle broken image link
+            onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loop
+                target.src = "https://placehold.co/24x24/FFD700/000000?text=Key"; // Placeholder image
+            }}
+        />
+    </div>
 );
 
 
@@ -131,7 +131,7 @@ interface TreasureChestProps {
   onGemReward: (amount: number) => void; // NEW: Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
-  keysCollected: number; // NEW: Number of keys collected by the player
+  collectedKeys: number; // NEW: Number of keys collected by the player
 }
 
 // Define interface for card data
@@ -170,7 +170,7 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, keysCollected }: TreasureChestProps) {
+export default function TreasureChest({ initialChests = 3, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, collectedKeys }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   const [showCard, setShowCard] = useState<Card | null>(null); // Changed to null to store card object directly
@@ -192,23 +192,7 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
   // Function to open the chest
   const openChest = () => {
     // Prevent opening chest if game is paused, already open, or no chests left
-    // MODIFIED: Also check if player has enough keys (e.g., 1 key per chest)
-    // Assuming 1 key is required to open a chest
-    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keysCollected < 1) {
-        console.log("Cannot open chest:", { isGamePaused, isChestOpen, chestsRemaining, keysCollected });
-        return;
-    }
-
-    // Decrement key count when opening chest
-    // This logic should ideally be in the parent component (background-game.tsx)
-    // But for simplicity in this update, we'll handle it here.
-    // A better approach would be to have a callback like onChestOpened in TreasureChest
-    // that the parent component listens to and decrements the key count.
-    // For now, let's assume keysCollected state is managed in the parent and passed down.
-    // We won't decrement keys here to avoid state management conflicts.
-    // The parent component (background-game.tsx) should handle key decrement when calling openChest.
-    // Let's add a check in the parent component before calling openChest.
-    // For now, we rely on the `keysCollected < 1` check above.
+    if (isGamePaused || isChestOpen || chestsRemaining <= 0) return;
 
     setChestShake(true);
     setTimeout(() => {
@@ -322,11 +306,11 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          // Disable click if game is paused, already open, no chests left, or not enough keys
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keysCollected >= 1 ? openChest : null}
-          aria-label={chestsRemaining > 0 ? (keysCollected >= 1 ? "Mở rương báu" : "Cần 1 chìa khóa để mở") : "Hết rương"}
+          // Disable click if game is paused, already open, or no chests left
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 ? openChest : null}
+          aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 && keysCollected >= 1 ? 0 : -1} // Make focusable only when usable
+          tabIndex={!isGamePaused && chestsRemaining > 0 ? 0 : -1} // Make focusable only when usable
         >
           <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
             {/* Chest main body */}
@@ -432,36 +416,29 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
 
         </div>
 
-        {/* Display remaining chests count AND keys collected */}
-        <div className="mt-4 flex flex-col items-center">
-          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-2 relative"> {/* Increased space-x */}
+        {/* Display remaining chests count and key count */}
+        <div className="mt-4 flex items-center space-x-2"> {/* Use flex and space-x for layout */}
+          {/* Chest count */}
+          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
             {chestsRemaining > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
-            {/* Rương báu */}
-            <div className="flex items-center space-x-1"> {/* Added space-x for icon and text */}
-              <img
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" // Assuming this is the chest icon URL
-                alt="Treasure Chest Icon" // Alt text
-                className="w-4 h-4" // Adjust size as needed
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null; // Prevent infinite loop
-                  target.src = "https://placehold.co/16x16/8b4513/ffffff?text=Chest"; // Placeholder
-                }}
-              />
+            <div className="flex items-center">
               <span className="text-amber-200 font-bold text-xs">{chestsRemaining}</span>
               <span className="text-amber-400/80 text-xs">/{initialChests}</span> {/* Use initialChests for total count */}
             </div>
-            {/* Chìa khóa */}
-            <div className="flex items-center space-x-1"> {/* Added space-x for icon and text */}
-              <KeyIcon size={16} /> {/* Use the KeyIcon component */}
-              <span className="text-yellow-200 font-bold text-xs">{keysCollected}</span> {/* Display keys collected */}
-            </div>
             {chestsRemaining > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
-           {/* Optional: Add a hint if keys are needed */}
-           {chestsRemaining > 0 && keysCollected < 1 && !isChestOpen && (
-                <div className="mt-1 text-yellow-300 text-xs animate-pulse">Cần 1 chìa khóa để mở rương!</div>
-           )}
+
+          {/* Key count */}
+          {/* NEW: Added Key Icon and collectedKeys count */}
+          <div className="bg-black bg-opacity-60 px-3 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+             {collectedKeys > 0 && (<div className="absolute inset-0 bg-yellow-500/10 rounded-lg animate-pulse-slow"></div>)}
+             <div className="flex items-center">
+                 <KeyIcon size={16} className="mr-1" /> {/* Key Icon */}
+                 <span className="text-amber-200 font-bold text-xs">{collectedKeys}</span> {/* Collected Keys Count */}
+             </div>
+             {collectedKeys > 0 && (<div className="absolute -inset-0.5 bg-yellow-500/20 rounded-lg blur-sm -z-10"></div>)}
+          </div>
+
         </div>
       </div>
 
@@ -497,4 +474,3 @@ export default function TreasureChest({ initialChests = 3, onCoinReward, onGemRe
     </>
   );
 }
-
