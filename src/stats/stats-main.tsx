@@ -793,7 +793,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                 title="Quay lại" // Added tooltip
               >
                 <img
-                  src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/return.png"
+                  src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/back.png" // Updated source URL
                   alt="Return icon" // Added alt text for accessibility
                   className="w-full h-full object-contain" // Ensure image fits and maintains aspect ratio
                 />
