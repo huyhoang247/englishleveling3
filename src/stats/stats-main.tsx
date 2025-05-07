@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; // Import React
-import ResetStatsControl from './reset-points.tsx'; // Import component mới
+import ResetStatsControl from './reset-points.tsx'; // Import component nút reset
 // import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới - Đã gỡ bỏ
-import BackButton from '../footer-back.tsx'; // Import the new BackButton component
+import BackButton from '../footer-back.tsx'; // Import component FooterBack (đã được đổi tên thành BackButton trong file này)
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -780,6 +780,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
          {/* Reset Stats Control - REMOVED from here */}
+         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
          {/* <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
@@ -793,19 +794,18 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       {/* Render Exchange Modal (conditionally) */}
       {showExchangeModal && <ExchangeModal />}
 
-      {/* Footer Section - Contains BackButton and ResetStatsControl */}
-      {/* Fixed at the bottom, full width, with padding and flexbox for alignment */}
-      {onClose && (
-        <div className="fixed bottom-0 left-0 w-full bg-white p-4 shadow-lg flex justify-end items-center space-x-4">
-          {/* Back Button */}
-          <BackButton onClick={onClose} />
-          {/* Reset Stats Control */}
+      {/* Footer Section - Using the new BackButton component */}
+      {/* This will be fixed at the bottom by its own component's styling */}
+      {/* Truyền component ResetStatsControl vào prop rightContent */}
+      <BackButton
+        onBackClick={onClose} // Sử dụng onClose cho hành động back
+        rightContent={
           <ResetStatsControl
-            currentStats={character.stats} // Pass current stats
-            onStatsReset={handleActualReset} // Pass the actual reset handler
+             currentStats={character.stats} // Truyền chỉ số hiện tại
+             onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
           />
-        </div>
-      )}
+        }
+      />
 
     </div> // End of main CharacterCard container
   );
