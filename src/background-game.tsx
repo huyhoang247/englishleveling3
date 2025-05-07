@@ -108,6 +108,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 // Define interface for component props
 interface ObstacleRunnerGameProps {
   className?: string;
+  hideNavBar: () => void; // NEW: Function to hide the nav bar
+  showNavBar: () => void; // NEW: Function to show the nav bar
 }
 
 // Define interface for Obstacle with health
@@ -148,8 +150,8 @@ interface GameCloud {
 }
 
 
-// Update component signature to accept className prop
-export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProps) {
+// Update component signature to accept className, hideNavBar, and showNavBar props
+export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }: ObstacleRunnerGameProps) {
   // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
@@ -1505,7 +1507,18 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     // Prevent opening if game over
     // REMOVED: showCard check
     if (gameOver) return;
-    setIsStatsFullscreen(!isStatsFullscreen);
+
+    // Toggle the fullscreen state
+    setIsStatsFullscreen(prev => {
+        const newState = !prev;
+        // Hide or show the nav bar based on the new state
+        if (newState) {
+            hideNavBar(); // Hide nav bar when entering fullscreen
+        } else {
+            showNavBar(); // Show nav bar when exiting fullscreen
+        }
+        return newState;
+    });
   };
 
 
@@ -1953,4 +1966,3 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
-
