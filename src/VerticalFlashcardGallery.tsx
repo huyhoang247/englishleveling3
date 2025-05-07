@@ -457,7 +457,7 @@ export default function VerticalFlashcardGallery() {
 
       {/* Main Content - Removed flex-1 from this container to fix the layout issue */}
       {/* This div now allows the grid layout inside to function correctly */}
-      <div className="p-4 pb-16 min-h-0">
+      <div className="p-4 pb-16 min-h-0"> {/* Added pb-16 to add padding at the bottom */}
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {filteredFlashcards.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
