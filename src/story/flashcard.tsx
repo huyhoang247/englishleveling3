@@ -253,11 +253,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       {/* Inject CSS animations */}
       <style>{animations}</style>
 
-      {/* Overlay */}
+      {/* Overlay - Removed onClick={onClose} from here */}
       <div
         className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300"
         style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}
-        onClick={onClose} // Click overlay to close
+        // onClick={onClose} // Click overlay to close - REMOVED
       ></div>
 
       {/* Fullscreen Modal Content */}
@@ -283,10 +283,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
           {/* Footer - This footer will now always be present */}
           <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
-            {/* The "Đóng" button is here, but its onClick={onClose} is removed */}
+            {/* The "Đóng" button is here, and it does NOT have onClick={onClose} */}
              <button
                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-               // onClick={onClose} // Removed this line
+               // onClick={onClose} // Removed this line as requested
              >
                Đóng
              </button>
