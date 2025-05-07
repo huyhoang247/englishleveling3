@@ -233,9 +233,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         setCoinBadgePulse(true);
         setTimeout(() => setCoinBadgePulse(false), 1500);
       }
-    }
-    setShowExchangeModal(false); // Close the exchange modal
-  };
+      }
+      setShowExchangeModal(false); // Close the exchange modal
+      };
 
   // Function to adjust the amount for exchange
   const adjustExchangeAmount = (amount) => {
@@ -594,8 +594,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
 
       {/* Container to limit the width of the content within the fullscreen view */}
-      {/* MODIFIED: Changed background back to white */}
-      <div className="relative max-w-lg mx-auto w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      {/* MODIFIED: Removed max-w-lg, mx-auto, rounded-2xl, shadow-2xl */}
+      <div className="relative w-full h-full bg-white overflow-hidden flex flex-col">
 
         {/* Header section with background pattern - FIXED TOP */}
         {/* MODIFIED: Changed background back to white */}
