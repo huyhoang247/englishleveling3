@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; // Import React
-import ResetStatsControl from './reset-points.tsx'; // Import component nút reset
+import ResetStatsControl from './reset-points.tsx'; // Import component mới
 // import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới - Đã gỡ bỏ
-import BackButton from '../footer-back.tsx'; // Import component FooterBack (đã được đổi tên thành BackButton trong file này)
+import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -780,13 +780,15 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
          {/* Reset Stats Control - REMOVED from here */}
-         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
-         {/* <div className="mb-8">
+         {/* The component will be passed to the footer */}
+         {/*
+         <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
            />
-         </div> */}
+         </div>
+         */}
 
       </div> {/* End of main content area */}
 
@@ -796,16 +798,18 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
       {/* Footer Section - Using the new BackButton component */}
       {/* This will be fixed at the bottom by its own component's styling */}
-      {/* Truyền component ResetStatsControl vào prop rightContent */}
-      <BackButton
-        onBackClick={onClose} // Sử dụng onClose cho hành động back
-        rightContent={
-          <ResetStatsControl
-             currentStats={character.stats} // Truyền chỉ số hiện tại
-             onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
-          />
-        }
-      />
+      {onClose && (
+        <BackButton
+          onClick={onClose}
+          // Pass the ResetStatsControl component as rightContent prop
+          rightContent={
+            <ResetStatsControl
+              currentStats={character.stats} // Pass current stats
+              onStatsReset={handleActualReset} // Pass the reset handler
+            />
+          }
+        />
+      )}
 
     </div> // End of main CharacterCard container
   );
