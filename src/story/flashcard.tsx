@@ -281,29 +281,21 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           {/* Body - Render content based on renderModalContent function */}
           {renderModalContent()}
 
-          {/* Footer - Removed the conditional rendering */}
+          {/* Footer - This footer will now always be present */}
           <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
-            {/* You can add content here if needed, or just keep the back icon */}
-            {/* For example, a close button centered: */}
+            {/* The "Đóng" button is here, but its onClick={onClose} is removed */}
              <button
                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-               onClick={onClose}
+               // onClick={onClose} // Removed this line
              >
                Đóng
              </button>
           </div>
 
 
-          {/* Back Icon at bottom left - Adjusted position slightly to be above the footer */}
-          {/* We will keep the back icon fixed, but adjust its bottom position */}
-          {/* Alternatively, you could place the BackIcon inside the footer div */}
-          {/* Let's place it inside the footer for better positioning relative to the footer */}
-          {/* Removed the fixed positioning and z-index from the BackIcon container */}
-          {/* The BackIcon will now be part of the footer's flex layout */}
-          {/* Or, keep it fixed but adjust bottom spacing */}
-          {/* Let's keep it fixed but adjust bottom spacing to be above the footer */}
+          {/* Back Icon at bottom left - This icon will now be the only way to close the modal */}
            <div className="fixed bottom-4 left-4 z-50"> {/* Position fixed at bottom left */}
-               <BackIcon onClick={onClose} className="shadow-lg" />
+               <BackIcon onClick={onClose} className="shadow-lg" /> {/* onClick={onClose} is kept here */}
            </div>
 
       </div>
