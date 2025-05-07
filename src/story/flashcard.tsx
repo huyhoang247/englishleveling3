@@ -281,9 +281,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
           {/* Full-width Footer with Back Icon on the left */}
            {/* Adjusted py-4 to py-2 to reduce vertical padding */}
-           {/* Updated background color to black with 80% opacity and added top-left/top-right rounded corners */}
-           {/* Increased rounded corners to xl */}
-           <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-start items-center bg-black bg-opacity-80 rounded-tl-xl rounded-tr-xl shadow-lg">
+           {/* Updated background and rounded corners to match navigation bar */}
+           <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-start items-center bg-black bg-opacity-85 backdrop-blur-md rounded-t-2xl shadow-lg">
                {/* The BackIcon is now aligned to the left */}
                {/* Adjusted icon color for better visibility on dark background */}
                <BackIcon onClick={onClose} className="text-white" />
