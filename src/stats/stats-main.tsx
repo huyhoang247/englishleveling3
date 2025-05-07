@@ -2,12 +2,57 @@ import React, { useState, useEffect } from 'react'; // Import React
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
-import { Icon } from './icon/icon.tsx'; // Assuming Icon component is in a separate file now
+
+// Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
+const Icon = ({ name, size = 24, className = '' }) => {
+  const icons = {
+    Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>,
+    Sword: <path d="M14.5 17.5L3 6 6 3l11.5 11.5L22 11l-3-3 3-3-3-3-3 3-3-3L6 6l11.5 11.5zM14.5 17.5l-3-3M14.5 17.5L11 21l3.5-3.5z"></path>,
+    Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,
+    Stars: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>,
+    Brain: <path d="M12 15c.68-1.32 1-2.8 1-4.4C13 6.4 10.8 2 7.5 2 4.2 2 2 6.4 2 10.6c0 4.2 2.2 8.6 5.5 8.6 2.12 0 3.6-.8 4.5-2.4zM12 15c-.68-1.32-1-2.8-1-4.4C11 6.4 13.2 2 16.5 2c3.3 0 5.5 4.4 5.5 8.6 0 4.2-2.2 8.6-5.5 8.6-2.12 0-3.6-.8-4.5-2.4z"></path>,
+    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
+    Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>,
+    Crosshair: <g><circle cx="12" cy="12" r="10"></circle><path d="M22 12h-4"></path><path d="M6 12H2"></path><path d="M12 6V2"></path><path d="M12 22v-4"></path></g>,
+    Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
+    Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
+    AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
+    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></g>,
+    Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
+    RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
+    ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
+  };
+
+  if (!icons[name]) {
+    console.warn(`Icon component: Icon with name "${name}" not found.`);
+    return null;
+  }
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`lucide lucide-${name.toLowerCase()} ${className}`}
+    >
+      {icons[name]}
+    </svg>
+  );
+};
+
 
 // Define props interface, including the new onClose prop
 interface CharacterCardProps {
   onClose?: () => void; // Optional function to call when closing
 }
+
 
 // Update component signature to accept onClose prop
 export default function CharacterCard({ onClose }: CharacterCardProps) {
@@ -60,7 +105,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   // Function to increase a stat value
-  const increaseStat = (stat: keyof typeof tempStats) => { // Use keyof typeof tempStats for type safety
+  const increaseStat = (stat) => {
     if (statPoints > 0) {
       // Trigger animation effect
       setPointAnimation({
@@ -89,7 +134,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   };
 
   // Function to decrease a stat value
-  const decreaseStat = (stat: keyof typeof tempStats) => { // Use keyof typeof tempStats for type safety
+  const decreaseStat = (stat) => {
     const originalStat = character.stats[stat]; // Get the original stat value before allocation
     // Only allow decrease if the temporary stat is higher than the original
     if (tempStats[stat] > originalStat) {
@@ -121,13 +166,13 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const cancelChanges = () => {
     // Calculate how many points were added temporarily
     const pointsAdded = Object.entries(tempStats).reduce((total, [key, value]) => {
-        const originalValue = character.stats[key as keyof typeof character.stats]; // Type assertion
+        const originalValue = character.stats[key];
         if (key === 'hp') {
           // Calculate points added for HP (1 point per 25 HP)
-          return total + Math.floor(((value as number) - originalValue) / 25); // Type assertion
+          return total + Math.floor((value - originalValue) / 25);
         } else {
           // Calculate points added for other stats (1 point per 2 stat value)
-          return total + Math.floor(((value as number) - originalValue) / 2); // Type assertion
+          return total + Math.floor((value - originalValue) / 2);
         }
       }, 0);
 
@@ -194,7 +239,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       };
 
   // Function to adjust the amount for exchange
-  const adjustExchangeAmount = (amount: number) => { // Add type for amount
+  const adjustExchangeAmount = (amount) => {
     const newAmount = exchangeAmount + amount;
     // Ensure the amount doesn't go below 1
     if (newAmount >= 1) {
@@ -209,16 +254,16 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     const stats = isEditMode ? tempStats : character.stats;
     // Define the list of stats to display
     const statsList = [
-      { name: "ATK", value: stats.atk, iconName: "Sword", color: "rose", key: "atk" },
-      { name: "DEF", value: stats.def, iconName: "Shield", color: "blue", key: "def" },
-      { name: "HP", value: stats.hp, iconName: "Heart", color: "red", key: "hp" },
-      { name: "LUCK", value: stats.luck, iconName: "Stars", color: "purple", key: "luck" },
-      { name: "INT", value: stats.wit, iconName: "Brain", color: "emerald", key: "wit" },
-      { name: "CRT", value: stats.crt, iconName: "Crosshair", color: "amber", key: "crt" }
+      { name: "ATK", value: stats.atk, icon: <Icon name="Sword" size={18} />, color: "rose", key: "atk" },
+      { name: "DEF", value: stats.def, icon: <Icon name="Shield" size={18} />, color: "blue", key: "def" },
+      { name: "HP", value: stats.hp, icon: <Icon name="Heart" size={18} />, color: "red", key: "hp" },
+      { name: "LUCK", value: stats.luck, icon: <Icon name="Stars" size={18} />, color: "purple", key: "luck" },
+      { name: "INT", value: stats.wit, icon: <Icon name="Brain" size={18} />, color: "emerald", key: "wit" },
+      { name: "CRT", value: stats.crt, icon: <Icon name="Crosshair" size={18} />, color: "amber", key: "crt" }
     ];
 
     // Helper function to get color scheme based on stat type
-    const getStatColor = (statColor: string) => { // Add type for statColor
+    const getStatColor = (statColor) => {
       switch(statColor) {
         case "rose": return { bg: "bg-rose-500", text: "text-rose-500", light: "bg-rose-100" };
         case "blue": return { bg: "bg-blue-500", text: "text-blue-500", light: "bg-blue-100" };
@@ -236,7 +281,11 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           const colorScheme = getStatColor(stat.color);
           const isSpecial = stat.name === "HP"; // HP has different display/calculation
           // Check if the stat value has increased in edit mode
-          const isIncreased = isEditMode && stats[stat.key as keyof typeof stats] > character.stats[stat.key as keyof typeof character.stats]; // Type assertion
+          const isIncreased = isEditMode && stats[stat.key] > character.stats[stat.key];
+          // Check if icon is valid before cloning
+          const statIconElement = stat.icon && React.isValidElement(stat.icon)
+              ? React.cloneElement(stat.icon, { size: 16 })
+              : null; // Render null if icon is invalid
 
           return (
             // MODIFIED: Reverted background and border colors for light mode
@@ -259,7 +308,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                   <div className={`w-8 h-8 ${colorScheme.light} rounded-lg flex items-center justify-center mr-3 relative overflow-hidden`}>
                     <div className={`absolute -bottom-3 -right-3 w-6 h-6 ${colorScheme.bg} opacity-20 rounded-full`}></div>
                     {/* Render the validated icon element */}
-                    <Icon name={stat.iconName} size={16} className={colorScheme.text} /> {/* Use Icon component */}
+                    {statIconElement && <span className={colorScheme.text}>{statIconElement}</span>}
                   </div>
                   {/* Stat name */}
                   {/* MODIFIED: Reverted text color for light mode */}
@@ -273,9 +322,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                     {/* Decrease Button */}
                     {/* MODIFIED: Reverted colors for light mode */}
                     <button
-                      onClick={() => decreaseStat(stat.key as keyof typeof tempStats)} // Type assertion
-                      disabled={stats[stat.key as keyof typeof stats] <= character.stats[stat.key as keyof typeof character.stats]} // Disable if value is at original or lower
-                      className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key as keyof typeof stats] <= character.stats[stat.key as keyof typeof character.stats] ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
+                      onClick={() => decreaseStat(stat.key)}
+                      disabled={stats[stat.key] <= character.stats[stat.key]} // Disable if value is at original or lower
+                      className={`flex items-center justify-center w-6 h-6 rounded-md ${stats[stat.key] <= character.stats[stat.key] ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
                     >
                       <Icon name="Minus" size={16} />
                     </button>
@@ -284,14 +333,14 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                     {/* MODIFIED: Reverted background and border colors for light mode */}
                     <div className="flex items-center justify-center">
                       <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
-                        {isSpecial ? stats[stat.key as keyof typeof stats].toLocaleString() : stats[stat.key as keyof typeof stats]} {/* Format HP with commas */}
+                        {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                       </p>
                     </div>
 
                     {/* Increase Button */}
                     {/* MODIFIED: Reverted colors for light mode */}
                     <button
-                      onClick={() => increaseStat(stat.key as keyof typeof tempStats)} // Type assertion
+                      onClick={() => increaseStat(stat.key)}
                       disabled={statPoints <= 0} // Disable if no points available
                       className={`flex items-center justify-center w-6 h-6 rounded-md ${statPoints <= 0 ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-500'}`}
                     >
@@ -303,7 +352,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                   <div className="flex items-center justify-center">
                     {/* MODIFIED: Reverted background and border colors for light mode */}
                     <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
-                      {isSpecial ? stats[stat.key as keyof typeof stats].toLocaleString() : stats[stat.key as keyof typeof stats]} {/* Format HP with commas */}
+                      {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                     </p>
                   </div>
                 )}
@@ -316,7 +365,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   };
 
   // Function to render a skill badge
-  const renderSkillBadge = (skill: string, index: number) => { // Add types
+  const renderSkillBadge = (skill, index) => {
     // Define color gradients for badges
     const colors = [
       "bg-gradient-to-r from-blue-500 to-purple-500 text-white",
@@ -324,10 +373,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
     ];
     // Get icon elements safely
-    let skillIconName: string | null = null; // Use icon name string
-    if (index === 0) skillIconName = "Sword";
-    if (index === 1) skillIconName = "Shield";
-    if (index === 2) skillIconName = "Zap";
+    let skillIcon = null;
+    if (index === 0) skillIcon = <Icon name="Sword" size={14} />;
+    if (index === 1) skillIcon = <Icon name="Shield" size={14} />;
+    if (index === 2) skillIcon = <Icon name="Zap" size={14} />;
 
 
     return (
@@ -336,7 +385,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         className={`${colors[index % colors.length]} px-4 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-1.5 transition-all hover:scale-105`}
       >
         {/* Render the icon only if it's valid */}
-        {skillIconName && <Icon name={skillIconName} size={14} />} {/* Use Icon component */}
+        {skillIcon}
         {skill}
       </span>
     );
@@ -542,14 +591,15 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
 
   return (
-    // MODIFIED: Changed background back to white and used flexbox for layout
-    // This main container will now be a flex column that fills the screen
-    <div className="flex flex-col h-screen bg-white"> {/* Use flex-col and h-screen */}
+    // Main container using flexbox to manage layout
+    // h-screen makes it take full viewport height
+    // MODIFIED: Changed background back to white and used flex layout
+    <div className="flex flex-col h-screen bg-white">
 
-      {/* Header section with background pattern - This will stay at the top */}
-      {/* MODIFIED: Changed background back to white */}
-      {/* MODIFIED: Removed px-8 */}
-      <div className="h-20 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
+      {/* Header section (fixed at the top) */}
+      {/* flex-shrink-0 prevents it from shrinking */}
+      {/* MODIFIED: Changed background back to white and added padding */}
+      <div className="flex-shrink-0 relative bg-white px-8 pt-4 pb-2"> {/* Adjusted padding */}
         {/* Background pattern overlay */}
         {/* MODIFIED: Changed fill color in SVG back to light for white background */}
         <div className="absolute inset-0" style={{
@@ -558,7 +608,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
         {/* Top right badges container with glassmorphism effect */}
         {/* MODIFIED: Reverted border color for light mode */}
-        <div className="absolute top-2 right-4 flex items-center space-x-2 overflow-hidden
+        {/* Positioned relative to this header div */}
+        <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden
                     backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
                     border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10"> {/* Kept opacity for glassmorphism */}
           {/* Coin Badge */}
@@ -616,16 +667,15 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
       </div>
 
-      {/* Main content area - This will be the scrollable part */}
-      {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
-      {/* MODIFIED: Removed px-8 from this container, added to inner sections */}
-      <div className="overflow-y-auto flex-grow p-4"> {/* Added p-4 for padding */}
-        {/* REMOVED: Empty div that previously had mb-2 */}
-        {/* <div className="flex flex-col mb-2"></div> */}
+      {/* Main content area - SCROLLABLE */}
+      {/* flex-grow makes it take up remaining space */}
+      {/* overflow-y-auto enables vertical scrolling */}
+      {/* Added padding here */}
+      <div className="flex-grow overflow-y-auto p-8">
 
         {/* Stats Section */}
-        {/* MODIFIED: Added px-4 back to the stats section for inner padding */}
-        <div className="mb-8 px-4"> {/* Changed px-8 to px-4 to account for parent padding */}
+        {/* MODIFIED: Removed px-8 as padding is now on the parent */}
+        <div className="mb-8">
             {/* Stats Header */}
             {/* MODIFIED: Reverted text and border colors for light mode */}
             <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
@@ -716,8 +766,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
 
         {/* Skills Section */}
-        {/* MODIFIED: Added px-4 back to the skills section for inner padding */}
-        <div className="mb-8 px-4"> {/* Changed px-8 to px-4 */}
+        {/* MODIFIED: Removed px-8 as padding is now on the parent */}
+        <div className="mb-8">
           {/* Skills Header */}
           {/* MODIFIED: Reverted text and border colors for light mode */}
           <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
@@ -730,27 +780,26 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         </div>
 
          {/* Reset Stats Control - Placed here, not in the footer */}
-         {/* MODIFIED: Added px-4 back to the ResetStatsControl section for inner padding */}
-         <div className="mb-8 px-4"> {/* Changed px-8 to px-4 */}
+         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
+         <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
            />
          </div>
 
-      </div> {/* End of main content area - This is the scrollable part */}
+      </div> {/* End of main content area */}
 
 
       {/* Render Exchange Modal (conditionally) */}
       {showExchangeModal && <ExchangeModal />}
 
       {/* Footer Section - Using the new BackButton component */}
-      {/* This will be fixed at the bottom by the BackButton component's own styling */}
+      {/* This will be fixed at the bottom by its own component's styling */}
       {onClose && (
         <BackButton onClick={onClose} />
       )}
 
-    </div> // End of main CharacterCard container (Flexbox column)
+    </div> // End of main CharacterCard container
   );
 }
-
