@@ -295,7 +295,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
           {/* Back Icon at bottom left */}
           <div className="fixed bottom-4 left-4 z-50"> {/* Position fixed at bottom left */}
-              <BackIcon onClick={onClose} className="bg-white dark:bg-gray-800 shadow-lg" /> {/* Use BackIcon and add some styling */}
+              {/* Removed background classes, kept shadow */}
+              <BackIcon onClick={onClose} className="shadow-lg" />
           </div>
       </div>
     </>
