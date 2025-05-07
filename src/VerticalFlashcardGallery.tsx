@@ -478,28 +478,25 @@ export default function VerticalFlashcardGallery() {
                     {/* Hover effect for flashcard */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
 
-                    {/* Heart Icon - Favorite/Unfavorite - Size and padding change based on layout */}
+                    {/* Heart Icon - Favorite/Unfavorite - Removed background and padding classes */}
                     <button
-                      className={`absolute top-3 right-3 ${layoutMode === 'double' ? 'p-1.5' : 'p-2'} rounded-full bg-white dark:bg-gray-700 bg-opacity-70 hover:bg-opacity-90 transition-all duration-300 z-10 shadow-md flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Added dark mode styles
+                      className={`absolute top-3 right-3 transition-all duration-300 z-10 flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Removed rounded-full, bg-*, p-* classes
                       onClick={() => toggleFavorite(card.id)}
                       aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                      {/* Replaced SVG with img tag and added opacity class */}
+                      <img
+                        src={card.isFavorite
+                          ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png"
+                          : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"
+                        }
+                        alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"}
                         className={`transition-all duration-300 ${
                           layoutMode === 'double'
                             ? 'h-4 w-4'
                             : 'h-6 w-6'
-                        } ${card.isFavorite ? 'text-pink-600 dark:text-pink-400 scale-110' : 'text-gray-400 dark:text-gray-500'}`} // Added dark mode styles
-                        viewBox="0 0 24 24"
-                        fill={card.isFavorite ? "currentColor" : "none"}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                      </svg>
+                        } ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} // Added conditional opacity class
+                      />
                     </button>
 
                     {/* Image aspect ratio container with style effects */}
@@ -924,4 +921,3 @@ export default function VerticalFlashcardGallery() {
     </div>
   );
 }
-
