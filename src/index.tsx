@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client'; // Keep createRoot for rendering
 import Home from './background-game.tsx'; // Assuming home.tsx is now Home component
 import NavigationBarBottom from './navigation-bar-bottom.tsx'; // Import NavigationBarBottom component
-import Profile from './profile.tsx';
-import Story from './VerticalFlashcardGallery.tsx';
-import Quiz from './stats/reset-points.tsx';
+import Profile from './profile.tsx'; 
+import Story from './VerticalFlashcardGallery.tsx'; 
+import Quiz from './stats/reset-points.tsx'; 
 
 // Define the possible tab types
-type TabType = 'home' | 'profile' | 'story' | 'quiz'; // Thêm 'quiz' vào TabType
+type TabType = 'home' | 'profile' | 'story';
 
 const App: React.FC = () => {
   // Initialize state to keep track of the active tab, default is 'home'
@@ -25,15 +25,14 @@ const App: React.FC = () => {
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story />}
       {activeTab === 'quiz' && <Quiz />}
+      
 
-
-      {/* Render the bottom navigation bar only if activeTab is NOT 'story' */}
-      {activeTab !== 'story' && (
-        <NavigationBarBottom
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      )}
+      {/* Render the bottom navigation bar */}
+      {/* Pass the active tab and the tab change handler as props */}
+      <NavigationBarBottom
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
     </div>
   );
 };
