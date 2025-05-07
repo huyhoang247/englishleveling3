@@ -253,11 +253,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       {/* Inject CSS animations */}
       <style>{animations}</style>
 
-      {/* Overlay - Removed onClick={onClose} from here */}
+      {/* Overlay */}
       <div
         className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300"
         style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}
-        // onClick={onClose} // Click overlay to close - REMOVED
       ></div>
 
       {/* Fullscreen Modal Content */}
@@ -274,28 +273,16 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                  {imageDetail === 'phrase' && selectedCard.vocabulary?.word} {/* Show word for phrase detail */}
                  {imageDetail !== 'basic' && imageDetail !== 'example' && imageDetail !== 'phrase' && selectedCard.vocabulary?.word} {/* Default to word */}
               </h3>
-              {/* Removed the close button from the header */}
             </div>
           </div>
 
           {/* Body - Render content based on renderModalContent function */}
           {renderModalContent()}
 
-          {/* Removed the entire footer div */}
-          {/*
-          <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-             <button
-               className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-             >
-               Đóng
-             </button>
-          </div>
-          */}
-
-
-          {/* Back Icon at bottom left with Glassmorphism background */}
-           <div className="fixed bottom-4 left-4 z-50 p-3 rounded-full bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg shadow-lg border border-opacity-20 border-white"> {/* Added glassmorphism classes */}
-               <BackIcon onClick={onClose} className="text-white" /> {/* Changed icon color to white for better contrast */}
+          {/* Full-width Glassmorphism Footer with Back Icon */}
+           <div className="fixed bottom-0 left-0 right-0 z-50 p-4 flex justify-center items-center bg-gray-200 dark:bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg"> {/* Added full width, gray background, flex for centering */}
+               {/* The BackIcon is now centered within this div */}
+               <BackIcon onClick={onClose} className="text-gray-800 dark:text-gray-200" /> {/* Adjusted icon color for gray background */}
            </div>
 
       </div>
