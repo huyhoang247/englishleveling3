@@ -285,7 +285,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
             {/* The "Đóng" button is here, and it does NOT have onClick={onClose} */}
              <button
-               className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
+               className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
                // onClick={onClose} // Removed this line as requested
              >
                Đóng
