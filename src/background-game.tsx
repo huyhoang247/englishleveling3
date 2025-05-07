@@ -322,7 +322,7 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     setShieldHealth(SHIELD_MAX_HEALTH); // Reset shield health to the new max
     setIsShieldOnCooldown(false); // Reset cooldown state
     setRemainingCooldown(0); // Reset remaining cooldown display
-    shieldCooldownStartTimeRef.current = null; // Reset cooldown start time
+    shieldCooldownStartTimeRef.current = null; // Reset start time
     pausedShieldCooldownRemainingRef.current = null; // *** NEW: Reset paused time on game over ***
 
     setActiveCoins([]); // NEW: Reset active coins
@@ -1352,12 +1352,25 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
         {/* Position the health bar above the obstacle */}
         {/* Added relative position to contain the key icon */}
         {/* Changed overflow-hidden to overflow-visible */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-visible border border-gray-600 shadow-sm relative"> {/* Adjusted size, Added relative, Changed overflow-hidden to overflow-visible */}
+        {/* MODIFIED: Improved health bar styling */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-16 h-3 bg-gray-800 rounded-full overflow-hidden border-2 border-gray-600 shadow-lg relative"> {/* Adjusted size, border, shadow */}
             {/* Inner health bar */}
             <div
-                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear relative`} // Added relative
                 style={{ width: `${obstacleHealthPct * 100}%` }}
-            ></div>
+            >
+                {/* Added gradient overlay for depth */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50"></div>
+            </div>
+
+             {/* Health Text */}
+             {/* Positioned absolute inside the health bar container */}
+             <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-xs font-bold drop-shadow-md">
+                    {Math.round(obstacle.health)}/{obstacle.maxHealth} {/* Display current/max health */}
+                </span>
+             </div>
+
 
              {/* NEW: Key icon on health bar if obstacle has a key */}
              {/* Positioned absolute inside the health bar container */}
@@ -1953,4 +1966,5 @@ export default function ObstacleRunnerGame({ className }: ObstacleRunnerGameProp
     </div>
   );
 }
+
 
