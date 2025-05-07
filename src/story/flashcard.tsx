@@ -279,11 +279,13 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           {/* Body - Render content based on renderModalContent function */}
           {renderModalContent()}
 
-          {/* Full-width Glassmorphism Footer with Back Icon on the left */}
+          {/* Full-width Footer with Back Icon on the left */}
            {/* Adjusted py-4 to py-2 to reduce vertical padding */}
-           <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-start items-center bg-gray-200 dark:bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg shadow-lg"> {/* Added horizontal padding, justify-start */}
+           {/* Updated background color to black with 80% opacity and added top-left/top-right rounded corners */}
+           <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-start items-center bg-black bg-opacity-80 rounded-tl-lg rounded-tr-lg shadow-lg">
                {/* The BackIcon is now aligned to the left */}
-               <BackIcon onClick={onClose} className="text-gray-800 dark:text-gray-200" /> {/* Adjusted icon color for gray background */}
+               {/* Adjusted icon color for better visibility on dark background */}
+               <BackIcon onClick={onClose} className="text-white" />
            </div>
 
       </div>
