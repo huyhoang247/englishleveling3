@@ -85,6 +85,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const [exchangeAmount, setExchangeAmount] = useState(100);
   const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
 
+  // NEW: State to control the visibility of the Reset Stats Modal
+  const [showResetModal, setShowResetModal] = useState(false);
+
+
   // Effect for card glow animation
   useEffect(() => {
     const interval = setInterval(() => {
@@ -183,7 +187,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     setShowPointsPanel(false); // Hide the allocation panel
   };
 
-  // NEW: Function to handle the actual state update after reset is confirmed in the child component
+  // Function to handle the actual state update after reset is confirmed in the child component
   const handleActualReset = (pointsRefunded: number) => {
      // Define base stats (all set to 0)
      const baseStats = {
@@ -205,6 +209,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
      setTempStats(baseStats);
      // Add the refunded points to the available stat points
      setStatPoints(statPoints + pointsRefunded);
+     // Close the reset modal after successful reset
+     setShowResetModal(false);
   };
 
 
@@ -779,8 +785,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
         </div>
 
-         {/* Reset Stats Control - REMOVED from here */}
-         {/* The component will be passed to the footer */}
+         {/* Reset Stats Control - REMOVED from here and rendered conditionally */}
          {/*
          <div className="mb-8">
            <ResetStatsControl
@@ -796,17 +801,31 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       {/* Render Exchange Modal (conditionally) */}
       {showExchangeModal && <ExchangeModal />}
 
+      {/* Render Reset Stats Modal (conditionally) */}
+      {/* This is rendered outside the footer to avoid positioning conflicts */}
+      {showResetModal && (
+        <ResetStatsControl
+           currentStats={character.stats} // Pass current stats
+           onStatsReset={handleActualReset} // Pass the actual reset handler
+           onClose={() => setShowResetModal(false)} // Pass a function to close the modal
+        />
+      )}
+
+
       {/* Footer Section - Using the new BackButton component */}
       {/* This will be fixed at the bottom by its own component's styling */}
       {onClose && (
         <BackButton
           onClick={onClose}
-          // Pass the ResetStatsControl component as rightContent prop
+          // Pass a button to trigger the reset modal as rightContent prop
           rightContent={
-            <ResetStatsControl
-              currentStats={character.stats} // Pass current stats
-              onStatsReset={handleActualReset} // Pass the reset handler
-            />
+             <button
+                onClick={() => setShowResetModal(true)} // Set state to show the modal
+                className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium shadow-md transition-colors flex items-center gap-1.5"
+             >
+                <Icon name="RotateCcw" size={14} />
+                Reset Chỉ Số
+             </button>
           }
         />
       )}
