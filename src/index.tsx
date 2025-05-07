@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import Home from './background-game.tsx';
+import Home from './background-game.tsx'; // Import Home component (which is background-game.tsx)
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx'; // Import VerticalFlashcardGallery
 import Profile from './profile.tsx';
@@ -18,10 +18,17 @@ const App: React.FC = () => {
   // Function to handle tab changes
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Ensure nav bar is visible when changing tabs, unless it's the story tab
-    // (The story tab will handle hiding/showing based on modal state)
-    if (tab !== 'story') {
+    // Ensure nav bar is visible when changing tabs, unless it's the story or home tab
+    // (Story and Home tabs will handle hiding/showing based on their internal state like modals/fullscreen)
+    if (tab !== 'story' && tab !== 'home') {
       setIsNavBarVisible(true);
+    }
+    // For 'home' and 'story', the respective components will manage nav bar visibility
+    // based on whether their fullscreen/modal content is active.
+    // When switching *to* 'home' or 'story', we should initially show the nav bar,
+    // then the component itself will hide it if its fullscreen/modal is open.
+    if (tab === 'story' || tab === 'home') {
+         setIsNavBarVisible(true);
     }
   };
 
@@ -38,7 +45,13 @@ const App: React.FC = () => {
   return (
     <div className="app-container">
       {/* Conditionally render components based on the activeTab state */}
-      {activeTab === 'home' && <Home />}
+      {activeTab === 'home' && (
+         // Pass hideNavBar and showNavBar functions to Home component
+         <Home
+           hideNavBar={hideNavBar}
+           showNavBar={showNavBar}
+         />
+      )}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && (
         // Pass hideNavBar and showNavBar functions to VerticalFlashcardGallery
