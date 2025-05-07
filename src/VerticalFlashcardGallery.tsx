@@ -16,112 +16,132 @@ interface StyledImageUrls {
   // Add more styles as needed
 }
 
+// Define the structure for vocabulary data
+interface VocabularyData {
+  word: string;
+  meaning: string;
+  example: string;
+  phrases: string[];
+  popularity: string;
+  synonyms: string[];
+  antonyms: string[];
+}
+
 // Define the structure for a flashcard, including styled image URLs
 interface Flashcard {
   id: number;
   imageUrl: StyledImageUrls; // Now an object containing URLs for different styles
   isFavorite: boolean;
-  vocabulary: {
-    word: string;
-    meaning: string;
-    example: string;
-    phrases: string[];
-    popularity: string;
-    synonyms: string[];
-    antonyms: string[];
-  };
+  vocabulary: VocabularyData; // Use the VocabularyData interface
 }
 
-// Sample data for flashcards - UPDATED to include styled image URLs
-// Cập nhật dữ liệu mẫu với danh sách ảnh và từ vựng của bạn
-const sampleFlashcards: Flashcard[] = [
-  {
-    id: 1,
-    imageUrl: {
-      default: "https://images.pixieset.com/59415508/7a1f30f4b95115d4cab5265ad0c40782-xxlarge.png",
-      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
-    },
-    isFavorite: false, // Đặt trạng thái yêu thích mặc định
-    vocabulary: {
-      word: "Source", // Từ vựng tương ứng với ảnh đầu tiên
-      meaning: "Nguồn, gốc", // Thêm nghĩa
-      example: "What is the source of this information?", // Thêm ví dụ
-      phrases: ["Information source", "Primary source"], // Thêm các cụm từ liên quan
-      popularity: "Cao", // Đánh giá độ phổ biến
-      synonyms: ["Origin", "Root", "Beginning"], // Thêm từ đồng nghĩa
-      antonyms: ["Result", "Outcome", "End"] // Thêm từ trái nghĩa
-    }
-  },
-  {
-    id: 2,
-    imageUrl: {
-      default: "https://images.pixieset.com/59415508/1d0b68793afa4a11abd5eb35d762c5ba-xxlarge.png",
-      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
-    },
-    isFavorite: false,
-    vocabulary: {
-      word: "Insurance", // Từ vựng tương ứng với ảnh thứ hai
-      meaning: "Bảo hiểm",
-      example: "You should buy travel insurance before your trip.",
-      phrases: ["Health insurance", "Car insurance"],
-      popularity: "Cao",
-      synonyms: ["Assurance", "Coverage", "Protection"],
-      antonyms: ["Risk", "Danger", "Exposure"]
-    }
-  },
-  {
-    id: 3,
-    imageUrl: {
-      default: "https://images.pixieset.com/59415508/93649b3d0569a29a6ad60cda73df8c40-xxlarge.png",
-      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
-    },
-    isFavorite: false,
-    vocabulary: {
-      word: "Argument", // Từ vựng tương ứng với ảnh thứ ba
-      meaning: "Cuộc tranh luận, lý lẽ",
-      example: "They had a heated argument about politics.",
-      phrases: ["Strong argument", "Logical argument"],
-      popularity: "Trung bình",
-      synonyms: ["Dispute", "Debate", "Reasoning"],
-      antonyms: ["Agreement", "Harmony", "Peace"]
-    }
-  },
-  {
-    id: 4,
-    imageUrl: {
-      default: "https://images.pixieset.com/59415508/340229e596d6c1c4b6e6161cf88cf4aa-xxlarge.png",
-      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
-    },
-    isFavorite: false,
-    vocabulary: {
-      word: "Influence", // Từ vựng tương ứng với ảnh thứ tư
-      meaning: "Ảnh hưởng",
-      example: "His parents had a strong influence on his career choice.",
-      phrases: ["Direct influence", "Negative influence"],
-      popularity: "Cao",
-      synonyms: ["Impact", "Effect", "Control"],
-      antonyms: ["Lack of effect", "Insignificance"]
-    }
-  },
-  {
-    id: 5,
-    imageUrl: {
-      default: "https://images.pixieset.com/59415508/cab96473a94e603273c6505bea2bdb3f-xxlarge.png",
-      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
-    },
-    isFavorite: false,
-    vocabulary: {
-      word: "Vocabulary 5", // Thay thế bằng từ vựng thứ năm nếu có
-      meaning: "Nghĩa của từ vựng 5",
-      example: "Ví dụ cho từ vựng 5.",
-      phrases: ["Cụm từ 1", "Cụm từ 2"],
-      popularity: "Thấp",
-      synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
-      antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
-    }
-  }
-  // Thêm các flashcard khác theo cấu trúc tương tự
+// --- Dữ liệu ảnh theo từng phong cách ---
+// Danh sách URL ảnh cho phong cách Mặc định (Default)
+const defaultImageUrls: string[] = [
+  "https://images.pixieset.com/59415508/7a1f30f4b95115d4cab5265ad0c40782-xxlarge.png",
+  "https://images.pixieset.com/59415508/1d0b68793afa4a11abd5eb35d762c5ba-xxlarge.png",
+  "https://images.pixieset.com/59415508/93649b3d0569a29a6ad60cda73df8c40-xxlarge.png",
+  "https://images.pixieset.com/59415508/340229e596d6c1c4b6e6161cf88cf4aa-xxlarge.png",
+  "https://images.pixieset.com/59415508/cab96473a94e603273c6505bea2bdb3f-xxlarge.png",
+  // Thêm các URL ảnh mặc định khác tại đây
 ];
+
+// Danh sách URL ảnh cho phong cách Anime (Ví dụ - bạn cần thay thế bằng ảnh thật)
+const animeImageUrls: string[] = [
+  "https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+1",
+  "https://placehold.co/1024x1536/FFCC99/FFFFFF?text=Anime+2",
+  "https://placehold.co/1024x1536/FF99FF/FFFFFF?text=Anime+3",
+  "https://placehold.co/1024x1536/CC99FF/FFFFFF?text=Anime+4",
+  "https://placehold.co/1024x1536/FF66B2/FFFFFF?text=Anime+5",
+  // Thêm các URL ảnh anime khác tại đây, đảm bảo số lượng khớp với defaultImageUrls và vocabularyData
+];
+
+// Danh sách URL ảnh cho phong cách Comic (Ví dụ - bạn cần thay thế bằng ảnh thật)
+const comicImageUrls: string[] = [
+  "https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+1",
+  "https://placehold.co/1024x1536/99CCFF/FFFFFF?text=Comic+2",
+  "https://placehold.co/1024x1536/66CCFF/FFFFFF?text=Comic+3",
+  "https://placehold.co/1024x1536/9999FF/FFFFFF?text=Comic+4",
+  "https://placehold.co/1024x1536/3399FF/FFFFFF?text=Comic+5",
+  // Thêm các URL ảnh comic khác tại đây
+];
+
+// Danh sách URL ảnh cho phong cách Realistic (Ví dụ - bạn cần thay thế bằng ảnh thật)
+const realisticImageUrls: string[] = [
+  "https://placehold.co/1024x1536/A0A0A0/333333?text=Realistic+1",
+  "https://placehold.co/1024x1536/B0B0B0/333333?text=Realistic+2",
+  "https://placehold.co/1024x1536/C0C0C0/333330?text=Realistic+3",
+  "https://placehold.co/1024x1536/B0B0B0/333330?text=Realistic+4",
+  "https://placehold.co/1024x1536/A0A0A0/333330?text=Realistic+5",
+  // Thêm các URL ảnh realistic khác tại đây
+];
+
+
+// --- Dữ liệu từ vựng ---
+// Danh sách dữ liệu từ vựng, đảm bảo thứ tự khớp với các danh sách ảnh
+const vocabularyData: VocabularyData[] = [
+  {
+    word: "Source",
+    meaning: "Nguồn, gốc",
+    example: "What is the source of this information?",
+    phrases: ["Information source", "Primary source"],
+    popularity: "Cao",
+    synonyms: ["Origin", "Root", "Beginning"],
+    antonyms: ["Result", "Outcome", "End"]
+  },
+  {
+    word: "Insurance",
+    meaning: "Bảo hiểm",
+    example: "You should buy travel insurance before your trip.",
+    phrases: ["Health insurance", "Car insurance"],
+    popularity: "Cao",
+    synonyms: ["Assurance", "Coverage", "Protection"],
+    antonyms: ["Risk", "Danger", "Exposure"]
+  },
+  {
+    word: "Argument",
+    meaning: "Cuộc tranh luận, lý lẽ",
+    example: "They had a heated argument about politics.",
+    phrases: ["Strong argument", "Logical argument"],
+    popularity: "Trung bình",
+    synonyms: ["Dispute", "Debate", "Reasoning"],
+    antonyms: ["Agreement", "Harmony", "Peace"]
+  },
+  {
+    word: "Influence",
+    meaning: "Ảnh hưởng",
+    example: "His parents had a strong influence on his career choice.",
+    phrases: ["Direct influence", "Negative influence"],
+    popularity: "Cao",
+    synonyms: ["Impact", "Effect", "Control"],
+    antonyms: ["Lack of effect", "Insignificance"]
+  },
+  {
+    word: "Vocabulary 5", // Thay thế bằng từ vựng thứ năm nếu có
+    meaning: "Nghĩa của từ vựng 5",
+    example: "Ví dụ cho từ vựng 5.",
+    phrases: ["Cụm từ 1", "Cụm từ 2"],
+    popularity: "Thấp",
+    synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
+    antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
+  }
+  // Thêm các dữ liệu từ vựng khác tại đây, đảm bảo số lượng khớp với các danh sách ảnh
+];
+
+// --- Tạo mảng sampleFlashcards từ dữ liệu trên ---
+// Đảm bảo rằng tất cả các mảng (defaultImageUrls, animeImageUrls, ..., vocabularyData) có cùng độ dài
+const sampleFlashcards: Flashcard[] = vocabularyData.map((vocab, index) => ({
+  id: index + 1, // ID dựa trên vị trí (bắt đầu từ 1)
+  imageUrl: {
+    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index
+    anime: animeImageUrls[index], // Lấy ảnh anime theo index (nếu có)
+    comic: comicImageUrls[index], // Lấy ảnh comic theo index (nếu có)
+    realistic: realisticImageUrls[index], // Lấy ảnh realistic theo index (nếu có)
+  },
+  isFavorite: false, // Đặt trạng thái yêu thích mặc định
+  vocabulary: vocab, // Gán dữ liệu từ vựng theo index
+}));
+
 
 // Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
 const exampleImages = [
