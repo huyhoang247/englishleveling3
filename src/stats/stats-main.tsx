@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'; // Import React
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới
+import BackButton from './footer-back.tsx'; // Import the new BackButton component
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -779,34 +780,29 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
               {character.skills.map((skill, index) => renderSkillBadge(skill, index))}
             </div>
           </div>
-        </div>
 
-        {/* Footer Section - FIXED BOTTOM */}
-        {/* MODIFIED: Reverted background gradient and border color for light mode */}
-        {/* MODIFIED: Removed px-8 */}
-        <div className="py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          <div className="flex justify-between items-center px-8"> {/* Added px-8 back here to keep padding inside footer */}
-            {/* Return Button - Using the new BackIcon component */}
-            {onClose && (
-              <BackIcon onClick={onClose} />
-            )}
+           {/* Reset Stats Control - Placed here, not in the footer */}
+           {/* MODIFIED: Added px-8 back to the ResetStatsControl section for inner padding */}
+           <div className="mb-8 px-8">
+             <ResetStatsControl
+                currentStats={character.stats} // Truyền chỉ số hiện tại
+                onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
+             />
+           </div>
 
-            {/* NEW: Render the new ResetStatsControl component */}
-            <ResetStatsControl
-               currentStats={character.stats} // Truyền chỉ số hiện tại
-               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
-            />
+        </div> {/* End of main content area */}
 
-          </div>
-        </div>
-
-        {/* REMOVED: Render Reset Modal (conditionallly) - Handled by ResetStatsControl */}
-        {/* {showResetModal && <ResetModal />} */}
 
         {/* Render Exchange Modal (conditionally) */}
         {showExchangeModal && <ExchangeModal />}
 
       </div> {/* End of content container */}
+
+      {/* Footer Section - Using the new BackButton component */}
+      {onClose && (
+        <BackButton onClick={onClose} />
+      )}
+
     </div> // End of main CharacterCard container
   );
 }
