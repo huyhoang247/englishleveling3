@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; // Import React
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
+import BackIcon from './BackIcon.tsx'; // Import component BackIcon mới
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -781,21 +782,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         {/* MODIFIED: Reverted background gradient and border color for light mode */}
         <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
           <div className="flex justify-between items-center">
-            {/* Return Button - MOVED AND STYLED */}
+            {/* Return Button - Using the new BackIcon component */}
             {onClose && (
-              <button
-                onClick={onClose}
-                // Removed background, border, backdrop filter, and shadow classes
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-colors p-1 hover:bg-gray-100" // Kept size, centering, padding, transition, and added hover effect
-                aria-label="Quay lại" // Updated aria-label
-                title="Quay lại" // Added tooltip
-              >
-                <img
-                  src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/left-arrow%20(1).png" // Updated source URL
-                  alt="Return icon" // Added alt text for accessibility
-                  className="w-full h-full object-contain" // Ensure image fits and maintains aspect ratio
-                />
-              </button>
+              <BackIcon onClick={onClose} />
             )}
 
             {/* NEW: Render the new ResetStatsControl component */}
