@@ -33,104 +33,94 @@ interface Flashcard {
 }
 
 // Sample data for flashcards - UPDATED to include styled image URLs
+// Cập nhật dữ liệu mẫu với danh sách ảnh và từ vựng của bạn
 const sampleFlashcards: Flashcard[] = [
   {
     id: 1,
-    // Updated imageUrl to be an object with different styles
     imageUrl: {
-      default: "https://placehold.co/1024x1536/E0E0E0/333333?text=Flashcard+1+Default",
-      anime: "https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Flashcard+1+Anime", // Example anime image URL
-      comic: "https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Flashcard+1+Comic", // Example comic image URL
-      realistic: "https://placehold.co/1024x1536/A0A0A0/333333?text=Flashcard+1+Realistic", // Example realistic image URL
+      default: "https://images.pixieset.com/59415508/7a1f30f4b95115d4cab5265ad0c40782-xxlarge.png",
+      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
     },
-    isFavorite: false,
-    // Add vocabulary information
+    isFavorite: false, // Đặt trạng thái yêu thích mặc định
     vocabulary: {
-      word: "Serendipity",
-      meaning: "Tình cờ tìm thấy điều tốt đẹp khi không tìm kiếm nó",
-      example: "Her discovery of the old photograph was a case of pure serendipity.",
-      phrases: ["Happy serendipity", "Pure serendipity"],
-      popularity: "Trung bình",
-      synonyms: ["Luck", "Chance", "Fortune"],
-      antonyms: ["Misfortune", "Design", "Plan"]
+      word: "Source", // Từ vựng tương ứng với ảnh đầu tiên
+      meaning: "Nguồn, gốc", // Thêm nghĩa
+      example: "What is the source of this information?", // Thêm ví dụ
+      phrases: ["Information source", "Primary source"], // Thêm các cụm từ liên quan
+      popularity: "Cao", // Đánh giá độ phổ biến
+      synonyms: ["Origin", "Root", "Beginning"], // Thêm từ đồng nghĩa
+      antonyms: ["Result", "Outcome", "End"] // Thêm từ trái nghĩa
     }
   },
   {
     id: 2,
     imageUrl: {
-      default: "https://placehold.co/1024x1536/D0D0D0/333333?text=Flashcard+2+Default",
-      anime: "https://placehold.co/1024x1536/FFCC99/FFFFFF?text=Flashcard+2+Anime", // Example anime image URL
-      comic: "https://placehold.co/1024x1536/99CCFF/FFFFFF?text=Flashcard+2+Comic", // Example comic image URL
-      realistic: "https://placehold.co/1024x1536/B0B0B0/333333?text=Flashcard+2+Realistic", // Example realistic image URL
+      default: "https://images.pixieset.com/59415508/1d0b68793afa4a11abd5eb35d762c5ba-xxlarge.png",
+      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
     },
-    isFavorite: true,
+    isFavorite: false,
     vocabulary: {
-      word: "Ephemeral",
-      meaning: "Tồn tại trong thời gian ngắn, thoáng qua",
-      example: "The beauty of cherry blossoms is ephemeral, lasting only a few days.",
-      phrases: ["Ephemeral joy", "Ephemeral beauty"],
-      popularity: "Thấp",
-      synonyms: ["Fleeting", "Temporary", "Transient"],
-      antonyms: ["Permanent", "Enduring", "Eternal"]
+      word: "Insurance", // Từ vựng tương ứng với ảnh thứ hai
+      meaning: "Bảo hiểm",
+      example: "You should buy travel insurance before your trip.",
+      phrases: ["Health insurance", "Car insurance"],
+      popularity: "Cao",
+      synonyms: ["Assurance", "Coverage", "Protection"],
+      antonyms: ["Risk", "Danger", "Exposure"]
     }
   },
   {
     id: 3,
     imageUrl: {
-      default: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3+Default",
-      anime: "https://placehold.co/1024x1536/FF99FF/FFFFFF?text=Flashcard+3+Anime", // Example anime image URL
-      comic: "https://placehold.co/1024x1536/66CCFF/FFFFFF?text=Flashcard+3+Comic", // Example comic image URL
-      realistic: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3+Realistic", // Example realistic image URL
-    }, // Corrected placeholder text color
+      default: "https://images.pixieset.com/59415508/93649b3d0569a29a6ad60cda73df8c40-xxlarge.png",
+      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
+    },
     isFavorite: false,
     vocabulary: {
-      word: "Ubiquitous",
-      meaning: "Hiện diện khắp nơi hoặc dường như hiện diện khắp nơi",
-      example: "Smartphones have become ubiquitous in modern society.",
-      phrases: ["Ubiquitous technology", "Ubiquitous presence"],
-      popularity: "Cao",
-      synonyms: ["Omnipresent", "Universal", "Pervasive"],
-      antonyms: ["Rare", "Limited", "Scarce"]
+      word: "Argument", // Từ vựng tương ứng với ảnh thứ ba
+      meaning: "Cuộc tranh luận, lý lẽ",
+      example: "They had a heated argument about politics.",
+      phrases: ["Strong argument", "Logical argument"],
+      popularity: "Trung bình",
+      synonyms: ["Dispute", "Debate", "Reasoning"],
+      antonyms: ["Agreement", "Harmony", "Peace"]
     }
   },
   {
     id: 4,
     imageUrl: {
-      default: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4+Default",
-      anime: "https://placehold.co/1024x1536/CC99FF/FFFFFF?text=Flashcard+4+Anime", // Example anime image URL
-      comic: "https://placehold.co/1024x1536/9999FF/FFFFFF?text=Flashcard+4+Comic", // Example comic image URL
-      realistic: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4+Realistic", // Example realistic image URL
-    }, // Corrected placeholder text color
-    isFavorite: true,
+      default: "https://images.pixieset.com/59415508/340229e596d6c1c4b6e6161cf88cf4aa-xxlarge.png",
+      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
+    },
+    isFavorite: false,
     vocabulary: {
-      word: "Quintessential",
-      meaning: "Đại diện hoàn hảo cho một loại, phẩm chất hoặc đặc điểm nhất định",
-      example: "Paris is the quintessential romantic city.",
-      phrases: ["Quintessential example", "Quintessential feature"],
-      popularity: "Trung bình",
-      synonyms: ["Classic", "Typical", "Perfect"],
-      antonyms: ["Atypical", "Uncharacteristic", "Unusual"]
+      word: "Influence", // Từ vựng tương ứng với ảnh thứ tư
+      meaning: "Ảnh hưởng",
+      example: "His parents had a strong influence on his career choice.",
+      phrases: ["Direct influence", "Negative influence"],
+      popularity: "Cao",
+      synonyms: ["Impact", "Effect", "Control"],
+      antonyms: ["Lack of effect", "Insignificance"]
     }
   },
   {
     id: 5,
     imageUrl: {
-      default: "https://placehold.co/1024x1536/A0A0A0/333330?text=Flashcard+5+Default",
-      anime: "https://placehold.co/1024x1536/FF66B2/FFFFFF?text=Flashcard+5+Anime", // Example anime image URL
-      comic: "https://placehold.co/1024x1536/3399FF/FFFFFF?text=Flashcard+5+Comic", // Example comic image URL
-      realistic: "https://placehold.co/1024x1536/A0A0A0/333330?text=Flashcard+5+Realistic", // Example realistic image URL
+      default: "https://images.pixieset.com/59415508/cab96473a94e603273c6505bea2bdb3f-xxlarge.png",
+      // Bạn có thể thêm các URL ảnh theo phong cách khác nếu có
     },
     isFavorite: false,
     vocabulary: {
-      word: "Resilience",
-      meaning: "Khả năng phục hồi nhanh chóng sau khó khăn",
-      example: "Her resilience helped her overcome many obstacles in life.",
-      phrases: ["Show resilience", "Build resilience"],
-      popularity: "Cao",
-      synonyms: ["Toughness", "Adaptability", "Strength"],
-      antonyms: ["Fragility", "Weakness", "Vulnerability"]
+      word: "Vocabulary 5", // Thay thế bằng từ vựng thứ năm nếu có
+      meaning: "Nghĩa của từ vựng 5",
+      example: "Ví dụ cho từ vựng 5.",
+      phrases: ["Cụm từ 1", "Cụm từ 2"],
+      popularity: "Thấp",
+      synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
+      antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
     }
   }
+  // Thêm các flashcard khác theo cấu trúc tương tự
 ];
 
 // Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
