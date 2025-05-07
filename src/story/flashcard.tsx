@@ -1,4 +1,5 @@
 import React from 'react';
+import BackIcon from '../icon/back-icon.tsx'; // Import the BackIcon component
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
@@ -273,14 +274,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                  {imageDetail === 'phrase' && selectedCard.vocabulary?.word} {/* Show word for phrase detail */}
                  {imageDetail !== 'basic' && imageDetail !== 'example' && imageDetail !== 'phrase' && selectedCard.vocabulary?.word} {/* Default to word */}
               </h3>
-              <button
-                onClick={onClose}
-                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              {/* Removed the close button from the header */}
             </div>
           </div>
 
@@ -298,6 +292,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               </button>
             </div>
           )}
+
+          {/* Back Icon at bottom left */}
+          <div className="fixed bottom-4 left-4 z-50"> {/* Position fixed at bottom left */}
+              <BackIcon onClick={onClose} className="bg-white dark:bg-gray-800 shadow-lg" /> {/* Use BackIcon and add some styling */}
+          </div>
       </div>
     </>
   );
