@@ -281,21 +281,21 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           {/* Body - Render content based on renderModalContent function */}
           {renderModalContent()}
 
-          {/* Footer - This footer will now always be present */}
-          <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
-            {/* The "Đóng" button is here, and it does NOT have onClick={onClose} */}
+          {/* Removed the entire footer div */}
+          {/*
+          <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
              <button
-               className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-               // onClick={onClose} // Removed this line as requested
+               className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
              >
-               {/* Removed "Đóng" text */}
+               Đóng
              </button>
           </div>
+          */}
 
 
-          {/* Back Icon at bottom left - This icon will now be the only way to close the modal */}
-           <div className="fixed bottom-4 left-4 z-50"> {/* Position fixed at bottom left */}
-               <BackIcon onClick={onClose} className="shadow-lg" /> {/* onClick={onClose} is kept here */}
+          {/* Back Icon at bottom left with Glassmorphism background */}
+           <div className="fixed bottom-4 left-4 z-50 p-3 rounded-full bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg shadow-lg border border-opacity-20 border-white"> {/* Added glassmorphism classes */}
+               <BackIcon onClick={onClose} className="text-white" /> {/* Changed icon color to white for better contrast */}
            </div>
 
       </div>
