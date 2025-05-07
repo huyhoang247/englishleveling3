@@ -247,8 +247,13 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     }
   };
 
-  // Determine the text to display at the bottom right - always show the word
-  const bottomText = selectedCard.vocabulary?.word;
+  // Determine the text to display at the bottom right
+  const bottomText =
+    imageDetail === 'basic'
+      ? 'Ảnh Gốc'
+      : imageDetail === 'example'
+      ? 'Hình Ảnh Ví Dụ'
+      : selectedCard.vocabulary?.word; // Default to word
 
   return (
     <>
