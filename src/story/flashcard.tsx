@@ -1,6 +1,6 @@
 import React from 'react';
 // import BackIcon from '../icon/back-icon.tsx'; // Removed the direct import
-import BackButton from './footerback.tsx'; // Import the new BackButton component
+import BackButton from './footer-back.tsx'; // Import the new BackButton component
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
