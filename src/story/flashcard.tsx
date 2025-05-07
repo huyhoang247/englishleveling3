@@ -247,6 +247,13 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     }
   };
 
+  // Determine the text to display at the bottom right
+  const bottomText =
+    imageDetail === 'basic'
+      ? 'Ảnh Gốc'
+      : imageDetail === 'example'
+      ? 'Hình Ảnh Ví Dụ'
+      : selectedCard.vocabulary?.word; // Default to word
 
   return (
     <>
@@ -264,18 +271,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900" // Changed to fullscreen classes
            style={{ animation: 'fadeIn 0.3s ease-out forwards' }} // Simple fade in for fullscreen
       >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">
-                 {/* Render header based on imageDetail */}
-                 {imageDetail === 'basic' && 'Ảnh Gốc'}
-                 {imageDetail === 'example' && 'Hình Ảnh Ví Dụ'}
-                 {imageDetail === 'phrase' && selectedCard.vocabulary?.word} {/* Show word for phrase detail */}
-                 {imageDetail !== 'basic' && imageDetail !== 'example' && imageDetail !== 'phrase' && selectedCard.vocabulary?.word} {/* Default to word */}
-              </h3>
-              {/* Removed the close button from the header */}
-            </div>
+          {/* Header - Kept for potential future use, but title moved */}
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0 hidden"> {/* Hidden the header */}
+            {/* Header content removed as title is moved */}
           </div>
 
           {/* Body - Render content based on renderModalContent function */}
@@ -293,10 +291,19 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             </div>
           )}
 
-          {/* Back Icon at bottom left */}
-          <div className="fixed bottom-4 left-4 z-50"> {/* Position fixed at bottom left */}
-              {/* Removed background classes, kept shadow */}
-              <BackIcon onClick={onClose} className="shadow-lg" />
+          {/* Controls at bottom */}
+          <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-between items-center"> {/* Position fixed at bottom, use flex to space items */}
+              {/* Back Icon at bottom left */}
+              <div> {/* Wrapper div for back icon */}
+                  <BackIcon onClick={onClose} className="shadow-lg" />
+              </div>
+
+              {/* Text at bottom right */}
+              {bottomText && ( // Only render if there is text to display
+                <div className="text-white text-lg font-bold mr-4"> {/* Added margin right */}
+                    {bottomText}
+                </div>
+              )}
           </div>
       </div>
     </>
