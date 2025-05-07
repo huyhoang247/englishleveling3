@@ -247,13 +247,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     }
   };
 
-  // Determine the text to display at the bottom right
-  const bottomText =
-    imageDetail === 'basic'
-      ? 'Ảnh Gốc'
-      : imageDetail === 'example'
-      ? 'Hình Ảnh Ví Dụ'
-      : selectedCard.vocabulary?.word; // Default to word
 
   return (
     <>
@@ -271,40 +264,48 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900" // Changed to fullscreen classes
            style={{ animation: 'fadeIn 0.3s ease-out forwards' }} // Simple fade in for fullscreen
       >
-          {/* Header - Kept for potential future use, but title moved */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0 hidden"> {/* Hidden the header */}
-            {/* Header content removed as title is moved */}
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-white">
+                 {/* Render header based on imageDetail */}
+                 {imageDetail === 'basic' && 'Ảnh Gốc'}
+                 {imageDetail === 'example' && 'Hình Ảnh Ví Dụ'}
+                 {imageDetail === 'phrase' && selectedCard.vocabulary?.word} {/* Show word for phrase detail */}
+                 {imageDetail !== 'basic' && imageDetail !== 'example' && imageDetail !== 'phrase' && selectedCard.vocabulary?.word} {/* Default to word */}
+              </h3>
+              {/* Removed the close button from the header */}
+            </div>
           </div>
 
           {/* Body - Render content based on renderModalContent function */}
           {renderModalContent()}
 
-          {/* Footer - Conditionally render based on imageDetail */}
-          {imageDetail !== 'basic' && imageDetail !== 'example' && (
-            <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
-              <button
-                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-                onClick={onClose}
-              >
-                Đóng
-              </button>
-            </div>
-          )}
-
-          {/* Controls at bottom */}
-          <div className="fixed bottom-4 left-4 right-4 z-50 flex justify-between items-center"> {/* Position fixed at bottom, use flex to space items */}
-              {/* Back Icon at bottom left */}
-              <div> {/* Wrapper div for back icon */}
-                  <BackIcon onClick={onClose} className="shadow-lg" />
-              </div>
-
-              {/* Text at bottom right */}
-              {bottomText && ( // Only render if there is text to display
-                <div className="text-white text-lg font-bold mr-4"> {/* Added margin right */}
-                    {bottomText}
-                </div>
-              )}
+          {/* Footer - Removed the conditional rendering */}
+          <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
+            {/* You can add content here if needed, or just keep the back icon */}
+            {/* For example, a close button centered: */}
+             <button
+               className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
+               onClick={onClose}
+             >
+               Đóng
+             </button>
           </div>
+
+
+          {/* Back Icon at bottom left - Adjusted position slightly to be above the footer */}
+          {/* We will keep the back icon fixed, but adjust its bottom position */}
+          {/* Alternatively, you could place the BackIcon inside the footer div */}
+          {/* Let's place it inside the footer for better positioning relative to the footer */}
+          {/* Removed the fixed positioning and z-index from the BackIcon container */}
+          {/* The BackIcon will now be part of the footer's flex layout */}
+          {/* Or, keep it fixed but adjust bottom spacing */}
+          {/* Let's keep it fixed but adjust bottom spacing to be above the footer */}
+           <div className="fixed bottom-4 left-4 z-50"> {/* Position fixed at bottom left */}
+               <BackIcon onClick={onClose} className="shadow-lg" />
+           </div>
+
       </div>
     </>
   );
