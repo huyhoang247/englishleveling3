@@ -1,6 +1,13 @@
 import { useRef, useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import the new component
 
+// Define the props interface for VerticalFlashcardGallery
+interface VerticalFlashcardGalleryProps {
+  hideNavBar: () => void; // Function to hide the nav bar
+  showNavBar: () => void; // Function to show the nav bar
+}
+
+
 // Sample data for flashcards
 const sampleFlashcards = [
   {
@@ -141,14 +148,14 @@ const animations = `
   }
 `;
 
-export default function VerticalFlashcardGallery() {
+// Accept hideNavBar and showNavBar as props
+export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: VerticalFlashcardGalleryProps) {
   const scrollContainerRef = useRef(null);
   const [flashcards, setFlashcards] = useState(sampleFlashcards);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [showFavoriteToast, setShowFavoriteToast] = useState(false);
   const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'favorite'
   const [showSettings, setShowSettings] = useState(false);
-  // Updated initial layoutMode to 'single' to match the grid class logic
   const [layoutMode, setLayoutMode] = useState('single'); // 'single' or 'double'
 
   // Add a new state variable for visual style
@@ -186,16 +193,18 @@ export default function VerticalFlashcardGallery() {
     setTimeout(() => setShowFavoriteToast(false), 2000);
   };
 
-  // Function to open vocabulary detail modal (now handled by setting state for the modal component)
+  // Function to open vocabulary detail modal
   const openVocabDetail = (card) => {
     setSelectedCard(card); // Set the selected card
     setShowVocabDetail(true); // Show the modal
+    hideNavBar(); // Hide the nav bar when modal opens
   };
 
   // Function to close vocabulary detail modal - Passed to FlashcardDetailModal
   const closeVocabDetail = () => {
     setShowVocabDetail(false);
     setSelectedCard(null); // Clear selected card when closing
+    showNavBar(); // Show the nav bar when modal closes
   };
 
   return (
