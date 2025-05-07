@@ -1,5 +1,6 @@
 import React from 'react';
-import BackIcon from '../icon/back-icon.tsx'; // Import the BackIcon component
+// import BackIcon from '../icon/back-icon.tsx'; // Removed the direct import
+import BackButton from './footerback.tsx'; // Import the new BackButton component
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
@@ -279,14 +280,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           {/* Body - Render content based on renderModalContent function */}
           {renderModalContent()}
 
-          {/* Full-width Footer with Back Icon on the left */}
-           {/* Adjusted py-4 to py-2 to reduce vertical padding */}
-           {/* Updated background and rounded corners to match navigation bar */}
-           <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-start items-center bg-black bg-opacity-85 backdrop-blur-md rounded-t-2xl shadow-lg">
-               {/* The BackIcon is now aligned to the left */}
-               {/* Adjusted icon color for better visibility on dark background */}
-               <BackIcon onClick={onClose} className="text-white" />
-           </div>
+          {/* Use the new BackButton component */}
+          <BackButton onClick={onClose} />
 
       </div>
     </>
