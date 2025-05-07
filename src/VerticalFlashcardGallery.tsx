@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import FlashcardDetailModal from './story/flashcard.tsx'; // Import the new component
 
 // Sample data for flashcards
 const sampleFlashcards = [
@@ -156,12 +157,11 @@ export default function VerticalFlashcardGallery() {
   // Add this after the visualStyle state
   const [imageDetail, setImageDetail] = useState('basic'); // 'basic', 'phrase', or 'example'
 
-  // State to manage vocabulary modal
-  const [showVocabDetail, setShowVocabDetail] = useState(false);
-  const [selectedVocab, setSelectedVocab] = useState(null); // This state seems unused now, using selectedCard instead
-
   // State to manage the selected card for detail view
   const [selectedCard, setSelectedCard] = useState(null);
+  // State to manage vocabulary modal visibility - Now used by FlashcardDetailModal
+  const [showVocabDetail, setShowVocabDetail] = useState(false);
+
 
   // Filter flashcards based on active tab
   const filteredFlashcards = activeTab === 'collection'
@@ -186,185 +186,17 @@ export default function VerticalFlashcardGallery() {
     setTimeout(() => setShowFavoriteToast(false), 2000);
   };
 
-  // Function to open vocabulary detail modal (now fullscreen)
+  // Function to open vocabulary detail modal (now handled by setting state for the modal component)
   const openVocabDetail = (card) => {
     setSelectedCard(card); // Set the selected card
-    setShowVocabDetail(true);
+    setShowVocabDetail(true); // Show the modal
   };
 
-  // Removed useEffect to close settings on outside click as per user's code
-
-  // Function to render modal content based on detailType
-  const renderModalContent = () => {
-    if (!selectedCard) return null;
-
-    // Find the original index of the selected card in the flashcards array
-    const originalIndex = flashcards.findIndex(card => card.id === selectedCard.id);
-
-    if (imageDetail === 'basic' && selectedCard.imageUrl) {
-      return (
-        // Content for Basic Image
-        <div className="flex justify-center items-center flex-grow p-4 overflow-hidden"> {/* Added flex-grow, overflow-hidden */}
-          <img
-            src={selectedCard.imageUrl}
-            alt="Card"
-            className="max-h-full max-w-full object-contain rounded-lg shadow-md" // Added rounded corners and shadow
-          />
-        </div>
-      );
-    } else if (imageDetail === 'example') {
-      // Get example image based on card index in the cards array
-      // Or you can use another logic to select the example image
-      const exampleIndex = originalIndex % exampleImages.length;
-      const exampleImageUrl = exampleImages[exampleIndex];
-
-      return (
-        // Content for Example Image
-        <div className="flex justify-center items-center flex-grow p-4 overflow-hidden"> {/* Added flex-grow, overflow-hidden */}
-          <img
-            src={exampleImageUrl}
-            alt="Example"
-            className="max-h-full max-w-full object-contain rounded-lg shadow-md" // Added rounded corners and shadow
-          />
-        </div>
-      );
-    } else if (imageDetail === 'phrase' && selectedCard.vocabulary?.phrases) {
-       return (
-         // Content for Phrase/Basic Vocabulary Info
-        <div className="p-5 overflow-y-auto flex-grow"> {/* Added flex-grow */}
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
-           {/* Cụm từ */}
-           <div className="mb-5">
-             <div className="inline-block bg-purple-50 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 mb-2">
-               Cụm từ phổ biến
-             </div>
-             <div className="flex flex-wrap gap-2">
-               {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                 <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-sm">
-                   {phrase}
-                 </span>
-               ))}
-             </div>
-           </div>
-            {/* You could add more vocabulary details here if needed */}
-            <div className="mb-5">
-              <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
-                Nghĩa
-              </div>
-              <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
-            </div>
-            <div className="mb-5">
-              <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
-                Ví dụ
-              </div>
-               <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
-                "{selectedCard.vocabulary.example}"
-              </p>
-            </div>
-        </div>
-       );
-    }
-    else {
-      // Default to Text Detail (full vocabulary info) if image or example not available or basic/example not selected
-      return (
-         // Content for Full Vocabulary Info
-        <div className="p-5 overflow-y-auto flex-grow"> {/* Added flex-grow */}
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3> {/* Added dark mode text color */}
-          {/* Nghĩa */}
-          <div className="mb-5">
-            <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
-              Nghĩa
-            </div>
-            <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p> {/* Added dark mode text color */}
-          </div>
-
-          {/* Ví dụ */}
-          <div className="mb-5">
-            <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
-              Ví dụ
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700"> {/* Added dark mode styles */}
-              "{selectedCard.vocabulary.example}"
-            </p>
-          </div>
-
-          {/* Cụm từ */}
-          <div className="mb-5">
-            <div className="inline-block bg-purple-50 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 mb-2">
-              Cụm từ phổ biến
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-sm">
-                  {phrase}
-                </span>
-              ))}
-            </div>
-          </div>
-
-           {/* Phổ biến */}
-           <div className="mb-5">
-             <div className="inline-block bg-amber-50 rounded-full px-3 py-1 text-xs font-semibold text-amber-600 mb-2">
-               Mức độ phổ biến
-             </div>
-             <div className="flex items-center">
-               <span className={`
-                 px-2 py-1 rounded-lg text-sm font-medium
-                 ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200" : // Added dark mode styles
-                   selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-200" : // Added dark mode styles
-                   "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200"} // Added condition and dark mode styles for "Thấp"
-               `}>
-                 {selectedCard.vocabulary.popularity}
-               </span>
-
-               {/* Hiển thị biểu đồ mức độ phổ biến */}
-               <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"> {/* Added dark mode styles */}
-                 <div
-                   className={`h-full rounded-full ${
-                     selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
-                     selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
-                     selectedCard.vocabulary.popularity === "Thấp" ? "bg-red-500 w-1/5" : "" // Added condition for "Thấp"
-                   }`}
-                 ></div>
-               </div>
-             </div>
-           </div>
-
-           {/* Synonyms & Antonyms */}
-           <div className="grid grid-cols-2 gap-4">
-             {/* Từ đồng nghĩa */}
-             <div>
-               <div className="inline-block bg-indigo-50 rounded-full px-3 py-1 text-xs font-semibold text-indigo-600 mb-2">
-                 Từ đồng nghĩa
-               </div>
-               <div className="flex flex-col gap-1">
-                 {selectedCard.vocabulary.synonyms.map((word, index) => (
-                   <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
-                     {word}
-                   </span>
-                 ))}
-               </div>
-             </div>
-
-             {/* Từ trái nghĩa */}
-             <div>
-               <div className="inline-block bg-pink-50 rounded-full px-3 py-1 text-xs font-semibold text-pink-600 mb-2">
-                 Từ trái nghĩa
-               </div>
-               <div className="flex flex-col gap-1">
-                 {selectedCard.vocabulary.antonyms.map((word, index) => (
-                   <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-pink-50 dark:bg-pink-900 px-2 py-1 rounded"> {/* Added dark mode styles */}
-                     {word}
-                   </span>
-                 ))}
-               </div>
-             </div>
-           </div>
-        </div>
-      );
-    }
+  // Function to close vocabulary detail modal - Passed to FlashcardDetailModal
+  const closeVocabDetail = () => {
+    setShowVocabDetail(false);
+    setSelectedCard(null); // Clear selected card when closing
   };
-
 
   return (
     // Main container now handles scrolling
@@ -540,8 +372,8 @@ export default function VerticalFlashcardGallery() {
                           }}
                           onClick={() => openVocabDetail(card)} // Added click event
                           onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Image+Error`;
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Image+Error`;
                           }}
                         />
 
@@ -864,59 +696,14 @@ export default function VerticalFlashcardGallery() {
         </div>
       )}
 
-      {/* Modal chi tiết từ vựng - Modified for Fullscreen */}
-      {showVocabDetail && selectedCard && (
-        <>
-          {/* Overlay - Still needed for background dimming */}
-          <div
-            className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300"
-            style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}
-            onClick={() => setShowVocabDetail(false)} // Click overlay to close
-          ></div>
-
-          {/* Fullscreen Modal Content */}
-          <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900" // Changed to fullscreen classes
-               style={{ animation: 'fadeIn 0.3s ease-out forwards' }} // Simple fade in for fullscreen
-          >
-              {/* Header */}
-              <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-white">
-                     {/* Render header based on imageDetail */}
-                     {imageDetail === 'basic' && 'Ảnh Gốc'}
-                     {imageDetail === 'example' && 'Hình Ảnh Ví Dụ'}
-                     {imageDetail === 'phrase' && selectedCard.vocabulary?.word} {/* Show word for phrase detail */}
-                     {imageDetail !== 'basic' && imageDetail !== 'example' && imageDetail !== 'phrase' && selectedCard.vocabulary?.word} {/* Default to word */}
-                  </h3>
-                  <button
-                    onClick={() => setShowVocabDetail(false)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Body - Render content based on renderModalContent function */}
-              {renderModalContent()}
-
-              {/* Footer - Conditionally render based on imageDetail */}
-              {imageDetail !== 'basic' && imageDetail !== 'example' && (
-                <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
-                  <button
-                    className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-                    onClick={() => setShowVocabDetail(false)}
-                  >
-                    Đóng
-                  </button>
-                </div>
-              )}
-          </div>
-        </>
-      )}
-
+      {/* Render the FlashcardDetailModal component */}
+      <FlashcardDetailModal
+        selectedCard={selectedCard}
+        showVocabDetail={showVocabDetail}
+        imageDetail={imageDetail}
+        exampleImages={exampleImages}
+        onClose={closeVocabDetail} // Pass the close function
+      />
 
     </div>
   );
