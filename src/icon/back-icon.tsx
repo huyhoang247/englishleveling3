@@ -1,4 +1,7 @@
 import React from 'react';
+// Import hình ảnh từ đường dẫn tương đối trong dự án của bạn
+// Đảm bảo đường dẫn này là chính xác dựa trên vị trí của tệp hình ảnh
+import leftArrowIcon from './image/back.png'; // Ví dụ: nếu tệp hình ảnh ở cùng thư mục hoặc trong thư mục con
 
 interface BackIconProps {
   onClick?: () => void; // Optional click handler
@@ -15,7 +18,8 @@ const BackIcon: React.FC<BackIconProps> = ({ onClick, className }) => {
       title="Quay lại"
     >
       <img
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/left-arrow%20(1).png"
+        // Sử dụng biến đã import làm nguồn ảnh
+        src={leftArrowIcon}
         alt="Return icon"
         className="w-full h-full object-contain" // Ensure image fits and maintains aspect ratio
       />
@@ -24,4 +28,3 @@ const BackIcon: React.FC<BackIconProps> = ({ onClick, className }) => {
 };
 
 export default BackIcon;
-
