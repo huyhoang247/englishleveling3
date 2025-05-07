@@ -545,7 +545,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           {!hasEnoughResources() && (
             <div className="mb-4 bg-red-50 p-3 rounded-lg border border-red-200">
               <div className="flex">
-                <Icon name="AlertCircle" size={20} className="text-red-500 mr-2 flex-shrink-0 mt-0.5" /> {/* Reverted text color */}
+                <Icon name="AlertCircle" size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" /> {/* Reverted text color */}
                 <div>
                   <h4 className="font-bold text-red-800 text-sm">Không đủ tài nguyên</h4> {/* Reverted text color */}
                   <p className="text-red-700 text-xs"> {/* Reverted text color */}
@@ -591,7 +591,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
   return (
     // MODIFIED: Changed background back to white
-    <div className="fixed inset-0 z-50 bg-white p-4 overflow-auto">
+    <div className="fixed inset-0 z-50 bg-white p-0 overflow-auto"> {/* Changed p-4 to p-0 */}
 
       {/* Container to limit the width of the content within the fullscreen view */}
       {/* MODIFIED: Removed max-w-lg, mx-auto, rounded-2xl, shadow-2xl */}
@@ -599,6 +599,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
         {/* Header section with background pattern - FIXED TOP */}
         {/* MODIFIED: Changed background back to white */}
+        {/* MODIFIED: Removed px-8 */}
         <div className="h-20 relative bg-white flex-shrink-0"> {/* Added flex-shrink-0 to prevent header shrinking */}
           {/* Background pattern overlay */}
           {/* MODIFIED: Changed fill color in SVG back to light for white background */}
@@ -668,13 +669,14 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
         {/* Main content area - SCROLLABLE MIDDLE */}
         {/* Added overflow-y-auto and flex-grow to make this section scrollable */}
-        {/* MODIFIED: Reduced padding top from pt-2 to pt-1 */}
-        <div className="px-8 pt-1 overflow-y-auto flex-grow">
+        {/* MODIFIED: Removed px-8 */}
+        <div className="pt-1 overflow-y-auto flex-grow">
           {/* REMOVED: Empty div that previously had mb-2 */}
           {/* <div className="flex flex-col mb-2"></div> */}
 
           {/* Stats Section */}
-          <div className="mb-8">
+          {/* MODIFIED: Added px-8 back to the stats section for inner padding */}
+          <div className="mb-8 px-8">
               {/* Stats Header */}
               {/* MODIFIED: Reverted text and border colors for light mode */}
               <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
@@ -765,7 +767,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
             </div>
 
           {/* Skills Section */}
-          <div className="mb-8">
+          {/* MODIFIED: Added px-8 back to the skills section for inner padding */}
+          <div className="mb-8 px-8">
             {/* Skills Header */}
             {/* MODIFIED: Reverted text and border colors for light mode */}
             <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
@@ -780,8 +783,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
 
         {/* Footer Section - FIXED BOTTOM */}
         {/* MODIFIED: Reverted background gradient and border color for light mode */}
-        <div className="px-8 py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
-          <div className="flex justify-between items-center">
+        {/* MODIFIED: Removed px-8 */}
+        <div className="py-3 bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 flex-shrink-0"> {/* Added flex-shrink-0 to prevent footer shrinking */}
+          <div className="flex justify-between items-center px-8"> {/* Added px-8 back here to keep padding inside footer */}
             {/* Return Button - Using the new BackIcon component */}
             {onClose && (
               <BackIcon onClick={onClose} />
