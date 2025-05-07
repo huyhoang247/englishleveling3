@@ -1,21 +1,48 @@
 import React from 'react';
-import BackIcon from './icon/back-icon.tsx'; // Import the BackIcon component
+import { useNavigate } from 'react-router-dom'; // Giả định bạn đang sử dụng react-router-dom
+import { ArrowLeftIcon } from '@heroicons/react/24/solid'; // Ví dụ sử dụng Heroicons cho icon back
 
-interface BackButtonProps {
-  onClick: () => void; // Function to handle the click event
-  className?: string; // Optional className for additional styling
+interface FooterBackProps {
+  // Prop để chứa phần tử (nút, icon, text,...) hiển thị bên phải icon back
+  rightContent?: React.ReactNode;
+  // Prop cho hành động khi click vào icon back
+  onBackClick?: () => void;
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ onClick, className }) => {
+const FooterBack: React.FC<FooterBackProps> = ({ rightContent, onBackClick }) => {
+  const navigate = useNavigate();
+
+  const handleBackClick = () => {
+    if (onBackClick) {
+      onBackClick();
+    } else {
+      // Hành động mặc định: quay lại trang trước
+      navigate(-1);
+    }
+  };
+
   return (
-    // This div contains the background styling and the BackIcon
-    // It's designed to be fixed at the bottom, full width, with specific styling
-    <div className={`fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-start items-center bg-black bg-opacity-85 backdrop-blur-md rounded-t-2xl shadow-lg ${className || ''}`}>
-      {/* The BackIcon component */}
-      {/* Adjusted icon color for better visibility on dark background */}
-      <BackIcon onClick={onClick} className="text-white" />
-    </div>
+    // Sử dụng Tailwind CSS để tạo footer cố định ở cuối trang và flexbox để căn chỉnh
+    <footer className="fixed bottom-0 left-0 w-full bg-gray-100 p-4 flex items-center justify-between shadow-lg z-20 rounded-t-xl">
+      {/* Container cho icon back */}
+      <div className="flex items-center">
+        <button
+          onClick={handleBackClick}
+          className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition duration-150 ease-in-out"
+          aria-label="Quay lại"
+        >
+          <ArrowLeftIcon className="h-6 w-6 text-gray-700" />
+        </button>
+        {/* Bạn có thể thêm các phần tử khác bên cạnh icon back nếu cần */}
+      </div>
+
+      {/* Container cho nội dung bên phải (nút reset chỉ số hoặc nội dung khác) */}
+      {/* Sử dụng flex items-center và space-x-2 để căn chỉnh và tạo khoảng cách */}
+      <div className="flex items-center space-x-2">
+        {rightContent}
+      </div>
+    </footer>
   );
 };
 
-export default BackButton;
+export default FooterBack;
