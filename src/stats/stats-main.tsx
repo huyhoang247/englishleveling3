@@ -85,8 +85,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
   const [exchangeAmount, setExchangeAmount] = useState(100);
   const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
 
-  // NEW: State to control the visibility of the Reset Stats Modal
-  const [showResetModal, setShowResetModal] = useState(false);
+  // REMOVED: State to control the visibility of the Reset Stats Modal
+  // const [showResetModal, setShowResetModal] = useState(false);
 
 
   // Effect for card glow animation
@@ -209,8 +209,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
      setTempStats(baseStats);
      // Add the refunded points to the available stat points
      setStatPoints(statPoints + pointsRefunded);
-     // Close the reset modal after successful reset
-     setShowResetModal(false);
+     // REMOVED: Close the reset modal after successful reset (modal state removed)
+     // setShowResetModal(false);
   };
 
 
@@ -785,15 +785,18 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
         </div>
 
-         {/* Reset Stats Control - REMOVED from here and rendered conditionally */}
-         {/*
+         {/* Reset Stats Control - Placed back here */}
+         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
          <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
+              // Assuming ResetStatsControl handles its own modal state internally
+              // If it needs an onClose prop to hide itself, you might need to add it back here
+              // onClose={() => setShowResetModal(false)} // Example if ResetStatsControl needs this
            />
          </div>
-         */}
+
 
       </div> {/* End of main content area */}
 
@@ -801,8 +804,9 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       {/* Render Exchange Modal (conditionally) */}
       {showExchangeModal && <ExchangeModal />}
 
-      {/* Render Reset Stats Modal (conditionally) */}
-      {/* This is rendered outside the footer to avoid positioning conflicts */}
+      {/* Render Reset Stats Modal (conditionally) - REMOVED */}
+      {/* The component is now rendered directly in the main content */}
+      {/*
       {showResetModal && (
         <ResetStatsControl
            currentStats={character.stats} // Pass current stats
@@ -810,6 +814,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
            onClose={() => setShowResetModal(false)} // Pass a function to close the modal
         />
       )}
+      */}
 
 
       {/* Footer Section - Using the new BackButton component */}
@@ -817,16 +822,16 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       {onClose && (
         <BackButton
           onClick={onClose}
-          // Pass a button to trigger the reset modal as rightContent prop
-          rightContent={
-             <button
-                onClick={() => setShowResetModal(true)} // Set state to show the modal
-                className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium shadow-md transition-colors flex items-center gap-1.5"
-             >
-                <Icon name="RotateCcw" size={14} />
-                Reset Chỉ Số
-             </button>
-          }
+          // REMOVED: The reset button is no longer passed as rightContent
+          // rightContent={
+          //    <button
+          //       onClick={() => setShowResetModal(true)} // Set state to show the modal
+          //       className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium shadow-md transition-colors flex items-center gap-1.5"
+          //    >
+          //       <Icon name="RotateCcw" size={14} />
+          //       Reset Chỉ Số
+          //    </button>
+          // }
         />
       )}
 
