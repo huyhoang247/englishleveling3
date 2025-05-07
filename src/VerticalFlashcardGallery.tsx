@@ -905,15 +905,17 @@ export default function VerticalFlashcardGallery() {
               {/* Body - Render content based on renderModalContent function */}
               {renderModalContent()}
 
-              {/* Footer */}
-              <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
-                <button
-                  className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
-                  onClick={() => setShowVocabDetail(false)}
-                >
-                  Đóng
-                </button>
-              </div>
+              {/* Footer - Conditionally render based on imageDetail */}
+              {imageDetail !== 'basic' && imageDetail !== 'example' && (
+                <div className="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900 flex-shrink-0"> {/* Added flex-shrink-0, dark mode styles */}
+                  <button
+                    className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
+                    onClick={() => setShowVocabDetail(false)}
+                  >
+                    Đóng
+                  </button>
+                </div>
+              )}
           </div>
         </>
       )}
