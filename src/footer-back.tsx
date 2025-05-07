@@ -1,5 +1,5 @@
 import React from 'react';
-import BackIcon from '../icon/back-icon.tsx'; // Import the BackIcon component
+import BackIcon from './icon/back-icon.tsx'; // Import the BackIcon component
 
 interface BackButtonProps {
   onClick: () => void; // Function to handle the click event
