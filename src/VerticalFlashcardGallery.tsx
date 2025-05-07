@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import the new component
+// Import defaultImageUrls from the new file
+import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
 
 // Define the props interface for VerticalFlashcardGallery
 interface VerticalFlashcardGalleryProps {
@@ -36,16 +38,6 @@ interface Flashcard {
 }
 
 // --- Dữ liệu ảnh theo từng phong cách ---
-// Danh sách URL ảnh cho phong cách Mặc định (Default)
-const defaultImageUrls: string[] = [
-  "https://images.pixieset.com/59415508/7a1f30f4b95115d4cab5265ad0c40782-xxlarge.png",
-  "https://images.pixieset.com/59415508/1d0b68793afa4a11abd5eb35d762c5ba-xxlarge.png",
-  "https://images.pixieset.com/59415508/93649b3d0569a29a6ad60cda73df8c40-xxlarge.png",
-  "https://images.pixieset.com/59415508/340229e596d6c1c4b6e6161cf88cf4aa-xxlarge.png",
-  "https://images.pixieset.com/59415508/cab96473a94e603273c6505bea2bdb3f-xxlarge.png",
-  // Thêm các URL ảnh mặc định khác tại đây
-];
-
 // Danh sách URL ảnh cho phong cách Anime (Ví dụ - bạn cần thay thế bằng ảnh thật)
 const animeImageUrls: string[] = [
   "https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+1",
@@ -133,7 +125,7 @@ const vocabularyData: VocabularyData[] = [
 const sampleFlashcards: Flashcard[] = vocabularyData.map((vocab, index) => ({
   id: index + 1, // ID dựa trên vị trí (bắt đầu từ 1)
   imageUrl: {
-    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index
+    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index từ file mới
     anime: animeImageUrls[index], // Lấy ảnh anime theo index (nếu có)
     comic: comicImageUrls[index], // Lấy ảnh comic theo index (nếu có)
     realistic: realisticImageUrls[index], // Lấy ảnh realistic theo index (nếu có)
@@ -685,7 +677,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
                         imageDetail === 'basic' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/0000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                         </svg>
                       </div>
