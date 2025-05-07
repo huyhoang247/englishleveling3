@@ -288,7 +288,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                className="w-full py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
                // onClick={onClose} // Removed this line as requested
              >
-               Đóng
+               {/* Removed "Đóng" text */}
              </button>
           </div>
 
