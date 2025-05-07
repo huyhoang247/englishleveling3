@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; // Import React
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới
-import BackButton from './footer-back.tsx'; // Import the new BackButton component
+import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
