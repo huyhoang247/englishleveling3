@@ -1,6 +1,4 @@
 import React, { useState } from "react"; // Import React and useState
-// import VerticalFlashcardGallery from "./VerticalFlashcardGallery.tsx"; // Keep or remove based on where this component is used
-// import Profile from "./profile.tsx"; // Keep or remove based on where this component is used
 
 // Define the props interface for the component
 interface NavigationBarBottomProps {
@@ -136,7 +134,8 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center">
+    // Added z-50 to ensure the navigation bar is on top
+    <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center z-50">
       {/* Nút bật tắt thanh điều hướng chỉ hiển thị khi activeTab là 'story' */}
       {activeTab === 'story' && (
         <div
