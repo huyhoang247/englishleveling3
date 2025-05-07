@@ -7,12 +7,42 @@ interface VerticalFlashcardGalleryProps {
   showNavBar: () => void; // Function to show the nav bar
 }
 
+// Define the structure for image URLs by style
+interface StyledImageUrls {
+  default: string;
+  anime?: string; // Optional URL for anime style
+  comic?: string; // Optional URL for comic style
+  realistic?: string; // Optional URL for realistic style
+  // Add more styles as needed
+}
 
-// Sample data for flashcards
-const sampleFlashcards = [
+// Define the structure for a flashcard, including styled image URLs
+interface Flashcard {
+  id: number;
+  imageUrl: StyledImageUrls; // Now an object containing URLs for different styles
+  isFavorite: boolean;
+  vocabulary: {
+    word: string;
+    meaning: string;
+    example: string;
+    phrases: string[];
+    popularity: string;
+    synonyms: string[];
+    antonyms: string[];
+  };
+}
+
+// Sample data for flashcards - UPDATED to include styled image URLs
+const sampleFlashcards: Flashcard[] = [
   {
     id: 1,
-    imageUrl: "https://placehold.co/1024x1536/E0E0E0/333333?text=Flashcard+1",
+    // Updated imageUrl to be an object with different styles
+    imageUrl: {
+      default: "https://placehold.co/1024x1536/E0E0E0/333333?text=Flashcard+1+Default",
+      anime: "https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Flashcard+1+Anime", // Example anime image URL
+      comic: "https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Flashcard+1+Comic", // Example comic image URL
+      realistic: "https://placehold.co/1024x1536/A0A0A0/333333?text=Flashcard+1+Realistic", // Example realistic image URL
+    },
     isFavorite: false,
     // Add vocabulary information
     vocabulary: {
@@ -27,7 +57,12 @@ const sampleFlashcards = [
   },
   {
     id: 2,
-    imageUrl: "https://placehold.co/1024x1536/D0D0D0/333333?text=Flashcard+2",
+    imageUrl: {
+      default: "https://placehold.co/1024x1536/D0D0D0/333333?text=Flashcard+2+Default",
+      anime: "https://placehold.co/1024x1536/FFCC99/FFFFFF?text=Flashcard+2+Anime", // Example anime image URL
+      comic: "https://placehold.co/1024x1536/99CCFF/FFFFFF?text=Flashcard+2+Comic", // Example comic image URL
+      realistic: "https://placehold.co/1024x1536/B0B0B0/333333?text=Flashcard+2+Realistic", // Example realistic image URL
+    },
     isFavorite: true,
     vocabulary: {
       word: "Ephemeral",
@@ -41,7 +76,12 @@ const sampleFlashcards = [
   },
   {
     id: 3,
-    imageUrl: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3", // Corrected placeholder text color
+    imageUrl: {
+      default: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3+Default",
+      anime: "https://placehold.co/1024x1536/FF99FF/FFFFFF?text=Flashcard+3+Anime", // Example anime image URL
+      comic: "https://placehold.co/1024x1536/66CCFF/FFFFFF?text=Flashcard+3+Comic", // Example comic image URL
+      realistic: "https://placehold.co/1024x1536/C0C0C0/333330?text=Flashcard+3+Realistic", // Example realistic image URL
+    }, // Corrected placeholder text color
     isFavorite: false,
     vocabulary: {
       word: "Ubiquitous",
@@ -55,7 +95,12 @@ const sampleFlashcards = [
   },
   {
     id: 4,
-    imageUrl: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4", // Corrected placeholder text color
+    imageUrl: {
+      default: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4+Default",
+      anime: "https://placehold.co/1024x1536/CC99FF/FFFFFF?text=Flashcard+4+Anime", // Example anime image URL
+      comic: "https://placehold.co/1024x1536/9999FF/FFFFFF?text=Flashcard+4+Comic", // Example comic image URL
+      realistic: "https://placehold.co/1024x1536/B0B0B0/333330?text=Flashcard+4+Realistic", // Example realistic image URL
+    }, // Corrected placeholder text color
     isFavorite: true,
     vocabulary: {
       word: "Quintessential",
@@ -69,7 +114,12 @@ const sampleFlashcards = [
   },
   {
     id: 5,
-    imageUrl: "https://placehold.co/1024x1536/A0A0A0/333330?text=Flashcard+5",
+    imageUrl: {
+      default: "https://placehold.co/1024x1536/A0A0A0/333330?text=Flashcard+5+Default",
+      anime: "https://placehold.co/1024x1536/FF66B2/FFFFFF?text=Flashcard+5+Anime", // Example anime image URL
+      comic: "https://placehold.co/1024x1536/3399FF/FFFFFF?text=Flashcard+5+Comic", // Example comic image URL
+      realistic: "https://placehold.co/1024x1536/A0A0A0/333330?text=Flashcard+5+Realistic", // Example realistic image URL
+    },
     isFavorite: false,
     vocabulary: {
       word: "Resilience",
@@ -83,7 +133,7 @@ const sampleFlashcards = [
   }
 ];
 
-// Array containing URLs of example images (1024x1536px)
+// Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
 const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1", // Placeholder example images
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
@@ -165,7 +215,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
   const [imageDetail, setImageDetail] = useState('basic'); // 'basic', 'phrase', or 'example'
 
   // State to manage the selected card for detail view
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null); // Use Flashcard type
   // State to manage vocabulary modal visibility - Now used by FlashcardDetailModal
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
@@ -179,7 +229,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
   const totalFlashcards = flashcards.length;
 
   // Toggle favorite status for a flashcard
-  const toggleFavorite = (id) => {
+  const toggleFavorite = (id: number) => { // Added type for id
     setFlashcards(prevCards =>
       prevCards.map(card =>
         card.id === id
@@ -194,7 +244,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
   };
 
   // Function to open vocabulary detail modal
-  const openVocabDetail = (card) => {
+  const openVocabDetail = (card: Flashcard) => { // Added type for card
     setSelectedCard(card); // Set the selected card
     setShowVocabDetail(true); // Show the modal
     hideNavBar(); // Hide the nav bar when modal opens
@@ -206,6 +256,22 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     setSelectedCard(null); // Clear selected card when closing
     showNavBar(); // Show the nav bar when modal closes
   };
+
+  // Function to get the correct image URL based on visual style
+  const getImageUrlForStyle = (card: Flashcard, style: string): string => {
+    // Check if the requested style exists in the imageUrl object, otherwise default
+    switch (style) {
+      case 'anime':
+        return card.imageUrl.anime || card.imageUrl.default;
+      case 'comic':
+        return card.imageUrl.comic || card.imageUrl.default;
+      case 'realistic':
+        return card.imageUrl.realistic || card.imageUrl.default;
+      default:
+        return card.imageUrl.default;
+    }
+  };
+
 
   return (
     // Main container now handles scrolling
@@ -365,9 +431,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                           <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
                         )}
 
-                        {/* Flashcard image updated to include click event */}
+                        {/* Flashcard image updated to include click event and dynamic URL */}
                         <img
-                          src={card.imageUrl}
+                          src={getImageUrlForStyle(card, visualStyle)} // Use the helper function to get the correct URL
                           alt={`Flashcard ${card.id}`}
                           className={`w-full h-auto ${
                             visualStyle === 'anime' ? 'saturate-150 contrast-105' :
@@ -382,7 +448,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                           onClick={() => openVocabDetail(card)} // Added click event
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Image+Error`;
+                            // Fallback to default image if the styled image fails to load
+                            e.currentTarget.src = card.imageUrl.default;
                           }}
                         />
 
@@ -710,7 +777,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
         selectedCard={selectedCard}
         showVocabDetail={showVocabDetail}
         imageDetail={imageDetail}
-        exampleImages={exampleImages}
+        exampleImages={exampleImages} // Keep this if you still use it in the modal
         onClose={closeVocabDetail} // Pass the close function
       />
 
