@@ -17,7 +17,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
     Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
     AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
-    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></g>,
+    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></path><path d="M12 2v20"></path></g>,
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
@@ -779,14 +779,13 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
           </div>
         </div>
 
-         {/* Reset Stats Control - Placed here, not in the footer */}
-         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
-         <div className="mb-8">
+         {/* Reset Stats Control was here, now moved to footer */}
+         {/* <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
            />
-         </div>
+         </div> */}
 
       </div> {/* End of main content area */}
 
@@ -794,10 +793,20 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       {/* Render Exchange Modal (conditionally) */}
       {showExchangeModal && <ExchangeModal />}
 
-      {/* Footer Section - Using the new BackButton component */}
-      {/* This will be fixed at the bottom by its own component's styling */}
+      {/* Footer Section - This section now contains both BackButton and ResetStatsControl */}
+      {/* Positioned fixed at the bottom, full width, with specific styling */}
+      {/* Using flexbox to justify content between start and end */}
       {onClose && (
-        <BackButton onClick={onClose} />
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-6 py-2 flex justify-between items-center bg-black bg-opacity-85 backdrop-blur-md rounded-t-2xl shadow-lg">
+          {/* Back Button on the left */}
+          <BackButton onClick={onClose} className="text-white" /> {/* Pass className for text color */}
+
+          {/* Reset Stats Control on the right */}
+          <ResetStatsControl
+            currentStats={character.stats} // Pass current stats
+            onStatsReset={handleActualReset} // Pass reset handler
+          />
+        </div>
       )}
 
     </div> // End of main CharacterCard container
