@@ -1,6 +1,6 @@
 // src/Auth.js
 import React, { useState, useEffect } from 'react';
-import { auth, googleProvider } from './firebase';
+import { auth, googleProvider } from '../firebase.js';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
