@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Component } from 'react';
+import React, { useState, useEffect, useRef, Component, useContext } from 'react';
 // Import the CharacterCard component
 import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in the same directory
 
@@ -11,9 +11,10 @@ import TreasureChest from './treasure.tsx';
 // NEW: Import the CoinDisplay component
 import CoinDisplay from './coin-display.tsx';
 
-// NEW: Import Firestore functions
-import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from './firebase.js'; // Import auth from your firebase.js
+// NEW: Import Firestore functions and auth
+import { doc, runTransaction } from 'firebase/firestore';
+import { db } from './firebase'; // Import db từ firebase.js
+import { AuthContext } from './auth'; // Import AuthContext từ auth.js
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -147,6 +148,9 @@ interface GameCloud {
 
 // Update component signature to accept className, hideNavBar, and showNavBar props
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }: ObstacleRunnerGameProps) {
+  // Sử dụng AuthContext để lấy user, coins, setCoins và isLoadingUserData
+  const { user, coins, setCoins, isLoadingUserData } = useContext(AuthContext);
+
   // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
@@ -174,8 +178,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   const [remainingCooldown, setRemainingCooldown, ] = useState(0); // Remaining cooldown time in seconds
 
   // --- Coin and Gem States ---
-  // Initialize coins state, will be overwritten by Firestore data
-  const [coins, setCoins] = useState(0); // Initialize with 0, will load from Firestore
+  // Coins state is now managed by AuthContext
   const [displayedCoins, setDisplayedCoins] = useState(0); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
   const coinScheduleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new coins
@@ -190,7 +193,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   // UI States
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
-  const [isLoadingUserData, setIsLoadingUserData] = useState(true); // NEW: State to track user data loading
+  // isLoadingUserData state is now managed by AuthContext
 
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
@@ -213,8 +216,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   // *** NEW: Ref to store remaining cooldown time when paused ***
   const pausedShieldCooldownRemainingRef = useRef<number | null>(null);
 
-  // NEW: Firestore instance
-  const db = getFirestore();
+  // db instance is imported from firebase.js
 
   // Obstacle types with properties (added base health)
   const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[] = [
@@ -250,45 +252,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  // --- NEW: Function to fetch user data from Firestore ---
-  const fetchUserData = async (userId: string) => {
-    setIsLoadingUserData(true); // Start loading
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDocSnap = await getDoc(userDocRef);
+  // --- REMOVED: fetchUserData function is now in AuthProvider ---
+  // const fetchUserData = async (userId: string) => { ... }
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        console.log("User data fetched:", userData);
-        // Update states with fetched data
-        setCoins(userData.coins || 0); // Use fetched coins or default to 0
-        setDisplayedCoins(userData.coins || 0); // Update displayed coins immediately
-        setGems(userData.gems || 0); // Fetch gems as well if stored
-        setKeyCount(userData.keys || 0); // Fetch keys if stored
-        // You can fetch other user-specific data here
-      } else {
-        // If user document doesn't exist, create it with default values
-        console.log("No user document found, creating default.");
-        await setDoc(userDocRef, {
-          coins: 0,
-          gems: 0,
-          keys: 0,
-          createdAt: new Date(), // Optional: add a creation timestamp
-        });
-        setCoins(0);
-        setDisplayedCoins(0);
-        setGems(0);
-        setKeyCount(0);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      // Handle error, maybe show a message to the user
-    } finally {
-      setIsLoadingUserData(false); // End loading
-    }
-  };
-
-  // --- NEW: Function to update user's coin count in Firestore using a transaction ---
+  // --- Function to update user's coin count in Firestore using a transaction ---
+  // Kept this function here as it's specific to game logic awarding coins
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update coins: User not authenticated.");
@@ -302,8 +270,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
           console.error("User document does not exist for transaction.");
-          // Optionally create the document here if it's missing, though fetchUserData should handle this
-          transaction.set(userDocRef, { coins: amount, gems: gems, keys: keyCount, createdAt: new Date() });
+          // Optionally create the document here if it's missing, though AuthProvider should handle this
+           // Fallback: create with default values if missing during transaction
+           transaction.set(userDocRef, { coins: amount, gems: gems, keys: keyCount, createdAt: new Date() });
+           console.warn("Created missing user document during coin transaction.");
         } else {
           const currentCoins = userDoc.data().coins || 0;
           const newCoins = currentCoins + amount;
@@ -318,8 +288,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   };
 
    // Coin count animation function (Kept in main game file)
+   // MODIFIED: Uses setCoins from context and calls updateCoinsInFirestore
   const startCoinCountAnimation = (reward: number) => {
-      const oldCoins = coins;
+      // Use coins from context for the starting point of the animation
+      const oldCoins = coins; // Use context coins here
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
       let current = oldCoins;
@@ -333,13 +305,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           current += step;
           if (current >= newCoins) {
               setDisplayedCoins(newCoins);
-              setCoins(newCoins); // Ensure the actual coin count is updated at the end
+              setCoins(newCoins); // UPDATE: Use setCoins from context
               clearInterval(countInterval);
               coinCountAnimationTimerRef.current = null; // Clear the ref after animation
 
-              // NEW: Update coins in Firestore AFTER the animation finishes
-              if (auth.currentUser) {
-                 updateCoinsInFirestore(auth.currentUser.uid, reward); // Update Firestore with the reward amount
+              // Update coins in Firestore AFTER the animation finishes
+              if (user) { // Use user from context
+                 updateCoinsInFirestore(user.uid, reward); // Update Firestore with the reward amount
               }
 
           } else {
@@ -355,6 +327,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       setGems(prev => prev + amount);
       console.log(`Received ${amount} gems from chest.`);
       // TODO: Implement Firestore update for gems
+      // You would add a similar update function for gems here
   };
 
   // NEW: Function to handle key collection (called when obstacle with key is defeated)
@@ -362,10 +335,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       setKeyCount(prev => prev + amount);
       console.log(`Collected ${amount} key(s). Total keys: ${keyCount + amount}`);
       // TODO: Implement Firestore update for keys
+      // You would add a similar update function for keys here
   };
 
 
   // Function to start the game
+  // MODIFIED: No longer resets coins, gems, keys - they are loaded from context
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
@@ -387,7 +362,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     setShowDamageNumber(false);
     setIsStatsFullscreen(false);
 
-    // Coin, Gem, Key counts are now loaded from Firestore on user auth,
+    // Coin, Gem, Key counts are now loaded from Firestore on user auth via AuthContext,
     // so we don't reset them here. They persist between games.
     // setCoins(0); // REMOVED: Don't reset coins here
     // setDisplayedCoins(0); // REMOVED: Don't reset displayed coins here
@@ -453,17 +428,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     scheduleNextCoin();
   };
 
-  // --- NEW: Effect to fetch user data on authentication state change ---
+  // --- MODIFIED Effect: Handle game start based on user authentication and data loading ---
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        console.log("User authenticated:", user.uid);
-        fetchUserData(user.uid); // Fetch user data when authenticated
-      } else {
-        console.log("User logged out.");
-        // Reset game states if user logs out
+    // Start game only if user is authenticated, data is loaded, and game hasn't started yet
+    if (user && !isLoadingUserData && !gameStarted) {
+      console.log("User authenticated and data loaded, starting game...");
+      startGame();
+    } else if (!user && !isLoadingUserData && gameStarted) {
+        // If user logs out while game is running, stop the game
+        console.log("User logged out, stopping game.");
         setGameStarted(false);
-        setGameOver(false);
+        setGameOver(false); // Ensure game over state is also set
+        // Clear timers and intervals here
+        clearTimeout(obstacleTimerRef.current);
+        clearInterval(runAnimationRef.current);
+        clearInterval(particleTimerRef.current);
+        if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
+        if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+        pausedShieldCooldownRemainingRef.current = null;
+        clearInterval(coinScheduleTimerRef.current);
+        clearInterval(coinCountAnimationTimerRef.current);
+         if (gameLoopIntervalRef.current) {
+            clearInterval(gameLoopIntervalRef.current);
+            gameLoopIntervalRef.current = null;
+        }
+         // Reset visual states
         setHealth(MAX_HEALTH);
         setCharacterPos(0);
         setObstacles([]);
@@ -480,25 +469,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         setDamageAmount(0);
         setShowDamageNumber(false);
         setIsStatsFullscreen(false);
-        setCoins(0); // Reset local coin state
-        setDisplayedCoins(0); // Reset local displayed coin state
-        setGems(0); // Reset local gems state
-        setKeyCount(0); // Reset local key state
-        setIsLoadingUserData(false); // Stop loading if user logs out
-      }
-    });
-
-    // Cleanup subscription on component unmount
-    return () => unsubscribe();
-  }, [auth]); // Depend on auth object
-
-  // Auto-start the game as soon as component mounts AND user data is loaded
-  useEffect(() => {
-    // Only start game if user data is NOT loading and game is not already started
-    if (!isLoadingUserData && !gameStarted && auth.currentUser) {
-      startGame();
+         // Coin, Gem, Key counts are reset in AuthProvider on logout
     }
-  }, [isLoadingUserData, gameStarted, auth.currentUser]); // Depend on loading state, gameStarted, and auth user
+  }, [user, isLoadingUserData, gameStarted]); // Depend on user, isLoadingUserData, and gameStarted
 
   // Effect to handle game over state when health reaches zero
   useEffect(() => {
@@ -541,7 +514,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    if (!gameStarted || gameOver || isStatsFullscreen) return;
+    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData) return; // Check isLoadingUserData
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) {
@@ -560,7 +533,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || isLoadingUserData) { // Check isLoadingUserData
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -605,7 +578,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || isLoadingUserData) { // Check isLoadingUserData
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
@@ -636,11 +609,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   // Handle character jump action
   const jump = () => {
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen) {
+    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isLoadingUserData) { // Check isLoadingUserData
       setJumping(true);
       setCharacterPos(80);
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen) {
+        if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Check isLoadingUserData
           setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
@@ -940,7 +913,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                             if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
                                 collisionDetected = true;
                                 const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                                startCoinCountAnimation(awardedCoins); // This now triggers Firestore update internally
+                                // Use startCoinCountAnimation which now uses setCoins from context and updates Firestore
+                                startCoinCountAnimation(awardedCoins);
 
                                 console.log(`Coin collected! Awarded: ${awardedCoins}`);
                             }
@@ -978,11 +952,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive, isLoadingUserData]); // Added isLoadingUserData to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive, isLoadingUserData, user]); // Added isLoadingUserData and user to dependencies
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
   useEffect(() => {
-      if (gameOver || isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
+      if (gameOver || isStatsFullscreen || isLoadingUserData) { // Check isLoadingUserData
           if (obstacleTimerRef.current) {
               clearTimeout(obstacleTimerRef.current);
               obstacleTimerRef.current = null;
@@ -991,7 +965,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
+      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Check isLoadingUserData
           if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
           }
@@ -1113,7 +1087,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   }, []);
 
     // Effect for coin counter animation
+    // MODIFIED: Uses coins from context in dependency array
   useEffect(() => {
+    // Trigger animation when displayedCoins catches up to the actual coins from context
     if (displayedCoins === coins) return;
 
     const coinElement = document.querySelector('.coin-counter');
@@ -1133,7 +1109,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       };
     }
      return () => {};
-  }, [displayedCoins, coins]);
+  }, [displayedCoins, coins]); // Dependency now includes coins from context
 
 
   // Calculate health percentage for the bar
@@ -1384,6 +1360,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   };
 
   // Show loading indicator if user data is being fetched
+  // MODIFIED: Use isLoadingUserData from AuthContext
   if (isLoadingUserData) {
     return (
       <div className="flex items-center justify-center w-full h-screen bg-gray-900 text-white">
@@ -1729,7 +1706,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               setKeyCount(prev => Math.max(0, prev - n));
               // TODO: Update keys in Firestore here
             }}
-            onCoinReward={startCoinCountAnimation}
+            onCoinReward={startCoinCountAnimation} // This now uses setCoins from context and updates Firestore
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
             isStatsFullscreen={isStatsFullscreen}
@@ -1740,3 +1717,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
+
