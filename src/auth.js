@@ -1,167 +1,69 @@
-// src/Auth.js
-import React, { useState, useEffect } from 'react';
-import { auth, googleProvider } from './firebase.js';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth';
+// src/auth.js - AuthProvider Component
+import React, { createContext, useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase'; // Import auth và db từ firebase.js
 
-export default function Auth() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+// Định nghĩa AuthContext
+export const AuthContext = createContext({
+  user: null,
+  coins: 0,
+  setCoins: (newCoins) => {}, // Placeholder function
+  isLoadingUserData: true, // Thêm trạng thái loading dữ liệu user
+});
+
+// AuthProvider Component
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false); // Thêm trạng thái loading
-  const [error, setError] = useState('');     // Thêm trạng thái lỗi để hiển thị trên UI
+  const [coins, setCoins] = useState(0);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Khởi tạo là true
 
-  // Theo dõi thay đổi trạng thái đăng nhập
   useEffect(() => {
-    setLoading(true); // Bắt đầu với trạng thái loading khi kiểm tra auth state
-    const unsubscribe = onAuthStateChanged(auth, u => {
-      console.log("Auth state changed, user:", u);
-      setUser(u);
-      setLoading(false); // Kết thúc loading sau khi auth state được xác định
+    // Theo dõi thay đổi trạng thái xác thực
+    const unsubscribe = onAuthStateChanged(auth, async currentUser => {
+      setIsLoadingUserData(true); // Bắt đầu tải dữ liệu user
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Nếu user đăng nhập, tải hoặc tạo document user
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        try {
+          const snap = await getDoc(userDocRef);
+
+          if (snap.exists() && typeof snap.data().coins === 'number') {
+            // Nếu document tồn tại và có trường coins hợp lệ
+            setCoins(snap.data().coins);
+            console.log("Loaded coins from Firestore:", snap.data().coins);
+          } else {
+            // Nếu chưa có document hoặc trường coins không hợp lệ, tạo mới với 0 coin
+            console.log("User document not found or coins invalid, creating default.");
+            await setDoc(userDocRef, { coins: 0, gems: 0, keys: 0, createdAt: new Date() }); // Thêm các trường mặc định khác nếu cần
+            setCoins(0);
+          }
+        } catch (error) {
+          console.error("Error fetching/creating user document:", error);
+          // Xử lý lỗi (ví dụ: hiển thị thông báo cho người dùng)
+          setCoins(0); // Đặt coins về 0 nếu có lỗi
+        } finally {
+           setIsLoadingUserData(false); // Kết thúc tải dữ liệu user
+        }
+
+      } else {
+        // User đã logout
+        console.log("User logged out.");
+        setCoins(0); // Reset coins về 0
+        setIsLoadingUserData(false); // Kết thúc tải dữ liệu user
+      }
     });
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
-  const handleRegister = async e => {
-    e.preventDefault();
-    setError(''); // Xóa lỗi cũ
-    setLoading(true);
-    console.log("Attempting registration with:", email);
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // onAuthStateChanged sẽ tự động cập nhật user state
-      console.log("Registration successful, waiting for onAuthStateChanged.");
-    } catch (err) {
-      console.error('Đăng ký lỗi:', err);
-      setError(`Đăng ký lỗi: ${err.message}`); // Hiển thị lỗi cho người dùng
-    }
-    setLoading(false);
-  };
-
-  const handleLogin = async () => {
-    setError(''); // Xóa lỗi cũ
-    setLoading(true);
-    console.log("Attempting login with:", email);
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login successful:", userCredential.user);
-      // onAuthStateChanged sẽ tự động cập nhật user state
-    } catch (err) {
-      console.error('Đăng nhập lỗi:', err);
-      setError(`Đăng nhập lỗi: ${err.message}`); // Hiển thị lỗi cho người dùng
-    }
-    setLoading(false);
-  };
-
-  const handleGoogle = async () => {
-    setError(''); // Xóa lỗi cũ
-    setLoading(true);
-    console.log("Attempting Google Sign-in");
-    try {
-      await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged sẽ tự động cập nhật user state
-      console.log("Google Sign-in successful, waiting for onAuthStateChanged.");
-    } catch (err) {
-      console.error('Google Sign‑in lỗi:', err);
-      setError(`Google Sign-in lỗi: ${err.message}`); // Hiển thị lỗi cho người dùng
-    }
-    setLoading(false);
-  };
-
-  const handleSignOut = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      await signOut(auth);
-      console.log("Sign out successful.");
-      // onAuthStateChanged sẽ tự động cập nhật user state thành null
-    } catch (err) {
-      console.error('Đăng xuất lỗi:', err);
-      setError(`Đăng xuất lỗi: ${err.message}`);
-    }
-    setLoading(false);
-  };
-
-  if (loading && !user) { // Hiển thị loading indicator ban đầu hoặc khi đang xử lý
-    return <div className="max-w-md mx-auto p-4 text-center">Đang tải...</div>;
-  }
+    // Cleanup subscription khi component unmount
+    return () => unsubscribe();
+  }, []); // Dependency rỗng để chỉ chạy một lần khi mount
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      {user ? (
-        <div className="text-center">
-          <p className="mb-2">Xin chào, {user.displayName || user.email}</p>
-          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-          <button
-            onClick={handleSignOut}
-            disabled={loading}
-            className="px-4 py-2 bg-red-500 text-white rounded disabled:opacity-50"
-          >
-            {loading ? 'Đang xử lý...' : 'Đăng xuất'}
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleRegister} className="space-y-4">
-          <h2 className="text-xl font-semibold text-center">Đăng nhập / Đăng ký</h2>
-          {error && <p className="text-red-500 text-sm text-center bg-red-100 p-2 rounded">{error}</p>}
-          <div>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="w-full p-2 border rounded"
-              disabled={loading}
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Mật khẩu"
-              required
-              className="w-full p-2 border rounded"
-              disabled={loading}
-            />
-          </div>
-          <div className="flex space-x-2">
-            <button
-              type="submit" // Nút này là để Đăng ký
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-            >
-              {loading ? 'Đang xử lý...' : 'Đăng ký'}
-            </button>
-            <button
-              type="button" // Quan trọng: type="button" để không submit form
-              onClick={handleLogin}
-              disabled={loading}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
-            >
-              {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-            </button>
-          </div>
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleGoogle}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-yellow-500 text-black rounded disabled:opacity-50"
-            >
-              {loading ? 'Đang xử lý...' : 'Đăng nhập với Google'}
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+    // Cung cấp user, coins, setCoins và isLoadingUserData cho các component con
+    <AuthContext.Provider value={{ user, coins, setCoins, isLoadingUserData }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
