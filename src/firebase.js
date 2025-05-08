@@ -5,6 +5,9 @@ import { getAnalytics } from 'firebase/analytics';
 // Import thêm auth và provider
 import { getAuth, GoogleAuthProvider, EmailAuthProvider } from 'firebase/auth';
 
+// Import Firestore
+import { getFirestore } from 'firebase/firestore'; // <-- Dòng này còn thiếu
+
 const firebaseConfig = {
   apiKey: "AIzaSyDbdIjGaUoCB2RMZGbeoFaSTKUl8g21I7Y",
   authDomain: "englishleveling-82f44.firebaseapp.com",
@@ -24,7 +27,9 @@ const auth = getAuth(app);
 // Tạo các provider để sử dụng
 const googleProvider = new GoogleAuthProvider();
 const emailProvider = EmailAuthProvider;
-const db = getFirestore(app); 
+
+// Khởi tạo Firestore
+const db = getFirestore(app); // Dòng này đã đúng
 
 export {
   app,
@@ -32,5 +37,5 @@ export {
   auth,
   googleProvider,
   emailProvider,
-  db // <-- Và export db
+  db // Export db là đúng
 };
