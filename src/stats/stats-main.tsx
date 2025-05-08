@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'; // Import React
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
 // import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới - Đã gỡ bỏ
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
+import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -618,24 +619,10 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
         <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden
                     backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
                     border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10"> {/* Kept opacity for glassmorphism */}
-          {/* Coin Badge */}
-          <div className="overflow-hidden">
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md ${coinBadgePulse ? 'animate-pulse' : ''}`}>
-              <div className="w-4 h-4 mr-1.5 relative">
-                <Icon name="Coins" size={16} className="text-amber-100 absolute -top-0.5 -left-0.5" />
-                <div className="absolute inset-0 bg-yellow-200 blur-md opacity-30"></div>
-              </div>
-              <span className="text-xs font-bold text-white">{character.coins.toLocaleString()}</span>
-               {/* Plus button next to Coin badge (functionality removed) */}
-               {/* MODIFIED: Reverted background opacity for light mode */}
-               <button
-                  className="ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors"
-                  title="Chuyển đổi Coin sang Point" // Tooltip remains
-                >
-                  <Icon name="Plus" size={10} className="text-white" />
-                </button>
-            </div>
-          </div>
+
+          {/* Use the CoinDisplay component here */}
+          {/* Pass the current coin amount and isStatsFullscreen={false} */}
+          <CoinDisplay displayedCoins={character.coins} isStatsFullscreen={false} />
 
           {/* Exchange Button */}
           {/* MODIFIED: Reverted colors for light mode */}
