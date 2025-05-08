@@ -5,7 +5,7 @@ import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx'; // Import VerticalFlashcardGallery
 import Profile from './profile.tsx';
 import Quiz from './stats/reset-points.tsx';
-import Auth from './auth.ts';    // ← import component Auth mới
+import Auth from './auth.js';    // ← import component Auth mới
 
 
 // Define the possible tab types
