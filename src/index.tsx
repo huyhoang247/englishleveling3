@@ -1,97 +1,88 @@
-import React, { useState, useEffect } from 'react';
+// src/index.tsx
+import React, { useState, useEffect } from 'react'; // Thêm useEffect
 import { createRoot } from 'react-dom/client';
-import Home from './background-game.tsx'; // Import Home component (which is background-game.tsx)
+import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
-import Story from './VerticalFlashcardGallery.tsx'; // Import VerticalFlashcardGallery
+import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './profile.tsx';
 import Quiz from './stats/reset-points.tsx';
-import Auth from './auth.js';    // ← import component Auth mới
+import AuthComponent from './auth.js'; // Đổi tên import Auth để tránh trùng lặp
+import { auth } from './firebase.js'; // Import đối tượng auth của Firebase
+import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và kiểu User
 
-// Import auth và onAuthStateChanged từ firebase
-import { auth } from './firebase.js';
-import { onAuthStateChanged } from 'firebase/auth';
-
-
-// Define the possible tab types
+// Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz';
 
 const App: React.FC = () => {
-  // Initialize state to keep track of the active tab, default is 'home'
+  // State để theo dõi tab đang hoạt động, mặc định là 'home'
   const [activeTab, setActiveTab] = useState<TabType>('home');
-  // State to control the visibility of the navigation bar
+  // State để kiểm soát hiển thị của thanh điều hướng
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
-  // State để lưu trữ thông tin người dùng đã đăng nhập
-  const [user, setUser] = useState<any>(null); // Sử dụng 'any' hoặc định nghĩa type cho user
+  // State để lưu thông tin người dùng đã đăng nhập
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // State để xử lý quá trình kiểm tra trạng thái đăng nhập ban đầu
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // Theo dõi trạng thái đăng nhập của người dùng
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      // Sau khi có trạng thái user, nếu có user thì chuyển về home, nếu không thì ở lại Auth
-      // Bạn có thể tùy chỉnh logic này tùy theo ý muốn
-      // if (currentUser) {
-      //   setActiveTab('home');
-      // } else {
-      //   setActiveTab('auth'); // Giả sử bạn có tab 'auth' hoặc giữ nguyên logic hiện tại
-      // }
+    // Lắng nghe sự thay đổi trạng thái xác thực từ Firebase
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user); // Cập nhật người dùng hiện tại
+      setLoadingAuth(false); // Đã kiểm tra xong trạng thái, không còn loading nữa
     });
-    // Cleanup subscription on unmount
+
+    // Cleanup subscription khi component unmount
     return () => unsubscribe();
-  }, []); // Chạy một lần khi component mount
+  }, []);
 
-  // Nếu chưa có người dùng đăng nhập, hiển thị component Auth
-  if (!user) {
-    return <Auth />;
-  }
-
-  // Function to handle tab changes
+  // Hàm xử lý thay đổi tab
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Ensure nav bar is visible when changing tabs, unless it's the story or home tab
-    // (Story and Home tabs will handle hiding/showing based on their internal state like modals/fullscreen)
+    // Đảm bảo thanh điều hướng hiển thị khi chuyển tab, trừ khi đó là tab story hoặc home
     if (tab !== 'story' && tab !== 'home') {
       setIsNavBarVisible(true);
     }
-    // For 'home' and 'story', the respective components will manage nav bar visibility
-    // based on whether their fullscreen/modal content is active.
-    // When switching *to* 'home' or 'story', we should initially show the nav bar,
-    // then the component itself will hide it if its fullscreen/modal is open.
     if (tab === 'story' || tab === 'home') {
-         setIsNavBarVisible(true);
+      setIsNavBarVisible(true);
     }
   };
 
-  // Function to hide the navigation bar
+  // Hàm ẩn thanh điều hướng
   const hideNavBar = () => {
     setIsNavBarVisible(false);
   };
 
-  // Function to show the navigation bar
+  // Hàm hiển thị thanh điều hướng
   const showNavBar = () => {
     setIsNavBarVisible(true);
   };
 
+  // Trong khi đang kiểm tra trạng thái đăng nhập, có thể hiển thị một loader
+  if (loadingAuth) {
+    return <div>Đang tải...</div>; // Hoặc một component loading đẹp hơn
+  }
+
+  // Nếu không có người dùng nào được xác thực (chưa đăng nhập)
+  if (!currentUser) {
+    // Hiển thị component AuthComponent để người dùng đăng nhập hoặc đăng ký
+    // AuthComponent sẽ tự xử lý việc hiển thị form hoặc thông báo chào mừng (nếu có logic đó)
+    return <AuthComponent />;
+  }
+
+  // Nếu người dùng đã được xác thực (đã đăng nhập)
+  // Hiển thị nội dung chính của ứng dụng
   return (
     <div className="app-container">
-      {/* Conditionally render components based on the activeTab state */}
+      {/* Hiển thị component dựa trên activeTab state */}
       {activeTab === 'home' && (
-         // Pass hideNavBar and showNavBar functions to Home component
-         <Home
-           hideNavBar={hideNavBar}
-           showNavBar={showNavBar}
-         />
+        <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
       )}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && (
-        // Pass hideNavBar and showNavBar functions to VerticalFlashcardGallery
-        <Story
-          hideNavBar={hideNavBar}
-          showNavBar={showNavBar}
-        />
+        <Story hideNavBar={hideNavBar} showNavBar={showNavBar} />
       )}
       {activeTab === 'quiz' && <Quiz />}
 
-      {/* Render the bottom navigation bar only if isNavBarVisible is true */}
+      {/* Hiển thị thanh điều hướng dưới cùng nếu isNavBarVisible là true */}
       {isNavBarVisible && (
         <NavigationBarBottom
           activeTab={activeTab}
@@ -102,14 +93,14 @@ const App: React.FC = () => {
   );
 };
 
-// Get the root element from the HTML
+// Lấy root element từ HTML
 const container = document.getElementById('root');
-// Throw an error if the root element is not found
+// Báo lỗi nếu không tìm thấy root element
 if (!container) {
   throw new Error('Root element with ID "root" not found in the document.');
 }
 
-// Create a root and render the App component
+// Tạo root và render App component
 const root = createRoot(container);
 root.render(<App />);
 
