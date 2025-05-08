@@ -24,6 +24,7 @@ const auth = getAuth(app);
 // Tạo các provider để sử dụng
 const googleProvider = new GoogleAuthProvider();
 const emailProvider = EmailAuthProvider;
+const db = getFirestore(app); 
 
 export {
   app,
