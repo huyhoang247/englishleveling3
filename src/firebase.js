@@ -31,5 +31,6 @@ export {
   analytics,
   auth,
   googleProvider,
-  emailProvider
+  emailProvider,
+  db // <-- Và export db
 };
