@@ -5,39 +5,44 @@ import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx'; // Import VerticalFlashcardGallery
 import Profile from './profile.tsx';
 import Quiz from './stats/reset-points.tsx';
-import Auth from './auth.js';    // Import component Auth
-import { auth } from './firebase.js'; // Import auth từ firebase để theo dõi trạng thái đăng nhập
-import { onAuthStateChanged } from 'firebase/auth'; // Import onAuthStateChanged
+import Auth from './auth.js';    // ← import component Auth mới
+
+// Import auth và onAuthStateChanged từ firebase
+import { auth } from './firebase.js';
+import { onAuthStateChanged } from 'firebase/auth';
+
 
 // Define the possible tab types
 type TabType = 'home' | 'profile' | 'story' | 'quiz';
 
 const App: React.FC = () => {
-  // State để theo dõi trạng thái đăng nhập của người dùng
-  const [user, setUser] = useState(auth.currentUser); // Khởi tạo với trạng thái hiện tại
-
-  // State để theo dõi tab đang hoạt động, mặc định là 'home'
+  // Initialize state to keep track of the active tab, default is 'home'
   const [activeTab, setActiveTab] = useState<TabType>('home');
-
-  // State để kiểm soát hiển thị của thanh điều hướng
+  // State to control the visibility of the navigation bar
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
+  // State để lưu trữ thông tin người dùng đã đăng nhập
+  const [user, setUser] = useState<any>(null); // Sử dụng 'any' hoặc định nghĩa type cho user
 
-  // Theo dõi thay đổi trạng thái đăng nhập từ Firebase Auth
+  // Theo dõi trạng thái đăng nhập của người dùng
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      // Khi người dùng đăng nhập thành công, chuyển về tab 'home' (hoặc tab mặc định bạn muốn)
-      if (currentUser) {
-        setActiveTab('home');
-        setIsNavBarVisible(true); // Đảm bảo nav bar hiển thị khi đăng nhập
-      }
-      // Nếu người dùng đăng xuất, có thể chuyển về tab 'home' và hiển thị Auth form
-      // Logic này đã được xử lý bởi việc render có điều kiện bên dưới
+      // Sau khi có trạng thái user, nếu có user thì chuyển về home, nếu không thì ở lại Auth
+      // Bạn có thể tùy chỉnh logic này tùy theo ý muốn
+      // if (currentUser) {
+      //   setActiveTab('home');
+      // } else {
+      //   setActiveTab('auth'); // Giả sử bạn có tab 'auth' hoặc giữ nguyên logic hiện tại
+      // }
     });
-
     // Cleanup subscription on unmount
-    return unsubscribe;
-  }, []); // Dependency rỗng để chỉ chạy một lần khi component mount
+    return () => unsubscribe();
+  }, []); // Chạy một lần khi component mount
+
+  // Nếu chưa có người dùng đăng nhập, hiển thị component Auth
+  if (!user) {
+    return <Auth />;
+  }
 
   // Function to handle tab changes
   const handleTabChange = (tab: TabType) => {
@@ -47,6 +52,8 @@ const App: React.FC = () => {
     if (tab !== 'story' && tab !== 'home') {
       setIsNavBarVisible(true);
     }
+    // For 'home' and 'story', the respective components will manage nav bar visibility
+    // based on whether their fullscreen/modal content is active.
     // When switching *to* 'home' or 'story', we should initially show the nav bar,
     // then the component itself will hide it if its fullscreen/modal is open.
     if (tab === 'story' || tab === 'home') {
@@ -64,13 +71,6 @@ const App: React.FC = () => {
     setIsNavBarVisible(true);
   };
 
-  // Render Auth component if user is not logged in
-  if (!user) {
-    // Auth component sẽ tự quản lý form đăng nhập/đăng ký và trạng thái lỗi
-    return <Auth />;
-  }
-
-  // Render main app content if user is logged in
   return (
     <div className="app-container">
       {/* Conditionally render components based on the activeTab state */}
