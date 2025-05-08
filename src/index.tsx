@@ -16,6 +16,10 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   // State to control the visibility of the navigation bar
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
+  // Ví dụ: nếu user chưa đăng nhập, ta cho hiện Auth trước
+  if (activeTab === 'home') {    // bạn có thể thay home thành Auth, hoặc thêm điều kiện
+  return <Auth />;
+ } 
 
   // Function to handle tab changes
   const handleTabChange = (tab: TabType) => {
