@@ -10,7 +10,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
 
 // NEW: Import the CoinDisplay component
-import CoinDisplay from './coin-display.tsx'; // Import the new CoinDisplay component
+import CoinDisplay from './coin-display.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -32,7 +32,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     {...props}
   >
     <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
+    <line x1="6" y1="6" x2="18" y1="18" />
   </svg>
 );
 
@@ -183,13 +183,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
   const [remainingCooldown, setRemainingCooldown, ] = useState(0); // Remaining cooldown time in seconds
 
-  // --- Coin and Gem States ---
-  // Keep coins state here, CoinDisplay will use this as a prop
+  // --- Coin and Gem States (Kept in main game file) ---
   const [coins, setCoins] = useState(357); // Player's coin count
-  // REMOVED: displayedCoins state (now in CoinDisplay)
+  const [displayedCoins, setDisplayedCoins] = useState(357); // Coins displayed with animation
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
   const coinScheduleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new coins
-  // REMOVED: coinCountAnimationTimerRef (now in CoinDisplay)
+  const coinCountAnimationTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for coin count animation
 
   // NEW: Gems state (Moved from TreasureChest)
   const [gems, setGems] = useState(42); // Player's gem count, initialized
@@ -268,12 +267,35 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   }
 
 
-  // Coin count animation function (Kept in main game file, now only updates the 'coins' state)
-  // CoinDisplay component will react to the change in 'coins' prop and handle the animation
+  // Coin count animation function (Kept in main game file)
   const startCoinCountAnimation = (reward: number) => { // Added type for reward
-      setCoins(prev => prev + reward); // Update the actual coin count
-      console.log(`Awarded ${reward} coins.`);
-      // The animation of the displayed number is now handled inside CoinDisplay component
+      const oldCoins = coins;
+      const newCoins = oldCoins + reward;
+      let step = Math.ceil(reward / 30);
+      let current = oldCoins;
+
+      // Clear any existing coin count animation interval
+      if (coinCountAnimationTimerRef.current) {
+          clearInterval(coinCountAnimationTimerRef.current);
+      }
+
+      const countInterval = setInterval(() => {
+          current += step;
+          if (current >= newCoins) {
+              setDisplayedCoins(newCoins);
+              setCoins(newCoins); // Ensure the actual coin count is updated at the end
+              clearInterval(countInterval);
+              // REMOVED: setPendingCoinReward(0); // This state is now in TreasureChest
+              coinCountAnimationTimerRef.current = null; // Clear the ref after animation
+          } else {
+              setDisplayedCoins(current);
+              // Optionally update actual coins state during animation for responsiveness
+              // setCoins(current); // This might make the number jump slightly, depending on step size
+          }
+      }, 50);
+
+      // Store the interval ID in the dedicated ref
+      coinCountAnimationTimerRef.current = countInterval;
   };
 
   // NEW: Function to handle gem rewards received from TreasureChest
@@ -316,7 +338,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     setIsStatsFullscreen(false); // NEW: Ensure full-screen stats is closed
     // REMOVED: setIsChestCoinEffectActive(false); // This state is now in TreasureChest
     setCoins(357); // Reset coin count to initial value
-    // REMOVED: setDisplayedCoins(357); // displayedCoins is now in CoinDisplay
+    setDisplayedCoins(357); // Reset displayed coin count
     // REMOVED: setChestsRemaining(3); // This state is now in TreasureChest
     setGems(42); // NEW: Reset gems count to initial value
     setKeyCount(0); // NEW: Reset key count
@@ -415,14 +437,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       // Clear all active timers
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current); // Clear run animation timer (if still active)
-      clearInterval(particleTimerRef.current);
+      clearInterval(particleTimerRefRef.current);
       // NEW: Clear Shield timers
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
       pausedShieldCooldownRemainingRef.current = null; // *** NEW: Clear paused time on game over ***
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
-      // REMOVED: clearInterval(coinCountAnimationTimerRef.current); // Now in CoinDisplay
+      clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
       // REMOVED: clearTimeout(chestCoinEffectTimerRef.current); // This timer is now in TreasureChest
 
       // NEW: Clear the main game loop interval on game over
@@ -521,6 +543,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       }
 
 
+      // Add new obstacles to the existing array
       setObstacles(prev => [...prev, ...newObstacles]);
 
       scheduleNextObstacle(); // Schedule the next obstacle recursively
@@ -946,7 +969,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                                 collisionDetected = true;
                                 // Grant random coins (1-5) - Use the local startCoinCountAnimation
                                 const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                                startCoinCountAnimation(awardedCoins); // Call the function to update coins state
+                                startCoinCountAnimation(awardedCoins);
 
                                 console.log(`Coin collected! Awarded: ${awardedCoins}`);
 
@@ -994,8 +1017,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         }
     };
     // Add isStatsFullscreen to dependency array
-    // Removed 'coins' from dependency array as CoinDisplay now handles its own animation triggered by the prop
-  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, isShieldActive]); // Added isStatsFullscreen to dependency array
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive]); // Added isStatsFullscreen to dependency array
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1090,28 +1112,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               // Recalculate remaining based on original start time
               const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-              if (remainingTimeMs > 0) {
-                   console.log(`Restarting main shield cooldown normally with ${remainingTimeMs}ms.`);
-                   shieldCooldownTimerRef.current = setTimeout(() => {
-                      console.log("Shield cooldown ended (normal restart).");
-                      setIsShieldOnCooldown(false);
-                      setRemainingCooldown(0);
-                      shieldCooldownStartTimeRef.current = null;
-                   }, remainingTimeMs);
-              } else {
-                  // Cooldown already finished
-                  setIsShieldOnCooldown(false);
-                  setRemainingCooldown(0);
-                  shieldCooldownStartTimeRef.current = null;
-              }
-          }
-
-
-          // 2. Resume Display Countdown Timer (setInterval)
-          if (!cooldownCountdownTimerRef.current && shieldCooldownStartTimeRef.current) { // Ensure start time exists
-              // Calculate remaining time based on potentially updated start time
-              const currentElapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
-              const currentRemainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - currentElapsedTime);
               const initialRemainingSeconds = Math.ceil(currentRemainingTimeMs / 1000);
 
               if (initialRemainingSeconds > 0) {
@@ -1168,7 +1168,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       pausedShieldCooldownRemainingRef.current = null; // *** NEW: Clear paused time on unmount ***
 
       clearInterval(coinScheduleTimerRef.current); // Clear coin scheduling timer
-      // REMOVED: clearInterval(coinCountAnimationTimerRef.current); // Now in CoinDisplay
+      clearInterval(coinCountAnimationTimerRef.current); // Clear coin count animation timer
       // REMOVED: clearTimeout(chestCoinEffectTimerRef.current); // This timer is now in TreasureChest
 
       // NEW: Clear the main game loop interval on unmount
@@ -1178,35 +1178,35 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     };
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
-    // REMOVED: Effect for coin counter animation (now in CoinDisplay)
-    // useEffect(() => {
-    //   // This effect now primarily controls the visual 'number-changing' class
-    //   // The startCoinCountAnimation function drives the actual displayedCoins state change
-    //   // REMOVED: pendingCoinReward check as it's in TreasureChest
-    //   if (displayedCoins === coins) return; // Only trigger if coins are different
+    // Effect for coin counter animation (Kept in main game file)
+  useEffect(() => {
+    // This effect now primarily controls the visual 'number-changing' class
+    // The startCoinCountAnimation function drives the actual displayedCoins state change
+    // REMOVED: pendingCoinReward check as it's in TreasureChest
+    if (displayedCoins === coins) return; // Only trigger if coins are different
 
-    //   const coinElement = document.querySelector('.coin-counter');
-    //   if (coinElement) {
-    //     coinElement.classList.add('number-changing');
-    //     const animationEndHandler = () => {
-    //       coinElement.classList.remove('number-changing');
-    //       coinElement.removeEventListener('animationend', animationEndHandler);
-    //     };
-    //     // Add event listener for animation end to remove the class
-    //     coinElement.addEventListener('animationend', animationEndHandler);
+    const coinElement = document.querySelector('.coin-counter');
+    if (coinElement) {
+      coinElement.classList.add('number-changing');
+      const animationEndHandler = () => {
+        coinElement.classList.remove('number-changing');
+        coinElement.removeEventListener('animationend', animationEndHandler);
+      };
+      // Add event listener for animation end to remove the class
+      coinElement.addEventListener('animationend', animationEndHandler);
 
-    //     // Cleanup function to remove the event listener if the component unmounts
-    //     return () => {
-    //       if (coinElement) { // Check if the element still exists
-    //           coinElement.removeEventListener('animationend', animationEndHandler);
-    //           // Ensure the class is removed on unmount or before adding again
-    //            coinElement.classList.remove('number-changing');
-    //       }
-    //     };
-    //   }
-    //    // No cleanup needed if coinElement is not found
-    //    return () => {}; // Return an empty cleanup function
-    // }, [displayedCoins, coins]); // Dependencies remain the same, removed pendingCoinReward
+      // Cleanup function to remove the event listener if the component unmounts
+      return () => {
+        if (coinElement) { // Check if the element still exists
+            coinElement.removeEventListener('animationend', animationEndHandler);
+            // Ensure the class is removed on unmount or before adding again
+             coinElement.classList.remove('number-changing');
+        }
+      };
+    }
+     // No cleanup needed if coinElement is not found
+     return () => {}; // Return an empty cleanup function
+  }, [displayedCoins, coins]); // Dependencies remain the same, removed pendingCoinReward
 
 
   // Calculate health percentage for the bar
@@ -1307,7 +1307,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 autoplay={!isStatsFullscreen} // Autoplay only when game is not fullscreen
                 className="w-full h-full" // Make Lottie fill its container
               />
-            )}
+              )}
           </div>
         );
         break;
@@ -1526,9 +1526,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes pulse-button { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
         .add-button-pulse { animation: pulse-button 1.5s infinite; }
-        /* Keep coin counter animation CSS here as it's used by the CoinDisplay component */
+        /* Keep coin animation styles here as the logic is still in this file */
         @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
         .number-changing { animation: number-change 0.3s ease-out; }
+         @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s infinite;
+        }
+
 
         /* Animations from original HealthBar */
         @keyframes pulse {
@@ -1703,10 +1711,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
 
-                    {/* Coins Container - Now using the CoinDisplay component */}
-                    {/* Pass the coins state and isStatsFullscreen prop to CoinDisplay */}
-                    <CoinDisplay coins={coins} isStatsFullscreen={isStatsFullscreen} />
-
+                    {/* Coins Container (Now using CoinDisplay component) */}
+                    {/* Pass displayedCoins and isStatsFullscreen as props */}
+                    <CoinDisplay
+                      displayedCoins={displayedCoins}
+                      isStatsFullscreen={isStatsFullscreen}
+                    />
                 </div>
              )}
           </div>
@@ -1925,4 +1935,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-
