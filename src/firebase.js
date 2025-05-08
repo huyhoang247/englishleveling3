@@ -6,12 +6,12 @@ import { getAnalytics } from 'firebase/analytics';
 import { getAuth, GoogleAuthProvider, EmailAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDbdIjGaUoCB2RMZGbeoFaS***********",
+  apiKey: "AIzaSyDbdIjGaUoCB2RMZGbeoFaSTKUl8g21I7Y",
   authDomain: "englishleveling-82f44.firebaseapp.com",
   projectId: "englishleveling-82f44",
   storageBucket: "englishleveling-82f44.appspot.com",
   messagingSenderId: "814669813776",
-  appId: "1:814669813776:web:fe7abeb970********",
+  appId: "1:814669813776:web:fe7abeb97c4514202a9295",
   measurementId: "G-KQ86BV6LHG"
 };
 
