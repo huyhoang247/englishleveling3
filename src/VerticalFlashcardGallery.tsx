@@ -296,6 +296,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   useEffect(() => {
     const fetchOpenedImageIds = async () => {
       if (!currentUser) {
+        console.log("No current user, resetting openedImageIds.");
         setOpenedImageIds([]); // Reset if no user
         setLoadingOpenedImages(false);
         return;
@@ -311,10 +312,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           // Ensure openedImageIds is an array, default to empty if missing or not array
           const fetchedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
           setOpenedImageIds(fetchedIds);
-          console.log("Fetched openedImageIds:", fetchedIds);
+          console.log("Fetched openedImageIds:", fetchedIds); // Log fetched IDs
         } else {
           setOpenedImageIds([]); // User document doesn't exist or no openedImageIds field
-          console.log("User document not found or no openedImageIds field.");
+          console.log("User document not found or no openedImageIds field for user:", currentUser.uid);
         }
       } catch (error) {
         console.error("Error fetching openedImageIds:", error);
@@ -334,6 +335,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     ? ALL_POSSIBLE_FLASHCARDS.filter(card => openedImageIds.includes(card.id)) // Filter by openedImageIds for collection
     : ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite); // Filter by isFavorite for favorite tab
 
+  // Log the filtered flashcards to see if the filtering works as expected
+  useEffect(() => {
+      console.log(`Filtered flashcards for ${activeTab} tab:`, filteredFlashcardsByTab);
+  }, [filteredFlashcardsByTab, activeTab]);
+
 
   // Calculate total pages based on filtered flashcards
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
@@ -342,6 +348,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
+
+  // Log the flashcards for the current page
+  useEffect(() => {
+      console.log("Flashcards for current page:", flashcardsForCurrentPage);
+  }, [flashcardsForCurrentPage]);
 
 
   const favoriteCount = ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite).length; // Count favorites from the full list
@@ -383,16 +394,20 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   // Function to get the correct image URL based on visual style
   const getImageUrlForStyle = (card: Flashcard, style: string): string => {
     // Check if the requested style exists in the imageUrl object, otherwise default
-    switch (style) {
-      case 'anime':
-        return card.imageUrl.anime || card.imageUrl.default;
-      case 'comic':
-        return card.imageUrl.comic || card.imageUrl.default;
-      case 'realistic':
-        return card.imageUrl.realistic || card.imageUrl.default;
-      default:
-        return card.imageUrl.default;
-    }
+    const url = (() => {
+        switch (style) {
+            case 'anime':
+                return card.imageUrl.anime || card.imageUrl.default;
+            case 'comic':
+                return card.imageUrl.comic || card.imageUrl.default;
+            case 'realistic':
+                return card.imageUrl.realistic || card.imageUrl.default;
+            default:
+                return card.imageUrl.default;
+        }
+    })();
+    console.log(`Getting image URL for card ID ${card.id}, style ${style}:`, url); // Log the URL being used
+    return url;
   };
 
   // Handle page change
@@ -596,9 +611,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           }}
                           onClick={() => openVocabDetail(card)} // Added click event
                           onError={(e) => {
+                            console.error(`Error loading image for card ID ${card.id}, URL: ${e.currentTarget.src}`); // Log image load error
                             e.currentTarget.onerror = null;
                             // Fallback to default image if the styled image fails to load
                             e.currentTarget.src = card.imageUrl.default;
+                            console.log(`Falling back to default image for card ID ${card.id}:`, card.imageUrl.default); // Log fallback URL
                           }}
                         />
 
