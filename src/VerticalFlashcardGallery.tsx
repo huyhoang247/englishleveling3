@@ -329,15 +329,18 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [currentUser]); // Re-run when currentUser changes
 
 
-  // Filter flashcards based on active tab AND openedImageIds
-  // Now filtering the full list of ALL_POSSIBLE_FLASHCARDS
+  // Filter and order flashcards based on active tab and openedImageIds
   const filteredFlashcardsByTab = activeTab === 'collection'
-    ? ALL_POSSIBLE_FLASHCARDS.filter(card => openedImageIds.includes(card.id)) // Filter by openedImageIds for collection
-    : ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite); // Filter by isFavorite for favorite tab
+    ? // For collection, filter and order based on the sequence in openedImageIds
+      openedImageIds
+        .map(id => ALL_POSSIBLE_FLASHCARDS.find(card => card.id === id)) // Find the flashcard for each ID
+        .filter(card => card !== undefined) as Flashcard[] // Filter out any undefined results (shouldn't happen if ALL_POSSIBLE_FLASHCARDS is complete)
+    : // For favorite, filter by isFavorite (original logic)
+      ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite);
 
-  // Log the filtered flashcards to see if the filtering works as expected
+  // Log the filtered flashcards to see if the filtering and ordering works as expected
   useEffect(() => {
-      console.log(`Filtered flashcards for ${activeTab} tab:`, filteredFlashcardsByTab);
+      console.log(`Filtered and ordered flashcards for ${activeTab} tab:`, filteredFlashcardsByTab);
   }, [filteredFlashcardsByTab, activeTab]);
 
 
@@ -1012,3 +1015,4 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </div>
   );
 }
+
