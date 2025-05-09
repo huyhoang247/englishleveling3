@@ -529,7 +529,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
             // Added pb-24 here to add more padding below the pagination
-            <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24"> {/* Removed border-t border-gray-200 dark:border-gray-700 classes */}
+            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 pb-24"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, CHANGED pb-12 to pb-24 */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
