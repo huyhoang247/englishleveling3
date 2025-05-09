@@ -61,7 +61,7 @@ const defaultImageUrls: string[] = [
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 
 // Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
-const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcard s, 'Comic', '66B2FF');
+const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 
 // Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
@@ -417,7 +417,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'
               }`}
             >
-              {flashcardsForCurrentPage.map((card) => ( // Use flashcardsForCurrentPage
+              {flashcardsForCurrentPage.map((card, index) => ( // Added index to map function
                 // Removed w-[48%] and w-full as grid handles width
                 <div key={card.id}>
                   {/* Flashcard component rendering */}
@@ -502,15 +502,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       </div>
                     </div>
                   </div>
+                  {/* Check if this is the last card on the current page */}
+                  {index === flashcardsForCurrentPage.length - 1 && (
+                    <div className="w-full text-center py-4 text-gray-500 dark:text-gray-400">
+                      1234
+                    </div>
+                  )}
                 </div>
               ))}
-
-              {/* Add "1234" at the end of the last page for the active tab */}
-              {currentPage === totalPages && filteredFlashcardsByTab.length > 0 && (
-                <div className="col-span-full text-center py-8 text-2xl font-bold text-gray-700 dark:text-gray-300">
-                  1234
-                </div>
-              )}
             </div>
           ) : (
             // Display empty state for Favorite tab if no items
