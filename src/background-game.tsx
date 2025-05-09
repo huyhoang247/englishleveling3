@@ -292,6 +292,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   };
 
   // --- NEW: Function to update user's coin count in Firestore using a transaction ---
+  // This function is now the central place for coin updates.
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
     console.log("updateCoinsInFirestore called with amount:", amount); // Debug Log 4
     if (!userId) {
@@ -308,12 +309,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         if (!userDoc.exists()) {
           console.error("User document does not exist for transaction.");
           // Optionally create the document here if it's missing, though fetchUserData should handle this
-          transaction.set(userDocRef, { coins: amount, gems: gems, keys: keyCount, createdAt: new Date() });
+          // Ensure all necessary fields are set if creating
+          transaction.set(userDocRef, {
+            coins: amount,
+            gems: gems, // Use current local gems state for new doc
+            keys: keyCount, // Use current local keys state for new doc
+            createdAt: new Date()
+          });
         } else {
           const currentCoins = userDoc.data().coins || 0;
           const newCoins = currentCoins + amount;
-          transaction.update(userDocRef, { coins: newCoins });
-          console.log(`Coins updated in Firestore for user ${userId}: ${currentCoins} -> ${newCoins}`);
+          // Ensure coins don't go below zero if deducting
+          const finalCoins = Math.max(0, newCoins);
+          transaction.update(userDocRef, { coins: finalCoins });
+          console.log(`Coins updated in Firestore for user ${userId}: ${currentCoins} -> ${finalCoins}`);
+          // Update local state after successful Firestore update
+          setCoins(finalCoins);
         }
       });
       console.log("Firestore transaction successful."); // Debug Log 6
@@ -328,9 +339,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   };
 
    // Coin count animation function (Kept in main game file)
+   // This function now only handles the animation, the Firestore update is separate.
   const startCoinCountAnimation = (reward: number) => {
       console.log("startCoinCountAnimation called with reward:", reward); // Debug Log 2
-      const oldCoins = coins;
+      const oldCoins = coins; // Use the state value
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
       let current = oldCoins;
@@ -344,12 +356,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           current += step;
           if (current >= newCoins) {
               setDisplayedCoins(newCoins);
-              setCoins(newCoins); // Ensure the actual coin count is updated at the end
+              // setCoins(newCoins); // REMOVED: Local state update is handled by Firestore transaction callback
               clearInterval(countInterval);
               coinCountAnimationTimerRef.current = null; // Clear the ref after animation
-              console.log("Coin count animation finished. Attempting Firestore update."); // Debug Log 3
+              console.log("Coin count animation finished."); // Debug Log 3
 
-              // NEW: Update coins in Firestore AFTER the animation finishes
+              // NEW: Trigger Firestore update AFTER the animation finishes
               if (auth.currentUser) {
                  updateCoinsInFirestore(auth.currentUser.uid, reward); // Update Firestore with the reward amount
               } else {
@@ -960,7 +972,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                                 collisionDetected = true;
                                 const awardedCoins = Math.floor(Math.random() * 5) + 1;
                                 console.log(`Coin collected! Awarded: ${awardedCoins}. Calling startCoinCountAnimation.`); // Debug Log 1
-                                startCoinCountAnimation(awardedCoins); // This now triggers Firestore update internally
+                                // startCoinCountAnimation(awardedCoins); // This now triggers Firestore update internally
+                                // Call the animation first, then the Firestore update will happen after animation
+                                startCoinCountAnimation(awardedCoins);
 
                                 console.log(`Coin collected! Awarded: ${awardedCoins}`);
                             }
@@ -1153,6 +1167,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
     // Effect for coin counter animation
   useEffect(() => {
+    // Only trigger animation if the displayed coins need to catch up to the actual coins state
     if (displayedCoins === coins) return;
 
     const coinElement = document.querySelector('.coin-counter');
@@ -1172,7 +1187,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       };
     }
      return () => {};
-  }, [displayedCoins, coins]);
+  }, [displayedCoins, coins]); // Depend on both displayedCoins and coins state
 
 
   // Calculate health percentage for the bar
@@ -1491,7 +1506,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
       {isStatsFullscreen ? (
         <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-            <CharacterCard onClose={toggleStatsFullscreen} />
+            {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
+            {auth.currentUser && (
+                <CharacterCard
+                    onClose={toggleStatsFullscreen}
+                    coins={coins} // Pass the coin state
+                    onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass the update function
+                />
+            )}
         </ErrorBoundary>
       ) : (
         <div
@@ -1784,8 +1806,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             onKeyCollect={(n) => {
               console.log(`Chest opened using ${n} key(s).`);
               setKeyCount(prev => Math.max(0, prev - n));
-              // TODO: Update keys in Firestore here
+              // TODO: Implement Firestore update for keys here
             }}
+            // Use startCoinCountAnimation to handle coin rewards from chests
             onCoinReward={startCoinCountAnimation}
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
@@ -1797,3 +1820,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
+
