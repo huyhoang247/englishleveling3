@@ -407,8 +407,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
       {/* Main Content - Removed flex-1 from this container to fix the layout issue */}
       {/* This div now allows the grid layout inside to function correctly */}
-      {/* Added pb-24 to ensure space for the pagination bar */}
-      <div className="p-4 pb-24 min-h-0">
+      <div className="p-4 pb-16 min-h-0">
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
@@ -528,7 +527,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
       {/* --- Pagination Controls --- */}
       {totalPages > 1 && ( // Only show pagination if there's more than one page
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center z-30 shadow-lg"> {/* Added dark mode styles, shadow */}
+        // Changed bottom-0 to bottom-16 to lift it above a potential nav bar
+        <div className="fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center z-30 shadow-lg"> {/* Added dark mode styles, shadow */}
           <nav className="flex space-x-2" aria-label="Pagination">
             {/* Previous Button */}
             <button
