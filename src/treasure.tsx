@@ -419,7 +419,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
             || isChestOpen
             || chestsRemaining === 0
             || keyCount < 1
-            || availableImageIndices.length === 0
+            || availableImageIndices.length === 0 // Use availableImageIndices.length
             || isLoading
             || !currentUserId // Disable if no user ID
           }
