@@ -1497,9 +1497,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         }
         */
 
-        /* NEW: Glass Shadow Border Effect */
+        /* NEW: Glass Shadow Border Effect (Border removed) */
         .glass-shadow-border {
-            border-bottom: 2px solid rgba(255, 255, 255, 0.8); /* Semi-transparent white border */
+            /* border-bottom: 2px solid rgba(255, 255, 255, 0.8); /* Removed */
             box-shadow:
                 0 4px 8px rgba(0, 0, 0, 0.6), /* Darker shadow below */
                 0 8px 15px rgba(0, 0, 0, 0.4), /* Even darker, more spread shadow */
