@@ -1457,7 +1457,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           }
           100% {
             opacity: 0;
-            transform: translate(-50%, -20px);
+            transform: translate(-5-%, -20px);
           }
         }
         .animate-fadeOutUp {
@@ -1554,16 +1554,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                   onClick={toggleStatsFullscreen}
                   title="Xem chỉ số nhân vật"
                 >
-                    <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform">
-                        <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
-                        <div className="relative z-10 flex items-center justify-center">
-                            <div className="flex items-end">
-                                <div className="w-1 h-2 bg-white rounded-sm mr-0.5" />
-                                <div className="w-1 h-3 bg-white rounded-sm mr-0.5" />
-                                <div className="w-1 h-1.5 bg-white rounded-sm" />
-                            </div>
-                        </div>
-                        <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" />
+                    {/* Replaced the old icon div with an img tag */}
+                    <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform p-1"> {/* Added padding */}
+                        <img
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/bullet-point%20(1).png"
+                            alt="Stats Icon"
+                            className="w-full h-full object-contain" // Ensure the image fits and maintains aspect ratio
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null; // Prevent infinite loop if placeholder also fails
+                                target.src = "https://placehold.co/32x32/8a2be2/ffffff?text=Stats"; // Fallback placeholder
+                            }}
+                        />
                     </div>
                 </div>
 
@@ -1820,4 +1822,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-
