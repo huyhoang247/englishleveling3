@@ -140,7 +140,8 @@ const App: React.FC = () => {
       )}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && (
-        <Story hideNavBar={hideNavBar} showNavBar={showNavBar} />
+        // Truyền currentUser cho component Story
+        <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
       )}
       {activeTab === 'quiz' && <Quiz />}
 
