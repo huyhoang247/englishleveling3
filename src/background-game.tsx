@@ -1547,7 +1547,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
           {renderParticles()}
 
-          <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30">
+          {/* Added border-b-2 and border-white classes here */}
+          <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30 border-b-2 border-white">
             <div className="flex items-center">
                 {/* Updated Stats Icon - Reverted size and changed image source */}
                 <div
@@ -1820,3 +1821,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
+
