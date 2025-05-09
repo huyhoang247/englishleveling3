@@ -269,16 +269,21 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
     // Prevent opening chest if game is paused, already open, no chests left, or not enough keys
     // Also prevent if there are no images left to reveal, data is still loading, or user is not logged in
     if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
-        if (isLoading) {
-             console.log("Đang tải dữ liệu...");
-        } else if (!currentUserId) {
-             console.log("Vui lòng đăng nhập để mở rương!");
-        } else if (keyCount < 1) {
-            console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
+        // Log the specific reason for not opening
+        if (isGamePaused) {
+             console.log("Không thể mở rương: Trò chơi đang tạm dừng.");
+        } else if (isChestOpen) {
+             console.log("Không thể mở rương: Rương đang mở.");
         } else if (chestsRemaining <= 0) {
-             console.log("Hết rương để mở!"); // Log or show a message if no chests are left
+             console.log("Không thể mở rương: Hết rương để mở.");
+        } else if (keyCount < 1) {
+            console.log("Không thể mở rương: Không đủ chìa khóa.");
         } else if (availableImageIndices.length === 0) {
-             console.log("Đã mở hết tất cả hình ảnh!"); // Log or show a message if all images are revealed
+             console.log("Không thể mở rương: Đã mở hết tất cả hình ảnh.");
+        } else if (isLoading) {
+             console.log("Không thể mở rương: Đang tải dữ liệu.");
+        } else if (!currentUserId) {
+             console.log("Không thể mở rương: Vui lòng đăng nhập.");
         }
         return;
     }
