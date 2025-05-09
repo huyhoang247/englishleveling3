@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+// Import the image URLs list
+import { defaultImageUrls } from './image-url (1).ts'; // Adjust the path if necessary
 
 // --- SVG Icon Components ---
 // These icons are used in the card popup, so they are kept here.
@@ -105,7 +107,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// NEW: Key Icon Component
+// Key Icon Component
 const KeyIcon = () => (
   <img
     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
@@ -126,7 +128,7 @@ interface TreasureChestProps {
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
 }
 
-// Define interface for card data
+// Define interface for card data (keeping this for potential future use or if other rewards are still cards)
 interface Card {
   id: number;
   name: string;
@@ -136,21 +138,14 @@ interface Card {
   background: string;
 }
 
-// Updated cards array to use SVG components
-const cards: Card[] = [
-  { id: 1, name: "Kiếm Sắt", rarity: "common", icon: <SwordIcon size={36} />, color: "#d4d4d8", background: "bg-gradient-to-br from-gray-200 to-gray-400" },
-  { id: 2, name: "Khiên Ma Thuật", rarity: "rare", icon: <ShieldIcon size={36} />, color: "#4287f5", background: "bg-gradient-to-br from-blue-300 to-blue-500" },
-  { id: 3, name: "Vương Miện", rarity: "epic", icon: <CrownIcon size={36} />, color: "#9932CC", background: "bg-gradient-to-br from-purple-400 to-purple-600" },
-  // GemIcon is now in background-game.tsx, so we can't use it directly here for the card icon.
-  // For now, let's use a placeholder or a different icon if needed, or assume GemIcon is imported (but it shouldn't be if it's moved).
-  // Let's keep the GemIcon here for now, assuming it's needed *only* for the card display within TreasureChest.
-  // If GemIcon is needed in background-game.tsx for the header display, it should be moved there.
-  // Let's move GemIcon to background-game.tsx as requested by the user's goal.
-  // We will need to update the legendary card icon here. Let's use StarIcon for legendary card icon as a placeholder.
-  { id: 4, name: "Ngọc Rồng", rarity: "legendary", icon: <StarIcon size={36} color="#FFD700" fill="currentColor" />, color: "#FFD700", background: "bg-gradient-to-br from-yellow-300 to-amber-500" }
-];
+// Define interface for the revealed image data
+interface RevealedImage {
+    id: number; // Using index as ID for simplicity
+    url: string;
+}
 
-// Helper function to get rarity color
+
+// Helper function to get rarity color (still needed if card rewards are kept)
 const getRarityColor = (rarity: Card['rarity']) => {
   switch(rarity) {
     case "common": return "text-gray-200";
@@ -165,18 +160,26 @@ const getRarityColor = (rarity: Card['rarity']) => {
 export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
-  const [showCard, setShowCard] = useState<Card | null>(null); // Changed to null to store card object directly
-  const [currentCard, setCurrentCard] = useState<Card | null>(null);
-  // REMOVED: gems state
+  // State to hold the revealed image data (ID and URL)
+  const [revealedImage, setRevealedImage] = useState<RevealedImage | null>(null);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
   // State for chests remaining - This state will now represent chests that can be opened with keys
   // It's still needed for the openChest logic, but won't be displayed directly as a number
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
-  // NEW: State to hold pending gem reward
+  // State to hold pending gem reward
   const [pendingGemReward, setPendingGemReward] = useState(0);
 
+  // NEW: State to manage the list of available image indices
+  const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
+
+  // Initialize available image indices when the component mounts
+  useEffect(() => {
+      // Create an array of indices from 0 to the number of defaultImageUrls - 1
+      const initialIndices = defaultImageUrls.map((_, index) => index);
+      setAvailableImageIndices(initialIndices);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   // State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
@@ -186,13 +189,14 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   // Function to open the chest
   const openChest = () => {
     // Prevent opening chest if game is paused, already open, no chests left, or not enough keys
-    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1) {
-        // Optional: Add visual feedback if not enough keys
+    // Also prevent if there are no images left to reveal
+    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0) {
         if (keyCount < 1) {
             console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
-            // You could add a state here to briefly show a "Not enough keys" message on the UI
         } else if (chestsRemaining <= 0) {
              console.log("Hết rương để mở!"); // Log or show a message if no chests are left
+        } else if (availableImageIndices.length === 0) {
+             console.log("Đã mở hết tất cả hình ảnh!"); // Log or show a message if all images are revealed
         }
         return;
     }
@@ -209,26 +213,29 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       }
 
       setTimeout(() => {
-        const randomCard = cards[Math.floor(Math.random() * cards.length)];
-        setCurrentCard(randomCard);
-        setShowCard(randomCard); // Set showCard to the card object
-        let coinReward = 0;
-        let gemReward = 0; // Initialize gem reward
+        // --- Image Selection Logic ---
+        // Select a random index from the available indices
+        const randomIndex = Math.floor(Math.random() * availableImageIndices.length);
+        const selectedImageIndex = availableImageIndices[randomIndex];
+        const selectedImageUrl = defaultImageUrls[selectedImageIndex];
 
-        switch(randomCard.rarity) {
-          case "common": coinReward = 10; break;
-          case "rare": coinReward = 25; break;
-          case "epic":
-              coinReward = 50;
-              gemReward = 2; // Award 2 gems for Epic
-              break;
-          case "legendary":
-              coinReward = 100;
-              gemReward = 5; // Award 5 gems for Legendary
-              break;
-        }
+        // Store the revealed image data
+        setRevealedImage({ id: selectedImageIndex, url: selectedImageUrl });
+
+        // Remove the selected index from the available indices
+        setAvailableImageIndices(prevIndices =>
+            prevIndices.filter(index => index !== selectedImageIndex)
+        );
+        // --- End Image Selection Logic ---
+
+        // --- Reward Logic (Example: Still give a small coin/gem reward with each image) ---
+        // You can adjust or remove this if opening a chest only gives an image
+        let coinReward = 10; // Example: Always give 10 coins per image
+        let gemReward = 1; // Example: Always give 1 gem per image
         setPendingCoinReward(coinReward);
-        setPendingGemReward(gemReward); // Store pending gem reward
+        setPendingGemReward(gemReward);
+        // --- End Reward Logic ---
+
 
         // --- Trigger Coin Collection Effect near Chest ---
         // Clear any existing chest coin effect timer
@@ -243,22 +250,21 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         }, 800); // Effect duration
         // --- END Trigger Coin Collection Effect near Chest ---
 
-      }, 1500); // Delay before showing card
+      }, 1500); // Delay before showing the revealed item (image)
     }, 600); // Duration of shake animation
   };
 
   // Function to reset the chest state and collect reward
   const resetChest = () => {
     setIsChestOpen(false);
-    setShowCard(null); // Reset showCard to null
-    setCurrentCard(null);
+    setRevealedImage(null); // Reset the revealed image state
     setShowShine(false);
     if (pendingCoinReward > 0) {
         // Call the parent's function to add coins
         onCoinReward(pendingCoinReward);
         setPendingCoinReward(0); // Reset pending reward after giving it to the parent
     }
-     // NEW: Call the parent's function to add gems if there's a pending reward
+     // Call the parent's function to add gems if there's a pending reward
     if (pendingGemReward > 0) {
         onGemReward(pendingGemReward);
         setPendingGemReward(0); // Reset pending gem reward
@@ -315,10 +321,11 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
           // Disable click if game is paused, already open, no chests left, or not enough keys
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keyCount >= 1 ? openChest : null}
-          aria-label={chestsRemaining > 0 ? "Mở rương báu" : "Hết rương"}
+          // Also disable if no images are available
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 ? openChest : null}
+          aria-label={availableImageIndices.length > 0 ? "Mở rương báu" : "Hết hình ảnh"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 ? 0 : -1} // Make focusable only when usable
+          tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 ? 0 : -1} // Make focusable only when usable
         >
           <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
             {/* Chest main body */}
@@ -371,22 +378,21 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
                     ))}
                   </div>
                 )}
-                {showCard ? (
-                  <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 ${currentCard?.background}`}>
-                    <div className="absolute inset-0 overflow-hidden rounded-xl">
-                      <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
-                    </div>
-                    {/* Render the card icon */}
-                    <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
-                    <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
-                    <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-                    <div className="flex mt-3">
-                      {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                        <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                      ))}
-                    </div>
+                {/* Display the revealed image if available */}
+                {revealedImage ? (
+                  <div className="w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 bg-slate-700/50 overflow-hidden">
+                     <img
+                        src={revealedImage.url}
+                        alt={`Revealed item with ID ${revealedImage.id}`}
+                        className="w-full h-full object-cover rounded-xl"
+                        onError={(e) => {
+                            // Optional: Handle image loading errors, e.g., show a placeholder
+                            e.currentTarget.src = 'https://placehold.co/160x208?text=Image+Error';
+                        }}
+                     />
                   </div>
                 ) : (
+                  // Show the bounce animation when no image is revealed yet
                   <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
                     <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
                   </div>
@@ -424,8 +430,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
         </div>
 
-        {/* Display only keys */}
-        {/* Removed the chests remaining display div */}
+        {/* Display keys and available images count */}
         <div className="mt-4 flex space-x-3 items-center justify-center">
           {/* Keys */}
           <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
@@ -436,32 +441,45 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
             <span className="text-green-200 font-bold text-xs">{keyCount}</span>
              {keyCount > 0 && (<div className="absolute -inset-0.5 bg-green-500/20 rounded-lg blur-sm -z-10"></div>)}
           </div>
+           {/* Available Images Count */}
+           <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+               <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
+           </div>
         </div>
       </div>
 
 
-      {/* Card info popup - Positioned on top of everything */}
-      {showCard && currentCard && (
+      {/* Revealed Image Popup - Positioned on top of everything */}
+      {revealedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Increased z-index */}
           <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
             <div className="absolute -top-3 -right-3">
               <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
             </div>
-            <div className="text-xl font-bold text-white mb-6">Bạn nhận được</div>
-            <div className={`w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative ${currentCard.background}`}>
-              <div className="absolute inset-0 overflow-hidden rounded-xl">
-                <div className="absolute -inset-20 w-40 h-[300px] bg-white/30 rotate-45 transform translate-x-[-200px] animate-shine"></div>
-              </div>
-              {/* Render the card icon */}
-              <div className="text-6xl mb-2" style={{ color: currentCard.color }}>{currentCard?.icon}</div>
-              <h3 className="text-xl font-bold text-white mt-4">{currentCard.name}</h3>
-              <p className={`${getRarityColor(currentCard.rarity)} capitalize mt-2 font-medium`}>{currentCard.rarity}</p>
-              <div className="flex mt-3">
-                {[...Array(currentCard.rarity === "legendary" ? 5 : currentCard.rarity === "epic" ? 4 : currentCard.rarity === "rare" ? 3 : 2)].map((_, i) => (
-                  <StarIcon key={i} size={16} className={getRarityColor(currentCard.rarity)} fill="currentColor" color="currentColor"/>
-                ))}
-              </div>
+            <div className="text-xl font-bold text-white mb-4">Bạn nhận được</div>
+            {/* Display the revealed image in the popup */}
+            <div className="w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative bg-slate-700/50 overflow-hidden">
+                 <img
+                    src={revealedImage.url}
+                    alt={`Revealed item with ID ${revealedImage.id}`}
+                    className="w-full h-full object-cover rounded-xl"
+                    onError={(e) => {
+                        e.currentTarget.src = 'https://placehold.co/160x208?text=Image+Error';
+                    }}
+                 />
             </div>
+            {/* Display the image ID */}
+            <div className="text-lg font-medium text-gray-300 mb-4">ID: {revealedImage.id}</div>
+
+             {/* Display rewards received (optional, based on your reward logic) */}
+            {(pendingCoinReward > 0 || pendingGemReward > 0) && (
+                 <div className="text-sm text-gray-400 mb-4">
+                    {pendingCoinReward > 0 && <span>+{pendingCoinReward} Xu</span>}
+                    {pendingCoinReward > 0 && pendingGemReward > 0 && <span>, </span>}
+                    {pendingGemReward > 0 && <span>+{pendingGemReward} Ngọc</span>}
+                 </div>
+            )}
+
             <button onClick={resetChest} className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-8 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-600/50 hover:scale-105">
               Tiếp tục
             </button>
