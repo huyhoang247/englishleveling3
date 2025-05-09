@@ -1496,6 +1496,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             animation: fadeInOut 2s ease-in-out forwards;
         }
         */
+
+        /* NEW: Glass Shadow Border Effect */
+        .glass-shadow-border {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.8); /* Semi-transparent white border */
+            box-shadow:
+                0 4px 8px rgba(0, 0, 0, 0.6), /* Darker shadow below */
+                0 8px 15px rgba(0, 0, 0, 0.4), /* Even darker, more spread shadow */
+                inset 0 -2px 4px rgba(255, 255, 255, 0.2); /* Inner white highlight at bottom */
+        }
+
       `}</style>
        <style jsx global>{`
         body {
@@ -1547,8 +1557,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
           {renderParticles()}
 
-          {/* Added border-b-2 and border-white classes here */}
-          <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30 border-b-2 border-white">
+          {/* Applied the new glass-shadow-border class here */}
+          <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30 glass-shadow-border">
             <div className="flex items-center">
                 {/* Updated Stats Icon - Reverted size and changed image source */}
                 <div
