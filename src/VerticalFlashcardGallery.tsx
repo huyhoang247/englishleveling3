@@ -311,8 +311,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           const userData = userDocSnap.data();
           // Ensure openedImageIds is an array, default to empty if missing or not array
           const fetchedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
-          setOpenedImageIds(fetchedIds);
-          console.log("Fetched openedImageIds:", fetchedIds); // Log fetched IDs
+          // --- REVERSE THE ARRAY HERE ---
+          setOpenedImageIds(fetchedIds.reverse()); // Reverse the fetched IDs
+          console.log("Fetched and reversed openedImageIds:", fetchedIds.reverse()); // Log fetched IDs
         } else {
           setOpenedImageIds([]); // User document doesn't exist or no openedImageIds field
           console.log("User document not found or no openedImageIds field for user:", currentUser.uid);
@@ -331,7 +332,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   // Filter and order flashcards based on active tab and openedImageIds
   const filteredFlashcardsByTab = activeTab === 'collection'
-    ? // For collection, filter and order based on the sequence in openedImageIds
+    ? // For collection, filter and order based on the sequence in openedImageIds (now reversed)
       openedImageIds
         .map(id => ALL_POSSIBLE_FLASHCARDS.find(card => card.id === id)) // Find the flashcard for each ID
         .filter(card => card !== undefined) as Flashcard[] // Filter out any undefined results (shouldn't happen if ALL_POSSIBLE_FLASHCARDS is complete)
@@ -1015,4 +1016,3 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </div>
   );
 }
-
