@@ -117,7 +117,7 @@ interface GameObstacle {
   position: number; // Horizontal position in %
   type: string;
   height: number; // Height in Tailwind units (e.g., 8 for h-8)
-  width: number; // Width in Tailwind units (e.g., 8 for w-8)
+  width: number; // Width in Tailwind units (e.g., w-8)
   color: string; // Tailwind gradient class or other identifier
   baseHealth: number; // Base health for this obstacle type
   health: number; // Current health of the obstacle
@@ -307,11 +307,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     const userDocRef = doc(db, 'users', userId);
 
     try {
-      console.log("Attempting Firestore transaction..."); // Debug Log 5
+      console.log("Attempting Firestore transaction for coins..."); // Debug Log 5
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
-          console.error("User document does not exist for transaction.");
+          console.error("User document does not exist for coin transaction.");
           // Optionally create the document here if it's missing, though fetchUserData should handle this
           // Ensure all necessary fields are set if creating
           transaction.set(userDocRef, {
@@ -331,13 +331,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setCoins(finalCoins);
         }
       });
-      console.log("Firestore transaction successful."); // Debug Log 6
+      console.log("Firestore transaction for coins successful."); // Debug Log 6
       // REMOVED: Set state to show "OK" text after successful transaction
       // setShowCoinUpdateSuccess(true);
       // console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
 
     } catch (error) {
-      console.error("Firestore Transaction failed: ", error); // Debug Log 8
+      console.error("Firestore Transaction failed for coins: ", error); // Debug Log 8
       // Handle the error, maybe retry or inform the user
     }
   };
@@ -380,6 +380,49 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       coinCountAnimationTimerRef.current = countInterval;
   };
 
+  // --- NEW: Function to update user's key count in Firestore using a transaction ---
+  const updateKeysInFirestore = async (userId: string, amount: number) => {
+    console.log("updateKeysInFirestore called with amount:", amount);
+    if (!userId) {
+      console.error("Cannot update keys: User not authenticated.");
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', userId);
+
+    try {
+      console.log("Attempting Firestore transaction for keys...");
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          console.error("User document does not exist for key transaction.");
+           // Optionally create the document here if it's missing, though fetchUserData should handle this
+          // Ensure all necessary fields are set if creating
+          transaction.set(userDocRef, {
+            coins: coins, // Use current local coins state for new doc
+            gems: gems, // Use current local gems state for new doc
+            keys: amount,
+            createdAt: new Date()
+          });
+        } else {
+          const currentKeys = userDoc.data().keys || 0;
+          const newKeys = currentKeys + amount;
+          // Ensure keys don't go below zero if deducting
+          const finalKeys = Math.max(0, newKeys);
+          transaction.update(userDocRef, { keys: finalKeys });
+          console.log(`Keys updated in Firestore for user ${userId}: ${currentKeys} -> ${finalKeys}`);
+          // Update local state after successful Firestore update
+          setKeyCount(finalKeys);
+        }
+      });
+      console.log("Firestore transaction for keys successful.");
+    } catch (error) {
+      console.error("Firestore Transaction failed for keys: ", error);
+      // Handle the error, maybe retry or inform the user
+    }
+  };
+
+
   // NEW: Function to handle gem rewards received from TreasureChest
   const handleGemReward = (amount: number) => {
       setGems(prev => prev + amount);
@@ -389,9 +432,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to handle key collection (called when obstacle with key is defeated)
   const handleKeyCollect = (amount: number) => {
+      console.log(`Collected ${amount} key(s).`);
+      // Update local state first
       setKeyCount(prev => prev + amount);
-      console.log(`Collected ${amount} key(s). Total keys: ${keyCount + amount}`);
-      // TODO: Implement Firestore update for keys here
+      // Then update Firestore
+      if (auth.currentUser) {
+        updateKeysInFirestore(auth.currentUser.uid, amount);
+      } else {
+        console.log("User not authenticated, skipping Firestore key update.");
+      }
   };
 
 
@@ -862,7 +911,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                         if (collisionDetected) {
                             if (obstacle.hasKey) {
-                                handleKeyCollect(1);
+                                handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
                             }
                             return { ...obstacle, position: newPosition, collided: true };
                         }
@@ -1819,8 +1868,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             keyCount={keyCount}
             onKeyCollect={(n) => {
               console.log(`Chest opened using ${n} key(s).`);
+              // Update local state first
               setKeyCount(prev => Math.max(0, prev - n));
-              // TODO: Implement Firestore update for keys here
+              // Then update Firestore
+              if (auth.currentUser) {
+                updateKeysInFirestore(auth.currentUser.uid, -n); // Subtract keys
+              } else {
+                console.log("User not authenticated, skipping Firestore key update.");
+              }
             }}
             // Use startCoinCountAnimation to handle coin rewards from chests
             onCoinReward={startCoinCountAnimation}
