@@ -3,10 +3,18 @@ import FlashcardDetailModal from './story/flashcard.tsx'; // Import the new comp
 // Import defaultImageUrls from the new file
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; // Adjust the path if necessary and rename import
 
+// Import Firebase auth and db
+import { auth, db } from './firebase.js';
+// Import Firestore functions and User type
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { User } from 'firebase/auth';
+
+
 // Define the props interface for VerticalFlashcardGallery
 interface VerticalFlashcardGalleryProps {
   hideNavBar: () => void; // Function to hide the nav bar
   showNavBar: () => void; // Function to show the nav bar
+  currentUser: User | null; // Add currentUser prop
 }
 
 // Define the structure for image URLs by style
@@ -48,7 +56,7 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
 };
 
 // Số lượng flashcard mẫu mong muốn (ví dụ: 55)
-const numberOfSampleFlashcards = 55;
+const numberOfSampleFlashcards = 100; // Tăng số lượng để có nhiều ảnh hơn
 
 // Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
 const defaultImageUrls: string[] = [
@@ -221,8 +229,9 @@ const animations = `
 `;
 
 // Accept hideNavBar and showNavBar as props
-export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: VerticalFlashcardGalleryProps) {
+export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   const scrollContainerRef = useRef(null);
+  // We will now filter sampleFlashcards based on openedImageIds
   const [flashcards, setFlashcards] = useState(sampleFlashcards);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [showFavoriteToast, setShowFavoriteToast] = useState(false);
@@ -241,13 +250,54 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
   // State to manage vocabulary modal visibility - Now used by FlashcardDetailModal
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
+  // --- NEW: State for opened image IDs from Firestore ---
+  const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
+  const [loadingOpenedImages, setLoadingOpenedImages] = useState(true); // State to track loading
+
   // --- Pagination States ---
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50; // Set items per page to 50
 
-  // Filter flashcards based on active tab
+
+  // --- NEW: Effect to fetch openedImageIds from Firestore ---
+  useEffect(() => {
+    const fetchOpenedImageIds = async () => {
+      if (!currentUser) {
+        setOpenedImageIds([]); // Reset if no user
+        setLoadingOpenedImages(false);
+        return;
+      }
+
+      setLoadingOpenedImages(true);
+      try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          // Ensure openedImageIds is an array, default to empty if missing or not array
+          const fetchedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
+          setOpenedImageIds(fetchedIds);
+          console.log("Fetched openedImageIds:", fetchedIds);
+        } else {
+          setOpenedImageIds([]); // User document doesn't exist or no openedImageIds field
+          console.log("User document not found or no openedImageIds field.");
+        }
+      } catch (error) {
+        console.error("Error fetching openedImageIds:", error);
+        setOpenedImageIds([]); // Reset on error
+      } finally {
+        setLoadingOpenedImages(false);
+      }
+    };
+
+    fetchOpenedImageIds();
+  }, [currentUser]); // Re-run when currentUser changes
+
+
+  // Filter flashcards based on active tab AND openedImageIds
   const filteredFlashcardsByTab = activeTab === 'collection'
-    ? flashcards
+    ? flashcards.filter(card => openedImageIds.includes(card.id)) // Filter by openedImageIds for collection
     : flashcards.filter(card => card.isFavorite);
 
   // Calculate total pages based on filtered flashcards
@@ -260,7 +310,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
 
   const favoriteCount = flashcards.filter(card => card.isFavorite).length;
-  const totalFlashcards = flashcards.length;
+  // Total flashcards in collection is now the count of opened images
+  const totalFlashcardsInCollection = openedImageIds.length;
 
   // Toggle favorite status for a flashcard
   const toggleFavorite = (id: number) => { // Added type for id
@@ -314,6 +365,15 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
       (scrollContainerRef.current as HTMLElement).scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  // Show loading state if openedImageIds are being fetched
+  if (loadingOpenedImages) {
+      return (
+          <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">
+              Đang tải bộ sưu tập...
+          </div>
+      );
+  }
 
 
   return (
@@ -379,7 +439,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
               <path d="M7 10h10M7 13h6" />
             </svg>
             <span>Collection</span>
-            <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcards}</span> {/* Added dark mode styles */}
+            {/* Display the count of opened images for the collection tab */}
+            <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span> {/* Added dark mode styles */}
           </button>
 
           <button
@@ -525,8 +586,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">Không có flashcard yêu thích</h3> {/* Added dark mode styles */}
-              <p className="text-gray-500 dark:text-gray-400 max-w-md">Nhấn vào biểu tượng trái tim trên flashcard để thêm vào danh sách yêu thích của bạn</p> {/* Added dark mode styles */}
+              <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  {activeTab === 'collection' ? 'Bộ sưu tập trống' : 'Không có flashcard yêu thích'}
+              </h3> {/* Added dark mode styles */}
+              <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                  {activeTab === 'collection'
+                    ? 'Hãy mở rương để nhận thêm flashcard mới!'
+                    : 'Nhấn vào biểu tượng trái tim trên flashcard để thêm vào danh sách yêu thích của bạn'}
+              </p> {/* Added dark mode styles */}
             </div>
           )}
 
@@ -701,7 +768,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         visualStyle === 'anime'
-                          ? 'border-pink-500 bg-pink-50 dark:border-pink-400 dark:bg-pink-900' // Added dark mode styles
+                          ? 'border-pink-500 bg-pink-50 dark:border-pink-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-600 hover:bg-pink-50/30 dark:hover:bg-pink-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setVisualStyle('anime')}
@@ -721,7 +788,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         visualStyle === 'comic'
-                          ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900' // Added dark mode styles
+                          ? 'border-blue-500 bg-blue-50 dark:border-blue-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setVisualStyle('comic')}
@@ -740,7 +807,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         visualStyle === 'realistic'
-                          ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-900' // Added dark mode styles
+                          ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-600 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setVisualStyle('realistic')}
@@ -792,7 +859,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         imageDetail === 'phrase'
-                          ? 'border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-900' // Added dark mode styles
+                          ? 'border-purple-500 bg-purple-50 dark:border-purple-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-600 hover:bg-purple-50/30 dark:hover:bg-purple-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setImageDetail('phrase')}
@@ -812,7 +879,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                     <div
                       className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
                         imageDetail === 'example'
-                          ? 'border-teal-500 bg-teal-50 dark:border-teal-400 dark:bg-teal-900' // Added dark mode styles
+                          ? 'border-teal-500 bg-teal-50 dark:border-teal-900' // Added dark mode styles
                           : 'border-gray-200 dark:border-gray-700 hover:border-teal-200 dark:hover:border-teal-600 hover:bg-teal-50/30 dark:hover:bg-teal-900/30' // Added dark mode styles
                       }`}
                       onClick={() => setImageDetail('example')}
@@ -890,4 +957,3 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     </div>
   );
 }
-
