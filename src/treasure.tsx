@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 // Import the image URLs list
-import { defaultImageUrls } from './image-url (1).ts'; // Adjust the path if necessary
+import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
 
 // Import db from your firebase.js file
 import { db } from './firebase.js'; // Adjust the path if necessary
