@@ -332,7 +332,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   // Filter and order flashcards based on active tab and openedImageIds
   const filteredFlashcardsByTab = activeTab === 'collection'
     ? // For collection, filter and order based on the sequence in openedImageIds
-      openedImageIds
+      // --- MODIFIED: Reverse the openedImageIds array for collection tab ---
+      [...openedImageIds].reverse() // Create a copy and reverse it
         .map(id => ALL_POSSIBLE_FLASHCARDS.find(card => card.id === id)) // Find the flashcard for each ID
         .filter(card => card !== undefined) as Flashcard[] // Filter out any undefined results (shouldn't happen if ALL_POSSIBLE_FLASHCARDS is complete)
     : // For favorite, filter by isFavorite (original logic)
@@ -451,7 +452,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             id="settings-button"
             className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} // Added dark mode styles
             onMouseEnter={() => setIsSettingsHovered(true)}
-            onMouseLeave={() => setIsSettingsHovered(false)}
+            onMouseLeave={() => setIsSettingsHovercard(false)}
             onClick={() => setShowSettings(!showSettings)}
           >
             <svg
