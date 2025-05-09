@@ -1011,6 +1011,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
+           if (particleTimerRef.current) {
+               clearInterval(particleTimerRef.current);
+               particleTimerRef.current = null;
+           }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
           if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
@@ -1468,13 +1472,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           100% { transform: translate(-50%, -20px); opacity: 0; }
         }
         /* REMOVED: Animation for OK text */
-        /* @keyframes fadeInOut {
+        /*
+        @keyframes fadeInOut {
             0%, 100% { opacity: 0; }
             50% { opacity: 1; }
         }
         .animate-fadeInOut {
             animation: fadeInOut 2s ease-in-out forwards;
-        } */
+        }
+        */
       `}</style>
        <style jsx global>{`
         body {
@@ -1580,11 +1586,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
              {!isStatsFullscreen && (
                 <div className="flex items-center space-x-1 currency-display-container relative">
                     {/* REMOVED: Display "OK" text */}
-                    {/* {showCoinUpdateSuccess && (
+                    {/*
+                    {showCoinUpdateSuccess && (
                         <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
                             OK
                         </div>
-                    )} */}
+                    )}
+                    */}
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center">
@@ -1789,4 +1797,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-
