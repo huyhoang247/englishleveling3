@@ -53,7 +53,7 @@ const numberOfSampleFlashcards = 55;
 // Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
 const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(numberOfSampleFlashcards - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
+  ...generatePlaceholderUrls(numberOfSampleFlashcard s - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
 ];
 
 
@@ -251,7 +251,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     : flashcards.filter(card => card.isFavorite);
 
   // Calculate total pages based on filtered flashcards
-  const totalPages = Math.ceil(filteredFlashcard sByTab.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
 
   // Get flashcards for the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -407,7 +407,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
       {/* Main Content - Removed flex-1 from this container to fix the layout issue */}
       {/* This div now allows the grid layout inside to function correctly */}
-      <div className="p-4 pb-16 min-h-0">
+      {/* Removed pb-16 class to allow pagination to sit at the bottom of the content */}
+      <div className="p-4 min-h-0">
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
@@ -524,9 +525,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           )}
 
           {/* --- Pagination Controls --- */}
+          {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
-            // Removed fixed positioning classes
-            <div className="mt-8 p-4 flex justify-center z-30"> {/* Added margin-top for spacing */}
+            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
@@ -571,6 +572,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
               </nav>
             </div>
           )}
+
         </div>
       </div>
 
@@ -772,7 +774,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                         </svg>
                       </div>
-                      <span className={`text-xs text-center ${imageDetail === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ảnh gốc</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                      <span className={`text-xs text-center ${imageDetail === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ảnh gốc</span> {/* Changed text-sm to text-xs, and text to "Cơ Bản", Added dark mode styles */}
                     </div>
 
                     {/* Phrase Detail */}
