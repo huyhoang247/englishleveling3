@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'; // Import React
 import ResetStatsControl from './reset-points.tsx'; // Import component mới
-// import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới - Đã gỡ bỏ
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
@@ -623,6 +622,15 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     // h-screen makes it take full viewport height
     // MODIFIED: Changed background back to white and used flex layout
     <div className="flex flex-col h-screen bg-white">
+      {/* Added the glass-shadow-border CSS style */}
+      <style>{`
+        .glass-shadow-border {
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 -1px 2px rgba(255, 255, 255, 0.15);
+        }
+      `}</style>
 
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
@@ -635,21 +643,21 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
         }}></div>
 
         {/* Top right badges container with glassmorphism effect */}
-        {/* MODIFIED: Reverted border color for light mode */}
-        {/* Positioned relative to this header div */}
+        {/* MODIFIED: Applied bg-black bg-opacity-60 and glass-shadow-border */}
         <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden
-                    backdrop-filter backdrop-blur-lg bg-white bg-opacity-20
-                    border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10"> {/* Kept opacity for glassmorphism */}
+                    backdrop-filter backdrop-blur-lg bg-black bg-opacity-60 glass-shadow-border
+                    rounded-xl p-2 shadow-lg z-10">
 
           {/* Use the CoinDisplay component here */}
           {/* Pass the coins prop to CoinDisplay */}
-          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+          {/* MODIFIED: Adjusted text color for dark background */}
+          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-white" />
 
           {/* Exchange Button */}
-          {/* MODIFIED: Reverted colors for light mode */}
+          {/* MODIFIED: Adjusted colors for dark background */}
           <button
             onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
-            className="px-3 py-1.5 rounded-lg bg-white bg-opacity-30 text-gray-800 text-xs font-medium transition-colors hover:bg-opacity-40 flex items-center justify-center border border-gray-300"
+            className="px-3 py-1.5 rounded-lg bg-white bg-opacity-20 text-white text-xs font-medium transition-colors hover:bg-opacity-30 flex items-center justify-center border border-white border-opacity-30"
             title="Chuyển đổi Coin/Point"
           >
             Exchange
