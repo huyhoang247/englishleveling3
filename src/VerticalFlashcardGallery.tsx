@@ -61,7 +61,7 @@ const defaultImageUrls: string[] = [
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 
 // Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
-const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
+const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcard s, 'Comic', '66B2FF');
 
 // Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
@@ -504,6 +504,13 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                   </div>
                 </div>
               ))}
+
+              {/* Add "1234" at the end of the last page for the active tab */}
+              {currentPage === totalPages && filteredFlashcardsByTab.length > 0 && (
+                <div className="col-span-full text-center py-8 text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  1234
+                </div>
+              )}
             </div>
           ) : (
             // Display empty state for Favorite tab if no items
