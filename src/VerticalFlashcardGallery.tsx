@@ -55,23 +55,29 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
   return urls;
 };
 
-// Số lượng flashcard mẫu mong muốn (ví dụ: 55)
-const numberOfSampleFlashcards = 100; // Tăng số lượng để có nhiều ảnh hơn
+// Số lượng flashcard mẫu mong muốn (đảm bảo đủ lớn để chứa tất cả các ID có thể mở)
+// Dựa trên ảnh Firestore, có ID lên tới 197, nên đặt là 200 hoặc hơn.
+const numberOfSampleFlashcards = 200; // Tăng số lượng để có nhiều ảnh hơn
+
 
 // Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
 const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(numberOfSampleFlashcards - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
+  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
 ];
 
 
 // Danh sách URL ảnh cho phong cách Anime (Thêm dữ liệu mẫu)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 
 // Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 
 // Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
 
@@ -142,25 +148,52 @@ const initialVocabularyData: VocabularyData[] = [
 ];
 
 // Kết hợp dữ liệu ban đầu và dữ liệu mẫu
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
 const vocabularyData: VocabularyData[] = [
   ...initialVocabularyData,
-  ...generatePlaceholderVocabulary(numberOfSampleFlashcards - initialVocabularyData.length)
+  ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
 ];
 
 
-// --- Tạo mảng sampleFlashcards từ dữ liệu trên ---
-// Đảm bảo rằng tất cả các mảng (defaultImageUrls, animeImageUrls, ..., vocabularyData) có cùng độ dài
-const sampleFlashcards: Flashcard[] = vocabularyData.map((vocab, index) => ({
-  id: index + 1, // ID dựa trên vị trí (bắt đầu từ 1)
-  imageUrl: {
-    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index từ mảng đã mở rộng
-    anime: animeImageUrls[index], // Lấy ảnh anime theo index (nếu có)
-    comic: comicImageUrls[index], // Lấy ảnh comic theo index (nếu có)
-    realistic: realisticImageUrls[index], // Lấy ảnh realistic theo index (nếu có)
-  },
-  isFavorite: false, // Đặt trạng thái yêu thích mặc định
-  vocabulary: vocab, // Gán dữ liệu từ vựng theo index
-}));
+// --- Tạo mảng ALL_POSSIBLE_FLASHCARDS từ dữ liệu trên ---
+// Tạo một mảng chứa TẤT CẢ các flashcard tiềm năng, không phụ thuộc vào việc đã mở hay chưa.
+const ALL_POSSIBLE_FLASHCARDS: Flashcard[] = [];
+// Sử dụng số lượng lớn nhất giữa các mảng dữ liệu để đảm bảo tạo đủ flashcard
+const totalPossibleFlashcards = Math.max(
+    defaultImageUrls.length,
+    animeImageUrls.length,
+    comicImageUrls.length,
+    realisticImageUrls.length,
+    vocabularyData.length
+);
+
+for (let i = 0; i < totalPossibleFlashcards; i++) {
+    // Lấy dữ liệu theo index, sử dụng dữ liệu mặc định hoặc placeholder nếu index vượt quá độ dài mảng ban đầu
+    const vocab = vocabularyData[i] || {
+        word: `Word ${i + 1}`,
+        meaning: `Meaning of Word ${i + 1}`,
+        example: `Example sentence for Word ${i + 1}.`,
+        phrases: [`Phrase A ${i + 1}`, `Phrase B ${i + 1}`],
+        popularity: (i + 1) % 3 === 0 ? "Cao" : (i + 1) % 2 === 0 ? "Trung bình" : "Thấp",
+        synonyms: [`Synonym 1.${i + 1}`, `Synonym 2.${i + 1}`],
+        antonyms: [`Antonym 1.${i + 1}`, `Antonym 2.${i + 1}`]
+    };
+
+     const imageUrls: StyledImageUrls = {
+        default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${i + 1}`,
+        anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${i + 1}`,
+        comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${i + 1}`,
+        realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
+     };
+
+
+    ALL_POSSIBLE_FLASHCARDS.push({
+        id: i + 1, // ID dựa trên vị trí (bắt đầu từ 1)
+        imageUrl: imageUrls,
+        isFavorite: false, // Đặt trạng thái yêu thích mặc định
+        vocabulary: vocab, // Gán dữ liệu từ vựng theo index
+    });
+}
 
 
 // Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
@@ -231,8 +264,8 @@ const animations = `
 // Accept hideNavBar and showNavBar as props
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   const scrollContainerRef = useRef(null);
-  // We will now filter sampleFlashcards based on openedImageIds
-  const [flashcards, setFlashcards] = useState(sampleFlashcards);
+  // Initialize flashcards state with the full list of possible flashcards
+  const [flashcards, setFlashcards] = useState(ALL_POSSIBLE_FLASHCARDS);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [showFavoriteToast, setShowFavoriteToast] = useState(false);
   const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'favorite'
@@ -296,9 +329,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
 
   // Filter flashcards based on active tab AND openedImageIds
+  // Now filtering the full list of ALL_POSSIBLE_FLASHCARDS
   const filteredFlashcardsByTab = activeTab === 'collection'
-    ? flashcards.filter(card => openedImageIds.includes(card.id)) // Filter by openedImageIds for collection
-    : flashcards.filter(card => card.isFavorite);
+    ? ALL_POSSIBLE_FLASHCARDS.filter(card => openedImageIds.includes(card.id)) // Filter by openedImageIds for collection
+    : ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite); // Filter by isFavorite for favorite tab
+
 
   // Calculate total pages based on filtered flashcards
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
@@ -309,12 +344,15 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
 
 
-  const favoriteCount = flashcards.filter(card => card.isFavorite).length;
+  const favoriteCount = ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite).length; // Count favorites from the full list
   // Total flashcards in collection is now the count of opened images
   const totalFlashcardsInCollection = openedImageIds.length;
 
   // Toggle favorite status for a flashcard
   const toggleFavorite = (id: number) => { // Added type for id
+    // Update the favorite status in the main ALL_POSSIBLE_FLASHCARDS array
+    // Note: This change is local to the component's state and not persisted to Firestore yet.
+    // If you need favorite status to persist, you'll need to save it to Firestore as well.
     setFlashcards(prevCards =>
       prevCards.map(card =>
         card.id === id
