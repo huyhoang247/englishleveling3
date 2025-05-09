@@ -3,6 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 // import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới - Đã gỡ bỏ
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
+import { auth } from './firebase.js'; // Import auth để lấy user ID
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -22,7 +23,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
-    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y1="18"></line></g>,
   };
 
   if (!icons[name]) {
@@ -49,15 +50,17 @@ const Icon = ({ name, size = 24, className = '' }) => {
 };
 
 
-// Define props interface, including the new onClose prop
+// Define props interface, including the new onClose prop AND coin props
 interface CharacterCardProps {
   onClose?: () => void; // Optional function to call when closing
+  coins: number; // Added coins prop
+  onUpdateCoins: (amount: number) => Promise<void>; // Added function to update coins
 }
 
 
-// Update component signature to accept onClose prop
-export default function CharacterCard({ onClose }: CharacterCardProps) {
-  // State for character data
+// Update component signature to accept onClose prop AND coin props
+export default function CharacterCard({ onClose, coins, onUpdateCoins }: CharacterCardProps) {
+  // State for character data (excluding coins, which comes from props)
   const [character, setCharacter] = useState({
     title: "Chiến Binh", // Giữ nguyên state nhưng không hiển thị
     level: 75, // Giữ nguyên state nhưng không hiển thị
@@ -72,7 +75,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     skills: ["Chém Nhanh", "Phòng Thủ", "Kỹ Năng Đặc Biệt"],
     elements: [], // Removed elements from state
     rank: "Cao Thủ", // Giữ nguyên state nhưng không hiển thị
-    coins: 3850
+    // coins: 3850 // REMOVED: Coins are now handled by props
   });
 
   // State for stat points allocation
@@ -164,6 +167,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
       ...character,
       stats: {...tempStats}
     });
+    // TODO: Implement Firestore update for stats here if needed
     setShowPointsPanel(false); // Hide the allocation panel
   };
 
@@ -210,40 +214,57 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
      setTempStats(baseStats);
      // Add the refunded points to the available stat points
      setStatPoints(statPoints + pointsRefunded);
+     // TODO: Implement Firestore update for stats after reset if needed
      // REMOVED: Close the reset modal after successful reset (modal state removed)
      // setShowResetModal(false);
   };
 
 
   // Function to handle the coin/point exchange
-  const handleExchange = () => {
+  const handleExchange = async () => { // Made async because onUpdateCoins is async
     if (exchangeDirection === 'coinToPoint') {
       // Exchange Coins for Points (100 Coins = 1 Point)
-      if (character.coins >= exchangeAmount) { // Check if enough coins
-        setCharacter({
-          ...character,
-          coins: character.coins - exchangeAmount // Deduct coins
-        });
+      if (coins >= exchangeAmount) { // Check if enough coins (using coins prop)
+        // Update coins in Firestore via the prop function
+        if (auth.currentUser) {
+            await onUpdateCoins(-exchangeAmount); // Deduct coins
+        } else {
+            console.error("User not authenticated for coin update.");
+            // Handle error or inform user
+            return; // Stop if not authenticated
+        }
+
         setStatPoints(statPoints + Math.floor(exchangeAmount / 100)); // Add points
         // Trigger point badge pulse effect
         setPointBadgePulse(true);
         setTimeout(() => setPointBadgePulse(false), 1500);
+      } else {
+          console.log("Not enough coins for exchange.");
+          // Optionally show an error message to the user
       }
     } else {
       // Exchange Points for Coins (1 Point = 100 Coins)
       if (statPoints >= exchangeAmount) { // Check if enough points
-        setCharacter({
-          ...character,
-          coins: character.coins + (exchangeAmount * 100) // Add coins
-        });
+         // Update coins in Firestore via the prop function
+         if (auth.currentUser) {
+            await onUpdateCoins(exchangeAmount * 100); // Add coins
+         } else {
+            console.error("User not authenticated for coin update.");
+            // Handle error or inform user
+            return; // Stop if not authenticated
+         }
+
         setStatPoints(statPoints - exchangeAmount); // Deduct points
         // Trigger coin badge pulse effect
         setCoinBadgePulse(true);
         setTimeout(() => setCoinBadgePulse(false), 1500);
+      } else {
+          console.log("Not enough points for exchange.");
+          // Optionally show an error message to the user
       }
-      }
-      setShowExchangeModal(false); // Close the exchange modal
-      };
+    }
+    setShowExchangeModal(false); // Close the exchange modal
+  };
 
   // Function to adjust the amount for exchange
   const adjustExchangeAmount = (amount) => {
@@ -413,7 +434,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     // Check if the user has enough resources for the selected exchange
     const hasEnoughResources = () => {
       if (exchangeDirection === 'coinToPoint') {
-        return character.coins >= exchangeAmount;
+        return coins >= exchangeAmount; // Use coins prop
       } else {
         return statPoints >= exchangeAmount;
       }
@@ -469,7 +490,7 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
               {/* MODIFIED: Reverted text color for light mode */}
               <div className="ml-auto text-xs text-gray-500">
                 {exchangeDirection === 'coinToPoint' ?
-                  `Hiện có: ${character.coins.toLocaleString()} Coin` :
+                  `Hiện có: ${coins.toLocaleString()} Coin` : // Use coins prop
                   `Hiện có: ${statPoints} Point`
                 }
               </div>
@@ -621,8 +642,8 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
                     border border-white border-opacity-30 rounded-xl p-2 shadow-lg z-10"> {/* Kept opacity for glassmorphism */}
 
           {/* Use the CoinDisplay component here */}
-          {/* Pass the current coin amount and isStatsFullscreen={false} */}
-          <CoinDisplay displayedCoins={character.coins} isStatsFullscreen={false} />
+          {/* Pass the coins prop to CoinDisplay */}
+          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
 
           {/* Exchange Button */}
           {/* MODIFIED: Reverted colors for light mode */}
@@ -825,3 +846,4 @@ export default function CharacterCard({ onClose }: CharacterCardProps) {
     </div> // End of main CharacterCard container
   );
 }
+
