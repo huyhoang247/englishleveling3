@@ -1549,17 +1549,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
           <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30">
             <div className="flex items-center">
-                {/* Updated Stats Icon - Increased size to w-10 h-10 */}
+                {/* Updated Stats Icon - Reverted size and changed image source */}
                 <div
-                  className="relative mr-2 cursor-pointer w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform" // Adjusted size
+                  className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform" // Reverted size
                   onClick={toggleStatsFullscreen}
                   title="Xem chỉ số nhân vật"
                 >
-                     <DotLottieReact
-                        src="https://lottie.host/f557507e-4cfc-4269-b62c-cc6ea2485ec4/TFkVmVXP4K.lottie"
-                        loop
-                        autoplay={!isStatsFullscreen && !isLoadingUserData} // Autoplay only when game is not fullscreen and not loading
-                        className="w-full h-full" // Ensure Lottie fills the container
+                     <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
+                        alt="Award Icon" // Added alt text
+                        className="w-full h-full object-contain" // Ensure image fits
+                         onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = "https://placehold.co/32x32/ffffff/000000?text=Stats"; // Placeholder on error
+                        }}
                       />
                 </div>
 
