@@ -1,7 +1,7 @@
 // src/index.tsx
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import Home from './background-game.tsx';
+import Home from './background-game.tsx'; // Assuming Home is in background-game.tsx
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './profile.tsx';
@@ -38,7 +38,8 @@ const ensureUserDocumentExists = async (user: User) => {
         createdAt: new Date(), // Thêm timestamp thời gian tạo
         coins: 0, // Giá trị mặc định ban đầu
         gems: 0,   // Giá trị mặc định ban đầu
-        keys: 0    // Giá trị mặc định ban đầu
+        keys: 0,    // Giá trị mặc định ban đầu
+        openedImageIds: [] // Initialize openedImageIds as an empty array
         // Thêm các trường mặc định khác nếu cần
       });
       console.log(`User document for ${user.uid} created successfully.`);
@@ -51,6 +52,11 @@ const ensureUserDocumentExists = async (user: User) => {
           console.log(`Updating email for user ${user.uid} in Firestore.`);
           await setDoc(userDocRef, { email: user.email }, { merge: true }); // Sử dụng merge để chỉ cập nhật trường email
       }
+       // Ensure openedImageIds field exists if it's missing (for existing users before this change)
+       if (!userData?.openedImageIds) {
+           console.log(`Adding openedImageIds field for user ${user.uid}.`);
+           await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
+       }
     }
   } catch (error) {
     console.error("Error ensuring user document exists:", error);
@@ -84,7 +90,7 @@ const App: React.FC = () => {
 
     // Cleanup subscription khi component unmount
     return () => unsubscribe();
-  }, []); // Depend on auth object (implicitly used by onAuthStateChanged)
+  }, [auth]); // Depend on auth object (implicitly used by onAuthStateChanged)
 
   // Hàm xử lý thay đổi tab
   const handleTabChange = (tab: TabType) => {
@@ -126,7 +132,11 @@ const App: React.FC = () => {
     <div className="app-container">
       {/* Hiển thị component dựa trên activeTab state */}
       {activeTab === 'home' && (
-        <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
+        <Home
+          hideNavBar={hideNavBar}
+          showNavBar={showNavBar}
+          currentUser={currentUser} // Truyền currentUser ở đây
+        />
       )}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && (
@@ -157,4 +167,3 @@ const root = createRoot(container);
 root.render(<App />);
 
 export default App;
-
