@@ -1497,13 +1497,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         }
         */
 
-        /* NEW: Glass Shadow Border Effect (Border removed) */
+        /* NEW: Glass Shadow Border Effect (Reduced intensity) */
         .glass-shadow-border {
-            /* border-bottom: 2px solid rgba(255, 255, 255, 0.8); /* Removed */
             box-shadow:
-                0 4px 8px rgba(0, 0, 0, 0.6), /* Darker shadow below */
-                0 8px 15px rgba(0, 0, 0, 0.4), /* Even darker, more spread shadow */
-                inset 0 -2px 4px rgba(255, 255, 255, 0.2); /* Inner white highlight at bottom */
+                0 2px 4px rgba(0, 0, 0, 0.4), /* Reduced spread and opacity */
+                0 4px 8px rgba(0, 0, 0, 0.3), /* Reduced spread and opacity */
+                inset 0 -1px 2px rgba(255, 255, 255, 0.15); /* Reduced inset highlight */
         }
 
       `}</style>
