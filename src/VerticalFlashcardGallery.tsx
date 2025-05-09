@@ -274,7 +274,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
     // Show favorite status toast
     setShowFavoriteToast(true);
-    setTimeout(() => setShowFavoriteToast(2000), false);
+    setTimeout(() => setShowFavoriteToast(false), 2000);
   };
 
   // Function to open vocabulary detail modal
@@ -527,8 +527,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           {/* --- Pagination Controls --- */}
           {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
-            // Added mb-4 class here to increase bottom margin
-            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 mb-4"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing */}
+            // Added mb-12 class here to increase bottom margin
+            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 mb-12"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
