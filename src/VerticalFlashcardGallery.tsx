@@ -318,14 +318,16 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
   return (
     // Main container now handles scrolling
+    // Removed px-4 from this div to remove horizontal padding
     <div className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
       {/* Inject CSS animations */}
       <style>{animations}</style>
 
       {/* Header with Tabs and Settings */}
       {/* This div will now scroll with the content */}
-      <div className="w-full max-w-6xl px-4 py-6 mx-auto"> {/* Added mx-auto for centering */}
-        <div className="flex justify-between items-center mb-4">
+      {/* Removed px-4 from this div as well */}
+      <div className="w-full max-w-6xl py-6 mx-auto"> {/* Added mx-auto for centering */}
+        <div className="flex justify-between items-center mb-4 px-4"> {/* Added px-4 back here to keep padding around header content */}
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1> {/* Added dark mode text color */}
 
           {/* Setting Button with hover effect */}
@@ -353,7 +355,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
         </div>
 
         {/* Redesigned Tab Navigation - With improved background color */}
-        <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700"> {/* Added dark mode styles */}
+        {/* Removed px-4 from this div as well */}
+        <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4"> {/* Added dark mode styles, added mx-4 to keep padding around tabs */}
           <button
             onClick={() => { setActiveTab('collection'); setCurrentPage(1); }} // Reset page on tab change
             className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
@@ -408,14 +411,17 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
       {/* Main Content - Removed flex-1 from this container to fix the layout issue */}
       {/* This div now allows the grid layout inside to function correctly */}
       {/* Removed pb-16 class to allow pagination to sit at the bottom of the content */}
-      <div className="p-4 min-h-0">
+      {/* Removed p-4 from this div */}
+      <div className="min-h-0">
+        {/* Removed px-4 from this div */}
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
             // Removed pb-12 from here as we are adding it to the pagination container
+            // Added px-4 to the grid container to add padding back only around the grid items
             <div
               ref={scrollContainerRef}
-              className={`grid gap-4 ${
+              className={`grid gap-4 px-4 ${ // Added px-4 here
                 layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'
               }`}
             >
@@ -508,7 +514,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
             </div>
           ) : (
             // Display empty state for Favorite tab if no items
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex flex-col items-center justify-center py-16 text-center px-4"> {/* Added px-4 here */}
               <div className="bg-pink-50 dark:bg-pink-900 p-6 rounded-full mb-4"> {/* Added dark mode styles */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -528,7 +534,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
             // Removed border-t and border-gray classes from this container
-            <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, CHANGED pb-12 to pb-24 */}
+            // Added px-4 to the pagination container
+            <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, CHANGED pb-12 to pb-24, Added px-4 */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
