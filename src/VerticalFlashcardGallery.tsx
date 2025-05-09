@@ -412,11 +412,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
+            // Added pb-12 here to increase bottom padding
             <div
               ref={scrollContainerRef}
               className={`grid gap-4 ${
                 layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'
-              }`}
+              } pb-12`} // Added pb-12 here
             >
               {flashcardsForCurrentPage.map((card) => ( // Use flashcardsForCurrentPage
                 // Removed w-[48%] and w-full as grid handles width
@@ -527,8 +528,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           {/* --- Pagination Controls --- */}
           {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
-            // Added mb-12 class here to increase bottom margin
-            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 mb-12"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing */}
+            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
@@ -880,3 +880,4 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     </div>
   );
 }
+
