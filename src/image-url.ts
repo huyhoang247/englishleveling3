@@ -1,6 +1,3 @@
-// imageUrls.ts
-
-// Danh sách URL ảnh cho phong cách Mặc định (Default)
 export const defaultImageUrls: string[] = [
 "https://images.pixieset.com/19327409/036a726ff9aca3e1114a752358bd0127-medium.png",
 "https://images.pixieset.com/19327409/42c0247a576956dd2401faf3a8b16e7a-medium.png",
