@@ -293,6 +293,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   // --- NEW: Function to update user's coin count in Firestore using a transaction ---
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
+    console.log("updateCoinsInFirestore called with amount:", amount); // Debug Log 4
     if (!userId) {
       console.error("Cannot update coins: User not authenticated.");
       return;
@@ -301,6 +302,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     const userDocRef = doc(db, 'users', userId);
 
     try {
+      console.log("Attempting Firestore transaction..."); // Debug Log 5
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
@@ -314,18 +316,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           console.log(`Coins updated in Firestore for user ${userId}: ${currentCoins} -> ${newCoins}`);
         }
       });
+      console.log("Firestore transaction successful."); // Debug Log 6
       // Set state to show "OK" text after successful transaction
       setShowCoinUpdateSuccess(true);
-      console.log("Firestore update successful, showing OK text.");
+      console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
 
     } catch (error) {
-      console.error("Transaction failed: ", error);
+      console.error("Firestore Transaction failed: ", error); // Debug Log 8
       // Handle the error, maybe retry or inform the user
     }
   };
 
    // Coin count animation function (Kept in main game file)
   const startCoinCountAnimation = (reward: number) => {
+      console.log("startCoinCountAnimation called with reward:", reward); // Debug Log 2
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
@@ -343,10 +347,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               setCoins(newCoins); // Ensure the actual coin count is updated at the end
               clearInterval(countInterval);
               coinCountAnimationTimerRef.current = null; // Clear the ref after animation
+              console.log("Coin count animation finished. Attempting Firestore update."); // Debug Log 3
 
               // NEW: Update coins in Firestore AFTER the animation finishes
               if (auth.currentUser) {
                  updateCoinsInFirestore(auth.currentUser.uid, reward); // Update Firestore with the reward amount
+              } else {
+                 console.log("User not authenticated, skipping Firestore update.");
               }
 
           } else {
@@ -950,6 +957,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                             if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
                                 collisionDetected = true;
                                 const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                                console.log(`Coin collected! Awarded: ${awardedCoins}. Calling startCoinCountAnimation.`); // Debug Log 1
                                 startCoinCountAnimation(awardedCoins); // This now triggers Firestore update internally
 
                                 console.log(`Coin collected! Awarded: ${awardedCoins}`);
