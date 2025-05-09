@@ -53,7 +53,7 @@ const numberOfSampleFlashcards = 55;
 // Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
 const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(numberOfSampleFlashcard s - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
+  ...generatePlaceholderUrls(numberOfSampleFlashcards - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
 ];
 
 
