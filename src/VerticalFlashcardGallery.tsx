@@ -251,275 +251,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     : flashcards.filter(card => card.isFavorite);
 
   // Calculate total pages based on filtered flashcards
-  const totalPages = Math.ceil(filteredFlashcard**thought
-The user wants to move the pagination controls to the bottom of the content, not fixed at the bottom of the screen.
-
-I have already made the necessary changes in the previous turn:
-1.  Removed `fixed`, `bottom-0`, `left-0`, `right-0`, `z-30`, `shadow-lg` classes from the pagination div.
-2.  Moved the pagination div (`<div className="p-4 flex justify-center bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 mt-4">`) *after* the main content div (`<div className="p-4 pb-16 min-h-0">...</div>`).
-3.  Added `mt-4` to the pagination div for spacing.
-4.  Kept the main container (`flex flex-col h-screen overflow-y-auto`) to handle scrolling.
-
-The code provided in the last turn already implements this change. I should inform the user that the change has been made and provide the complete updated code again.Tôi đã cập nhật mã để di chuyển phần phân trang xuống cuối nội dung của trang. Bây giờ nó sẽ cuộn cùng với các flashcard.
-
-Dưới đây là mã React đã được chỉnh sửa:
-
-
-```react
-import { useRef, useState, useEffect } from 'react';
-import FlashcardDetailModal from './story/flashcard.tsx'; // Import the new component
-// Import defaultImageUrls from the new file
-import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; // Adjust the path if necessary and rename import
-
-// Define the props interface for VerticalFlashcardGallery
-interface VerticalFlashcardGalleryProps {
-  hideNavBar: () => void; // Function to hide the nav bar
-  showNavBar: () => void; // Function to show the nav bar
-}
-
-// Define the structure for image URLs by style
-interface StyledImageUrls {
-  default: string;
-  anime?: string; // Optional URL for anime style
-  comic?: string; // Optional URL for comic style
-  realistic?: string; // Optional URL for realistic style
-  // Add more styles as needed
-}
-
-// Define the structure for vocabulary data
-interface VocabularyData {
-  word: string;
-  meaning: string;
-  example: string;
-  phrases: string[];
-  popularity: string;
-  synonyms: string[];
-  antonyms: string[];
-}
-
-// Define the structure for a flashcard, including styled image URLs
-interface Flashcard {
-  id: number;
-  imageUrl: StyledImageUrls; // Now an object containing URLs for different styles
-  isFavorite: boolean;
-  vocabulary: VocabularyData; // Use the VocabularyData interface
-}
-
-// --- Dữ liệu ảnh theo từng phong cách (Thêm dữ liệu mẫu để có hơn 50 ảnh) ---
-// Tạo mảng dữ liệu mẫu lớn hơn
-const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
-  const urls: string[] = [];
-  for (let i = 1; i <= count; i++) {
-    urls.push(`https://placehold.co/1024x1536/${color}/FFFFFF?text=${text}+${i}`);
-  }
-  return urls;
-};
-
-// Số lượng flashcard mẫu mong muốn (ví dụ: 55)
-const numberOfSampleFlashcards = 55;
-
-// Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
-const defaultImageUrls: string[] = [
-  ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(numberOfSampleFlashcards - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
-];
-
-
-// Danh sách URL ảnh cho phong cách Anime (Thêm dữ liệu mẫu)
-const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
-
-// Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
-const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
-
-// Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
-const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
-
-
-// --- Dữ liệu từ vựng (Thêm dữ liệu mẫu để có hơn 50 mục) ---
-const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
-  const data: VocabularyData[] = [];
-  for (let i = 1; i <= count; i++) {
-    data.push({
-      word: `Word ${i}`,
-      meaning: `Meaning of Word ${i}`,
-      example: `Example sentence for Word ${i}.`,
-      phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
-      popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
-      synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
-      antonyms: [`Antonym 1.${i}`, `Antonym 2.${i}`]
-    });
-  }
-  return data;
-};
-
-// Dữ liệu từ vựng ban đầu (từ file cũ)
-const initialVocabularyData: VocabularyData[] = [
-  {
-    word: "Source",
-    meaning: "Nguồn, gốc",
-    example: "What is the source of this information?",
-    phrases: ["Information source", "Primary source"],
-    popularity: "Cao",
-    synonyms: ["Origin", "Root", "Beginning"],
-    antonyms: ["Result", "Outcome", "End"]
-  },
-  {
-    word: "Insurance",
-    meaning: "Bảo hiểm",
-    example: "You should buy travel insurance before your trip.",
-    phrases: ["Health insurance", "Car insurance"],
-    popularity: "Cao",
-    synonyms: ["Assurance", "Coverage", "Protection"],
-    antonyms: ["Risk", "Danger", "Exposure"]
-  },
-  {
-    word: "Argument",
-    meaning: "Cuộc tranh luận, lý lẽ",
-    example: "They had a heated argument about politics.",
-    phrases: ["Strong argument", "Logical argument"],
-    popularity: "Trung bình",
-    synonyms: ["Dispute", "Debate", "Reasoning"],
-    antonyms: ["Agreement", "Harmony", "Peace"]
-  },
-  {
-    word: "Influence",
-    meaning: "Ảnh hưởng",
-    example: "His parents had a strong influence on his career choice.",
-    phrases: ["Direct influence", "Negative influence"],
-    popularity: "Cao",
-    synonyms: ["Impact", "Effect", "Control"],
-    antonyms: ["Lack of effect", "Insignificance"]
-  },
-  {
-    word: "Vocabulary 5", // Thay thế bằng từ vựng thứ năm nếu có
-    meaning: "Nghĩa của từ vựng 5",
-    example: "Ví dụ cho từ vựng 5.",
-    phrases: ["Cụm từ 1", "Cụm từ 2"],
-    popularity: "Thấp",
-    synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
-    antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
-  }
-];
-
-// Kết hợp dữ liệu ban đầu và dữ liệu mẫu
-const vocabularyData: VocabularyData[] = [
-  ...initialVocabularyData,
-  ...generatePlaceholderVocabulary(numberOfSampleFlashcards - initialVocabularyData.length)
-];
-
-
-// --- Tạo mảng sampleFlashcards từ dữ liệu trên ---
-// Đảm bảo rằng tất cả các mảng (defaultImageUrls, animeImageUrls, ..., vocabularyData) có cùng độ dài
-const sampleFlashcards: Flashcard[] = vocabularyData.map((vocab, index) => ({
-  id: index + 1, // ID dựa trên vị trí (bắt đầu từ 1)
-  imageUrl: {
-    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index từ mảng đã mở rộng
-    anime: animeImageUrls[index], // Lấy ảnh anime theo index (nếu có)
-    comic: comicImageUrls[index], // Lấy ảnh comic theo index (nếu có)
-    realistic: realisticImageUrls[index], // Lấy ảnh realistic theo index (nếu có)
-  },
-  isFavorite: false, // Đặt trạng thái yêu thích mặc định
-  vocabulary: vocab, // Gán dữ liệu từ vựng theo index
-}));
-
-
-// Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
-const exampleImages = [
-  "[https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1](https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1)", // Placeholder example images
-  "[https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2](https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2)",
-  "[https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3](https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3)",
-  "[https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4](https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4)",
-  "[https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5](https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5)",
-  // Add more images if needed
-];
-
-
-// Animation styles for toast and settings modal
-const animations = `
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(-10px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
-  }
-
-  @keyframes slideIn {
-    0% { transform: translateY(20px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-  }
-
-  @keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-
-  @keyframes scaleIn {
-    0% { transform: scale(0.95); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-
-  /* Animation for backdrop */
-  @keyframes modalBackdropIn {
-    0% { opacity: 0; }
-    100% { opacity: 0.4; } /* Use 0.4 opacity as requested */
-  }
-
-  /* Animation for modal (added but not used in the new settings code) */
-  @keyframes modalIn {
-    0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
-  }
-
-  /* Adding style-specific animations */
-  @keyframes animeSparkle {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
-  }
-
-  @keyframes comicPop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-
-  @keyframes realisticShine {
-    0% { background-position: -100% 0; }
-    100% { background-position: 200% 0; }
-  }
-`;
-
-// Accept hideNavBar and showNavBar as props
-export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: VerticalFlashcardGalleryProps) {
-  const scrollContainerRef = useRef(null);
-  const [flashcards, setFlashcards] = useState(sampleFlashcards);
-  const [isSettingsHovered, setIsSettingsHovered] = useState(false);
-  const [showFavoriteToast, setShowFavoriteToast] = useState(false);
-  const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'favorite'
-  const [showSettings, setShowSettings] = useState(false);
-  const [layoutMode, setLayoutMode] = useState('single'); // 'single' or 'double'
-
-  // Add a new state variable for visual style
-  const [visualStyle, setVisualStyle] = useState('default'); // 'default', 'anime', 'comic', or 'realistic'
-
-  // Add this after the visualStyle state
-  const [imageDetail, setImageDetail] = useState('basic'); // 'basic', 'phrase', or 'example'
-
-  // State to manage the selected card for detail view
-  const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null); // Use Flashcard type
-  // State to manage vocabulary modal visibility - Now used by FlashcardDetailModal
-  const [showVocabDetail, setShowVocabDetail] = useState(false);
-
-  // --- Pagination States ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50; // Set items per page to 50
-
-  // Filter flashcards based on active tab
-  const filteredFlashcardsByTab = activeTab === 'collection'
-    ? flashcards
-    : flashcards.filter(card => card.isFavorite);
-
-  // Calculate total pages based on filtered flashcards
-  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredFlashcard sByTab.length / itemsPerPage);
 
   // Get flashcards for the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -605,7 +337,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
             onClick={() => setShowSettings(!showSettings)}
           >
             <svg
-              xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+              xmlns="http://www.w3.org/2000/svg"
               className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} // Added dark mode styles
               viewBox="0 0 24 24"
               fill="none"
@@ -631,7 +363,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
             }`}
           >
             <svg
-              xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+              xmlns="http://www.w3.org/2000/svg"
               className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} // Added dark mode styles
               viewBox="0 0 24 24"
               fill="none"
@@ -656,7 +388,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
             }`}
           >
             <svg
-              xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+              xmlns="http://www.w3.org/2000/svg"
               className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} // Added dark mode styles
               viewBox="0 0 24 24"
               fill={activeTab === 'favorite' ? "currentColor" : "none"}
@@ -705,8 +437,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       {/* Replaced SVG with img tag and added opacity class */}
                       <img
                         src={card.isFavorite
-                          ? "[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png)"
-                          : "[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png)"
+                          ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png"
+                          : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"
                         }
                         alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"}
                         className={`transition-all duration-300 ${
@@ -778,7 +510,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="bg-pink-50 dark:bg-pink-900 p-6 rounded-full mb-4"> {/* Added dark mode styles */}
                 <svg
-                  xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+                  xmlns="http://www.w3.org/2000/svg"
                   className="h-16 w-16 text-pink-300 dark:text-pink-600" // Added dark mode styles
                   viewBox="0 0 24 24"
                   fill="currentColor"
@@ -790,57 +522,57 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
               <p className="text-gray-500 dark:text-gray-400 max-w-md">Nhấn vào biểu tượng trái tim trên flashcard để thêm vào danh sách yêu thích của bạn</p> {/* Added dark mode styles */}
             </div>
           )}
+
+          {/* --- Pagination Controls --- */}
+          {totalPages > 1 && ( // Only show pagination if there's more than one page
+            // Removed fixed positioning classes
+            <div className="mt-8 p-4 flex justify-center z-30"> {/* Added margin-top for spacing */}
+              <nav className="flex space-x-2" aria-label="Pagination">
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                    currentPage === 1
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
+                      : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                  }`}
+                >
+                  Trước
+                </button>
+
+                {/* Page Number Buttons */}
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                      currentPage === index + 1
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                    currentPage === totalPages
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
+                      : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                  }`}
+                >
+                  Sau
+                </button>
+              </nav>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* --- Pagination Controls --- */}
-      {/* Moved from fixed position to flow with content */}
-      {totalPages > 1 && ( // Only show pagination if there's more than one page
-        <div className="p-4 flex justify-center bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 mt-4"> {/* Removed fixed, bottom-0, left-0, right-0, z-30, shadow-lg. Added mt-4 */}
-           <nav className="flex space-x-2" aria-label="Pagination">
-            {/* Previous Button */}
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                currentPage === 1
-                  ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
-                  : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
-              }`}
-            >
-              Trước
-            </button>
-
-            {/* Page Number Buttons */}
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => handlePageChange(index + 1)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                  currentPage === index + 1
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-
-            {/* Next Button */}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                currentPage === totalPages
-                  ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
-                  : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
-              }`}
-            >
-              Sau
-            </button>
-          </nav>
-        </div>
-      )}
 
 
       {/* Settings Panel Popup */}
@@ -865,7 +597,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0"> {/* Added flex-shrink-0 */}
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold text-white flex items-center">
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3"></circle>
                       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
@@ -875,7 +607,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                     onClick={() => setShowSettings(false)}
                     className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"
                   >
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -887,7 +619,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 {/* Layout Mode */}
                 <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"> {/* Changed mb-3 to mb-2, Added dark mode styles */}
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
                       <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                     Bố cục hiển thị
@@ -925,7 +657,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 {/* Visual Style */}
                 <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"> {/* Changed mb-3 to mb-2, Added dark mode styles */}
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
                       <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" />
                     </svg>
                     Phong cách hiển thị
@@ -945,7 +677,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
                         visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                         </svg>
                       </div>
@@ -964,7 +696,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
                         visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                           <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                         </svg>
@@ -984,7 +716,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
                         visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
                         </svg>
                       </div>
@@ -1003,7 +735,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
                         visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -1015,7 +747,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 {/* Image Detail */}
                 <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"> {/* Changed mb-3 to mb-2, Added dark mode styles */}
-                    <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                       <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                     </svg>
@@ -1036,7 +768,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
                         imageDetail === 'basic' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                         </svg>
                       </div>
@@ -1055,7 +787,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
                         imageDetail === 'phrase' ? 'bg-purple-100 dark:bg-purple-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${imageDetail === 'phrase' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'phrase' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5z" />
                           <path d="M11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
                         </svg>
@@ -1075,7 +807,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
                         imageDetail === 'example' ? 'bg-teal-100 dark:bg-teal-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className={`h-3 w-3 ${imageDetail === 'example' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'example' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -1100,7 +832,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                   className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center" // Changed py-2 to py-2.5
                   onClick={() => setShowSettings(false)}
                 >
-                  <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                   Áp dụng
@@ -1118,7 +850,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           style={{ animation: 'fadeInOut 2s forwards' }}
         >
           <svg
-            xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
+            xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 mr-2 text-pink-600 dark:text-pink-400" // Added dark mode styles
             viewBox="0 0 20 20"
             fill="currentColor"
