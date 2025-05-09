@@ -48,7 +48,7 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
 };
 
 // Số lượng flashcard mẫu mong muốn (ví dụ: 55)
-const numberOfSampleFlashcards = 190;
+const numberOfSampleFlashcards = 55;
 
 // Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
 const defaultImageUrls: string[] = [
@@ -407,7 +407,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
       {/* Main Content - Removed flex-1 from this container to fix the layout issue */}
       {/* This div now allows the grid layout inside to function correctly */}
-      <div className="p-4 pb-16 min-h-0">
+      {/* Added pb-24 to ensure space for the pagination bar */}
+      <div className="p-4 pb-24 min-h-0">
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
           {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
@@ -771,7 +772,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                         </svg>
                       </div>
-                      <span className={`text-xs text-center ${imageDetail === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ảnh gốc</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                      <span className={`text-xs text-center ${imageDetail === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ảnh gốc</span> {/* Changed text-sm to text-xs, and text to "Cơ Bản", Added dark mode styles */}
                     </div>
 
                     {/* Phrase Detail */}
