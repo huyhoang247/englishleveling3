@@ -425,6 +425,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                   {/* Flashcard component rendering */}
                   <div
                     id={`flashcard-${card.id}`}
+                    // Removed border classes from here
                     className={`flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
                   >
                     {/* Hover effect for flashcard */}
@@ -453,10 +454,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
 
                     {/* Image aspect ratio container with style effects */}
                     <div className="w-full">
+                      {/* Removed conditional border classes from this div */}
                       <div className={`relative w-full ${
-                        // Apply frame styles based on visualStyle
-                        visualStyle === 'anime' ? 'border-4 border-pink-300 bg-pink-50 dark:border-pink-700 dark:bg-pink-900' : // Added dark mode styles
-                        visualStyle === 'comic' ? 'border-4 border-blue-300 border-dashed bg-blue-50 dark:border-blue-700 dark:bg-blue-900' : // Added dark mode styles
                         visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
                         ''
                       }`}>
@@ -528,13 +527,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           {/* --- Pagination Controls --- */}
           {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
-            // Added pb-24 here to add more padding below the pagination
-            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 pb-24"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, CHANGED pb-12 to pb-24 */}
+            // Removed border-t and border-gray classes from this container
+            <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, CHANGED pb-12 to pb-24 */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
+                  // Removed border classes from here
                   className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
                     currentPage === 1
                       ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
@@ -549,6 +549,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                   <button
                     key={index + 1}
                     onClick={() => handlePageChange(index + 1)}
+                    // Removed border classes from here
                     className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
                       currentPage === index + 1
                         ? 'bg-indigo-600 text-white shadow-md'
@@ -563,6 +564,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
+                  // Removed border classes from here
                   className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
                     currentPage === totalPages
                       ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
@@ -881,3 +883,4 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     </div>
   );
 }
+
