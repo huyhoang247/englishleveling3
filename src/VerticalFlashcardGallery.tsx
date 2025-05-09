@@ -48,7 +48,7 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
 };
 
 // Số lượng flashcard mẫu mong muốn (ví dụ: 55)
-const numberOfSampleFlashcards = 55;
+const numberOfSampleFlashcards = 190;
 
 // Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
 const defaultImageUrls: string[] = [
