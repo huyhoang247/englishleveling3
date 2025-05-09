@@ -180,8 +180,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
   const coinScheduleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new coins
   const coinCountAnimationTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for coin count animation
-  // NEW: State to show "OK" text after coin update
-  const [showCoinUpdateSuccess, setShowCoinUpdateSuccess] = useState(false);
+  // REMOVED: State to show "OK" text after coin update
+  // const [showCoinUpdateSuccess, setShowCoinUpdateSuccess] = useState(false);
 
 
   // NEW: Gems state (Moved from TreasureChest)
@@ -317,9 +317,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         }
       });
       console.log("Firestore transaction successful."); // Debug Log 6
-      // Set state to show "OK" text after successful transaction
-      setShowCoinUpdateSuccess(true);
-      console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
+      // REMOVED: Set state to show "OK" text after successful transaction
+      // setShowCoinUpdateSuccess(true);
+      // console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
 
     } catch (error) {
       console.error("Firestore Transaction failed: ", error); // Debug Log 8
@@ -400,7 +400,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     setDamageAmount(0);
     setShowDamageNumber(false);
     setIsStatsFullscreen(false);
-    setShowCoinUpdateSuccess(false); // Reset success text state
+    // REMOVED: Reset success text state
+    // setShowCoinUpdateSuccess(false);
 
 
     // Coin, Gem, Key counts are now loaded from Firestore on user auth,
@@ -501,7 +502,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         setGems(0); // Reset local gems state
         setKeyCount(0); // Reset local key state
         setIsLoadingUserData(false); // Stop loading if user logs out
-        setShowCoinUpdateSuccess(false); // Reset success text state
+        // REMOVED: Reset success text state
+        // setShowCoinUpdateSuccess(false);
       }
     });
 
@@ -1110,20 +1112,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData]); // Added isLoadingUserData to dependencies
 
-  // NEW: Effect to hide the "OK" text after a few seconds
-  useEffect(() => {
-      let successTimer: NodeJS.Timeout | null = null;
-      if (showCoinUpdateSuccess) {
-          successTimer = setTimeout(() => {
-              setShowCoinUpdateSuccess(false);
-          }, 2000); // Hide after 2 seconds
-      }
-      return () => {
-          if (successTimer) {
-              clearTimeout(successTimer);
-          }
-      };
-  }, [showCoinUpdateSuccess]);
+  // REMOVED: Effect to hide the "OK" text after a few seconds
+  // useEffect(() => {
+  //     let successTimer: NodeJS.Timeout | null = null;
+  //     if (showCoinUpdateSuccess) {
+  //         successTimer = setTimeout(() => {
+  //             setShowCoinUpdateSuccess(false);
+  //         }, 2000); // Hide after 2 seconds
+  //     }
+  //     return () => {
+  //         if (successTimer) {
+  //             clearTimeout(successTimer);
+  //         }
+  //     };
+  // }, [showCoinUpdateSuccess]);
 
 
   // Effect to clean up all timers when the component unmounts
@@ -1465,14 +1467,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           0% { transform: translate(-50%, 0); opacity: 1; }
           100% { transform: translate(-50%, -20px); opacity: 0; }
         }
-        /* NEW: Animation for OK text */
-        @keyframes fadeInOut {
+        /* REMOVED: Animation for OK text */
+        /* @keyframes fadeInOut {
             0%, 100% { opacity: 0; }
             50% { opacity: 1; }
         }
         .animate-fadeInOut {
             animation: fadeInOut 2s ease-in-out forwards;
-        }
+        } */
       `}</style>
        <style jsx global>{`
         body {
@@ -1577,12 +1579,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </div>
              {!isStatsFullscreen && (
                 <div className="flex items-center space-x-1 currency-display-container relative">
-                    {/* NEW: Display "OK" text */}
-                    {showCoinUpdateSuccess && (
+                    {/* REMOVED: Display "OK" text */}
+                    {/* {showCoinUpdateSuccess && (
                         <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
                             OK
                         </div>
-                    )}
+                    )} */}
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center">
@@ -1787,3 +1789,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
+
