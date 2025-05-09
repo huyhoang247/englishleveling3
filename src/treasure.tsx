@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 // Import the image URLs list
-import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
+import { defaultImageUrls } from './image-url (1).ts'; // Adjust the path if necessary
+
+// Import db from your firebase.js file
+import { db } from './firebase.js'; // Adjust the path if necessary
+
+// Import necessary Firestore functions
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { User } from 'firebase/auth'; // Import User type
+
 
 // --- SVG Icon Components ---
 // These icons are used in the card popup, so they are kept here.
@@ -126,6 +134,7 @@ interface TreasureChestProps {
   onGemReward: (amount: number) => void; // Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
+  currentUserId: string | null; // Pass the current user ID as a prop (can be null if not logged in)
 }
 
 // Define interface for card data (keeping this for potential future use or if other rewards are still cards)
@@ -157,7 +166,7 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false }: TreasureChestProps) {
+export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   // State to hold the revealed image data (ID and URL)
@@ -171,15 +180,84 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   // State to hold pending gem reward
   const [pendingGemReward, setPendingGemReward] = useState(0);
 
-  // NEW: State to manage the list of available image indices
+  // State to manage the list of available image indices
   const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
+  // State to track if data is being loaded from Firestore
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize available image indices when the component mounts
+  // --- Firestore Interaction ---
+  // Effect to fetch opened image IDs from Firestore on component mount or user change
   useEffect(() => {
-      // Create an array of indices from 0 to the number of defaultImageUrls - 1
-      const initialIndices = defaultImageUrls.map((_, index) => index);
-      setAvailableImageIndices(initialIndices);
-  }, []); // Empty dependency array ensures this runs only once on mount
+      const fetchOpenedImages = async () => {
+          // If no user is logged in, initialize with all images and stop loading
+          if (!currentUserId) {
+              console.log("User not logged in, cannot fetch opened images. Initializing with all images.");
+              setIsLoading(false);
+              const initialIndices = defaultImageUrls.map((_, index) => index);
+              setAvailableImageIndices(initialIndices);
+              return;
+          }
+
+          setIsLoading(true);
+          const userDocRef = doc(db, 'users', currentUserId);
+
+          try {
+              const userDocSnap = await getDoc(userDocRef);
+
+              let openedImageIds: number[] = [];
+              if (userDocSnap.exists()) {
+                  const userData = userDocSnap.data();
+                  // Ensure openedImageIds is treated as an array of numbers
+                  if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
+                      openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number');
+                  }
+              } else {
+                  // If user document doesn't exist, this is unexpected based on index.tsx logic,
+                  // but we'll handle it by creating it with an empty array.
+                  console.warn(`User document for ${currentUserId} not found during fetch. Creating...`);
+                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); // Use merge: true to avoid overwriting other fields if they exist
+              }
+
+              // Filter out the opened image IDs from the full list of indices
+              const allIndices = defaultImageUrls.map((_, index) => index);
+              const remainingIndices = allIndices.filter(index => !openedImageIds.includes(index));
+              setAvailableImageIndices(remainingIndices);
+
+          } catch (error) {
+              console.error("Error fetching opened images:", error);
+              // In case of error, initialize with all images to allow some functionality
+              const initialIndices = defaultImageUrls.map((_, index) => index);
+              setAvailableImageIndices(initialIndices);
+          } finally {
+              setIsLoading(false);
+          }
+      };
+
+      fetchOpenedImages();
+
+  }, [currentUserId, db]); // Re-run effect if currentUserId or db instance changes
+
+  // Function to add a revealed image ID to Firestore
+  const addOpenedImageToFirestore = async (imageId: number) => {
+      if (!currentUserId) {
+          console.log("User not logged in, cannot save opened image.");
+          return;
+      }
+
+      const userDocRef = doc(db, 'users', currentUserId);
+
+      try {
+          // Use arrayUnion to add the imageId to the openedImageIds array
+          await updateDoc(userDocRef, {
+              openedImageIds: arrayUnion(imageId)
+          });
+          console.log(`Image ID ${imageId} added to Firestore for user ${currentUserId}`);
+      } catch (error) {
+          console.error("Error adding opened image to Firestore:", error);
+      }
+  };
+  // --- End Firestore Interaction ---
+
 
   // State for chest coin effect
   const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
@@ -189,9 +267,13 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   // Function to open the chest
   const openChest = () => {
     // Prevent opening chest if game is paused, already open, no chests left, or not enough keys
-    // Also prevent if there are no images left to reveal
-    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0) {
-        if (keyCount < 1) {
+    // Also prevent if there are no images left to reveal, data is still loading, or user is not logged in
+    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
+        if (isLoading) {
+             console.log("Đang tải dữ liệu...");
+        } else if (!currentUserId) {
+             console.log("Vui lòng đăng nhập để mở rương!");
+        } else if (keyCount < 1) {
             console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
         } else if (chestsRemaining <= 0) {
              console.log("Hết rương để mở!"); // Log or show a message if no chests are left
@@ -222,11 +304,14 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         // Store the revealed image data
         setRevealedImage({ id: selectedImageIndex, url: selectedImageUrl });
 
-        // Remove the selected index from the available indices
+        // Remove the selected index from the available indices state immediately
         setAvailableImageIndices(prevIndices =>
             prevIndices.filter(index => index !== selectedImageIndex)
         );
-        // --- End Image Selection Logic ---
+
+        // --- Save the opened image ID to Firestore ---
+        addOpenedImageToFirestore(selectedImageIndex);
+        // --- End Save to Firestore ---
 
         // --- Reward Logic (Example: Still give a small coin/gem reward with each image) ---
         // You can adjust or remove this if opening a chest only gives an image
@@ -310,6 +395,15 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       return null; // Don't render anything if stats are fullscreen
   }
 
+  // Show loading indicator while fetching data
+  if (isLoading) {
+      return (
+          <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20 text-white">
+              Đang tải dữ liệu rương...
+          </div>
+      );
+  }
+
 
   return (
     <>
@@ -321,11 +415,11 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         <div
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
           // Disable click if game is paused, already open, no chests left, or not enough keys
-          // Also disable if no images are available
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 ? openChest : null}
+          // Also disable if no images are available, data is loading, or user is not logged in
+          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? openChest : null}
           aria-label={availableImageIndices.length > 0 ? "Mở rương báu" : "Hết hình ảnh"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 ? 0 : -1} // Make focusable only when usable
+          tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1} // Make focusable only when usable
         >
           <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
             {/* Chest main body */}
