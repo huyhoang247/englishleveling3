@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import the new component
 // Import defaultImageUrls from the new file
-import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
+import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; // Adjust the path if necessary and rename import
 
 // Define the props interface for VerticalFlashcardGallery
 interface VerticalFlashcardGalleryProps {
@@ -37,41 +37,55 @@ interface Flashcard {
   vocabulary: VocabularyData; // Use the VocabularyData interface
 }
 
-// --- Dữ liệu ảnh theo từng phong cách ---
-// Danh sách URL ảnh cho phong cách Anime (Ví dụ - bạn cần thay thế bằng ảnh thật)
-const animeImageUrls: string[] = [
-  "https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+1",
-  "https://placehold.co/1024x1536/FFCC99/FFFFFF?text=Anime+2",
-  "https://placehold.co/1024x1536/FF99FF/FFFFFF?text=Anime+3",
-  "https://placehold.co/1024x1536/CC99FF/FFFFFF?text=Anime+4",
-  "https://placehold.co/1024x1536/FF66B2/FFFFFF?text=Anime+5",
-  // Thêm các URL ảnh anime khác tại đây, đảm bảo số lượng khớp với defaultImageUrls và vocabularyData
-];
+// --- Dữ liệu ảnh theo từng phong cách (Thêm dữ liệu mẫu để có hơn 50 ảnh) ---
+// Tạo mảng dữ liệu mẫu lớn hơn
+const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
+  const urls: string[] = [];
+  for (let i = 1; i <= count; i++) {
+    urls.push(`https://placehold.co/1024x1536/${color}/FFFFFF?text=${text}+${i}`);
+  }
+  return urls;
+};
 
-// Danh sách URL ảnh cho phong cách Comic (Ví dụ - bạn cần thay thế bằng ảnh thật)
-const comicImageUrls: string[] = [
-  "https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+1",
-  "https://placehold.co/1024x1536/99CCFF/FFFFFF?text=Comic+2",
-  "https://placehold.co/1024x1536/66CCFF/FFFFFF?text=Comic+3",
-  "https://placehold.co/1024x1536/9999FF/FFFFFF?text=Comic+4",
-  "https://placehold.co/1024x1536/3399FF/FFFFFF?text=Comic+5",
-  // Thêm các URL ảnh comic khác tại đây
-];
+// Số lượng flashcard mẫu mong muốn (ví dụ: 55)
+const numberOfSampleFlashcards = 55;
 
-// Danh sách URL ảnh cho phong cách Realistic (Ví dụ - bạn cần thay thế bằng ảnh thật)
-const realisticImageUrls: string[] = [
-  "https://placehold.co/1024x1536/A0A0A0/333333?text=Realistic+1",
-  "https://placehold.co/1024x1536/B0B0B0/333333?text=Realistic+2",
-  "https://placehold.co/1024x1536/C0C0C0/333330?text=Realistic+3",
-  "https://placehold.co/1024x1536/B0B0B0/333330?text=Realistic+4",
-  "https://placehold.co/1024x1536/A0A0A0/333330?text=Realistic+5",
-  // Thêm các URL ảnh realistic khác tại đây
+// Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
+const defaultImageUrls: string[] = [
+  ...initialDefaultImageUrls,
+  ...generatePlaceholderUrls(numberOfSampleFlashcards - initialDefaultImageUrls.length, 'Default', 'A0A0A0')
 ];
 
 
-// --- Dữ liệu từ vựng ---
-// Danh sách dữ liệu từ vựng, đảm bảo thứ tự khớp với các danh sách ảnh
-const vocabularyData: VocabularyData[] = [
+// Danh sách URL ảnh cho phong cách Anime (Thêm dữ liệu mẫu)
+const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
+
+// Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
+const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
+
+// Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
+const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
+
+
+// --- Dữ liệu từ vựng (Thêm dữ liệu mẫu để có hơn 50 mục) ---
+const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
+  const data: VocabularyData[] = [];
+  for (let i = 1; i <= count; i++) {
+    data.push({
+      word: `Word ${i}`,
+      meaning: `Meaning of Word ${i}`,
+      example: `Example sentence for Word ${i}.`,
+      phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
+      popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
+      synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
+      antonyms: [`Antonym 1.${i}`, `Antonym 2.${i}`]
+    });
+  }
+  return data;
+};
+
+// Dữ liệu từ vựng ban đầu (từ file cũ)
+const initialVocabularyData: VocabularyData[] = [
   {
     word: "Source",
     meaning: "Nguồn, gốc",
@@ -117,15 +131,21 @@ const vocabularyData: VocabularyData[] = [
     synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
     antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
   }
-  // Thêm các dữ liệu từ vựng khác tại đây, đảm bảo số lượng khớp với các danh sách ảnh
 ];
+
+// Kết hợp dữ liệu ban đầu và dữ liệu mẫu
+const vocabularyData: VocabularyData[] = [
+  ...initialVocabularyData,
+  ...generatePlaceholderVocabulary(numberOfSampleFlashcards - initialVocabularyData.length)
+];
+
 
 // --- Tạo mảng sampleFlashcards từ dữ liệu trên ---
 // Đảm bảo rằng tất cả các mảng (defaultImageUrls, animeImageUrls, ..., vocabularyData) có cùng độ dài
 const sampleFlashcards: Flashcard[] = vocabularyData.map((vocab, index) => ({
   id: index + 1, // ID dựa trên vị trí (bắt đầu từ 1)
   imageUrl: {
-    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index từ file mới
+    default: defaultImageUrls[index], // Lấy ảnh mặc định theo index từ mảng đã mở rộng
     anime: animeImageUrls[index], // Lấy ảnh anime theo index (nếu có)
     comic: comicImageUrls[index], // Lấy ảnh comic theo index (nếu có)
     realistic: realisticImageUrls[index], // Lấy ảnh realistic theo index (nếu có)
