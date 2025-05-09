@@ -1549,18 +1549,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
           <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-center bg-black bg-opacity-60 shadow-lg z-30">
             <div className="flex items-center">
-                {/* Updated Stats Icon */}
                 <div
-                  className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform" // Adjusted styling
+                  className="relative mr-2 cursor-pointer"
                   onClick={toggleStatsFullscreen}
                   title="Xem chỉ số nhân vật"
                 >
-                     <DotLottieReact
-                        src="https://lottie.host/f557507e-4cfc-4269-b62c-cc6ea2485ec4/TFkVmVXP4K.lottie"
-                        loop
-                        autoplay={!isStatsFullscreen && !isLoadingUserData} // Autoplay only when game is not fullscreen and not loading
-                        className="w-full h-full" // Ensure Lottie fills the container
-                      />
+                    {/* Increased size from w-8 h-8 to w-10 h-10 and adjusted padding */}
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-gray-400 overflow-hidden shadow-lg hover:scale-110 transition-transform p-1.5"> {/* Changed size and padding */}
+                        <img
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/bullet-point%20(1).png"
+                            alt="Stats Icon"
+                            className="w-full h-full object-contain" // Ensure the image fits and maintains aspect ratio
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null; // Prevent infinite loop if placeholder also fails
+                                target.src = "https://placehold.co/40x40/8a2be2/ffffff?text=Stats"; // Fallback placeholder (adjusted size)
+                            }}
+                        />
+                    </div>
                 </div>
 
                 <div className="w-32 relative">
