@@ -309,10 +309,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
   // Handle page change
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
-    // Optional: Scroll to top of the flashcard list when changing page
-    if (scrollContainerRef.current) {
-      (scrollContainerRef.current as HTMLElement).scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // Scroll to top of the page when changing page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
 
