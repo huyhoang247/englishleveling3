@@ -111,7 +111,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     {...props}
   >
     <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
+    <line x1="6" y1="6" x2="18" y1="18" />
   </svg>
 );
 
@@ -269,21 +269,16 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
     // Prevent opening chest if game is paused, already open, no chests left, or not enough keys
     // Also prevent if there are no images left to reveal, data is still loading, or user is not logged in
     if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
-        // Log the specific reason for not opening
-        if (isGamePaused) {
-             console.log("Không thể mở rương: Trò chơi đang tạm dừng.");
-        } else if (isChestOpen) {
-             console.log("Không thể mở rương: Rương đang mở.");
-        } else if (chestsRemaining <= 0) {
-             console.log("Không thể mở rương: Hết rương để mở.");
-        } else if (keyCount < 1) {
-            console.log("Không thể mở rương: Không đủ chìa khóa.");
-        } else if (availableImageIndices.length === 0) {
-             console.log("Không thể mở rương: Đã mở hết tất cả hình ảnh.");
-        } else if (isLoading) {
-             console.log("Không thể mở rương: Đang tải dữ liệu.");
+        if (isLoading) {
+             console.log("Đang tải dữ liệu...");
         } else if (!currentUserId) {
-             console.log("Không thể mở rương: Vui lòng đăng nhập.");
+             console.log("Vui lòng đăng nhập để mở rương!");
+        } else if (keyCount < 1) {
+            console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
+        } else if (chestsRemaining <= 0) {
+             console.log("Hết rương để mở!"); // Log or show a message if no chests are left
+        } else if (availableImageIndices.length === 0) {
+             console.log("Đã mở hết tất cả hình ảnh!"); // Log or show a message if all images are revealed
         }
         return;
     }
@@ -417,11 +412,18 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
       {/* Treasure chest and remaining chests count - Positioned on top of the game */}
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
-        <div
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''}`}
-          // Disable click if game is paused, already open, no chests left, or not enough keys
-          // Also disable if no images are available, data is loading, or user is not logged in
-          onClick={!isGamePaused && !isChestOpen && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? openChest : null}
+        <button // Changed from div to button for accessibility and disabled state
+          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${!currentUserId || isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions
+          disabled={
+            isGamePaused
+            || isChestOpen
+            || chestsRemaining === 0
+            || keyCount < 1
+            || availableImageIndices.length === 0
+            || isLoading
+            || !currentUserId // Disable if no user ID
+          }
+          onClick={openChest}
           aria-label={availableImageIndices.length > 0 ? "Mở rương báu" : "Hết hình ảnh"}
           role="button"
           tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1} // Make focusable only when usable
@@ -486,7 +488,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
                         className="w-full h-full object-cover rounded-xl"
                         onError={(e) => {
                             // Optional: Handle image loading errors, e.g., show a placeholder
-                            e.currentTarget.src = 'https://placehold.co/160x208?text=Image+Error';
+                            (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
                         }}
                      />
                   </div>
@@ -527,7 +529,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
           )}
 
 
-        </div>
+        </button>
 
         {/* Display keys and available images count */}
         <div className="mt-4 flex space-x-3 items-center justify-center">
@@ -563,7 +565,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
                     alt={`Revealed item with ID ${revealedImage.id}`}
                     className="w-full h-full object-cover rounded-xl"
                     onError={(e) => {
-                        e.currentTarget.src = 'https://placehold.co/160x208?text=Image+Error';
+                        (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
                     }}
                  />
             </div>
