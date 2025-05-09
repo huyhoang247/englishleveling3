@@ -14,6 +14,9 @@ import CoinDisplay from './coin-display.tsx';
 // NEW: Import Firestore functions
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth } from './firebase.js'; // Import auth from your firebase.js
+// Import User type from firebase/auth
+import { User } from 'firebase/auth';
+
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -42,7 +45,7 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
       alt="Tourmaline Gem Icon"
       className="w-full h-full object-contain"
       onError={(e) => {
-        const target = e.target as HTMLImageElement;
+        const target = e as any; // Cast to any to access target
         target.onerror = null;
         target.src = "https://placehold.co/24x24/8a2be2/ffffff?text=Gem";
       }}
@@ -105,6 +108,7 @@ interface ObstacleRunnerGameProps {
   className?: string;
   hideNavBar: () => void;
   showNavBar: () => void;
+  currentUser: User | null; // Added currentUser prop
 }
 
 // Define interface for Obstacle with health
@@ -145,8 +149,8 @@ interface GameCloud {
 }
 
 
-// Update component signature to accept className, hideNavBar, and showNavBar props
-export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }: ObstacleRunnerGameProps) {
+// Update component signature to accept className, hideNavBar, showNavBar, and currentUser props
+export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
   // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
@@ -1334,7 +1338,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
           opacity: 0.8
         }}
         onError={(e) => {
-          const target = e.target as HTMLImageElement;
+          const target = e as any; // Cast to any to access target
           target.onerror = null;
           target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
         }}
@@ -1570,7 +1574,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                         alt="Award Icon" // Added alt text
                         className="w-full h-full object-contain" // Ensure image fits
                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
+                            const target = e as any; // Cast to any to access target
                             target.onerror = null;
                             target.src = "https://placehold.co/32x32/ffffff/000000?text=Stats"; // Placeholder on error
                         }}
@@ -1823,6 +1827,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
             isStatsFullscreen={isStatsFullscreen}
+            currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
           />
 
         </div>
@@ -1830,4 +1835,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-
