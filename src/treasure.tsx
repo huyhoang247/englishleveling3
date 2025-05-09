@@ -149,7 +149,7 @@ interface Card {
 
 // Define interface for the revealed image data
 interface RevealedImage {
-    id: number; // Using index as ID for simplicity
+    id: number; // Using index + 1 as ID (1-based)
     url: string;
 }
 
@@ -180,19 +180,20 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   // State to hold pending gem reward
   const [pendingGemReward, setPendingGemReward] = useState(0);
 
-  // State to manage the list of available image indices
+  // State to manage the list of available image indices (0-based)
   const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
   // State to track if data is being loaded from Firestore
   const [isLoading, setIsLoading] = useState(true);
 
   // --- Firestore Interaction ---
-  // Effect to fetch opened image IDs from Firestore on component mount or user change
+  // Effect to fetch opened image IDs (1-based) from Firestore on component mount or user change
   useEffect(() => {
       const fetchOpenedImages = async () => {
           // If no user is logged in, initialize with all images and stop loading
           if (!currentUserId) {
               console.log("User not logged in, cannot fetch opened images. Initializing with all images.");
               setIsLoading(false);
+              // Initialize with all indices (0 to length-1)
               const initialIndices = defaultImageUrls.map((_, index) => index);
               setAvailableImageIndices(initialIndices);
               return;
@@ -204,23 +205,26 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
           try {
               const userDocSnap = await getDoc(userDocRef);
 
-              let openedImageIds: number[] = [];
+              let openedImageIds: number[] = []; // These are 1-based IDs
               if (userDocSnap.exists()) {
                   const userData = userDocSnap.data();
-                  // Ensure openedImageIds is treated as an array of numbers
+                  // Ensure openedImageIds is treated as an array of numbers (1-based)
                   if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
-                      openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number');
+                      // Filter to ensure only valid numbers (greater than 0) are included
+                      openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number' && id > 0);
                   }
               } else {
-                  // If user document doesn't exist, this is unexpected based on index.tsx logic,
-                  // but we'll handle it by creating it with an empty array.
+                  // If user document doesn't exist, create it with an empty array.
                   console.warn(`User document for ${currentUserId} not found during fetch. Creating...`);
-                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); // Use merge: true to avoid overwriting other fields if they exist
+                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); // Use merge: true
               }
 
-              // Filter out the opened image IDs from the full list of indices
+              // Convert openedImageIds (1-based) to openedImageIndices (0-based)
+              const openedImageIndices = openedImageIds.map(id => id - 1).filter(index => index >= 0 && index < defaultImageUrls.length);
+
+              // Filter out the opened image indices from the full list of indices (0-based)
               const allIndices = defaultImageUrls.map((_, index) => index);
-              const remainingIndices = allIndices.filter(index => !openedImageIds.includes(index));
+              const remainingIndices = allIndices.filter(index => !openedImageIndices.includes(index));
               setAvailableImageIndices(remainingIndices);
 
           } catch (error) {
@@ -237,17 +241,22 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
   }, [currentUserId, db]); // Re-run effect if currentUserId or db instance changes
 
-  // Function to add a revealed image ID to Firestore
+  // Function to add a revealed image ID (1-based) to Firestore
   const addOpenedImageToFirestore = async (imageId: number) => {
       if (!currentUserId) {
           console.log("User not logged in, cannot save opened image.");
+          return;
+      }
+      // Ensure the imageId is valid (greater than 0)
+      if (imageId <= 0) {
+          console.error("Invalid image ID for saving:", imageId);
           return;
       }
 
       const userDocRef = doc(db, 'users', currentUserId);
 
       try {
-          // Use arrayUnion to add the imageId to the openedImageIds array
+          // Use arrayUnion to add the imageId (1-based) to the openedImageIds array
           await updateDoc(userDocRef, {
               openedImageIds: arrayUnion(imageId)
           });
@@ -296,21 +305,21 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
       setTimeout(() => {
         // --- Image Selection Logic ---
-        // Select a random index from the available indices
+        // Select a random index (0-based) from the available indices
         const randomIndex = Math.floor(Math.random() * availableImageIndices.length);
         const selectedImageIndex = availableImageIndices[randomIndex];
         const selectedImageUrl = defaultImageUrls[selectedImageIndex];
 
-        // Store the revealed image data
-        setRevealedImage({ id: selectedImageIndex, url: selectedImageUrl });
+        // Store the revealed image data (ID is index + 1)
+        setRevealedImage({ id: selectedImageIndex + 1, url: selectedImageUrl });
 
         // Remove the selected index from the available indices state immediately
         setAvailableImageIndices(prevIndices =>
             prevIndices.filter(index => index !== selectedImageIndex)
         );
 
-        // --- Save the opened image ID to Firestore ---
-        addOpenedImageToFirestore(selectedImageIndex);
+        // --- Save the opened image ID (1-based) to Firestore ---
+        addOpenedImageToFirestore(selectedImageIndex + 1);
         // --- End Save to Firestore ---
 
         // --- Reward Logic (Example: Still give a small coin/gem reward with each image) ---
