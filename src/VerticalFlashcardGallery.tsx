@@ -251,12 +251,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     : flashcards.filter(card => card.isFavorite);
 
   // Calculate total pages based on filtered flashcards
-  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredFlashcardByTab.length / itemsPerPage);
 
   // Get flashcards for the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
+  const flashcardsForCurrentPage = filteredFlashcardByTab.slice(startIndex, endIndex);
 
 
   const favoriteCount = flashcards.filter(card => card.isFavorite).length;
@@ -527,8 +527,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           {/* --- Pagination Controls --- */}
           {/* Moved pagination controls inside the main content div */}
           {totalPages > 1 && ( // Only show pagination if there's more than one page
-            // Added pb-8 class for padding bottom
-            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 pb-8"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, ADDED pb-8 */}
+            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center shadow-lg mt-4 mb-8"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, ADDED mb-8 */}
               <nav className="flex space-x-2" aria-label="Pagination">
                 {/* Previous Button */}
                 <button
