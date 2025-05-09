@@ -3,7 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 // import BackIcon from '../icon/back-icon.tsx'; // Import component BackIcon mới - Đã gỡ bỏ
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
-import { auth } from './firebase.js'; // Import auth để lấy user ID
+import { auth } from '../firebase.js'; // Import auth để lấy user ID
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
