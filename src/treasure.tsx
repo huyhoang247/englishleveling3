@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 // Import the image URLs list
-import { defaultImageUrls } from './image-url (1).ts'; // Adjust the path if necessary
+import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
 
 // --- SVG Icon Components ---
 // These icons are used in the card popup, so they are kept here.
