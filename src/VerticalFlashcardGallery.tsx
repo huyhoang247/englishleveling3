@@ -417,93 +417,104 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'
               }`}
             >
-              {flashcardsForCurrentPage.map((card) => ( // Use flashcardsForCurrentPage
-                // Removed w-[48%] and w-full as grid handles width
-                <div key={card.id}>
-                  {/* Flashcard component rendering */}
-                  <div
-                    id={`flashcard-${card.id}`}
-                    className={`flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
-                  >
-                    {/* Hover effect for flashcard */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+              {flashcardsForCurrentPage.map((card, index) => { // Added index to check for the last card
+                const isLastCardOnPage = index === flashcardsForCurrentPage.length - 1; // Check if it's the last card
 
-                    {/* Heart Icon - Favorite/Unfavorite - Removed background and padding classes */}
-                    <button
-                      className={`absolute top-3 right-3 transition-all duration-300 z-10 flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Removed rounded-full, bg-*, p-* classes
-                      onClick={() => toggleFavorite(card.id)}
-                      aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                return (
+                  // Removed w-[48%] and w-full as grid handles width
+                  <div key={card.id}>
+                    {/* Flashcard component rendering */}
+                    <div
+                      id={`flashcard-${card.id}`}
+                      className={`flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
                     >
-                      {/* Replaced SVG with img tag and added opacity class */}
-                      <img
-                        src={card.isFavorite
-                          ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png"
-                          : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"
-                        }
-                        alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"}
-                        className={`transition-all duration-300 ${
-                          layoutMode === 'double'
-                            ? 'h-4 w-4'
-                            : 'h-6 w-6'
-                        } ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} // Added conditional opacity class
-                      />
-                    </button>
+                      {/* Hover effect for flashcard */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
 
-                    {/* Image aspect ratio container with style effects */}
-                    <div className="w-full">
-                      <div className={`relative w-full ${
-                        // Apply frame styles based on visualStyle
-                        visualStyle === 'anime' ? 'border-4 border-pink-300 bg-pink-50 dark:border-pink-700 dark:bg-pink-900' : // Added dark mode styles
-                        visualStyle === 'comic' ? 'border-4 border-blue-300 border-dashed bg-blue-50 dark:border-blue-700 dark:bg-blue-900' : // Added dark mode styles
-                        visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
-                        ''
-                      }`}>
-                        {/* Apply style-specific overlays */}
-                        {visualStyle === 'anime' && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>
-                        )}
-                        {visualStyle === 'comic' && (
-                          <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" // Added dark mode styles
-                            style={{
-                              backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)',
-                              backgroundSize: '4px 4px'
-                            }}>
-                          </div>
-                        )}
-                        {visualStyle === 'realistic' && (
-                          <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
-                        )}
-
-                        {/* Flashcard image updated to include click event and dynamic URL */}
+                      {/* Heart Icon - Favorite/Unfavorite - Removed background and padding classes */}
+                      <button
+                        className={`absolute top-3 right-3 transition-all duration-300 z-10 flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Removed rounded-full, bg-*, p-* classes
+                        onClick={() => toggleFavorite(card.id)}
+                        aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        {/* Replaced SVG with img tag and added opacity class */}
                         <img
-                          src={getImageUrlForStyle(card, visualStyle)} // Use the helper function to get the correct URL
-                          alt={`Flashcard ${card.id}`}
-                          className={`w-full h-auto ${
-                            visualStyle === 'anime' ? 'saturate-150 contrast-105' :
-                            visualStyle === 'comic' ? 'contrast-125 brightness-105' :
-                            visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
-                            ''
-                          } cursor-pointer`} // Added cursor-pointer
-                          style={{
-                            aspectRatio: '1024/1536',
-                            filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
-                          }}
-                          onClick={() => openVocabDetail(card)} // Added click event
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            // Fallback to default image if the styled image fails to load
-                            e.currentTarget.src = card.imageUrl.default;
-                          }}
+                          src={card.isFavorite
+                            ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png"
+                            : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"
+                          }
+                          alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"}
+                          className={`transition-all duration-300 ${
+                            layoutMode === 'double'
+                              ? 'h-4 w-4'
+                              : 'h-6 w-6'
+                          } ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} // Added conditional opacity class
                         />
+                      </button>
 
-                        {/* Image Detail Overlay based on setting - Removed the overlay */}
-                        {/* The overlay for image detail is now completely removed */}
+                      {/* Image aspect ratio container with style effects */}
+                      <div className="w-full">
+                        <div className={`relative w-full ${
+                          // Apply frame styles based on visualStyle
+                          visualStyle === 'anime' ? 'border-4 border-pink-300 bg-pink-50 dark:border-pink-700 dark:bg-pink-900' : // Added dark mode styles
+                          visualStyle === 'comic' ? 'border-4 border-blue-300 border-dashed bg-blue-50 dark:border-blue-700 dark:bg-blue-900' : // Added dark mode styles
+                          visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
+                          ''
+                        }`}>
+                          {/* Apply style-specific overlays */}
+                          {visualStyle === 'anime' && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>
+                          )}
+                          {visualStyle === 'comic' && (
+                            <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" // Added dark mode styles
+                              style={{
+                                backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)',
+                                backgroundSize: '4px 4px'
+                              }}>
+                            </div>
+                          )}
+                          {visualStyle === 'realistic' && (
+                            <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
+                          )}
 
+                          {/* Flashcard image updated to include click event and dynamic URL */}
+                          <img
+                            src={getImageUrlForStyle(card, visualStyle)} // Use the helper function to get the correct URL
+                            alt={`Flashcard ${card.id}`}
+                            className={`w-full h-auto ${
+                              visualStyle === 'anime' ? 'saturate-150 contrast-105' :
+                              visualStyle === 'comic' ? 'contrast-125 brightness-105' :
+                              visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
+                              ''
+                            } cursor-pointer`} // Added cursor-pointer
+                            style={{
+                              aspectRatio: '1024/1536',
+                              filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
+                            }}
+                            onClick={() => openVocabDetail(card)} // Added click event
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              // Fallback to default image if the styled image fails to load
+                              e.currentTarget.src = card.imageUrl.default;
+                            }}
+                          />
+
+                          {/* Image Detail Overlay based on setting - Removed the overlay */}
+                          {/* The overlay for image detail is now completely removed */}
+
+                        </div>
                       </div>
+
+                      {/* Display "1234" on the last card of the page */}
+                      {isLastCardOnPage && (
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-lg font-bold bg-black bg-opacity-50 px-3 py-1 rounded-full z-20">
+                          1234
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             // Display empty state for Favorite tab if no items
