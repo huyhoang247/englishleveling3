@@ -1554,18 +1554,25 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                   onClick={toggleStatsFullscreen}
                   title="Xem chỉ số nhân vật"
                 >
-                    {/* Increased size from w-8 h-8 to w-10 h-10 and adjusted padding */}
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-gray-400 overflow-hidden shadow-lg hover:scale-110 transition-transform p-1.5"> {/* Changed size and padding */}
+                    <div className="w-8 h-8 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full flex items-center justify-center border-2 border-gray-800 overflow-hidden shadow-lg hover:scale-110 transition-transform">
+                        <div className="absolute inset-0 bg-black bg-opacity-10 rounded-full" />
+                        {/* Replaced SVG icon with image tag */}
                         <img
-                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/bullet-point%20(1).png"
-                            alt="Stats Icon"
-                            className="w-full h-full object-contain" // Ensure the image fits and maintains aspect ratio
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.onerror = null; // Prevent infinite loop if placeholder also fails
-                                target.src = "https://placehold.co/40x40/8a2be2/ffffff?text=Stats"; // Fallback placeholder (adjusted size)
-                            }}
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/bullet-point%20(1).png"
+                          alt="Stats Icon"
+                          className="relative z-10 w-5 h-5 object-contain" // Adjust size and styling as needed
                         />
+                         {/* Removed the old SVG structure */}
+                        {/*
+                        <div className="relative z-10 flex items-center justify-center">
+                            <div className="flex items-end">
+                                <div className="w-1 h-2 bg-white rounded-sm mr-0.5" />
+                                <div className="w-1 h-3 bg-white rounded-sm mr-0.5" />
+                                <div className="w-1 h-1.5 bg-white rounded-sm" />
+                            </div>
+                        </div>
+                        <div className="absolute top-0 left-0 right-0 h-1/3 bg-white bg-opacity-30 rounded-t-full" />
+                        */}
                     </div>
                 </div>
 
