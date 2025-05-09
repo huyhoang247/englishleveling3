@@ -221,11 +221,23 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
   // State to manage vocabulary modal visibility - Now used by FlashcardDetailModal
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
+  // --- Pagination States ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50; // Set items per page to 50
 
   // Filter flashcards based on active tab
-  const filteredFlashcards = activeTab === 'collection'
+  const filteredFlashcardsByTab = activeTab === 'collection'
     ? flashcards
     : flashcards.filter(card => card.isFavorite);
+
+  // Calculate total pages based on filtered flashcards
+  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
+
+  // Get flashcards for the current page
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
+
 
   const favoriteCount = flashcards.filter(card => card.isFavorite).length;
   const totalFlashcards = flashcards.length;
@@ -274,6 +286,15 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
     }
   };
 
+  // Handle page change
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    // Optional: Scroll to top of the flashcard list when changing page
+    if (scrollContainerRef.current) {
+      (scrollContainerRef.current as HTMLElement).scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
 
   return (
     // Main container now handles scrolling
@@ -314,7 +335,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
         {/* Redesigned Tab Navigation - With improved background color */}
         <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700"> {/* Added dark mode styles */}
           <button
-            onClick={() => setActiveTab('collection')}
+            onClick={() => { setActiveTab('collection'); setCurrentPage(1); }} // Reset page on tab change
             className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
               activeTab === 'collection'
                 ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' // Added dark mode styles
@@ -339,7 +360,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           </button>
 
           <button
-            onClick={() => setActiveTab('favorite')}
+            onClick={() => { setActiveTab('favorite'); setCurrentPage(1); }} // Reset page on tab change
             className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
               activeTab === 'favorite'
                 ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' // Added dark mode styles
@@ -368,7 +389,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
       {/* This div now allows the grid layout inside to function correctly */}
       <div className="p-4 pb-16 min-h-0">
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
-          {filteredFlashcards.length > 0 ? (
+          {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
             <div
               ref={scrollContainerRef}
@@ -376,7 +397,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                 layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'
               }`}
             >
-              {filteredFlashcards.map((card) => (
+              {flashcardsForCurrentPage.map((card) => ( // Use flashcardsForCurrentPage
                 // Removed w-[48%] and w-full as grid handles width
                 <div key={card.id}>
                   {/* Flashcard component rendering */}
@@ -483,6 +504,55 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
           )}
         </div>
       </div>
+
+      {/* --- Pagination Controls --- */}
+      {totalPages > 1 && ( // Only show pagination if there's more than one page
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-center z-30 shadow-lg"> {/* Added dark mode styles, shadow */}
+          <nav className="flex space-x-2" aria-label="Pagination">
+            {/* Previous Button */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                currentPage === 1
+                  ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
+                  : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+              }`}
+            >
+              Trước
+            </button>
+
+            {/* Page Number Buttons */}
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  currentPage === index + 1
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+
+            {/* Next Button */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                currentPage === totalPages
+                  ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
+                  : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+              }`}
+            >
+              Sau
+            </button>
+          </nav>
+        </div>
+      )}
+
 
       {/* Settings Panel Popup */}
       {showSettings && (
@@ -677,7 +747,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar }: Ver
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
                         imageDetail === 'basic' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
                       }`}>
-                        <svg xmlns="http://www.w3.org/0000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
                           <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                         </svg>
                       </div>
