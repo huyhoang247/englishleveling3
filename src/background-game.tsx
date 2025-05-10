@@ -193,7 +193,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
 
   // State for Health Bar visual display
-  const [damageAmount, setDamageAmount] useState(0); // State to store the amount of damage taken for display
+  const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display // CORRECTED LINE
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
   // Shield Timers (Refs are better for timers as they don't trigger re-renders)
