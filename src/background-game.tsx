@@ -193,7 +193,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
 
   // State for Health Bar visual display
-  const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display // CORRECTED LINE
+  const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
   // Shield Timers (Refs are better for timers as they don't trigger re-renders)
@@ -814,8 +814,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Calculate initial remaining cooldown in seconds and set the state
     setRemainingCooldown(Math.ceil(SHIELD_COOLDOWN_TIME / 1000));
 
-    shieldCooldownStartTimeRef.current = Date.now(); // Update ref using its setter from the hook
+    const now = Date.now();
+    shieldCooldownStartTimeRef.current = now; // Update ref using its setter from the hook
     pausedShieldCooldownRemainingRef.current = null; // Update ref using its setter from the hook
+
+    console.log(`Shield activated at: ${now}`);
+
 
     // Set the main shield cooldown timer
     if (shieldCooldownTimerRef.current) {
@@ -1227,9 +1231,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
            } else if (shieldCooldownStartTime !== null) { // If not paused, ensure main timer is running (should be set in activateShield)
                // This block is primarily for ensuring the countdown display starts if it wasn't already
                if (cooldownCountdownTimerRef.current === null) { // Only start countdown display if not already running
-                    const elapsedTime = Date.now() - shieldCooldownStartTime;
+                    const now = Date.now();
+                    const elapsedTime = now - shieldCooldownStartTime;
                     const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
                     const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000);
+
+                    console.log(`Calculating remaining cooldown: now=${now}, startTime=${shieldCooldownStartTime}, elapsedTime=${elapsedTime}, remainingMs=${remainingTimeMs}, initialSeconds=${initialRemainingSeconds}`);
+
 
                     if (initialRemainingSeconds > 0) {
                         console.log(`Starting shield display countdown from start time with ${initialRemainingSeconds}s.`);
