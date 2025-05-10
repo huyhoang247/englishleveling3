@@ -421,7 +421,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
       {/* Display available images count - Positioned above the chest */}
       {/* Adjusted bottom value to position it slightly higher */}
-      <div className="absolute bottom-64 flex flex-col items-center justify-center w-full z-20">
+      <div className="absolute bottom-68 flex flex-col items-center justify-center w-full z-20">
            <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
                <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
            </div>
