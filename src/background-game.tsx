@@ -175,7 +175,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active (có máu và đang hiển thị)
   const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
-  const [remainingCooldown, setRemainingCooldown, ] = useState(0); // Remaining cooldown time in seconds
+  const [remainingCooldown, setRemainingCooldown] = useState(0); // Remaining cooldown time in seconds
 
   // --- Coin and Gem States ---
   // Initialize coins state, will be overwritten by Firestore data
@@ -209,7 +209,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const particleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for generating particles - Specify type
   // NEW: Shield timers
   const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for shield cooldown (200s) - Specify type
-  const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for cooldown countdown display - Specify type
+  const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for cooldown countdown display (1s interval) - Specify type
 
   // NEW: Ref for the main game loop interval
   const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null); // Specify type
@@ -514,7 +514,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             return false;
           })();
 
-          initialObstacles.push({
+          newObstacles.push({
             id: Date.now() + i,
             position: 150 + (i * 50),
             ...obstacleType,
@@ -625,7 +625,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    if (!gameStarted || gameOver || isStatsFullscreen) return;
+    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData) return; // Added isLoadingUserData check
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) {
@@ -644,7 +644,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -689,7 +689,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
@@ -720,11 +720,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Handle character jump action
   const jump = () => {
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen) {
+    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
       setJumping(true);
       setCharacterPos(80);
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen) {
+        if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
           setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
@@ -781,16 +781,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShieldHealth(SHIELD_MAX_HEALTH);
 
     setIsShieldOnCooldown(true);
+    // Set initial remaining cooldown to the full cooldown time
     setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000);
 
     shieldCooldownStartTimeRef.current = Date.now();
     pausedShieldCooldownRemainingRef.current = null;
 
+    // Clear any existing main cooldown timer before setting a new one
     if (shieldCooldownTimerRef.current) {
         clearTimeout(shieldCooldownTimerRef.current);
     }
+    // Set the main cooldown timer for the full duration
     shieldCooldownTimerRef.current = setTimeout(() => {
-        console.log("Shield cooldown ended.");
+        console.log("Main Shield cooldown ended.");
         setIsShieldOnCooldown(false);
         setRemainingCooldown(0);
         shieldCooldownStartTimeRef.current = null;
@@ -1114,8 +1117,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
       let countdownInterval: NodeJS.Timeout | null = null;
 
-      if (isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
-          if (shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current) {
+      // Pause logic
+      if (isStatsFullscreen || isLoadingUserData) {
+          // If main cooldown timer is running, pause it and save remaining time
+          if (shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current !== null) {
               const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
               pausedShieldCooldownRemainingRef.current = remainingTimeMs;
@@ -1124,64 +1129,102 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               console.log(`Main shield cooldown PAUSED with ${remainingTimeMs}ms remaining.`);
           }
 
+          // Clear the countdown display interval
           if (cooldownCountdownTimerRef.current) {
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null;
               console.log("Shield display countdown PAUSED.");
           }
-      } else if (isShieldOnCooldown && !gameOver && !isLoadingUserData) { // Added isLoadingUserData check
+      }
+      // Resume/Active Cooldown Logic
+      else if (isShieldOnCooldown && !gameOver) {
+          // If resuming from a pause
           if (pausedShieldCooldownRemainingRef.current !== null) {
               const remainingTimeToResume = pausedShieldCooldownRemainingRef.current;
               console.log(`Resuming main shield cooldown with ${remainingTimeToResume}ms.`);
+
+              // Set a new main cooldown timer with the remaining time
               shieldCooldownTimerRef.current = setTimeout(() => {
-                  console.log("Shield cooldown ended (after pause).");
+                  console.log("Main Shield cooldown ended (after pause).");
                   setIsShieldOnCooldown(false);
                   setRemainingCooldown(0);
                   shieldCooldownStartTimeRef.current = null;
                   pausedShieldCooldownRemainingRef.current = null;
               }, remainingTimeToResume);
 
+              // Adjust the start time reference based on the resumed time
               shieldCooldownStartTimeRef.current = Date.now() - (SHIELD_COOLDOWN_TIME - remainingTimeToResume);
 
+              // Clear the paused remaining time
               pausedShieldCooldownRemainingRef.current = null;
-          } else if (!shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current) {
-              const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
-              const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-              const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000); // Use remainingTimeMs here
+          }
 
-              if (initialRemainingSeconds > 0) {
-                  setRemainingCooldown(initialRemainingSeconds);
-                  console.log(`Resuming shield display countdown with ${initialRemainingSeconds}s.`);
+          // Start or ensure the countdown display interval is running
+          if (!cooldownCountdownTimerRef.current) {
+              console.log("Starting/Resuming shield display countdown.");
+              countdownInterval = setInterval(() => {
+                  // Check pause conditions inside the interval as well
+                  if (isStatsFullscreen || isLoadingUserData || !isShieldOnCooldown) {
+                      clearInterval(countdownInterval!);
+                      cooldownCountdownTimerRef.current = null;
+                      return;
+                  }
 
-                  countdownInterval = setInterval(() => {
-                      if (isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
+                  // Calculate remaining time based on the start time
+                  if (shieldCooldownStartTimeRef.current !== null) {
+                      const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
+                      const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+                      const remainingSeconds = Math.ceil(remainingTimeMs / 1000);
+
+                      setRemainingCooldown(remainingSeconds);
+
+                      // If remaining time is 0, clear interval and end cooldown state
+                      if (remainingTimeMs <= 0) {
                           clearInterval(countdownInterval!);
                           cooldownCountdownTimerRef.current = null;
-                          return;
+                          setIsShieldOnCooldown(false);
+                          setRemainingCooldown(0);
+                          shieldCooldownStartTimeRef.current = null;
+                          pausedShieldCooldownRemainingRef.current = null;
+                          console.log("Shield display countdown finished.");
                       }
-                      setRemainingCooldown(prev => {
-                          const newRemaining = Math.max(0, prev - 1);
-                          if (newRemaining === 0) {
-                              clearInterval(countdownInterval!);
-                              cooldownCountdownTimerRef.current = null;
-                          }
-                          return newRemaining;
-                      });
-                  }, 1000);
-                  cooldownCountdownTimerRef.current = countdownInterval;
-              } else {
-                  setRemainingCooldown(0);
-              }
+                  } else {
+                      // If start time is somehow null while isShieldOnCooldown is true, stop the countdown
+                       clearInterval(countdownInterval!);
+                       cooldownCountdownTimerRef.current = null;
+                       setIsShieldOnCooldown(false);
+                       setRemainingCooldown(0);
+                       console.error("Shield cooldown start time is null while isShieldOnCooldown is true.");
+                  }
+
+              }, 1000); // Update every 1 second
+              cooldownCountdownTimerRef.current = countdownInterval; // Store the interval ID
           }
       }
+      // If not on cooldown and not paused, ensure countdown display is 0 and interval is cleared
+      else if (!isShieldOnCooldown && !isStatsFullscreen && !isLoadingUserData) {
+           setRemainingCooldown(0);
+           if (cooldownCountdownTimerRef.current) {
+               clearInterval(cooldownCountdownTimerRef.current);
+               cooldownCountdownTimerRef.current = null;
+           }
+           if (shieldCooldownTimerRef.current) {
+               clearTimeout(shieldCooldownTimerRef.current);
+               shieldCooldownTimerRef.current = null;
+           }
+           shieldCooldownStartTimeRef.current = null;
+           pausedShieldCooldownRemainingRef.current = null;
+      }
+
 
       return () => {
+          // Cleanup function: clear the countdown interval if it exists
           if (countdownInterval) {
               clearInterval(countdownInterval);
           }
       };
 
-  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData]); // Added isLoadingUserData to dependencies
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData]); // Dependencies include loading state, game over, fullscreen, and cooldown state
 
   // REMOVED: Effect to hide the "OK" text after a few seconds
   // useEffect(() => {
