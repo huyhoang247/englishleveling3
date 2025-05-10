@@ -452,7 +452,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             id="settings-button"
             className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} // Added dark mode styles
             onMouseEnter={() => setIsSettingsHovered(true)}
-            onMouseLeave={() => setIsSettingsHovercard(false)}
+            onMouseLeave={() => setIsSettingsHovered(false)}
             onClick={() => setShowSettings(!showSettings)}
           >
             <svg
@@ -550,7 +550,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <div
                     id={`flashcard-${card.id}`}
                     // Removed border classes from here
-                    className={`flex flex-col items-center bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
+                    // Removed rounded-xl from here
+                    className={`flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
                   >
                     {/* Hover effect for flashcard */}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
@@ -579,8 +580,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     {/* Image aspect ratio container with style effects */}
                     <div className="w-full">
                       {/* Removed conditional border classes from this div */}
-                      {/* Added border-0 and outline-0 here */}
-                      <div className={`relative w-full border-0 outline-0 ${
+                      <div className={`relative w-full ${
                         visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
                         ''
                       }`}>
@@ -601,14 +601,13 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         )}
 
                         {/* Flashcard image updated to include click event and dynamic URL */}
-                        {/* Added border-0 and outline-0 here */}
                         <img
                           src={getImageUrlForStyle(card, visualStyle)} // Use the helper function to get the correct URL
                           alt={`Flashcard ${card.id}`}
-                          className={`w-full h-auto border-0 outline-0 ${
+                          className={`w-full h-auto ${
                             visualStyle === 'anime' ? 'saturate-150 contrast-105' :
                             visualStyle === 'comic' ? 'contrast-125 brightness-105' :
-                            visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : // shadow-md is here
+                            visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
                             ''
                           } cursor-pointer`} // Added cursor-pointer
                           style={{
