@@ -579,7 +579,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     {/* Image aspect ratio container with style effects */}
                     <div className="w-full">
                       {/* Removed conditional border classes from this div */}
-                      <div className={`relative w-full ${
+                      {/* Added border-0 and outline-0 here */}
+                      <div className={`relative w-full border-0 outline-0 ${
                         visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
                         ''
                       }`}>
@@ -600,13 +601,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         )}
 
                         {/* Flashcard image updated to include click event and dynamic URL */}
+                        {/* Added border-0 and outline-0 here */}
                         <img
                           src={getImageUrlForStyle(card, visualStyle)} // Use the helper function to get the correct URL
                           alt={`Flashcard ${card.id}`}
-                          className={`w-full h-auto ${
+                          className={`w-full h-auto border-0 outline-0 ${
                             visualStyle === 'anime' ? 'saturate-150 contrast-105' :
                             visualStyle === 'comic' ? 'contrast-125 brightness-105' :
-                            visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
+                            visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : // shadow-md is here
                             ''
                           } cursor-pointer`} // Added cursor-pointer
                           style={{
@@ -1016,4 +1018,3 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </div>
   );
 }
-
