@@ -494,7 +494,8 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
                      <img
                         src={revealedImage.url}
                         alt={`Revealed item with ID ${revealedImage.id}`}
-                        className="w-full h-full object-cover rounded-xl"
+                        // Changed object-cover to object-contain here
+                        className="w-full h-full object-contain rounded-xl"
                         onError={(e) => {
                             // Optional: Handle image loading errors, e.g., show a placeholder
                             (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
@@ -572,7 +573,8 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
                  <img
                     src={revealedImage.url}
                     alt={`Revealed item with ID ${revealedImage.id}`}
-                    className="w-full h-full object-cover rounded-xl"
+                    // Changed object-cover to object-contain here
+                    className="w-full h-full object-contain rounded-xl"
                     onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
                     }}
