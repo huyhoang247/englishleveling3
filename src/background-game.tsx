@@ -27,7 +27,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
-    viewBox="0 0 24 24
+    viewBox="0 0 24 24" // <-- Đã sửa lỗi ở đây
     fill="none"
     stroke={color}
     strokeWidth="2"
@@ -1164,9 +1164,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-           if (particleTimerRef.current) {
-               clearInterval(particleTimerRef.current);
-               particleTimerRef.current = null;
+           if (particleTimerRef.current) { // <-- Fixed typo here
+               clearInterval(particleTimerRef.current); // <-- Fixed typo here
+               particleTimerRef.current = null; // <-- Fixed typo here
            }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
           if (!obstacleTimerRef.current) {
@@ -1175,7 +1175,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           if (!coinScheduleTimerRef.current) {
               scheduleNextCoin();
           }
-           if (!particleTimerRefRef.current) {
+           if (!particleTimerRef.current) { // <-- Fixed typo here
                particleTimerRef.current = setInterval(generateParticles, 300);
            }
       }
