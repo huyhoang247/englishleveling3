@@ -1,25 +1,11 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
-// Import the CharacterCard component
-import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in the same directory
-
-// Import DotLottieReact component
+import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
-// NEW: Import the TreasureChest component
 import TreasureChest from './treasure.tsx';
-
-// NEW: Import the CoinDisplay component
 import CoinDisplay from './coin-display.tsx';
-
-// NEW: Import Firestore functions
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from './firebase.js'; // Import auth from your firebase.js
-// Import User type from firebase/auth
+import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
-
-// NEW: Import the custom useSessionStorage hook
-import useSessionStorage from './bo-nho-tam.tsx';
-
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -151,8 +137,7 @@ interface GameCloud {
   imgSrc: string; // Source URL for the cloud image
 }
 
-// Define interface for session storage data (used by the hook internally now)
-// We define it here as well for clarity on what's being saved/loaded
+// Define interface for session storage data
 interface GameSessionData {
     health: number;
     characterPos: number;
@@ -171,21 +156,14 @@ interface GameSessionData {
 
 // Update component signature to accept className, hideNavBar, showNavBar, and currentUser props
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
-  // Game states - Now using useSessionStorage for states that should persist in session
-  const MAX_HEALTH = 3000; // Define max health
-  const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH); // Use hook for health
-  const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0); // Use hook for char position
-  const [obstacles, setObstacles] = useSessionStorage<GameObstacle[]>('gameObstacles', []); // Use hook for obstacles
-  const [activeCoins, setActiveCoins] = useSessionStorage<GameCoin[]>('gameActiveCoins', []); // Use hook for active coins
-  const [isShieldActive, setIsShieldActive] = useSessionStorage<boolean>('gameIsShieldActive', false); // Use hook for shield active
-  const [shieldHealth, setShieldHealth] = useSessionStorage<number>('gameShieldHealth', 2000); // Use hook for shield health
-  const [isShieldOnCooldown, setIsShieldOnCooldown] = useSessionStorage<boolean>('gameIsShieldOnCooldown', false); // Use hook for shield cooldown
-  const [remainingCooldown, setRemainingCooldown] = useSessionStorage<number>('gameRemainingCooldown', 0); // Use hook for remaining cooldown
-
-  // States that do NOT need session storage persistence (reset on refresh)
+  // Game states
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
+  const MAX_HEALTH = 3000; // Define max health
+  const [health, setHealth] = useState(MAX_HEALTH); // Player's health, initialized to max
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
+  const [characterPos, setCharacterPos] = useState(0); // Vertical position of the character (0 is on the ground)
+  const [obstacles, setObstacles] = useState<GameObstacle[]>([]); // Array of active obstacles with health
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
   const [particles, setParticles] = useState([]); // Array of active particles (dust)
@@ -196,27 +174,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
-  // Shield Timers (Refs are better for timers as they don't trigger re-renders)
+  // --- NEW: Shield Skill States ---
   const SHIELD_MAX_HEALTH = 2000; // Base health for the shield
   const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
-  const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for shield cooldown (200s) - Specify type
-  const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for cooldown countdown display - Specify type
-  const shieldCooldownStartTimeRef = useSessionStorage<number | null>('gameShieldCooldownStartTime', null); // Use hook for start time ref
-  const pausedShieldCooldownRemainingRef = useSessionStorage<number | null>('gamePausedShieldCooldownRemaining', null); // Use hook for paused remaining ref
+  const [isShieldActive, setIsShieldActive] = useState(false); // Tracks if the shield is active (có máu và đang hiển thị)
+  const [shieldHealth, setShieldHealth] = useState(SHIELD_MAX_HEALTH); // Current shield health
+  const [isShieldOnCooldown, setIsShieldOnCooldown] = useState(false); // Tracks if the shield is on cooldown (timer 200s đang chạy)
+  const [remainingCooldown, setRemainingCooldown, ] = useState(0); // Remaining cooldown time in seconds
 
-
-  // --- Coin and Gem States (Persisted in Firestore) ---
+  // --- Coin and Gem States ---
+  // Initialize coins state, will be overwritten by Firestore data
   const [coins, setCoins] = useState(0); // Initialize with 0, will load from Firestore
   const [displayedCoins, setDisplayedCoins] = useState(0); // Coins displayed with animation
+  const [activeCoins, setActiveCoins] = useState<GameCoin[]>([]); // Array of active coins
   const coinScheduleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new coins
   const coinCountAnimationTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for coin count animation
+  // REMOVED: State to show "OK" text after coin update
+  // const [showCoinUpdateSuccess, setShowCoinUpdateSuccess] = useState(false);
 
+
+  // NEW: Gems state (Moved from TreasureChest)
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
   const [keyCount, setKeyCount] = useState(0); // Player's key count
-  const nextKeyInRef = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval ref
-
+  const nextKeyInRef = useRef<number>(randomBetween(5, 10)); // Number of enemies until the next key drops
 
   // UI States
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
@@ -225,15 +207,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
 
-  // Refs for timers that do NOT need session storage persistence
+  // Refs for timers to manage intervals and timeouts
   const gameRef = useRef<HTMLDivElement | null>(null); // Ref for the main game container div - Specify type
   const obstacleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for scheduling new obstacles - Specify type
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null); // Timer for character run animation - Specify type
   const particleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for generating particles - Specify type
+  // NEW: Shield timers
+  const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for shield cooldown (200s) - Specify type
+  const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for cooldown countdown display - Specify type
 
   // NEW: Ref for the main game loop interval
   const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null); // Specify type
 
+  // NEW: Ref to store the timestamp when shield cooldown started
+  const shieldCooldownStartTimeRef = useRef<number | null>(null); // Specify type
+
+  // *** NEW: Ref to store remaining cooldown time when paused ***
+  const pausedShieldCooldownRemainingRef = useRef<number | null>(null);
 
   // NEW: Firestore instance
   const db = getFirestore();
@@ -459,40 +449,49 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
 
-  // Function to start a NEW game (resets session storage states)
-  const startNewGame = () => {
-    // Reset session storage states to initial values
-    setHealth(MAX_HEALTH);
-    setCharacterPos(0);
+  // Function to start the game
+  const startGame = () => {
+    setGameStarted(true);
+    setGameOver(false);
+    setHealth(MAX_HEALTH); // Start with max health
+    setCharacterPos(0); // Character starts on the ground (0 is on the ground relative to ground level)
     setObstacles([]);
-    setActiveCoins([]);
+    setParticles([]);
     setIsShieldActive(false);
     setShieldHealth(SHIELD_MAX_HEALTH);
     setIsShieldOnCooldown(false);
     setRemainingCooldown(0);
-    shieldCooldownStartTimeRef.current = null; // Reset ref using its setter from the hook
-    pausedShieldCooldownRemainingRef.current = null; // Reset ref using its setter from the hook
-    nextKeyInRef.current = randomBetween(5, 10); // Reset ref using its setter from the hook
+    shieldCooldownStartTimeRef.current = null;
+    pausedShieldCooldownRemainingRef.current = null;
 
-    // Reset states that don't use session storage
-    setGameStarted(true);
-    setGameOver(false);
+    setActiveCoins([]);
     setIsRunning(true);
     setShowHealthDamageEffect(false);
     setDamageAmount(0);
     setShowDamageNumber(false);
     setIsStatsFullscreen(false);
+    // REMOVED: Reset success text state
+    // setShowCoinUpdateSuccess(false);
 
-    // Game elements setup
+
+    // Coin, Gem, Key counts are now loaded from Firestore on user auth,
+    // so we don't reset them here. They persist between games.
+    // setCoins(0); // REMOVED: Don't reset coins here
+    // setDisplayedCoins(0); // REMOVED: Don't reset displayed coins here
+    // setGems(0); // REMOVED: Don't reset gems here
+    // setKeyCount(0); // REMOVED: Don't reset key count here
+
+    nextKeyInRef.current = randomBetween(5, 10); // Reset key drop interval
+
+
     const initialObstacles: GameObstacle[] = [];
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
         const hasKeyFirst = (() => {
-          // nextKeyInRef.current -= 1; // This is handled by the hook's state update now
-          nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
+          nextKeyInRef.current -= 1;
           if (nextKeyInRef.current <= 0) {
-            nextKeyInRef.current = randomBetween(5, 10); // Update the hook's state
+            nextKeyInRef.current = randomBetween(5, 10);
             return true;
           }
           return false;
@@ -512,10 +511,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const spacing = i * (Math.random() * 10 + 10);
 
           const hasKey = (() => {
-            // nextKeyInRef.current -= 1; // Handled by hook state update
-            nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
+            nextKeyInRef.current -= 1;
             if (nextKeyInRef.current <= 0) {
-              nextKeyInRef.current = randomBetween(5, 10); // Update the hook's state
+              nextKeyInRef.current = randomBetween(5, 10);
               return true;
             }
             return false;
@@ -542,76 +540,127 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     scheduleNextCoin();
   };
 
-
-  // Effect to fetch user data from Firestore on authentication state change
+  // --- NEW: Effect to fetch user data from Firestore ---
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         console.log("User authenticated:", user.uid);
         fetchUserData(user.uid); // Fetch user data when authenticated
-        // The useSessionStorage hook will automatically load game state if available
-        setGameStarted(true); // Assume game can start if user is authenticated
-        setIsRunning(true); // Start running animation
       } else {
         console.log("User logged out.");
-        // Reset all game states on logout, including clearing session storage
+        // Reset game states if user logs out
         setGameStarted(false);
         setGameOver(false);
-        setHealth(MAX_HEALTH); // Reset session storage state
-        setCharacterPos(0); // Reset session storage state
-        setObstacles([]); // Reset session storage state
-        setActiveCoins([]); // Reset session storage state
-        setIsShieldActive(false); // Reset session storage state
-        setShieldHealth(SHIELD_MAX_HEALTH); // Reset session storage state
-        setIsShieldOnCooldown(false); // Reset session storage state
-        setRemainingCooldown(0); // Reset session storage state
-        shieldCooldownStartTimeRef.current = null; // Reset session storage ref state
-        pausedShieldCooldownRemainingRef.current = null; // Reset session storage ref state
-        nextKeyInRef.current = randomBetween(5, 10); // Reset session storage ref state
-
-
+        setHealth(MAX_HEALTH);
+        setCharacterPos(0);
+        setObstacles([]);
+        setParticles([]);
+        setIsShieldActive(false);
+        setShieldHealth(SHIELD_MAX_HEALTH);
+        setIsShieldOnCooldown(false);
+        setRemainingCooldown(0);
+        shieldCooldownStartTimeRef.current = null;
+        pausedShieldCooldownRemainingRef.current = null;
+        setActiveCoins([]);
         setIsRunning(false);
         setShowHealthDamageEffect(false);
         setDamageAmount(0);
         setShowDamageNumber(false);
         setIsStatsFullscreen(false);
-        setCoins(0); // Reset local state
-        setDisplayedCoins(0); // Reset local state
-        setGems(0); // Reset local state
-        setKeyCount(0); // Reset local state
+        setCoins(0); // Reset local coin state
+        setDisplayedCoins(0); // Reset local displayed coin state
+        setGems(0); // Reset local gems state
+        setKeyCount(0); // Reset local key state
         setIsLoadingUserData(false); // Stop loading if user logs out
+        // REMOVED: Reset success text state
+        // setShowCoinUpdateSuccess(false);
 
-        // Clear all session storage related to the game on logout
-        sessionStorage.removeItem('gameHealth');
-        sessionStorage.removeItem('gameCharacterPos');
-        sessionStorage.removeItem('gameObstacles');
-        sessionStorage.removeItem('gameActiveCoins');
-        sessionStorage.removeItem('gameIsShieldActive');
-        sessionStorage.removeItem('gameShieldHealth');
-        sessionStorage.removeItem('gameIsShieldOnCooldown');
-        sessionStorage.removeItem('gameRemainingCooldown');
-        sessionStorage.removeItem('gameShieldCooldownStartTime');
-        sessionStorage.removeItem('gamePausedShieldCooldownRemaining');
-        sessionStorage.removeItem('gameNextKeyIn');
-
-        // Clear timers and intervals
-        clearTimeout(obstacleTimerRef.current);
-        clearInterval(runAnimationRef.current);
-        clearInterval(particleTimerRef.current);
-        if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
-        if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-        clearInterval(coinScheduleTimerRef.current);
-        clearInterval(coinCountAnimationTimerRef.current);
-        if (gameLoopIntervalRef.current) {
-            clearInterval(gameLoopIntervalRef.current);
-            gameLoopIntervalRef.current = null;
-        }
+        // Clear session storage on logout
+        sessionStorage.removeItem('gameState');
       }
     });
 
     // Cleanup subscription on component unmount
     return () => unsubscribe();
   }, [auth]); // Depend on auth object
+
+  // Auto-start the game as soon as component mounts AND user data is loaded,
+  // OR load game state from session storage if available.
+  useEffect(() => {
+    // Only try to load or start game if user data is NOT loading and game is not already started
+    if (!isLoadingUserData && !gameStarted && auth.currentUser) {
+      const savedGameState = sessionStorage.getItem('gameState');
+      if (savedGameState) {
+        try {
+          const gameState: GameSessionData = JSON.parse(savedGameState);
+          // Load saved state
+          setHealth(gameState.health);
+          setCharacterPos(gameState.characterPos);
+          setObstacles(gameState.obstacles);
+          setActiveCoins(gameState.activeCoins);
+          setIsShieldActive(gameState.isShieldActive);
+          setShieldHealth(gameState.shieldHealth);
+          setIsShieldOnCooldown(gameState.isShieldOnCooldown);
+          setRemainingCooldown(gameState.remainingCooldown);
+          shieldCooldownStartTimeRef.current = gameState.shieldCooldownStartTime;
+          pausedShieldCooldownRemainingRef.current = gameState.pausedShieldCooldownRemaining;
+          nextKeyInRef.current = gameState.nextKeyIn;
+
+          setGameStarted(true);
+          setGameOver(false); // Assume not game over if loading state
+          setIsRunning(true);
+          setShowHealthDamageEffect(false);
+          setDamageAmount(0);
+          setShowDamageNumber(false);
+          setIsStatsFullscreen(false);
+
+          generateInitialClouds(5); // Regenerate clouds as they are temporary
+          if (particleTimerRef.current) clearInterval(particleTimerRef.current);
+          particleTimerRef.current = setInterval(generateParticles, 300);
+
+          scheduleNextObstacle(); // Restart obstacle scheduling
+          scheduleNextCoin(); // Restart coin scheduling
+
+          console.log("Game state loaded from sessionStorage.");
+
+        } catch (error) {
+          console.error("Error loading game state from sessionStorage:", error);
+          // If loading fails, start a new game
+          startGame();
+        }
+      } else {
+        // If no saved state, start a new game
+        startGame();
+      }
+    }
+  }, [isLoadingUserData, gameStarted, auth.currentUser]); // Depend on loading state, gameStarted, and auth user
+
+  // Effect to save game state to sessionStorage whenever key states change
+  useEffect(() => {
+      if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) {
+          const gameState: GameSessionData = {
+              health,
+              characterPos,
+              obstacles,
+              activeCoins,
+              isShieldActive,
+              shieldHealth,
+              isShieldOnCooldown,
+              remainingCooldown,
+              shieldCooldownStartTime: shieldCooldownStartTimeRef.current,
+              pausedShieldCooldownRemaining: pausedShieldCooldownRemainingRef.current,
+              nextKeyIn: nextKeyInRef.current,
+              // Add other temporary states here
+          };
+          sessionStorage.setItem('gameState', JSON.stringify(gameState));
+          // console.log("Game state saved to sessionStorage."); // Optional: log saving
+      } else if (gameOver || !gameStarted) {
+          // Clear session storage when game is over or not started
+          sessionStorage.removeItem('gameState');
+          // console.log("Game state cleared from sessionStorage."); // Optional: log clearing
+      }
+  }, [health, characterPos, obstacles, activeCoins, isShieldActive, shieldHealth, isShieldOnCooldown, remainingCooldown, gameStarted, gameOver, isStatsFullscreen, isLoadingUserData]); // Dependencies for saving state
+
 
   // Effect to handle game over state when health reaches zero
   useEffect(() => {
@@ -623,7 +672,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       clearInterval(particleTimerRef.current);
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-      // No need to reset session storage refs here, the hook handles saving the current state (including null)
+      pausedShieldCooldownRemainingRef.current = null;
 
       clearInterval(coinScheduleTimerRef.current);
       clearInterval(coinCountAnimationTimerRef.current);
@@ -692,10 +741,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const spacing = i * (Math.random() * 10 + 10);
 
             const hasKey = (() => {
-              // nextKeyInRef.current -= 1; // Handled by hook state update
-              nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
+              nextKeyInRef.current -= 1;
               if (nextKeyInRef.current <= 0) {
-                nextKeyInRef.current = randomBetween(5, 10); // Update the hook's state
+                nextKeyInRef.current = randomBetween(5, 10);
                 return true;
               }
               return false;
@@ -772,9 +820,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (isStatsFullscreen || isLoadingUserData) return; // Ignore taps if loading data or stats are fullscreen
 
     if (!gameStarted) {
-      startNewGame(); // Start a new game on first tap if not started
+      startGame();
     } else if (gameOver) {
-      startNewGame(); // Start a new game on tap if game over
+      startGame();
     }
     // Jump logic is triggered by key press or a dedicated jump button if you add one
   };
@@ -813,8 +861,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsShieldOnCooldown(true);
     setRemainingCooldown(SHIELD_COOLDOWN_TIME / 1000);
 
-    shieldCooldownStartTimeRef.current = Date.now(); // Update ref using its setter from the hook
-    pausedShieldCooldownRemainingRef.current = null; // Update ref using its setter from the hook
+    shieldCooldownStartTimeRef.current = Date.now();
+    pausedShieldCooldownRemainingRef.current = null;
 
     if (shieldCooldownTimerRef.current) {
         clearTimeout(shieldCooldownTimerRef.current);
@@ -823,8 +871,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         console.log("Shield cooldown ended.");
         setIsShieldOnCooldown(false);
         setRemainingCooldown(0);
-        shieldCooldownStartTimeRef.current = null; // Update ref using its setter from the hook
-        pausedShieldCooldownRemainingRef.current = null; // Update ref using its setter from the hook
+        shieldCooldownStartTimeRef.current = null;
+        pausedShieldCooldownRemainingRef.current = null;
     }, SHIELD_COOLDOWN_TIME);
 
   };
@@ -917,10 +965,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 const randomOffset = Math.floor(Math.random() * 20);
 
                                 const hasKey = (() => {
-                                  // nextKeyInRef.current -= 1; // Handled by hook state update
-                                  nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
+                                  nextKeyInRef.current -= 1;
                                   if (nextKeyInRef.current <= 0) {
-                                    nextKeyInRef.current = randomBetween(5, 10); // Update the hook's state
+                                    nextKeyInRef.current = randomBetween(5, 10);
                                     return true;
                                   }
                                   return false;
@@ -1096,8 +1143,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData]); // Added all session storage states to dependencies
-
+  }, [gameStarted, gameOver, jumping, characterPos, obstacleTypes, isStatsFullscreen, coins, isShieldActive, isLoadingUserData]); // Added isLoadingUserData to dependencies
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
   useEffect(() => {
@@ -1146,18 +1192,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
       let countdownInterval: NodeJS.Timeout | null = null;
 
-      // Access the values from the hook's state
-      const shieldCooldownStartTime = shieldCooldownStartTimeRef.current;
-      const pausedShieldCooldownRemaining = pausedShieldCooldownRemainingRef.current;
-      const setShieldCooldownStartTime = shieldCooldownStartTimeRef[1]; // Get the setter from the hook's return tuple
-      const setPausedShieldCooldownRemaining = pausedShieldCooldownRemainingRef[1]; // Get the setter from the hook's return tuple
-
-
       if (isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
-          if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null
-              const elapsedTime = Date.now() - shieldCooldownStartTime;
+          if (shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current !== null) { // Check for null
+              const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-              setPausedShieldCooldownRemaining(remainingTimeMs); // Use the setter from the hook
+              pausedShieldCooldownRemainingRef.current = remainingTimeMs;
               clearTimeout(shieldCooldownTimerRef.current);
               shieldCooldownTimerRef.current = null;
               console.log(`Main shield cooldown PAUSED with ${remainingTimeMs}ms remaining.`);
@@ -1169,22 +1208,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               console.log("Shield display countdown PAUSED.");
           }
       } else if (isShieldOnCooldown && !gameOver && !isLoadingUserData) { // Added isLoadingUserData check
-          if (pausedShieldCooldownRemaining !== null) {
-              const remainingTimeToResume = pausedShieldCooldownRemaining;
+          if (pausedShieldCooldownRemainingRef.current !== null) {
+              const remainingTimeToResume = pausedShieldCooldownRemainingRef.current;
               console.log(`Resuming main shield cooldown with ${remainingTimeToResume}ms.`);
               shieldCooldownTimerRef.current = setTimeout(() => {
                   console.log("Shield cooldown ended (after pause).");
                   setIsShieldOnCooldown(false);
                   setRemainingCooldown(0);
-                  setShieldCooldownStartTime(null); // Use the setter from the hook
-                  setPausedShieldCooldownRemaining(null); // Use the setter from the hook
+                  shieldCooldownStartTimeRef.current = null;
+                  pausedShieldCooldownRemainingRef.current = null;
               }, remainingTimeToResume);
 
-              setShieldCooldownStartTime(Date.now() - (SHIELD_COOLDOWN_TIME - remainingTimeToResume)); // Use the setter from the hook
+              shieldCooldownStartTimeRef.current = Date.now() - (SHIELD_COOLDOWN_TIME - remainingTimeToResume);
 
-              setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-          } else if (!shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null
-              const elapsedTime = Date.now() - shieldCooldownStartTime;
+              pausedShieldCooldownRemainingRef.current = null;
+          } else if (!shieldCooldownTimerRef.current && shieldCooldownStartTimeRef.current !== null) { // Check for null
+              const elapsedTime = Date.now() - shieldCooldownStartTimeRef.current;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
               const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000); // Use remainingTimeMs here
 
@@ -1220,7 +1259,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           }
       };
 
-  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTimeRef.current, pausedShieldCooldownRemainingRef.current]); // Dependencies include hook states
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData]); // Added isLoadingUserData to dependencies
+
+  // REMOVED: Effect to hide the "OK" text after a few seconds
+  // useEffect(() => {
+  //     let successTimer: NodeJS.Timeout | null = null;
+  //     if (showCoinUpdateSuccess) {
+  //         successTimer = setTimeout(() => {
+  //             setShowCoinUpdateSuccess(false);
+  //         }, 2000); // Hide after 2 seconds
+  //     }
+  //     return () => {
+  //         if (successTimer) {
+  //             clearTimeout(successTimer);
+  //         }
+  //     };
+  // }, [showCoinUpdateSuccess]);
 
 
   // Effect to clean up all timers when the component unmounts
@@ -1231,7 +1285,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       clearInterval(particleTimerRef.current);
       if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-      // No need to clear session storage refs here, the hook handles saving the current state
+      pausedShieldCooldownRemainingRef.current = null;
 
       clearInterval(coinScheduleTimerRef.current);
       clearInterval(coinCountAnimationTimerRef.current);
@@ -1239,6 +1293,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
       }
+      // Optional: Clear session storage when component unmounts,
+      // depending on whether you want state to persist across page refreshes
+      // sessionStorage.removeItem('gameState');
     };
   }, []);
 
@@ -1605,7 +1662,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div
           ref={gameRef}
           className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-          onClick={handleTap} // Handle tap for start/restart
+          onClick={handleTap}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
 
@@ -1730,7 +1787,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
               <button
                 className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                onClick={startNewGame} // Call startNewGame on button click
+                onClick={startGame}
               >
                 Chơi Lại
               </button>
