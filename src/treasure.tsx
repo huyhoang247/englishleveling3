@@ -413,24 +413,27 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       );
   }
 
+  // Define a consistent margin value for spacing above and below the chest
+  const verticalSpacing = 'mb-6'; // Use mb-6 for space below the image count
+  const verticalSpacingTop = 'mt-6'; // Use mt-6 for space above the keys
 
   return (
     <>
       {/* Add chest-specific CSS animations */}
       <style>{chestAnimations}</style>
 
-      {/* Display available images count - Positioned above the chest */}
-      {/* Adjusted bottom value to position it slightly higher */}
-      <div className="absolute bottom-68 flex flex-col items-center justify-center w-full z-20">
-           <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
-               <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
-           </div>
-      </div>
+      {/* Container for the image count, chest, and keys */}
+      {/* Position this container, and its children will be laid out inside */}
+      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Main container */}
+
+        {/* Display available images count - Positioned above the chest */}
+        {/* Use margin-bottom to create space below this element */}
+        <div className={`${verticalSpacing} bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative`}>
+             <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
+        </div>
 
 
-      {/* Treasure chest and keys count - Positioned on top of the game */}
-      {/* Kept original bottom value for the chest and added keys back */}
-      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
+        {/* Treasure chest button */}
         <button // Changed from div to button for accessibility and disabled state
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${!currentUserId || isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions
           disabled={
@@ -551,8 +554,9 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
         </button>
 
-        {/* Display keys count - Positioned next to the chest */}
-        <div className="mt-4 flex space-x-3 items-center justify-center">
+        {/* Display keys count - Positioned below the chest */}
+        {/* Use margin-top to create space above this element */}
+        <div className={`${verticalSpacingTop} flex space-x-3 items-center justify-center`}>
           {/* Keys */}
           <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
             {keyCount > 0 && (
