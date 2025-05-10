@@ -419,29 +419,17 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       {/* Add chest-specific CSS animations */}
       <style>{chestAnimations}</style>
 
-      {/* Display keys and available images count - Positioned above the chest */}
+      {/* Display available images count - Positioned above the chest */}
       {/* Adjusted bottom value to position it above the chest */}
       <div className="absolute bottom-64 flex flex-col items-center justify-center w-full z-20">
-        <div className="flex space-x-3 items-center justify-center">
-          {/* Keys */}
-          <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
-            {keyCount > 0 && (
-              <div className="absolute inset-0 bg-green-500/10 rounded-lg animate-pulse-slow"></div>
-            )}
-            <KeyIcon /> {/* Kept KeyIcon here */}
-            <span className="text-green-200 font-bold text-xs">{keyCount}</span>
-             {keyCount > 0 && (<div className="absolute -inset-0.5 bg-green-500/20 rounded-lg blur-sm -z-10"></div>)}
-          </div>
-           {/* Available Images Count */}
            <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
                <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
            </div>
-        </div>
       </div>
 
 
-      {/* Treasure chest - Positioned on top of the game */}
-      {/* Kept original bottom value for the chest */}
+      {/* Treasure chest and keys count - Positioned on top of the game */}
+      {/* Kept original bottom value for the chest and added keys back */}
       <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Adjusted z-index */}
         <button // Changed from div to button for accessibility and disabled state
           className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${!currentUserId || isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions
@@ -562,6 +550,19 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
 
         </button>
+
+        {/* Display keys count - Positioned next to the chest */}
+        <div className="mt-4 flex space-x-3 items-center justify-center">
+          {/* Keys */}
+          <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+            {keyCount > 0 && (
+              <div className="absolute inset-0 bg-green-500/10 rounded-lg animate-pulse-slow"></div>
+            )}
+            <KeyIcon /> {/* Kept KeyIcon here */}
+            <span className="text-green-200 font-bold text-xs">{keyCount}</span>
+             {keyCount > 0 && (<div className="absolute -inset-0.5 bg-green-500/20 rounded-lg blur-sm -z-10"></div>)}
+          </div>
+        </div>
       </div>
 
 
