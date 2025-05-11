@@ -6,6 +6,7 @@ import { auth } from '../firebase.js'; // Import auth để lấy user ID
 import HeaderBackground from '../header-background.tsx'; // Import HeaderBackground
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
+// This component will still be used for other icons like Sword, Shield, etc.
 const Icon = ({ name, size = 24, className = '' }) => {
   const icons = {
     Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>,
@@ -19,7 +20,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
     Minus: <line x1="5" y1="12" x2="19" y2="12"></line>,
     AlertCircle: <g><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></g>,
-    Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></g>,
+    // Gem: <g><path d="M6 3h12l4 6-10 13L2 9l4-6z"></path><path d="M12 22L4 9l8-6 8 6-8 13z"></path><path d="M12 2l8 7-8 7-8-7 8-7z"></path><path d="M2 9h20"></path><path d="M12 2v20"></path></g>, // Removed inline Gem icon
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
@@ -110,6 +111,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
   // State for badge pulse animations (kept state, removed pulsing effect)
   const [pointBadgePulse, setPointBadgePulse] = useState(false);
   const [coinBadgePulse, setCoinBadgePulse] = useState(false);
+
+  // URL for the new points icon image
+  const pointsIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/game.png";
 
 
   // Function to increase a stat value
@@ -470,7 +474,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                   'text-gray-500 hover:bg-gray-50' // Inactive style
                 }`}
               >
-                <Icon name="Gem" size={16} />
+                {/* Use the image for the Point icon here */}
+                 <img src={pointsIconUrl} alt="Point Icon" className="w-4 h-4" />
                 Point → Coin
               </button>
             </div>
@@ -542,10 +547,11 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               {/* Result Icon */}
               <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3">
                 {exchangeDirection === 'coinToPoint' ? (
-                  // Point Icon with pulse effect
+                  // Point Icon with pulse effect - Use the image here
                   <div className="w-full h-full relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
-                    <Icon name="Gem" size={24} className="absolute inset-0 m-auto text-white" />
+                    {/* Use the image tag for the point icon */}
+                    <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6 absolute inset-0 m-auto" />
                   </div>
                 ) : (
                   // Coin Icon with pulse effect
@@ -684,7 +690,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
             {/* Removed shadow-md class */}
             <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 ${pointBadgePulse ? 'animate-pulse' : ''}`}>
               <div className="w-4 h-4 mr-1.5 relative">
-                <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
+                {/* Use the image for the Point icon here */}
+                <img src={pointsIconUrl} alt="Point Icon" className="w-full h-full absolute -top-0.5 -left-0.5" />
                 <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
               </div>
               <span className="text-xs font-bold text-white">{statPoints}</span>
@@ -749,7 +756,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 {/* Reverted text color for light mode */}
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
-                    <Icon name="Plus" size={20} className="text-white" />
+                     {/* Use the image for the Point icon here */}
+                    <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
