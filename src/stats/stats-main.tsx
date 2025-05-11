@@ -3,7 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
-import HeaderBackground from './header-background.tsx'; // Import HeaderBackground
+import HeaderBackground from '../header-background.tsx'; // Import HeaderBackground
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -623,34 +623,30 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     // h-screen makes it take full viewport height
     // MODIFIED: Changed background back to white and used flex layout
     <div className="flex flex-col h-screen bg-white">
-      {/* Added the glass-shadow-border CSS style */}
-      <style>{`
+      {/* Added the glass-shadow-border CSS style - Keep if needed elsewhere */}
+      {/* <style>{`
         .glass-shadow-border {
             box-shadow:
                 0 2px 4px rgba(0, 0, 0, 0.4),
                 0 4px 8px rgba(0, 0, 0, 0.3),
                 inset 0 -1px 2px rgba(255, 255, 255, 0.15);
         }
-      `}</style>
+      `}</style> */}
 
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
       {/* MODIFIED: Changed background back to white and added padding */}
       {/* Position relative to allow absolute positioning of background and badges */}
-      <div className="flex-shrink-0 relative px-8 pt-4 pb-2 overflow-hidden"> {/* Adjusted padding and added overflow-hidden */}
+      {/* Added styling from background-game.tsx header for consistent look */}
+      <div className="flex-shrink-0 relative px-8 pt-4 pb-2 overflow-hidden
+                  rounded-b-lg shadow-2xl
+                  bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                  border-b border-l border-r border-slate-700/50">
         {/* Insert HeaderBackground here */}
         {/* Use absolute positioning to cover the header area */}
         <div className="absolute inset-0 z-0">
           <HeaderBackground />
         </div>
-
-        {/* REMOVED: Original background pattern overlay */}
-        {/*
-        <div className="absolute inset-0" style={{
-          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
-        }}></div>
-        */}
-
 
         {/* Top right badges container with glassmorphism effect */}
         {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
@@ -693,11 +689,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
             </div>
           </div>
         </div>
-
-        {/* Gradient overlay at the bottom of the header */}
-        {/* MODIFIED: Reverted gradient colors for light mode */}
-        {/* Removed the gradient overlay as HeaderBackground provides its own effects */}
-        {/* <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div> */}
       </div>
 
       {/* Main content area - SCROLLABLE */}
