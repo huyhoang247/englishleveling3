@@ -489,44 +489,36 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
-    const obstacleCount = 5; // Start with 5 obstacles
-
-    // CORRECTED: Decrease nextKeyIn once for the initial group
-     setNextKeyIn(prevCount => {
-        const newCount = prevCount - 1; // Decrease the count
-        // Only reset if it drops to 0 or less
-        if (newCount <= 0) {
-          return randomBetween(5, 10); // Reset to a new random value
-        }
-        return newCount; // Otherwise, keep the new count
-     });
-
-    // CORRECTED: Determine if ANY obstacle in this initial group should have a key
-    // This check should happen AFTER updating nextKeyIn state
-     const shouldAnyHaveKey = nextKeyIn <= 1; // Check if the count *before* this update was 1 or less
-
-     // CORRECTED: If any should have a key, randomly pick ONE obstacle in this initial group
-     let keyIndex = -1;
-     if (shouldAnyHaveKey && obstacleCount > 0) {
-         keyIndex = Math.floor(Math.random() * obstacleCount);
-     }
-
-
     if (obstacleTypes.length > 0) {
+
+        // Áp dụng logic thả key cho các chướng ngại vật ban đầu
+        const obstacleCount = 5; // Số lượng chướng ngại vật ban đầu
+        const dropKeyThisBatch = nextKeyIn <= 1; // Kiểm tra xem có nên thả key ở batch đầu tiên không
+        const nextInterval = dropKeyThisBatch
+          ? randomBetween(5, 10)   // Reset khoảng nếu thả key
+          : nextKeyIn - 1;         // Giảm khoảng nếu không thả key
+        setNextKeyIn(nextInterval); // Cập nhật state nextKeyIn MỘT LẦN sau khi xử lý batch đầu
+
+        // Chọn ngẫu nhiên chỉ mục (index) của obstacle sẽ nhận key trong batch đầu tiên (nếu có key)
+        const keyObstacleIndex = dropKeyThisBatch
+          ? Math.floor(Math.random() * obstacleCount)
+          : -1; // -1 nghĩa là không có obstacle nào nhận key
+
+
         for (let i = 0; i < obstacleCount; i++) {
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // CORRECTED: Assign hasKey based on the randomly selected index for initial obstacles
-          const hasKey = (i === keyIndex);
+          // Gán hasKey = true chỉ cho obstacle được chọn ngẫu nhiên (nếu dropKeyThisBatch là true)
+          const hasKey = dropKeyThisBatch && i === keyObstacleIndex;
 
           initialObstacles.push({
             id: Date.now() + i,
-            position: 150 + (i * 50), // Adjust initial positions as needed
+            position: 120 + (i * 50), // Điều chỉnh vị trí ban đầu để không quá gần
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
-            hasKey: hasKey, // Assign the determined hasKey value
+            hasKey: hasKey, // Sử dụng giá trị hasKey đã tính
           });
         }
     }
@@ -537,7 +529,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (particleTimerRef.current) clearInterval(particleTimerRef.current);
     particleTimerRef.current = setInterval(generateParticles, 300);
 
-    scheduleNextObstacle();
+    // scheduleNextObstacle(); // Lần gọi đầu tiên đã được xử lý trong logic tạo initialObstacles
     scheduleNextCoin();
   };
 
@@ -674,7 +666,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || isLoadingUserData) {
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -687,24 +679,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
       const newObstacles: GameObstacle[] = [];
 
-      // CORRECTED: Decrease nextKeyIn once per group of obstacles
-      // We use a functional update to ensure we're working with the latest state
-      let shouldAnyHaveKey = false; // Flag to determine if *any* obstacle in this group should have a key
-      setNextKeyIn(prevCount => {
-        const newCount = prevCount - 1; // Decrease the count
-        // If the count drops to 0 or less, this group gets a key
-        if (newCount <= 0) {
-          shouldAnyHaveKey = true; // Set the flag
-          return randomBetween(5, 10); // Reset to a new random value
-        }
-        return newCount; // Otherwise, keep the new count
-      });
+      // Cách sửa 2: Quyết định có thả key trong batch này không VÀ cập nhật state nextKeyIn trước vòng lặp
+      const dropKeyThisBatch = nextKeyIn <= 1; // Nếu nextKeyIn là 1 hoặc 0, thả key
+      const nextInterval = dropKeyThisBatch
+        ? randomBetween(5, 10)   // Reset khoảng nếu thả key
+        : nextKeyIn - 1;         // Giảm khoảng nếu không thả key
+      setNextKeyIn(nextInterval); // Cập nhật state nextKeyIn MỘT LẦN
 
-      // CORRECTED: If any should have a key, randomly pick ONE obstacle in this group
-      let keyIndex = -1;
-      if (shouldAnyHaveKey && obstacleCount > 0) {
-          keyIndex = Math.floor(Math.random() * obstacleCount);
-      }
+      // Chọn ngẫu nhiên chỉ mục (index) của obstacle sẽ nhận key trong batch này (nếu có key)
+      const keyObstacleIndex = dropKeyThisBatch
+        ? Math.floor(Math.random() * obstacleCount)
+        : -1; // -1 nghĩa là không có obstacle nào nhận key
 
 
       if (obstacleTypes.length > 0) {
@@ -712,8 +697,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // CORRECTED: Assign hasKey based on the randomly selected index
-            const hasKey = (i === keyIndex);
+            // Gán hasKey = true chỉ cho obstacle được chọn ngẫu nhiên (nếu dropKeyThisBatch là true)
+            const hasKey = dropKeyThisBatch && i === keyObstacleIndex;
 
             newObstacles.push({
               id: Date.now() + i,
@@ -721,7 +706,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
-              hasKey: hasKey, // Assign the determined hasKey value
+              hasKey: hasKey, // Sử dụng giá trị hasKey đã tính
             });
           }
       }
@@ -733,7 +718,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    if (gameOver || isStatsFullscreen) {
+    if (gameOver || isStatsFullscreen || isLoadingUserData) {
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
@@ -931,29 +916,45 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             }
                         }
 
-                        // Removed the old logic for recycling obstacles and assigning keys here
-                        // The key assignment logic is now handled only in scheduleNextObstacle and startNewGame
+                        if (newPosition < -20 && !collisionDetected) {
+                            if (Math.random() < 0.7) {
+                                if (obstacleTypes.length === 0) return obstacle;
+
+                                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                                const randomOffset = Math.floor(Math.random() * 20);
+
+                                // Logic thả key đã được chuyển sang hàm scheduleNextObstacle
+                                // Khi một obstacle cũ đi qua màn hình và được thay thế bằng obstacle mới,
+                                // nó sẽ không tự động kiểm tra và thả key ở đây nữa.
+                                // Việc thả key chỉ xảy ra khi hàm scheduleNextObstacle được gọi.
+                                const hasKey = false; // Mặc định là false khi tái sử dụng obstacle
+
+                                return {
+                                    ...obstacle,
+                                    ...randomObstacleType,
+                                    id: Date.now(),
+                                    position: 120 + randomOffset,
+                                    health: randomObstacleType.baseHealth,
+                                    maxHealth: randomObstacleType.baseHealth,
+                                    hasKey: hasKey, // Luôn là false khi tái sử dụng
+                                };
+                            } else {
+                                return { ...obstacle, position: newPosition };
+                            }
+                        }
 
                         if (collisionDetected) {
-                             // Check if the obstacle had a key BEFORE it's potentially removed
                             if (obstacle.hasKey) {
                                 handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
                             }
-                            // Mark for removal after collision
                             return { ...obstacle, position: newPosition, collided: true };
                         }
 
-
-                        // If obstacle goes off screen and didn't collide, remove it
-                         if (newPosition < -20) {
-                             return { ...obstacle, position: newPosition, collided: true }; // Mark for removal
-                         }
-
-
                         return { ...obstacle, position: newPosition };
                     })
-                    // Filter out collided or off-screen obstacles
-                    .filter(obstacle => !obstacle.collided);
+                    .filter(obstacle => {
+                        return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0;
+                    });
             });
 
             setClouds(prevClouds => {
@@ -1117,7 +1118,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
-          if (!obstacleTimerRef.current) {
+          // Chỉ schedule next obstacle nếu chưa có timer VÀ game đã bắt đầu
+          // Logic initial obstacles đã được xử lý trong startNewGame
+          if (!obstacleTimerRef.current && obstacles.length > 0) { // Chỉ schedule nếu đã có initial obstacles
               scheduleNextObstacle();
           }
           if (!coinScheduleTimerRef.current) {
@@ -1142,7 +1145,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, nextKeyIn]); // Dependencies include loading state and nextKeyIn
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, nextKeyIn, obstacles.length]); // Dependencies include loading state, nextKeyIn, and obstacles.length
+
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -1987,4 +1991,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-
