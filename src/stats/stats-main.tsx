@@ -649,7 +649,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           <HeaderBackground />
         </div>
 
-        {/* Left side of the header (Stats Icon, Health Bar) */}
+        {/* Left side of the header (Stats Icon) */}
         {/* Added this block back to match background-game.tsx structure */}
         <div className="flex items-center relative z-10">
             {/* Stats Icon - Reused from background-game.tsx */}
@@ -669,26 +669,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                       }}
                     />
               </div>
-            {/* Health Bar - Adapted from background-game.tsx */}
-            {/* Note: Health state is not available in stats-main.tsx, this will be static or need health prop */}
-            {/* For now, rendering a placeholder or static bar */}
-             <div className="w-32 relative">
-                  <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                      {/* Placeholder Health Bar */}
-                      <div
-                          className={`bg-green-500 h-full transform origin-left`} // Static green bar
-                          style={{ width: '100%' }} // Always full for now
-                      >
-                          <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                      </div>
-                  </div>
-                   {/* Placeholder Health Text */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                          HP: N/A {/* Placeholder text */}
-                      </span>
-                  </div>
-             </div>
+            {/* Removed the HP bar div */}
         </div>
 
 
