@@ -24,7 +24,7 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 
 // NEW: Import the DailyCheckIn component
-import DailyCheckIn from './check-in.tsx';
+import DailyCheckIn from './daily-check-in-component.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -2069,11 +2069,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         // Overlay for dimming the background
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
           {/* Popup Container */}
-          <div className="relative w-full max-w-sm mx-auto p-4 animate-scaleIn"> {/* Added max-w-sm, mx-auto, p-4, and animate-scaleIn */}
+          {/* MODIFIED: Added overflow-y-auto and max-h-full */}
+          <div className="relative w-full max-w-sm mx-auto p-4 animate-scaleIn overflow-y-auto max-h-full">
             <DailyCheckIn />
             {/* Close button for the popup - Positioned relative to the popup container */}
             <button
-              className="absolute top-0 right-0 m-2 text-white hover:text-gray-300 transition-colors z-50" // Adjusted position and added margin
+              className="absolute top-0 right-0 m-2 text-white hover:text-gray-300 transition-colors z-50"
               onClick={closeDailyCheckIn}
               aria-label="Đóng"
             >
