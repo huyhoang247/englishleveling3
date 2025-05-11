@@ -22,7 +22,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
-    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y1="18"></line></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
   if (!icons[name]) {
@@ -649,7 +649,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           {/* Use the CoinDisplay component here */}
           {/* Pass the coins prop to CoinDisplay */}
           {/* MODIFIED: Adjusted text color for dark background */}
-          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-gray-800" />
+          {/* NOTE: The grey background is likely from the CoinDisplay component itself. */}
+          {/* Adding bg-transparent here might help, but the ideal fix is in ../coin-display.tsx */}
+          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-gray-800 bg-transparent" />
 
           {/* Exchange Button */}
           {/* MODIFIED: Adjusted colors for dark background */}
