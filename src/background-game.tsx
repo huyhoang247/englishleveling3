@@ -489,50 +489,46 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
-    if (obstacleTypes.length > 0) {
-        const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+    const obstacleCount = 5; // Start with 5 obstacles
 
-        // CORRECTED: Use a local counter for key logic during initial obstacle creation
-        let counter = nextKeyIn; // Initialize local counter with current state value
-
-        // Logic for the first obstacle
-        counter--;
-        const hasKeyFirst = counter <= 0;
-        if (hasKeyFirst) {
-          counter = randomBetween(5, 10);
+    // CORRECTED: Decrease nextKeyIn once for the initial group
+     setNextKeyIn(prevCount => {
+        const newCount = prevCount - 1; // Decrease the count
+        // Only reset if it drops to 0 or less
+        if (newCount <= 0) {
+          return randomBetween(5, 10); // Reset to a new random value
         }
+        return newCount; // Otherwise, keep the new count
+     });
 
-        initialObstacles.push({
-          id: Date.now(),
-          position: 120,
-          ...firstObstacleType,
-          health: firstObstacleType.baseHealth,
-          maxHealth: firstObstacleType.baseHealth,
-          hasKey: hasKeyFirst,
-        });
+    // CORRECTED: Determine if ANY obstacle in this initial group should have a key
+    // This check should happen AFTER updating nextKeyIn state
+     const shouldAnyHaveKey = nextKeyIn <= 1; // Check if the count *before* this update was 1 or less
 
-        for (let i = 1; i < 5; i++) {
+     // CORRECTED: If any should have a key, randomly pick ONE obstacle in this initial group
+     let keyIndex = -1;
+     if (shouldAnyHaveKey && obstacleCount > 0) {
+         keyIndex = Math.floor(Math.random() * obstacleCount);
+     }
+
+
+    if (obstacleTypes.length > 0) {
+        for (let i = 0; i < obstacleCount; i++) {
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // CORRECTED: Use the local counter for key logic within the loop
-          counter--;
-          const hasKey = counter <= 0;
-          if (hasKey) {
-            counter = randomBetween(5, 10);
-          }
+          // CORRECTED: Assign hasKey based on the randomly selected index for initial obstacles
+          const hasKey = (i === keyIndex);
 
           initialObstacles.push({
             id: Date.now() + i,
-            position: 150 + (i * 50),
+            position: 150 + (i * 50), // Adjust initial positions as needed
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
-            hasKey: hasKey,
+            hasKey: hasKey, // Assign the determined hasKey value
           });
         }
-        // CORRECTED: Update the state ONLY ONCE after the loop finishes
-        setNextKeyIn(counter);
     }
 
     setObstacles(initialObstacles);
@@ -691,20 +687,33 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
       const newObstacles: GameObstacle[] = [];
 
-      if (obstacleTypes.length > 0) {
-          // CORRECTED: Use a local counter for key logic during obstacle creation batch
-          let counter = nextKeyIn; // Initialize local counter with current state value
+      // CORRECTED: Decrease nextKeyIn once per group of obstacles
+      // We use a functional update to ensure we're working with the latest state
+      let shouldAnyHaveKey = false; // Flag to determine if *any* obstacle in this group should have a key
+      setNextKeyIn(prevCount => {
+        const newCount = prevCount - 1; // Decrease the count
+        // If the count drops to 0 or less, this group gets a key
+        if (newCount <= 0) {
+          shouldAnyHaveKey = true; // Set the flag
+          return randomBetween(5, 10); // Reset to a new random value
+        }
+        return newCount; // Otherwise, keep the new count
+      });
 
+      // CORRECTED: If any should have a key, randomly pick ONE obstacle in this group
+      let keyIndex = -1;
+      if (shouldAnyHaveKey && obstacleCount > 0) {
+          keyIndex = Math.floor(Math.random() * obstacleCount);
+      }
+
+
+      if (obstacleTypes.length > 0) {
           for (let i = 0; i < obstacleCount; i++) {
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // CORRECTED: Use the local counter for key logic within the loop
-            counter--;
-            const hasKey = counter <= 0;
-            if (hasKey) {
-              counter = randomBetween(5, 10);
-            }
+            // CORRECTED: Assign hasKey based on the randomly selected index
+            const hasKey = (i === keyIndex);
 
             newObstacles.push({
               id: Date.now() + i,
@@ -712,11 +721,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
-              hasKey: hasKey,
+              hasKey: hasKey, // Assign the determined hasKey value
             });
           }
-          // CORRECTED: Update the state ONLY ONCE after the loop finishes
-          setNextKeyIn(counter);
       }
 
       setObstacles(prev => [...prev, ...newObstacles]);
@@ -924,58 +931,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             }
                         }
 
-                        // When an obstacle goes off-screen and no collision occurred, potentially reuse it
-                        if (newPosition < -20 && !collisionDetected) {
-                            // 70% chance to reuse the obstacle
-                            if (Math.random() < 0.7) {
-                                if (obstacleTypes.length === 0) return obstacle; // Should not happen if initialized
+                        // Removed the old logic for recycling obstacles and assigning keys here
+                        // The key assignment logic is now handled only in scheduleNextObstacle and startNewGame
 
-                                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                                const randomOffset = Math.floor(Math.random() * 20);
-
-                                // Key logic for obstacles going off-screen
-                                // This logic *does* use the current state value and updates the state
-                                // because it's processing obstacles one by one in the game loop,
-                                // not in a batch creation like in startNewGame or scheduleNextObstacle.
-                                const newCount = nextKeyIn - 1;
-                                const hasKey = newCount <= 0;
-                                if (hasKey) {
-                                    setNextKeyIn(randomBetween(5, 10));
-                                } else {
-                                    setNextKeyIn(newCount);
-                                }
-
-
-                                return {
-                                    ...obstacle,
-                                    ...randomObstacleType,
-                                    id: Date.now(), // Assign a new ID
-                                    position: 120 + randomOffset, // Reposition off-screen to the right
-                                    health: randomObstacleType.baseHealth, // Reset health
-                                    maxHealth: randomObstacleType.baseHealth,
-                                    hasKey: hasKey, // Assign key based on updated logic
-                                };
-                            } else {
-                                // If not reusing, simply update position (will be filtered out below)
-                                return { ...obstacle, position: newPosition };
-                            }
-                        }
-
-                        // If collision detected, mark for removal
                         if (collisionDetected) {
+                             // Check if the obstacle had a key BEFORE it's potentially removed
                             if (obstacle.hasKey) {
                                 handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
                             }
+                            // Mark for removal after collision
                             return { ...obstacle, position: newPosition, collided: true };
                         }
 
-                        // Default: just update position if no collision and not off-screen
+
+                        // If obstacle goes off screen and didn't collide, remove it
+                         if (newPosition < -20) {
+                             return { ...obstacle, position: newPosition, collided: true }; // Mark for removal
+                         }
+
+
                         return { ...obstacle, position: newPosition };
                     })
-                    // Filter out collided obstacles and those that went off-screen without being reused
-                    .filter(obstacle => {
-                        return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0;
-                    });
+                    // Filter out collided or off-screen obstacles
+                    .filter(obstacle => !obstacle.collided);
             });
 
             setClouds(prevClouds => {
@@ -2001,7 +1979,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
             isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
             isStatsFullscreen={isStatsFullscreen}
-            currentUserId={currentUser ? currentUser.currentUser.uid : null} // Pass currentUserId here
+            currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
           />
 
         </div>
@@ -2009,3 +1987,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+
