@@ -24,7 +24,7 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 
 // NEW: Import the DailyCheckIn component
-import DailyCheckIn from './daily-check-in-component.tsx';
+import DailyCheckIn from './check-in.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
