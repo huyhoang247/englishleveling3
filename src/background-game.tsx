@@ -164,7 +164,7 @@ interface GameSessionData {
     remainingCooldown: number;
     shieldCooldownStartTime: number | null;
     pausedShieldCooldownRemaining: number | null;
-    nextKeyIn: number;
+    nextKeyIn: number; // This is now the state value from the hook
     // Add other temporary game state you want to save
 }
 
@@ -216,7 +216,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval
+  // CORRECTED: Use array destructuring for state and setter
+  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval state
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -474,7 +475,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setRemainingCooldown(0);
     setShieldCooldownStartTime(null); // Use the setter from the hook
     setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-    setNextKeyIn(randomBetween(5, 10)); // Reset nextKeyIn state using its setter from the hook
+    // CORRECTED: Reset nextKeyIn using its setter
+    setNextKeyIn(randomBetween(5, 10)); // Reset state using its setter
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -490,16 +492,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
-        // Logic for the first obstacle's key drop
-        let shouldHaveKeyFirst = false;
-        setNextKeyIn(prev => {
-            const newNextKeyIn = prev - 1;
-            if (newNextKeyIn <= 0) {
-                shouldHaveKeyFirst = true;
-                return randomBetween(5, 10);
-            }
-            return newNextKeyIn;
-        });
+        // CORRECTED: Use the state value and setter
+        const hasKeyFirst = (() => {
+          const newCount = nextKeyIn - 1; // Use state value
+          if (newCount <= 0) {
+            setNextKeyIn(randomBetween(5, 10)); // Update state using setter
+            return true;
+          } else {
+            setNextKeyIn(newCount); // Update state using setter
+            return false;
+          }
+        })();
 
         initialObstacles.push({
           id: Date.now(),
@@ -507,24 +510,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           ...firstObstacleType,
           health: firstObstacleType.baseHealth,
           maxHealth: firstObstacleType.baseHealth,
-          hasKey: shouldHaveKeyFirst,
+          hasKey: hasKeyFirst,
         });
 
         for (let i = 1; i < 5; i++) {
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // Logic for subsequent obstacles' key drop
-          let shouldHaveKey = false;
-          setNextKeyIn(prev => {
-              const newNextKeyIn = prev - 1;
-              if (newNextKeyIn <= 0) {
-                  shouldHaveKey = true;
-                  return randomBetween(5, 10);
-              }
-              return newNextKeyIn;
-          });
-
+          // CORRECTED: Use the state value and setter
+          const hasKey = (() => {
+            const newCount = nextKeyIn - 1; // Use state value
+            if (newCount <= 0) {
+              setNextKeyIn(randomBetween(5, 10)); // Update state using setter
+              return true;
+            } else {
+              setNextKeyIn(newCount); // Update state using setter
+              return false;
+            }
+          })();
 
           initialObstacles.push({
             id: Date.now() + i,
@@ -532,7 +535,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
-            hasKey: shouldHaveKey,
+            hasKey: hasKey,
           });
         }
     }
@@ -572,7 +575,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setRemainingCooldown(0); // Reset session storage state
         setShieldCooldownStartTime(null); // Reset session storage state
         setPausedShieldCooldownRemaining(null); // Reset session storage state
-        setNextKeyIn(randomBetween(5, 10)); // Reset session storage state for nextKeyIn
+        // CORRECTED: Reset nextKeyIn using its setter
+        setNextKeyIn(randomBetween(5, 10)); // Reset session storage state
 
 
         setIsRunning(false);
@@ -697,20 +701,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // Logic for key drop: Decrement nextKeyIn and check if it's time to drop a key
-            let shouldHaveKey = false;
-            setNextKeyIn(prev => {
-                const newNextKeyIn = prev - 1;
-                console.log(`Obstacle created. nextKeyIn: ${newNextKeyIn}`); // Log the value
-                if (newNextKeyIn <= 0) {
-                    shouldHaveKey = true;
-                    const resetValue = randomBetween(5, 10);
-                    console.log(`Key dropped! Resetting nextKeyIn to: ${resetValue}`); // Log key drop
-                    return resetValue; // Reset the counter
-                }
-                return newNextKeyIn; // Decrement the counter
-            });
-
+            // CORRECTED: Use the state value and setter
+            const hasKey = (() => {
+              const newCount = nextKeyIn - 1; // Use state value
+              if (newCount <= 0) {
+                setNextKeyIn(randomBetween(5, 10)); // Update state using setter
+                return true;
+              } else {
+                setNextKeyIn(newCount); // Update state using setter
+                return false;
+              }
+            })();
 
             newObstacles.push({
               id: Date.now() + i,
@@ -718,7 +719,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
-              hasKey: shouldHaveKey, // Assign the determined hasKey value
+              hasKey: hasKey,
             });
           }
       }
@@ -928,7 +929,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             }
                         }
 
-                        // Logic for recycling obstacles and potentially adding a key
                         if (newPosition < -20 && !collisionDetected) {
                             if (Math.random() < 0.7) {
                                 if (obstacleTypes.length === 0) return obstacle;
@@ -936,20 +936,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // Logic for key drop when recycling: Decrement nextKeyIn and check if it's time to drop a key
-                                let shouldHaveKey = false;
-                                setNextKeyIn(prev => {
-                                    const newNextKeyIn = prev - 1;
-                                    console.log(`Recycled obstacle. nextKeyIn: ${newNextKeyIn}`); // Log the value
-                                    if (newNextKeyIn <= 0) {
-                                        shouldHaveKey = true;
-                                        const resetValue = randomBetween(5, 10);
-                                        console.log(`Key dropped! Resetting nextKeyIn to: ${resetValue}`); // Log key drop
-                                        return resetValue; // Reset the counter
-                                    }
-                                    return newNextKeyIn; // Decrement the counter
-                                });
-
+                                // CORRECTED: Use the state value and setter
+                                const hasKey = (() => {
+                                  const newCount = nextKeyIn - 1; // Use state value
+                                  if (newCount <= 0) {
+                                    setNextKeyIn(randomBetween(5, 10)); // Update state using setter
+                                    return true;
+                                  } else {
+                                    setNextKeyIn(newCount); // Update state using setter
+                                    return false;
+                                  }
+                                })();
 
                                 return {
                                     ...obstacle,
@@ -958,7 +955,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                     position: 120 + randomOffset,
                                     health: randomObstacleType.baseHealth,
                                     maxHealth: randomObstacleType.baseHealth,
-                                    hasKey: shouldHaveKey, // Assign the determined hasKey value
+                                    hasKey: hasKey,
                                 };
                             } else {
                                 return { ...obstacle, position: newPosition };
@@ -1121,7 +1118,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added nextKeyIn to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added all session storage states and nextKeyIn to dependencies
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1165,7 +1162,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData]); // Dependencies include loading state
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, nextKeyIn]); // Dependencies include loading state and nextKeyIn
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -1464,39 +1461,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           left: `${obstacle.position}%`
         }}
       >
-        {/* Thanh máu */}
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-visible border border-gray-600 shadow-sm relative">
             <div
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
-        </div>
 
-        {/* Phần tử chướng ngại vật */}
-        <div className="relative"> {/* Added relative positioning here */}
-            {obstacleEl}
-
-             {/* Hiển thị biểu tượng chìa khóa nếu obstacle có hasKey là true */}
-            {obstacle.hasKey && (
+             {/* CORRECTED: hasKey logic is now correct, icon will render when true */}
+             {obstacle.hasKey && (
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
                 alt="Key"
-                className="absolute w-4 h-4 object-contain z-50" // Added z-50 for higher stacking order
+                className="absolute w-4 h-4"
                 style={{
-                    bottom: 'calc(100% + 20px)', // Position 20px above the obstacle element
-                    left: '50%', // Center horizontally relative to the obstacle element
-                    transform: 'translateX(-50%)', // Adjust to truly center
-                }}
-                // Thêm onError để xử lý khi ảnh không tải được
-                onError={(e) => {
-                    const target = e as any; // Cast to any to access target
-                    target.onerror = null; // Ngăn chặn lặp vô hạn nếu ảnh lỗi
-                    target.src = "https://placehold.co/16x16/ff0000/ffffff?text=Key"; // Ảnh placeholder màu đỏ
-                    console.error("Error loading key icon image:", target.src); // Log lỗi
+                    bottom: 'calc(100% + 4px)',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
                 }}
               />
             )}
         </div>
+
+        {obstacleEl}
       </div>
     );
   };
