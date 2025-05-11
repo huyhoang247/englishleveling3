@@ -22,7 +22,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
-    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y1="18"></line></g>,
   };
 
   if (!icons[name]) {
@@ -642,7 +642,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
         }}></div>
 
-        {/* Top right badges container */}
+        {/* Top right badges container with glassmorphism effect */}
         {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
         <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden z-10">
 
@@ -683,10 +683,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           </div>
         </div>
 
-        {/* Removed the gradient overlay div */}
-        {/*
+        {/* Gradient overlay at the bottom of the header */}
+        {/* MODIFIED: Reverted gradient colors for light mode */}
         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
-        */}
       </div>
 
       {/* Main content area - SCROLLABLE */}
