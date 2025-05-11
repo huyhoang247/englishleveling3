@@ -3,7 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
-import HeaderBackground from '../header-background.tsx'; // Import HeaderBackground
+import HeaderBackground from './header-background.tsx'; // Import HeaderBackground
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -622,8 +622,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     // Main container using flexbox to manage layout
     // h-screen makes it take full viewport height
     // REVISED: Added rounded-lg, overflow-hidden, relative, shadow-2xl to match game container
-    // Ensure these classes are on the outermost container
-    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl">
+    // Added border-b, border-l, border-r, and border-slate-700/50 for the bottom border
+    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl
+                border-b border-l border-r border-slate-700/50"> {/* Added bottom borders */}
       {/* Added the glass-shadow-border CSS style - Keep if needed elsewhere */}
       {/* <style>{`
         .glass-shadow-border {
@@ -642,7 +643,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       <div className="flex-shrink-0 relative h-12 flex items-center justify-end px-3 overflow-hidden
                   shadow-2xl
                   bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                  border-b border-l border-r border-slate-700/50">
+                  border-b border-l border-r border-slate-700/50"> {/* Kept top borders for header */}
         {/* Insert HeaderBackground here */}
         {/* Use absolute positioning to cover the header area */}
         <div className="absolute inset-0 z-0">
