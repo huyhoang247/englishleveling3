@@ -3,7 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
-import HeaderBackground from '../header-background.tsx'; // Import HeaderBackground
+import HeaderBackground from './header-background.tsx'; // Import HeaderBackground
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -622,7 +622,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     // Main container using flexbox to manage layout
     // h-screen makes it take full viewport height
     // MODIFIED: Changed background back to white and used flex layout
-    <div className="flex flex-col h-screen bg-white">
+    // REVISED: Added rounded-lg, overflow-hidden, relative, shadow-2xl to match game container
+    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl">
       {/* Added the glass-shadow-border CSS style - Keep if needed elsewhere */}
       {/* <style>{`
         .glass-shadow-border {
@@ -639,8 +640,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {/* Position relative to allow absolute positioning of background and badges */}
       {/* Added styling from background-game.tsx header for consistent look */}
       {/* REVISED: Applied h-12, flex, items-center, justify-between, px-3 to match background-game.tsx header */}
+      {/* Removed rounded-b-lg from header itself, as parent container handles overall rounding */}
       <div className="flex-shrink-0 relative h-12 flex items-center justify-between px-3 overflow-hidden
-                  rounded-b-lg shadow-2xl
+                  shadow-2xl
                   bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                   border-b border-l border-r border-slate-700/50">
         {/* Insert HeaderBackground here */}
@@ -649,7 +651,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           <HeaderBackground />
         </div>
 
-        {/* Left side of the header (Stats Icon) */}
+        {/* Left side of the header (Stats Icon, Health Bar) */}
         {/* Added this block back to match background-game.tsx structure */}
         <div className="flex items-center relative z-10">
             {/* Stats Icon - Reused from background-game.tsx */}
@@ -669,7 +671,26 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                       }}
                     />
               </div>
-            {/* Removed the HP bar div */}
+            {/* Health Bar - Adapted from background-game.tsx */}
+            {/* Note: Health state is not available in stats-main.tsx, this will be static or need health prop */}
+            {/* For now, rendering a placeholder or static bar */}
+             <div className="w-32 relative">
+                  <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                      {/* Placeholder Health Bar */}
+                      <div
+                          className={`bg-green-500 h-full transform origin-left`} // Static green bar
+                          style={{ width: '100%' }} // Always full for now
+                      >
+                          <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                      </div>
+                  </div>
+                   {/* Placeholder Health Text */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                          HP: N/A {/* Placeholder text */}
+                      </span>
+                  </div>
+             </div>
         </div>
 
 
