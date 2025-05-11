@@ -621,8 +621,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
   return (
     // Main container using flexbox to manage layout
     // h-screen makes it take full viewport height
-    // MODIFIED: Changed background back to white and used flex layout
     // REVISED: Added rounded-lg, overflow-hidden, relative, shadow-2xl to match game container
+    // Ensure these classes are on the outermost container
     <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl">
       {/* Added the glass-shadow-border CSS style - Keep if needed elsewhere */}
       {/* <style>{`
@@ -636,12 +636,10 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
-      {/* MODIFIED: Changed background back to white and added padding */}
       {/* Position relative to allow absolute positioning of background and badges */}
-      {/* Added styling from background-game.tsx header for consistent look */}
-      {/* REVISED: Applied h-12, flex, items-center, justify-between, px-3 to match background-game.tsx header */}
+      {/* Applied styling from background-game.tsx header for consistent look */}
       {/* Removed rounded-b-lg from header itself, as parent container handles overall rounding */}
-      <div className="flex-shrink-0 relative h-12 flex items-center justify-between px-3 overflow-hidden
+      <div className="flex-shrink-0 relative h-12 flex items-center justify-end px-3 overflow-hidden
                   shadow-2xl
                   bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                   border-b border-l border-r border-slate-700/50">
@@ -652,7 +650,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
         </div>
 
         {/* Left side of the header - Now empty as stats icon and health bar are removed */}
-        {/* Keeping the div structure to maintain flex layout */}
+        {/* Keeping the div structure for flex layout, but it will be empty */}
         <div className="flex items-center relative z-10">
             {/* Removed Stats Icon */}
             {/* Removed Health Bar */}
@@ -660,18 +658,17 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
 
         {/* Right side of the header (Coin Display, Exchange Button, Points Badge) */}
-        {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
         {/* Ensure z-index is higher than the background */}
-        {/* REVISED: Adjusted spacing and relative z-10 */}
+        {/* Adjusted spacing and relative z-10 */}
         <div className="relative flex items-center space-x-2 overflow-hidden z-10"> {/* Removed justify-end */}
 
           {/* Use the CoinDisplay component here */}
           {/* Pass the coins prop to CoinDisplay */}
-          {/* MODIFIED: Adjusted text color for dark background */}
+          {/* Adjusted text color for dark background */}
           <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-white" /> {/* Changed text color to white */}
 
           {/* Exchange Button */}
-          {/* MODIFIED: Adjusted colors for dark background */}
+          {/* Adjusted colors for dark background */}
           <button
             onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
             className="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-medium transition-colors hover:bg-gray-600 flex items-center justify-center border border-gray-600" // Adjusted colors
@@ -682,7 +679,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
           {/* Points Badge */}
           <div className="overflow-hidden">
-            {/* MODIFIED: Removed shadow-md class */}
+            {/* Removed shadow-md class */}
             <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 ${pointBadgePulse ? 'animate-pulse' : ''}`}>
               <div className="w-4 h-4 mr-1.5 relative">
                 <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
@@ -690,7 +687,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               </div>
               <span className="text-xs font-bold text-white">{statPoints}</span>
               {/* Plus button next to Points badge (conditionally visible) */}
-              {/* MODIFIED: Reverted background opacity for light mode */}
+              {/* Reverted background opacity for light mode */}
               <button
                 onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
                 className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
@@ -710,10 +707,10 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       <div className="flex-grow overflow-y-auto p-8">
 
         {/* Stats Section */}
-        {/* MODIFIED: Removed px-8 as padding is now on the parent */}
+        {/* Removed px-8 as padding is now on the parent */}
         <div className="mb-8">
             {/* Stats Header */}
-            {/* MODIFIED: Reverted text and border colors for light mode */}
+            {/* Reverted text and border colors for light mode */}
             <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
               <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
                 <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
@@ -731,7 +728,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               )}
 
               {/* "Details" indicator (visible if no points or panel is open) */}
-              {/* MODIFIED: Reverted colors for light mode */}
+              {/* Reverted colors for light mode */}
               {!statPoints && !showPointsPanel && (
                 <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
                   <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -744,10 +741,10 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
             {/* Point Allocation Panel (conditionally rendered) */}
             {showPointsPanel ? (
-              // MODIFIED: Reverted background and border colors for light mode
+              // Reverted background and border colors for light mode
               <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
                 {/* Panel Header */}
-                {/* MODIFIED: Reverted text color for light mode */}
+                {/* Reverted text color for light mode */}
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
                     <Icon name="Plus" size={20} className="text-white" />
@@ -761,7 +758,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 {renderStats(true)}
 
                 {/* Allocation Tip */}
-                {/* MODIFIED: Reverted background and text colors for light mode */}
+                {/* Reverted background and text colors for light mode */}
                 <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start">
                   <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" /> {/* Reverted text color */}
                   <div className="text-xs text-blue-800"> {/* Reverted text color */}
@@ -776,7 +773,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                  {/* Action Buttons for Allocation Panel */}
                 <div className="flex items-center justify-end space-x-2">
                    {/* Cancel Button */}
-                   {/* MODIFIED: Reverted colors for light mode */}
+                   {/* Reverted colors for light mode */}
                    <button
                       onClick={cancelChanges}
                       className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
@@ -794,7 +791,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               </div>
             ) : (
               // Render stats in view mode (when allocation panel is closed)
-              // MODIFIED: Reverted background and border colors for light mode
+              // Reverted background and border colors for light mode
               <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
                 {renderStats()}
               </div>
@@ -802,10 +799,10 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           </div>
 
         {/* Skills Section */}
-        {/* MODIFIED: Removed px-8 as padding is now on the parent */}
+        {/* Removed px-8 as padding is now on the parent */}
         <div className="mb-8">
           {/* Skills Header */}
-          {/* MODIFIED: Reverted text and border colors for light mode */}
+          {/* Reverted text and border colors for light mode */}
           <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
             <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
           </h3>
@@ -816,7 +813,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
         </div>
 
          {/* Reset Stats Control - Placed back here */}
-         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
+         {/* Removed px-8 as padding is now on the parent */}
          <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
