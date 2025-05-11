@@ -12,7 +12,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,
     Stars: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>,
     Brain: <path d="M12 15c.68-1.32 1-2.8 1-4.4C13 6.4 10.8 2 7.5 2 4.2 2 2 6.4 2 10.6c0 4.2 2.2 8.6 5.5 8.6 2.12 0 3.6-.8 4.5-2.4zM12 15c-.68-1.32-1-2.8-1-4.4C11 6.4 13.2 2 16.5 2c3.3 0 5.5 4.4 5.5 8.6 0 4.2-2.2 8.6-5.5 8.6-2.12 0-3.6-.8-4.5-2.4z"></path>,
-    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
+    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 5 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
     Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>,
     Crosshair: <g><circle cx="12" cy="12" r="10"></circle><path d="M22 12h-4"></path><path d="M6 12H2"></path><path d="M12 6V2"></path><path d="M12 22v-4"></path></g>,
     Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
@@ -22,7 +22,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
-    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y1="18"></line></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
   if (!icons[name]) {
@@ -635,8 +635,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
       {/* MODIFIED: Changed background back to white and added padding */}
-      {/* ADJUSTED: Added relative positioning and overflow-hidden to the header for better control */}
-      <div className="flex-shrink-0 relative bg-white px-8 pt-4 pb-2 overflow-hidden"> {/* Adjusted padding and added overflow-hidden */}
+      <div className="flex-shrink-0 relative bg-white px-8 pt-4 pb-2"> {/* Adjusted padding */}
         {/* Background pattern overlay */}
         {/* MODIFIED: Changed fill color in SVG back to light for white background */}
         <div className="absolute inset-0" style={{
@@ -645,8 +644,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
         {/* Top right badges container with glassmorphism effect */}
         {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
-        {/* ADJUSTED: Added some bottom padding to the badges container */}
-        <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden z-10 pb-2"> {/* Added pb-2 */}
+        <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden z-10">
 
           {/* Use the CoinDisplay component here */}
           {/* Pass the coins prop to CoinDisplay */}
@@ -687,8 +685,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
         {/* Gradient overlay at the bottom of the header */}
         {/* MODIFIED: Reverted gradient colors for light mode */}
-        {/* ADJUSTED: Removed this gradient as it might be contributing to the overflow */}
-        {/* <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div> */}
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
       </div>
 
       {/* Main content area - SCROLLABLE */}
@@ -701,8 +698,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
         <div className="mb-8">
             {/* Stats Header */}
-            {/* MODIFIED: Reverted text and border colors for light mode */}
-            <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
+            {/* ADDED mt-4 for top margin */}
+            <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2 mt-4">
               <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
                 <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
               </h3>
