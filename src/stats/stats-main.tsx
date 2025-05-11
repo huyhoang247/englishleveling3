@@ -3,6 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
+import HeaderBackground from './header-background.tsx'; // Import HeaderBackground component
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -12,7 +13,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Heart: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>,
     Stars: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>,
     Brain: <path d="M12 15c.68-1.32 1-2.8 1-4.4C13 6.4 10.8 2 7.5 2 4.2 2 2 6.4 2 10.6c0 4.2 2.2 8.6 5.5 8.6 2.12 0 3.6-.8 4.5-2.4zM12 15c-.68-1.32-1-2.8-1-4.4C11 6.4 13.2 2 16.5 2c3.3 0 5.5 4.4 5.5 8.6 0 4.2-2.2 8.6-5.5 8.6-2.12 0-3.6-.8-4.5-2.4z"></path>,
-    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
+    Trophy: <g><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14l2 2 2-2M12 17v5"></path><path d="M12 17a5 5 0 0 1-5-5V5a2 5 0 0 1 2-2h6a2 5 0 0 1 2 2v7a5 5 0 0 1-5 5z"></path></g>,
     Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>,
     Crosshair: <g><circle cx="12" cy="12" r="10"></circle><path d="M22 12h-4"></path><path d="M6 12H2"></path><path d="M12 6V2"></path><path d="M12 22v-4"></path></g>,
     Plus: <g><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></g>,
@@ -448,9 +449,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           {/* Exchange Direction Selection */}
           <div className="mb-5">
             {/* Toggle Buttons */}
-            {/* REMOVED: The div with bg-gray-100 and rounded-lg around the buttons */}
             {/* MODIFIED: Reverted background colors for light mode */}
-            <div className="flex mb-2"> {/* Kept the flex and mb-2 classes */}
+            <div className="bg-gray-100 p-1 rounded-lg flex mb-2">
               <button
                 onClick={() => setExchangeDirection('coinToPoint')}
                 className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
@@ -636,57 +636,67 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
       {/* MODIFIED: Changed background back to white and added padding */}
-      <div className="flex-shrink-0 relative bg-white px-8 pt-4 pb-2"> {/* Adjusted padding */}
-        {/* Background pattern overlay */}
-        {/* MODIFIED: Changed fill color in SVG back to light for white background */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
-        }}></div>
+      <div className="flex-shrink-0 relative w-full h-32 overflow-hidden"> {/* Adjusted height and added overflow-hidden */}
+        {/* Insert the HeaderBackground component here */}
+        <HeaderBackground />
 
-        {/* Top right badges container with glassmorphism effect */}
-        {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
-        <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden z-10">
+        {/* Content of the header (level bar, badges) - Positioned on top */}
+        <div className="absolute inset-0 flex flex-col justify-center items-center px-8 pt-4 pb-2 z-10"> {/* Added z-10 */}
+           {/* Level bar (Placeholder - replace with actual level bar component) */}
+           {/* Added margin bottom for spacing */}
+          <div className="w-full max-w-md bg-gray-700 rounded-full h-4 mb-4 overflow-hidden"> {/* Added max-w-md and overflow-hidden */}
+            <div className="bg-green-500 h-4 rounded-full" style={{ width: '80%' }}></div> {/* Example fill */}
+          </div>
 
-          {/* Use the CoinDisplay component here */}
-          {/* Pass the coins prop to CoinDisplay */}
-          {/* MODIFIED: Adjusted text color for dark background */}
-          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-gray-800" />
 
-          {/* Exchange Button */}
-          {/* MODIFIED: Adjusted colors for dark background */}
-          <button
-            onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
-            className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium transition-colors hover:bg-gray-300 flex items-center justify-center border border-gray-300"
-            title="Chuyển đổi Coin/Point"
-          >
-            Exchange
-          </button>
+          {/* Top right badges container */}
+          {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
+          {/* Adjusted positioning to be relative to this inner div */}
+          <div className="w-full max-w-md flex items-center justify-end space-x-2 z-10"> {/* Added max-w-md and z-10 */}
 
-          {/* Points Badge */}
-          <div className="overflow-hidden">
-            {/* MODIFIED: Removed shadow-md class */}
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 ${pointBadgePulse ? 'animate-pulse' : ''}`}>
-              <div className="w-4 h-4 mr-1.5 relative">
-                <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
-                <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
+            {/* Use the CoinDisplay component here */}
+            {/* Pass the coins prop to CoinDisplay */}
+            {/* MODIFIED: Adjusted text color for dark background */}
+            {/* Removed className="text-gray-800" as CoinDisplay handles its own text color */}
+            <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+
+            {/* Exchange Button */}
+            {/* MODIFIED: Adjusted colors for dark background */}
+            <button
+              onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
+              className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium transition-colors hover:bg-gray-300 flex items-center justify-center border border-gray-300"
+              title="Chuyển đổi Coin/Point"
+            >
+              Exchange
+            </button>
+
+            {/* Points Badge */}
+            <div className="overflow-hidden">
+              {/* MODIFIED: Removed shadow-md class */}
+              <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 ${pointBadgePulse ? 'animate-pulse' : ''}`}>
+                <div className="w-4 h-4 mr-1.5 relative">
+                  <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
+                  <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
+                </div>
+                <span className="text-xs font-bold text-white">{statPoints}</span>
+                {/* Plus button next to Points badge (conditionally visible) */}
+                {/* MODIFIED: Reverted background opacity for light mode */}
+                <button
+                  onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
+                  className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
+                  disabled={!(!showPointsPanel && statPoints > 0)}
+                >
+                  <Icon name="Plus" size={10} className="text-white" />
+                </button>
               </div>
-              <span className="text-xs font-bold text-white">{statPoints}</span>
-              {/* Plus button next to Points badge (conditionally visible) */}
-              {/* MODIFIED: Reverted background opacity for light mode */}
-              <button
-                onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
-                className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
-                disabled={!(!showPointsPanel && statPoints > 0)}
-              >
-                <Icon name="Plus" size={10} className="text-white" />
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Gradient overlay at the bottom of the header */}
-        {/* MODIFIED: Reverted gradient colors for light mode */}
+        {/* Gradient overlay at the bottom of the header - REMOVED as HeaderBackground handles this */}
+        {/*
         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
+        */}
       </div>
 
       {/* Main content area - SCROLLABLE */}
