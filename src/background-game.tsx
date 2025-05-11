@@ -164,7 +164,7 @@ interface GameSessionData {
     remainingCooldown: number;
     shieldCooldownStartTime: number | null;
     pausedShieldCooldownRemaining: number | null;
-    nextKeyIn: number; // This is now the state value from the hook
+    // Removed nextKeyIn from session data interface
     // Add other temporary game state you want to save
 }
 
@@ -216,8 +216,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  // CORRECTED: Use array destructuring for state and setter
-  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval state
+  // Removed nextKeyIn state and its hook
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -475,8 +474,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setRemainingCooldown(0);
     setShieldCooldownStartTime(null); // Use the setter from the hook
     setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-    // CORRECTED: Reset nextKeyIn using its setter
-    setNextKeyIn(randomBetween(5, 10)); // Reset state using its setter
+    // Removed reset for nextKeyIn
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -492,17 +490,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
-        // CORRECTED: Use the state value and setter
-        const hasKeyFirst = (() => {
-          const newCount = nextKeyIn - 1; // Use state value
-          if (newCount <= 0) {
-            setNextKeyIn(randomBetween(5, 10)); // Update state using setter
-            return true;
-          } else {
-            setNextKeyIn(newCount); // Update state using setter
-            return false;
-          }
-        })();
+        // 20% chance để có chìa khóa
+        const hasKeyFirst = Math.random() < 0.2;
 
         initialObstacles.push({
           id: Date.now(),
@@ -517,17 +506,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // CORRECTED: Use the state value and setter
-          const hasKey = (() => {
-            const newCount = nextKeyIn - 1; // Use state value
-            if (newCount <= 0) {
-              setNextKeyIn(randomBetween(5, 10)); // Update state using setter
-              return true;
-            } else {
-              setNextKeyIn(newCount); // Update state using setter
-              return false;
-            }
-          })();
+          // 20% chance để có chìa khóa
+          const hasKey = Math.random() < 0.2;
 
           initialObstacles.push({
             id: Date.now() + i,
@@ -575,8 +555,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setRemainingCooldown(0); // Reset session storage state
         setShieldCooldownStartTime(null); // Reset session storage state
         setPausedShieldCooldownRemaining(null); // Reset session storage state
-        // CORRECTED: Reset nextKeyIn using its setter
-        setNextKeyIn(randomBetween(5, 10)); // Reset session storage state
+        // Removed reset for nextKeyIn
 
 
         setIsRunning(false);
@@ -601,7 +580,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         sessionStorage.removeItem('gameRemainingCooldown');
         sessionStorage.removeItem('gameShieldCooldownStartTime');
         sessionStorage.removeItem('gamePausedShieldCooldownRemaining');
-        sessionStorage.removeItem('gameNextKeyIn');
+        // Removed session storage key for nextKeyIn
 
         // Clear timers and intervals
         clearTimeout(obstacleTimerRef.current);
@@ -701,17 +680,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // CORRECTED: Use the state value and setter
-            const hasKey = (() => {
-              const newCount = nextKeyIn - 1; // Use state value
-              if (newCount <= 0) {
-                setNextKeyIn(randomBetween(5, 10)); // Update state using setter
-                return true;
-              } else {
-                setNextKeyIn(newCount); // Update state using setter
-                return false;
-              }
-            })();
+            // 20% chance để có chìa khóa
+            const hasKey = Math.random() < 0.2;
 
             newObstacles.push({
               id: Date.now() + i,
@@ -936,17 +906,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // CORRECTED: Use the state value and setter
-                                const hasKey = (() => {
-                                  const newCount = nextKeyIn - 1; // Use state value
-                                  if (newCount <= 0) {
-                                    setNextKeyIn(randomBetween(5, 10)); // Update state using setter
-                                    return true;
-                                  } else {
-                                    setNextKeyIn(newCount); // Update state using setter
-                                    return false;
-                                  }
-                                })();
+                                // 20% chance để có chìa khóa
+                                const hasKey = Math.random() < 0.2;
 
                                 return {
                                     ...obstacle,
@@ -1118,7 +1079,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added all session storage states and nextKeyIn to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData]); // Removed nextKeyIn from dependencies
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1162,7 +1123,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, nextKeyIn]); // Dependencies include loading state and nextKeyIn
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData]); // Dependencies updated, removed nextKeyIn
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -2007,3 +1968,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+
