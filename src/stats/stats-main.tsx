@@ -24,7 +24,7 @@ const Icon = ({ name, size = 24, className = '' }) => {
     Coins: <g><circle cx="12" cy="12" r="10"/><circle cx="16" cy="8" r="6"/></g>,
     RotateCcw: <g><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 12v.7L6 9"></path></g>,
     ArrowRight: <g><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></g>,
-    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y1="18"></line></g>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
   };
 
   if (!icons[name]) {
@@ -114,6 +114,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
   // URL for the new points icon image
   const pointsIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/game.png";
+  const pointsIconPlaceholderUrl = "https://placehold.co/16x16/800080/ffffff?text=P"; // Placeholder for points icon
 
 
   // Function to increase a stat value
@@ -475,7 +476,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 }`}
               >
                 {/* Use the image for the Point icon here */}
-                 <img src={pointsIconUrl} alt="Point Icon" className="w-4 h-4" />
+                 <img src={pointsIconUrl} alt="Point Icon" className="w-4 h-4" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = pointsIconPlaceholderUrl; }} />
                 Point → Coin
               </button>
             </div>
@@ -551,7 +552,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                   <div className="w-full h-full relative">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
                     {/* Use the image tag for the point icon */}
-                    <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6 absolute inset-0 m-auto" />
+                    <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6 absolute inset-0 m-auto" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = pointsIconPlaceholderUrl; }} />
                   </div>
                 ) : (
                   // Coin Icon with pulse effect
@@ -640,6 +641,23 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 inset 0 -1px 2px rgba(255, 255, 255, 0.15);
         }
       `}</style> */}
+       {/* Add necessary styles for animations used here */}
+      <style jsx>{`
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s infinite;
+        }
+         @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px #a78bfa; } /* Purple glow */
+            50% { text-shadow: 0 0 10px #c4b5fd, 0 0 12px #a78bfa; }
+        }
+        .animate-glow {
+            animation: glow 3s infinite alternate;
+        }
+      `}</style>
 
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
@@ -685,26 +703,43 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
             Exchange
           </button>
 
-          {/* Points Badge */}
-          <div className="overflow-hidden">
-            {/* Removed shadow-md class */}
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 ${pointBadgePulse ? 'animate-pulse' : ''}`}>
-              <div className="w-4 h-4 mr-1.5 relative">
-                {/* Use the image for the Point icon here */}
-                <img src={pointsIconUrl} alt="Point Icon" className="w-full h-full absolute -top-0.5 -left-0.5" />
-                <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
-              </div>
-              <span className="text-xs font-bold text-white">{statPoints}</span>
-              {/* Plus button next to Points badge (conditionally visible) */}
-              {/* Reverted background opacity for light mode */}
-              <button
-                onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
-                className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
-                disabled={!(!showPointsPanel && statPoints > 0)}
-              >
-                <Icon name="Plus" size={10} className="text-white" />
-              </button>
+          {/* Points Badge - Styled to match Coin Display */}
+          {/* Applied similar styling classes */}
+          <div className={`bg-gradient-to-br from-indigo-600 to-purple-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${pointBadgePulse ? 'animate-pulse' : ''}`}>
+             {/* Absolute positioned div for hover glow effect */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+
+            {/* Icon Container */}
+            <div className="relative mr-0.5 flex items-center justify-center z-10"> {/* Added z-10 */}
+               {/* Use the image for the Point icon here */}
+              <img
+                src={pointsIconUrl}
+                alt="Point Icon"
+                className="w-4 h-4" // Adjust size as needed
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; // Prevent infinite loop
+                  target.src = pointsIconPlaceholderUrl; // Placeholder image
+                }}
+              />
             </div>
+            {/* Points Count */}
+            {/* Applied text styling similar to coins */}
+            <div className="font-bold text-purple-100 text-xs tracking-wide animate-glow z-10"> {/* Added z-10 and animate-glow */}
+              {statPoints}
+            </div>
+            {/* Plus button next to Points badge (conditionally visible) */}
+            {/* Styled to match Coin Display's plus button */}
+            <button
+              onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
+              className={`ml-0.5 w-3 h-3 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse z-10 ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Added z-10 and visibility logic
+              disabled={!(!showPointsPanel && statPoints > 0)}
+            >
+              <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
+            </button>
+             {/* Small absolute positioned divs for subtle animations */}
+            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast z-10"></div> {/* Added z-10 */}
+            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast z-10"></div> {/* Added z-10 */}
           </div>
         </div>
       </div>
@@ -757,7 +792,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
                      {/* Use the image for the Point icon here */}
-                    <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6" />
+                    <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = pointsIconPlaceholderUrl; }} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
