@@ -24,7 +24,7 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 
 // NEW: Import the DailyCheckIn component
-import DailyCheckIn from './check-in.tsx';
+import DailyCheckIn from './daily-check-in-component.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -427,7 +427,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           transaction.set(userDocRef, {
             coins: coins, // Use current local coins state for new doc
             gems: gems, // Use current local gems state for new doc
-            keys: amount,
+            keys: keyCount, // Use current local keys state for new doc
             createdAt: new Date()
           });
         } else {
@@ -1703,15 +1703,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         /* NEW: Keyframes for popup fade-in */
         @keyframes fadeIn {
-            0% { opacity: 0; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
 
         /* NEW: Keyframes for popup fade-out */
         @keyframes fadeOut {
-            0% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.95); }
+            0% { opacity: 1; }
+            100% { opacity: 0; }
         }
+
+        /* NEW: Keyframes for popup scale-in */
+        @keyframes scaleIn {
+            0% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
 
         /* Apply animations to elements using Tailwind's utility classes (Copied from background-header.txt) */
         /* REMOVED: Moved to HeaderBackground.tsx */
@@ -2059,12 +2066,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
       {/* NEW: Daily Check-in Popup */}
       {showDailyCheckIn && (
+        // Overlay for dimming the background
         <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <div className="relative">
+          {/* Popup Container */}
+          <div className="relative w-full max-w-sm mx-auto p-4 animate-scaleIn"> {/* Added max-w-sm, mx-auto, p-4, and animate-scaleIn */}
             <DailyCheckIn />
-            {/* Close button for the popup */}
+            {/* Close button for the popup - Positioned relative to the popup container */}
             <button
-              className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-50"
+              className="absolute top-0 right-0 m-2 text-white hover:text-gray-300 transition-colors z-50" // Adjusted position and added margin
               onClick={closeDailyCheckIn}
               aria-label="Đóng"
             >
