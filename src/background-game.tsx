@@ -1738,7 +1738,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           {/* Applied the new background styling to the header div */}
           {/* Changed positioning to relative to contain inner absolute elements */}
           {/* Adjusted padding to accommodate inner border/corner effects */}
-          <div className="absolute top-0 left-0 w-full h-16 flex justify-between items-center z-30 relative px-3 overflow-hidden
+          {/* MODIFIED: Changed height from h-16 to h-12 */}
+          <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
                       rounded-b-lg shadow-2xl
                       bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                       border-b border-l border-r border-slate-700/50">
@@ -1775,68 +1776,88 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               {/* Enhanced corner effects - detailed and layered design (Copied from background-header.txt, adjusted positioning/sizes) */}
               {/* Top-left corner details */}
               <div className="absolute top-0 left-0">
-                <div className="absolute top-0 left-0 w-6 h-6 overflow-hidden"> {/* Adjusted size */}
-                  <div className="absolute w-8 h-8 bg-gradient-to-br from-blue-400/30 via-blue-500/10 to-transparent rounded-tl-lg border-t border-l border-blue-400/60"></div> {/* Adjusted size */}
-                  <div className="absolute w-4 h-4 bg-gradient-to-br from-blue-400/20 via-blue-500/5 to-transparent rounded-tl-lg"></div> {/* Adjusted size */}
+                {/* MODIFIED: Adjusted size and positioning for smaller header */}
+                <div className="absolute top-0 left-0 w-5 h-5 overflow-hidden">
+                  <div className="absolute w-6 h-6 bg-gradient-to-br from-blue-400/30 via-blue-500/10 to-transparent rounded-tl-lg border-t border-l border-blue-400/60"></div>
+                  <div className="absolute w-3 h-3 bg-gradient-to-br from-blue-400/20 via-blue-500/5 to-transparent rounded-tl-lg"></div>
                   {/* Twinkling effect dot */}
-                  <div className="absolute w-1.5 h-1.5 bg-blue-400/40 rounded-full top-0.5 left-0.5 animate-twinkle"></div> {/* Adjusted size/position */}
+                  <div className="absolute w-1 h-1 bg-blue-400/40 rounded-full top-0.5 left-0.5 animate-twinkle"></div>
                 </div>
                 {/* Corner border lines */}
-                <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-blue-400/60 rounded-tl-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-blue-400/60 rounded-tl-lg"></div>
                 {/* Corner gradient lines */}
-                <div className="absolute top-0 left-0 w-8 h-0.5 bg-gradient-to-r from-blue-400/60 to-transparent"></div> {/* Adjusted size */}
-                <div className="absolute top-0 left-0 h-8 w-0.5 bg-gradient-to-b from-blue-400/60 to-transparent"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute top-0 left-0 w-6 h-0.5 bg-gradient-to-r from-blue-400/60 to-transparent"></div>
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute top-0 left-0 h-6 w-0.5 bg-gradient-to-b from-blue-400/60 to-transparent"></div>
               </div>
 
               {/* Top-right corner details */}
               <div className="absolute top-0 right-0">
-                <div className="absolute top-0 right-0 w-6 h-6 overflow-hidden"> {/* Adjusted size */}
-                  <div className="absolute -right-2 -top-2 w-8 h-8 bg-gradient-to-bl from-blue-400/30 via-blue-500/10 to-transparent rounded-tr-lg border-t border-r border-blue-400/60"></div> {/* Adjusted size */}
-                  <div className="absolute right-0 top-0 w-4 h-4 bg-gradient-to-bl from-blue-400/20 via-blue-500/5 to-transparent rounded-tr-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size and positioning for smaller header */}
+                <div className="absolute top-0 right-0 w-5 h-5 overflow-hidden">
+                  <div className="absolute -right-1 -top-1 w-6 h-6 bg-gradient-to-bl from-blue-400/30 via-blue-500/10 to-transparent rounded-tr-lg border-t border-r border-blue-400/60"></div>
+                  <div className="absolute right-0 top-0 w-3 h-3 bg-gradient-to-bl from-blue-400/20 via-blue-500/5 to-transparent rounded-tr-lg"></div>
                   {/* Twinkling effect dot with animation delay */}
-                  <div className="absolute w-1.5 h-1.5 bg-blue-400/40 rounded-full top-0.5 right-0.5 animate-twinkle" style={{animationDelay: '0.7s'}}></div> {/* Adjusted size/position */}
+                   {/* MODIFIED: Adjusted size/position */}
+                  <div className="absolute w-1 h-1 bg-blue-400/40 rounded-full top-0.5 right-0.5 animate-twinkle" style={{animationDelay: '0.7s'}}></div>
                 </div>
                 {/* Corner border lines */}
-                <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-blue-400/60 rounded-tr-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-blue-400/60 rounded-tr-lg"></div>
                 {/* Corner gradient lines */}
-                <div className="absolute top-0 right-0 w-8 h-0.5 bg-gradient-to-l from-blue-400/60 to-transparent"></div> {/* Adjusted size */}
-                <div className="absolute top-0 right-0 h-8 w-0.5 bg-gradient-to-b from-blue-400/60 to-transparent"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute top-0 right-0 w-6 h-0.5 bg-gradient-to-l from-blue-400/60 to-transparent"></div>
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute top-0 right-0 h-6 w-0.5 bg-gradient-to-b from-blue-400/60 to-transparent"></div>
               </div>
 
               {/* Bottom-left corner details */}
               <div className="absolute bottom-0 left-0">
-                <div className="absolute bottom-0 left-0 w-6 h-6 overflow-hidden"> {/* Adjusted size */}
-                  <div className="absolute left-0 bottom-0 w-8 h-8 bg-gradient-to-tr from-purple-500/20 via-purple-500/5 to-transparent rounded-bl-lg border-b border-l border-purple-500/30"></div> {/* Adjusted size */}
-                  <div className="absolute left-0 bottom-0 w-4 h-4 bg-gradient-to-tr from-purple-500/15 via-purple-500/3 to-transparent rounded-bl-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size and positioning for smaller header */}
+                <div className="absolute bottom-0 left-0 w-5 h-5 overflow-hidden">
+                  <div className="absolute left-0 bottom-0 w-6 h-6 bg-gradient-to-tr from-purple-500/20 via-purple-500/5 to-transparent rounded-bl-lg border-b border-l border-purple-500/30"></div>
+                  <div className="absolute left-0 bottom-0 w-3 h-3 bg-gradient-to-tr from-purple-500/15 via-purple-500/3 to-transparent rounded-bl-lg"></div>
                   {/* Twinkling effect dot with animation delay */}
-                  <div className="absolute w-1 h-1 bg-purple-400/40 rounded-full bottom-0.5 left-0.5 animate-twinkle" style={{animationDelay: '1.2s'}}></div> {/* Adjusted size/position */}
+                   {/* MODIFIED: Adjusted size/position */}
+                  <div className="absolute w-0.5 h-0.5 bg-purple-400/40 rounded-full bottom-0.5 left-0.5 animate-twinkle" style={{animationDelay: '1.2s'}}></div>
                 </div>
                 {/* Corner border lines */}
-                <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-purple-500/30 rounded-bl-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-purple-500/30 rounded-bl-lg"></div>
                 {/* Corner gradient lines */}
-                <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-purple-500/30 to-transparent"></div> {/* Adjusted size */}
-                <div className="absolute bottom-0 left-0 h-8 w-0.5 bg-gradient-to-t from-purple-500/30 to-transparent"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute bottom-0 left-0 w-6 h-0.5 bg-gradient-to-r from-purple-500/30 to-transparent"></div>
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute bottom-0 left-0 h-6 w-0.5 bg-gradient-to-t from-purple-500/30 to-transparent"></div>
               </div>
 
               {/* Bottom-right corner details */}
               <div className="absolute bottom-0 right-0">
-                <div className="absolute bottom-0 right-0 w-6 h-6 overflow-hidden"> {/* Adjusted size */}
-                  <div className="absolute right-0 bottom-0 w-8 h-8 bg-gradient-to-tl from-purple-500/20 via-purple-500/5 to-transparent rounded-br-lg border-b border-r border-purple-500/30"></div> {/* Adjusted size */}
-                  <div className="absolute right-0 bottom-0 w-4 h-4 bg-gradient-to-tl from-purple-500/15 via-purple-500/3 to-transparent rounded-br-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size and positioning for smaller header */}
+                <div className="absolute bottom-0 right-0 w-5 h-5 overflow-hidden">
+                  <div className="absolute right-0 bottom-0 w-6 h-6 bg-gradient-to-tl from-purple-500/20 via-purple-500/5 to-transparent rounded-br-lg border-b border-r border-purple-500/30"></div>
+                  <div className="absolute right-0 bottom-0 w-3 h-3 bg-gradient-to-tl from-purple-500/15 via-purple-500/3 to-transparent rounded-br-lg"></div>
                   {/* Twinkling effect dot with animation delay */}
-                  <div className="absolute w-1 h-1 bg-purple-400/40 rounded-full bottom-0.5 right-0.5 animate-twinkle" style={{animationDelay: '1.5s'}}></div> {/* Adjusted size/position */}
+                   {/* MODIFIED: Adjusted size/position */}
+                  <div className="absolute w-0.5 h-0.5 bg-purple-400/40 rounded-full bottom-0.5 right-0.5 animate-twinkle" style={{animationDelay: '1.5s'}}></div>
                 </div>
                 {/* Corner border lines */}
-                <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-purple-500/30 rounded-br-lg"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-purple-500/30 rounded-br-lg"></div>
                 {/* Corner gradient lines */}
-                <div className="absolute bottom-0 right-0 w-8 h-0.5 bg-gradient-to-l from-purple-500/30 to-transparent"></div> {/* Adjusted size */}
-                <div className="absolute bottom-0 right-0 h-8 w-0.5 bg-gradient-to-t from-purple-500/30 to-transparent"></div> {/* Adjusted size */}
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute bottom-0 right-0 w-6 h-0.5 bg-gradient-to-l from-purple-500/30 to-transparent"></div>
+                 {/* MODIFIED: Adjusted size */}
+                <div className="absolute bottom-0 right-0 h-6 w-0.5 bg-gradient-to-t from-purple-500/30 to-transparent"></div>
               </div>
 
                {/* Dynamic scan line effect overlay (Copied from background-header.txt) */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {/* Adjusted height and top position for the header */}
-                <div className="w-full h-8 bg-gradient-to-b from-transparent via-slate-400/5 to-transparent absolute -top-4 animate-scanline"></div>
+                 {/* MODIFIED: Adjusted height and top position for smaller header */}
+                <div className="w-full h-6 bg-gradient-to-b from-transparent via-slate-400/5 to-transparent absolute -top-3 animate-scanline"></div>
               </div>
 
 
