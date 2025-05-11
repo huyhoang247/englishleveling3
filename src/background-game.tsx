@@ -182,9 +182,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useSessionStorage<boolean>('gameIsShieldOnCooldown', false); // Use hook for shield cooldown
   const [remainingCooldown, setRemainingCooldown] = useSessionStorage<number>('gameRemainingCooldown', 0); // Use hook for remaining cooldown
 
-  // CORRECTED: Use state directly from useSessionStorage for nextKeyIn
-  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval
-
   // States that do NOT need session storage persistence (reset on refresh)
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
   const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
@@ -219,8 +216,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  // REMOVED: nextKeyInRef as it's replaced by nextKeyIn state
-  // const nextKeyInRef = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval ref
+  // Replaced nextKeyInRef with state and its setter from useSessionStorage
+  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10));
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -478,8 +475,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setRemainingCooldown(0);
     setShieldCooldownStartTime(null); // Use the setter from the hook
     setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-    // CORRECTED: Reset nextKeyIn using its setter
-    setNextKeyIn(randomBetween(5, 10)); // Reset nextKeyIn using its setter
+    // Reset nextKeyIn state using its setter from the hook
+    setNextKeyIn(randomBetween(5, 10));
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -495,16 +492,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
-        // CORRECTED: Use setNextKeyIn for updating the state
+        // Updated logic to use setNextKeyIn and check the new state value
         let hasKeyFirst = false;
         setNextKeyIn(prev => {
-          const next = prev - 1;
-          if (next <= 0) {
-            hasKeyFirst = true;
-            return randomBetween(5, 10);
+          const newVal = prev - 1;
+          if (newVal <= 0) {
+            const resetVal = randomBetween(5, 10);
+            hasKeyFirst = true; // Set the flag based on the *new* value
+            return resetVal;
           }
-          return next;
+          hasKeyFirst = false; // Set the flag based on the *new* value
+          return newVal;
         });
+
 
         initialObstacles.push({
           id: Date.now(),
@@ -519,15 +519,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // CORRECTED: Use setNextKeyIn for updating the state inside the loop
+          // Updated logic to use setNextKeyIn and check the new state value
           let hasKey = false;
           setNextKeyIn(prev => {
-            const next = prev - 1;
-            if (next <= 0) {
-              hasKey = true;
-              return randomBetween(5, 10);
+            const newVal = prev - 1;
+            if (newVal <= 0) {
+              const resetVal = randomBetween(5, 10);
+              hasKey = true; // Set the flag based on the *new* value
+              return resetVal;
             }
-            return next;
+            hasKey = false; // Set the flag based on the *new* value
+            return newVal;
           });
 
           initialObstacles.push({
@@ -576,8 +578,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setRemainingCooldown(0); // Reset session storage state
         setShieldCooldownStartTime(null); // Reset session storage state
         setPausedShieldCooldownRemaining(null); // Reset session storage state
-        // CORRECTED: Reset nextKeyIn using its setter on logout
-        setNextKeyIn(randomBetween(5, 10)); // Reset nextKeyIn session storage state
+        // Reset nextKeyIn state on logout
+        setNextKeyIn(randomBetween(5, 10));
 
 
         setIsRunning(false);
@@ -602,7 +604,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         sessionStorage.removeItem('gameRemainingCooldown');
         sessionStorage.removeItem('gameShieldCooldownStartTime');
         sessionStorage.removeItem('gamePausedShieldCooldownRemaining');
-        sessionStorage.removeItem('gameNextKeyIn');
+        sessionStorage.removeItem('gameNextKeyIn'); // Clear nextKeyIn from session storage
 
         // Clear timers and intervals
         clearTimeout(obstacleTimerRef.current);
@@ -702,15 +704,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // CORRECTED: Use setNextKeyIn for updating the state
+            // Updated logic to use setNextKeyIn and check the new state value
             let hasKey = false;
             setNextKeyIn(prev => {
-              const next = prev - 1;
-              if (next <= 0) {
-                hasKey = true;
-                return randomBetween(5, 10);
+              const newVal = prev - 1;
+              if (newVal <= 0) {
+                const resetVal = randomBetween(5, 10);
+                hasKey = true; // Set the flag based on the *new* value
+                return resetVal;
               }
-              return next;
+              hasKey = false; // Set the flag based on the *new* value
+              return newVal;
             });
 
             newObstacles.push({
@@ -936,15 +940,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // CORRECTED: Use setNextKeyIn for updating the state
+                                // Updated logic to use setNextKeyIn and check the new state value
                                 let hasKey = false;
                                 setNextKeyIn(prev => {
-                                  const next = prev - 1;
-                                  if (next <= 0) {
-                                    hasKey = true;
-                                    return randomBetween(5, 10);
+                                  const newVal = prev - 1;
+                                  if (newVal <= 0) {
+                                    const resetVal = randomBetween(5, 10);
+                                    hasKey = true; // Set the flag based on the *new* value
+                                    return resetVal;
                                   }
-                                  return next;
+                                  hasKey = false; // Set the flag based on the *new* value
+                                  return newVal;
                                 });
 
                                 return {
@@ -1117,7 +1123,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added nextKeyIn to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData]); // Added all session storage states to dependencies
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1370,9 +1376,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // NEW: Calculate shield health percentage
   const shieldHealthPct = isShieldActive ? shieldHealth / SHIELD_MAX_HEALTH : 0;
 
-  // CORRECTED: Calculate hasKey based on the nextKeyIn state
-  const hasKey = nextKeyIn <= 0;
-
 
   // Render the character with animation and damage effect
   const renderCharacter = () => {
@@ -1469,6 +1472,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
 
+             {/* Ensure key is rendered when obstacle.hasKey is true */}
              {obstacle.hasKey && (
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
@@ -2008,4 +2012,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-
