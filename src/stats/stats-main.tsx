@@ -622,8 +622,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     // Main container using flexbox to manage layout
     // h-screen makes it take full viewport height
     // REVISED: Added rounded-lg, overflow-hidden, relative, shadow-2xl to match game container
-    // Removed border-b, border-l, border-r, and border-slate-700/50
-    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl"> {/* Removed bottom borders */}
+    // Added border-b, border-l, border-r, and border-slate-700/50 for the bottom border
+    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl
+                border-b border-l border-r border-slate-700/50"> {/* Added bottom borders */}
       {/* Added the glass-shadow-border CSS style - Keep if needed elsewhere */}
       {/* <style>{`
         .glass-shadow-border {
@@ -640,6 +641,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {/* Applied styling from background-game.tsx header for consistent look */}
       {/* Removed rounded-b-lg from header itself, as parent container handles overall rounding */}
       <div className="flex-shrink-0 relative h-12 flex items-center justify-end px-3 overflow-hidden
+                  rounded-b-lg {/* <-- Added rounded-b-lg here */}
                   shadow-2xl
                   bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                   border-b border-l border-r border-slate-700/50"> {/* Kept top borders for header */}
