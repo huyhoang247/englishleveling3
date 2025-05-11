@@ -72,6 +72,9 @@ const GameLevelSystem = () => {
     maxStars: 100
   });
 
+  // State để quản lý việc hiển thị các nút hành động
+  const [showActionButtons, setShowActionButtons] = useState(true);
+
   // Determine rank based on level
   const getRank = (level) => {
     if (level >= 30) return {
@@ -134,12 +137,9 @@ const GameLevelSystem = () => {
   const currentRankTotal = playerRank.maxLevel - playerRank.minLevel;
   const levelPercentage = (currentRankProgress / currentRankTotal) * 100;
 
-  // Level up effects
-  // const [glowing, setGlowing] = useState(false); // Removed
-  // const [showLevelUp, setShowLevelUp] = useState(false); // Removed
-  // const [floatingText, setFloatingText] = useState({ show: false, text: '', color: '' }); // Removed
-  // const [showRankUp, setShowRankUp] = useState(false); // Removed
-  // const [oldRank, setOldRank] = useState(''); // Removed
+  // Level up effects (Removed as per previous version)
+  const glowing = false;
+
 
   // Simulate EXP gain
   const increaseExp = () => {
@@ -148,30 +148,11 @@ const GameLevelSystem = () => {
         ...prev,
         exp: Math.min(prev.exp + 200, prev.maxExp)
       }));
-
-      // showFloatingText('+200 EXP', 'text-blue-400'); // Removed
     } else {
-      // Check rank before level up
       const currentRank = getRank(playerStats.level).name;
-
-      // Level up
-      // setGlowing(true); // Removed
-      // setShowLevelUp(true); // Removed
-
       setPlayerStats(prev => {
         const newLevel = prev.level + 1;
-        // Check rank after level up
         const newRank = getRank(newLevel).name;
-
-        // If rank changed, show rank up notification
-        // if (newRank !== currentRank) { // Removed
-        //   setOldRank(currentRank); // Removed
-        //   setShowRankUp(true); // Removed
-        //   setTimeout(() => { // Removed
-        //     setShowRankUp(false); // Removed
-        //   }, 3000); // Removed
-        // } // Removed
-
         return {
           ...prev,
           level: newLevel,
@@ -180,13 +161,6 @@ const GameLevelSystem = () => {
           gems: prev.gems + 50
         };
       });
-
-      // setTimeout(() => { // Removed
-      //   setGlowing(false); // Removed
-      //   setShowLevelUp(false); // Removed
-      // }, 2000); // Removed
-
-      // showFloatingText('+50 Gems', 'text-purple-400', 500); // Removed
     }
   };
 
@@ -201,10 +175,6 @@ const GameLevelSystem = () => {
         vocabulary: Math.min(prev.vocabulary + 5, prev.maxVocabulary),
         stars: Math.min(prev.stars + 2, prev.maxStars)
       }));
-
-      // showFloatingText('-10 Energy', 'text-yellow-400'); // Removed
-      // showFloatingText('+1 Floor', 'text-green-400', 300); // Removed
-      // showFloatingText('+10 Gems', 'text-purple-400', 600); // Removed
     } else {
       // showFloatingText('Not enough gems!', 'text-red-400'); // Removed
     }
@@ -218,63 +188,24 @@ const GameLevelSystem = () => {
         energy: Math.min(prev.energy + 25, prev.maxEnergy),
         gems: prev.gems - 20
       }));
-
-      // showFloatingText('+25 Energy', 'text-yellow-400'); // Removed
-      // showFloatingText('-20 Gems', 'text-purple-400', 300); // Removed
     } else {
       // showFloatingText('Not enough gems!', 'text-red-400'); // Removed
     }
   };
 
-  // Show floating text animation
-  // const showFloatingText = (text, color, delay = 0) => { // Removed
-  //   setTimeout(() => { // Removed
-  //     setFloatingText({ show: true, text, color }); // Removed
-  //     setTimeout(() => setFloatingText({ show: false, text: '', color: '' }), 1000); // Removed
-  //   }, delay); // Removed
-  // }; // Removed
-
-  // Particle effect on level up
-  // const [particles, setParticles] = useState([]); // Removed
-
-  // useEffect(() => { // Removed
-  //   if (glowing) { // Removed
-  //     const newParticles = []; // Removed
-  //     for (let i = 0; i < 20; i++) { // Removed
-  //       newParticles.push({ // Removed
-  //         id: i, // Removed
-  //         x: Math.random() * 100, // Removed
-  //         y: Math.random() * 100, // Removed
-  //         size: Math.random() * 6 + 2, // Removed
-  //         color: ['bg-yellow-400', 'bg-blue-400', 'bg-purple-400'][Math.floor(Math.random() * 3)] // Removed
-  //       }); // Removed
-  //     } // Removed
-  //     setParticles(newParticles); // Removed
-  //   } else { // Removed
-  //     setParticles([]); // Removed
-  //   } // Removed
-  // }, [glowing]); // Removed
-
-  // Determine if glowing effect should be applied based on level up or rank up (if they were still active)
-  // Since animations are removed, glowing is always false now.
-  const glowing = false;
+  // Hàm xử lý ẩn/hiện các nút hành động
+  const toggleActionButtons = () => {
+    setShowActionButtons(prev => !prev);
+  };
 
 
   return (
-    // Removed justify-center to remove top spacing and added min-h-screen
     <div className="flex flex-col items-center bg-gradient-to-b from-gray-900 to-indigo-950 text-white p-4 min-h-screen">
       <div className="relative">
-        {/* Level Up Animation */}
-        {/* Removed */}
-
-        {/* Rank Up Animation */}
-        {/* Removed */}
-
-        {/* Floating text animation */}
-        {/* Removed */}
-
-        {/* Particle effect */}
-        {/* Removed */}
+        {/* Level Up Animation (Removed) */}
+        {/* Rank Up Animation (Removed) */}
+        {/* Floating text animation (Removed) */}
+        {/* Particle effect (Removed) */}
 
         <div className={`w-full max-w-lg bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-indigo-500/30 ${glowing ? 'ring-4 ring-yellow-400 animate-pulse shadow-yellow-400/50' : ''}`}>
 
@@ -549,41 +480,52 @@ const GameLevelSystem = () => {
               </div>
             </div>
 
-            {/* Action Buttons with glow effect */}
-            <div className="flex justify-between gap-4 pt-2">
+            {/* Nút ẩn/hiện các nút hành động */}
+            <div className="flex justify-center pt-4">
               <button
-                onClick={increaseExp}
-                className="flex-1 bg-gradient-to-br from-blue-600 to-indigo-500 py-3 rounded-lg font-medium hover:from-blue-500 hover:to-indigo-400 transition-all duration-300 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 text-sm uppercase tracking-wider"
+                onClick={toggleActionButtons}
+                className="bg-gray-700/50 hover:bg-gray-600/50 text-white py-2 px-4 rounded-full font-medium transition-all duration-300 text-sm"
               >
-                <div className="flex items-center justify-center">
-                  {/* Thay thế TrendingUp bằng IconSVG */}
-                  <IconSVG icon="trendingUp" size={16} className="mr-1" />
-                  Gain EXP
-                </div>
-              </button>
-
-              <button
-                onClick={useEnergy}
-                className="flex-1 bg-gradient-to-br from-green-600 to-emerald-500 py-3 rounded-lg font-medium hover:from-green-500 hover:to-emerald-400 transition-all duration-300 shadow-lg shadow-green-600/20 hover:shadow-green-500/30 hover:-translate-y-0.5 text-sm uppercase tracking-wider"
-              >
-                <div className="flex items-center justify-center">
-                  {/* Thay thế Layers bằng IconSVG */}
-                  <IconSVG icon="layers" size={16} className="mr-1" />
-                  Next Floor
-                </div>
-              </button>
-
-              <button
-                onClick={restoreEnergy}
-                className="flex-1 bg-gradient-to-br from-purple-600 to-violet-500 py-3 rounded-lg font-medium hover:from-purple-500 hover:to-violet-400 transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 hover:-translate-y-0.5 text-sm uppercase tracking-wider"
-              >
-                <div className="flex items-center justify-center">
-                  {/* Thay thế Gem bằng IconSVG */}
-                  <IconSVG icon="gem" size={16} className="mr-1" />
-                  Restore
-                </div>
+                {showActionButtons ? 'Ẩn Nút Hành Động' : 'Hiện Nút Hành Động'}
               </button>
             </div>
+
+
+            {/* Action Buttons with enhanced styling and conditional rendering */}
+            {showActionButtons && (
+              // Adjusted spacing and padding for smaller buttons
+              <div className="flex justify-center gap-2 pt-2">
+                {/* Gain EXP Button - Compact */}
+                <button
+                  onClick={increaseExp}
+                  className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-700 to-indigo-600 rounded-full font-bold hover:from-blue-600 hover:to-indigo-500 transition-all duration-300 shadow-lg shadow-blue-700/30 hover:shadow-blue-600/40 hover:-translate-y-0.5 border border-blue-500/30 group"
+                  title="Gain EXP" // Tooltip/Hover text
+                >
+                   {/* Icon only, increased size slightly for focus */}
+                  <IconSVG icon="trendingUp" size={20} className="text-white group-hover:scale-110 transition-transform duration-300" />
+                </button>
+
+                {/* Next Floor Button - Compact */}
+                <button
+                  onClick={useEnergy}
+                  className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-600 rounded-full font-bold hover:from-green-600 hover:to-emerald-500 transition-all duration-300 shadow-lg shadow-green-700/30 hover:shadow-green-600/40 hover:-translate-y-0.5 border border-green-500/30 group"
+                  title="Next Floor" // Tooltip/Hover text
+                >
+                   {/* Icon only, increased size slightly for focus */}
+                  <IconSVG icon="layers" size={20} className="text-white group-hover:scale-110 transition-transform duration-300" />
+                </button>
+
+                {/* Restore Button - Compact */}
+                <button
+                  onClick={restoreEnergy}
+                  className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-700 to-violet-600 rounded-full font-bold hover:from-purple-600 hover:to-violet-500 transition-all duration-300 shadow-lg shadow-purple-700/30 hover:shadow-purple-600/40 hover:-translate-y-0.5 border border-purple-500/30 group"
+                  title="Restore Energy" // Tooltip/Hover text
+                >
+                  {/* Icon only, increased size slightly for focus */}
+                  <IconSVG icon="gem" size={20} className="text-white group-hover:scale-110 transition-transform duration-300" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
