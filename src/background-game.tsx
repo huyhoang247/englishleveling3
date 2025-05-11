@@ -216,7 +216,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  // Sử dụng useSessionStorage cho biến nextKeyIn để nó được lưu lại giữa các phiên
   const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
@@ -475,8 +474,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setRemainingCooldown(0);
     setShieldCooldownStartTime(null); // Use the setter from the hook
     setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-    // Reset nextKeyIn state using its setter from the hook
-    setNextKeyIn(randomBetween(5, 10));
+    setNextKeyIn(randomBetween(5, 10)); // Reset nextKeyIn state using its setter from the hook
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -628,7 +626,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setIsRunning(false);
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
-      clearInterval(particleTimerRefRef.current);
+      clearInterval(particleTimerRef.current);
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
       // No need to reset session storage states here, the hook handles saving the current state (including null)
@@ -1466,22 +1464,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           left: `${obstacle.position}%`
         }}
       >
+        {/* Thanh máu */}
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-visible border border-gray-600 shadow-sm relative">
             <div
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
+        </div>
+
+        {/* Phần tử chướng ngại vật */}
+        <div className="relative"> {/* Added relative positioning here */}
+            {obstacleEl}
 
              {/* Hiển thị biểu tượng chìa khóa nếu obstacle có hasKey là true */}
             {obstacle.hasKey && (
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
                 alt="Key"
-                className="absolute w-4 h-4"
+                className="absolute w-4 h-4 object-contain z-50" // Added z-50 for higher stacking order
                 style={{
-                    bottom: 'calc(100% + 4px)', // Đặt phía trên thanh máu
-                    left: '50%', // Căn giữa theo chiều ngang
-                    transform: 'translateX(-50%)', // Điều chỉnh để căn giữa chính xác
+                    bottom: 'calc(100% + 20px)', // Position 20px above the obstacle element
+                    left: '50%', // Center horizontally relative to the obstacle element
+                    transform: 'translateX(-50%)', // Adjust to truly center
                 }}
                 // Thêm onError để xử lý khi ảnh không tải được
                 onError={(e) => {
@@ -1493,8 +1497,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               />
             )}
         </div>
-
-        {obstacleEl}
       </div>
     );
   };
