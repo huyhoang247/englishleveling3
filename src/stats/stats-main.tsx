@@ -116,6 +116,10 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
   const pointsIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/game.png";
   const pointsIconPlaceholderUrl = "https://placehold.co/16x16/800080/ffffff?text=P"; // Placeholder for points icon
 
+  // URL for the exchange icon image
+  const exchangeIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/exchange%20(1).png";
+  const exchangeIconPlaceholderUrl = "https://placehold.co/16x16/008000/ffffff?text=E"; // Placeholder for exchange icon
+
 
   // Function to increase a stat value
   const increaseStat = (stat) => {
@@ -698,9 +702,19 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           <button
             onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
             className="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-medium transition-colors hover:bg-gray-600 flex items-center justify-center border border-gray-600" // Adjusted colors
-            title="Chuyển đổi Coin/Point"
+            title="Chuyển đổi Coin/Point" // Updated title for accessibility
           >
-            Exchange
+            {/* Replaced text with image icon */}
+            <img
+              src={exchangeIconUrl}
+              alt="Exchange Icon" // Alt text for accessibility
+              className="w-4 h-4" // Adjusted size as needed
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite loop
+                target.src = exchangeIconPlaceholderUrl; // Placeholder image
+              }}
+            />
           </button>
 
           {/* Points Badge - Styled to match Coin Display */}
