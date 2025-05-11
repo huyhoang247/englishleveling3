@@ -20,7 +20,8 @@ const CoinDisplay: React.FC<CoinDisplayProps> = ({ displayedCoins, isStatsFullsc
   return (
     // Coins Container
     // Copied from background-game.tsx
-    <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+    // Updated background to be transparent
+    <div className="bg-transparent rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
       {/* Add necessary styles for animations used here */}
       <style jsx>{`
         @keyframes number-change {
