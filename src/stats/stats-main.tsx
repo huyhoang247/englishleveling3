@@ -638,7 +638,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {/* MODIFIED: Changed background back to white and added padding */}
       {/* Position relative to allow absolute positioning of background and badges */}
       {/* Added styling from background-game.tsx header for consistent look */}
-      <div className="flex-shrink-0 relative px-8 pt-4 pb-2 overflow-hidden
+      {/* REVISED: Applied h-12, flex, items-center, justify-between, px-3 to match background-game.tsx header */}
+      <div className="flex-shrink-0 relative h-12 flex items-center justify-between px-3 overflow-hidden
                   rounded-b-lg shadow-2xl
                   bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                   border-b border-l border-r border-slate-700/50">
@@ -648,10 +649,54 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           <HeaderBackground />
         </div>
 
-        {/* Top right badges container with glassmorphism effect */}
+        {/* Left side of the header (Stats Icon, Health Bar) */}
+        {/* Added this block back to match background-game.tsx structure */}
+        <div className="flex items-center relative z-10">
+            {/* Stats Icon - Reused from background-game.tsx */}
+             <div
+                className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform"
+                onClick={onClose} // Use onClose prop to close stats
+                title="Đóng bảng chỉ số" // Changed title
+              >
+                   <img
+                      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
+                      alt="Award Icon"
+                      className="w-full h-full object-contain"
+                       onError={(e) => {
+                          const target = e as any;
+                          target.onerror = null;
+                          target.src = "https://placehold.co/32x32/ffffff/000000?text=Stats";
+                      }}
+                    />
+              </div>
+            {/* Health Bar - Adapted from background-game.tsx */}
+            {/* Note: Health state is not available in stats-main.tsx, this will be static or need health prop */}
+            {/* For now, rendering a placeholder or static bar */}
+             <div className="w-32 relative">
+                  <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                      {/* Placeholder Health Bar */}
+                      <div
+                          className={`bg-green-500 h-full transform origin-left`} // Static green bar
+                          style={{ width: '100%' }} // Always full for now
+                      >
+                          <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                      </div>
+                  </div>
+                   {/* Placeholder Health Text */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                          HP: N/A {/* Placeholder text */}
+                      </span>
+                  </div>
+             </div>
+        </div>
+
+
+        {/* Right side of the header (Coin Display, Exchange Button, Points Badge) */}
         {/* MODIFIED: Removed background, blur, shadow, border, and padding classes */}
         {/* Ensure z-index is higher than the background */}
-        <div className="relative flex items-center space-x-2 overflow-hidden z-10 justify-end"> {/* Added justify-end to align right */}
+        {/* REVISED: Adjusted spacing and relative z-10 */}
+        <div className="relative flex items-center space-x-2 overflow-hidden z-10"> {/* Removed justify-end */}
 
           {/* Use the CoinDisplay component here */}
           {/* Pass the coins prop to CoinDisplay */}
