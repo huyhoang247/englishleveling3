@@ -3,6 +3,7 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
+import HeaderBackground from '../header-background.tsx'; // Import HeaderBackground component
 
 // Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
 const Icon = ({ name, size = 24, className = '' }) => {
@@ -636,11 +637,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {/* flex-shrink-0 prevents it from shrinking */}
       {/* MODIFIED: Changed background back to white and added padding */}
       <div className="flex-shrink-0 relative bg-white px-8 pt-4 pb-2"> {/* Adjusted padding */}
-        {/* Background pattern overlay */}
-        {/* MODIFIED: Changed fill color in SVG back to light for white background */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-6z'/%3E3C/g%3E%3C/g%3E%3C/svg%3E')"
-        }}></div>
+        {/* Use the HeaderBackground component here */}
+        <HeaderBackground />
 
         {/* Top right badges container with glassmorphism effect */}
         {/* MODIFIED: Applied bg-black bg-opacity-60 and glass-shadow-border */}
@@ -684,9 +682,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           </div>
         </div>
 
-        {/* Gradient overlay at the bottom of the header */}
-        {/* MODIFIED: Reverted gradient colors for light mode */}
-        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent"></div>
+        {/* Removed the old background pattern and bottom gradient divs */}
       </div>
 
       {/* Main content area - SCROLLABLE */}
@@ -854,4 +850,3 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     </div> // End of main CharacterCard container
   );
 }
-
