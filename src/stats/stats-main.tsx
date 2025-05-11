@@ -622,9 +622,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
     // Main container using flexbox to manage layout
     // h-screen makes it take full viewport height
     // REVISED: Added rounded-lg, overflow-hidden, relative, shadow-2xl to match game container
-    // Added border-b, border-l, border-r, and border-slate-700/50 for the bottom border
-    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl
-                border-b border-l border-r border-slate-700/50"> {/* Added bottom borders */}
+    // Removed border-b, border-l, border-r, and border-slate-700/50
+    <div className="flex flex-col h-screen bg-white rounded-lg overflow-hidden relative shadow-2xl"> {/* Removed bottom borders */}
       {/* Added the glass-shadow-border CSS style - Keep if needed elsewhere */}
       {/* <style>{`
         .glass-shadow-border {
