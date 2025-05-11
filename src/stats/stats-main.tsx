@@ -3,9 +3,9 @@ import ResetStatsControl from './reset-points.tsx'; // Import component mới
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import { auth } from '../firebase.js'; // Import auth để lấy user ID
-import HeaderBackground from '../header-background.tsx'; // Import HeaderBackground component
+import HeaderBackground from '../header-background.tsx'; // Import the HeaderBackground component
 
-// Custom Icon component using inline SVG (Kept here as it's used elsewhere in this component)
+// Custom Icon component using inline SVG
 const Icon = ({ name, size = 24, className = '' }) => {
   const icons = {
     Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>,
@@ -49,6 +49,239 @@ const Icon = ({ name, size = 24, className = '' }) => {
   );
 };
 
+// Component for the Coin/Point Exchange Modal
+const ExchangeModal = ({ show, onClose, coins, statPoints, onUpdateCoins, onUpdateStatPoints }) => {
+  const [exchangeAmount, setExchangeAmount] = useState(100);
+  const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
+
+  // Calculate the result of the exchange based on direction and amount
+  const getResult = () => {
+    if (exchangeDirection === 'coinToPoint') {
+      return Math.floor(exchangeAmount / 100); // 100 Coins = 1 Point
+    } else {
+      return exchangeAmount * 100; // 1 Point = 100 Coins
+    }
+  };
+
+  // Check if the user has enough resources for the selected exchange
+  const hasEnoughResources = () => {
+    if (exchangeDirection === 'coinToPoint') {
+      return coins >= exchangeAmount; // Use coins prop
+    } else {
+      return statPoints >= exchangeAmount;
+    }
+  };
+
+  // Function to handle the coin/point exchange
+  const handleExchange = async () => { // Made async because onUpdateCoins is async
+    if (exchangeDirection === 'coinToPoint') {
+      // Exchange Coins for Points (100 Coins = 1 Point)
+      if (coins >= exchangeAmount) { // Check if enough coins (using coins prop)
+        // Update coins in Firestore via the prop function
+        if (auth.currentUser) {
+            await onUpdateCoins(-exchangeAmount); // Deduct coins
+        } else {
+            console.error("User not authenticated for coin update.");
+            // Handle error or inform user
+            return; // Stop if not authenticated
+        }
+        onUpdateStatPoints(statPoints + Math.floor(exchangeAmount / 100)); // Add points
+      } else {
+          console.log("Not enough coins for exchange.");
+          // Optionally show an error message to the user
+      }
+    } else {
+      // Exchange Points for Coins (1 Point = 100 Coins)
+      if (statPoints >= exchangeAmount) { // Check if enough points
+         // Update coins in Firestore via the prop function
+         if (auth.currentUser) {
+            await onUpdateCoins(exchangeAmount * 100); // Add coins
+         } else {
+            console.error("User not authenticated for coin update.");
+            // Handle error or inform user
+            return; // Stop if not authenticated
+         }
+        onUpdateStatPoints(statPoints - exchangeAmount); // Deduct points
+      } else {
+          console.log("Not enough points for exchange.");
+          // Optionally show an error message to the user
+      }
+    }
+    onClose(); // Close the exchange modal
+  };
+
+  // Function to adjust the amount for exchange
+  const adjustExchangeAmount = (amount) => {
+    const newAmount = exchangeAmount + amount;
+    // Ensure the amount doesn't go below 1
+    if (newAmount >= 1) {
+      setExchangeAmount(newAmount);
+    }
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {/* Modal Content Container */}
+      <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all text-gray-800">
+
+        {/* Exchange Direction Selection */}
+        <div className="mb-5">
+          {/* Toggle Buttons */}
+          <div className="bg-gray-100 p-1 rounded-lg flex mb-2">
+            <button
+              onClick={() => setExchangeDirection('coinToPoint')}
+              className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
+                exchangeDirection === 'coinToPoint' ?
+                'bg-white shadow-sm text-indigo-600' : // Active style
+                'text-gray-500 hover:bg-gray-50' // Inactive style
+              }`}
+            >
+              <Icon name="Coins" size={16} />
+              Coin → Point
+            </button>
+            <button
+              onClick={() => setExchangeDirection('pointToCoin')}
+              className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
+                exchangeDirection === 'pointToCoin' ?
+                'bg-white shadow-sm text-amber-600' : // Active style
+                'text-gray-500 hover:bg-gray-50' // Inactive style
+              }`}
+            >
+              <Icon name="Gem" size={16} />
+              Point → Coin
+            </button>
+          </div>
+          {/* Helper Text */}
+          <div className="text-xs text-gray-500 italic text-center">
+            Chọn loại tài nguyên bạn muốn chuyển đổi
+          </div>
+        </div>
+
+        {/* Amount Selection */}
+        <div className="mb-5">
+          {/* Header with current resource amount */}
+          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+            <span>Số lượng chuyển đổi</span>
+            <div className="ml-auto text-xs text-gray-500">
+              {exchangeDirection === 'coinToPoint' ?
+                `Hiện có: ${coins.toLocaleString()} Coin` : // Use coins prop
+                `Hiện có: ${statPoints} Point`
+              }
+            </div>
+          </h4>
+          {/* Input and Adjustment Buttons */}
+          <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200">
+            {/* Decrease Button */}
+            <button
+              onClick={() => adjustExchangeAmount(-100)}
+              className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+            >
+              <Icon name="Minus" size={18} />
+            </button>
+            {/* Amount Input */}
+            <div className="flex-1 mx-2">
+              <input
+                type="number"
+                value={exchangeAmount}
+                onChange={(e) => setExchangeAmount(Math.max(1, parseInt(e.target.value) || 0))} // Ensure value is at least 1
+                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-bold text-gray-700"
+              />
+            </div>
+            {/* Increase Button */}
+            <button
+              onClick={() => adjustExchangeAmount(100)}
+              className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+            >
+              <Icon name="Plus" size={18} />
+            </button>
+          </div>
+          {/* Exchange Rate Info */}
+          <div className="text-xs text-gray-500 italic text-center mt-1">
+            {exchangeDirection === 'coinToPoint' ?
+              '100 Coin = 1 Point' :
+              '1 Point = 100 Coin'
+            }
+          </div>
+        </div>
+
+        {/* Exchange Result Preview */}
+        <div className="mb-5 bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-center">
+            {/* Result Icon */}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3">
+              {exchangeDirection === 'coinToPoint' ? (
+                // Point Icon with pulse effect
+                <div className="w-full h-full relative">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
+                  <Icon name="Gem" size={24} className="absolute inset-0 m-auto text-white" />
+                </div>
+              ) : (
+                // Coin Icon with pulse effect
+                <div className="w-full h-full relative">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 animate-pulse"></div>
+                  <Icon name="Coins" size={24} className="absolute inset-0 m-auto text-white" />
+                </div>
+              )}
+            </div>
+            {/* Result Text */}
+            <div className="flex-1">
+              <div className="text-sm text-gray-500">Bạn sẽ nhận được:</div>
+              <div className="font-bold text-lg text-gray-800 flex items-center">
+                {getResult().toLocaleString()} {/* Format result with commas */}
+                <span className="ml-1 text-sm">
+                  {exchangeDirection === 'coinToPoint' ? 'Point' : 'Coin'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Warning Message (if not enough resources) */}
+        {!hasEnoughResources() && (
+          <div className="mb-4 bg-red-50 p-3 rounded-lg border border-red-200">
+            <div className="flex">
+              <Icon name="AlertCircle" size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-bold text-red-800 text-sm">Không đủ tài nguyên</h4>
+                <p className="text-red-700 text-xs">
+                  {exchangeDirection === 'coinToPoint' ?
+                    `Bạn cần tối thiểu ${exchangeAmount.toLocaleString()} Coin để thực hiện chuyển đổi này.` :
+                    `Bạn cần tối thiểu ${exchangeAmount.toLocaleString()} Point để thực hiện chuyển đổi này.`
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {/* Cancel Button */}
+          <button
+            onClick={onClose}
+            className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-colors"
+          >
+            Hủy
+          </button>
+          {/* Exchange Button */}
+          <button
+            onClick={handleExchange}
+            disabled={!hasEnoughResources()} // Disable if not enough resources
+            className={`flex-1 px-3 py-2 rounded-lg font-medium text-white text-sm shadow-lg flex items-center justify-center gap-2 transition-all ${
+              hasEnoughResources() ?
+              'bg-gradient-to-r from-indigo-600 to-amber-600 hover:from-indigo-700 hover:to-amber-700' : // Enabled style
+              'bg-gray-400 cursor-not-allowed' // Disabled style
+            }`}
+          >
+            Chuyển Đổi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Define props interface, including the new onClose prop AND coin props
 interface CharacterCardProps {
@@ -86,11 +319,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
   // State for Coin and Point exchange modal
   const [showExchangeModal, setShowExchangeModal] = useState(false);
-  const [exchangeAmount, setExchangeAmount] = useState(100);
-  const [exchangeDirection, setExchangeDirection] = useState('coinToPoint'); // or 'pointToCoin'
-
-  // REMOVED: State to control the visibility of the Reset Stats Modal
-  // const [showResetModal, setShowResetModal] = useState(false);
 
 
   // Effect for card glow animation
@@ -215,64 +443,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
      // Add the refunded points to the available stat points
      setStatPoints(statPoints + pointsRefunded);
      // TODO: Implement Firestore update for stats after reset if needed
-     // REMOVED: Close the reset modal after successful reset (modal state removed)
-     // setShowResetModal(false);
-  };
-
-
-  // Function to handle the coin/point exchange
-  const handleExchange = async () => { // Made async because onUpdateCoins is async
-    if (exchangeDirection === 'coinToPoint') {
-      // Exchange Coins for Points (100 Coins = 1 Point)
-      if (coins >= exchangeAmount) { // Check if enough coins (using coins prop)
-        // Update coins in Firestore via the prop function
-        if (auth.currentUser) {
-            await onUpdateCoins(-exchangeAmount); // Deduct coins
-        } else {
-            console.error("User not authenticated for coin update.");
-            // Handle error or inform user
-            return; // Stop if not authenticated
-        }
-
-        setStatPoints(statPoints + Math.floor(exchangeAmount / 100)); // Add points
-        // Trigger point badge pulse effect
-        setPointBadgePulse(true);
-        setTimeout(() => setPointBadgePulse(false), 1500);
-      } else {
-          console.log("Not enough coins for exchange.");
-          // Optionally show an error message to the user
-      }
-    } else {
-      // Exchange Points for Coins (1 Point = 100 Coins)
-      if (statPoints >= exchangeAmount) { // Check if enough points
-         // Update coins in Firestore via the prop function
-         if (auth.currentUser) {
-            await onUpdateCoins(exchangeAmount * 100); // Add coins
-         } else {
-            console.error("User not authenticated for coin update.");
-            // Handle error or inform user
-            return; // Stop if not authenticated
-         }
-
-        setStatPoints(statPoints - exchangeAmount); // Deduct points
-        // Trigger coin badge pulse effect
-        setCoinBadgePulse(true);
-        setTimeout(() => setCoinBadgePulse(false), 1500);
-      } else {
-          console.log("Not enough points for exchange.");
-          // Optionally show an error message to the user
-      }
-    }
-    setShowExchangeModal(false); // Close the exchange modal
-  };
-
-  // Function to adjust the amount for exchange
-  const adjustExchangeAmount = (amount) => {
-    const newAmount = exchangeAmount + amount;
-    // Ensure the amount doesn't go below 1
-    if (newAmount >= 1) {
-      setExchangeAmount(newAmount);
-    }
   };
 
 
@@ -316,7 +486,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               : null; // Render null if icon is invalid
 
           return (
-            // MODIFIED: Reverted background and border colors for light mode
             <div key={stat.key} // Use stat key for more stable key
                  className={`${index >= 4 ? "col-span-1" : ""} bg-white rounded-xl shadow-sm border ${isIncreased ? 'border-green-200' : 'border-gray-100'} overflow-hidden relative transition-all duration-300`}>
               {/* Subtle background glow effect */}
@@ -332,14 +501,12 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 {/* Top row: Icon and Stat Name */}
                 <div className="flex items-center justify-center mb-1">
                   {/* Icon container */}
-                  {/* MODIFIED: Reverted light background color for light mode */}
                   <div className={`w-8 h-8 ${colorScheme.light} rounded-lg flex items-center justify-center mr-3 relative overflow-hidden`}>
                     <div className={`absolute -bottom-3 -right-3 w-6 h-6 ${colorScheme.bg} opacity-20 rounded-full`}></div>
                     {/* Render the validated icon element */}
                     {statIconElement && <span className={colorScheme.text}>{statIconElement}</span>}
                   </div>
                   {/* Stat name */}
-                  {/* MODIFIED: Reverted text color for light mode */}
                   <h4 className="text-xs font-semibold text-gray-500">{stat.name}</h4>
                 </div>
 
@@ -348,7 +515,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                   // Edit Mode Layout: Minus Button - Value - Plus Button
                   <div className="flex items-center justify-around w-full">
                     {/* Decrease Button */}
-                    {/* MODIFIED: Reverted colors for light mode */}
                     <button
                       onClick={() => decreaseStat(stat.key)}
                       disabled={stats[stat.key] <= character.stats[stat.key]} // Disable if value is at original or lower
@@ -358,7 +524,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                     </button>
 
                     {/* Stat Value Display */}
-                    {/* MODIFIED: Reverted background and border colors for light mode */}
                     <div className="flex items-center justify-center">
                       <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
                         {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
@@ -366,7 +531,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                     </div>
 
                     {/* Increase Button */}
-                    {/* MODIFIED: Reverted colors for light mode */}
                     <button
                       onClick={() => increaseStat(stat.key)}
                       disabled={statPoints <= 0} // Disable if no points available
@@ -378,7 +542,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 ) : (
                   // View Mode Layout: Centered Value
                   <div className="flex items-center justify-center">
-                    {/* MODIFIED: Reverted background and border colors for light mode */}
                     <p className={`text-sm font-bold ${isIncreased ? 'text-green-600' : colorScheme.text} bg-gray-50 rounded-md px-2 py-0.5 border ${isIncreased ? 'border-green-100' : isSpecial ? 'border-red-100' : 'border-gray-200'}`}>
                       {isSpecial ? stats[stat.key].toLocaleString() : stats[stat.key]} {/* Format HP with commas */}
                     </p>
@@ -420,270 +583,61 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
   };
 
 
-  // Component for the Coin/Point Exchange Modal
-  const ExchangeModal = () => {
-    // Calculate the result of the exchange based on direction and amount
-    const getResult = () => {
-      if (exchangeDirection === 'coinToPoint') {
-        return Math.floor(exchangeAmount / 100); // 100 Coins = 1 Point
-      } else {
-        return exchangeAmount * 100; // 1 Point = 100 Coins
-      }
-    };
-
-    // Check if the user has enough resources for the selected exchange
-    const hasEnoughResources = () => {
-      if (exchangeDirection === 'coinToPoint') {
-        return coins >= exchangeAmount; // Use coins prop
-      } else {
-        return statPoints >= exchangeAmount;
-      }
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        {/* Modal Content Container */}
-        {/* MODIFIED: Reverted background gradient and text colors for light mode */}
-        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all text-gray-800">
-
-          {/* Exchange Direction Selection */}
-          <div className="mb-5">
-            {/* Toggle Buttons */}
-            {/* MODIFIED: Reverted background colors for light mode */}
-            <div className="bg-gray-100 p-1 rounded-lg flex mb-2">
-              <button
-                onClick={() => setExchangeDirection('coinToPoint')}
-                className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
-                  exchangeDirection === 'coinToPoint' ?
-                  'bg-white shadow-sm text-indigo-600' : // Active style
-                  'text-gray-500 hover:bg-gray-50' // Inactive style
-                }`}
-              >
-                <Icon name="Coins" size={16} />
-                Coin → Point
-              </button>
-              <button
-                onClick={() => setExchangeDirection('pointToCoin')}
-                className={`flex-1 py-2 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
-                  exchangeDirection === 'pointToCoin' ?
-                  'bg-white shadow-sm text-amber-600' : // Active style
-                  'text-gray-500 hover:bg-gray-50' // Inactive style
-                }`}
-              >
-                <Icon name="Gem" size={16} />
-                Point → Coin
-              </button>
-            </div>
-            {/* Helper Text */}
-            {/* MODIFIED: Reverted text color for light mode */}
-            <div className="text-xs text-gray-500 italic text-center">
-              Chọn loại tài nguyên bạn muốn chuyển đổi
-            </div>
-          </div>
-
-          {/* Amount Selection */}
-          <div className="mb-5">
-            {/* Header with current resource amount */}
-            {/* MODIFIED: Reverted text color for light mode */}
-            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span>Số lượng chuyển đổi</span>
-              {/* MODIFIED: Reverted text color for light mode */}
-              <div className="ml-auto text-xs text-gray-500">
-                {exchangeDirection === 'coinToPoint' ?
-                  `Hiện có: ${coins.toLocaleString()} Coin` : // Use coins prop
-                  `Hiện có: ${statPoints} Point`
-                }
-              </div>
-            </h4>
-            {/* Input and Adjustment Buttons */}
-            {/* MODIFIED: Reverted background and border colors for light mode */}
-            <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200">
-              {/* Decrease Button */}
-              {/* MODIFIED: Reverted colors for light mode */}
-              <button
-                onClick={() => adjustExchangeAmount(-100)}
-                className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
-              >
-                <Icon name="Minus" size={18} />
-              </button>
-              {/* Amount Input */}
-              {/* MODIFIED: Reverted background, border, and text colors for light mode */}
-              <div className="flex-1 mx-2">
-                <input
-                  type="number"
-                  value={exchangeAmount}
-                  onChange={(e) => setExchangeAmount(Math.max(1, parseInt(e.target.value) || 0))} // Ensure value is at least 1
-                  className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-center font-bold text-gray-700"
-                />
-              </div>
-              {/* Increase Button */}
-              {/* MODIFIED: Reverted colors for light mode */}
-              <button
-                onClick={() => adjustExchangeAmount(100)}
-                className="w-10 h-10 rounded-md flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
-              >
-                <Icon name="Plus" size={18} />
-              </button>
-            </div>
-            {/* Exchange Rate Info */}
-            {/* MODIFIED: Reverted text color for light mode */}
-            <div className="text-xs text-gray-500 italic text-center mt-1">
-              {exchangeDirection === 'coinToPoint' ?
-                '100 Coin = 1 Point' :
-                '1 Point = 100 Coin'
-              }
-            </div>
-          </div>
-
-          {/* Exchange Result Preview */}
-          {/* MODIFIED: Reverted background color for light mode */}
-          <div className="mb-5 bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center">
-              {/* Result Icon */}
-              <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3">
-                {exchangeDirection === 'coinToPoint' ? (
-                  // Point Icon with pulse effect
-                  <div className="w-full h-full relative">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
-                    <Icon name="Gem" size={24} className="absolute inset-0 m-auto text-white" />
-                  </div>
-                ) : (
-                  // Coin Icon with pulse effect
-                  <div className="w-full h-full relative">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-500 to-yellow-400 animate-pulse"></div>
-                    <Icon name="Coins" size={24} className="absolute inset-0 m-auto text-white" />
-                  </div>
-                )}
-              </div>
-              {/* Result Text */}
-              {/* MODIFIED: Reverted text color for light mode */}
-              <div className="flex-1">
-                <div className="text-sm text-gray-500">Bạn sẽ nhận được:</div>
-                <div className="font-bold text-lg text-gray-800 flex items-center">
-                  {getResult().toLocaleString()} {/* Format result with commas */}
-                  <span className="ml-1 text-sm">
-                    {exchangeDirection === 'coinToPoint' ? 'Point' : 'Coin'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Warning Message (if not enough resources) */}
-          {/* MODIFIED: Reverted background and border colors for light mode */}
-          {!hasEnoughResources() && (
-            <div className="mb-4 bg-red-50 p-3 rounded-lg border border-red-200">
-              <div className="flex">
-                <Icon name="AlertCircle" size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" /> {/* Reverted text color */}
-                <div>
-                  <h4 className="font-bold text-red-800 text-sm">Không đủ tài nguyên</h4> {/* Reverted text color */}
-                  <p className="text-red-700 text-xs"> {/* Reverted text color */}
-                    {exchangeDirection === 'coinToPoint' ?
-                      `Bạn cần tối thiểu ${exchangeAmount.toLocaleString()} Coin để thực hiện chuyển đổi này.` :
-                      `Bạn cần tối thiểu ${exchangeAmount.toLocaleString()} Point để thực hiện chuyển đổi này.`
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {/* Cancel Button */}
-            {/* MODIFIED: Reverted colors for light mode */}
-            <button
-              onClick={() => setShowExchangeModal(false)}
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-colors"
-            >
-              Hủy
-            </button>
-            {/* Exchange Button */}
-            {/* MODIFIED: Reverted disabled background color for light mode */}
-            <button
-              onClick={handleExchange}
-              disabled={!hasEnoughResources()} // Disable if not enough resources
-              className={`flex-1 px-3 py-2 rounded-lg font-medium text-white text-sm shadow-lg flex items-center justify-center gap-2 transition-all ${
-                hasEnoughResources() ?
-                'bg-gradient-to-r from-indigo-600 to-amber-600 hover:from-indigo-700 hover:to-amber-700' : // Enabled style
-                'bg-gray-400 cursor-not-allowed' // Disabled style - Reverted color
-              }`}
-            >
-              Chuyển Đổi
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-
   return (
     // Main container using flexbox to manage layout
     // h-screen makes it take full viewport height
-    // MODIFIED: Changed background back to white and used flex layout
     <div className="flex flex-col h-screen bg-white">
-      {/* Added the glass-shadow-border CSS style */}
-      <style>{`
-        .glass-shadow-border {
-            box-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.4),
-                0 4px 8px rgba(0, 0, 0, 0.3),
-                inset 0 -1px 2px rgba(255, 255, 255, 0.15);
-        }
-      `}</style>
-
       {/* Header section (fixed at the top) */}
       {/* flex-shrink-0 prevents it from shrinking */}
-      {/* MODIFIED: Changed background back to white and added padding */}
-      <div className="flex-shrink-0 relative bg-white px-8 pt-4 pb-2"> {/* Adjusted padding */}
-        {/* Use the HeaderBackground component here */}
+      {/* Use a relative container to position the background and content */}
+      <div className="flex-shrink-0 relative h-40"> {/* Adjusted height for header area */}
+        {/* Render the HeaderBackground component */}
         <HeaderBackground />
 
-        {/* Top right badges container with glassmorphism effect */}
-        {/* MODIFIED: Applied bg-black bg-opacity-60 and glass-shadow-border */}
-        <div className="absolute top-4 right-8 flex items-center space-x-2 overflow-hidden
-                    backdrop-filter backdrop-blur-lg bg-black bg-opacity-60 glass-shadow-border
-                    rounded-xl p-2 shadow-lg z-10">
+        {/* Content overlay for coins, exchange, and points */}
+        <div className="absolute inset-0 flex flex-col justify-between px-8 pt-4 pb-2">
+           {/* Top right badges container with glassmorphism effect */}
+          <div className="self-end flex items-center space-x-2 overflow-hidden
+                      backdrop-filter backdrop-blur-lg bg-black bg-opacity-60
+                      rounded-xl p-2 shadow-lg z-10"> {/* Added z-10 to ensure it's above background */}
 
-          {/* Use the CoinDisplay component here */}
-          {/* Pass the coins prop to CoinDisplay */}
-          {/* MODIFIED: Adjusted text color for dark background */}
-          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-white" />
+            {/* Use the CoinDisplay component here */}
+            {/* Pass the coins prop to CoinDisplay */}
+            <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} className="text-white" />
 
-          {/* Exchange Button */}
-          {/* MODIFIED: Adjusted colors for dark background */}
-          <button
-            onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
-            className="px-3 py-1.5 rounded-lg bg-white bg-opacity-20 text-white text-xs font-medium transition-colors hover:bg-opacity-30 flex items-center justify-center border border-white border-opacity-30"
-            title="Chuyển đổi Coin/Point"
-          >
-            Exchange
-          </button>
+            {/* Exchange Button */}
+            <button
+              onClick={() => setShowExchangeModal(true)} // Opens the exchange modal
+              className="px-3 py-1.5 rounded-lg bg-white bg-opacity-20 text-white text-xs font-medium transition-colors hover:bg-opacity-30 flex items-center justify-center border border-white border-opacity-30"
+              title="Chuyển đổi Coin/Point"
+            >
+              Exchange
+            </button>
 
-          {/* Points Badge */}
-          <div className="overflow-hidden">
-            <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}>
-              <div className="w-4 h-4 mr-1.5 relative">
-                <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
-                <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
+            {/* Points Badge */}
+            <div className="overflow-hidden">
+              <div className={`flex items-center p-1 pl-2 pr-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md ${pointBadgePulse ? 'animate-pulse' : ''}`}>
+                <div className="w-4 h-4 mr-1.5 relative">
+                  <Icon name="Gem" size={16} className="text-yellow-300 absolute -top-0.5 -left-0.5" />
+                  <div className="absolute inset-0 bg-yellow-300 blur-md opacity-30"></div>
+                </div>
+                <span className="text-xs font-bold text-white">{statPoints}</span>
+                {/* Plus button next to Points badge (conditionally visible) */}
+                <button
+                  onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
+                  className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
+                  disabled={!(!showPointsPanel && statPoints > 0)}
+                >
+                  <Icon name="Plus" size={10} className="text-white" />
+                </button>
               </div>
-              <span className="text-xs font-bold text-white">{statPoints}</span>
-              {/* Plus button next to Points badge (conditionally visible) */}
-              {/* MODIFIED: Reverted background opacity for light mode */}
-              <button
-                onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
-                className={`ml-1.5 w-4 h-4 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-colors ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Visible only if panel is closed and points > 0
-                disabled={!(!showPointsPanel && statPoints > 0)}
-              >
-                <Icon name="Plus" size={10} className="text-white" />
-              </button>
             </div>
           </div>
+           {/* Gradient overlay at the bottom of the header - Kept for visual separation */}
+           <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
         </div>
-
-        {/* Removed the old background pattern and bottom gradient divs */}
       </div>
+
 
       {/* Main content area - SCROLLABLE */}
       {/* flex-grow makes it take up remaining space */}
@@ -692,10 +646,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       <div className="flex-grow overflow-y-auto p-8">
 
         {/* Stats Section */}
-        {/* MODIFIED: Removed px-8 as padding is now on the parent */}
         <div className="mb-8">
             {/* Stats Header */}
-            {/* MODIFIED: Reverted text and border colors for light mode */}
             <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
               <h3 className="text-sm uppercase tracking-wider font-bold text-gray-600 flex items-center">
                 <Icon name="Trophy" size={16} className="mr-2 text-gray-500" /> STATS
@@ -713,7 +665,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               )}
 
               {/* "Details" indicator (visible if no points or panel is open) */}
-              {/* MODIFIED: Reverted colors for light mode */}
               {!statPoints && !showPointsPanel && (
                 <div className="px-2 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-medium flex items-center">
                   <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -726,27 +677,24 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
             {/* Point Allocation Panel (conditionally rendered) */}
             {showPointsPanel ? (
-              // MODIFIED: Reverted background and border colors for light mode
               <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-5 mb-4">
                 {/* Panel Header */}
-                {/* MODIFIED: Reverted text color for light mode */}
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shadow-md">
                     <Icon name="Plus" size={20} className="text-white" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Còn lại: <span className="font-medium text-indigo-600">{statPoints} điểm</span></p>
-                  </div> {/* Reverted text color */}
+                  </div>
                 </div>
 
                 {/* Render stats in edit mode */}
                 {renderStats(true)}
 
                 {/* Allocation Tip */}
-                {/* MODIFIED: Reverted background and text colors for light mode */}
                 <div className="bg-blue-50 rounded-lg p-3 mt-4 mb-4 flex items-start">
-                  <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" /> {/* Reverted text color */}
-                  <div className="text-xs text-blue-800"> {/* Reverted text color */}
+                  <Icon name="AlertCircle" size={16} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-blue-800">
                     <p className="font-medium mb-1">Mẹo phân bổ điểm:</p>
                     <ul className="list-disc pl-4 space-y-1">
                       <li>ATK, DEF, LUCK, INT, CRT: +2 cho mỗi điểm</li>
@@ -758,7 +706,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                  {/* Action Buttons for Allocation Panel */}
                 <div className="flex items-center justify-end space-x-2">
                    {/* Cancel Button */}
-                   {/* MODIFIED: Reverted colors for light mode */}
                    <button
                       onClick={cancelChanges}
                       className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-800 text-xs font-medium hover:bg-gray-300 transition-colors"
@@ -776,7 +723,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               </div>
             ) : (
               // Render stats in view mode (when allocation panel is closed)
-              // MODIFIED: Reverted background and border colors for light mode
               <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
                 {renderStats()}
               </div>
@@ -784,10 +730,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
           </div>
 
         {/* Skills Section */}
-        {/* MODIFIED: Removed px-8 as padding is now on the parent */}
         <div className="mb-8">
           {/* Skills Header */}
-          {/* MODIFIED: Reverted text and border colors for light mode */}
           <h3 className="text-sm uppercase tracking-wider font-bold text-gray-500 mb-4 border-b border-gray-200 pb-2 flex items-center">
             <Icon name="Zap" size={16} className="mr-2 text-gray-400" /> SKILLS
           </h3>
@@ -798,35 +742,24 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
         </div>
 
          {/* Reset Stats Control - Placed back here */}
-         {/* MODIFIED: Removed px-8 as padding is now on the parent */}
          <div className="mb-8">
            <ResetStatsControl
               currentStats={character.stats} // Truyền chỉ số hiện tại
               onStatsReset={handleActualReset} // Truyền hàm xử lý reset thực tế
-              // Assuming ResetStatsControl handles its own modal state internally
-              // If it needs an onClose prop to hide itself, you might need to add it back here
-              // onClose={() => setShowResetModal(false)} // Example if ResetStatsControl needs this
            />
          </div>
-
-
       </div> {/* End of main content area */}
 
 
       {/* Render Exchange Modal (conditionally) */}
-      {showExchangeModal && <ExchangeModal />}
-
-      {/* Render Reset Stats Modal (conditionally) - REMOVED */}
-      {/* The component is now rendered directly in the main content */}
-      {/*
-      {showResetModal && (
-        <ResetStatsControl
-           currentStats={character.stats} // Pass current stats
-           onStatsReset={handleActualReset} // Pass the actual reset handler
-           onClose={() => setShowResetModal(false)} // Pass a function to close the modal
-        />
-      )}
-      */}
+      <ExchangeModal
+        show={showExchangeModal}
+        onClose={() => setShowExchangeModal(false)}
+        coins={coins}
+        statPoints={statPoints}
+        onUpdateCoins={onUpdateCoins}
+        onUpdateStatPoints={setStatPoints} // Pass the setStatPoints function
+      />
 
 
       {/* Footer Section - Using the new BackButton component */}
@@ -834,16 +767,6 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
       {onClose && (
         <BackButton
           onClick={onClose}
-          // REMOVED: The reset button is no longer passed as rightContent
-          // rightContent={
-          //    <button
-          //       onClick={() => setShowResetModal(true)} // Set state to show the modal
-          //       className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium shadow-md transition-colors flex items-center gap-1.5"
-          //    >
-          //       <Icon name="RotateCcw" size={14} />
-          //       Reset Chỉ Số
-          //    </button>
-          // }
         />
       )}
 
