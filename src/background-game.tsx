@@ -492,14 +492,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
-        // Updated logic to use setNextKeyIn and check the new state value
+        // Updated logic to use setNextKeyIn and check the new state value using callback
         let hasKeyFirst = false;
-        setNextKeyIn(prev => {
+        setNextKeyIn((prev) => {
           const newVal = prev - 1;
           if (newVal <= 0) {
-            const resetVal = randomBetween(5, 10);
             hasKeyFirst = true; // Set the flag based on the *new* value
-            return resetVal;
+            return randomBetween(5, 10); // Reset giá trị
           }
           hasKeyFirst = false; // Set the flag based on the *new* value
           return newVal;
@@ -519,14 +518,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // Updated logic to use setNextKeyIn and check the new state value
+          // Updated logic to use setNextKeyIn and check the new state value using callback
           let hasKey = false;
-          setNextKeyIn(prev => {
+          setNextKeyIn((prev) => {
             const newVal = prev - 1;
             if (newVal <= 0) {
-              const resetVal = randomBetween(5, 10);
               hasKey = true; // Set the flag based on the *new* value
-              return resetVal;
+              return randomBetween(5, 10); // Reset giá trị
             }
             hasKey = false; // Set the flag based on the *new* value
             return newVal;
@@ -704,9 +702,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // Updated logic to use setNextKeyIn and check the new state value
+            // Updated logic to use setNextKeyIn and check the new state value using callback
             let hasKey = false;
-            setNextKeyIn(prev => {
+            setNextKeyIn((prev) => {
               const newVal = prev - 1;
               if (newVal <= 0) {
                 const resetVal = randomBetween(5, 10);
@@ -940,9 +938,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // Updated logic to use setNextKeyIn and check the new state value
+                                // Updated logic to use setNextKeyIn and check the new state value using callback
                                 let hasKey = false;
-                                setNextKeyIn(prev => {
+                                setNextKeyIn((prev) => {
                                   const newVal = prev - 1;
                                   if (newVal <= 0) {
                                     const resetVal = randomBetween(5, 10);
