@@ -23,9 +23,6 @@ import useSessionStorage from './bo-nho-tam.tsx';
 // NEW: Import the HeaderBackground component
 import HeaderBackground from './header-background.tsx';
 
-// NEW: Import the DailyCheckIn component
-import DailyCheckIn from './check-in.tsx';
-
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -222,11 +219,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  // Removed nextKeyIn from state and its hook
+  // Removed nextKeyIn state and its hook
   const [keyCount, setKeyCount] = useState(0); // Player's key count
-
-  // NEW: State for Daily Check-in popup visibility
-  const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
 
 
   // UI States
@@ -427,7 +421,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           transaction.set(userDocRef, {
             coins: coins, // Use current local coins state for new doc
             gems: gems, // Use current local gems state for new doc
-            keys: keyCount, // Use current local keys state for new doc
+            keys: amount,
             createdAt: new Date()
           });
         } else {
@@ -469,22 +463,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-  // NEW: Function to open the Daily Check-in popup
-  const openDailyCheckIn = () => {
-    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData) {
-      console.log("Cannot open Daily Check-in:", { gameStarted, gameOver, isStatsFullscreen, isLoadingUserData });
-      return;
-    }
-    setShowDailyCheckIn(true);
-    hideNavBar(); // Hide navbar when popup is open
-  };
-
-  // NEW: Function to close the Daily Check-in popup
-  const closeDailyCheckIn = () => {
-    setShowDailyCheckIn(false);
-    showNavBar(); // Show navbar when popup is closed
-  };
-
 
   // Function to start a NEW game (resets session storage states)
   const startNewGame = () => {
@@ -509,7 +487,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setDamageAmount(0);
     setShowDamageNumber(false);
     setIsStatsFullscreen(false);
-    setShowDailyCheckIn(false); // Ensure check-in popup is closed on new game
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
@@ -589,7 +566,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDamageAmount(0);
         setShowDamageNumber(false);
         setIsStatsFullscreen(false);
-        setShowDailyCheckIn(false); // Close check-in popup on logout
         setCoins(0); // Reset local state
         setDisplayedCoins(0); // Reset local state
         setGems(0); // Reset local state
@@ -670,8 +646,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    if (!gameStarted || gameOver || isStatsFullscreen || showDailyCheckIn) return; // Prevent particles during popup
-    if (isLoadingUserData) return; // Added isLoadingUserData check
+    if (!gameStarted || gameOver || isStatsFullscreen) return;
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) {
@@ -690,15 +665,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver || isStatsFullscreen || showDailyCheckIn) { // Prevent obstacles during popup
+    if (gameOver || isStatsFullscreen) {
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
         }
         return;
     }
-     if (isLoadingUserData) return; // Added isLoadingUserData check
-
 
     const randomTime = Math.floor(Math.random() * 15000) + 5000;
     obstacleTimerRef.current = setTimeout(() => {
@@ -731,15 +704,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    if (gameOver || isStatsFullscreen || showDailyCheckIn) { // Prevent coins during popup
+    if (gameOver || isStatsFullscreen) {
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
         }
         return;
     }
-     if (isLoadingUserData) return; // Added isLoadingUserData check
-
 
     const randomTime = Math.floor(Math.random() * 4000) + 1000;
     if (coinScheduleTimerRef.current) {
@@ -764,11 +735,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Handle character jump action
   const jump = () => {
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !showDailyCheckIn && !isLoadingUserData) { // Prevent jump during popup or loading
+    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen) {
       setJumping(true);
       setCharacterPos(80);
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen && !showDailyCheckIn && !isLoadingUserData) { // Check states again before resetting
+        if (gameStarted && !gameOver && !isStatsFullscreen) {
           setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
@@ -783,7 +754,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
-    if (isStatsFullscreen || isLoadingUserData || showDailyCheckIn) return; // Ignore taps if loading data, stats are fullscreen, or popup is open
+    if (isStatsFullscreen || isLoadingUserData) return; // Ignore taps if loading data or stats are fullscreen
 
     if (!gameStarted) {
       startNewGame(); // Start a new game on first tap if not started
@@ -814,8 +785,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Function to activate Shield skill ---
   const activateShield = () => {
-    if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || showDailyCheckIn) { // Added isLoadingUserData and showDailyCheckIn check
-      console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldActive, isShieldOnCooldown, isStatsFullscreen, isLoadingUserData, showDailyCheckIn });
+    if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
+      console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldActive, isShieldOnCooldown, isStatsFullscreen, isLoadingUserData });
       return;
     }
 
@@ -855,7 +826,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   // This useEffect is the main game loop for movement and collision detection
   useEffect(() => {
-    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || showDailyCheckIn) { // Added isLoadingUserData and showDailyCheckIn check
+    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
@@ -1111,12 +1082,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, showDailyCheckIn]); // Added showDailyCheckIn to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData]); // Removed nextKeyIn from dependencies
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
   useEffect(() => {
-      if (gameOver || isStatsFullscreen || isLoadingUserData || showDailyCheckIn) { // Added isLoadingUserData and showDailyCheckIn check
+      if (gameOver || isStatsFullscreen || isLoadingUserData) { // Added isLoadingUserData check
           if (obstacleTimerRef.current) {
               clearTimeout(obstacleTimerRef.current);
               obstacleTimerRef.current = null;
@@ -1129,7 +1100,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                clearInterval(particleTimerRef.current);
                particleTimerRef.current = null;
            }
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn) { // Added isLoadingUserData and showDailyCheckIn check
+      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
           if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
           }
@@ -1155,7 +1126,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, showDailyCheckIn]); // Dependencies updated, added showDailyCheckIn
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData]); // Dependencies updated, removed nextKeyIn
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -1168,7 +1139,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           isStatsFullscreen,
           isLoadingUserData,
           gameStarted,
-          showDailyCheckIn, // Added showDailyCheckIn
           shieldCooldownStartTime, // Use the state variable
           pausedShieldCooldownRemaining, // Use the state variable
           currentCooldownTimer: !!shieldCooldownTimerRef.current,
@@ -1176,9 +1146,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       });
 
 
-      // Clear timers if game is inactive or paused (including check-in popup open)
-      if (isStatsFullscreen || isLoadingUserData || gameOver || !gameStarted || showDailyCheckIn) { // Added showDailyCheckIn check
-          console.log("Game inactive or paused (or popup open). Clearing shield timers.");
+      // Clear timers if game is inactive or paused
+      if (isStatsFullscreen || isLoadingUserData || gameOver || !gameStarted) {
+          console.log("Game inactive or paused. Clearing shield timers.");
           // Pause main shield cooldown timer if it's running
           if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
               const elapsedTime = Date.now() - shieldCooldownStartTime;
@@ -1303,7 +1273,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // We rely on the effect's internal logic to clear shieldCooldownTimerRef.
       };
 
-  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, showDailyCheckIn]); // Dependencies updated, added showDailyCheckIn
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted]); // Dependencies updated to use state variables
 
 
   // Effect to clean up all timers when the component unmounts
@@ -1380,7 +1350,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn} // Autoplay only when game is not fullscreen, not loading, and popup is not open
+          autoplay={!isStatsFullscreen && !isLoadingUserData} // Autoplay only when game is not fullscreen and not loading
           className="w-full h-full"
         />
       </div>
@@ -1414,7 +1384,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn} // Autoplay only when game is not fullscreen, not loading, and popup is not open
+                autoplay={!isStatsFullscreen && !isLoadingUserData} // Autoplay only when game is not fullscreen and not loading
                 className="w-full h-full"
               />
             )}
@@ -1431,7 +1401,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn} // Autoplay only when game is not fullscreen, not loading, and popup is not open
+                autoplay={!isStatsFullscreen && !isLoadingUserData} // Autoplay only when game is not fullscreen and not loading
                 className="w-full h-full"
               />
               )}
@@ -1553,7 +1523,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
           loop
-          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn} // Autoplay only when shield is active, not fullscreen, not loading, and popup is not open
+          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData} // Autoplay only when shield is active, not fullscreen, and not loading
           className="w-full h-full"
         />
       </div>
@@ -1577,7 +1547,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn} // Autoplay only when game is not fullscreen, not loading, and popup is not open
+          autoplay={!isStatsFullscreen && !isLoadingUserData} // Autoplay only when game is not fullscreen and not loading
           className="w-full h-full"
         />
       </div>
@@ -1587,7 +1557,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle full-screen stats
   const toggleStatsFullscreen = () => {
-    if (gameOver || isLoadingUserData || showDailyCheckIn) return; // Prevent opening if game over, loading data, or popup is open
+    if (gameOver || isLoadingUserData) return; // Prevent opening if game over or loading data
 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
@@ -1687,36 +1657,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
 
         @keyframes particle3 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(-50px, -50px) scale(0); }
+          0% { transform: translate(0, 0); opacity: 1; }
+          100% { transform: translate(-30px, 40px); opacity: 0; }
         }
 
         @keyframes particle4 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(50px, -50px) scale(0); }
+          0% { transform: translate(0, 0); opacity: 1; }
+          100% { transform: translate(40px, 30px); opacity: 0; }
         }
 
         @keyframes particle5 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(0, -80px) scale(0); }
-        }
-
-        /* NEW: Keyframes for popup fade-in */
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        /* NEW: Keyframes for popup fade-out */
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-
-        /* NEW: Keyframes for popup scale-in */
-        @keyframes scaleIn {
-            0% { transform: scale(0.95); }
-            100% { transform: scale(1); }
+          0% { transform: translate(0, 0); opacity: 1; }
+          100% { transform: translate(20px, -50px); opacity: 0; }
         }
 
 
@@ -1947,10 +1899,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
                <div
-                className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || showDailyCheckIn ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData and showDailyCheckIn check
+                className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData check
                 onClick={activateShield}
                 title={
-                  !gameStarted || gameOver || isLoadingUserData || showDailyCheckIn ? "Không khả dụng" : // Added isLoadingUserData and showDailyCheckIn check
+                  !gameStarted || gameOver || isLoadingUserData ? "Không khả dụng" : // Added isLoadingUserData check
                   isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
                   isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
                   isStatsFullscreen ? "Không khả dụng" :
@@ -1958,13 +1910,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 }
                 aria-label="Sử dụng Khiên chắn"
                 role="button"
-                tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || showDailyCheckIn ? -1 : 0} // Added isLoadingUserData and showDailyCheckIn check
+                tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData ? -1 : 0} // Added isLoadingUserData check
               >
                 <div className="w-10 h-10">
                    <DotLottieReact
                       src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                       loop
-                      autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !showDailyCheckIn} // Autoplay only when shield is active, not fullscreen, not loading, and popup is not open
+                      autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData} // Autoplay only when shield is active, not fullscreen, and not loading
                       className="w-full h-full"
                    />
                 </div>
@@ -2016,11 +1968,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   label: "Blacksmith",
                   notification: true,
                   special: true,
-                  centered: true,
-                  onClick: openDailyCheckIn // Add onClick handler here
+                  centered: true
                 },
               ].map((item, index) => (
-                <div key={index} className="group cursor-pointer" onClick={item.onClick}> {/* Added onClick handler to the div */}
+                <div key={index} className="group cursor-pointer">
                   {item.special && item.centered ? (
                       <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
                           {item.icon}
@@ -2056,31 +2007,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             // Use startCoinCountAnimation to handle coin rewards from chests
             onCoinReward={startCoinCountAnimation}
             onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-            isGamePaused={gameOver || !gameStarted || isLoadingUserData || showDailyCheckIn} // Added isLoadingUserData and showDailyCheckIn check
+            isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
             isStatsFullscreen={isStatsFullscreen}
             currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
           />
 
-        </div>
-      )}
-
-      {/* NEW: Daily Check-in Popup */}
-      {showDailyCheckIn && (
-        // Overlay for dimming the background
-        <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          {/* Popup Container */}
-          {/* MODIFIED: Added overflow-y-auto and max-h-full */}
-          <div className="relative w-full max-w-sm mx-auto p-4 animate-scaleIn overflow-y-auto max-h-full">
-            <DailyCheckIn />
-            {/* Close button for the popup - Positioned relative to the popup container */}
-            <button
-              className="absolute top-0 right-0 m-2 text-white hover:text-gray-300 transition-colors z-50"
-              onClick={closeDailyCheckIn}
-              aria-label="Đóng"
-            >
-              <XIcon size={24} />
-            </button>
-          </div>
         </div>
       )}
     </div>
