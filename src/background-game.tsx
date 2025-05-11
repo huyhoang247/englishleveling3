@@ -27,7 +27,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
-    viewBox="0 0 24 24" // <-- Đã sửa lỗi ở đây
+    viewBox="0 0 24 24"
     fill="none"
     stroke={color}
     strokeWidth="2"
@@ -216,7 +216,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  const nextKeyInRef = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval ref
+  // Sử dụng useSessionStorage cho biến nextKeyIn để nó được lưu lại giữa các phiên
+  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -463,7 +464,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Function to start a NEW game (resets session storage states)
   const startNewGame = () => {
-    console.log("startNewGame called."); // Log start of new game
     // Reset session storage states to initial values
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
@@ -475,10 +475,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setRemainingCooldown(0);
     setShieldCooldownStartTime(null); // Use the setter from the hook
     setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-
-    const initialNextKeyIn = randomBetween(5, 10);
-    nextKeyInRef.current = initialNextKeyIn; // Reset ref using its setter from the hook
-    console.log(`startNewGame: nextKeyInRef reset to ${initialNextKeyIn}`); // Log initial key counter
+    // Reset nextKeyIn state using its setter from the hook
+    setNextKeyIn(randomBetween(5, 10));
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -494,19 +492,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
-        const hasKeyFirst = (() => {
-          console.log(`startNewGame (Obstacle 1): Checking key, nextKeyInRef before decrement: ${nextKeyInRef.current}`); // Log before decrement
-          nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
-          console.log(`startNewGame (Obstacle 1): nextKeyInRef after decrement: ${nextKeyInRef.current}`); // Log after decrement
-          if (nextKeyInRef.current <= 0) {
-            const newNextKeyIn = randomBetween(5, 10);
-            nextKeyInRef.current = newNextKeyIn; // Update the hook's state
-            console.log(`startNewGame (Obstacle 1): Key assigned! Resetting nextKeyInRef to ${newNextKeyIn}`); // Log key assignment and reset
-            return true;
-          }
-          console.log(`startNewGame (Obstacle 1): No key assigned.`); // Log no key assigned
-          return false;
-        })();
+        // Logic for the first obstacle's key drop
+        let shouldHaveKeyFirst = false;
+        setNextKeyIn(prev => {
+            const newNextKeyIn = prev - 1;
+            if (newNextKeyIn <= 0) {
+                shouldHaveKeyFirst = true;
+                return randomBetween(5, 10);
+            }
+            return newNextKeyIn;
+        });
 
         initialObstacles.push({
           id: Date.now(),
@@ -514,27 +509,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           ...firstObstacleType,
           health: firstObstacleType.baseHealth,
           maxHealth: firstObstacleType.baseHealth,
-          hasKey: hasKeyFirst,
+          hasKey: shouldHaveKeyFirst,
         });
-        console.log(`startNewGame (Obstacle 1): Created with hasKey = ${hasKeyFirst}`); // Log final hasKey status
 
         for (let i = 1; i < 5; i++) {
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          const hasKey = (() => {
-            console.log(`startNewGame (Obstacle ${i+1}): Checking key, nextKeyInRef before decrement: ${nextKeyInRef.current}`); // Log before decrement
-            nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
-             console.log(`startNewGame (Obstacle ${i+1}): nextKeyInRef after decrement: ${nextKeyInRef.current}`); // Log after decrement
-            if (nextKeyInRef.current <= 0) {
-              const newNextKeyIn = randomBetween(5, 10);
-              nextKeyInRef.current = newNextKeyIn; // Update the hook's state
-              console.log(`startNewGame (Obstacle ${i+1}): Key assigned! Resetting nextKeyInRef to ${newNextKeyIn}`); // Log key assignment and reset
-              return true;
-            }
-            console.log(`startNewGame (Obstacle ${i+1}): No key assigned.`); // Log no key assigned
-            return false;
-          })();
+          // Logic for subsequent obstacles' key drop
+          let shouldHaveKey = false;
+          setNextKeyIn(prev => {
+              const newNextKeyIn = prev - 1;
+              if (newNextKeyIn <= 0) {
+                  shouldHaveKey = true;
+                  return randomBetween(5, 10);
+              }
+              return newNextKeyIn;
+          });
+
 
           initialObstacles.push({
             id: Date.now() + i,
@@ -542,9 +534,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
-            hasKey: hasKey,
+            hasKey: shouldHaveKey,
           });
-           console.log(`startNewGame (Obstacle ${i+1}): Created with hasKey = ${hasKey}`); // Log final hasKey status
         }
     }
 
@@ -566,7 +557,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         console.log("User authenticated:", user.uid);
         fetchUserData(user.uid); // Fetch user data when authenticated
         // The useSessionStorage hook will automatically load game state if available
-        console.log(`useEffect[auth]: Initial nextKeyInRef value loaded: ${nextKeyInRef.current}`); // Log initial value from session storage
         setGameStarted(true); // Assume game can start if user is authenticated
         setIsRunning(true); // Start running animation
       } else {
@@ -584,8 +574,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setRemainingCooldown(0); // Reset session storage state
         setShieldCooldownStartTime(null); // Reset session storage state
         setPausedShieldCooldownRemaining(null); // Reset session storage state
-        nextKeyInRef.current = randomBetween(5, 10); // Reset session storage ref state
-        console.log(`useEffect[auth]: User logged out. nextKeyInRef reset to ${nextKeyInRef.current}`); // Log reset on logout
+        setNextKeyIn(randomBetween(5, 10)); // Reset session storage state for nextKeyIn
 
 
         setIsRunning(false);
@@ -639,7 +628,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setIsRunning(false);
       clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
-      clearInterval(particleTimerRef.current);
+      clearInterval(particleTimerRefRef.current);
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
       // No need to reset session storage states here, the hook handles saving the current state (including null)
@@ -710,19 +699,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            const hasKey = (() => {
-              console.log(`scheduleNextObstacle (Obstacle ${i+1}): Checking key, nextKeyInRef before decrement: ${nextKeyInRef.current}`); // Log before decrement
-              nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
-              console.log(`scheduleNextObstacle (Obstacle ${i+1}): nextKeyInRef after decrement: ${nextKeyInRef.current}`); // Log after decrement
-              if (nextKeyInRef.current <= 0) {
-                const newNextKeyIn = randomBetween(5, 10);
-                nextKeyInRef.current = newNextKeyIn; // Update the hook's state
-                 console.log(`scheduleNextObstacle (Obstacle ${i+1}): Key assigned! Resetting nextKeyInRef to ${newNextKeyIn}`); // Log key assignment and reset
-                return true;
-              }
-              console.log(`scheduleNextObstacle (Obstacle ${i+1}): No key assigned.`); // Log no key assigned
-              return false;
-            })();
+            // Logic for key drop: Decrement nextKeyIn and check if it's time to drop a key
+            let shouldHaveKey = false;
+            setNextKeyIn(prev => {
+                const newNextKeyIn = prev - 1;
+                console.log(`Obstacle created. nextKeyIn: ${newNextKeyIn}`); // Log the value
+                if (newNextKeyIn <= 0) {
+                    shouldHaveKey = true;
+                    const resetValue = randomBetween(5, 10);
+                    console.log(`Key dropped! Resetting nextKeyIn to: ${resetValue}`); // Log key drop
+                    return resetValue; // Reset the counter
+                }
+                return newNextKeyIn; // Decrement the counter
+            });
+
 
             newObstacles.push({
               id: Date.now() + i,
@@ -730,9 +720,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
-              hasKey: hasKey,
+              hasKey: shouldHaveKey, // Assign the determined hasKey value
             });
-             console.log(`scheduleNextObstacle (Obstacle ${i+1}): Created with hasKey = ${hasKey}`); // Log final hasKey status
           }
       }
 
@@ -941,72 +930,56 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             }
                         }
 
-                        // This section seems incorrect for obstacle recycling/respawn logic
-                        // It's trying to check if a defeated obstacle should become a new one AND filter it out.
-                        // Defeated obstacles should likely just be filtered out, and new ones scheduled separately.
-                        // Keeping it as-is for now to match original code, but note it might be a source of bugs.
+                        // Logic for recycling obstacles and potentially adding a key
                         if (newPosition < -20 && !collisionDetected) {
-                            // This block determines if an off-screen obstacle should be recycled
-                            if (Math.random() < 0.7) { // 70% chance to respawn off-screen
+                            if (Math.random() < 0.7) {
                                 if (obstacleTypes.length === 0) return obstacle;
 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // Key logic here seems redundant as scheduleNextObstacle also handles keys
-                                // This might lead to keys being assigned more frequently than intended,
-                                // or interfering with the main scheduleNextObstacle timer logic.
-                                // Suggestion: Remove key logic from this recycling block.
-                                const hasKey = (() => {
-                                  console.log(`GameLoop (Recycling Obstacle): Checking key, nextKeyInRef before decrement: ${nextKeyInRef.current}`); // Log before decrement
-                                  nextKeyInRef.current = nextKeyInRef.current - 1; // Update the hook's state
-                                  console.log(`GameLoop (Recycling Obstacle): nextKeyInRef after decrement: ${nextKeyInRef.current}`); // Log after decrement
-                                  if (nextKeyInRef.current <= 0) {
-                                    const newNextKeyIn = randomBetween(5, 10);
-                                    nextKeyInRef.current = newNextKeyIn; // Update the hook's state
-                                    console.log(`GameLoop (Recycling Obstacle): Key assigned! Resetting nextKeyInRef to ${newNextKeyIn}`); // Log key assignment and reset
-                                    return true;
-                                  }
-                                  console.log(`GameLoop (Recycling Obstacle): No key assigned.`); // Log no key assigned
-                                  return false;
-                                })();
+                                // Logic for key drop when recycling: Decrement nextKeyIn and check if it's time to drop a key
+                                let shouldHaveKey = false;
+                                setNextKeyIn(prev => {
+                                    const newNextKeyIn = prev - 1;
+                                    console.log(`Recycled obstacle. nextKeyIn: ${newNextKeyIn}`); // Log the value
+                                    if (newNextKeyIn <= 0) {
+                                        shouldHaveKey = true;
+                                        const resetValue = randomBetween(5, 10);
+                                        console.log(`Key dropped! Resetting nextKeyIn to: ${resetValue}`); // Log key drop
+                                        return resetValue; // Reset the counter
+                                    }
+                                    return newNextKeyIn; // Decrement the counter
+                                });
 
 
                                 return {
-                                    ...obstacle, // Keep old properties like ID? Maybe assign new ID?
-                                    ...randomObstacleType, // Override type properties
-                                    id: Date.now() + Math.random(), // Assign a new ID to avoid React key issues if not filtered
-                                    position: 120 + randomOffset, // Set new position
-                                    health: randomObstacleType.baseHealth, // Reset health
-                                    maxHealth: randomObstacleType.baseHealth, // Reset max health
-                                    hasKey: hasKey, // Re-evaluate key status (Potential conflict with main scheduler)
+                                    ...obstacle,
+                                    ...randomObstacleType,
+                                    id: Date.now(),
+                                    position: 120 + randomOffset,
+                                    health: randomObstacleType.baseHealth,
+                                    maxHealth: randomObstacleType.baseHealth,
+                                    hasKey: shouldHaveKey, // Assign the determined hasKey value
                                 };
                             } else {
-                                // 30% chance to just move off-screen and then get filtered out
                                 return { ...obstacle, position: newPosition };
                             }
                         }
 
-                        // Collision handling and filtering
                         if (collisionDetected) {
-                            // Check if obstacle had a key BEFORE filtering it out
-                             if (obstacle.hasKey) {
-                                console.log(`GameLoop: Obstacle with key collided/defeated, collecting key.`); // Log key collection
+                            if (obstacle.hasKey) {
                                 handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
-                             }
-                            // Mark for removal by filtering
+                            }
                             return { ...obstacle, position: newPosition, collided: true };
                         }
 
-                        // If not off-screen and no collision, just update position
                         return { ...obstacle, position: newPosition };
                     })
                     .filter(obstacle => {
-                         // Filter out obstacles that collided OR moved off-screen past -20
-                        return !obstacle.collided && obstacle.position > -20;
+                        return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0;
                     });
             });
-
 
             setClouds(prevClouds => {
                 return prevClouds
@@ -1150,7 +1123,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData]); // Added all session storage states to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added nextKeyIn to dependencies
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1164,9 +1137,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-           if (particleTimerRef.current) { // <-- Fixed typo here
-               clearInterval(particleTimerRef.current); // <-- Fixed typo here
-               particleTimerRef.current = null; // <-- Fixed typo here
+           if (particleTimerRef.current) {
+               clearInterval(particleTimerRef.current);
+               particleTimerRef.current = null;
            }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
           if (!obstacleTimerRef.current) {
@@ -1175,7 +1148,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           if (!coinScheduleTimerRef.current) {
               scheduleNextCoin();
           }
-           if (!particleTimerRef.current) { // <-- Fixed typo here
+           if (!particleTimerRef.current) {
                particleTimerRef.current = setInterval(generateParticles, 300);
            }
       }
@@ -1499,23 +1472,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
 
-             {/* Check for obstacle.hasKey property before rendering the key icon */}
-             {obstacle.hasKey && (
+             {/* Hiển thị biểu tượng chìa khóa nếu obstacle có hasKey là true */}
+            {obstacle.hasKey && (
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
                 alt="Key"
                 className="absolute w-4 h-4"
                 style={{
-                    bottom: 'calc(100% + 4px)', // Position above the health bar container
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    bottom: 'calc(100% + 4px)', // Đặt phía trên thanh máu
+                    left: '50%', // Căn giữa theo chiều ngang
+                    transform: 'translateX(-50%)', // Điều chỉnh để căn giữa chính xác
                 }}
-                // Add onError for the key icon image itself
-                 onError={(e) => {
+                // Thêm onError để xử lý khi ảnh không tải được
+                onError={(e) => {
                     const target = e as any; // Cast to any to access target
-                    target.onerror = null;
-                    target.src = "https://placehold.co/16x16/ffffff/000000?text=K"; // Placeholder on error
-                    console.error(`Failed to load key image for obstacle ${obstacle.id}.`);
+                    target.onerror = null; // Ngăn chặn lặp vô hạn nếu ảnh lỗi
+                    target.src = "https://placehold.co/16x16/ff0000/ffffff?text=Key"; // Ảnh placeholder màu đỏ
+                    console.error("Error loading key icon image:", target.src); // Log lỗi
                 }}
               />
             )}
@@ -1758,7 +1731,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
           {renderShield()}
 
-          {/* Render Obstacles */}
           {obstacles.map(obstacle => renderObstacle(obstacle))}
 
           {renderCoins()}
