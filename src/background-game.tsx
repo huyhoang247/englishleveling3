@@ -164,7 +164,7 @@ interface GameSessionData {
     remainingCooldown: number;
     shieldCooldownStartTime: number | null;
     pausedShieldCooldownRemaining: number | null;
-    nextKeyIn: number; // This is now the state value from the hook
+    nextKeyIn: number; // Added nextKeyIn to session data interface
     // Add other temporary game state you want to save
 }
 
@@ -181,6 +181,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [shieldHealth, setShieldHealth] = useSessionStorage<number>('gameShieldHealth', 2000); // Use hook for shield health
   const [isShieldOnCooldown, setIsShieldOnCooldown] = useSessionStorage<boolean>('gameIsShieldOnCooldown', false); // Use hook for shield cooldown
   const [remainingCooldown, setRemainingCooldown] = useSessionStorage<number>('gameRemainingCooldown', 0); // Use hook for remaining cooldown
+
+  // CORRECTED: Use state directly from useSessionStorage for nextKeyIn
+  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval
 
   // States that do NOT need session storage persistence (reset on refresh)
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
@@ -216,8 +219,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  // CORRECTED: Use array destructuring for state and setter
-  const [nextKeyIn, setNextKeyIn] = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval state
+  // REMOVED: nextKeyInRef as it's replaced by nextKeyIn state
+  // const nextKeyInRef = useSessionStorage<number>('gameNextKeyIn', randomBetween(5, 10)); // Use hook for key drop interval ref
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -476,7 +479,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShieldCooldownStartTime(null); // Use the setter from the hook
     setPausedShieldCooldownRemaining(null); // Use the setter from the hook
     // CORRECTED: Reset nextKeyIn using its setter
-    setNextKeyIn(randomBetween(5, 10)); // Reset state using its setter
+    setNextKeyIn(randomBetween(5, 10)); // Reset nextKeyIn using its setter
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -490,35 +493,50 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
     if (obstacleTypes.length > 0) {
+        const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
-        // Áp dụng logic thả key cho các chướng ngại vật ban đầu
-        const obstacleCount = 5; // Số lượng chướng ngại vật ban đầu
-        const dropKeyThisBatch = nextKeyIn <= 1; // Kiểm tra xem có nên thả key ở batch đầu tiên không
-        const nextInterval = dropKeyThisBatch
-          ? randomBetween(5, 10)   // Reset khoảng nếu thả key
-          : nextKeyIn - 1;         // Giảm khoảng nếu không thả key
-        setNextKeyIn(nextInterval); // Cập nhật state nextKeyIn MỘT LẦN sau khi xử lý batch đầu
+        // CORRECTED: Use setNextKeyIn for updating the state
+        let hasKeyFirst = false;
+        setNextKeyIn(prev => {
+          const next = prev - 1;
+          if (next <= 0) {
+            hasKeyFirst = true;
+            return randomBetween(5, 10);
+          }
+          return next;
+        });
 
-        // Chọn ngẫu nhiên chỉ mục (index) của obstacle sẽ nhận key trong batch đầu tiên (nếu có key)
-        const keyObstacleIndex = dropKeyThisBatch
-          ? Math.floor(Math.random() * obstacleCount)
-          : -1; // -1 nghĩa là không có obstacle nào nhận key
+        initialObstacles.push({
+          id: Date.now(),
+          position: 120,
+          ...firstObstacleType,
+          health: firstObstacleType.baseHealth,
+          maxHealth: firstObstacleType.baseHealth,
+          hasKey: hasKeyFirst,
+        });
 
-
-        for (let i = 0; i < obstacleCount; i++) {
+        for (let i = 1; i < 5; i++) {
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
 
-          // Gán hasKey = true chỉ cho obstacle được chọn ngẫu nhiên (nếu dropKeyThisBatch là true)
-          const hasKey = dropKeyThisBatch && i === keyObstacleIndex;
+          // CORRECTED: Use setNextKeyIn for updating the state inside the loop
+          let hasKey = false;
+          setNextKeyIn(prev => {
+            const next = prev - 1;
+            if (next <= 0) {
+              hasKey = true;
+              return randomBetween(5, 10);
+            }
+            return next;
+          });
 
           initialObstacles.push({
             id: Date.now() + i,
-            position: 120 + (i * 50), // Điều chỉnh vị trí ban đầu để không quá gần
+            position: 150 + (i * 50),
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
-            hasKey: hasKey, // Sử dụng giá trị hasKey đã tính
+            hasKey: hasKey,
           });
         }
     }
@@ -529,7 +547,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (particleTimerRef.current) clearInterval(particleTimerRef.current);
     particleTimerRef.current = setInterval(generateParticles, 300);
 
-    // scheduleNextObstacle(); // Lần gọi đầu tiên đã được xử lý trong logic tạo initialObstacles
+    scheduleNextObstacle();
     scheduleNextCoin();
   };
 
@@ -558,8 +576,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setRemainingCooldown(0); // Reset session storage state
         setShieldCooldownStartTime(null); // Reset session storage state
         setPausedShieldCooldownRemaining(null); // Reset session storage state
-        // CORRECTED: Reset nextKeyIn using its setter
-        setNextKeyIn(randomBetween(5, 10)); // Reset session storage state
+        // CORRECTED: Reset nextKeyIn using its setter on logout
+        setNextKeyIn(randomBetween(5, 10)); // Reset nextKeyIn session storage state
 
 
         setIsRunning(false);
@@ -666,7 +684,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    if (gameOver || isStatsFullscreen || isLoadingUserData) {
+    if (gameOver || isStatsFullscreen) {
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -679,26 +697,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
       const newObstacles: GameObstacle[] = [];
 
-      // Cách sửa 2: Quyết định có thả key trong batch này không VÀ cập nhật state nextKeyIn trước vòng lặp
-      const dropKeyThisBatch = nextKeyIn <= 1; // Nếu nextKeyIn là 1 hoặc 0, thả key
-      const nextInterval = dropKeyThisBatch
-        ? randomBetween(5, 10)   // Reset khoảng nếu thả key
-        : nextKeyIn - 1;         // Giảm khoảng nếu không thả key
-      setNextKeyIn(nextInterval); // Cập nhật state nextKeyIn MỘT LẦN
-
-      // Chọn ngẫu nhiên chỉ mục (index) của obstacle sẽ nhận key trong batch này (nếu có key)
-      const keyObstacleIndex = dropKeyThisBatch
-        ? Math.floor(Math.random() * obstacleCount)
-        : -1; // -1 nghĩa là không có obstacle nào nhận key
-
-
       if (obstacleTypes.length > 0) {
           for (let i = 0; i < obstacleCount; i++) {
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             const spacing = i * (Math.random() * 10 + 10);
 
-            // Gán hasKey = true chỉ cho obstacle được chọn ngẫu nhiên (nếu dropKeyThisBatch là true)
-            const hasKey = dropKeyThisBatch && i === keyObstacleIndex;
+            // CORRECTED: Use setNextKeyIn for updating the state
+            let hasKey = false;
+            setNextKeyIn(prev => {
+              const next = prev - 1;
+              if (next <= 0) {
+                hasKey = true;
+                return randomBetween(5, 10);
+              }
+              return next;
+            });
 
             newObstacles.push({
               id: Date.now() + i,
@@ -706,7 +719,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
-              hasKey: hasKey, // Sử dụng giá trị hasKey đã tính
+              hasKey: hasKey,
             });
           }
       }
@@ -718,7 +731,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    if (gameOver || isStatsFullscreen || isLoadingUserData) {
+    if (gameOver || isStatsFullscreen) {
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
@@ -923,11 +936,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // Logic thả key đã được chuyển sang hàm scheduleNextObstacle
-                                // Khi một obstacle cũ đi qua màn hình và được thay thế bằng obstacle mới,
-                                // nó sẽ không tự động kiểm tra và thả key ở đây nữa.
-                                // Việc thả key chỉ xảy ra khi hàm scheduleNextObstacle được gọi.
-                                const hasKey = false; // Mặc định là false khi tái sử dụng obstacle
+                                // CORRECTED: Use setNextKeyIn for updating the state
+                                let hasKey = false;
+                                setNextKeyIn(prev => {
+                                  const next = prev - 1;
+                                  if (next <= 0) {
+                                    hasKey = true;
+                                    return randomBetween(5, 10);
+                                  }
+                                  return next;
+                                });
 
                                 return {
                                     ...obstacle,
@@ -936,7 +954,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                     position: 120 + randomOffset,
                                     health: randomObstacleType.baseHealth,
                                     maxHealth: randomObstacleType.baseHealth,
-                                    hasKey: hasKey, // Luôn là false khi tái sử dụng
+                                    hasKey: hasKey,
                                 };
                             } else {
                                 return { ...obstacle, position: newPosition };
@@ -1099,7 +1117,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added all session storage states and nextKeyIn to dependencies
+  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, coins, isLoadingUserData, nextKeyIn]); // Added nextKeyIn to dependencies
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1118,9 +1136,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData) { // Added isLoadingUserData check
-          // Chỉ schedule next obstacle nếu chưa có timer VÀ game đã bắt đầu
-          // Logic initial obstacles đã được xử lý trong startNewGame
-          if (!obstacleTimerRef.current && obstacles.length > 0) { // Chỉ schedule nếu đã có initial obstacles
+          if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
           }
           if (!coinScheduleTimerRef.current) {
@@ -1145,8 +1161,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, nextKeyIn, obstacles.length]); // Dependencies include loading state, nextKeyIn, and obstacles.length
-
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData]); // Dependencies include loading state
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -1355,6 +1370,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // NEW: Calculate shield health percentage
   const shieldHealthPct = isShieldActive ? shieldHealth / SHIELD_MAX_HEALTH : 0;
 
+  // CORRECTED: Calculate hasKey based on the nextKeyIn state
+  const hasKey = nextKeyIn <= 0;
+
 
   // Render the character with animation and damage effect
   const renderCharacter = () => {
@@ -1451,7 +1469,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
 
-             {/* CORRECTED: hasKey logic is now correct, icon will render when true */}
              {obstacle.hasKey && (
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
@@ -1991,3 +2008,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+
