@@ -554,8 +554,7 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
                 {exchangeDirection === 'coinToPoint' ? (
                   // Point Icon with pulse effect - Use the image here
                   <div className="w-full h-full relative">
-                    {/* Changed gradient for point icon pulse to blue */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 animate-pulse"></div>
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 animate-pulse"></div>
                     {/* Use the image tag for the point icon */}
                     <img src={pointsIconUrl} alt="Point Icon" className="w-6 h-6 absolute inset-0 m-auto" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = pointsIconPlaceholderUrl; }} />
                   </div>
@@ -656,9 +655,8 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
             animation: pulse-fast 1s infinite;
         }
          @keyframes glow {
-            /* Changed glow effect to blue */
-            0%, 100% { text-shadow: 0 0 5px #3b82f6; } /* Blue glow */
-            50% { text-shadow: 0 0 10px #60a5fa, 0 0 12px #3b82f6; }
+            0%, 100% { text-shadow: 0 0 5px #a78bfa; } /* Purple glow */
+            50% { text-shadow: 0 0 10px #c4b5fd, 0 0 12px #a78bfa; }
         }
         .animate-glow {
             animation: glow 3s infinite alternate;
@@ -721,11 +719,9 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
 
           {/* Points Badge - Styled to match Coin Display */}
           {/* Applied similar styling classes */}
-          {/* Changed background gradient to blue shades */}
-          <div className={`bg-gradient-to-br from-blue-600 to-cyan-700 rounded-lg p-0.5 flex items-center shadow-lg border border-blue-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${pointBadgePulse ? 'animate-pulse' : ''}`}>
+          <div className={`bg-gradient-to-br from-indigo-600 to-purple-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${pointBadgePulse ? 'animate-pulse' : ''}`}>
              {/* Absolute positioned div for hover glow effect */}
-            {/* Changed hover glow effect color to blue */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-blue-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
 
             {/* Icon Container */}
             <div className="relative mr-0.5 flex items-center justify-center z-10"> {/* Added z-10 */}
@@ -742,23 +738,22 @@ export default function CharacterCard({ onClose, coins, onUpdateCoins }: Charact
               />
             </div>
             {/* Points Count */}
-            {/* Applied text styling similar to coins, changed text color to light blue */}
-            <div className="font-bold text-blue-100 text-xs tracking-wide animate-glow z-10"> {/* Added z-10 and animate-glow */}
+            {/* Applied text styling similar to coins */}
+            <div className="font-bold text-purple-100 text-xs tracking-wide animate-glow z-10"> {/* Added z-10 and animate-glow */}
               {statPoints}
             </div>
             {/* Plus button next to Points badge (conditionally visible) */}
-            {/* Styled to match Coin Display's plus button, changed colors to blue */}
+            {/* Styled to match Coin Display's plus button */}
             <button
               onClick={() => setShowPointsPanel(true)} // Opens the point allocation panel
-              className={`ml-0.5 w-3 h-3 bg-gradient-to-br from-blue-400 to-cyan-600 rounded-full flex items-center justify-center cursor-pointer border border-blue-300 shadow-inner hover:shadow-blue-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse z-10 ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Added z-10 and visibility logic
+              className={`ml-0.5 w-3 h-3 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse z-10 ${!showPointsPanel && statPoints > 0 ? '' : 'invisible pointer-events-none'}`} // Added z-10 and visibility logic
               disabled={!(!showPointsPanel && statPoints > 0)}
             >
               <span className="text-white font-bold text-xs">+</span> {/* Text size remains xs */}
             </button>
              {/* Small absolute positioned divs for subtle animations */}
             <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast z-10"></div> {/* Added z-10 */}
-            {/* Changed color of the second small div to blue */}
-            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-blue-200 rounded-full animate-pulse-fast z-10"></div> {/* Added z-10 */}
+            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast z-10"></div> {/* Added z-10 */}
           </div>
         </div>
       </div>
