@@ -7,30 +7,106 @@ import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay componen
 
 const quizData = [
   {
-    question: 'Thủ đô của Việt Nam là gì?',
-    options: ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Huế'],
-    correctAnswer: 'Hà Nội'
+    "question": "Từ \"Source\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Lửa", "B. Nước", "C. Nguồn", "D. Hơi nước"],
+    "correctAnswer": "C. Nguồn"
   },
   {
-    question: 'Ngôn ngữ lập trình nào không phải là ngôn ngữ hướng đối tượng?',
-    options: ['Java', 'C++', 'HTML', 'Python'],
-    correctAnswer: 'HTML'
+    "question": "Từ \"Insurance\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Bảo vệ", "B. Bảo hiểm", "C. Đầu tư", "D. Rủi ro"],
+    "correctAnswer": "B. Bảo hiểm"
   },
   {
-    question: 'Năm bao nhiêu Việt Nam giành độc lập?',
-    options: ['1945', '1954', '1975', '1986'],
-    correctAnswer: '1945'
+    "question": "Từ \"Argument\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Thỏa thuận", "B. Tranh luận", "C. Cuộc chiến", "D. Im lặng"],
+    "correctAnswer": "B. Tranh luận"
   },
   {
-    question: 'Sông nào dài nhất Việt Nam?',
-    options: ['Sông Hồng', 'Sông Mê Kông', 'Sông Đà', 'Sông Đồng Nai'],
-    correctAnswer: 'Sông Mê Kêông' // Đã sửa chính tả
+    "question": "Từ \"Influence\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Ảnh hưởng", "B. Thờ ơ", "C. Kháng cự", "D. Lờ đi"],
+    "correctAnswer": "A. Ảnh hưởng"
   },
   {
-    question: 'Việt Nam có bao nhiêu tỉnh thành?',
-    options: ['58', '63', '54', '68'],
-    correctAnswer: '63'
+    "question": "Từ \"Release\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Bắt giữ", "B. Giải phóng", "C. Giữ lại", "D. Giam giữ"],
+    "correctAnswer": "B. Giải phóng"
+  },
+  {
+    "question": "Từ \"Capacity\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Khả năng", "B. Giới hạn", "C. Công suất", "D. Khoảng trống"],
+    "correctAnswer": "C. Công suất"
+  },
+  {
+    "question": "Từ \"Senate\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Chính phủ", "B. Hội đồng", "C. Thượng nghị viện", "D. Tòa án"],
+    "correctAnswer": "C. Thượng nghị viện"
+  },
+  {
+    "question": "Từ \"Massive\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Nhỏ", "B. Lớn", "C. Nhẹ", "D. Nặng"],
+    "correctAnswer": "B. Lớn"
+  },
+  {
+    "question": "Từ \"Stick\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Cành cây", "B. Keo dán", "C. Cây gậy", "D. Lá"],
+    "correctAnswer": "C. Cây gậy"
+  },
+  {
+    "question": "Từ \"District\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Quốc gia", "B. Thành phố", "C. Quận", "D. Làng"],
+    "correctAnswer": "C. Quận"
+  },
+  {
+    "question": "Từ \"Budget\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Chi phí", "B. Ngân sách", "C. Nợ", "D. Kế hoạch"],
+    "correctAnswer": "B. Ngân sách"
+  },
+  {
+    "question": "Từ \"Measure\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Tính toán", "B. Đo lường", "C. Đoán", "D. Lờ đi"],
+    "correctAnswer": "B. Đo lường"
+  },
+  {
+    "question": "Từ \"Cross\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Theo dõi", "B. Băng qua", "C. Gặp gỡ", "D. Tránh"],
+    "correctAnswer": "B. Băng qua"
+  },
+  {
+    "question": "Từ \"Central\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Trung tâm", "B. Rìa", "C. Đỉnh", "D. Đáy"],
+    "correctAnswer": "A. Trung tâm"
+  },
+  {
+    "question": "Từ \"Proud\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Xấu hổ", "B. Tự hào", "C. Hạnh phúc", "D. Buồn"],
+    "correctAnswer": "B. Tự hào"
+  },
+  {
+    "question": "Từ \"Core\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Trung tâm", "B. Bề mặt", "C. Bên ngoài", "D. Lớp"],
+    "correctAnswer": "A. Trung tâm"
+  },
+  {
+    "question": "Từ \"County\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Thành phố", "B. Hạt", "C. Thị trấn", "D. Quận"],
+    "correctAnswer": "B. Hạt"
+  },
+  {
+    "question": "Từ \"Species\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Loài", "B. Giống", "C. Cá thể", "D. Nhóm"],
+    "correctAnswer": "A. Loài"
+  },
+  {
+    "question": "Từ \"Conditions\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Điều kiện", "B. Kết quả", "C. Nguyên nhân", "D. Vấn đề"],
+    "correctAnswer": "A. Điều kiện"
+  },
+  {
+    "question": "Từ \"Touch\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["A. Nhìn", "B. Chạm", "C. Nghe", "D. Nếm"],
+    "correctAnswer": "B. Chạm"
   }
+
 ];
 
 // Map các đáp án thành A, B, C, D
