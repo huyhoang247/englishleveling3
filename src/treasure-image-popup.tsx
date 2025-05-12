@@ -12,6 +12,8 @@ interface RevealedImagePopupProps {
   pendingCoinReward: number;
   pendingGemReward: number;
   onClose: () => void;
+  hideNavBar: () => void; // Added prop to hide the nav bar
+  showNavBar: () => void; // Added prop to show the nav bar
 }
 
 const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
@@ -19,22 +21,48 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
   pendingCoinReward,
   pendingGemReward,
   onClose,
+  hideNavBar, // Destructure hideNavBar prop
+  showNavBar, // Destructure showNavBar prop
 }) => {
   const [showAnimation, setShowAnimation] = useState(true);
   const [showRewards, setShowRewards] = useState(false);
 
+  // Effect to manage nav bar visibility based on popup state
   useEffect(() => {
-    // Show the rewards after the initial animation
-    const timer = setTimeout(() => {
-      setShowAnimation(false);
-      setShowRewards(true);
-    }, 1500);
+    if (revealedImage) {
+      // If revealedImage is not null, popup is showing, hide nav bar
+      hideNavBar();
+    } else {
+      // If revealedImage is null, popup is hidden, show nav bar
+      showNavBar();
+    }
 
-    return () => clearTimeout(timer);
-  }, []);
+    // Cleanup function: Ensure nav bar is shown if component unmounts while popup is open
+    return () => {
+      showNavBar();
+    };
+  }, [revealedImage, hideNavBar, showNavBar]); // Re-run effect when revealedImage, hideNavBar, or showNavBar changes
+
+
+  useEffect(() => {
+    // Only run the animation timer if the popup is actually showing (revealedImage is not null)
+    if (revealedImage) {
+        // Show the rewards after the initial animation
+        const timer = setTimeout(() => {
+          setShowAnimation(false);
+          setShowRewards(true);
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }
+     // If revealedImage is null, no timer is needed
+    return () => {};
+
+  }, [revealedImage]); // Depend on revealedImage
+
 
   if (!revealedImage) {
-    return null;
+    return null; // Don't render anything if there's no image to reveal
   }
 
   // Icon components
@@ -62,7 +90,7 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-md">
-      <div 
+      <div
         className={`relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-blue-600/30 border border-blue-500/30 overflow-hidden ${
           showAnimation ? 'animate-pulse' : ''
         }`}
@@ -73,7 +101,7 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
           <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-cyan-500 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
         </div>
-        
+
         {/* Close button with improved hover effect */}
         <button
           onClick={onClose}
@@ -109,7 +137,7 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
               />
             </div>
           </div>
-          
+
           {/* Light beams animation */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
             <div className="absolute top-0 left-1/4 w-1 h-full bg-blue-400/20 blur-sm transform -rotate-45 translate-y-full animate-lightbeam"></div>
