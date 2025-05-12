@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
-import CharacterCard from './stats/stats-main.tsx'; 
+import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from './firebase.js'; 
+import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
+import StatsIcon from './library/icon.tsx'; // Import the new StatsIcon component
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -26,7 +27,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     {...props}
   >
     <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y1="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
@@ -1724,23 +1725,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <HeaderBackground />
 
               <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                {/* Updated Stats Icon - Reverted size and changed image source */}
-                <div
-                  className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform" // Reverted size
-                  onClick={toggleStatsFullscreen}
-                  title="Xem chỉ số nhân vật"
-                >
-                     <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
-                        alt="Award Icon" // Added alt text
-                        className="w-full h-full object-contain" // Ensure image fits
-                         onError={(e) => {
-                            const target = e as any; // Cast to any to access target
-                            target.onerror = null;
-                            target.src = "https://placehold.co/32x32/ffffff/000000?text=Stats"; // Placeholder on error
-                        }}
-                      />
-                </div>
+                {/* Use the new StatsIcon component here */}
+                <StatsIcon onClick={toggleStatsFullscreen} />
 
                 <div className="w-32 relative">
                     <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
