@@ -443,7 +443,7 @@ export default function QuizApp() {
             <div className="p-6">
               {/* Streak text message */}
               {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
-                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-stone-100'}`}> {/* Changed scale-100 to scale-stone-100 to avoid Tailwind conflict */}
+                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}> {/* Đã sửa lại thành scale-100 */}
                   <div className="flex items-center justify-center">
                      <img
                        src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
