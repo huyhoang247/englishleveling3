@@ -10,9 +10,12 @@ import { db } from './firebase.js'; // Adjust the path if necessary
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { User } from 'firebase/auth'; // Import User type
 
+// Import the new popup component
+import RevealedImagePopup from './treasure-image-popup.tsx'; // Adjust the path if necessary
+
 
 // --- SVG Icon Components ---
-// These icons are used in the card popup, so they are kept here.
+// These icons are used in the card popup or other parts of the component, so they are kept here or in a shared file.
 
 // Star Icon SVG
 const StarIcon = ({ size = 24, color = 'currentColor', fill = 'none', className = '', ...props }) => (
@@ -95,25 +98,6 @@ const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props
   </svg>
 );
 
-// X Icon SVG (for closing modal) - Keep here as it's used in the chest popup
-const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide-icon ${className}`}
-    {...props}
-  >
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y1="18" />
-  </svg>
-);
 
 // Key Icon Component
 const KeyIcon = () => (
@@ -147,7 +131,7 @@ interface Card {
   background: string;
 }
 
-// Define interface for the revealed image data
+// Define interface for the revealed image data - KEPT HERE as TreasureChest manages this state
 interface RevealedImage {
     id: number; // Using index + 1 as ID (1-based)
     url: string;
@@ -169,15 +153,16 @@ const getRarityColor = (rarity: Card['rarity']) => {
 export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
-  // State to hold the revealed image data (ID and URL)
+  // State to hold the revealed image data (ID and URL) - MANAGED HERE
   const [revealedImage, setRevealedImage] = useState<RevealedImage | null>(null);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
   // State for chests remaining - This state will now represent chests that can be opened with keys
   // It's still needed for the openChest logic, but won't be displayed directly as a number
   const [chestsRemaining, setChestsRemaining] = useState(initialChests);
+  // State to hold pending coin reward - MANAGED HERE
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
-  // State to hold pending gem reward
+  // State to hold pending gem reward - MANAGED HERE
   const [pendingGemReward, setPendingGemReward] = useState(0);
 
   // State to manage the list of available image indices (0-based)
@@ -348,8 +333,8 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
     }, 600); // Duration of shake animation
   };
 
-  // Function to reset the chest state and collect reward
-  const resetChest = () => {
+  // Function to handle closing the popup and collecting rewards
+  const handleClosePopup = () => {
     setIsChestOpen(false);
     setRevealedImage(null); // Reset the revealed image state
     setShowShine(false);
@@ -375,7 +360,7 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   }, []); // Empty dependency array means this effect runs only on mount and unmount
 
 
-  // CSS Animations (only chest/card related)
+  // CSS Animations (only chest/card related) - KEPT HERE as they are chest-specific
   const chestAnimations = `
     @keyframes float-card { 0% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } 25% { transform: translateY(-15px) rotate(2deg); filter: brightness(1.2); } 50% { transform: translateY(-20px) rotate(0deg); filter: brightness(1.3); } 75% { transform: translateY(-15px) rotate(-2deg); filter: brightness(1.2); } 100% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } }
     @keyframes chest-shake { 0% { transform: translateX(0) rotate(0deg); } 10% { transform: translateX(-4px) rotate(-3deg); } 20% { transform: translateX(4px) rotate(3deg); } 30% { transform: translateX(-4px) rotate(-3deg); } 40% { transform: translateX(4px) rotate(3deg); } 50% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(2deg); } }
@@ -501,25 +486,13 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
                     ))}
                   </div>
                 )}
-                {/* Display the revealed image if available */}
-                {revealedImage ? (
-                  <div className="w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative z-10 bg-slate-700/50 overflow-hidden">
-                     <img
-                        src={revealedImage.url}
-                        alt={`Revealed item with ID ${revealedImage.id}`}
-                        // Changed object-cover to object-contain here
-                        className="w-full h-full object-contain rounded-xl"
-                        onError={(e) => {
-                            // Optional: Handle image loading errors, e.g., show a placeholder
-                            (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
-                        }}
-                     />
-                  </div>
-                ) : (
-                  // Show the bounce animation when no image is revealed yet
-                  <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
-                    <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
-                  </div>
+                {/* Placeholder or animation when chest is open but image not revealed */}
+                {isChestOpen && !revealedImage && (
+                   <div className="flex justify-center items-center h-full">
+                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
+                         <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
+                       </div>
+                   </div>
                 )}
                 </div>
               <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
@@ -569,45 +542,13 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         </div>
       </div>
 
-
-      {/* Revealed Image Popup - Positioned on top of everything */}
-      {revealedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Increased z-index */}
-          <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
-            <div className="absolute -top-3 -right-3">
-              <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
-            </div>
-            <div className="text-xl font-bold text-white mb-4">Bạn nhận được</div>
-            {/* Display the revealed image in the popup */}
-            <div className="w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative bg-slate-700/50 overflow-hidden">
-                 <img
-                    src={revealedImage.url}
-                    alt={`Revealed item with ID ${revealedImage.id}`}
-                    // Changed object-cover to object-contain here
-                    className="w-full h-full object-contain rounded-xl"
-                    onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
-                    }}
-                 />
-            </div>
-            {/* Display the image ID */}
-            <div className="text-lg font-medium text-gray-300 mb-4">ID: {revealedImage.id}</div>
-
-             {/* Display rewards received (optional, based on your reward logic) */}
-            {(pendingCoinReward > 0 || pendingGemReward > 0) && (
-                 <div className="text-sm text-gray-400 mb-4">
-                    {pendingCoinReward > 0 && <span>+{pendingCoinReward} Xu</span>}
-                    {pendingCoinReward > 0 && pendingGemReward > 0 && <span>, </span>}
-                    {pendingGemReward > 0 && <span>+{pendingGemReward} Ngọc</span>}
-                 </div>
-            )}
-
-            <button onClick={resetChest} className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-8 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-600/50 hover:scale-105">
-              Tiếp tục
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Use the new RevealedImagePopup component */}
+      <RevealedImagePopup
+          revealedImage={revealedImage}
+          pendingCoinReward={pendingCoinReward}
+          pendingGemReward={pendingGemReward}
+          onClose={handleClosePopup} // Pass the handler function
+      />
     </>
   );
 }
