@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-// Import các module cần thiết từ firebase.js và firestore
 import { db, auth } from './firebase'; // Import db và auth từ file firebase của bạn
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
@@ -131,6 +130,10 @@ export default function QuizApp() {
   // State để lưu các đáp án đã xáo trộn cho câu hỏi hiện tại
   const [shuffledOptions, setShuffledOptions] = useState([]);
 
+  // State mới để lưu danh sách từ vựng của người dùng và dữ liệu quiz đã lọc
+  const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
+  const [filteredQuizData, setFilteredQuizData] = useState<any[]>([]);
+
 
   // Lắng nghe trạng thái xác thực người dùng
   useEffect(() => {
@@ -140,36 +143,59 @@ export default function QuizApp() {
     return () => unsubscribe(); // Hủy đăng ký lắng nghe khi component unmount
   }, []);
 
-  // Lấy dữ liệu coins từ Firestore khi component mount hoặc khi user thay đổi
+  // Lấy dữ liệu coins và listVocabulary từ Firestore khi component mount hoặc khi user thay đổi
   useEffect(() => {
-    const fetchCoins = async () => {
+    const fetchData = async () => {
       if (user) {
         const userRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(userRef);
 
         if (docSnap.exists()) {
-          // Nếu tài liệu người dùng tồn tại, lấy số coins
-          setCoins(docSnap.data().coins || 0);
+          // Nếu tài liệu người dùng tồn tại, lấy số coins và listVocabulary
+          const userData = docSnap.data();
+          setCoins(userData.coins || 0);
+          // Giả định listVocabulary là một mảng các string trong tài liệu người dùng
+          setUserVocabulary(userData.listVocabulary || []);
         } else {
-          // Nếu không tồn tại, tạo tài liệu mới với 0 coins
-          await setDoc(userRef, { coins: 0 });
+          // Nếu không tồn tại, tạo tài liệu mới với 0 coins và listVocabulary rỗng
+          await setDoc(userRef, { coins: 0, listVocabulary: [] });
           setCoins(0);
+          setUserVocabulary([]);
         }
       } else {
-        // Nếu không có người dùng đăng nhập, đặt coins về 0
+        // Nếu không có người dùng đăng nhập, đặt coins và listVocabulary về giá trị mặc định
         setCoins(0);
+        setUserVocabulary([]);
       }
     };
 
-    fetchCoins();
+    fetchData();
   }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
 
-  // Cập nhật đáp án xáo trộn khi câu hỏi hiện tại thay đổi
+  // Lọc quizData dựa trên userVocabulary khi userVocabulary hoặc quizData thay đổi
   useEffect(() => {
-    if (quizData[currentQuestion]?.options) {
-      setShuffledOptions(shuffleArray(quizData[currentQuestion].options));
+    if (userVocabulary.length > 0) {
+      // Lọc quizData: chỉ lấy những câu hỏi có từ vựng (word) nằm trong userVocabulary
+      // **Lưu ý:** Cần đảm bảo mỗi đối tượng câu hỏi trong quizData có thuộc tính 'word'
+      const filtered = quizData.filter(question =>
+        userVocabulary.includes(question.word) // Giả định mỗi câu hỏi có thuộc tính 'word'
+      );
+      setFilteredQuizData(shuffleArray(filtered)); // Xáo trộn danh sách câu hỏi đã lọc
+    } else {
+      // Nếu userVocabulary rỗng, có thể hiển thị tất cả câu hỏi hoặc không hiển thị gì
+      // Tùy theo logic bạn muốn, ở đây tôi sẽ hiển thị quizData gốc (đã xáo trộn) nếu không có từ vựng nào
+       setFilteredQuizData(shuffleArray(quizData)); // Hoặc setFilteredQuizData([]) nếu muốn quiz rỗng
     }
-  }, [currentQuestion]); // Dependency array bao gồm currentQuestion
+  }, [userVocabulary]); // Dependency array bao gồm userVocabulary và quizData (mặc dù quizData không đổi)
+
+  // Cập nhật đáp án xáo trộn khi câu hỏi hiện tại hoặc filteredQuizData thay đổi
+  useEffect(() => {
+    if (filteredQuizData.length > 0 && filteredQuizData[currentQuestion]?.options) {
+      setShuffledOptions(shuffleArray(filteredQuizData[currentQuestion].options));
+    } else {
+        setShuffledOptions([]); // Đảm bảo options rỗng nếu không có câu hỏi
+    }
+  }, [currentQuestion, filteredQuizData]); // Dependency array bao gồm currentQuestion và filteredQuizData
 
 
   // Hàm cập nhật coins lên Firestore
@@ -187,14 +213,14 @@ export default function QuizApp() {
 
 
   const handleAnswer = (selectedAnswer) => {
-    // Không cho phép trả lời nếu đã trả lời câu hỏi này rồi
-    if (answered) return;
+    // Không cho phép trả lời nếu đã trả lời câu hỏi này rồi hoặc không có câu hỏi nào
+    if (answered || filteredQuizData.length === 0) return;
 
     setSelectedOption(selectedAnswer);
     setAnswered(true);
 
-    // Sử dụng correctAnswer từ quizData gốc để kiểm tra
-    const isCorrect = selectedAnswer === quizData[currentQuestion].correctAnswer;
+    // Sử dụng correctAnswer từ câu hỏi hiện tại trong filteredQuizData để kiểm tra
+    const isCorrect = selectedAnswer === filteredQuizData[currentQuestion].correctAnswer;
 
     if (isCorrect) {
       setScore(score + 1);
@@ -240,7 +266,8 @@ export default function QuizApp() {
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
 
-    if (nextQuestion < quizData.length) {
+    // Sử dụng filteredQuizData.length để kiểm tra
+    if (nextQuestion < filteredQuizData.length) {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
@@ -258,7 +285,8 @@ export default function QuizApp() {
     setAnswered(false);
     setStreak(0);
     // Giữ lại coins khi làm lại quiz, coins đã được lưu trên Firestore
-    // Đáp án xáo trộn sẽ được cập nhật bởi useEffect khi currentQuestion thay đổi về 0
+    // filteredQuizData đã được tạo lại khi userVocabulary thay đổi, chỉ cần xáo trộn lại nếu cần
+    setFilteredQuizData(shuffleArray(filteredQuizData)); // Xáo trộn lại câu hỏi cho lần chơi mới
   };
 
 
@@ -291,23 +319,37 @@ export default function QuizApp() {
             <div className="bg-gray-50 rounded-xl p-6 mb-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
-                <span className="text-2xl font-bold text-indigo-600">{score}/{quizData.length}</span>
+                 {/* Sử dụng filteredQuizData.length */}
+                <span className="text-2xl font-bold text-indigo-600">{score}/{filteredQuizData.length}</span>
               </div>
 
               <div className="mb-3">
                 <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                  {/* Sử dụng filteredQuizData.length */}
                   <div
                     className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                    style={{ width: `${(score / quizData.length) * 100}%` }}
+                    style={{ width: `${(score / (filteredQuizData.length || 1)) * 100}%` }} {/* Chia cho 1 nếu length = 0 để tránh lỗi */}
                   ></div>
                 </div>
+                {/* Sử dụng filteredQuizData.length */}
                 <p className="text-right mt-1 text-sm text-gray-600 font-medium">
-                  {Math.round((score / quizData.length) * 100)}%
+                  {Math.round((score / (filteredQuizData.length || 1)) * 100)}%
                 </p>
               </div>
 
+              {/* Hiển thị số từ vựng của người dùng khớp với câu hỏi */}
+               <div className="flex items-center justify-between mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center">
+                      {/* Using AwardIcon SVG as a placeholder for vocabulary count icon */}
+                      <AwardIcon className="h-5 w-5 text-blue-600 mr-1" />
+                      <span className="font-medium text-gray-700">Số từ vựng của bạn khớp với câu hỏi:</span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-600">{filteredQuizData.length}</span>
+               </div>
+
+
               {/* Using CoinDisplay component for coins in results */}
-              <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center justify-between mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200"> {/* Adjusted mt */}
                 <div className="flex items-center">
                    {/* Display streak icon in results - Using img tag directly */}
                    <img
@@ -340,30 +382,45 @@ export default function QuizApp() {
               </div>
 
               <p className="text-gray-600 text-sm italic mt-4">
-                {score === quizData.length ?
+                {score === filteredQuizData.length && filteredQuizData.length > 0 ?
                   "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
-                  score > quizData.length / 2 ?
+                  score > filteredQuizData.length / 2 && filteredQuizData.length > 0 ?
                     "Kết quả tốt! Bạn có thể cải thiện thêm." :
-                    "Hãy thử lại để cải thiện điểm số của bạn."
+                     filteredQuizData.length > 0 ?
+                     "Hãy thử lại để cải thiện điểm số của bạn." :
+                     "Không có câu hỏi nào khớp với từ vựng của bạn."
                 }
               </p>
             </div>
 
-            <button
-              onClick={resetQuiz}
-              className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              {/* Using RefreshIcon SVG */}
-              <RefreshIcon className="mr-2 h-5 w-5" />
-              Làm lại quiz
-            </button>
+            {/* Chỉ hiển thị nút làm lại nếu có câu hỏi */}
+            {filteredQuizData.length > 0 && (
+              <button
+                onClick={resetQuiz}
+                className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                {/* Using RefreshIcon SVG */}
+                <RefreshIcon className="mr-2 h-5 w-5" />
+                Làm lại quiz
+              </button>
+            )}
+
           </div>
         ) : (
+           // Hiển thị thông báo nếu không có câu hỏi nào được lọc
+           filteredQuizData.length === 0 ? (
+             <div className="p-10 text-center">
+               <h2 className="text-2xl font-bold text-gray-800 mb-4">Không có câu hỏi nào</h2>
+               <p className="text-gray-600">Dựa trên danh sách từ vựng của bạn, hiện không có câu hỏi nào phù hợp.</p>
+               <p className="text-gray-600 mt-2">Hãy thêm từ vựng vào danh sách của bạn để bắt đầu quiz!</p>
+             </div>
+           ) : (
           <>
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
               <div className="flex justify-between items-center mb-6">
                 <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
-                  <span className="font-medium">Câu hỏi {currentQuestion + 1}/{quizData.length}</span>
+                   {/* Sử dụng filteredQuizData.length */}
+                  <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Using CoinDisplay component for coins */}
@@ -375,8 +432,9 @@ export default function QuizApp() {
                   <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                 </div>
               </div>
+              {/* Sử dụng filteredQuizData[currentQuestion].question */}
               <h2 className="text-2xl font-bold mb-2">
-                {quizData[currentQuestion].question}
+                {filteredQuizData[currentQuestion].question}
               </h2>
 
 
@@ -385,7 +443,7 @@ export default function QuizApp() {
             <div className="p-6">
               {/* Streak text message */}
               {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
-                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-stone-100'}`}> {/* Changed scale-100 to scale-stone-100 to avoid Tailwind conflict */}
                   <div className="flex items-center justify-center">
                      <img
                        src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
@@ -399,8 +457,10 @@ export default function QuizApp() {
 
               <div className="space-y-3 mb-6">
                 {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
+                {/* Đảm bảo shuffledOptions không rỗng trước khi map */}
                 {shuffledOptions.map((option, index) => {
-                  const isCorrect = option === quizData[currentQuestion].correctAnswer;
+                   // Sử dụng filteredQuizData[currentQuestion].correctAnswer
+                  const isCorrect = option === filteredQuizData[currentQuestion].correctAnswer;
                   const isSelected = option === selectedOption;
 
                   let bgColor = "bg-white";
@@ -446,7 +506,8 @@ export default function QuizApp() {
                     onClick={handleNextQuestion}
                     className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
                   >
-                    {currentQuestion < quizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
+                    {/* Sử dụng filteredQuizData.length */}
+                    {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
                   </button>
                 </div>
               )}
@@ -459,9 +520,10 @@ export default function QuizApp() {
                 </div>
 
                 <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                   {/* Sử dụng filteredQuizData.length */}
                   <div
                     className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                    style={{ width: `${(currentQuestion / (quizData.length - 1)) * 100}%` }}
+                    style={{ width: `${(currentQuestion / (filteredQuizData.length - 1 || 1)) * 100}%` }} {/* Chia cho 1 nếu length-1 = 0 */}
                   ></div>
                 </div>
               </div>
