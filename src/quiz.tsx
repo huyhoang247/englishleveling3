@@ -21,7 +21,7 @@ const quizData = [
   {
     question: 'Sông nào dài nhất Việt Nam?',
     options: ['Sông Hồng', 'Sông Mê Kông', 'Sông Đà', 'Sông Đồng Nai'],
-    correctAnswer: 'Sông Mê Kông'
+    correctAnswer: 'Sông Mê Kêông'
   },
   {
     question: 'Việt Nam có bao nhiêu tỉnh thành?',
@@ -59,8 +59,8 @@ interface StreakDisplayProps {
 
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => {
   return (
-    // Streak Container - Styled similarly to CoinDisplay
-    <div className={`bg-gradient-to-br from-orange-500 to-red-700 rounded-lg p-0.5 flex items-center shadow-lg border border-red-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
+    // Streak Container - Styled with white/grey background
+    <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-0.5 flex items-center shadow-md border border-gray-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
        {/* Add necessary styles for animations used here */}
       <style jsx>{`
          @keyframes pulse-fast {
@@ -71,8 +71,8 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
             animation: pulse-fast 1s infinite;
         }
       `}</style>
-      {/* Background highlight effect */}
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-red-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+      {/* Background highlight effect - adjusted for grey scale */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
 
       {/* Streak Icon */}
       <div className="relative mr-0.5 flex items-center justify-center">
@@ -84,8 +84,8 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         />
       </div>
 
-      {/* Streak Count */}
-      <div className="font-bold text-red-100 text-xs tracking-wide streak-counter">
+      {/* Streak Count - adjusted text color */}
+      <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter">
         {displayedStreak}
       </div>
 
@@ -94,7 +94,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
          <span className="text-white font-bold text-xs">🔥</span>
        </div> */}
 
-       {/* Small pulsing dots */}
+       {/* Small pulsing dots - kept white/yellow as they contrast well */}
       <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
       <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
     </div>
