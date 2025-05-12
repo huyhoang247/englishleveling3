@@ -105,7 +105,7 @@ const quizData = [
     "question": "Từ \"Touch\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Nhìn", "Chạm", "Nghe", "Nếm"],
     "correctAnswer": "Chạm"
-  } 
+  }
 
 ];
 
@@ -209,6 +209,16 @@ const AwardIcon = ({ className }) => (
 </svg>
 );
 
+// Function to shuffle an array (Fisher-Yates (Knuth) Shuffle)
+const shuffleArray = (array) => {
+  const shuffledArray = [...array]; // Create a copy to avoid modifying the original array
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; // Swap elements
+  }
+  return shuffledArray;
+};
+
 
 export default function QuizApp() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -221,6 +231,9 @@ export default function QuizApp() {
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null); // State để lưu thông tin người dùng
+  // State để lưu các đáp án đã xáo trộn cho câu hỏi hiện tại
+  const [shuffledOptions, setShuffledOptions] = useState([]);
+
 
   // Lắng nghe trạng thái xác thực người dùng
   useEffect(() => {
@@ -254,6 +267,14 @@ export default function QuizApp() {
     fetchCoins();
   }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
 
+  // Cập nhật đáp án xáo trộn khi câu hỏi hiện tại thay đổi
+  useEffect(() => {
+    if (quizData[currentQuestion]?.options) {
+      setShuffledOptions(shuffleArray(quizData[currentQuestion].options));
+    }
+  }, [currentQuestion]); // Dependency array bao gồm currentQuestion
+
+
   // Hàm cập nhật coins lên Firestore
   const updateCoinsInFirestore = async (newCoins) => {
     if (user) {
@@ -275,6 +296,7 @@ export default function QuizApp() {
     setSelectedOption(selectedAnswer);
     setAnswered(true);
 
+    // Sử dụng correctAnswer từ quizData gốc để kiểm tra
     const isCorrect = selectedAnswer === quizData[currentQuestion].correctAnswer;
 
     if (isCorrect) {
@@ -325,6 +347,7 @@ export default function QuizApp() {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
+      // Đáp án xáo trộn sẽ được cập nhật bởi useEffect khi currentQuestion thay đổi
     } else {
       setShowScore(true);
     }
@@ -338,6 +361,7 @@ export default function QuizApp() {
     setAnswered(false);
     setStreak(0);
     // Giữ lại coins khi làm lại quiz, coins đã được lưu trên Firestore
+    // Đáp án xáo trộn sẽ được cập nhật bởi useEffect khi currentQuestion thay đổi về 0
   };
 
 
@@ -477,7 +501,8 @@ export default function QuizApp() {
               )}
 
               <div className="space-y-3 mb-6">
-                {quizData[currentQuestion].options.map((option, index) => {
+                {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
+                {shuffledOptions.map((option, index) => {
                   const isCorrect = option === quizData[currentQuestion].correctAnswer;
                   const isSelected = option === selectedOption;
 
@@ -501,12 +526,13 @@ export default function QuizApp() {
                   }
                   return (
                     <button
-                      key={index}
+                      key={option} // Use option as key since it's unique within options
                       onClick={() => !answered && handleAnswer(option)}
                       disabled={answered}
                       className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
                     >
                       <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
+                        {/* Keep original index for labels A, B, C, D */}
                         {optionLabels[index]}
                       </div>
                       <span className="flex-grow">{option}</span>
@@ -549,3 +575,4 @@ export default function QuizApp() {
     </div>
   );
 }
+
