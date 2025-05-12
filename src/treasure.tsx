@@ -290,9 +290,7 @@ export default function TreasureChest({
         return;
     }
 
-    // --- Hide the navigation bar before opening the popup ---
-    hideNavBar();
-    // --- End Hide Nav Bar ---
+    // Removed: hideNavBar() call from here. Logic moved to RevealedImagePopup.tsx
 
     setChestShake(true);
     setTimeout(() => {
@@ -355,9 +353,7 @@ export default function TreasureChest({
     setIsChestOpen(false);
     setRevealedImage(null); // Reset the revealed image state
 
-    // --- Show the navigation bar after closing the popup ---
-    showNavBar();
-    // --- End Show Nav Bar ---
+    // Removed: showNavBar() call from here. Logic moved to RevealedImagePopup.tsx
 
     setShowShine(false);
     if (pendingCoinReward > 0) {
@@ -570,6 +566,8 @@ export default function TreasureChest({
           pendingCoinReward={pendingCoinReward}
           pendingGemReward={pendingGemReward}
           onClose={handleClosePopup} // Pass the handler function
+          hideNavBar={hideNavBar} // Pass hideNavBar down to the popup
+          showNavBar={showNavBar} // Pass showNavBar down to the popup
       />
     </>
   );
