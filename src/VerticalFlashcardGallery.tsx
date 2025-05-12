@@ -6,7 +6,7 @@ import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; //
 // Import Firebase auth and db
 import { auth, db } from './firebase.js';
 // Import Firestore functions and User type
-import { doc, getDoc, getFirestore, updateDoc, arrayUnion } from 'firebase/firestore'; // Import updateDoc and arrayUnion
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 
 // Import defaultVocabulary from the provided file
@@ -226,22 +226,19 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   // --- NEW: State for opened image IDs from Firestore ---
   const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
-  // --- NEW: State for listvocabulary IDs from Firestore ---
-  const [listVocabularyIds, setListVocabularyIds] = useState<number[]>([]); // State mới cho listvocabulary
   const [loadingOpenedImages, setLoadingOpenedImages] = useState(true); // State to track loading
 
   // --- Pagination States ---
   const [currentPage, setCurrentPage] = useState(1);
-  itemsPerPage = 50; // Set items per page to 50
+  const itemsPerPage = 50; // Set items per page to 50
 
 
-  // --- NEW: Effect to fetch openedImageIds and listvocabulary from Firestore ---
+  // --- NEW: Effect to fetch openedImageIds from Firestore ---
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchOpenedImageIds = async () => {
       if (!currentUser) {
-        console.log("No current user, resetting openedImageIds and listVocabularyIds.");
+        console.log("No current user, resetting openedImageIds.");
         setOpenedImageIds([]); // Reset if no user
-        setListVocabularyIds([]); // Reset listVocabularyIds as well
         setLoadingOpenedImages(false);
         return;
       }
@@ -254,68 +251,23 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
           // Ensure openedImageIds is an array, default to empty if missing or not array
-          const fetchedOpenedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
-          setOpenedImageIds(fetchedOpenedIds);
-          console.log("Fetched openedImageIds:", fetchedOpenedIds); // Log fetched IDs
-
-          // Ensure listvocabulary is an array, default to empty if missing or not array
-          const fetchedListVocabIds = Array.isArray(userData?.listvocabulary) ? userData.listvocabulary : [];
-          setListVocabularyIds(fetchedListVocabIds);
-          console.log("Fetched listvocabulary:", fetchedListVocabIds); // Log fetched listvocabulary IDs
-
+          const fetchedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
+          setOpenedImageIds(fetchedIds);
+          console.log("Fetched openedImageIds:", fetchedIds); // Log fetched IDs
         } else {
           setOpenedImageIds([]); // User document doesn't exist or no openedImageIds field
-          setListVocabularyIds([]); // Reset listVocabularyIds as well
-          console.log("User document not found or fields missing for user:", currentUser.uid);
+          console.log("User document not found or no openedImageIds field for user:", currentUser.uid);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching openedImageIds:", error);
         setOpenedImageIds([]); // Reset on error
-        setListVocabularyIds([]); // Reset listVocabularyIds on error
       } finally {
         setLoadingOpenedImages(false);
       }
     };
 
-    fetchData();
+    fetchOpenedImageIds();
   }, [currentUser]); // Re-run when currentUser changes
-
-  // --- NEW: Function to save opened image ID and listvocabulary ID to Firestore ---
-  const saveOpenedIdsToFirestore = async (imageId: number) => {
-    if (!currentUser) {
-      console.log("No current user, cannot save opened IDs.");
-      return;
-    }
-
-    try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
-      // Use arrayUnion to add the imageId to both arrays only if it's not already present
-      await updateDoc(userDocRef, {
-        openedImageIds: arrayUnion(imageId),
-        listvocabulary: arrayUnion(imageId) // Save to listvocabulary as well
-      });
-      console.log(`Successfully saved opened ID ${imageId} to Firestore (openedImageIds and listvocabulary).`);
-
-      // Optimistically update the local states
-      setOpenedImageIds(prevIds => {
-        if (!prevIds.includes(imageId)) {
-          return [...prevIds, imageId];
-        }
-        return prevIds;
-      });
-       setListVocabularyIds(prevIds => {
-        if (!prevIds.includes(imageId)) {
-          return [...prevIds, imageId];
-        }
-        return prevIds;
-      });
-
-
-    } catch (error) {
-      console.error(`Error saving opened ID ${imageId} to Firestore:`, error);
-      // Handle error (e.g., show a message to the user)
-    }
-  };
 
 
   // Filter and order flashcards based on active tab and openedImageIds
@@ -375,9 +327,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     setSelectedCard(card); // Set the selected card
     setShowVocabDetail(true); // Show the modal
     hideNavBar(); // Hide the nav bar when modal opens
-
-    // --- NEW: Call the save function when a flashcard is opened ---
-    saveOpenedIdsToFirestore(card.id); // Call the updated save function
   };
 
   // Function to close vocabulary detail modal - Passed to FlashcardDetailModal
@@ -752,7 +701,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <h3 className="text-lg font-semibold text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 01 0 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 01 0-2.83l-.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 01 0-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 012.83 0 2 2 0 01 0 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                     Cài đặt hiển thị
                   </h3>
