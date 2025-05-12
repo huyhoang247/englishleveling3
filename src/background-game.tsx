@@ -8,7 +8,8 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-import { StatsIcon, GemIcon‎ } from './library/icon.tsx'; // Import the new StatsIcon component
+import { StatsIcon, GemIcon } from './library/icon.tsx'; // Import the new StatsIcon component
+
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -31,6 +32,8 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
+// REMOVED: GemIcon component definition is moved to GemIcon.tsx
+/*
 const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
     <img
@@ -45,6 +48,7 @@ const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }
     />
   </div>
 );
+*/
 
 const KeyIcon = () => (
   <img
@@ -1779,6 +1783,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center">
+                            {/* Sử dụng GemIcon từ file mới */}
                             <GemIcon size={16} color="#a78bfa" className="relative z-20" />
                         </div>
                         <div className="font-bold text-purple-200 text-xs tracking-wide">
