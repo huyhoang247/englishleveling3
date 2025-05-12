@@ -100,7 +100,198 @@ const quizData = [
     "question": "Từ \"Touch\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Nhìn", "Chạm", "Nghe", "Nếm"],
     "correctAnswer": "Chạm"
+  },
+  {
+    "question": "Từ \"Mass\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Lửa",
+      "Nước",
+      "Khối lượng",
+      "Hơi nước"
+    ],
+    "correctAnswer": "Khối lượng"
+  },
+  {
+    "question": "Từ \"Platform\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Xe lửa",
+      "Sân ga",
+      "Ghế",
+      "Cửa"
+    ],
+    "correctAnswer": "Sân ga"
+  },
+  {
+    "question": "Từ \"Straight\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Cong",
+      "Thẳng",
+      "Tròn",
+      "Xoắn"
+    ],
+    "correctAnswer": "Thẳng"
+  },
+  {
+    "question": "Từ \"Serious\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Vui vẻ",
+      "Nghiêm túc",
+      "Buồn bã",
+      "Ngớ ngẩn"
+    ],
+    "correctAnswer": "Nghiêm túc"
+  },
+  {
+    "question": "Từ \"Encourage\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Ngăn cản",
+      "Khuyến khích",
+      "Làm nản lòng",
+      "Phớt lờ"
+    ],
+    "correctAnswer": "Khuyến khích"
+  },
+  {
+    "question": "Từ \"Due\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Sớm",
+      "Đến hạn",
+      "Tùy chọn",
+      "Quá hạn"
+    ],
+    "correctAnswer": "Đến hạn"
+  },
+  {
+    "question": "Từ \"Memory\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Sự quên",
+      "Trí nhớ",
+      "Sự thờ ơ",
+      "Mất mát"
+    ],
+    "correctAnswer": "Trí nhớ"
+  },
+  {
+    "question": "Từ \"Secretary\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Giáo viên",
+      "Thư ký",
+      "Kỹ sư",
+      "Bác sĩ"
+    ],
+    "correctAnswer": "Thư ký"
+  },
+  {
+    "question": "Từ \"Cold\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Nóng",
+      "Ấm",
+      "Lạnh",
+      "Nhiệt đới"
+    ],
+    "correctAnswer": "Lạnh"
+  },
+  {
+    "question": "Từ \"Instance\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Ví dụ",
+      "Toàn bộ",
+      "Lý thuyết",
+      "Sai lầm"
+    ],
+    "correctAnswer": "Ví dụ"
+  },
+  {
+    "question": "Từ \"Foundation\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Mái nhà",
+      "Nền tảng",
+      "Trang trí",
+      "Cửa sổ"
+    ],
+    "correctAnswer": "Nền tảng"
+  },
+  {
+    "question": "Từ \"Separate\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Kết hợp",
+      "Tách biệt",
+      "Gắn liền",
+      "Trộn lẫn"
+    ],
+    "correctAnswer": "Tách biệt"
+  },
+  {
+    "question": "Từ \"Map\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Bản đồ",
+      "Sách",
+      "Bài hát",
+      "Tranh"
+    ],
+    "correctAnswer": "Bản đồ"
+  },
+  {
+    "question": "Từ \"Statement\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Câu hỏi",
+      "Tuyên bố",
+      "Thì thầm",
+      "Im lặng"
+    ],
+    "correctAnswer": "Tuyên bố"
+  },
+  {
+    "question": "Từ \"Rich\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Nghèo",
+      "Giàu có",
+      "Trung lưu",
+      "Tiết kiệm"
+    ],
+    "correctAnswer": "Giàu có"
+  },
+  {
+    "question": "Từ \"Previous\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Tiếp theo",
+      "Hiện tại",
+      "Trước đó",
+      "Tương lai"
+    ],
+    "correctAnswer": "Trước đó"
+  },
+  {
+    "question": "Từ \"Necessary\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Tùy chọn",
+      "Cần thiết",
+      "Thêm",
+      "Không quan trọng"
+    ],
+    "correctAnswer": "Cần thiết"
+  },
+  {
+    "question": "Từ \"Engineering\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Y học",
+      "Nghệ thuật",
+      "Kỹ thuật",
+      "Văn học"
+    ],
+    "correctAnswer": "Kỹ thuật"
+  },
+  {
+    "question": "Từ \"Heat\" trong tiếng Anh có nghĩa là gì?",
+    "options": [
+      "Lạnh",
+      "Nhiệt",
+      "Đá",
+      "Hơi nước"
+    ],
+    "correctAnswer": "Nhiệt"
   }
+
 ];
 
 export default quizData;
