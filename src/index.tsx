@@ -50,7 +50,7 @@ const ensureUserDocumentExists = async (user: User) => {
       const userData = userDocSnap.data();
       if (userData?.email !== user.email) {
           console.log(`Updating email for user ${user.uid} in Firestore.`);
-          await setDoc(userDocRef, { email: user.email }, { merge: true }); // Sử dụng merge: true
+          await setDoc(userDocRef, { email: user.email }, { merge: true }); // Sử dụng merge để chỉ cập nhật trường email
       }
        // Ensure openedImageIds field exists if it's missing (for existing users before this change)
        if (!userData?.openedImageIds) {
@@ -96,8 +96,12 @@ const App: React.FC = () => {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     // Đảm bảo thanh điều hướng hiển thị khi chuyển tab, trừ khi đó là tab story hoặc home
-    // Logic này có thể cần điều chỉnh tùy thuộc vào cách bạn muốn ẩn/hiện nav bar cho các tab khác
-    setIsNavBarVisible(true); // Luôn hiển thị khi chuyển tab
+    if (tab !== 'story' && tab !== 'home') {
+      setIsNavBarVisible(true);
+    }
+    if (tab === 'story' || tab === 'home') {
+      setIsNavBarVisible(true);
+    }
   };
 
   // Hàm ẩn thanh điều hướng
@@ -129,8 +133,8 @@ const App: React.FC = () => {
       {/* Hiển thị component dựa trên activeTab state */}
       {activeTab === 'home' && (
         <Home
-          hideNavBar={hideNavBar} // Truyền hàm hideNavBar xuống Home
-          showNavBar={showNavBar} // Truyền hàm showNavBar xuống Home
+          hideNavBar={hideNavBar}
+          showNavBar={showNavBar}
           currentUser={currentUser} // Truyền currentUser ở đây
         />
       )}
