@@ -10,7 +10,7 @@ import { doc, getDoc, updateDoc, getFirestore } from 'firebase/firestore'; // Im
 import { User } from 'firebase/auth';
 
 // Import defaultVocabulary
-import { defaultVocabulary } from './list-vocabularyd (1).ts'; // Import defaultVocabulary - Adjust the path if necessary
+import { defaultVocabulary } from './list-vocabulary.ts'; // Import defaultVocabulary - Adjust the path if necessary
 
 
 // Define the props interface for VerticalFlashcardGallery
