@@ -1,5 +1,5 @@
 import React from 'react';
-import gemImage from './image/gem.png';
+import gemImage from './image/gems.png';
 import StatsIconImage from './image/stats-icon.png';
 
 // --- Component Icon Gem ---
