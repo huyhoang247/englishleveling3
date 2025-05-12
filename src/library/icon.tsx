@@ -1,6 +1,6 @@
 import React from 'react';
-// Import hình ảnh awatd.png và đặt tên biến là StatsIcon
-import StatsIcon from './image/stats-icon.png';
+// Import hình ảnh awatd.png và đặt tên biến khác để tránh trùng lặp
+import StatsIconImage from './image/stats-icon.png'; // Đã đổi tên biến import
 
 // Define props for the StatsIcon component
 interface StatsIconProps {
@@ -19,7 +19,7 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
     >
       {/* Image tag for the icon */}
       <img
-        src={StatsIcon} // Sử dụng biến StatsIcon đã import làm nguồn ảnh
+        src={StatsIconImage} // Sử dụng biến mới đã đổi tên làm nguồn ảnh
         alt="Award Icon" // Alt text for accessibility
         className="w-full h-full object-contain" // Ensure the image fits within the container
         // Handle potential errors when loading the image
