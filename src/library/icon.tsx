@@ -1,37 +1,70 @@
 import React from 'react';
-// Import hình ảnh awatd.png và đặt tên biến khác để tránh trùng lặp
-import StatsIconImage from './image/stats-icon.png'; // Đã đổi tên biến import
+import gemImage from './image/gem.png';
+import StatsIconImage from './image/stats-icon.png';
 
-// Define props for the StatsIcon component
-interface StatsIconProps {
-  onClick: () => void; // Function to call when the icon is clicked
-  // Add other props if needed for styling or state
+// --- Component Icon Gem ---
+// Định nghĩa props cho GemIcon
+interface GemIconProps {
+  size?: number; // Kích thước icon (mặc định 24)
+  color?: string; // Màu sắc icon (mặc định 'currentColor') - Lưu ý: SVG này dùng ảnh, màu sắc có thể không áp dụng trực tiếp
+  className?: string; // Các class CSS bổ sung
+  [key: string]: any; // Cho phép các props khác như onClick, style, v.v.
 }
 
-// StatsIcon component: Displays the icon that opens the stats screen
+// Component GemIcon: Hiển thị icon viên ngọc
+const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
+  // Lưu ý: Icon này sử dụng ảnh, nên thuộc tính 'color' sẽ không thay đổi màu của ảnh.
+  // Bạn có thể cần thay đổi ảnh hoặc sử dụng SVG gốc nếu muốn thay đổi màu sắc động.
+  return (
+    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+      <img
+        // Sử dụng ảnh đã import từ đường dẫn cục bộ
+        src={gemImage}
+        alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
+        className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
+        // Xử lý lỗi tải ảnh cục bộ (tùy chọn, thường không cần thiết với asset được bundle)
+        // onError={(e) => {
+        //   const target = e as any;
+        //   target.onerror = null;
+        //   target.src = `https://placehold.co/${size}x${size}/8a2be2/ffffff?text=Gem`; // Placeholder
+        // }}
+      />
+    </div>
+  );
+};
+
+// --- Component Stats Icon ---
+// Định nghĩa props cho StatsIcon
+interface StatsIconProps {
+  onClick: () => void; // Hàm được gọi khi icon được click
+  // Thêm các props khác nếu cần cho styling hoặc state
+}
+
+// Component StatsIcon: Hiển thị icon mở màn hình chỉ số
 const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
   return (
-    // Container div for the icon
-    // Added relative and z-10 to ensure it's above background layers in the header
+    // Container div cho icon
+    // Thêm relative và z-10 để đảm bảo nó nằm trên các lớp nền trong header
     <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10"
-         onClick={onClick} // Call the onClick prop when clicked
-         title="Xem chỉ số nhân vật" // Tooltip for accessibility
+         onClick={onClick} // Gọi hàm onClick khi được click
+         title="Xem chỉ số nhân vật" // Tooltip cho khả năng tiếp cận
     >
-      {/* Image tag for the icon */}
+      {/* Thẻ img cho icon */}
       <img
-        src={StatsIconImage} // Sử dụng biến mới đã đổi tên làm nguồn ảnh
-        alt="Award Icon" // Alt text for accessibility
-        className="w-full h-full object-contain" // Ensure the image fits within the container
-        // Handle potential errors when loading the image
+        src={StatsIconImage} // Sử dụng biến import ảnh
+        alt="Award Icon" // Alt text cho khả năng tiếp cận
+        className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
+        // Xử lý lỗi tải ảnh
         onError={(e) => {
-          const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
-          target.onerror = null; // Prevent infinite loop if placeholder also fails
+          const target = e.target as HTMLImageElement; // Ép kiểu sang HTMLImageElement
+          target.onerror = null; // Ngăn chặn vòng lặp vô hạn nếu placeholder cũng lỗi
           // Cập nhật placeholder hoặc xử lý lỗi tải ảnh từ đường dẫn local nếu cần
-          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; // Show a placeholder image on error
+          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; // Hiển thị ảnh placeholder khi lỗi
         }}
       />
     </div>
   );
 };
 
-export default StatsIcon; // Export the component for use in other files
+// Export cả hai component để có thể import và sử dụng ở nơi khác
+export { GemIcon, StatsIcon };
