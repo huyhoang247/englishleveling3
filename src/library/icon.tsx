@@ -1,6 +1,6 @@
 import React from 'react';
 // Import hình ảnh awatd.png và đặt tên biến là StatsIcon
-import StatsIcon from './image/awatd.png';
+import StatsIcon from './image/award.png';
 
 // Define props for the StatsIcon component
 interface StatsIconProps {
