@@ -1,4 +1,6 @@
 import React from 'react';
+// Import hình ảnh awatd.png và đặt tên biến là StatsIcon
+import StatsIcon from './image/awatd.png';
 
 // Define props for the StatsIcon component
 interface StatsIconProps {
@@ -17,14 +19,15 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
     >
       {/* Image tag for the icon */}
       <img
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png" // Source URL for the icon image
+        src={StatsIcon} // Sử dụng biến StatsIcon đã import làm nguồn ảnh
         alt="Award Icon" // Alt text for accessibility
         className="w-full h-full object-contain" // Ensure the image fits within the container
         // Handle potential errors when loading the image
         onError={(e) => {
           const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
           target.onerror = null; // Prevent infinite loop if placeholder also fails
-          target.src = "https://placehold.co/32x32/ffffff/000000?text=Stats"; // Show a placeholder image on error
+          // Cập nhật placeholder hoặc xử lý lỗi tải ảnh từ đường dẫn local nếu cần
+          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; // Show a placeholder image on error
         }}
       />
     </div>
