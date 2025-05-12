@@ -1,38 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Define interface for the revealed image data (assuming it's the same as in TreasureChest)
+// Define interface for the revealed image data
 interface RevealedImage {
-    id: number; // Using index + 1 as ID (1-based)
-    url: string;
+  id: number;
+  url: string;
 }
-
-// X Icon SVG (for closing modal) - Moved here as it's specific to the popup
-const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide-icon ${className}`}
-    {...props}
-  >
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y1="18" />
-  </svg>
-);
-
 
 // Define interface for component props
 interface RevealedImagePopupProps {
-  revealedImage: RevealedImage | null; // The image data to display
-  pendingCoinReward: number; // Coins received
-  pendingGemReward: number; // Gems received
-  onClose: () => void; // Function to call when the popup is closed
+  revealedImage: RevealedImage | null;
+  pendingCoinReward: number;
+  pendingGemReward: number;
+  onClose: () => void;
 }
 
 const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
@@ -41,67 +20,148 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
   pendingGemReward,
   onClose,
 }) => {
+  const [showAnimation, setShowAnimation] = useState(true);
+  const [showRewards, setShowRewards] = useState(false);
 
-  // If there's no image data, don't render the popup
+  useEffect(() => {
+    // Show the rewards after the initial animation
+    const timer = setTimeout(() => {
+      setShowAnimation(false);
+      setShowRewards(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!revealedImage) {
     return null;
   }
 
+  // Icon components
+  const XIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y1="18" />
+    </svg>
+  );
+
+  const CoinIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+
+  const GemIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="5 3 19 3 22 9 12 21 2 9" />
+    </svg>
+  );
+
+  const StarIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26" />
+    </svg>
+  );
+
   return (
-    // Fixed overlay for the popup
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm"> {/* Increased z-index */}
-      {/* Popup container */}
-      <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-8 max-w-xs w-full text-center shadow-lg shadow-blue-500/30 border border-slate-700 relative">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-md">
+      <div className={`relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-blue-600/30 border border-blue-500/30 overflow-hidden ${showAnimation ? 'animate-pulse' : ''}`}>
+        
+        {/* Background decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
+        </div>
+        
+        {/* Sparkling stars */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(10)].map((_, i) => (
+            <div 
+              key={i} 
+              className="absolute text-yellow-300 animate-pulse"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                opacity: Math.random() * 0.7
+              }}
+            >
+              <StarIcon />
+            </div>
+          ))}
+        </div>
+        
         {/* Close button */}
         <button
-            onClick={onClose}
-            className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors duration-200 z-10"
-            aria-label="Đóng popup"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors duration-200 z-10 hover:bg-white/10 p-2 rounded-full"
+          aria-label="Đóng popup"
         >
-            <XIcon size={28} /> {/* Use the XIcon component */}
+          <XIcon />
         </button>
 
-        {/* Decorative spinning element */}
-        <div className="absolute -top-3 -right-3">
-          <div className="animate-spin-slow w-16 h-16 rounded-full border-4 border-dashed border-blue-400 opacity-30"></div>
+        {/* Treasure found heading */}
+        <div className="text-center mb-6">
+          <div className="text-2xl font-bold bg-gradient-to-r from-yellow-300 via-yellow-500 to-amber-500 bg-clip-text text-transparent mb-1">Kho Báu Đã Mở!</div>
+          <div className="text-blue-300 text-sm font-medium">Bạn đã tìm thấy một vật phẩm quý giá</div>
         </div>
 
-        {/* Popup title */}
-        <div className="text-xl font-bold text-white mb-4">Bạn nhận được</div>
-
-        {/* Display the revealed image in the popup */}
-        <div className="w-40 h-52 mx-auto rounded-xl shadow-xl mb-6 flex flex-col items-center justify-center relative bg-slate-700/50 overflow-hidden">
-             <img
+        {/* Image container with glow effect */}
+        <div className="relative mx-auto mb-6 group">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-md transform group-hover:scale-105 transition-all duration-500 opacity-75"></div>
+          <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 p-1 rounded-2xl border border-slate-700/50 overflow-hidden">
+            <div className="w-full h-64 flex items-center justify-center bg-slate-800/50 rounded-xl overflow-hidden">
+              <img
                 src={revealedImage.url}
-                alt={`Revealed item with ID ${revealedImage.id}`}
-                // Use object-contain to ensure the whole image is visible
-                className="w-full h-full object-contain rounded-xl"
+                alt={`Vật phẩm #${revealedImage.id}`}
+                className="w-full h-full object-contain transition-transform duration-700 hover:scale-110"
                 onError={(e) => {
-                    // Handle image loading errors, show a placeholder
-                    (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/160x208?text=Image+Error';
+                  (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/400x400?text=Treasure';
                 }}
-             />
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Display the image ID */}
-        <div className="text-lg font-medium text-gray-300 mb-4">ID: {revealedImage.id}</div>
+        {/* Item ID badge */}
+        <div className="flex justify-center mb-6">
+          <div className="px-4 py-1 bg-blue-900/30 rounded-full border border-blue-500/20">
+            <span className="text-blue-200 font-medium">Vật phẩm #{revealedImage.id}</span>
+          </div>
+        </div>
 
-         {/* Display rewards received (optional, based on your reward logic) */}
-        {(pendingCoinReward > 0 || pendingGemReward > 0) && (
-             <div className="text-sm text-gray-400 mb-4">
-                {pendingCoinReward > 0 && <span>+{pendingCoinReward} Xu</span>}
-                {pendingCoinReward > 0 && pendingGemReward > 0 && <span>, </span>}
-                {pendingGemReward > 0 && <span>+{pendingGemReward} Ngọc</span>}
-             </div>
+        {/* Rewards section with animations */}
+        {showRewards && (pendingCoinReward > 0 || pendingGemReward > 0) && (
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="text-center text-lg font-semibold text-white mb-2">Phần thưởng của bạn</div>
+            <div className="flex justify-center gap-4">
+              {pendingCoinReward > 0 && (
+                <div className="flex items-center bg-gradient-to-r from-yellow-600/30 to-amber-600/30 px-4 py-2 rounded-xl border border-yellow-500/30 animate-fadeIn">
+                  <CoinIcon />
+                  <span className="ml-2 text-yellow-300 font-bold">+{pendingCoinReward} Xu</span>
+                </div>
+              )}
+              {pendingGemReward > 0 && (
+                <div className="flex items-center bg-gradient-to-r from-blue-600/30 to-purple-600/30 px-4 py-2 rounded-xl border border-blue-500/30 animate-fadeIn">
+                  <GemIcon />
+                  <span className="ml-2 text-blue-300 font-bold">+{pendingGemReward} Ngọc</span>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
-        {/* Continue button */}
-        <button
-            onClick={onClose} // Call onClose when the button is clicked
-            className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-8 rounded-lg transition-all duration-300 font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-600/50 hover:scale-105"
-        >
-          Tiếp tục
-        </button>
+        {/* Continue button with hover effect */}
+        <div className="text-center">
+          <button
+            onClick={onClose}
+            className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-10 rounded-xl font-medium transition-all duration-300 overflow-hidden group hover:shadow-lg hover:shadow-blue-500/50"
+          >
+            <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-105"></span>
+            <span className="relative z-10">Tiếp tục</span>
+          </button>
+        </div>
       </div>
     </div>
   );
