@@ -351,7 +351,8 @@ export default function QuizApp() {
                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-bold">+{streak >= 20 ? 20 : streak >= 10 ? 15 : streak >= 5 ? 10 : streak >= 3 ? 5 : 1} coins</span>
+                    {/* Removed "+... coins" text */}
+                    <span className="font-bold">{streak >= 20 ? 20 : streak >= 10 ? 15 : streak >= 5 ? 10 : streak >= 3 ? 5 : 1}</span>
                   </div>
                 </div>
               )}
