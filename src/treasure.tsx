@@ -119,6 +119,8 @@ interface TreasureChestProps {
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
   currentUserId: string | null; // Pass the current user ID as a prop (can be null if not logged in)
+  hideNavBar: () => void; // Added prop to hide the nav bar
+  showNavBar: () => void; // Added prop to show the nav bar
 }
 
 // Define interface for card data (keeping this for potential future use or if other rewards are still cards)
@@ -150,7 +152,18 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
+export default function TreasureChest({
+    initialChests = 3,
+    keyCount = 0,
+    onKeyCollect,
+    onCoinReward,
+    onGemReward,
+    isGamePaused = false,
+    isStatsFullscreen = false,
+    currentUserId,
+    hideNavBar, // Destructure hideNavBar prop
+    showNavBar, // Destructure showNavBar prop
+}: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   // State to hold the revealed image data (ID and URL) - MANAGED HERE
@@ -277,6 +290,10 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         return;
     }
 
+    // --- Hide the navigation bar before opening the popup ---
+    hideNavBar();
+    // --- End Hide Nav Bar ---
+
     setChestShake(true);
     setTimeout(() => {
       setChestShake(false);
@@ -337,6 +354,11 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
   const handleClosePopup = () => {
     setIsChestOpen(false);
     setRevealedImage(null); // Reset the revealed image state
+
+    // --- Show the navigation bar after closing the popup ---
+    showNavBar();
+    // --- End Show Nav Bar ---
+
     setShowShine(false);
     if (pendingCoinReward > 0) {
         // Call the parent's function to add coins
