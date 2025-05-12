@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, RefreshCw, Award } from 'lucide-react'; // Removed Coins as it's in CoinDisplay
+// Removed CheckCircle, XCircle, RefreshCw, Award from lucide-react
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 
 const quizData = [
@@ -41,6 +41,34 @@ const streakIconUrls = {
   streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', // 10 consecutive correct answers
   streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', // 20 consecutive correct answers
 };
+
+// SVG Icons
+const CheckIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6L9 17L4 12"></path>
+  </svg>
+);
+
+const XIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
+const RefreshIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path>
+    <path d="M3 12a9 9 0 0 1 9-9c2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
+  </svg>
+);
+
+const AwardIcon = ({ className }) => (
+ <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="7"></circle>
+    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+</svg>
+);
 
 
 export default function QuizApp() {
@@ -150,7 +178,8 @@ export default function QuizApp() {
           <div className="p-10 text-center">
             <div className="mb-8">
               <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Award className="w-16 h-16 text-indigo-600" />
+                {/* Using AwardIcon SVG */}
+                <AwardIcon className="w-16 h-16 text-indigo-600" />
               </div>
               <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Quiz</h2>
               <p className="text-gray-500">Bạn đã hoàn thành bài kiểm tra!</p>
@@ -218,7 +247,8 @@ export default function QuizApp() {
               onClick={resetQuiz}
               className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-              <RefreshCw className="mr-2 h-5 w-5" />
+              {/* Using RefreshIcon SVG */}
+              <RefreshIcon className="mr-2 h-5 w-5" />
               Làm lại quiz
             </button>
           </div>
@@ -275,7 +305,7 @@ export default function QuizApp() {
                 <div className="mb-4 p-2 rounded-lg bg-yellow-100 border border-yellow-300 text-center animate-pulse">
                   <div className="flex items-center justify-center text-yellow-700">
                     {/* Using a simple coin icon here, not the full CoinDisplay */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                     </svg>
                     <span className="font-bold">+{streak >= 20 ? 20 : streak >= 10 ? 15 : streak >= 5 ? 10 : streak >= 3 ? 5 : 1} coins</span>
@@ -317,8 +347,8 @@ export default function QuizApp() {
                         {optionLabels[index]}
                       </div>
                       <span className="flex-grow">{option}</span>
-                      {answered && isCorrect && <CheckCircle className="h-4 w-4 text-green-600 ml-1" />}
-                      {answered && isSelected && !isCorrect && <XCircle className="h-4 w-4 text-red-600 ml-1" />}
+                      {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
+                      {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />} {/* Using XIcon SVG */}
                     </button>
                   );
                 })}
