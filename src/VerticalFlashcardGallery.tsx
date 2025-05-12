@@ -6,7 +6,7 @@ import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; //
 // Import Firebase auth and db
 import { auth, db } from './firebase.js';
 // Import Firestore functions and User type
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore'; // Import updateDoc, arrayUnion, arrayRemove
 import { User } from 'firebase/auth';
 
 
@@ -39,7 +39,7 @@ interface VocabularyData {
 
 // Define the structure for a flashcard, including styled image URLs
 interface Flashcard {
-  id: number;
+  id: string; // *** CHANGED: ID is now a string (the word itself) ***
   imageUrl: StyledImageUrls; // Now an object containing URLs for different styles
   isFavorite: boolean;
   vocabulary: VocabularyData; // Use the VocabularyData interface
@@ -86,9 +86,9 @@ const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
   const data: VocabularyData[] = [];
   for (let i = 1; i <= count; i++) {
     data.push({
-      word: `Word ${i}`,
-      meaning: `Meaning of Word ${i}`,
-      example: `Example sentence for Word ${i}.`,
+      word: `PlaceholderWord${i}`, // *** CHANGED: Use a unique word for placeholders ***
+      meaning: `Meaning of PlaceholderWord${i}`,
+      example: `Example sentence for PlaceholderWord${i}.`,
       phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
       popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
       synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
@@ -98,59 +98,56 @@ const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
   return data;
 };
 
-// Dữ liệu từ vựng ban đầu (từ file cũ)
+// Dữ liệu từ vựng ban đầu (từ file cũ) - Sử dụng danh sách từ bạn cung cấp
 const initialVocabularyData: VocabularyData[] = [
-  {
-    word: "Source",
-    meaning: "Nguồn, gốc",
-    example: "What is the source of this information?",
-    phrases: ["Information source", "Primary source"],
-    popularity: "Cao",
-    synonyms: ["Origin", "Root", "Beginning"],
-    antonyms: ["Result", "Outcome", "End"]
-  },
-  {
-    word: "Insurance",
-    meaning: "Bảo hiểm",
-    example: "You should buy travel insurance before your trip.",
-    phrases: ["Health insurance", "Car insurance"],
-    popularity: "Cao",
-    synonyms: ["Assurance", "Coverage", "Protection"],
-    antonyms: ["Risk", "Danger", "Exposure"]
-  },
-  {
-    word: "Argument",
-    meaning: "Cuộc tranh luận, lý lẽ",
-    example: "They had a heated argument about politics.",
-    phrases: ["Strong argument", "Logical argument"],
-    popularity: "Trung bình",
-    synonyms: ["Dispute", "Debate", "Reasoning"],
-    antonyms: ["Agreement", "Harmony", "Peace"]
-  },
-  {
-    word: "Influence",
-    meaning: "Ảnh hưởng",
-    example: "His parents had a strong influence on his career choice.",
-    phrases: ["Direct influence", "Negative influence"],
-    popularity: "Cao",
-    synonyms: ["Impact", "Effect", "Control"],
-    antonyms: ["Lack of effect", "Insignificance"]
-  },
-  {
-    word: "Vocabulary 5", // Thay thế bằng từ vựng thứ năm nếu có
-    meaning: "Nghĩa của từ vựng 5",
-    example: "Ví dụ cho từ vựng 5.",
-    phrases: ["Cụm từ 1", "Cụm từ 2"],
-    popularity: "Thấp",
-    synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
-    antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
-  }
+  { word: "Source", meaning: "Nguồn, gốc", example: "What is the source of this information?", phrases: ["Information source", "Primary source"], popularity: "Cao", synonyms: ["Origin", "Root", "Beginning"], antonyms: ["Result", "Outcome", "End"] },
+  { word: "Insurance", meaning: "Bảo hiểm", example: "You should buy travel insurance before your trip.", phrases: ["Health insurance", "Car insurance"], popularity: "Cao", synonyms: ["Assurance", "Coverage", "Protection"], antonyms: ["Risk", "Danger", "Exposure"] },
+  { word: "Argument", meaning: "Cuộc tranh luận, lý lẽ", example: "They had a heated argument about politics.", phrases: ["Strong argument", "Logical argument"], popularity: "Trung bình", synonyms: ["Dispute", "Debate", "Reasoning"], antonyms: ["Agreement", "Harmony", "Peace"] },
+  { word: "Influence", meaning: "Ảnh hưởng", example: "His parents had a strong influence on his career choice.", phrases: ["Direct influence", "Negative influence"], popularity: "Cao", synonyms: ["Impact", "Effect", "Control"], antonyms: ["Lack of effect", "Insignificance"] },
+  { word: "Release", meaning: "Phát hành, giải phóng", example: "The company will release a new product next month.", phrases: ["Release date", "Release tension"], popularity: "Trung bình", synonyms: ["Launch", "Issue", "Free"], antonyms: ["Hold", "Keep", "Confine"] },
+  { word: "Capacity", meaning: "Sức chứa, năng lực", example: "The room has a capacity of 100 people.", phrases: ["Storage capacity", "Mental capacity"], popularity: "Cao", synonyms: ["Volume", "Ability", "Capability"], antonyms: ["Incapacity", "Inability"] },
+  { word: "Senate", meaning: "Thượng viện", example: "The bill was passed by the Senate.", phrases: ["US Senate", "Senate committee"], popularity: "Thấp", synonyms: ["Legislature", "Council"], antonyms: [] },
+  { word: "Massive", meaning: "To lớn, đồ sộ", example: "They built a massive bridge.", phrases: ["Massive structure", "Massive effort"], popularity: "Cao", synonyms: ["Huge", "Enormous", "Gigantic"], antonyms: ["Tiny", "Small", "Minute"] },
+  { word: "Stick", meaning: "Cái gậy, dính vào", example: "The wet leaves stick to the path.", phrases: ["Stick together", "Stick to the plan"], popularity: "Trung bình", synonyms: ["Adhere", "Cling", "Rod"], antonyms: ["Detach", "Separate"] },
+  { word: "District", meaning: "Quận, huyện", example: "He lives in the business district.", phrases: ["School district", "Voting district"], popularity: "Cao", synonyms: ["Area", "Region", "Zone"], antonyms: [] },
+  { word: "Budget", meaning: "Ngân sách", example: "We need to stay within our budget.", phrases: ["Annual budget", "Budget cuts"], popularity: "Cao", synonyms: ["Fund", "Estimate", "Allowance"], antonyms: [] },
+  { word: "Measure", meaning: "Đo lường, biện pháp", example: "We need to measure the room.", phrases: ["Take measures", "Safety measure"], popularity: "Cao", synonyms: ["Gauge", "Assess", "Action"], antonyms: [] },
+  { word: "Cross", meaning: "Vượt qua, cây thánh giá", example: "Be careful when you cross the road.", phrases: ["Cross the line", "Cross my heart"], popularity: "Trung bình", synonyms: ["Traverse", "Intersect", "Opposite"], antonyms: ["Uncross"] },
+  { word: "Central", meaning: "Trung tâm, chính", example: "The central idea of the book is freedom.", phrases: ["Central station", "Central nervous system"], popularity: "Cao", synonyms: ["Middle", "Core", "Main"], antonyms: ["Peripheral", "Minor"] },
+  { word: "Proud", meaning: "Tự hào", example: "She is proud of her achievements.", phrases: ["Proud of yourself", "Proud moment"], popularity: "Cao", synonyms: ["Satisfied", "Pleased", "Arrogant"], antonyms: ["Ashamed", "Humble"] },
+  { word: "Core", meaning: "Cốt lõi, trung tâm", example: "The core of the problem is communication.", phrases: ["Core value", "Apple core"], popularity: "Cao", synonyms: ["Essence", "Center", "Heart"], antonyms: ["Exterior", "Surface"] },
+  { word: "County", meaning: "Hạt (đơn vị hành chính)", example: "He lives in Los Angeles County.", phrases: ["County council", "County seat"], popularity: "Trung bình", synonyms: ["Shire", "District"], antonyms: [] },
+  { word: "Species", meaning: "Loài", example: "There are many different species of birds.", phrases: ["Endangered species", "New species"], popularity: "Cao", synonyms: ["Type", "Kind", "Breed"], antonyms: [] },
+  { word: "Conditions", meaning: "Điều kiện, tình trạng", example: "The working conditions are poor.", phrases: ["Living conditions", "Weather conditions"], popularity: "Cao", synonyms: ["Circumstances", "State", "Terms"], antonyms: [] },
+  { word: "Touch", meaning: "Chạm, liên lạc", example: "Don't touch the wet paint.", phrases: ["Keep in touch", "Touch base"], popularity: "Cao", synonyms: ["Feel", "Contact", "Tap"], antonyms: ["Avoid", "Release"] },
+  { word: "Mass", meaning: "Khối lượng, số đông", example: "The mass of the object is 10 kg.", phrases: ["Mass production", "Mass media"], popularity: "Cao", synonyms: ["Weight", "Bulk", "Crowd"], antonyms: ["Individual", "Smallness"] },
+  { word: "Platform", meaning: "Nền tảng, sân ga", example: "The train is arriving on platform 3.", phrases: ["Software platform", "Political platform"], popularity: "Cao", synonyms: ["Stage", "Base", "System"], antonyms: [] },
+  { word: "Straight", meaning: "Thẳng, trực tiếp", example: "Draw a straight line.", phrases: ["Go straight", "Straight answer"], popularity: "Cao", synonyms: ["Direct", "Linear", "Honest"], antonyms: ["Crooked", "Indirect"] },
+  { word: "Serious", meaning: "Nghiêm túc, nghiêm trọng", example: "This is a serious problem.", phrases: ["Serious illness", "Serious talk"], popularity: "Cao", synonyms: ["Grave", "Solemn", "Important"], antonyms: ["Trivial", "Funny", "Casual"] },
+  { word: "Encourage", meaning: "Khuyến khích", example: "My parents encouraged me to study hard.", phrases: ["Encourage growth", "Encourage participation"], popularity: "Cao", synonyms: ["Inspire", "Support", "Promote"], antonyms: ["Discourage", "Hinder"] },
+  { word: "Due", meaning: "Đến hạn, do", example: "The payment is due next week.", phrases: ["Due to", "Due date"], popularity: "Cao", synonyms: ["Scheduled", "Owed", "Resulting from"], antonyms: ["Undue", "Late"] },
+  { word: "Memory", meaning: "Bộ nhớ, ký ức", example: "He has a good memory for faces.", phrases: ["Short-term memory", "Computer memory"], popularity: "Cao", synonyms: ["Recollection", "Remembrance", "Storage"], antonyms: ["Forgetfulness"] },
+  { word: "Secretary", meaning: "Thư ký, bộ trưởng", example: "Please ask the secretary to make an appointment.", phrases: ["Company secretary", "Secretary of State"], popularity: "Trung bình", synonyms: ["Assistant", "Administrator", "Minister"], antonyms: [] },
+  { word: "Cold", meaning: "Lạnh, cảm lạnh", example: "It's very cold outside.", phrases: ["Catch a cold", "Cold weather"], popularity: "Cao", synonyms: ["Chilly", "Icy", "Unemotional"], antonyms: ["Hot", "Warm", "Friendly"] },
+  { word: "Instance", meaning: "Ví dụ, trường hợp", example: "For instance, consider this case.", phrases: ["In this instance", "Another instance"], popularity: "Cao", synonyms: ["Example", "Case", "Situation"], antonyms: [] },
+  { word: "Foundation", meaning: "Nền tảng, tổ chức", example: "The building has a strong foundation.", phrases: ["Solid foundation", "Charitable foundation"], popularity: "Cao", synonyms: ["Base", "Basis", "Organization"], antonyms: ["Superstructure"] },
+  { word: "Separate", meaning: "Tách biệt, riêng lẻ", example: "Please separate the trash.", phrases: ["Keep separate", "Separate ways"], popularity: "Cao", synonyms: ["Divide", "Detach", "Distinct"], antonyms: ["Combine", "Join", "Together"] },
+  { word: "Map", meaning: "Bản đồ", example: "Can you show me the map?", phrases: ["Road map", "World map"], popularity: "Cao", synonyms: ["Chart", "Plan", "Guide"], antonyms: [] },
+  { word: "Ice", meaning: "Băng, đá", example: "Be careful, there is ice on the road.", phrases: ["Ice cream", "Break the ice"], popularity: "Cao", synonyms: ["Frost", "Glacier"], antonyms: ["Water"] },
+  { word: "Statement", meaning: "Tuyên bố, báo cáo", example: "He made a public statement.", phrases: ["Bank statement", "Press statement"], popularity: "Cao", synonyms: ["Declaration", "Report", "Assertion"], antonyms: [] },
+  { word: "Rich", meaning: "Giàu có, phong phú", example: "He is a very rich man.", phrases: ["Rich in history", "Rich color"], popularity: "Cao", synonyms: ["Wealthy", "Affluent", "Abundant"], antonyms: ["Poor", "Needy", "Scarce"] },
+  { word: "Previous", meaning: "Trước đó", example: "We discussed this in the previous meeting.", phrases: ["Previous experience", "Previous page"], popularity: "Cao", synonyms: ["Prior", "Earlier", "Former"], antonyms: ["Next", "Following"] },
+  { word: "Necessary", meaning: "Cần thiết", example: "It is necessary to wear a helmet.", phrases: ["Absolutely necessary", "Necessary evil"], popularity: "Cao", synonyms: ["Essential", "Required", "Vital"], antonyms: ["Unnecessary", "Optional"] },
+  { word: "Engineering", meaning: "Kỹ thuật", example: "She is studying engineering.", phrases: ["Software engineering", "Mechanical engineering"], popularity: "Cao", synonyms: ["Technology", "Construction", "Design"], antonyms: [] },
+  { word: "Heat", meaning: "Nhiệt, làm nóng", example: "The sun gives off heat.", phrases: ["Heat wave", "Heat up"], popularity: "Cao", synonyms: ["Warmth", "Temperature", "Warm"], antonyms: ["Cold", "Cool"] }
 ];
+
 
 // Kết hợp dữ liệu ban đầu và dữ liệu mẫu
 // Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
 const vocabularyData: VocabularyData[] = [
   ...initialVocabularyData,
+  // Generate only enough placeholder data to reach the desired total count
   ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
 ];
 
@@ -168,11 +165,11 @@ const totalPossibleFlashcards = Math.max(
 );
 
 for (let i = 0; i < totalPossibleFlashcards; i++) {
-    // Lấy dữ liệu theo index, sử dụng dữ liệu mặc định hoặc placeholder nếu index vượt quá độ dài mảng ban đầu
+    // Lấy dữ liệu từ vựng theo index, sử dụng dữ liệu mặc định hoặc placeholder nếu index vượt quá độ dài mảng ban đầu
     const vocab = vocabularyData[i] || {
-        word: `Word ${i + 1}`,
-        meaning: `Meaning of Word ${i + 1}`,
-        example: `Example sentence for Word ${i + 1}.`,
+        word: `PlaceholderWord${i + 1}`, // *** Ensure placeholder words are unique and consistent ***
+        meaning: `Meaning of PlaceholderWord${i + 1}`,
+        example: `Example sentence for PlaceholderWord${i + 1}.`,
         phrases: [`Phrase A ${i + 1}`, `Phrase B ${i + 1}`],
         popularity: (i + 1) % 3 === 0 ? "Cao" : (i + 1) % 2 === 0 ? "Trung bình" : "Thấp",
         synonyms: [`Synonym 1.${i + 1}`, `Synonym 2.${i + 1}`],
@@ -188,12 +185,18 @@ for (let i = 0; i < totalPossibleFlashcards; i++) {
 
 
     ALL_POSSIBLE_FLASHCARDS.push({
-        id: i + 1, // ID dựa trên vị trí (bắt đầu từ 1)
+        id: vocab.word, // *** CHANGED: Use the word as the ID ***
         imageUrl: imageUrls,
         isFavorite: false, // Đặt trạng thái yêu thích mặc định
         vocabulary: vocab, // Gán dữ liệu từ vựng theo index
     });
 }
+
+// --- NEW: Create a Map for quick lookup by word ID ---
+const ALL_POSSIBLE_FLASHCARDS_MAP = new Map<string, Flashcard>();
+ALL_POSSIBLE_FLASHCARDS.forEach(card => {
+    ALL_POSSIBLE_FLASHCARDS_MAP.set(card.id, card);
+});
 
 
 // Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
@@ -265,7 +268,8 @@ const animations = `
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   const scrollContainerRef = useRef(null);
   // Initialize flashcards state with the full list of possible flashcards
-  const [flashcards, setFlashcards] = useState(ALL_POSSIBLE_FLASHCARDS);
+  // We will update the favorite status based on fetched data later
+  const [flashcards, setFlashcards] = useState(ALL_POSSIBLE_FLASHCARDS); // Keep this for local state updates (e.g., favorite)
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [showFavoriteToast, setShowFavoriteToast] = useState(false);
   const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'favorite'
@@ -283,61 +287,83 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   // State to manage vocabulary modal visibility - Now used by FlashcardDetailModal
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
-  // --- NEW: State for opened image IDs from Firestore ---
-  const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
-  const [loadingOpenedImages, setLoadingOpenedImages] = useState(true); // State to track loading
+  // --- NEW: State for opened image IDs (now strings) from Firestore ---
+  const [openedImageIds, setOpenedImageIds] = useState<string[]>([]); // *** CHANGED: State holds string IDs ***
+  // --- NEW: State for favorite image IDs (now strings) from Firestore ---
+  const [favoriteImageIds, setFavoriteImageIds] = useState<string[]>([]); // *** NEW: State to hold favorite IDs ***
+  const [loadingUserData, setLoadingUserData] = useState(true); // State to track loading user data (opened and favorite)
 
   // --- Pagination States ---
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50; // Set items per page to 50
 
 
-  // --- NEW: Effect to fetch openedImageIds from Firestore ---
+  // --- NEW: Effect to fetch openedImageIds and favoriteImageIds from Firestore ---
   useEffect(() => {
-    const fetchOpenedImageIds = async () => {
+    const fetchUserData = async () => {
       if (!currentUser) {
-        console.log("No current user, resetting openedImageIds.");
-        setOpenedImageIds([]); // Reset if no user
-        setLoadingOpenedImages(false);
+        console.log("No current user, resetting user data.");
+        setOpenedImageIds([]);
+        setFavoriteImageIds([]);
+        setLoadingUserData(false);
         return;
       }
 
-      setLoadingOpenedImages(true);
+      setLoadingUserData(true);
       try {
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
-          // Ensure openedImageIds is an array, default to empty if missing or not array
-          const fetchedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
-          setOpenedImageIds(fetchedIds);
-          console.log("Fetched openedImageIds:", fetchedIds); // Log fetched IDs
+          // Ensure openedImageIds is an array of strings, default to empty if missing or not array
+          const fetchedOpenedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds.filter((id: any) => typeof id === 'string') : [];
+          setOpenedImageIds(fetchedOpenedIds);
+          console.log("Fetched openedImageIds:", fetchedOpenedIds); // Log fetched IDs
+
+          // Ensure favoriteImageIds is an array of strings, default to empty if missing or not array
+          const fetchedFavoriteIds = Array.isArray(userData?.favoriteImageIds) ? userData.favoriteImageIds.filter((id: any) => typeof id === 'string') : [];
+          setFavoriteImageIds(fetchedFavoriteIds);
+          console.log("Fetched favoriteImageIds:", fetchedFavoriteIds); // Log fetched favorite IDs
+
         } else {
           setOpenedImageIds([]); // User document doesn't exist or no openedImageIds field
-          console.log("User document not found or no openedImageIds field for user:", currentUser.uid);
+          setFavoriteImageIds([]); // User document doesn't exist or no favoriteImageIds field
+          console.log("User document not found or no user data fields for user:", currentUser.uid);
         }
       } catch (error) {
-        console.error("Error fetching openedImageIds:", error);
+        console.error("Error fetching user data:", error);
         setOpenedImageIds([]); // Reset on error
+        setFavoriteImageIds([]); // Reset on error
       } finally {
-        setLoadingOpenedImages(false);
+        setLoadingUserData(false);
       }
     };
 
-    fetchOpenedImageIds();
+    fetchUserData();
   }, [currentUser]); // Re-run when currentUser changes
 
+  // --- NEW: Effect to update local flashcard state based on fetched favorite IDs ---
+  useEffect(() => {
+      setFlashcards(prevCards =>
+          prevCards.map(card => ({
+              ...card,
+              isFavorite: favoriteImageIds.includes(card.id) // Set isFavorite based on fetched favorite IDs
+          }))
+      );
+  }, [favoriteImageIds]); // Re-run when favoriteImageIds change
 
-  // Filter and order flashcards based on active tab and openedImageIds
+
+  // Filter and order flashcards based on active tab and openedImageIds/favoriteImageIds
   const filteredFlashcardsByTab = activeTab === 'collection'
     ? // For collection, filter and order based on the sequence in openedImageIds
-      // --- MODIFIED: Reverse the openedImageIds array for collection tab ---
+      // Use the Map for efficient lookup
       [...openedImageIds].reverse() // Create a copy and reverse it
-        .map(id => ALL_POSSIBLE_FLASHCARDS.find(card => card.id === id)) // Find the flashcard for each ID
-        .filter(card => card !== undefined) as Flashcard[] // Filter out any undefined results (shouldn't happen if ALL_POSSIBLE_FLASHCARDS is complete)
-    : // For favorite, filter by isFavorite (original logic)
-      ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite);
+        .map(id => ALL_POSSIBLE_FLASHCARDS_MAP.get(id)) // Find the flashcard for each ID using the Map
+        .filter(card => card !== undefined) as Flashcard[] // Filter out any undefined results
+    : // For favorite, filter by isFavorite (which is now synced with favoriteImageIds)
+      ALL_POSSIBLE_FLASHCARDS.filter(card => favoriteImageIds.includes(card.id)); // Filter using favoriteImageIds
+
 
   // Log the filtered flashcards to see if the filtering and ordering works as expected
   useEffect(() => {
@@ -359,26 +385,46 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [flashcardsForCurrentPage]);
 
 
-  const favoriteCount = ALL_POSSIBLE_FLASHCARDS.filter(card => card.isFavorite).length; // Count favorites from the full list
+  const favoriteCount = favoriteImageIds.length; // Count favorites from the favoriteImageIds state
   // Total flashcards in collection is now the count of opened images
   const totalFlashcardsInCollection = openedImageIds.length;
 
   // Toggle favorite status for a flashcard
-  const toggleFavorite = (id: number) => { // Added type for id
-    // Update the favorite status in the main ALL_POSSIBLE_FLASHCARDS array
-    // Note: This change is local to the component's state and not persisted to Firestore yet.
-    // If you need favorite status to persist, you'll need to save it to Firestore as well.
-    setFlashcards(prevCards =>
-      prevCards.map(card =>
-        card.id === id
-          ? { ...card, isFavorite: !card.isFavorite }
-          : card
-      )
-    );
+  const toggleFavorite = async (id: string) => { // *** CHANGED: Accepts string ID ***
+    if (!currentUser) {
+        console.log("No user logged in to favorite.");
+        // Optionally show a message to the user
+        return;
+    }
 
-    // Show favorite status toast
-    setShowFavoriteToast(true);
-    setTimeout(() => setShowFavoriteToast(false), 2000);
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const isCurrentlyFavorite = favoriteImageIds.includes(id);
+
+    try {
+        if (isCurrentlyFavorite) {
+            // Remove from favorites in Firestore
+            await updateDoc(userDocRef, {
+                favoriteImageIds: arrayRemove(id)
+            });
+            setFavoriteImageIds(prevIds => prevIds.filter(favId => favId !== id)); // Update local state
+            console.log(`Removed ${id} from favorites in Firestore.`);
+        } else {
+            // Add to favorites in Firestore
+            await updateDoc(userDocRef, {
+                favoriteImageIds: arrayUnion(id)
+            });
+            setFavoriteImageIds(prevIds => [...prevIds, id]); // Update local state
+            console.log(`Added ${id} to favorites in Firestore.`);
+        }
+
+        // Show favorite status toast
+        setShowFavoriteToast(true);
+        setTimeout(() => setShowFavoriteToast(false), 2000);
+
+    } catch (error) {
+        console.error("Error toggling favorite status:", error);
+        // Optionally show an error message to the user
+    }
   };
 
   // Function to open vocabulary detail modal
@@ -386,6 +432,19 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     setSelectedCard(card); // Set the selected card
     setShowVocabDetail(true); // Show the modal
     hideNavBar(); // Hide the nav bar when modal opens
+
+    // --- NEW: Add the opened card's ID to Firestore openedImageIds ---
+    if (currentUser && !openedImageIds.includes(card.id)) {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        updateDoc(userDocRef, {
+            openedImageIds: arrayUnion(card.id)
+        }).then(() => {
+            setOpenedImageIds(prevIds => [...prevIds, card.id]); // Update local state
+            console.log(`Added ${card.id} to openedImageIds in Firestore.`);
+        }).catch(error => {
+            console.error("Error adding card ID to openedImageIds:", error);
+        });
+    }
   };
 
   // Function to close vocabulary detail modal - Passed to FlashcardDetailModal
@@ -410,7 +469,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 return card.imageUrl.default;
         }
     })();
-    console.log(`Getting image URL for card ID ${card.id}, style ${style}:`, url); // Log the URL being used
+    // console.log(`Getting image URL for card ID ${card.id}, style ${style}:`, url); // Log the URL being used (optional, can be noisy)
     return url;
   };
 
@@ -423,11 +482,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   };
 
-  // Show loading state if openedImageIds are being fetched
-  if (loadingOpenedImages) {
+  // Show loading state if user data is being fetched
+  if (loadingUserData) {
       return (
           <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">
-              Đang tải bộ sưu tập...
+              Đang tải dữ liệu người dùng...
           </div>
       );
   }
@@ -466,7 +525,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               strokeLinejoin="round"
             >
               <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
           </div>
         </div>
@@ -545,7 +604,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             >
               {flashcardsForCurrentPage.map((card) => ( // Use flashcardsForCurrentPage
                 // Removed w-[48%] and w-full as grid handles width
-                <div key={card.id}>
+                <div key={card.id}> {/* Key is now card.id (string) */}
                   {/* Flashcard component rendering */}
                   <div
                     id={`flashcard-${card.id}`}
@@ -559,7 +618,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     {/* Heart Icon - Favorite/Unfavorite - Removed background and padding classes */}
                     <button
                       className={`absolute top-3 right-3 transition-all duration-300 z-10 flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Removed rounded-full, bg-*, p-* classes
-                      onClick={() => toggleFavorite(card.id)}
+                      onClick={() => toggleFavorite(card.id)} // Pass string ID
                       aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
                     >
                       {/* Replaced SVG with img tag and added opacity class */}
@@ -739,7 +798,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <h3 className="text-lg font-semibold text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                     Cài đặt hiển thị
                   </h3>
@@ -1017,3 +1076,4 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </div>
   );
 }
+
