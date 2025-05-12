@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
-import CharacterCard from './stats/stats-main.tsx'; 
+import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from './firebase.js'; 
+import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
@@ -1478,6 +1478,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     ));
   };
 
+
   // --- NEW: Render Shield ---
   const renderShield = () => {
     if (!isShieldActive) return null;
@@ -1996,6 +1997,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
             isStatsFullscreen={isStatsFullscreen}
             currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
+            hideNavBar={hideNavBar} // Truyền prop hideNavBar
+            showNavBar={showNavBar} // Truyền prop showNavBar
           />
 
         </div>
