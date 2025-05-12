@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+// Import các module cần thiết từ firebase.js và firestore
 import { db, auth } from './firebase'; // Import db và auth từ file firebase của bạn
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
@@ -129,10 +130,12 @@ export default function QuizApp() {
   const [user, setUser] = useState(null); // State để lưu thông tin người dùng
   // State để lưu các đáp án đã xáo trộn cho câu hỏi hiện tại
   const [shuffledOptions, setShuffledOptions] = useState([]);
-
-  // State mới để lưu danh sách từ vựng của người dùng và dữ liệu quiz đã lọc
+  // State để lưu danh sách từ vựng của người dùng
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
-  const [filteredQuizData, setFilteredQuizData] = useState<any[]>([]);
+  // State để lưu danh sách câu hỏi đã lọc dựa trên từ vựng của người dùng
+  const [filteredQuizData, setFilteredQuizData] = useState(quizData);
+  // State để đếm số câu hỏi khớp với từ vựng của người dùng
+  const [matchingQuestionsCount, setMatchingQuestionsCount] = useState(0);
 
 
   // Lắng nghe trạng thái xác thực người dùng
@@ -154,7 +157,7 @@ export default function QuizApp() {
           // Nếu tài liệu người dùng tồn tại, lấy số coins và listVocabulary
           const userData = docSnap.data();
           setCoins(userData.coins || 0);
-          // Giả định listVocabulary là một mảng các string trong tài liệu người dùng
+          // Đảm bảo listVocabulary là một mảng, mặc định là mảng rỗng nếu không tồn tại
           setUserVocabulary(userData.listVocabulary || []);
         } else {
           // Nếu không tồn tại, tạo tài liệu mới với 0 coins và listVocabulary rỗng
@@ -163,7 +166,7 @@ export default function QuizApp() {
           setUserVocabulary([]);
         }
       } else {
-        // Nếu không có người dùng đăng nhập, đặt coins và listVocabulary về giá trị mặc định
+        // Nếu không có người dùng đăng nhập, đặt coins và listVocabulary về trạng thái ban đầu
         setCoins(0);
         setUserVocabulary([]);
       }
@@ -172,28 +175,31 @@ export default function QuizApp() {
     fetchData();
   }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
 
-  // Lọc quizData dựa trên userVocabulary khi userVocabulary hoặc quizData thay đổi
+  // Lọc câu hỏi dựa trên từ vựng của người dùng khi userVocabulary hoặc quizData thay đổi
   useEffect(() => {
     if (userVocabulary.length > 0) {
-      // Lọc quizData: chỉ lấy những câu hỏi có từ vựng (word) nằm trong userVocabulary
-      // **Lưu ý:** Cần đảm bảo mỗi đối tượng câu hỏi trong quizData có thuộc tính 'word'
+      // Lọc quizData: giữ lại câu hỏi nếu bất kỳ từ vựng nào của người dùng xuất hiện trong câu hỏi
       const filtered = quizData.filter(question =>
-        userVocabulary.includes(question.word) // Giả định mỗi câu hỏi có thuộc tính 'word'
+        userVocabulary.some(vocabWord =>
+          // Sử dụng biểu thức chính quy để tìm từ vựng như một từ hoàn chỉnh
+          new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
+        )
       );
-      setFilteredQuizData(shuffleArray(filtered)); // Xáo trộn danh sách câu hỏi đã lọc
+      setFilteredQuizData(filtered);
+      setMatchingQuestionsCount(filtered.length);
     } else {
-      // Nếu userVocabulary rỗng, có thể hiển thị tất cả câu hỏi hoặc không hiển thị gì
-      // Tùy theo logic bạn muốn, ở đây tôi sẽ hiển thị quizData gốc (đã xáo trộn) nếu không có từ vựng nào
-       setFilteredQuizData(shuffleArray(quizData)); // Hoặc setFilteredQuizData([]) nếu muốn quiz rỗng
+      // Nếu người dùng không có từ vựng nào, hiển thị tất cả câu hỏi hoặc không hiển thị gì
+      // Ở đây tôi sẽ hiển thị tất cả câu hỏi nếu listVocabulary rỗng
+      setFilteredQuizData(quizData);
+      setMatchingQuestionsCount(0); // Hoặc quizData.length nếu bạn muốn đếm tất cả khi không có từ vựng
     }
-  }, [userVocabulary]); // Dependency array bao gồm userVocabulary và quizData (mặc dù quizData không đổi)
+  }, [userVocabulary, quizData]); // Dependency array bao gồm userVocabulary và quizData
 
   // Cập nhật đáp án xáo trộn khi câu hỏi hiện tại hoặc filteredQuizData thay đổi
   useEffect(() => {
-    if (filteredQuizData.length > 0 && filteredQuizData[currentQuestion]?.options) {
+    // Sử dụng filteredQuizData để lấy câu hỏi hiện tại
+    if (filteredQuizData[currentQuestion]?.options) {
       setShuffledOptions(shuffleArray(filteredQuizData[currentQuestion].options));
-    } else {
-        setShuffledOptions([]); // Đảm bảo options rỗng nếu không có câu hỏi
     }
   }, [currentQuestion, filteredQuizData]); // Dependency array bao gồm currentQuestion và filteredQuizData
 
@@ -219,7 +225,7 @@ export default function QuizApp() {
     setSelectedOption(selectedAnswer);
     setAnswered(true);
 
-    // Sử dụng correctAnswer từ câu hỏi hiện tại trong filteredQuizData để kiểm tra
+    // Sử dụng correctAnswer từ filteredQuizData gốc để kiểm tra
     const isCorrect = selectedAnswer === filteredQuizData[currentQuestion].correctAnswer;
 
     if (isCorrect) {
@@ -285,8 +291,7 @@ export default function QuizApp() {
     setAnswered(false);
     setStreak(0);
     // Giữ lại coins khi làm lại quiz, coins đã được lưu trên Firestore
-    // filteredQuizData đã được tạo lại khi userVocabulary thay đổi, chỉ cần xáo trộn lại nếu cần
-    setFilteredQuizData(shuffleArray(filteredQuizData)); // Xáo trộn lại câu hỏi cho lần chơi mới
+    // filteredQuizData không cần reset vì nó phụ thuộc vào userVocabulary
   };
 
 
@@ -305,96 +310,97 @@ export default function QuizApp() {
     // Removed min-h-screen to allow content to dictate height
     <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
-        {showScore ? (
-          <div className="p-10 text-center">
-            <div className="mb-8">
-              <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
-                {/* Using AwardIcon SVG */}
-                <AwardIcon className="w-16 h-16 text-indigo-600" />
-              </div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Quiz</h2>
-              <p className="text-gray-500">Bạn đã hoàn thành bài kiểm tra!</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-6 mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
-                 {/* Sử dụng filteredQuizData.length */}
-                <span className="text-2xl font-bold text-indigo-600">{score}/{filteredQuizData.length}</span>
-              </div>
-
-              <div className="mb-3">
-                <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                  {/* Sử dụng filteredQuizData.length */}
-                  <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                    style={{ width: `${(score / (filteredQuizData.length || 1)) * 100}%` }} {/* Chia cho 1 nếu length = 0 để tránh lỗi */}
-                  ></div>
+        {/* Hiển thị thông báo nếu không có câu hỏi nào phù hợp */}
+        {filteredQuizData.length === 0 && !showScore ? (
+           <div className="p-10 text-center">
+             <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy câu hỏi nào phù hợp</h2>
+             <p className="text-gray-600">Dựa trên danh sách từ vựng của bạn, hiện không có câu hỏi nào trong bộ dữ liệu khớp. Hãy thêm từ vựng mới hoặc thử lại sau.</p>
+           </div>
+        ) : (
+          showScore ? (
+            <div className="p-10 text-center">
+              <div className="mb-8">
+                <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                  {/* Using AwardIcon SVG */}
+                  <AwardIcon className="w-16 h-16 text-indigo-600" />
                 </div>
-                {/* Sử dụng filteredQuizData.length */}
-                <p className="text-right mt-1 text-sm text-gray-600 font-medium">
-                  {Math.round((score / (filteredQuizData.length || 1)) * 100)}%
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Quiz</h2>
+                <p className="text-gray-500">Bạn đã hoàn thành bài kiểm tra!</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
+                  {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
+                  <span className="text-2xl font-bold text-indigo-600">{score}/{filteredQuizData.length}</span>
+                </div>
+
+                <div className="mb-3">
+                  <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                    {/* Sử dụng filteredQuizData.length cho tính toán phần trăm */}
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                      style={{ width: `${(score / filteredQuizData.length) * 100}%` }}
+                    ></div>
+                  </div>
+                  {/* Sử dụng filteredQuizData.length cho tính toán phần trăm */}
+                  <p className="text-right mt-1 text-sm text-gray-600 font-medium">
+                    {Math.round((score / filteredQuizData.length) * 100)}%
+                  </p>
+                </div>
+
+                {/* Using CoinDisplay component for coins in results */}
+                <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center">
+                     {/* Display streak icon in results - Using img tag directly */}
+                     <img
+                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                       alt="Streak Icon"
+                       className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
+                     />
+                    <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Đã sửa text */}
+                  </div>
+                   {/* Pass coins to CoinDisplay */}
+                  {/* Hiển thị tổng số coins của người dùng từ state */}
+                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Luôn hiển thị coins ở đây */}
+                </div>
+
+                {/* Using StreakDisplay component for streak in results */}
+                <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {/* Display streak icon in results - Using img tag directly */}
+                       <img
+                        src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                        alt="Streak Icon"
+                        className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
+                      />
+                      <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
+                    </div>
+                     {/* Pass streak to StreakDisplay, no animation in results */}
+                    <StreakDisplay displayedStreak={streak} isAnimating={false} />
+                  </div>
+                </div>
+
+                {/* Hiển thị số câu hỏi khớp với từ vựng */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-700">Câu hỏi khớp với từ vựng của bạn:</span>
+                    <span className="font-bold text-blue-600">{matchingQuestionsCount}</span>
+                  </div>
+                </div>
+
+
+                <p className="text-gray-600 text-sm italic mt-4">
+                  {score === filteredQuizData.length ?
+                    "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
+                    score > filteredQuizData.length / 2 ?
+                      "Kết quả tốt! Bạn có thể cải thiện thêm." :
+                      "Hãy thử lại để cải thiện điểm số của bạn."
+                  }
                 </p>
               </div>
 
-              {/* Hiển thị số từ vựng của người dùng khớp với câu hỏi */}
-               <div className="flex items-center justify-between mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center">
-                      {/* Using AwardIcon SVG as a placeholder for vocabulary count icon */}
-                      <AwardIcon className="h-5 w-5 text-blue-600 mr-1" />
-                      <span className="font-medium text-gray-700">Số từ vựng của bạn khớp với câu hỏi:</span>
-                  </div>
-                  <span className="text-lg font-bold text-blue-600">{filteredQuizData.length}</span>
-               </div>
-
-
-              {/* Using CoinDisplay component for coins in results */}
-              <div className="flex items-center justify-between mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200"> {/* Adjusted mt */}
-                <div className="flex items-center">
-                   {/* Display streak icon in results - Using img tag directly */}
-                   <img
-                     src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                     alt="Streak Icon"
-                     className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
-                   />
-                  <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Đã sửa text */}
-                </div>
-                 {/* Pass coins to CoinDisplay */}
-                {/* Hiển thị tổng số coins của người dùng từ state */}
-                <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Luôn hiển thị coins ở đây */}
-              </div>
-
-              {/* Using StreakDisplay component for streak in results */}
-              <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    {/* Display streak icon in results - Using img tag directly */}
-                     <img
-                      src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                      alt="Streak Icon"
-                      className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
-                    />
-                    <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
-                  </div>
-                   {/* Pass streak to StreakDisplay, no animation in results */}
-                  <StreakDisplay displayedStreak={streak} isAnimating={false} />
-                </div>
-              </div>
-
-              <p className="text-gray-600 text-sm italic mt-4">
-                {score === filteredQuizData.length && filteredQuizData.length > 0 ?
-                  "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
-                  score > filteredQuizData.length / 2 && filteredQuizData.length > 0 ?
-                    "Kết quả tốt! Bạn có thể cải thiện thêm." :
-                     filteredQuizData.length > 0 ?
-                     "Hãy thử lại để cải thiện điểm số của bạn." :
-                     "Không có câu hỏi nào khớp với từ vựng của bạn."
-                }
-              </p>
-            </div>
-
-            {/* Chỉ hiển thị nút làm lại nếu có câu hỏi */}
-            {filteredQuizData.length > 0 && (
               <button
                 onClick={resetQuiz}
                 className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -403,132 +409,126 @@ export default function QuizApp() {
                 <RefreshIcon className="mr-2 h-5 w-5" />
                 Làm lại quiz
               </button>
-            )}
-
-          </div>
-        ) : (
-           // Hiển thị thông báo nếu không có câu hỏi nào được lọc
-           filteredQuizData.length === 0 ? (
-             <div className="p-10 text-center">
-               <h2 className="text-2xl font-bold text-gray-800 mb-4">Không có câu hỏi nào</h2>
-               <p className="text-gray-600">Dựa trên danh sách từ vựng của bạn, hiện không có câu hỏi nào phù hợp.</p>
-               <p className="text-gray-600 mt-2">Hãy thêm từ vựng vào danh sách của bạn để bắt đầu quiz!</p>
-             </div>
-           ) : (
-          <>
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-              <div className="flex justify-between items-center mb-6">
-                <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
-                   {/* Sử dụng filteredQuizData.length */}
-                  <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {/* Using CoinDisplay component for coins */}
-                  {/* Pass coins and showScore state to CoinDisplay */}
-                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
-
-                  {/* Using StreakDisplay component */}
-                  {/* Pass streak and streakAnimation state to StreakDisplay */}
-                  <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
-                </div>
-              </div>
-              {/* Sử dụng filteredQuizData[currentQuestion].question */}
-              <h2 className="text-2xl font-bold mb-2">
-                {filteredQuizData[currentQuestion].question}
-              </h2>
-
-
             </div>
+          ) : (
+            <>
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
+                    {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
+                    <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Using CoinDisplay component for coins */}
+                    {/* Pass coins and showScore state to CoinDisplay */}
+                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
 
-            <div className="p-6">
-              {/* Streak text message */}
-              {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
-                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}> {/* Đã sửa lại thành scale-100 */}
-                  <div className="flex items-center justify-center">
-                     <img
-                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                       alt="Streak Icon"
-                       className="h-5 w-5 mr-2 text-white" // Adjust size as needed
-                     />
-                    <span className="text-white font-medium">{getStreakText()}</span>
+                    {/* Using StreakDisplay component */}
+                    {/* Pass streak and streakAnimation state to StreakDisplay */}
+                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                   </div>
                 </div>
-              )}
+                 {/* Hiển thị số câu hỏi khớp với từ vựng */}
+                 <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
+                   {matchingQuestionsCount} câu hỏi khớp
+                 </div>
+                <h2 className="text-2xl font-bold mb-2">
+                  {/* Sử dụng filteredQuizData để lấy câu hỏi hiện tại */}
+                  {filteredQuizData[currentQuestion]?.question}
+                </h2>
 
-              <div className="space-y-3 mb-6">
-                {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
-                {/* Đảm bảo shuffledOptions không rỗng trước khi map */}
-                {shuffledOptions.map((option, index) => {
-                   // Sử dụng filteredQuizData[currentQuestion].correctAnswer
-                  const isCorrect = option === filteredQuizData[currentQuestion].correctAnswer;
-                  const isSelected = option === selectedOption;
 
-                  let bgColor = "bg-white";
-                  let borderColor = "border-gray-200";
-                  let textColor = "text-gray-700";
-                  let labelBg = "bg-gray-100";
+              </div>
 
-                  if (answered) {
-                    if (isCorrect) {
-                      bgColor = "bg-green-50";
-                      borderColor = "border-green-500";
-                      textColor = "text-green-800";
-                      labelBg = "bg-green-500 text-white";
-                    } else if (isSelected) {
-                      bgColor = "bg-red-50";
-                      borderColor = "border-red-500";
-                      textColor = "text-red-800";
-                      labelBg = "bg-red-500 text-white";
+              <div className="p-6">
+                {/* Streak text message */}
+                {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
+                  <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                    <div className="flex items-center justify-center">
+                       <img
+                         src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                         alt="Streak Icon"
+                         className="h-5 w-5 mr-2 text-white" // Adjust size as needed
+                       />
+                      <span className="text-white font-medium">{getStreakText()}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3 mb-6">
+                  {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
+                  {/* Sử dụng filteredQuizData để lấy đáp án đúng */}
+                  {shuffledOptions.map((option, index) => {
+                    const isCorrect = option === filteredQuizData[currentQuestion]?.correctAnswer;
+                    const isSelected = option === selectedOption;
+
+                    let bgColor = "bg-white";
+                    let borderColor = "border-gray-200";
+                    let textColor = "text-gray-700";
+                    let labelBg = "bg-gray-100";
+
+                    if (answered) {
+                      if (isCorrect) {
+                        bgColor = "bg-green-50";
+                        borderColor = "border-green-500";
+                        textColor = "text-green-800";
+                        labelBg = "bg-green-500 text-white";
+                      } else if (isSelected) {
+                        bgColor = "bg-red-50";
+                        borderColor = "border-red-500";
+                        textColor = "text-red-800";
+                        labelBg = "bg-red-500 text-white";
+                      }
                     }
-                  }
-                  return (
+                    return (
+                      <button
+                        key={option} // Use option as key since it's unique within options
+                        onClick={() => !answered && handleAnswer(option)}
+                        disabled={answered || filteredQuizData.length === 0} // Disable button if no questions
+                        className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered && filteredQuizData.length > 0 ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                      >
+                        <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
+                          {/* Keep original index for labels A, B, C, D */}
+                          {optionLabels[index]}
+                        </div>
+                        <span className="flex-grow">{option}</span>
+                        {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
+                        {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />} {/* Using XIcon SVG */}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
+                  <div className="mt-8 flex justify-end">
                     <button
-                      key={option} // Use option as key since it's unique within options
-                      onClick={() => !answered && handleAnswer(option)}
-                      disabled={answered}
-                      className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                      onClick={handleNextQuestion}
+                      className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
                     >
-                      <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
-                        {/* Keep original index for labels A, B, C, D */}
-                        {optionLabels[index]}
-                      </div>
-                      <span className="flex-grow">{option}</span>
-                      {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
-                      {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />} {/* Using XIcon SVG */}
+                      {/* Sử dụng filteredQuizData.length để kiểm tra */}
+                      {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
                     </button>
-                  );
-                })}
+                  </div>
+                )}
               </div>
 
-              {answered && (
-                <div className="mt-8 flex justify-end">
-                  <button
-                    onClick={handleNextQuestion}
-                    className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
-                  >
-                    {/* Sử dụng filteredQuizData.length */}
-                    {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
-                  </button>
-                </div>
-              )}
-            </div>
+              <div className="bg-gray-50 px-8 py-4 border-t">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
+                  </div>
 
-            <div className="bg-gray-50 px-8 py-4 border-t">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
-                </div>
-
-                <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
-                   {/* Sử dụng filteredQuizData.length */}
-                  <div
-                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                    style={{ width: `${(currentQuestion / (filteredQuizData.length - 1 || 1)) * 100}%` }} {/* Chia cho 1 nếu length-1 = 0 */}
-                  ></div>
+                  <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                     {/* Sử dụng filteredQuizData.length để tính toán tiến độ */}
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                      style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
+            </>
+          )
         )}
       </div>
     </div>
