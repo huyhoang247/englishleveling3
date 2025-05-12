@@ -6,11 +6,11 @@ import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; //
 // Import Firebase auth and db
 import { auth, db } from './firebase.js';
 // Import Firestore functions and User type
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, getFirestore } from 'firebase/firestore'; // Import updateDoc
 import { User } from 'firebase/auth';
 
-// Import defaultVocabulary from the provided file
-import { defaultVocabulary } from './list-vocabulary.ts';
+// Import defaultVocabulary
+import { defaultVocabulary } from './list-vocabularyd (1).ts'; // Import defaultVocabulary - Adjust the path if necessary
 
 
 // Define the props interface for VerticalFlashcardGallery
@@ -84,17 +84,79 @@ const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcard
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
 
-// --- Dữ liệu từ vựng (Sử dụng defaultVocabulary từ file list-vocabularyd.ts) ---
-// Tạo dữ liệu vocabularyData từ defaultVocabulary
-const vocabularyData: VocabularyData[] = defaultVocabulary.map((word, index) => ({
-    word: word,
-    meaning: `Meaning of ${word}`, // Placeholder meaning
-    example: `Example sentence for ${word}.`, // Placeholder example
-    phrases: [`Phrase A for ${word}`, `Phrase B for ${word}`], // Placeholder phrases
-    popularity: (index + 1) % 3 === 0 ? "Cao" : (index + 1) % 2 === 0 ? "Trung bình" : "Thấp", // Placeholder popularity
-    synonyms: [`Synonym 1 for ${word}`, `Synonym 2 for ${word}`], // Placeholder synonyms
-    antonyms: [`Antonym 1 for ${word}`, `Antonym 2 for ${word}`] // Placeholder antonyms
-}));
+// --- Dữ liệu từ vựng (Thêm dữ liệu mẫu để có hơn 50 mục) ---
+const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
+  const data: VocabularyData[] = [];
+  for (let i = 1; i <= count; i++) {
+    data.push({
+      word: `Word ${i}`,
+      meaning: `Meaning of Word ${i}`,
+      example: `Example sentence for Word ${i}.`,
+      phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
+      popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
+      synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
+      antonyms: [`Antonym 1.${i}`, `Antonym 2.${i}`]
+    });
+  }
+  return data;
+};
+
+// Dữ liệu từ vựng ban đầu (từ file cũ)
+const initialVocabularyData: VocabularyData[] = [
+  {
+    word: "Source",
+    meaning: "Nguồn, gốc",
+    example: "What is the source of this information?",
+    phrases: ["Information source", "Primary source"],
+    popularity: "Cao",
+    synonyms: ["Origin", "Root", "Beginning"],
+    antonyms: ["Result", "Outcome", "End"]
+  },
+  {
+    word: "Insurance",
+    meaning: "Bảo hiểm",
+    example: "You should buy travel insurance before your trip.",
+    phrases: ["Health insurance", "Car insurance"],
+    popularity: "Cao",
+    synonyms: ["Assurance", "Coverage", "Protection"],
+    antonyms: ["Risk", "Danger", "Exposure"]
+  },
+  {
+    word: "Argument",
+    meaning: "Cuộc tranh luận, lý lẽ",
+    example: "They had a heated argument about politics.",
+    phrases: ["Strong argument", "Logical argument"],
+    popularity: "Trung bình",
+    synonyms: ["Dispute", "Debate", "Reasoning"],
+    antonyms: ["Agreement", "Harmony", "Peace"]
+  },
+  {
+    word: "Influence",
+    meaning: "Ảnh hưởng",
+    example: "His parents had a strong influence on his career choice.",
+    phrases: ["Direct influence", "Negative influence"],
+    popularity: "Cao",
+    synonyms: ["Impact", "Effect", "Control"],
+    antonyms: ["Lack of effect", "Insignificance"]
+  },
+  {
+    word: "Vocabulary 5", // Thay thế bằng từ vựng thứ năm nếu có
+    meaning: "Nghĩa của từ vựng 5",
+    example: "Ví dụ cho từ vựng 5.",
+    phrases: ["Cụm từ 1", "Cụm từ 2"],
+    popularity: "Thấp",
+    synonyms: ["Từ đồng nghĩa 1", "Từ đồng nghĩa 2"],
+    antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"]
+  }
+];
+
+// Kết hợp dữ liệu ban đầu và dữ liệu mẫu
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
+const vocabularyData: VocabularyData[] = [
+  ...initialVocabularyData,
+  ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
+];
+
 
 // --- Tạo mảng ALL_POSSIBLE_FLASHCARDS từ dữ liệu trên ---
 // Tạo một mảng chứa TẤT CẢ các flashcard tiềm năng, không phụ thuộc vào việc đã mở hay chưa.
@@ -233,7 +295,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const itemsPerPage = 50; // Set items per page to 50
 
 
-  // --- NEW: Effect to fetch openedImageIds from Firestore ---
+  // --- NEW: Effect to fetch openedImageIds from Firestore and generate listVocabulary ---
   useEffect(() => {
     const fetchOpenedImageIds = async () => {
       if (!currentUser) {
@@ -254,12 +316,24 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           const fetchedIds = Array.isArray(userData?.openedImageIds) ? userData.openedImageIds : [];
           setOpenedImageIds(fetchedIds);
           console.log("Fetched openedImageIds:", fetchedIds); // Log fetched IDs
+
+          // --- Map ID to Vocabulary and save to Firestore ---
+          const listVocabulary = fetchedIds.map(id =>
+            // id starts from 1, so subtract 1 for the correct index
+            (defaultVocabulary[id - 1]?.toLowerCase() ?? '').trim()
+          );
+          console.log('Mapped listVocabulary:', listVocabulary);
+
+          // Update the user document with the generated listVocabulary
+          await updateDoc(userDocRef, { listVocabulary });
+          console.log("Updated Firestore with listVocabulary:", listVocabulary);
+
         } else {
           setOpenedImageIds([]); // User document doesn't exist or no openedImageIds field
           console.log("User document not found or no openedImageIds field for user:", currentUser.uid);
         }
       } catch (error) {
-        console.error("Error fetching openedImageIds:", error);
+        console.error("Error fetching openedImageIds or updating listVocabulary:", error);
         setOpenedImageIds([]); // Reset on error
       } finally {
         setLoadingOpenedImages(false);
@@ -474,27 +548,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       <div className="min-h-0">
         {/* Removed px-4 from this div */}
         <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
-
-          {/* --- NEW: Display list of opened words --- */}
-          {/* Only show this section on the Collection tab */}
-          {activeTab === 'collection' && filteredFlashcardsByTab.length > 0 && (
-              <div className="mb-6 px-4"> {/* Added padding and bottom margin */}
-                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">Từ vựng đã mở:</h2> {/* Added dark mode styles and bottom margin */}
-                  <div className="flex flex-wrap gap-2"> {/* Use flex-wrap for word list */}
-                      {filteredFlashcardsByTab.map((card, index) => (
-                          <span
-                              key={card.id}
-                              className="bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 text-sm font-medium px-3 py-1 rounded-full shadow-sm" // Styled word tags
-                          >
-                              {card.vocabulary.word}
-                          </span>
-                      ))}
-                  </div>
-              </div>
-          )}
-          {/* --- END NEW: Display list of opened words --- */}
-
-
           {flashcardsForCurrentPage.length > 0 ? (
             // Wrapped flashcard mapping in a grid div based on layoutMode
             // Removed pb-12 from here as we are adding it to the pagination container
@@ -701,7 +754,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <h3 className="text-lg font-semibold text-white flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 01 0 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 01 0-2.83l-.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 01 0-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 012.83 0 2 2 0 01 0 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
                     </svg>
                     Cài đặt hiển thị
                   </h3>
