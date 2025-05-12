@@ -8,7 +8,7 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-import StatsIcon from './library/icon.tsx'; // Import the new StatsIcon component
+import { StatsIcon, GemIcon‎ } from './library/icon.tsx'; // Import the new StatsIcon component
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
