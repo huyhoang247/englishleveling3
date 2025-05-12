@@ -61,8 +61,9 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 backdrop-blur-md">
-      <div 
+    // Tăng z-index lên z-51 để đảm bảo popup nằm trên thanh điều hướng (z-50)
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[51] backdrop-blur-md">
+      <div
         className={`relative bg-gradient-to-b from-slate-900 to-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-blue-600/30 border border-blue-500/30 overflow-hidden ${
           showAnimation ? 'animate-pulse' : ''
         }`}
@@ -73,7 +74,7 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
           <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-cyan-500 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2 opacity-30"></div>
         </div>
-        
+
         {/* Close button with improved hover effect */}
         <button
           onClick={onClose}
@@ -109,7 +110,7 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
               />
             </div>
           </div>
-          
+
           {/* Light beams animation */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
             <div className="absolute top-0 left-1/4 w-1 h-full bg-blue-400/20 blur-sm transform -rotate-45 translate-y-full animate-lightbeam"></div>
@@ -171,3 +172,4 @@ const RevealedImagePopup: React.FC<RevealedImagePopupProps> = ({
 // }
 
 export default RevealedImagePopup;
+
