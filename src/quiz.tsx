@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-// Removed CheckCircle, XCircle, RefreshCw, Award from lucide-react
+// Import các module cần thiết từ firebase.js và firestore
+import { db, auth } from './firebase'; // Import db và auth từ file firebase của bạn
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 
 const quizData = [
@@ -21,7 +24,7 @@ const quizData = [
   {
     question: 'Sông nào dài nhất Việt Nam?',
     options: ['Sông Hồng', 'Sông Mê Kông', 'Sông Đà', 'Sông Đồng Nai'],
-    correctAnswer: 'Sông Mê Kông'
+    correctAnswer: 'Sông Mê Kêông' // Đã sửa chính tả
   },
   {
     question: 'Việt Nam có bao nhiêu tỉnh thành?',
@@ -141,10 +144,58 @@ export default function QuizApp() {
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
+  const [user, setUser] = useState(null); // State để lưu thông tin người dùng
 
+  // Lắng nghe trạng thái xác thực người dùng
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe(); // Hủy đăng ký lắng nghe khi component unmount
+  }, []);
+
+  // Lấy dữ liệu coins từ Firestore khi component mount hoặc khi user thay đổi
+  useEffect(() => {
+    const fetchCoins = async () => {
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+          // Nếu tài liệu người dùng tồn tại, lấy số coins
+          setCoins(docSnap.data().coins || 0);
+        } else {
+          // Nếu không tồn tại, tạo tài liệu mới với 0 coins
+          await setDoc(userRef, { coins: 0 });
+          setCoins(0);
+        }
+      } else {
+        // Nếu không có người dùng đăng nhập, đặt coins về 0
+        setCoins(0);
+      }
+    };
+
+    fetchCoins();
+  }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
+
+  // Hàm cập nhật coins lên Firestore
+  const updateCoinsInFirestore = async (newCoins) => {
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      try {
+        await updateDoc(userRef, { coins: newCoins });
+        console.log("Coins updated successfully in Firestore!");
+      } catch (error) {
+        console.error("Error updating coins in Firestore:", error);
+      }
+    }
+  };
 
 
   const handleAnswer = (selectedAnswer) => {
+    // Không cho phép trả lời nếu đã trả lời câu hỏi này rồi
+    if (answered) return;
+
     setSelectedOption(selectedAnswer);
     setAnswered(true);
 
@@ -173,7 +224,9 @@ export default function QuizApp() {
 
 
       if (coinsToAdd > 0) {
-        setCoins(coins + coinsToAdd);
+        const totalCoins = coins + coinsToAdd;
+        setCoins(totalCoins);
+        updateCoinsInFirestore(totalCoins); // Cập nhật coins lên Firestore
         setCoinAnimation(true);
         setTimeout(() => setCoinAnimation(false), 1500);
       }
@@ -185,6 +238,7 @@ export default function QuizApp() {
     } else {
       // Reset streak on wrong answer
       setStreak(0);
+      // Không reset coins khi trả lời sai
     }
   };
 
@@ -207,7 +261,7 @@ export default function QuizApp() {
     setSelectedOption(null);
     setAnswered(false);
     setStreak(0);
-    // Keep the coins when restarting the quiz
+    // Giữ lại coins khi làm lại quiz, coins đã được lưu trên Firestore
   };
 
 
@@ -264,10 +318,11 @@ export default function QuizApp() {
                      alt="Streak Icon"
                      className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
                    />
-                  <span className="font-medium text-gray-700">Coins kiếm được:</span>
+                  <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Đã sửa text */}
                 </div>
                  {/* Pass coins to CoinDisplay */}
-                <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
+                {/* Hiển thị tổng số coins của người dùng từ state */}
+                <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Luôn hiển thị coins ở đây */}
               </div>
 
               {/* Using StreakDisplay component for streak in results */}
@@ -344,20 +399,6 @@ export default function QuizApp() {
                   </div>
                 </div>
               )}
-
-              {/* Removed the coin animation display section */}
-              {/*
-              {coinAnimation && streak >= 1 && ( // Trigger coin animation for streak 1 and above
-                <div className="mb-4 p-2 rounded-lg bg-yellow-100 border border-yellow-300 text-center animate-pulse">
-                  <div className="flex items-center justify-center text-yellow-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-bold">{streak >= 20 ? 20 : streak >= 10 ? 15 : streak >= 5 ? 10 : streak >= 3 ? 5 : 1}</span>
-                  </div>
-                </div>
-              )}
-              */}
 
               <div className="space-y-3 mb-6">
                 {quizData[currentQuestion].options.map((option, index) => {
