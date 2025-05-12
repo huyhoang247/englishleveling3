@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 // Removed CheckCircle, XCircle, RefreshCw, Award from lucide-react
-import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
+import CoinDisplay from './CoinDisplay'; // Import the CoinDisplay component
 
 const quizData = [
   {
@@ -33,7 +33,7 @@ const quizData = [
 // Map các đáp án thành A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
 
-// Define streak icon URLs
+// Define streak icon URLs (assuming these are available or passed down)
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
   streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
@@ -42,7 +42,67 @@ const streakIconUrls = {
   streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', // 20 consecutive correct answers
 };
 
-// SVG Icons
+// Function to get the correct streak icon URL based on streak count
+const getStreakIconUrl = (streak: number) => {
+  if (streak >= 20) return streakIconUrls.streak20;
+  if (streak >= 10) return streakIconUrls.streak10;
+  if (streak >= 5) return streakIconUrls.streak5;
+  if (streak >= 1) return streakIconUrls.streak1;
+  return streakIconUrls.default;
+};
+
+// StreakDisplay component (Integrated)
+interface StreakDisplayProps {
+  displayedStreak: number; // The number of streak to display
+  isAnimating: boolean; // Flag to trigger animation
+}
+
+const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => {
+  return (
+    // Streak Container - Styled similarly to CoinDisplay
+    <div className={`bg-gradient-to-br from-orange-500 to-red-700 rounded-lg p-0.5 flex items-center shadow-lg border border-red-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
+       {/* Add necessary styles for animations used here */}
+      <style jsx>{`
+         @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s infinite;
+        }
+      `}</style>
+      {/* Background highlight effect */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-red-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+
+      {/* Streak Icon */}
+      <div className="relative mr-0.5 flex items-center justify-center">
+        <img
+          src={getStreakIconUrl(displayedStreak)}
+          alt="Streak Icon"
+          className="w-4 h-4" // Adjust size as needed
+          // Add onerror if needed, similar to CoinDisplay
+        />
+      </div>
+
+      {/* Streak Count */}
+      <div className="font-bold text-red-100 text-xs tracking-wide streak-counter">
+        {displayedStreak}
+      </div>
+
+       {/* Optional: Add a small decorative element like the plus button in CoinDisplay */}
+       {/* <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-orange-400 to-red-600 rounded-full flex items-center justify-center cursor-pointer border border-red-300 shadow-inner hover:shadow-red-300/50 hover:scale-110 transition-all duration-200">
+         <span className="text-white font-bold text-xs">🔥</span>
+       </div> */}
+
+       {/* Small pulsing dots */}
+      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+    </div>
+  );
+};
+
+
+// SVG Icons (Replaced lucide-react icons)
 const CheckIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 6L9 17L4 12"></path>
@@ -118,7 +178,7 @@ export default function QuizApp() {
         setTimeout(() => setCoinAnimation(false), 1500);
       }
 
-      if (newStreak >= 3) { // Trigger animation for streak 3 and above
+      if (newStreak >= 1) { // Trigger animation for streak 1 and above
         setStreakAnimation(true);
         setTimeout(() => setStreakAnimation(false), 1500);
       }
@@ -161,15 +221,6 @@ export default function QuizApp() {
     return "";
   };
 
-  // Function to get the correct streak icon URL based on streak count
-  const getStreakIconUrl = () => {
-    if (streak >= 20) return streakIconUrls.streak20;
-    if (streak >= 10) return streakIconUrls.streak10;
-    if (streak >= 5) return streakIconUrls.streak5;
-    if (streak >= 1) return streakIconUrls.streak1;
-    return streakIconUrls.default;
-  };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -206,9 +257,9 @@ export default function QuizApp() {
               {/* Using CoinDisplay component for coins in results */}
               <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                 <div className="flex items-center">
-                   {/* Display streak icon in results */}
+                   {/* Display streak icon in results - Using img tag directly */}
                    <img
-                     src={getStreakIconUrl()}
+                     src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                      alt="Streak Icon"
                      className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
                    />
@@ -218,18 +269,20 @@ export default function QuizApp() {
                 <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
               </div>
 
+              {/* Using StreakDisplay component for streak in results */}
               <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    {/* Display streak icon in results */}
-                    <img
-                      src={getStreakIconUrl()}
+                    {/* Display streak icon in results - Using img tag directly */}
+                     <img
+                      src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                       alt="Streak Icon"
                       className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
                     />
                     <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
                   </div>
-                  <span className="text-xl font-bold text-orange-600">{streak}</span>
+                   {/* Pass streak to StreakDisplay, no animation in results */}
+                  <StreakDisplay displayedStreak={streak} isAnimating={false} />
                 </div>
               </div>
 
@@ -264,15 +317,9 @@ export default function QuizApp() {
                   {/* Pass coins and showScore state to CoinDisplay */}
                   <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
 
-                  {/* Streak display with image icons - removed background classes */}
-                  <div className={`flex items-center text-white px-2 py-1 rounded-lg transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
-                    <img
-                      src={getStreakIconUrl()}
-                      alt="Streak Icon"
-                      className="h-4 w-4 mr-1" // Adjust size as needed
-                    />
-                    <span className="font-bold">{streak}</span>
-                  </div>
+                  {/* Using StreakDisplay component */}
+                  {/* Pass streak and streakAnimation state to StreakDisplay */}
+                  <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                 </div>
               </div>
               <h2 className="text-2xl font-bold mb-2">
@@ -284,11 +331,11 @@ export default function QuizApp() {
 
             <div className="p-6">
               {/* Streak text message */}
-              {streak >= 3 && (
+              {streak >= 1 && ( // Show streak text for streak 1 and above
                 <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
                   <div className="flex items-center justify-center">
                      <img
-                       src={getStreakIconUrl()}
+                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                        alt="Streak Icon"
                        className="h-5 w-5 mr-2 text-white" // Adjust size as needed
                      />
@@ -297,11 +344,8 @@ export default function QuizApp() {
                 </div>
               )}
 
-              {/* Coin animation - This might be handled within CoinDisplay now,
-                  or you might keep this if it's a separate animation effect.
-                  Keeping it for now, but consider if CoinDisplay handles this.
-              */}
-              {coinAnimation && streak >= 1 && (
+              {/* Coin animation */}
+              {coinAnimation && streak >= 1 && ( // Trigger coin animation for streak 1 and above
                 <div className="mb-4 p-2 rounded-lg bg-yellow-100 border border-yellow-300 text-center animate-pulse">
                   <div className="flex items-center justify-center text-yellow-700">
                     {/* Using a simple coin icon here, not the full CoinDisplay */}
