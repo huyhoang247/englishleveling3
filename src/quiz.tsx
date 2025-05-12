@@ -59,8 +59,8 @@ interface StreakDisplayProps {
 
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => {
   return (
-    // Streak Container - Styled with white/grey background and fiery border
-    <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-0.5 flex items-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
+    // Streak Container - Styled with white/grey background, fiery border, wider, and centered content
+    <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-1 flex items-center justify-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
        {/* Add necessary styles for animations used here */}
       <style jsx>{`
          @keyframes pulse-fast {
@@ -75,7 +75,8 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
 
       {/* Streak Icon */}
-      <div className="relative mr-0.5 flex items-center justify-center">
+      {/* Removed mr-0.5 to allow centering within the flex container */}
+      <div className="relative flex items-center justify-center">
         <img
           src={getStreakIconUrl(displayedStreak)}
           alt="Streak Icon"
@@ -85,7 +86,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
       </div>
 
       {/* Streak Count - adjusted text color for contrast on grey background */}
-      <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter">
+      <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter ml-1"> {/* Added ml-1 for spacing */}
         {displayedStreak}
       </div>
 
