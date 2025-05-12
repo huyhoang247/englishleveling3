@@ -195,8 +195,12 @@ const quizData = [
     "question": "Từ \"Heat\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Lạnh", "Nhiệt", "Đá", "Hơi nước"],
     "correctAnswer": "Nhiệt"
-  }     
-      
+  },
+  {
+    "question": "Từ \"Ice\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lửa", "Nước", "Đá", "Hơi nước"],
+    "correctAnswer": "Đá"
+  }    
 
 
 ];
