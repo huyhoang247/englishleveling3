@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 // Removed CheckCircle, XCircle, RefreshCw, Award from lucide-react
-import CoinDisplay from './CoinDisplay'; // Import the CoinDisplay component
+import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 
 const quizData = [
   {
