@@ -1,26 +1,12 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
-// Import the CharacterCard component
-import CharacterCard from './stats/stats-main.tsx'; // Assuming stats.tsx is in the same directory
-
-// Import DotLottieReact component
+import CharacterCard from './stats/stats-main.tsx'; 
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
-// NEW: Import the TreasureChest component
 import TreasureChest from './treasure.tsx';
-
-// NEW: Import the CoinDisplay component
 import CoinDisplay from './coin-display.tsx';
-
-// NEW: Import Firestore functions
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from './firebase.js'; // Import auth from your firebase.js
-// Import User type from firebase/auth
+import { auth } from './firebase.js'; 
 import { User } from 'firebase/auth';
-
-// NEW: Import the custom useSessionStorage hook
 import useSessionStorage from './bo-nho-tam.tsx';
-
-// NEW: Import the HeaderBackground component
 import HeaderBackground from './header-background.tsx';
 
 
