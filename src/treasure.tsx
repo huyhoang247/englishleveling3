@@ -119,8 +119,6 @@ interface TreasureChestProps {
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
   currentUserId: string | null; // Pass the current user ID as a prop (can be null if not logged in)
-  hideNavBar: () => void; // Function to hide the navigation bar
-  showNavBar: () => void; // Function to show the navigation bar
 }
 
 // Define interface for card data (keeping this for potential future use or if other rewards are still cards)
@@ -152,7 +150,7 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId, hideNavBar, showNavBar }: TreasureChestProps) {
+export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   // State to hold the revealed image data (ID and URL) - MANAGED HERE
@@ -280,9 +278,6 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
     }
 
     setChestShake(true);
-    // Hide the navigation bar when the chest starts opening
-    hideNavBar();
-
     setTimeout(() => {
       setChestShake(false);
       setIsChestOpen(true);
@@ -353,8 +348,6 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
         onGemReward(pendingGemReward);
         setPendingGemReward(0); // Reset pending gem reward
     }
-    // Show the navigation bar when the popup is closed
-    showNavBar();
   };
 
   // Effect to clear chest coin effect timer on unmount
