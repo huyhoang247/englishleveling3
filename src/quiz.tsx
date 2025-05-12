@@ -211,16 +211,7 @@ export default function QuizApp() {
   };
 
 
-
-  const getStreakText = () => {
-    if (streak >= 20) return "Không thể cản phá!";
-    if (streak >= 10) return "Tuyệt đỉnh!";
-    if (streak >= 5) return "Siêu xuất sắc!";
-    if (streak >= 3) return "Xuất sắc!";
-    if (streak >= 2) return "Tiếp tục nào!";
-    return "";
-  };
-
+  // Removed getStreakText function as it's no longer used for display
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -313,13 +304,8 @@ export default function QuizApp() {
                   <span className="font-medium">Câu hỏi {currentQuestion + 1}/{quizData.length}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Using CoinDisplay component for coins */}
-                  {/* Pass coins and showScore state to CoinDisplay */}
-                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
-
-                  {/* Using StreakDisplay component */}
-                  {/* Pass streak and streakAnimation state to StreakDisplay */}
-                  <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+                  {/* Removed CoinDisplay component from here */}
+                  {/* Removed StreakDisplay component from here */}
                 </div>
               </div>
               <h2 className="text-2xl font-bold mb-2">
@@ -330,32 +316,8 @@ export default function QuizApp() {
             </div>
 
             <div className="p-6">
-              {/* Streak text message */}
-              {streak >= 1 && ( // Show streak text for streak 1 and above
-                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
-                  <div className="flex items-center justify-center">
-                     <img
-                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                       alt="Streak Icon"
-                       className="h-5 w-5 mr-2 text-white" // Adjust size as needed
-                     />
-                    <span className="text-white font-medium">{getStreakText()}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Coin animation */}
-              {coinAnimation && streak >= 1 && ( // Trigger coin animation for streak 1 and above
-                <div className="mb-4 p-2 rounded-lg bg-yellow-100 border border-yellow-300 text-center animate-pulse">
-                  <div className="flex items-center justify-center text-yellow-700">
-                    {/* Using a simple coin icon here, not the full CoinDisplay */}
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-bold">+{streak >= 20 ? 20 : streak >= 10 ? 15 : streak >= 5 ? 10 : streak >= 3 ? 5 : 1} coins</span>
-                  </div>
-                </div>
-              )}
+              {/* Removed Streak text message */}
+              {/* Removed Coin animation */}
 
               <div className="space-y-3 mb-6">
                 {quizData[currentQuestion].options.map((option, index) => {
