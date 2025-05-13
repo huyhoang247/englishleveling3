@@ -18,7 +18,7 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-// Enhanced Home Icon
+// Enhanced Home Icon - Removed mr-1 as there's no text next to it now
 const HomeIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -30,7 +30,7 @@ const HomeIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="mr-1"
+    // className="mr-1" // Removed margin right
   >
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
     <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -253,14 +253,14 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   return (
     <nav className="flex items-center py-3 px-4 bg-white rounded-lg shadow-md mb-4 text-sm">
       <div className="flex items-center flex-wrap gap-2">
-        {/* Home Button */}
+        {/* Home Button - Removed text span */}
         <button
           onClick={goHome}
           className="flex items-center text-gray-700 hover:text-blue-700 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-100"
-          aria-label="Trang chủ"
+          aria-label="Trang chủ" // Keep aria-label for accessibility
         >
           <HomeIcon />
-          <span className="font-medium">Trang chủ</span>
+          {/* Removed: <span className="font-medium">Trang chủ</span> */}
         </button>
 
         {/* Quiz */}
