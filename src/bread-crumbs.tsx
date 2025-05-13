@@ -168,6 +168,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   // Handler for Type breadcrumb click
   const handleTypeBreadcrumbClick = () => {
     setAnimation({ ...animation, type: true });
+    
+    // Khi quay về danh sách theo loại, cần reset selectedPractice để breadcrumb không hiển thị practice nữa
     if (selectedType === 'tracNghiem') {
       setCurrentView('practices');
     } else {
@@ -194,7 +196,6 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   // Determine active states for breadcrumbs
   const isQuizActive = currentView === 'quizTypes';
   const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks';
-  const isPracticeActive = currentView === 'quiz';
 
   // Get type name for display
   const getTypeName = () => {
@@ -301,14 +302,14 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           </>
         )}
 
-        {/* Practice */}
-        {selectedPractice && (currentView === 'practices' || currentView === 'quiz') && (
+        {/* Practice - Chỉ hiển thị khi đang ở trang chi tiết (quiz) */}
+        {selectedPractice && currentView === 'quiz' && (
           <>
             <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
             <BreadcrumbItem 
-              active={isPracticeActive}
+              active={true} // Luôn active vì chỉ hiển thị khi đang ở trang chi tiết
               onClick={handlePracticeBreadcrumbClick}
               label={`Practice ${selectedPractice}`}
               icon={<PracticeIcon />}
