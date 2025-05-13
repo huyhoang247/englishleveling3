@@ -6,27 +6,19 @@ export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-  // Các state liên quan đến câu hỏi và đáp án có thể không cần thiết ở đây nữa
-  // nếu logic quiz được xử lý hoàn toàn trong QuizApp từ quiz.tsx
-  // const [currentQuestion, setCurrentQuestion] = useState(1);
-  // const [selectedAnswer, setSelectedAnswer] = useState(null);
-  // const [timer, setTimer] = useState(0); // Cần thêm logic để quản lý timer
 
   // Hàm xử lý khi chọn Quiz
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
-    // Reset states liên quan đến quiz nếu có
   };
 
   // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    // Chuyển đến màn hình practices nếu chọn trắc nghiệm
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      // Giả định điền từ sẽ có màn hình riêng hoặc xử lý khác
       setCurrentView('fillInBlanks');
     }
   };
@@ -50,9 +42,6 @@ export default function QuizAppHome() {
     } else if (currentView === 'quiz') { // Nếu đang ở màn hình quiz, quay lại màn hình practices
        setCurrentView('practices');
     }
-    // Reset states liên quan khi quay lại
-    // setCurrentQuestion(1);
-    // setSelectedAnswer(null);
   };
 
   // Hàm quay về màn hình chính
@@ -60,13 +49,7 @@ export default function QuizAppHome() {
     setCurrentView('main');
     setSelectedQuiz(null);
     setSelectedType(null);
-    // Reset states liên quan khi về trang chủ
-    // setCurrentQuestion(1);
-    // setSelectedAnswer(null);
   };
-
-  // Các hàm xử lý trong quiz (handleNextQuestion, handlePrevQuestion, handleSelectAnswer)
-  // sẽ được xử lý bên trong component QuizApp từ quiz.tsx
 
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
@@ -236,7 +219,7 @@ export default function QuizAppHome() {
           </div>
         );
 
-      case 'quiz': // Case mới để render component QuizApp
+      case 'quiz': // Case để render component QuizApp
         return (
           // Render component QuizApp từ quiz.tsx
           // Bạn có thể truyền props vào đây nếu QuizApp cần thông tin về quiz/practice
@@ -248,42 +231,41 @@ export default function QuizAppHome() {
     }
   };
 
-  // Thay đổi phần return cuối cùng để có background và container đẹp hơn
+  // Thay đổi cấu trúc render để cố định thanh điều hướng
   return (
-    <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
-      <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
+    <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0 flex flex-col"> {/* Sử dụng flex-col */}
+      <div className="w-full bg-white rounded-none shadow-xl overflow-hidden flex flex-col flex-grow"> {/* Sử dụng flex-col và flex-grow */}
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        <div className="h-[calc(100%-8px)] p-6"> {/* 8px = height của gradient line trên cùng */}
-          {/* Navigation bar giữ nguyên */}
-          {currentView !== 'main' && (
-            <div className="flex justify-between mb-6">
-              <button
-                onClick={goBack}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Quay lại
-              </button>
+        {/* Header cố định cho thanh điều hướng */}
+        {currentView !== 'main' && (
+          <div className="flex justify-between mb-6 p-6 bg-white border-b border-gray-200"> {/* Thêm padding và border */}
+            <button
+              onClick={goBack}
+              className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Quay lại
+            </button>
 
-              <button
-                onClick={goHome}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Trang chủ
-              </button>
-            </div>
-          )}
-
-          {/* Main content */}
-          <div className="h-[calc(100%-48px)] overflow-y-auto"> {/* 48px = chiều cao navigation */}
-            {renderContent()}
+            <button
+              onClick={goHome}
+              className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Trang chủ
+            </button>
           </div>
+        )}
+
+        {/* Main content có thể cuộn */}
+        {/* Chỉ thêm padding-top nếu thanh điều hướng không hiển thị */}
+        <div className={`flex-grow overflow-y-auto ${currentView === 'main' ? 'p-6' : 'px-6 pb-6'}`}> {/* Sử dụng flex-grow và overflow-y-auto */}
+          {renderContent()}
         </div>
       </div>
     </div>
