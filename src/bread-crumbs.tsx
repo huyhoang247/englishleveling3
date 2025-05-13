@@ -44,8 +44,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
   // Xác định trạng thái active cho các breadcrumb
   const isQuizActive = currentView === 'quizTypes';
-  // Loại bài tập active chỉ khi đang ở màn hình chọn loại bài tập
-  const isTypeActive = currentView === 'quizTypes'; // Đã thay đổi điều kiện ở đây
+  // Loại bài tập active khi đang ở practices, fillInBlanks, hoặc quiz
+  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz';
   // Practice active khi đang ở màn hình quiz
   const isPracticeActive = currentView === 'quiz';
 
@@ -89,7 +89,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <button
               onClick={handleTypeBreadcrumbClick} // Thêm sự kiện click
               className={`transition-all duration-200 ${
-                isTypeActive // Sử dụng điều kiện isTypeActive mới
+                isTypeActive
                   ? selectedType === 'tracNghiem'
                     ? 'bg-green-100 text-green-800 font-medium px-2 py-0.5 rounded-full'
                     : 'bg-yellow-100 text-yellow-800 font-medium px-2 py-0.5 rounded-full'
