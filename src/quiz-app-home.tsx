@@ -450,46 +450,48 @@ export default function QuizApp() {
 
   // Thay đổi phần return cuối cùng để có background và container đẹp hơn
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="max-w-lg mx-auto bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 transform hover:shadow-2xl">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="w-full h-full flex items-center justify-center"> {/* Thêm flexbox để căn giữa nội dung */}
+        <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 transform hover:shadow-2xl"> {/* Giữ lại max-w-lg cho nội dung bên trong để không quá rộng trên màn hình lớn */}
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        <div className="p-6">
-          {/* Navigation bar */}
-          {currentView !== 'main' && (
-            <div className="flex justify-between mb-6">
-              <button
-                onClick={goBack}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Quay lại
-              </button>
+          <div className="p-6">
+            {/* Navigation bar */}
+            {currentView !== 'main' && (
+              <div className="flex justify-between mb-6">
+                <button
+                  onClick={goBack}
+                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Quay lại
+                </button>
 
-              <button
-                onClick={goHome}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Trang chủ
-              </button>
+                <button
+                  onClick={goHome}
+                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  Trang chủ
+                </button>
+              </div>
+            )}
+
+            {/* Main content với animation */}
+            <div className="py-4 transition-all duration-500 ease-in-out">
+              {renderContent()}
             </div>
-          )}
-
-          {/* Main content với animation */}
-          <div className="py-4 transition-all duration-500 ease-in-out">
-            {renderContent()}
           </div>
-        </div>
 
-        {/* Footer đã được xóa */}
-        {/* <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-100">
-          <p className="text-center text-gray-600 text-sm">© 2025 Ứng dụng Quiz | Học mọi lúc, mọi nơi</p>
-        </div> */}
+          {/* Footer đã được xóa */}
+          {/* <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-100">
+            <p className="text-center text-gray-600 text-sm">© 2025 Ứng dụng Quiz | Học mọi lúc, mọi nơi</p>
+          </div> */}
+        </div>
       </div>
     </div>
   );
