@@ -258,20 +258,8 @@ export default function QuizAppHome() {
           {/* Navigation bar và Breadcrumbs */}
           {currentView !== 'main' && (
             <div className="mb-6">
-              {/* Phần nút điều hướng Quay lại và Trang chủ */}
-              <div className="flex justify-end mb-2"> {/* Changed justify-between to justify-end */}
-                {/* Removed the "Quay lại" button */}
-
-                {/* Nút Trang chủ giờ được xử lý trong component Breadcrumbs */}
-                {/* <button
-                  onClick={goHome}
-                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  Trang chủ
-                </button> */}
+              {/* Phần breadcrumbs giờ nằm bên trái */}
+              <div className="flex justify-start mb-2"> {/* Changed justify-end to justify-start */}
                  {/* Sử dụng component Breadcrumbs */}
                  <Breadcrumbs
                     currentView={currentView}
