@@ -7,14 +7,6 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-// Định nghĩa icon Home bằng SVG
-const HomeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    <polyline points="9 22 9 12 15 12 15 22"/>
-  </svg>
-);
-
 // Định nghĩa kiểu cho props
 interface BreadcrumbsProps {
   currentView: string;
@@ -43,21 +35,29 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     setCurrentView('practices');
   };
 
+  // Hàm xử lý khi click vào breadcrumb Loại bài tập
+  const handleTypeBreadcrumbClick = () => {
+      // Quay lại màn hình chọn loại bài tập (quizTypes)
+      setCurrentView('quizTypes');
+  };
+
+
   // Xác định trạng thái active cho các breadcrumb
   const isQuizActive = currentView === 'quizTypes';
+  // Loại bài tập active khi đang ở practices, fillInBlanks, hoặc quiz
   const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz';
+  // Practice active khi đang ở màn hình quiz
   const isPracticeActive = currentView === 'quiz';
 
   return (
     <nav className="flex items-center py-2 px-3 bg-white rounded-lg shadow-sm mb-3 text-sm">
       <div className="flex items-center flex-wrap gap-1">
-        {/* Trang chủ - Thay bằng icon Home */}
+        {/* Trang chủ */}
         <button
           onClick={goHome}
-          className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center" // Thêm flex và items-center để căn icon và text (nếu có)
-          aria-label="Trang chủ" // Thêm aria-label cho khả năng tiếp cận
+          className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200"
         >
-          <HomeIcon /> {/* Sử dụng icon Home */}
+          Trang chủ
         </button>
 
         {/* Quiz */}
@@ -85,17 +85,19 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="flex items-center mx-1 text-gray-400">
               <ChevronRightIcon />
             </div>
-            <span
-              className={`${
+            {/* Thay đổi span thành button và thêm onClick */}
+            <button
+              onClick={handleTypeBreadcrumbClick} // Thêm sự kiện click
+              className={`transition-all duration-200 ${
                 isTypeActive
                   ? selectedType === 'tracNghiem'
                     ? 'bg-green-100 text-green-800 font-medium px-2 py-0.5 rounded-full'
                     : 'bg-yellow-100 text-yellow-800 font-medium px-2 py-0.5 rounded-full'
-                  : 'text-gray-600'
+                  : 'text-gray-600 hover:text-blue-600' // Thêm hover state
               }`}
             >
               {selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}
-            </span>
+            </button>
           </>
         )}
 
