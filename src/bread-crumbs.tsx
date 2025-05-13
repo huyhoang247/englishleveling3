@@ -41,22 +41,33 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
   // Hàm xử lý khi click vào breadcrumb Practice
   const handlePracticeBreadcrumbClick = () => {
-    setCurrentView('practices');
+    // Chỉ điều hướng đến 'practices' nếu đang không ở màn hình chi tiết practice (quiz)
+    if (currentView !== 'quiz') {
+      setCurrentView('practices');
+    } else {
+      // Nếu đang ở màn hình chi tiết practice (quiz), nhấn vào breadcrumb Practice
+      // sẽ quay về danh sách practices.
+      setCurrentView('practices');
+    }
   };
 
   // Hàm xử lý khi click vào breadcrumb Loại bài tập
   const handleTypeBreadcrumbClick = () => {
-      // Quay lại màn hình chọn loại bài tập (quizTypes)
-      setCurrentView('quizTypes');
+      // Điều hướng đến màn hình danh sách bài tập dựa trên loại đã chọn
+      if (selectedType === 'tracNghiem') {
+          setCurrentView('practices'); // Giả định 'practices' là màn hình danh sách trắc nghiệm
+      } else {
+          setCurrentView('fillInBlanks'); // Giả định 'fillInBlanks' là màn hình danh sách điền từ
+      }
   };
 
 
   // Xác định trạng thái active cho các breadcrumb
   const isQuizActive = currentView === 'quizTypes';
-  // Loại bài tập active khi đang ở practices, fillInBlanks, hoặc quiz
-  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz';
-  // Practice active khi đang ở màn hình quiz
-  const isPracticeActive = currentView === 'quiz';
+  // Loại bài tập active khi đang ở practices hoặc fillInBlanks, KHÔNG active khi ở quiz
+  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks'; // Đã chỉnh sửa
+  // Practice active khi đang ở màn hình quiz (chi tiết bài practice)
+  const isPracticeActive = currentView === 'quiz'; // Đã chỉnh sửa
 
   return (
     <nav className="flex items-center py-2 px-3 bg-white rounded-lg shadow-sm mb-3 text-sm">
