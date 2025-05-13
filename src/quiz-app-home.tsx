@@ -6,6 +6,8 @@ export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  // Thêm state mới để lưu practice đã chọn
+  const [selectedPractice, setSelectedPractice] = useState(null);
   // Các state liên quan đến câu hỏi và đáp án có thể không cần thiết ở đây nữa
   // nếu logic quiz được xử lý hoàn toàn trong QuizApp từ quiz.tsx
   // const [currentQuestion, setCurrentQuestion] = useState(1);
@@ -17,6 +19,8 @@ export default function QuizAppHome() {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
     // Reset states liên quan đến quiz nếu có
+    setSelectedType(null); // Reset type khi chọn lại quiz
+    setSelectedPractice(null); // Reset practice khi chọn lại quiz
   };
 
   // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
@@ -29,12 +33,15 @@ export default function QuizAppHome() {
       // Giả định điền từ sẽ có màn hình riêng hoặc xử lý khác
       setCurrentView('fillInBlanks');
     }
+    setSelectedPractice(null); // Reset practice khi chọn loại bài tập
   };
 
   // Hàm xử lý khi chọn Practice
   const handlePracticeSelect = (practice) => {
     // Khi chọn practice, chuyển view sang 'quiz' để render component QuizApp
     setCurrentView('quiz');
+    // Lưu practice đã chọn vào state mới
+    setSelectedPractice(practice);
     // Có thể truyền thêm thông tin về practice đã chọn vào state nếu cần
     // Ví dụ: setSelectedPractice(practice);
   };
@@ -44,11 +51,15 @@ export default function QuizAppHome() {
     if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
+      setSelectedType(null); // Reset type khi quay lại main
+      setSelectedPractice(null); // Reset practice khi quay lại main
     } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
       setCurrentView('quizTypes');
-      setSelectedType(null);
+      setSelectedType(null); // Reset type khi quay lại quizTypes
+      setSelectedPractice(null); // Reset practice khi quay lại quizTypes
     } else if (currentView === 'quiz') { // Nếu đang ở màn hình quiz, quay lại màn hình practices
        setCurrentView('practices');
+       // selectedPractice sẽ được giữ lại để hiển thị trong breadcrumbs khi quay lại practices
     }
     // Reset states liên quan khi quay lại
     // setCurrentQuestion(1);
@@ -60,6 +71,7 @@ export default function QuizAppHome() {
     setCurrentView('main');
     setSelectedQuiz(null);
     setSelectedType(null);
+    setSelectedPractice(null); // Reset practice khi về trang chủ
     // Reset states liên quan khi về trang chủ
     // setCurrentQuestion(1);
     // setSelectedAnswer(null);
@@ -272,7 +284,8 @@ export default function QuizAppHome() {
 
               {/* Phần breadcrumbs cố định */}
               <div className="flex items-center gap-2 text-sm">
-                {currentView !== 'quizTypes' && (
+                {/* Hiển thị Quiz đã chọn */}
+                {selectedQuiz && (
                   <>
                     <button
                       onClick={() => setCurrentView('main')}
@@ -284,16 +297,19 @@ export default function QuizAppHome() {
                   </>
                 )}
 
+                {/* Hiển thị Loại bài tập đã chọn */}
                 {selectedType === 'tracNghiem' && (
                   <>
                     <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
                       Trắc nghiệm
                     </span>
-                    {(currentView === 'quiz' || currentView === 'practices') && (
+                    {/* Chỉ hiển thị Practice khi ở màn hình practices hoặc quiz VÀ đã chọn practice */}
+                    {(currentView === 'quiz' || currentView === 'practices') && selectedPractice && (
                       <>
                         <span className="text-gray-400">/</span>
+                        {/* Sử dụng state selectedPractice để hiển thị số practice */}
                         <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
-                          Practice 1
+                          Practice {selectedPractice}
                         </span>
                       </>
                     )}
