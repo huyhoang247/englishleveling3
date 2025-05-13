@@ -1,13 +1,13 @@
 import React from 'react';
 
-// Định nghĩa icon cho breadcrumb separator
+// Define icon for breadcrumb separator
 const ChevronRightIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m9 18 6-6-6-6" />
   </svg>
 );
 
-// Định nghĩa icon Home bằng SVG
+// Define Home icon using SVG
 const HomeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -16,7 +16,7 @@ const HomeIcon = () => (
 );
 
 
-// Định nghĩa kiểu cho props
+// Define type for props
 interface BreadcrumbsProps {
   currentView: string;
   selectedQuiz: number | null;
@@ -34,51 +34,51 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   goHome,
   setCurrentView,
 }) => {
-  // Hàm xử lý khi click vào breadcrumb Quiz
+  // Function to handle click on Quiz breadcrumb
   const handleQuizBreadcrumbClick = () => {
     setCurrentView('quizTypes');
   };
 
-  // Hàm xử lý khi click vào breadcrumb Practice
+  // Function to handle click on Practice breadcrumb
   const handlePracticeBreadcrumbClick = () => {
-    // Chỉ điều hướng đến 'practices' nếu đang không ở màn hình chi tiết practice (quiz)
+    // Navigate to 'practices' only if not currently on the practice detail screen ('quiz')
     if (currentView !== 'quiz') {
       setCurrentView('practices');
     } else {
-      // Nếu đang ở màn hình chi tiết practice (quiz), nhấn vào breadcrumb Practice
-      // sẽ quay về danh sách practices.
+      // If currently on the practice detail screen ('quiz'), clicking the Practice breadcrumb
+      // will navigate back to the list of practices.
       setCurrentView('practices');
     }
   };
 
-  // Hàm xử lý khi click vào breadcrumb Loại bài tập
+  // Function to handle click on Exercise Type breadcrumb
   const handleTypeBreadcrumbClick = () => {
-      // Điều hướng đến màn hình danh sách bài tập dựa trên loại đã chọn
+      // Navigate to the list screen based on the selected type
       if (selectedType === 'tracNghiem') {
-          setCurrentView('practices'); // Giả định 'practices' là màn hình danh sách trắc nghiệm
+          setCurrentView('practices'); // Assuming 'practices' is the multiple choice list screen
       } else {
-          setCurrentView('fillInBlanks'); // Giả định 'fillInBlanks' là màn hình danh sách điền từ
+          setCurrentView('fillInBlanks'); // Assuming 'fillInBlanks' is the fill-in-the-blanks list screen
       }
   };
 
 
-  // Xác định trạng thái active cho các breadcrumb
+  // Determine active state for breadcrumbs
   const isQuizActive = currentView === 'quizTypes';
-  // Loại bài tập active khi đang ở practices hoặc fillInBlanks, KHÔNG active khi ở quiz
-  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks'; // Đã chỉnh sửa
-  // Practice active khi đang ở màn hình quiz (chi tiết bài practice)
-  const isPracticeActive = currentView === 'quiz'; // Đã chỉnh sửa
+  // Exercise type is active when in practices or fillInBlanks, NOT active when in quiz
+  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks'; // Corrected
+  // Practice is active when on the quiz screen (practice detail)
+  const isPracticeActive = currentView === 'quiz'; // Corrected
 
   return (
     <nav className="flex items-center py-2 px-3 bg-white rounded-lg shadow-sm mb-3 text-sm">
       <div className="flex items-center flex-wrap gap-1">
-        {/* Trang chủ - Thay bằng icon Home */}
+        {/* Home Page - Replaced with Home icon */}
         <button
           onClick={goHome}
-          className="text-gray-600 hover:text-blue-600 transition-colors duration-200 p-1 rounded" // Thêm padding và bo góc nhẹ cho khu vực click
-          aria-label="Trang chủ" // Thêm aria-label cho trình đọc màn hình
+          className="text-gray-600 hover:text-blue-600 transition-colors duration-200 p-1 rounded" // Added padding and slight rounding for click area
+          aria-label="Trang chủ" // Added aria-label for screen readers
         >
-          <HomeIcon /> {/* Sử dụng component HomeIcon */}
+          <HomeIcon /> {/* Using HomeIcon component */}
         </button>
 
         {/* Quiz */}
@@ -87,6 +87,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="flex items-center mx-1 text-gray-400">
               <ChevronRightIcon />
             </div>
+            {/* Button cho Quiz - Sử dụng lớp transition-all duration-200 của Tailwind */}
             <button
               onClick={handleQuizBreadcrumbClick}
               className={`transition-all duration-200 ${
@@ -100,15 +101,15 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           </>
         )}
 
-        {/* Loại bài tập */}
+        {/* Exercise Type */}
         {selectedType && (
           <>
             <div className="flex items-center mx-1 text-gray-400">
               <ChevronRightIcon />
             </div>
-            {/* Thay đổi span thành button và thêm onClick */}
+            {/* Button cho Loại bài tập - Sử dụng lớp transition-all duration-200 của Tailwind */}
             <button
-              onClick={handleTypeBreadcrumbClick} // Thêm sự kiện click
+              onClick={handleTypeBreadcrumbClick} // Added click event
               className={`transition-all duration-200 ${
                 isTypeActive
                   ? selectedType === 'tracNghiem'
@@ -128,6 +129,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="flex items-center mx-1 text-gray-400">
               <ChevronRightIcon />
             </div>
+            {/* Button cho Practice - Sử dụng lớp transition-all duration-200 của Tailwind */}
             <button
               onClick={handlePracticeBreadcrumbClick}
               className={`transition-all duration-200 ${
@@ -146,3 +148,4 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 };
 
 export default Breadcrumbs;
+
