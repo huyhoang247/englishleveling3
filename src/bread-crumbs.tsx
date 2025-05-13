@@ -129,10 +129,10 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="flex items-center mx-1 text-gray-400">
               <ChevronRightIcon />
             </div>
-            {/* Button cho Practice - Sử dụng lớp transition-all duration-200 của Tailwind */}
+            {/* Button cho Practice - Thêm lớp animate-on-enter để áp dụng animation khi component được render */}
             <button
               onClick={handlePracticeBreadcrumbClick}
-              className={`transition-all duration-200 ${
+              className={`transition-all duration-200 animate-on-enter ${ // Add the animation class here
                 isPracticeActive
                   ? 'bg-indigo-100 text-indigo-800 font-medium px-2 py-0.5 rounded-full'
                   : 'text-gray-600 hover:text-blue-600'
@@ -148,4 +148,3 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 };
 
 export default Breadcrumbs;
-
