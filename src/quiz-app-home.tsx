@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // Import component QuizApp từ file quiz.tsx
-import QuizApp from './quiz';
+import QuizApp from './quiz.tsx';
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
