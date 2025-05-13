@@ -259,16 +259,8 @@ export default function QuizAppHome() {
           {currentView !== 'main' && (
             <div className="mb-6">
               {/* Phần nút điều hướng Quay lại và Trang chủ */}
-              <div className="flex justify-between mb-2">
-                <button
-                  onClick={goBack}
-                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Quay lại
-                </button>
+              <div className="flex justify-end mb-2"> {/* Changed justify-between to justify-end */}
+                {/* Removed the "Quay lại" button */}
 
                 {/* Nút Trang chủ giờ được xử lý trong component Breadcrumbs */}
                 {/* <button
