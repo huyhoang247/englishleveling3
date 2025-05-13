@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronRight, Home, BookOpen, ListChecks, ClipboardList } from 'lucide-react';
 
 // Định nghĩa kiểu cho props
 interface BreadcrumbsProps {
@@ -20,73 +21,113 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 }) => {
   // Hàm xử lý khi click vào breadcrumb Quiz
   const handleQuizBreadcrumbClick = () => {
-    // Quay về màn hình chọn loại bài tập (quizTypes)
     setCurrentView('quizTypes');
   };
 
-  // Hàm xử lý khi click vào breadcrumb Loại bài tập (hiện tại không có link, chỉ là text)
-  // Có thể thêm logic nếu muốn click vào đây để quay lại màn hình chọn loại bài tập
-  // const handleTypeBreadcrumbClick = () => {
-  //   setCurrentView('quizTypes');
-  // };
-
   // Hàm xử lý khi click vào breadcrumb Practice
   const handlePracticeBreadcrumbClick = () => {
-     // Quay về màn hình chọn practice
     setCurrentView('practices');
   };
 
+  // Xác định trạng thái active cho từng breadcrumb
+  const isQuizActive = currentView === 'quizTypes';
+  const isTypeActive = currentView === 'practices';
+  const isPracticeActive = currentView === 'quiz' || currentView === 'fillInBlanks';
+
+  // Helper function để xác định màu sắc cho loại bài tập
+  const getTypeColors = () => {
+    if (selectedType === 'tracNghiem') {
+      return {
+        bg: isTypeActive || isPracticeActive ? 'bg-emerald-100' : 'bg-gray-100',
+        text: isTypeActive || isPracticeActive ? 'text-emerald-700' : 'text-gray-700',
+        hover: 'hover:bg-emerald-200',
+        icon: <ListChecks size={16} className="mr-1" />
+      };
+    } else {
+      return {
+        bg: isTypeActive || isPracticeActive ? 'bg-amber-100' : 'bg-gray-100',
+        text: isTypeActive || isPracticeActive ? 'text-amber-700' : 'text-gray-700',
+        hover: 'hover:bg-amber-200',
+        icon: <ClipboardList size={16} className="mr-1" />
+      };
+    }
+  };
 
   return (
-    <div className="flex items-center gap-2 text-sm">
-      {/* Breadcrumb Trang chủ */}
-      <button
-        onClick={goHome}
-        className="text-blue-600 hover:underline"
-      >
-        Trang chủ
-      </button>
-
-      {/* Hiển thị Quiz đã chọn nếu có */}
-      {selectedQuiz && (
-        <>
-          <span className="text-gray-400">/</span>
-          {/* Breadcrumb Quiz - có thể click để quay lại màn hình chọn loại */}
+    <nav aria-label="Breadcrumb" className="py-3 px-4 bg-white rounded-lg shadow-sm">
+      <ol className="flex items-center flex-wrap gap-1">
+        {/* Trang chủ */}
+        <li className="flex items-center">
           <button
-            onClick={handleQuizBreadcrumbClick}
-            className={`text-blue-600 hover:underline ${currentView === 'quizTypes' || currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz' ? 'bg-blue-100 px-2 py-1 rounded-full' : ''}`}
+            onClick={goHome}
+            className="flex items-center px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition-all duration-200"
           >
-            Quiz {selectedQuiz}
+            <Home size={16} className="mr-1" />
+            <span>Trang chủ</span>
           </button>
-        </>
-      )}
+        </li>
 
-      {/* Hiển thị Loại bài tập đã chọn nếu có */}
-      {selectedType && (
-        <>
-          <span className="text-gray-400">/</span>
-          {/* Breadcrumb Loại bài tập - hiện tại chỉ hiển thị text */}
-          {/* Có thể thêm onClick={handleTypeBreadcrumbClick} nếu muốn click vào đây */}
-          <span className={`${currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz' ? (selectedType === 'tracNghiem' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800') + ' px-2 py-1 rounded-full' : ''}`}>
-            {selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}
-          </span>
-
-          {/* Chỉ hiển thị dấu '/' và Practice khi ở màn hình practices hoặc quiz VÀ đã chọn practice */}
-          {(currentView === 'practices' || currentView === 'quiz') && selectedPractice && (
-            <>
-              <span className="text-gray-400">/</span>
-              {/* Breadcrumb Practice - có thể click để quay lại màn hình chọn practice */}
+        {/* Quiz */}
+        {selectedQuiz && (
+          <>
+            <li className="flex items-center text-gray-400">
+              <ChevronRight size={16} />
+            </li>
+            <li>
               <button
-                 onClick={handlePracticeBreadcrumbClick}
-                 className={`${currentView === 'quiz' ? 'bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full' : ''} text-blue-600 hover:underline`}
+                onClick={handleQuizBreadcrumbClick}
+                className={`flex items-center px-3 py-2 rounded-md transition-all duration-200 
+                  ${isQuizActive || isTypeActive || isPracticeActive 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:bg-gray-100'}`}
               >
-                Practice {selectedPractice}
+                <BookOpen size={16} className="mr-1" />
+                <span>Quiz {selectedQuiz}</span>
               </button>
-            </>
-          )}
-        </>
-      )}
-    </div>
+            </li>
+          </>
+        )}
+
+        {/* Loại bài tập */}
+        {selectedType && (
+          <>
+            <li className="flex items-center text-gray-400">
+              <ChevronRight size={16} />
+            </li>
+            <li>
+              <button 
+                onClick={handleQuizBreadcrumbClick}
+                className={`flex items-center px-3 py-2 rounded-md transition-all duration-200 
+                  ${getTypeColors().bg} ${getTypeColors().text} ${getTypeColors().hover}`}
+              >
+                {getTypeColors().icon}
+                <span>{selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}</span>
+              </button>
+            </li>
+          </>
+        )}
+
+        {/* Practice */}
+        {(currentView === 'practices' || currentView === 'quiz' || currentView === 'fillInBlanks') && selectedPractice && (
+          <>
+            <li className="flex items-center text-gray-400">
+              <ChevronRight size={16} />
+            </li>
+            <li>
+              <button
+                onClick={handlePracticeBreadcrumbClick}
+                className={`flex items-center px-3 py-2 rounded-md transition-all duration-200 
+                  ${isPracticeActive 
+                    ? 'bg-indigo-100 text-indigo-700' 
+                    : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <span>Practice {selectedPractice}</span>
+              </button>
+            </li>
+          </>
+        )}
+      </ol>
+    </nav>
   );
 };
 
