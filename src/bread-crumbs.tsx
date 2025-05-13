@@ -1,22 +1,130 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Định nghĩa icon cho breadcrumb separator
+// Improved Chevron Icon with better sizing and styling
 const ChevronRightIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="16" 
+    height="16" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className="mx-1"
+  >
     <path d="m9 18 6-6-6-6" />
   </svg>
 );
 
-// Định nghĩa icon Home bằng SVG
+// Enhanced Home Icon
 const HomeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="18" 
+    height="18" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className="mr-1"
+  >
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
     <polyline points="9 22 9 12 15 12 15 22"></polyline>
   </svg>
 );
 
+// New quiz icon
+const QuizIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="14" 
+    height="14" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className="mr-1"
+  >
+    <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"></path>
+    <path d="M12 8v4l3 3"></path>
+  </svg>
+);
 
-// Định nghĩa kiểu cho props
+// New type icon
+const TypeIcon = ({type}) => {
+  // Different icon based on type
+  if (type === 'tracNghiem') {
+    return (
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className="mr-1"
+      >
+        <polyline points="9 11 12 14 22 4"></polyline>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+    );
+  } else {
+    return (
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="14" 
+        height="14" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className="mr-1"
+      >
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+    );
+  }
+};
+
+// New practice icon
+const PracticeIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="14" 
+    height="14" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className="mr-1"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+    <polyline points="14 2 14 8 20 8"></polyline>
+    <line x1="16" y1="13" x2="8" y2="13"></line>
+    <line x1="16" y1="17" x2="8" y2="17"></line>
+    <polyline points="10 9 9 9 8 9"></polyline>
+  </svg>
+);
+
+// Define props interface
 interface BreadcrumbsProps {
   currentView: string;
   selectedQuiz: number | null;
@@ -34,110 +142,178 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   goHome,
   setCurrentView,
 }) => {
-  // Hàm xử lý khi click vào breadcrumb Quiz
+  // Add animation state
+  const [animation, setAnimation] = useState({
+    quiz: false,
+    type: false,
+    practice: false
+  });
+
+  // Reset animation after it plays
+  useEffect(() => {
+    if (animation.quiz || animation.type || animation.practice) {
+      const timer = setTimeout(() => {
+        setAnimation({ quiz: false, type: false, practice: false });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [animation]);
+
+  // Handler for Quiz breadcrumb click
   const handleQuizBreadcrumbClick = () => {
+    setAnimation({ ...animation, quiz: true });
     setCurrentView('quizTypes');
   };
 
-  // Hàm xử lý khi click vào breadcrumb Practice
+  // Handler for Type breadcrumb click
+  const handleTypeBreadcrumbClick = () => {
+    setAnimation({ ...animation, type: true });
+    if (selectedType === 'tracNghiem') {
+      setCurrentView('practices');
+    } else {
+      setCurrentView('fillInBlanks');
+    }
+  };
+
+  // Handler for Practice breadcrumb click
   const handlePracticeBreadcrumbClick = () => {
-    // Chỉ điều hướng đến 'practices' nếu đang không ở màn hình chi tiết practice (quiz)
+    setAnimation({ ...animation, practice: true });
     if (currentView !== 'quiz') {
       setCurrentView('practices');
     } else {
-      // Nếu đang ở màn hình chi tiết practice (quiz), nhấn vào breadcrumb Practice
-      // sẽ quay về danh sách practices.
       setCurrentView('practices');
     }
   };
 
-  // Hàm xử lý khi click vào breadcrumb Loại bài tập
-  const handleTypeBreadcrumbClick = () => {
-      // Điều hướng đến màn hình danh sách bài tập dựa trên loại đã chọn
-      if (selectedType === 'tracNghiem') {
-          setCurrentView('practices'); // Giả định 'practices' là màn hình danh sách trắc nghiệm
-      } else {
-          setCurrentView('fillInBlanks'); // Giả định 'fillInBlanks' là màn hình danh sách điền từ
-      }
+  // Determine active states for breadcrumbs
+  const isQuizActive = currentView === 'quizTypes';
+  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks';
+  const isPracticeActive = currentView === 'quiz';
+
+  // Get type name for display
+  const getTypeName = () => {
+    return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
   };
 
+  // Get type color scheme
+  const getTypeColorScheme = () => {
+    if (selectedType === 'tracNghiem') {
+      return {
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+        hover: 'hover:bg-green-200',
+        border: 'border-green-300'
+      };
+    } else {
+      return {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+        hover: 'hover:bg-yellow-200',
+        border: 'border-yellow-300'
+      };
+    }
+  };
 
-  // Xác định trạng thái active cho các breadcrumb
-  const isQuizActive = currentView === 'quizTypes';
-  // Loại bài tập active khi đang ở practices hoặc fillInBlanks, KHÔNG active khi ở quiz
-  const isTypeActive = currentView === 'practices' || currentView === 'fillInBlanks'; // Đã chỉnh sửa
-  // Practice active khi đang ở màn hình quiz (chi tiết bài practice)
-  const isPracticeActive = currentView === 'quiz'; // Đã chỉnh sửa
+  // Reusable breadcrumb item component
+  const BreadcrumbItem = ({ 
+    active, 
+    onClick, 
+    label, 
+    icon,
+    colorScheme = {
+      bg: 'bg-blue-100', 
+      text: 'text-blue-800',
+      hover: 'hover:bg-blue-200',
+      border: 'border-blue-300'
+    },
+    animationState = false
+  }) => (
+    <button
+      onClick={onClick}
+      className={`
+        flex items-center transition-all duration-200 border
+        ${active 
+          ? `${colorScheme.bg} ${colorScheme.text} font-medium px-3 py-1 rounded-full border-${colorScheme.border}`
+          : 'text-gray-600 hover:text-blue-700 px-2 py-0.5 border-transparent hover:bg-gray-100 rounded'}
+        ${animationState ? 'scale-105' : ''}
+      `}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
 
   return (
-    <nav className="flex items-center py-2 px-3 bg-white rounded-lg shadow-sm mb-3 text-sm">
-      <div className="flex items-center flex-wrap gap-1">
-        {/* Trang chủ - Thay bằng icon Home */}
+    <nav className="flex items-center py-3 px-4 bg-white rounded-lg shadow-md mb-4 text-sm">
+      <div className="flex items-center flex-wrap gap-2">
+        {/* Home Button */}
         <button
           onClick={goHome}
-          className="text-gray-600 hover:text-blue-600 transition-colors duration-200 p-1 rounded" // Thêm padding và bo góc nhẹ cho khu vực click
-          aria-label="Trang chủ" // Thêm aria-label cho trình đọc màn hình
+          className="flex items-center text-gray-700 hover:text-blue-700 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-100"
+          aria-label="Trang chủ"
         >
-          <HomeIcon /> {/* Sử dụng component HomeIcon */}
+          <HomeIcon />
+          <span className="font-medium">Trang chủ</span>
         </button>
 
         {/* Quiz */}
         {selectedQuiz && (
           <>
-            <div className="flex items-center mx-1 text-gray-400">
+            <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
-            <button
+            <BreadcrumbItem 
+              active={isQuizActive}
               onClick={handleQuizBreadcrumbClick}
-              className={`transition-all duration-200 ${
-                isQuizActive
-                  ? 'bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded-full'
-                  : 'text-gray-600 hover:text-blue-600'
-              }`}
-            >
-              Quiz {selectedQuiz}
-            </button>
+              label={`Quiz ${selectedQuiz}`}
+              icon={<QuizIcon />}
+              colorScheme={{
+                bg: 'bg-blue-100',
+                text: 'text-blue-800',
+                hover: 'hover:bg-blue-200',
+                border: 'border-blue-300'
+              }}
+              animationState={animation.quiz}
+            />
           </>
         )}
 
-        {/* Loại bài tập */}
+        {/* Type */}
         {selectedType && (
           <>
-            <div className="flex items-center mx-1 text-gray-400">
+            <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
-            {/* Thay đổi span thành button và thêm onClick */}
-            <button
-              onClick={handleTypeBreadcrumbClick} // Thêm sự kiện click
-              className={`transition-all duration-200 ${
-                isTypeActive
-                  ? selectedType === 'tracNghiem'
-                    ? 'bg-green-100 text-green-800 font-medium px-2 py-0.5 rounded-full'
-                    : 'bg-yellow-100 text-yellow-800 font-medium px-2 py-0.5 rounded-full'
-                  : 'text-gray-600 hover:text-blue-600' // Thêm hover state
-              }`}
-            >
-              {selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}
-            </button>
+            <BreadcrumbItem 
+              active={isTypeActive}
+              onClick={handleTypeBreadcrumbClick}
+              label={getTypeName()}
+              icon={<TypeIcon type={selectedType} />}
+              colorScheme={getTypeColorScheme()}
+              animationState={animation.type}
+            />
           </>
         )}
 
         {/* Practice */}
         {selectedPractice && (currentView === 'practices' || currentView === 'quiz') && (
           <>
-            <div className="flex items-center mx-1 text-gray-400">
+            <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
-            <button
+            <BreadcrumbItem 
+              active={isPracticeActive}
               onClick={handlePracticeBreadcrumbClick}
-              className={`transition-all duration-200 ${
-                isPracticeActive
-                  ? 'bg-indigo-100 text-indigo-800 font-medium px-2 py-0.5 rounded-full'
-                  : 'text-gray-600 hover:text-blue-600'
-              }`}
-            >
-              Practice {selectedPractice}
-            </button>
+              label={`Practice ${selectedPractice}`}
+              icon={<PracticeIcon />}
+              colorScheme={{
+                bg: 'bg-indigo-100',
+                text: 'text-indigo-800',
+                hover: 'hover:bg-indigo-200',
+                border: 'border-indigo-300'
+              }}
+              animationState={animation.practice}
+            />
           </>
         )}
       </div>
