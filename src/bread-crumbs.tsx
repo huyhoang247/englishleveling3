@@ -178,9 +178,15 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   // Handler for Practice breadcrumb click
   const handlePracticeBreadcrumbClick = () => {
     setAnimation({ ...animation, practice: true });
-    if (currentView !== 'quiz') {
-      setCurrentView('practices');
-    } else {
+    
+    // Nếu đang ở màn hình chi tiết practice (quiz), không cần chuyển đi đâu cả
+    // vì người dùng đã đang ở practice đúng rồi
+    if (currentView === 'quiz') {
+      // Không làm gì cả hoặc có thể thêm thông báo nhỏ cho biết đã ở đúng practice
+      return;
+    } 
+    // Nếu không phải đang ở quiz, thì chuyển về practices
+    else {
       setCurrentView('practices');
     }
   };
