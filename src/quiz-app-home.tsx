@@ -287,9 +287,14 @@ export default function QuizAppHome() {
                 {/* Hiển thị Quiz đã chọn */}
                 {selectedQuiz && (
                   <>
+                    {/* Highlight Quiz if currentView is quizTypes, practices, fillInBlanks, or quiz */}
                     <button
                       onClick={() => setCurrentView('main')}
-                      className="text-blue-600 hover:underline"
+                      className={`px-2 py-1 rounded-full transition-colors ${
+                         currentView === 'quizTypes' || currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz'
+                           ? 'bg-blue-500 text-white'
+                           : 'text-blue-600 hover:underline'
+                       }`}
                     >
                       Quiz {selectedQuiz}
                     </button>
@@ -300,15 +305,24 @@ export default function QuizAppHome() {
                 {/* Hiển thị Loại bài tập đã chọn */}
                 {selectedType === 'tracNghiem' && (
                   <>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                    {/* Highlight Trắc nghiệm if currentView is practices or quiz */}
+                    <span className={`px-2 py-1 rounded-full ${
+                        currentView === 'practices' || currentView === 'quiz'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-green-100 text-green-800'
+                      }`}>
                       Trắc nghiệm
                     </span>
                     {/* Chỉ hiển thị Practice khi ở màn hình practices hoặc quiz VÀ đã chọn practice */}
                     {(currentView === 'quiz' || currentView === 'practices') && selectedPractice && (
                       <>
                         <span className="text-gray-400">/</span>
-                        {/* Sử dụng state selectedPractice để hiển thị số practice */}
-                        <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                        {/* Highlight Practice if currentView is quiz */}
+                        <span className={`px-2 py-1 rounded-full ${
+                            currentView === 'quiz'
+                              ? 'bg-indigo-500 text-white'
+                              : 'bg-indigo-100 text-indigo-800'
+                          }`}>
                           Practice {selectedPractice}
                         </span>
                       </>
@@ -317,7 +331,12 @@ export default function QuizAppHome() {
                 )}
 
                 {selectedType === 'dienTu' && (
-                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                  // Highlight Điền từ if currentView is fillInBlanks
+                  <span className={`px-2 py-1 rounded-full ${
+                      currentView === 'fillInBlanks'
+                        ? 'bg-yellow-500 text-white'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
                     Điền từ
                   </span>
                 )}
