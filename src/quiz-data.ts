@@ -28,8 +28,8 @@ const quizData = [
   },
   {
     "question": "Từ \"Capacity\" trong tiếng Anh có nghĩa là gì?",
-    "options": ["Khả năng", "Giới hạn", "Công suất", "Khoảng trống"],
-    "correctAnswer": "Công suất"
+    "options": ["Khả năng", "Giới hạn", "Sức chứa", "Khoảng trống"],
+    "correctAnswer": "Sức chứa"
   },
   {
     "question": "Từ \"Senate\" trong tiếng Anh có nghĩa là gì?",
