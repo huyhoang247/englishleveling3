@@ -12,7 +12,7 @@ const ChevronRightIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="mx-1"
+    className="mx-0.5" // Đã thay đổi từ mx-1 thành mx-0.5 để giảm khoảng cách
   >
     <path d="m9 18 6-6-6-6" />
   </svg>
@@ -160,7 +160,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     </button>
   );
 
-  // --- Logic mới để xác định các mục hiển thị ---
+  // --- Logic để xác định các mục hiển thị ---
   const breadcrumbItems = [];
 
   // Thêm Home
@@ -256,7 +256,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     displayedItems.push(breadcrumbItems[totalItems - 2]);
     displayedItems.push(breadcrumbItems[totalItems - 1]);
   }
-  // --- Kết thúc logic mới ---
+  // --- Kết thúc logic ---
 
 
   return (
@@ -264,7 +264,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
       <div className="flex items-center flex-wrap gap-2">
         {displayedItems.map((item, index) => (
           <React.Fragment key={item.key}>
-            {/* Chỉ hiển thị Chevron nếu không phải là mục đầu tiên */}
+            {/* Chỉ hiển thị Chevron nếu không phải là mục đầu tiên và không phải đứng sau dấu "..." */}
             {index > 0 && item.key !== 'ellipsis' && displayedItems[index -1].key !== 'ellipsis' && (
                  <div className="flex items-center text-gray-400">
                     <ChevronRightIcon />
