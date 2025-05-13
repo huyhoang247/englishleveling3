@@ -1,0 +1,16 @@
+/* Define the keyframes for the animation */
+@keyframes slideInFadeIn {
+  0% {
+    opacity: 0; /* Start completely transparent */
+    transform: translateY(10px); /* Start 10 pixels below its final position */
+  }
+  100% {
+    opacity: 1; /* End fully visible */
+    transform: translateY(0); /* End at its natural vertical position */
+  }
+}
+
+/* Apply this class to the element you want to animate when it's added to the DOM */
+.animate-on-enter {
+  animation: slideInFadeIn 0.4s ease-out forwards; /* Apply the animation: name, duration, easing, and keep the final state */
+}
