@@ -7,6 +7,14 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
+// Định nghĩa icon Home bằng SVG
+const HomeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+);
+
 // Định nghĩa kiểu cho props
 interface BreadcrumbsProps {
   currentView: string;
@@ -43,12 +51,13 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   return (
     <nav className="flex items-center py-2 px-3 bg-white rounded-lg shadow-sm mb-3 text-sm">
       <div className="flex items-center flex-wrap gap-1">
-        {/* Trang chủ */}
+        {/* Trang chủ - Thay bằng icon Home */}
         <button
           onClick={goHome}
-          className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200"
+          className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200 flex items-center" // Thêm flex và items-center để căn icon và text (nếu có)
+          aria-label="Trang chủ" // Thêm aria-label cho khả năng tiếp cận
         >
-          Trang chủ
+          <HomeIcon /> {/* Sử dụng icon Home */}
         </button>
 
         {/* Quiz */}
@@ -60,8 +69,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <button
               onClick={handleQuizBreadcrumbClick}
               className={`transition-all duration-200 ${
-                isQuizActive 
-                  ? 'bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded-full' 
+                isQuizActive
+                  ? 'bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded-full'
                   : 'text-gray-600 hover:text-blue-600'
               }`}
             >
