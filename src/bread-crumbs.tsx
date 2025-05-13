@@ -12,7 +12,7 @@ const ChevronRightIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="mx-0.5" // Đã thay đổi từ mx-1 thành mx-0.5 để giảm khoảng cách
+    // Đã loại bỏ lớp mx-0.5 để giảm tối đa khoảng cách
   >
     <path d="m9 18 6-6-6-6" />
   </svg>
