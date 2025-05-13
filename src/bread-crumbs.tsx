@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 // Improved Chevron Icon with better sizing and styling
 const ChevronRightIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="16" 
-    height="16" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
     strokeLinejoin="round"
     className="mx-1"
   >
@@ -20,15 +20,15 @@ const ChevronRightIcon = () => (
 
 // Enhanced Home Icon
 const HomeIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="18" 
-    height="18" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
     strokeLinejoin="round"
     className="mr-1"
   >
@@ -39,15 +39,15 @@ const HomeIcon = () => (
 
 // New quiz icon
 const QuizIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="14" 
-    height="14" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
     strokeLinejoin="round"
     className="mr-1"
   >
@@ -61,15 +61,15 @@ const TypeIcon = ({type}) => {
   // Different icon based on type
   if (type === 'tracNghiem') {
     return (
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        width="14" 
-        height="14" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
         strokeLinejoin="round"
         className="mr-1"
       >
@@ -79,15 +79,15 @@ const TypeIcon = ({type}) => {
     );
   } else {
     return (
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        width="14" 
-        height="14" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="2" 
-        strokeLinecap="round" 
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
         strokeLinejoin="round"
         className="mr-1"
       >
@@ -104,15 +104,15 @@ const TypeIcon = ({type}) => {
 
 // New practice icon
 const PracticeIcon = () => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="14" 
-    height="14" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
     strokeLinejoin="round"
     className="mr-1"
   >
@@ -132,8 +132,6 @@ interface BreadcrumbsProps {
   selectedPractice: number | null;
   goHome: () => void;
   setCurrentView: (view: string) => void;
-  setSelectedType?: (type: string | null) => void;  // Thêm hàm để reset selectedType
-  setSelectedPractice?: (practice: number | null) => void;  // Thêm hàm để reset selectedPractice
 }
 
 const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
@@ -143,8 +141,6 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   selectedPractice,
   goHome,
   setCurrentView,
-  setSelectedType,  // Nhận hàm để reset selectedType
-  setSelectedPractice,  // Nhận hàm để reset selectedPractice
 }) => {
   // Add animation state
   const [animation, setAnimation] = useState({
@@ -166,28 +162,14 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   // Handler for Quiz breadcrumb click
   const handleQuizBreadcrumbClick = () => {
     setAnimation({ ...animation, quiz: true });
-    
-    // Reset selectedType và selectedPractice khi quay về màn hình quizTypes
-    if (setSelectedType) {
-      setSelectedType(null);
-    }
-    
-    if (setSelectedPractice) {
-      setSelectedPractice(null);
-    }
-    
     setCurrentView('quizTypes');
   };
 
   // Handler for Type breadcrumb click
   const handleTypeBreadcrumbClick = () => {
     setAnimation({ ...animation, type: true });
-    
-    // Reset selectedPractice khi quay về danh sách theo loại
-    if (setSelectedPractice) {
-      setSelectedPractice(null);
-    }
-    
+
+    // Khi quay về danh sách theo loại, cần reset selectedPractice để breadcrumb không hiển thị practice nữa
     if (selectedType === 'tracNghiem') {
       setCurrentView('practices');
     } else {
@@ -198,12 +180,13 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   // Handler for Practice breadcrumb click
   const handlePracticeBreadcrumbClick = () => {
     setAnimation({ ...animation, practice: true });
-    
+
     // Nếu đang ở màn hình chi tiết practice (quiz), không cần chuyển đi đâu cả
+    // vì người dùng đã đang ở practice đúng rồi
     if (currentView === 'quiz') {
-      // Không làm gì cả
+      // Không làm gì cả hoặc có thể thêm thông báo nhỏ cho biết đã ở đúng practice
       return;
-    } 
+    }
     // Nếu không phải đang ở quiz, thì chuyển về practices
     else {
       setCurrentView('practices');
@@ -239,13 +222,13 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   };
 
   // Reusable breadcrumb item component
-  const BreadcrumbItem = ({ 
-    active, 
-    onClick, 
-    label, 
+  const BreadcrumbItem = ({
+    active,
+    onClick,
+    label,
     icon,
     colorScheme = {
-      bg: 'bg-blue-100', 
+      bg: 'bg-blue-100',
       text: 'text-blue-800',
       hover: 'hover:bg-blue-200',
       border: 'border-blue-300'
@@ -256,7 +239,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
       onClick={onClick}
       className={`
         flex items-center transition-all duration-200 border
-        ${active 
+        ${active
           ? `${colorScheme.bg} ${colorScheme.text} font-medium px-3 py-1 rounded-full border-${colorScheme.border}`
           : 'text-gray-600 hover:text-blue-700 px-2 py-0.5 border-transparent hover:bg-gray-100 rounded'}
         ${animationState ? 'scale-105' : ''}
@@ -286,7 +269,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
-            <BreadcrumbItem 
+            <BreadcrumbItem
               active={isQuizActive}
               onClick={handleQuizBreadcrumbClick}
               label={`Quiz ${selectedQuiz}`}
@@ -302,13 +285,13 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           </>
         )}
 
-        {/* Type - Chỉ hiển thị khi selectedType có giá trị */}
-        {selectedType && (
+        {/* Type - Cập nhật điều kiện hiển thị */}
+        {selectedType && currentView !== 'quizTypes' && (
           <>
             <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
-            <BreadcrumbItem 
+            <BreadcrumbItem
               active={isTypeActive}
               onClick={handleTypeBreadcrumbClick}
               label={getTypeName()}
@@ -325,7 +308,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="flex items-center text-gray-400">
               <ChevronRightIcon />
             </div>
-            <BreadcrumbItem 
+            <BreadcrumbItem
               active={true} // Luôn active vì chỉ hiển thị khi đang ở trang chi tiết
               onClick={handlePracticeBreadcrumbClick}
               label={`Practice ${selectedPractice}`}
