@@ -116,7 +116,7 @@ export default function QuizAppHome() {
         return (
           <div className="flex flex-col items-center gap-4">
             <div className="text-center mb-4">
-              <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-2">Quiz {selectedQuiz}</span>
+              {/* Breadcrumbs removed as per request */}
               <h1 className="text-2xl font-bold text-gray-800">Chọn loại bài tập</h1>
               <div className="w-16 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
             </div>
@@ -287,14 +287,10 @@ export default function QuizAppHome() {
                 {/* Hiển thị Quiz đã chọn */}
                 {selectedQuiz && (
                   <>
-                    {/* Highlight Quiz if currentView is quizTypes, practices, fillInBlanks, or quiz */}
+                    {/* Thêm class có điều kiện cho background */}
                     <button
                       onClick={() => setCurrentView('main')}
-                      className={`px-2 py-1 rounded-full transition-colors ${
-                         currentView === 'quizTypes' || currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz'
-                           ? 'bg-blue-500 text-white'
-                           : 'text-blue-600 hover:underline'
-                       }`}
+                      className={`text-blue-600 hover:underline ${currentView === 'quizTypes' || currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz' ? 'bg-blue-100 px-2 py-1 rounded-full' : ''}`}
                     >
                       Quiz {selectedQuiz}
                     </button>
@@ -303,42 +299,24 @@ export default function QuizAppHome() {
                 )}
 
                 {/* Hiển thị Loại bài tập đã chọn */}
-                {selectedType === 'tracNghiem' && (
+                {selectedType && (
                   <>
-                    {/* Highlight Trắc nghiệm if currentView is practices or quiz */}
-                    <span className={`px-2 py-1 rounded-full ${
-                        currentView === 'practices' || currentView === 'quiz'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                      Trắc nghiệm
+                    {/* Thêm class có điều kiện cho background */}
+                    <span className={`${currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz' ? (selectedType === 'tracNghiem' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800') + ' px-2 py-1 rounded-full' : ''}`}>
+                      {selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}
                     </span>
-                    {/* Chỉ hiển thị Practice khi ở màn hình practices hoặc quiz VÀ đã chọn practice */}
-                    {(currentView === 'quiz' || currentView === 'practices') && selectedPractice && (
+                    {/* Chỉ hiển thị dấu '/' và Practice khi ở màn hình practices hoặc quiz VÀ đã chọn practice */}
+                    {(currentView === 'practices' || currentView === 'quiz') && selectedPractice && (
                       <>
                         <span className="text-gray-400">/</span>
-                        {/* Highlight Practice if currentView is quiz */}
-                        <span className={`px-2 py-1 rounded-full ${
-                            currentView === 'quiz'
-                              ? 'bg-indigo-500 text-white'
-                              : 'bg-indigo-100 text-indigo-800'
-                          }`}>
+                        {/* Sử dụng state selectedPractice để hiển thị số practice */}
+                        {/* Thêm class có điều kiện cho background */}
+                         <span className={`${currentView === 'quiz' ? 'bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full' : ''}`}>
                           Practice {selectedPractice}
                         </span>
                       </>
                     )}
                   </>
-                )}
-
-                {selectedType === 'dienTu' && (
-                  // Highlight Điền từ if currentView is fillInBlanks
-                  <span className={`px-2 py-1 rounded-full ${
-                      currentView === 'fillInBlanks'
-                        ? 'bg-yellow-500 text-white'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    Điền từ
-                  </span>
                 )}
               </div>
             </div>
