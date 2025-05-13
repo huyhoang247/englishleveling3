@@ -1,6 +1,8 @@
 import { useState } from 'react';
 // Import component QuizApp từ file quiz.tsx
 import QuizApp from './quiz.tsx';
+// Import component Breadcrumbs mới tạo
+import Breadcrumbs from './bread-crumbs.tsx';
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -116,7 +118,6 @@ export default function QuizAppHome() {
         return (
           <div className="flex flex-col items-center gap-4">
             <div className="text-center mb-4">
-              {/* Breadcrumbs removed as per request */}
               <h1 className="text-2xl font-bold text-gray-800">Chọn loại bài tập</h1>
               <div className="w-16 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
             </div>
@@ -145,7 +146,6 @@ export default function QuizAppHome() {
       case 'practices':
         return (
           <div className="flex flex-col items-center gap-4">
-            {/* Breadcrumbs removed as per request */}
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
 
             <div className="space-y-4 w-full">
@@ -192,7 +192,6 @@ export default function QuizAppHome() {
          // Giữ nguyên phần render cho điền từ nếu có
         return (
           <div className="text-center">
-            {/* Breadcrumbs removed as per request */}
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
               <div className="flex justify-between items-center mb-6">
                 <span className="bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full">Câu 1/5</span> {/* Cần cập nhật lại logic câu hỏi */}
@@ -256,10 +255,10 @@ export default function QuizAppHome() {
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
         <div className="h-[calc(100%-8px)] p-6"> {/* 8px = height của gradient line trên cùng */}
-          {/* Navigation bar */}
+          {/* Navigation bar và Breadcrumbs */}
           {currentView !== 'main' && (
             <div className="mb-6">
-              {/* Phần nút điều hướng */}
+              {/* Phần nút điều hướng Quay lại và Trang chủ */}
               <div className="flex justify-between mb-2">
                 <button
                   onClick={goBack}
@@ -271,7 +270,8 @@ export default function QuizAppHome() {
                   Quay lại
                 </button>
 
-                <button
+                {/* Nút Trang chủ giờ được xử lý trong component Breadcrumbs */}
+                {/* <button
                   onClick={goHome}
                   className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
                 >
@@ -279,46 +279,22 @@ export default function QuizAppHome() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                   Trang chủ
-                </button>
+                </button> */}
+                 {/* Sử dụng component Breadcrumbs */}
+                 <Breadcrumbs
+                    currentView={currentView}
+                    selectedQuiz={selectedQuiz}
+                    selectedType={selectedType}
+                    selectedPractice={selectedPractice}
+                    goHome={goHome}
+                    setCurrentView={setCurrentView}
+                 />
               </div>
 
-              {/* Phần breadcrumbs cố định */}
-              <div className="flex items-center gap-2 text-sm">
-                {/* Hiển thị Quiz đã chọn */}
-                {selectedQuiz && (
-                  <>
-                    {/* Thêm class có điều kiện cho background */}
-                    <button
-                      onClick={() => setCurrentView('main')}
-                      className={`text-blue-600 hover:underline ${currentView === 'quizTypes' || currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz' ? 'bg-blue-100 px-2 py-1 rounded-full' : ''}`}
-                    >
-                      Quiz {selectedQuiz}
-                    </button>
-                    <span className="text-gray-400">/</span>
-                  </>
-                )}
-
-                {/* Hiển thị Loại bài tập đã chọn */}
-                {selectedType && (
-                  <>
-                    {/* Thêm class có điều kiện cho background */}
-                    <span className={`${currentView === 'practices' || currentView === 'fillInBlanks' || currentView === 'quiz' ? (selectedType === 'tracNghiem' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800') + ' px-2 py-1 rounded-full' : ''}`}>
-                      {selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}
-                    </span>
-                    {/* Chỉ hiển thị dấu '/' và Practice khi ở màn hình practices hoặc quiz VÀ đã chọn practice */}
-                    {(currentView === 'practices' || currentView === 'quiz') && selectedPractice && (
-                      <>
-                        <span className="text-gray-400">/</span>
-                        {/* Sử dụng state selectedPractice để hiển thị số practice */}
-                        {/* Thêm class có điều kiện cho background */}
-                         <span className={`${currentView === 'quiz' ? 'bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full' : ''}`}>
-                          Practice {selectedPractice}
-                        </span>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
+              {/* Phần breadcrumbs cố định - Đã chuyển sang component Breadcrumbs */}
+              {/* <div className="flex items-center gap-2 text-sm">
+                ... (nội dung breadcrumbs cũ) ...
+              </div> */}
             </div>
           )}
 
