@@ -132,6 +132,8 @@ interface BreadcrumbsProps {
   selectedPractice: number | null;
   goHome: () => void;
   setCurrentView: (view: string) => void;
+  setSelectedType?: (type: string | null) => void;  // Thêm hàm để reset selectedType
+  setSelectedPractice?: (practice: number | null) => void;  // Thêm hàm để reset selectedPractice
 }
 
 const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
@@ -141,6 +143,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   selectedPractice,
   goHome,
   setCurrentView,
+  setSelectedType,  // Nhận hàm để reset selectedType
+  setSelectedPractice,  // Nhận hàm để reset selectedPractice
 }) => {
   // Add animation state
   const [animation, setAnimation] = useState({
@@ -162,6 +166,16 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   // Handler for Quiz breadcrumb click
   const handleQuizBreadcrumbClick = () => {
     setAnimation({ ...animation, quiz: true });
+    
+    // Reset selectedType và selectedPractice khi quay về màn hình quizTypes
+    if (setSelectedType) {
+      setSelectedType(null);
+    }
+    
+    if (setSelectedPractice) {
+      setSelectedPractice(null);
+    }
+    
     setCurrentView('quizTypes');
   };
 
@@ -169,7 +183,11 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   const handleTypeBreadcrumbClick = () => {
     setAnimation({ ...animation, type: true });
     
-    // Khi quay về danh sách theo loại, cần reset selectedPractice để breadcrumb không hiển thị practice nữa
+    // Reset selectedPractice khi quay về danh sách theo loại
+    if (setSelectedPractice) {
+      setSelectedPractice(null);
+    }
+    
     if (selectedType === 'tracNghiem') {
       setCurrentView('practices');
     } else {
@@ -182,9 +200,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     setAnimation({ ...animation, practice: true });
     
     // Nếu đang ở màn hình chi tiết practice (quiz), không cần chuyển đi đâu cả
-    // vì người dùng đã đang ở practice đúng rồi
     if (currentView === 'quiz') {
-      // Không làm gì cả hoặc có thể thêm thông báo nhỏ cho biết đã ở đúng practice
+      // Không làm gì cả
       return;
     } 
     // Nếu không phải đang ở quiz, thì chuyển về practices
@@ -285,7 +302,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           </>
         )}
 
-        {/* Type */}
+        {/* Type - Chỉ hiển thị khi selectedType có giá trị */}
         {selectedType && (
           <>
             <div className="flex items-center text-gray-400">
