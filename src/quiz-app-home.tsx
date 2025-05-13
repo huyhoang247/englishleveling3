@@ -1,39 +1,42 @@
 import { useState } from 'react';
+// Import component QuizApp từ file quiz.tsx
+import QuizApp from './quiz';
 
-export default function QuizApp() {
+export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [timer, setTimer] = useState(0); // Cần thêm logic để quản lý timer
+  // Các state liên quan đến câu hỏi và đáp án có thể không cần thiết ở đây nữa
+  // nếu logic quiz được xử lý hoàn toàn trong QuizApp từ quiz.tsx
+  // const [currentQuestion, setCurrentQuestion] = useState(1);
+  // const [selectedAnswer, setSelectedAnswer] = useState(null);
+  // const [timer, setTimer] = useState(0); // Cần thêm logic để quản lý timer
 
   // Hàm xử lý khi chọn Quiz
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
-    setCurrentQuestion(1); // Reset câu hỏi khi chọn quiz mới
-    setSelectedAnswer(null); // Reset đáp án khi chọn quiz mới
+    // Reset states liên quan đến quiz nếu có
   };
 
   // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    setCurrentQuestion(1); // Reset câu hỏi khi loại mới
-    setSelectedAnswer(null); // Reset đáp án khi chọn loại mới
+    // Chuyển đến màn hình practices nếu chọn trắc nghiệm
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
+      // Giả định điền từ sẽ có màn hình riêng hoặc xử lý khác
       setCurrentView('fillInBlanks');
     }
   };
 
   // Hàm xử lý khi chọn Practice
   const handlePracticeSelect = (practice) => {
-    setCurrentView(`practice${practice}`);
-    setCurrentQuestion(1); // Reset câu hỏi khi chọn practice mới
-    setSelectedAnswer(null); // Reset đáp án khi chọn practice mới
-    // Cần thêm logic để tải dữ liệu câu hỏi cho practice đã chọn
+    // Khi chọn practice, chuyển view sang 'quiz' để render component QuizApp
+    setCurrentView('quiz');
+    // Có thể truyền thêm thông tin về practice đã chọn vào state nếu cần
+    // Ví dụ: setSelectedPractice(practice);
   };
 
   // Hàm quay lại màn hình trước
@@ -44,11 +47,12 @@ export default function QuizApp() {
     } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
       setCurrentView('quizTypes');
       setSelectedType(null);
-    } else if (currentView.startsWith('practice')) {
-      setCurrentView('practices');
+    } else if (currentView === 'quiz') { // Nếu đang ở màn hình quiz, quay lại màn hình practices
+       setCurrentView('practices');
     }
-    setCurrentQuestion(1); // Reset câu hỏi khi quay lại
-    setSelectedAnswer(null); // Reset đáp án khi quay lại
+    // Reset states liên quan khi quay lại
+    // setCurrentQuestion(1);
+    // setSelectedAnswer(null);
   };
 
   // Hàm quay về màn hình chính
@@ -56,33 +60,13 @@ export default function QuizApp() {
     setCurrentView('main');
     setSelectedQuiz(null);
     setSelectedType(null);
-    setCurrentQuestion(1); // Reset câu hỏi khi về trang chủ
-    setSelectedAnswer(null); // Reset đáp án khi về trang chủ
+    // Reset states liên quan khi về trang chủ
+    // setCurrentQuestion(1);
+    // setSelectedAnswer(null);
   };
 
-  // Thêm các hàm này sau các hàm hiện có
-  const handleNextQuestion = () => {
-    // Logic để chuyển sang câu hỏi tiếp theo
-    // Cần thêm kiểm tra xem còn câu hỏi nào nữa không
-    setCurrentQuestion(prev => prev + 1);
-    setSelectedAnswer(null);
-    // Cần thêm logic để tải câu hỏi tiếp theo
-  };
-
-  const handlePrevQuestion = () => {
-    // Logic để quay lại câu hỏi trước
-    if (currentQuestion > 1) {
-      setCurrentQuestion(prev => prev - 1);
-      setSelectedAnswer(null);
-      // Cần thêm logic để tải câu hỏi trước đó
-    }
-  };
-
-  const handleSelectAnswer = (answer) => {
-    setSelectedAnswer(answer);
-    // Cần thêm logic để kiểm tra đáp án và xử lý kết quả
-  };
-
+  // Các hàm xử lý trong quiz (handleNextQuestion, handlePrevQuestion, handleSelectAnswer)
+  // sẽ được xử lý bên trong component QuizApp từ quiz.tsx
 
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
@@ -159,7 +143,7 @@ export default function QuizApp() {
 
             <div className="space-y-4 w-full">
               <button
-                onClick={() => handlePracticeSelect(1)}
+                onClick={() => handlePracticeSelect(1)} // Khi nhấn Practice 1
                 className="w-full bg-white border border-gray-200 hover:border-indigo-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
                 <div className="flex items-center">
@@ -177,7 +161,7 @@ export default function QuizApp() {
               </button>
 
               <button
-                onClick={() => handlePracticeSelect(2)}
+                onClick={() => handlePracticeSelect(2)} // Khi nhấn Practice 2
                 className="w-full bg-white border border-gray-200 hover:border-pink-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
                 <div className="flex items-center">
@@ -198,6 +182,7 @@ export default function QuizApp() {
         );
 
       case 'fillInBlanks':
+         // Giữ nguyên phần render cho điền từ nếu có
         return (
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -209,7 +194,7 @@ export default function QuizApp() {
 
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
               <div className="flex justify-between items-center mb-6">
-                <span className="bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full">Câu {currentQuestion}/5</span> {/* Sử dụng state currentQuestion */}
+                <span className="bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full">Câu 1/5</span> {/* Cần cập nhật lại logic câu hỏi */}
                 <span className="text-gray-500 text-sm">Thời gian: 00:45</span> {/* Cần thêm logic timer */}
               </div>
 
@@ -229,9 +214,8 @@ export default function QuizApp() {
 
               <div className="flex justify-between">
                 <button
-                  onClick={handlePrevQuestion} // Sử dụng hàm xử lý câu trước
+                  onClick={() => {}} // Cần cập nhật lại logic
                   className="text-gray-500 flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  disabled={currentQuestion === 1} // Disable nút "Câu trước" ở câu đầu tiên
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -239,9 +223,8 @@ export default function QuizApp() {
                   Câu trước
                 </button>
                 <button
-                   onClick={handleNextQuestion} // Sử dụng hàm xử lý câu tiếp
+                   onClick={() => {}} // Cần cập nhật lại logic
                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center"
-                   // Cần thêm logic để kiểm tra xem đã hết câu hỏi chưa để hiển thị nút "Hoàn thành"
                 >
                   Câu tiếp
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -253,194 +236,11 @@ export default function QuizApp() {
           </div>
         );
 
-      case 'practice1':
+      case 'quiz': // Case mới để render component QuizApp
         return (
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              {/* Breadcrumbs */}
-              <button onClick={() => setCurrentView('quizTypes')} className="text-blue-600 hover:underline text-xs">Quiz {selectedQuiz}</button>
-              <span className="text-gray-400 text-xs">/</span>
-              <button onClick={() => setCurrentView('practices')} className="text-green-600 hover:underline text-xs">Trắc Nghiệm</button>
-               <span className="text-gray-400 text-xs">/</span>
-              <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">Practice 1</span>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-              <div className="mb-6 flex justify-between items-center">
-                <div className="flex gap-2">
-                  <span className="bg-indigo-50 text-indigo-700 text-xs px-3 py-1 rounded-full">Câu {currentQuestion}/5</span> {/* Sử dụng state currentQuestion */}
-                </div>
-                <span className="text-gray-500 text-sm">Thời gian: 01:25</span> {/* Cần thêm logic timer */}
-              </div>
-
-              <div className="mb-6 text-left">
-                 {/* Nội dung câu hỏi trắc nghiệm - Cần thay thế bằng dữ liệu thực tế */}
-                <p className="text-xl font-semibold mb-4 text-gray-800">What is the capital of France?</p>
-                <div className="space-y-3">
-                  <label className={`flex items-center p-4 rounded-lg border transition-all cursor-pointer ${selectedAnswer === 'London' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50'}`}> {/* Sử dụng state selectedAnswer */}
-                    <input
-                      type="radio"
-                      name="q1"
-                      className="form-radio text-indigo-600 h-5 w-5"
-                      checked={selectedAnswer === 'London'}
-                      onChange={() => handleSelectAnswer('London')} // Sử dụng hàm xử lý chọn đáp án
-                    />
-                    <span className="ml-3 text-gray-700">London</span>
-                  </label>
-                  <label className={`flex items-center p-4 rounded-lg border transition-all cursor-pointer ${selectedAnswer === 'Paris' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50'}`}> {/* Sử dụng state selectedAnswer */}
-                    <input
-                      type="radio"
-                      name="q1"
-                      className="form-radio text-indigo-600 h-5 w-5"
-                      checked={selectedAnswer === 'Paris'}
-                      onChange={() => handleSelectAnswer('Paris')} // Sử dụng hàm xử lý chọn đáp án
-                    />
-                    <span className="ml-3 text-gray-700">Paris</span>
-                  </label>
-                  <label className={`flex items-center p-4 rounded-lg border transition-all cursor-pointer ${selectedAnswer === 'Berlin' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-200 hover:bg-indigo-50'}`}> {/* Sử dụng state selectedAnswer */}
-                    <input
-                      type="radio"
-                      name="q1"
-                      className="form-radio text-indigo-600 h-5 w-5"
-                      checked={selectedAnswer === 'Berlin'}
-                      onChange={() => handleSelectAnswer('Berlin')} // Sử dụng hàm xử lý chọn đáp án
-                    />
-                    <span className="ml-3 text-gray-700">Berlin</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-between mt-8">
-                <button
-                  onClick={handlePrevQuestion} // Sử dụng hàm xử lý câu trước
-                  className="text-gray-500 flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  disabled={currentQuestion === 1} // Disable nút "Câu trước" ở câu đầu tiên
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Câu trước
-                </button>
-                <button
-                  onClick={handleNextQuestion} // Sử dụng hàm xử lý câu tiếp
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center"
-                  // Cần thêm logic để kiểm tra xem đã hết câu hỏi chưa để hiển thị nút "Hoàn thành"
-                >
-                  Câu tiếp
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              {/* Hiển thị tiến trình câu hỏi - Cần thêm logic dựa trên tổng số câu hỏi */}
-              <div className="flex justify-center gap-2">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <span
-                    key={index}
-                    className={`w-3 h-3 rounded-full ${index < currentQuestion ? 'bg-indigo-500' : 'bg-gray-300'}`}
-                  ></span>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'practice2':
-        return (
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              {/* Breadcrumbs */}
-              <button onClick={() => setCurrentView('quizTypes')} className="text-blue-600 hover:underline text-xs">Quiz {selectedQuiz}</button>
-              <span className="text-gray-400 text-xs">/</span>
-              <button onClick={() => setCurrentView('practices')} className="text-green-600 hover:underline text-xs">Trắc Nghiệm</button>
-               <span className="text-gray-400 text-xs">/</span>
-              <span className="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">Practice 2</span>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-              <div className="mb-6 flex justify-between items-center">
-                <div className="flex gap-2">
-                  <span className="bg-pink-50 text-pink-700 text-xs px-3 py-1 rounded-full">Câu {currentQuestion}/7</span> {/* Sử dụng state currentQuestion */}
-                </div>
-                <span className="text-gray-500 text-sm">Thời gian: 01:25</span> {/* Cần thêm logic timer */}
-              </div>
-
-              <div className="mb-6 text-left">
-                 {/* Nội dung câu hỏi trắc nghiệm - Cần thay thế bằng dữ liệu thực tế */}
-                <p className="text-xl font-semibold mb-4 text-gray-800">Which planet is known as the Red Planet?</p>
-                <div className="space-y-3">
-                  <label className={`flex items-center p-4 rounded-lg border transition-all cursor-pointer ${selectedAnswer === 'Venus' ? 'border-pink-500 bg-pink-50' : 'border-gray-200 hover:border-pink-200 hover:bg-pink-50'}`}> {/* Sử dụng state selectedAnswer */}
-                    <input
-                      type="radio"
-                      name="q1"
-                      className="form-radio text-pink-600 h-5 w-5"
-                      checked={selectedAnswer === 'Venus'}
-                      onChange={() => handleSelectAnswer('Venus')} // Sử dụng hàm xử lý chọn đáp án
-                    />
-                    <span className="ml-3 text-gray-700">Venus</span>
-                  </label>
-                  <label className={`flex items-center p-4 rounded-lg border transition-all cursor-pointer ${selectedAnswer === 'Mars' ? 'border-pink-500 bg-pink-50' : 'border-gray-200 hover:border-pink-200 hover:bg-pink-50'}`}> {/* Sử dụng state selectedAnswer */}
-                    <input
-                      type="radio"
-                      name="q1"
-                      className="form-radio text-pink-600 h-5 w-5"
-                      checked={selectedAnswer === 'Mars'}
-                      onChange={() => handleSelectAnswer('Mars')} // Sử dụng hàm xử lý chọn đáp án
-                    />
-                    <span className="ml-3 text-gray-700">Mars</span>
-                  </label>
-                  <label className={`flex items-center p-4 rounded-lg border transition-all cursor-pointer ${selectedAnswer === 'Jupiter' ? 'border-pink-500 bg-pink-50' : 'border-gray-200 hover:border-pink-200 hover:bg-pink-50'}`}> {/* Sử dụng state selectedAnswer */}
-                    <input
-                      type="radio"
-                      name="q1"
-                      className="form-radio text-pink-600 h-5 w-5"
-                      checked={selectedAnswer === 'Jupiter'}
-                      onChange={() => handleSelectAnswer('Jupiter')} // Sử dụng hàm xử lý chọn đáp án
-                    />
-                    <span className="ml-3 text-gray-700">Jupiter</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-between mt-8">
-                <button
-                  onClick={handlePrevQuestion} // Sử dụng hàm xử lý câu trước
-                  className="text-gray-500 flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  disabled={currentQuestion === 1} // Disable nút "Câu trước" ở câu đầu tiên
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Câu trước
-                </button>
-                <button
-                  onClick={handleNextQuestion} // Sử dụng hàm xử lý câu tiếp
-                  className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center"
-                  // Cần thêm logic để kiểm tra xem đã hết câu hỏi chưa để hiển thị nút "Hoàn thành"
-                >
-                  Câu tiếp
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              {/* Hiển thị tiến trình câu hỏi - Cần thêm logic dựa trên tổng số câu hỏi */}
-              <div className="flex justify-center gap-2">
-                {Array.from({ length: 7 }).map((_, index) => (
-                  <span
-                    key={index}
-                    className={`w-3 h-3 rounded-full ${index < currentQuestion ? 'bg-pink-500' : 'bg-gray-300'}`}
-                  ></span>
-                ))}
-              </div>
-            </div>
-          </div>
+          // Render component QuizApp từ quiz.tsx
+          // Bạn có thể truyền props vào đây nếu QuizApp cần thông tin về quiz/practice
+          <QuizApp />
         );
 
       default:
