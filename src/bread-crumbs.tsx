@@ -18,7 +18,7 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-// Enhanced Home Icon - Removed mr-1 as there's no text next to it now
+// Enhanced Home Icon
 const HomeIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -30,14 +30,14 @@ const HomeIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    // className="mr-1" // Removed margin right
+    // className="mr-1" // Removed margin right as there's no text next to it
   >
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
     <polyline points="9 22 9 12 15 12 15 22"></polyline>
   </svg>
 );
 
-// New quiz icon
+// New quiz icon (kept as component but not used in BreadcrumbItem)
 const QuizIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -56,7 +56,7 @@ const QuizIcon = () => (
   </svg>
 );
 
-// New type icon
+// New type icon (kept as component but not used in BreadcrumbItem)
 const TypeIcon = ({type}) => {
   // Different icon based on type
   if (type === 'tracNghiem') {
@@ -102,7 +102,7 @@ const TypeIcon = ({type}) => {
   }
 };
 
-// New practice icon
+// New practice icon (kept as component but not used in BreadcrumbItem)
 const PracticeIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -226,7 +226,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     active,
     onClick,
     label,
-    icon,
+    icon, // Icon prop is still here but won't be passed in the specific cases below
     colorScheme = {
       bg: 'bg-blue-100',
       text: 'text-blue-800',
@@ -245,7 +245,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         ${animationState ? 'scale-105' : ''}
       `}
     >
-      {icon}
+      {/* Removed icon rendering here */}
       <span>{label}</span>
     </button>
   );
@@ -253,17 +253,16 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   return (
     <nav className="flex items-center py-3 px-4 bg-white rounded-lg shadow-md mb-4 text-sm">
       <div className="flex items-center flex-wrap gap-2">
-        {/* Home Button - Removed text span */}
+        {/* Home Button - Only icon */}
         <button
           onClick={goHome}
           className="flex items-center text-gray-700 hover:text-blue-700 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-100"
           aria-label="Trang chủ" // Keep aria-label for accessibility
         >
           <HomeIcon />
-          {/* Removed: <span className="font-medium">Trang chủ</span> */}
         </button>
 
-        {/* Quiz */}
+        {/* Quiz - Removed icon prop */}
         {selectedQuiz && (
           <>
             <div className="flex items-center text-gray-400">
@@ -273,7 +272,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
               active={isQuizActive}
               onClick={handleQuizBreadcrumbClick}
               label={`Quiz ${selectedQuiz}`}
-              icon={<QuizIcon />}
+              // Removed: icon={<QuizIcon />}
               colorScheme={{
                 bg: 'bg-blue-100',
                 text: 'text-blue-800',
@@ -285,7 +284,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           </>
         )}
 
-        {/* Type - Cập nhật điều kiện hiển thị */}
+        {/* Type - Cập nhật điều kiện hiển thị - Removed icon prop */}
         {selectedType && currentView !== 'quizTypes' && (
           <>
             <div className="flex items-center text-gray-400">
@@ -295,14 +294,14 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
               active={isTypeActive}
               onClick={handleTypeBreadcrumbClick}
               label={getTypeName()}
-              icon={<TypeIcon type={selectedType} />}
+              // Removed: icon={<TypeIcon type={selectedType} />}
               colorScheme={getTypeColorScheme()}
               animationState={animation.type}
             />
           </>
         )}
 
-        {/* Practice - Chỉ hiển thị khi đang ở trang chi tiết (quiz) */}
+        {/* Practice - Chỉ hiển thị khi đang ở trang chi tiết (quiz) - Removed icon prop */}
         {selectedPractice && currentView === 'quiz' && (
           <>
             <div className="flex items-center text-gray-400">
@@ -312,7 +311,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
               active={true} // Luôn active vì chỉ hiển thị khi đang ở trang chi tiết
               onClick={handlePracticeBreadcrumbClick}
               label={`Practice ${selectedPractice}`}
-              icon={<PracticeIcon />}
+              // Removed: icon={<PracticeIcon />}
               colorScheme={{
                 bg: 'bg-indigo-100',
                 text: 'text-indigo-800',
