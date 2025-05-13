@@ -133,12 +133,7 @@ export default function QuizAppHome() {
       case 'practices':
         return (
           <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-2 mb-2">
-               {/* Breadcrumbs */}
-              <button onClick={() => setCurrentView('quizTypes')} className="text-blue-600 hover:underline text-xs">Quiz {selectedQuiz}</button>
-              <span className="text-gray-400 text-xs">/</span>
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Trắc Nghiệm</span>
-            </div>
+            {/* Breadcrumbs removed as per request */}
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
 
             <div className="space-y-4 w-full">
@@ -185,13 +180,7 @@ export default function QuizAppHome() {
          // Giữ nguyên phần render cho điền từ nếu có
         return (
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              {/* Breadcrumbs */}
-              <button onClick={() => setCurrentView('quizTypes')} className="text-blue-600 hover:underline text-xs">Quiz {selectedQuiz}</button>
-              <span className="text-gray-400 text-xs">/</span>
-              <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Điền Từ</span>
-            </div>
-
+            {/* Breadcrumbs removed as per request */}
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
               <div className="flex justify-between items-center mb-6">
                 <span className="bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full">Câu 1/5</span> {/* Cần cập nhật lại logic câu hỏi */}
@@ -255,28 +244,68 @@ export default function QuizAppHome() {
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
         <div className="h-[calc(100%-8px)] p-6"> {/* 8px = height của gradient line trên cùng */}
-          {/* Navigation bar giữ nguyên */}
+          {/* Navigation bar */}
           {currentView !== 'main' && (
-            <div className="flex justify-between mb-6">
-              <button
-                onClick={goBack}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Quay lại
-              </button>
+            <div className="mb-6">
+              {/* Phần nút điều hướng */}
+              <div className="flex justify-between mb-2">
+                <button
+                  onClick={goBack}
+                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Quay lại
+                </button>
 
-              <button
-                onClick={goHome}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                Trang chủ
-              </button>
+                <button
+                  onClick={goHome}
+                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  Trang chủ
+                </button>
+              </div>
+
+              {/* Phần breadcrumbs cố định */}
+              <div className="flex items-center gap-2 text-sm">
+                {currentView !== 'quizTypes' && (
+                  <>
+                    <button
+                      onClick={() => setCurrentView('main')}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Quiz {selectedQuiz}
+                    </button>
+                    <span className="text-gray-400">/</span>
+                  </>
+                )}
+
+                {selectedType === 'tracNghiem' && (
+                  <>
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                      Trắc nghiệm
+                    </span>
+                    {(currentView === 'quiz' || currentView === 'practices') && (
+                      <>
+                        <span className="text-gray-400">/</span>
+                        <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                          Practice 1
+                        </span>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {selectedType === 'dienTu' && (
+                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                    Điền từ
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
