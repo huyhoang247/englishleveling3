@@ -200,8 +200,107 @@ const quizData = [
     "question": "Từ \"Ice\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Lửa", "Nước", "Đá", "Hơi nước"],
     "correctAnswer": "Đá"
-  }    
-
+  },  
+  {
+    "question": "Từ 'Collection' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự phân tán", "Cá nhân", "Nhóm", "Sự phá hủy"],
+    "correctAnswer": "Nhóm"
+  },
+  {
+    "question": "Từ 'Labor' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giải trí", "Lao động", "Nghỉ ngơi", "Học tập"],
+    "correctAnswer": "Lao động"
+  },
+  {
+    "question": "Từ 'Flow' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhảy", "Bay", "Chảy", "Đứng yên"],
+    "correctAnswer": "Chảy"
+  },
+  {
+    "question": "Từ 'Floor' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trần nhà", "Sàn nhà", "Tường", "Cửa sổ"],
+    "correctAnswer": "Sàn nhà"
+  },
+  {
+    "question": "Từ 'Variety' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự giống nhau", "Sự đa dạng", "Sự đơn điệu", "Sự cố định"],
+    "correctAnswer": "Sự đa dạng"
+  },
+  {
+    "question": "Từ 'Math' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Môn Văn", "Môn Toán", "Môn Sử", "Môn Địa"],
+    "correctAnswer": "Môn Toán"
+  },
+  {
+    "question": "Từ 'Session' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Kỳ nghỉ", "Phiên làm việc", "Buổi tiệc", "Chuyến đi"],
+    "correctAnswer": "Phiên làm việc"
+  },
+  {
+    "question": "Từ 'Nuclear' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sinh học", "Hóa học", "Hạt nhân", "Thiên văn"],
+    "correctAnswer": "Hạt nhân"
+  },
+  {
+    "question": "Từ 'Roll' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cắt", "Cuộn", "Dán", "Gấp"],
+    "correctAnswer": "Cuộn"
+  },
+  {
+    "question": "Từ 'Museum' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhà hát", "Bảo tàng", "Trường học", "Siêu thị"],
+    "correctAnswer": "Bảo tàng"
+  },
+  {
+    "question": "Từ 'Limited' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vô hạn", "Có giới hạn", "Tạm thời", "Mở rộng"],
+    "correctAnswer": "Có giới hạn"
+  },
+  {
+    "question": "Từ 'Constant' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ngẫu nhiên", "Liên tục", "Không đều", "Thỉnh thoảng"],
+    "correctAnswer": "Liên tục"
+  },
+  {
+    "question": "Từ 'Temperature' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Áp suất", "Nhiệt độ", "Độ ẩm", "Tốc độ"],
+    "correctAnswer": "Nhiệt độ"
+  },
+  {
+    "question": "Từ 'Description' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Dự đoán", "Sự miêu tả", "Giải thích", "Câu hỏi"],
+    "correctAnswer": "Sự miêu tả"
+  },
+  {
+    "question": "Từ 'Transition' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Gián đoạn", "Sự chuyển tiếp", "Kết thúc", "Khởi đầu"],
+    "correctAnswer": "Sự chuyển tiếp"
+  },
+  {
+    "question": "Từ 'Chair' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bàn", "Ghế", "Đèn", "Tủ"],
+    "correctAnswer": "Ghế"
+  },
+  {
+    "question": "Từ 'Pattern' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Màu sắc", "Hoa văn", "Kích thước", "Chất liệu"],
+    "correctAnswer": "Hoa văn"
+  },
+  {
+    "question": "Từ 'Demand' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cung cấp", "Nhu cầu", "Từ chối", "Đề nghị"],
+    "correctAnswer": "Nhu cầu"
+  },
+  {
+    "question": "Từ 'Hate' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Yêu", "Ghét", "Thích", "Quan tâm"],
+    "correctAnswer": "Ghét"
+  },
+  {
+    "question": "Từ 'Classroom' trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phòng ngủ", "Lớp học", "Nhà bếp", "Phòng tắm"],
+    "correctAnswer": "Lớp học"
+  }
 
 ];
 
