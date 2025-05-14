@@ -114,7 +114,7 @@ export default function VocabularyGame() {
   // Confetti component
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
-    
+
     return (
       <div className="fixed inset-0 pointer-events-none z-50">
         {confettiPieces.map((_, index) => {
@@ -123,9 +123,9 @@ export default function VocabularyGame() {
           const size = `${Math.random() * 10 + 5}px`;
           const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500'];
           const color = colors[Math.floor(Math.random() * colors.length)];
-          
+
           return (
-            <div 
+            <div
               key={index}
               className={`absolute ${color} opacity-80 rounded-full`}
               style={{
@@ -138,7 +138,7 @@ export default function VocabularyGame() {
             />
           );
         })}
-        
+
         <style jsx>{`
           @keyframes fall {
             0% {
@@ -158,11 +158,12 @@ export default function VocabularyGame() {
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-2xl shadow-xl font-sans">
       {showConfetti && <Confetti />}
-      
+
       <div className="w-full flex flex-col items-center">
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-6 text-center">
+        {/* Removed the h1 element containing "Trò Chơi Học Từ Vựng Tiếng Anh" */}
+        {/* <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-6 text-center">
           Trò Chơi Học Từ Vựng Tiếng Anh
-        </h1>
+        </h1> */}
 
         {gameOver ? (
           <div className="text-center py-8 w-full">
@@ -170,8 +171,8 @@ export default function VocabularyGame() {
               <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
               <p className="text-xl mb-4">Điểm của bạn: <span className="font-bold text-indigo-600">{score}/{vocabularyList.length}</span></p>
               <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
-                <div 
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full" 
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-4 rounded-full"
                   style={{ width: `${(score / vocabularyList.length) * 100}%` }}
                 ></div>
               </div>
@@ -192,7 +193,7 @@ export default function VocabularyGame() {
                 <span className="font-bold text-gray-800">{score}/{vocabularyList.length}</span>
               </div>
               <div className="h-2 w-1/2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
                   style={{ width: `${(usedWords.length / vocabularyList.length) * 100}%` }}
                 ></div>
@@ -254,7 +255,7 @@ export default function VocabularyGame() {
                   <button
                     onClick={checkAnswer}
                     className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-3 rounded-lg transition-all shadow-sm
-                      ${userInput.trim() ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700' : 
+                      ${userInput.trim() ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700' :
                       'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                     disabled={isCorrect === true || !userInput.trim()}
                   >
@@ -265,7 +266,7 @@ export default function VocabularyGame() {
                 {/* Feedback */}
                 {feedback && (
                   <div className={`flex items-center justify-center p-4 rounded-xl shadow-sm animation-pulse
-                    ${isCorrect ? 'bg-green-100 text-green-800 border border-green-200' : 
+                    ${isCorrect ? 'bg-green-100 text-green-800 border border-green-200' :
                                'bg-red-100 text-red-800 border border-red-200'}`}>
                     {isCorrect ?
                       <div className="flex items-center">
