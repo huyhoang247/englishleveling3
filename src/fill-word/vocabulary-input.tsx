@@ -51,6 +51,29 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     }
   };
   
+  // Define custom animation keyframes
+  useEffect(() => {
+    // This adds a custom animation to the document
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-5px); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(-3px); }
+        80% { transform: translateX(3px); }
+      }
+      .animate-shake {
+        animation: shake 0.5s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
   // Get the appropriate styles for a specific letter box
   const getSquareStyle = (index: number) => {
     // If the answer has been submitted and is correct
@@ -66,7 +89,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       return 'bg-gradient-to-br from-indigo-100 to-indigo-200 border-indigo-400 text-indigo-800 shadow-md';
     }
     // Empty square
-    return 'bg-gradient-to-b from-gray-50 to-white border-gray-300 text-gray-500';
+    return 'bg-gradient-to-br from-gray-50 to-white border-gray-300 text-gray-500 shadow-sm';
   };
 
   // Get the appropriate animation for a specific letter box
@@ -77,8 +100,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     
     if (isCorrect === true) {
       // Different animation delays for each letter when correct
-      const delays = ['animate-bounce', 'delay-100', 'delay-200', 'delay-300', 'delay-400'];
+      const delays = ['animate-bounce delay-0', 'animate-bounce delay-100', 'animate-bounce delay-200', 'animate-bounce delay-300', 'animate-bounce delay-400'];
       return delays[index % delays.length];
+    }
+    
+    if (isCorrect === false) {
+      return 'animate-shake';
     }
     
     return '';
@@ -106,7 +133,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         {squares.map((char, index) => (
           <div
             key={index}
-            className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center border-2 rounded-xl text-2xl font-bold transition-all duration-300 transform ${
+            className={`aspect-square w-16 md:w-20 flex items-center justify-center border-2 rounded-xl text-2xl font-bold transition-all duration-300 transform ${
               index === userInput.length && !disabled ? 'scale-110 border-blue-500 ring-2 ring-blue-300 ring-opacity-50' : ''
             } ${getSquareStyle(index)} ${getSquareAnimation(index)}`}
           >
@@ -126,7 +153,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
           }`}
           disabled={userInput.length !== wordLength || disabled}
         >
-          Kiểm tra
+          <span className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Kiểm tra
+          </span>
         </button>
       </div>
       
@@ -141,11 +173,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                   setUserInput(userInput + letter.toLowerCase());
                 }
               }}
-              className={`w-10 h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
+              className={`aspect-square w-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   disabled
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-100 hover:shadow hover:from-gray-50 hover:-translate-y-0.5'
+                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 shadow-sm hover:bg-gray-100 hover:shadow hover:from-gray-50 hover:-translate-y-0.5'
                 }`}
               disabled={disabled || userInput.length >= wordLength}
             >
@@ -162,11 +194,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                   setUserInput(userInput + letter.toLowerCase());
                 }
               }}
-              className={`w-10 h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
+              className={`aspect-square w-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   disabled
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-100 hover:shadow hover:from-gray-50 hover:-translate-y-0.5'
+                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 shadow-sm hover:bg-gray-100 hover:shadow hover:from-gray-50 hover:-translate-y-0.5'
                 }`}
               disabled={disabled || userInput.length >= wordLength}
             >
@@ -181,11 +213,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 checkAnswer();
               }
             }}
-            className={`px-3 h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
+            className={`px-3 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
               ${
                 disabled || userInput.length !== wordLength
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-b from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-md hover:-translate-y-0.5'
+                  : 'bg-gradient-to-b from-green-500 to-green-600 text-white shadow-sm hover:from-green-600 hover:to-green-700 hover:shadow-md hover:-translate-y-0.5'
               }`}
             disabled={disabled || userInput.length !== wordLength}
           >
@@ -199,11 +231,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                   setUserInput(userInput + letter.toLowerCase());
                 }
               }}
-              className={`w-10 h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
+              className={`aspect-square w-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   disabled
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-100 hover:shadow hover:from-gray-50 hover:-translate-y-0.5'
+                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 shadow-sm hover:bg-gray-100 hover:shadow hover:from-gray-50 hover:-translate-y-0.5'
                 }`}
               disabled={disabled || userInput.length >= wordLength}
             >
@@ -216,11 +248,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 setUserInput(userInput.slice(0, -1));
               }
             }}
-            className={`px-3 h-12 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
+            className={`px-3 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
               ${
                 disabled || userInput.length === 0
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-b from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-md hover:-translate-y-0.5'
+                  : 'bg-gradient-to-b from-red-500 to-red-600 text-white shadow-sm hover:from-red-600 hover:to-red-700 hover:shadow-md hover:-translate-y-0.5'
               }`}
             disabled={disabled || userInput.length === 0}
           >
@@ -237,11 +269,19 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             : 'bg-gradient-to-r from-red-100 to-red-50 text-red-800 border border-red-200'}`}>
           {isCorrect ?
             <div className="flex items-center">
-              <span className="flex items-center justify-center bg-gradient-to-br from-green-400 to-green-500 text-white rounded-full w-8 h-8 mr-3 shadow-sm">✓</span>
+              <span className="flex items-center justify-center bg-gradient-to-br from-green-400 to-green-500 text-white rounded-full w-8 h-8 mr-3 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
               <span className="font-medium">{feedback}</span>
             </div> :
             <div className="flex items-center">
-              <span className="flex items-center justify-center bg-gradient-to-br from-red-400 to-red-500 text-white rounded-full w-8 h-8 mr-3 shadow-sm">✕</span>
+              <span className="flex items-center justify-center bg-gradient-to-br from-red-400 to-red-500 text-white rounded-full w-8 h-8 mr-3 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </span>
               <span>{feedback}</span>
             </div>
           }
