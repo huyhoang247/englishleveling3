@@ -5,14 +5,18 @@ import { db, auth } from '../firebase.js'; // Import db và auth
 import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
 
-// Định nghĩa kiểu dữ liệu cho một từ vựng (vẫn giữ nguyên để tương thích với logic game)
+// Import mảng URL ảnh từ image-urffggl (1).ts
+import { defaultImageUrls } from './image-urffggl (1).ts';
+
+// Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
   word: string;
   hint: string; // Chúng ta sẽ tạo hint giả nếu dữ liệu gốc không có
+  imageIndex?: number; // Thêm trường imageIndex để lưu chỉ mục ảnh
 }
 
 export default function VocabularyGame() {
-  // State để lưu trữ danh sách từ vựng
+  // State để lưu trữ danh sách từ vựng với thông tin ảnh
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   // State để theo dõi trạng thái tải dữ liệu
   const [loading, setLoading] = useState(true);
@@ -20,6 +24,9 @@ export default function VocabularyGame() {
   const [error, setError] = useState<string | null>(null);
   // State để lưu thông tin người dùng đã đăng nhập
   const [user, setUser] = useState<User | null>(null);
+  // State để lưu trữ mảng openedImageIds từ Firestore
+  const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
+
 
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
@@ -43,12 +50,13 @@ export default function VocabularyGame() {
 
   // Effect để tải dữ liệu từ Firestore khi user thay đổi
   useEffect(() => {
-    const fetchVocabulary = async () => {
+    const fetchUserData = async () => {
       // Chỉ fetch nếu có người dùng đăng nhập
       if (!user) {
-        console.log("No user logged in, cannot fetch vocabulary from user document.");
+        console.log("No user logged in, cannot fetch data from user document.");
         setLoading(false);
         setVocabularyList([]); // Đặt danh sách trống nếu không có user
+        setOpenedImageIds([]); // Đặt danh sách ảnh trống
         setError("Vui lòng đăng nhập để chơi.");
         return;
       }
@@ -63,44 +71,83 @@ export default function VocabularyGame() {
 
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          // Kiểm tra xem trường 'listVocabulary' có tồn tại và là mảng không
+          let fetchedVocabulary: VocabularyItem[] = [];
+          let fetchedImageIds: number[] = [];
+
+          // Lấy danh sách từ vựng
           if (userData && Array.isArray(userData.listVocabulary)) {
             console.log("Fetched listVocabulary array:", userData.listVocabulary);
             // Chuyển đổi mảng chuỗi thành cấu trúc VocabularyItem
-            const fetchedVocabulary: VocabularyItem[] = userData.listVocabulary.map((word: string) => ({
+            fetchedVocabulary = userData.listVocabulary.map((word: string, index: number) => ({
               word: word,
               // Tạo hint giả từ từ vựng, hoặc bạn có thể bỏ qua hint nếu không cần
-              hint: `Nghĩa của từ "${word}"`
+              hint: `Nghĩa của từ "${word}"`,
+              // Lưu trữ chỉ mục gốc để liên kết với ảnh sau
+              originalIndex: index
             }));
-            setVocabularyList(fetchedVocabulary); // Cập nhật state danh sách từ vựng
-            console.log("Transformed vocabulary list:", fetchedVocabulary);
+            console.log("Transformed vocabulary list with original index:", fetchedVocabulary);
           } else {
-            console.log("User document does not contain a listVocabulary array.");
-            setVocabularyList([]); // Đặt danh sách trống nếu trường không tồn tại hoặc sai định dạng
-            setError("Không tìm thấy danh sách từ vựng trong tài khoản của bạn.");
+            console.log("User document does not contain a listVocabulary array or it's not an array.");
+            setError("Không tìm thấy danh sách từ vựng trong tài khoản của bạn hoặc định dạng sai.");
           }
+
+          // Lấy danh sách ID ảnh đã mở
+          if (userData && Array.isArray(userData.openedImageIds)) {
+             // Kiểm tra xem các phần tử có phải là số không
+             const areAllNumbers = userData.openedImageIds.every((id: any) => typeof id === 'number');
+             if(areAllNumbers) {
+                fetchedImageIds = userData.openedImageIds as number[];
+                console.log("Fetched openedImageIds array:", fetchedImageIds);
+                setOpenedImageIds(fetchedImageIds); // Cập nhật state openedImageIds
+             } else {
+                 console.log("User document contains openedImageIds but it's not an array of numbers.");
+                 setError("Dữ liệu ảnh trong tài khoản của bạn có định dạng sai.");
+             }
+          } else {
+            console.log("User document does not contain an openedImageIds array or it's not an array.");
+            // Không có openedImageIds là bình thường, không cần đặt lỗi
+            setOpenedImageIds([]); // Đặt mảng rỗng nếu không có
+          }
+
+          // Kết hợp danh sách từ vựng với chỉ mục ảnh tương ứng
+          // Giả định rằng thứ tự trong listVocabulary tương ứng với thứ tự trong openedImageIds
+          const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
+              const imageIndex = fetchedImageIds[index]; // Lấy chỉ mục ảnh tương ứng
+              // Kiểm tra xem chỉ mục ảnh có hợp lệ trong mảng defaultImageUrls không
+              const isValidImageIndex = imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length;
+              return {
+                  ...item,
+                  // Chỉ thêm imageIndex nếu nó hợp lệ
+                  imageIndex: isValidImageIndex ? imageIndex : undefined
+              };
+          });
+
+          setVocabularyList(vocabularyWithImages); // Cập nhật state danh sách từ vựng với thông tin ảnh
+
         } else {
           console.log("User document does not exist.");
           setVocabularyList([]); // Đặt danh sách trống nếu document không tồn tại
+          setOpenedImageIds([]);
           setError("Không tìm thấy dữ liệu người dùng.");
         }
 
         setLoading(false); // Tải xong, đặt loading là false
 
       } catch (err: any) {
-        console.error("Error fetching vocabulary from user document:", err);
-        setError(`Không thể tải dữ liệu từ vựng: ${err.message}`); // Cập nhật state lỗi
+        console.error("Error fetching user data from document:", err);
+        setError(`Không thể tải dữ liệu người dùng: ${err.message}`); // Cập nhật state lỗi
         setLoading(false); // Tải thất bại, đặt loading là false
       }
     };
 
-    // Chỉ chạy fetchVocabulary khi user có giá trị (đã đăng nhập)
+    // Chỉ chạy fetchUserData khi user có giá trị (đã đăng nhập)
     if (user) {
-      fetchVocabulary();
+      fetchUserData();
     } else {
        // Nếu không có user, đặt loading false ngay lập tức và danh sách trống
        setLoading(false);
        setVocabularyList([]);
+       setOpenedImageIds([]);
        setError("Vui lòng đăng nhập để chơi.");
     }
 
@@ -108,6 +155,7 @@ export default function VocabularyGame() {
 
   // Effect để bắt đầu trò chơi sau khi dữ liệu từ vựng đã được tải VÀ không còn loading VÀ không có lỗi
   useEffect(() => {
+    // Bắt đầu game chỉ khi danh sách từ vựng có dữ liệu, không loading và không có lỗi
     if (vocabularyList.length > 0 && !loading && !error) {
       selectRandomWord(); // Chọn từ đầu tiên khi danh sách từ vựng có sẵn và không có lỗi/loading
     } else if (vocabularyList.length === 0 && !loading && !error) {
@@ -162,10 +210,14 @@ export default function VocabularyGame() {
     }
   };
 
-  // Generate a placeholder image based on the word
-  const generateImageUrl = (word: string) => {
-     // Sử dụng placeholder image service
-    return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
+  // Generate image URL based on the imageIndex from the vocabulary item
+  const generateImageUrl = (imageIndex?: number) => {
+     // Nếu có imageIndex hợp lệ, sử dụng URL từ defaultImageUrls
+     if (imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length) {
+         return defaultImageUrls[imageIndex];
+     }
+     // Nếu không có imageIndex hoặc không hợp lệ, sử dụng placeholder
+     return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`;
   };
 
   // Reset the game
@@ -231,7 +283,7 @@ export default function VocabularyGame() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">
-        Đang tải từ vựng...
+        Đang tải dữ liệu...
       </div>
     );
   }
@@ -305,10 +357,19 @@ export default function VocabularyGame() {
                   className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
-                    <span className="text-white text-8xl font-bold mb-2">?</span>
-                    <span className="text-white text-lg opacity-80">Chạm để xem</span>
-                  </div>
+                  {/* Sử dụng ảnh thật nếu có imageIndex, ngược lại dùng overlay */}
+                  {currentWord.imageIndex !== undefined ? (
+                       <img
+                           src={generateImageUrl(currentWord.imageIndex)}
+                           alt={currentWord.word}
+                           className="w-full h-full object-cover" // Đảm bảo ảnh bao phủ toàn bộ div
+                       />
+                  ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
+                        <span className="text-white text-8xl font-bold mb-2">?</span>
+                        <span className="text-white text-lg opacity-80">Chạm để xem</span>
+                      </div>
+                  )}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <p className="text-white text-center">Đoán từ này là gì?</p>
                   </div>
@@ -343,7 +404,8 @@ export default function VocabularyGame() {
             </button>
             <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
             <img
-              src={generateImageUrl(currentWord.word)}
+              // Sử dụng generateImageUrl với imageIndex từ currentWord
+              src={generateImageUrl(currentWord.imageIndex)}
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full"
             />
