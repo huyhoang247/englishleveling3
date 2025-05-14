@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
-import { db } from './firebase.js'; // Import db object from your firebase config
+import { db } from '../firebase.js'; // Import db object from your firebase config
 import { collection, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions
 
 // Định nghĩa kiểu dữ liệu cho một mục từ vựng
