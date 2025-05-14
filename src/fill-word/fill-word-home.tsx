@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
-import { db } from './firebase.js'; // Import the Firestore database instance
+import { db } from '../firebase.js'; // Import the Firestore database instance
 import { collection, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions
 
 // Define the structure of a vocabulary item
