@@ -21,29 +21,22 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   isCorrect,
   disabled,
 }) => {
-  // Create an array of individual characters from userInput
   const characters = userInput.split('');
-  
-  // Create an array of empty squares for the current word length
   const wordLength = word?.length || 5;
   const squares = Array(wordLength).fill('');
   
-  // Populate squares with available characters
   for (let i = 0; i < characters.length && i < wordLength; i++) {
     squares[i] = characters[i];
   }
   
-  // Reference to hidden input element
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   
-  // Focus the hidden input when clicking on the container
   const focusInput = () => {
     if (hiddenInputRef.current && !disabled) {
       hiddenInputRef.current.focus();
     }
   };
   
-  // Handle backspace and delete keys
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value.length <= wordLength) {
@@ -51,22 +44,36 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     }
   };
   
-  // Get the appropriate background color for a specific letter box
+  // Get the appropriate style for a specific letter box
   const getSquareStyle = (index: number) => {
     // If the answer has been submitted and is correct
     if (isCorrect === true) {
-      return 'bg-green-100 border-green-500 text-green-800';
+      return 'bg-gradient-to-br from-green-400 to-green-600 border-green-500 text-white shadow-lg';
     }
     // If the answer has been submitted and is incorrect
     else if (isCorrect === false) {
-      return 'bg-red-50 border-red-500 text-red-800';
+      return 'bg-gradient-to-br from-red-400 to-red-600 border-red-500 text-white shadow-lg';
     }
     // If the square has a letter
     else if (squares[index]) {
-      return 'bg-indigo-50 border-indigo-400 text-indigo-800';
+      return 'bg-gradient-to-br from-indigo-400 to-indigo-600 border-indigo-400 text-white shadow-md';
     }
-    // Empty square
-    return 'bg-white border-gray-300 text-gray-500';
+    // Empty square - improved empty state
+    return 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-300 text-gray-500 shadow-sm';
+  };
+
+  // Get the appropriate animation for a specific letter box
+  const getSquareAnimation = (index: number) => {
+    // Current square being typed
+    if (index === userInput.length && !disabled) {
+      return 'animate-pulse scale-105';
+    }
+    // Letter just typed (most recent)
+    else if (index === userInput.length - 1 && squares[index] && !disabled) {
+      return 'animate-bounce-once scale-105';
+    }
+    // Default - no animation
+    return '';
   };
   
   return (
@@ -83,41 +90,48 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         disabled={disabled}
       />
       
-      {/* Word squares container */}
+      {/* Word squares container - improved styling */}
       <div 
-        className="flex justify-center w-full gap-2 mb-4"
+        className="flex justify-center w-full gap-3 mb-4"
         onClick={focusInput}
       >
         {squares.map((char, index) => (
           <div
             key={index}
-            className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center border-2 rounded-lg text-2xl font-bold transition-all transform ${
-              index === userInput.length && !disabled ? 'scale-105 border-blue-500 shadow-md' : ''
-            } ${getSquareStyle(index)}`}
+            className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center border-2 
+            rounded-xl text-2xl font-bold transition-all duration-300 transform 
+            ${getSquareAnimation(index)} ${getSquareStyle(index)}`}
+            style={{
+              boxShadow: squares[index] ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none',
+              transform: index === userInput.length && !disabled ? 'translateY(-4px)' : 'none',
+            }}
           >
             {char.toUpperCase()}
           </div>
         ))}
       </div>
       
-      {/* Submit button */}
+      {/* Submit button - improved styling */}
       <div className="flex justify-center">
         <button
           onClick={checkAnswer}
-          className={`px-8 py-3 rounded-xl transition-all shadow-md transform hover:shadow-lg ${
+          className={`px-8 py-3 rounded-xl transition-all duration-300 shadow-md transform ${
             userInput.length === wordLength && !disabled
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 hover:scale-105'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 hover:scale-105 hover:shadow-xl'
+              : 'bg-gradient-to-r from-gray-200 to-gray-300 text-gray-500 cursor-not-allowed'
           }`}
           disabled={userInput.length !== wordLength || disabled}
+          style={{
+            boxShadow: userInput.length === wordLength && !disabled ? '0 4px 12px rgba(66, 99, 235, 0.25)' : 'none',
+          }}
         >
           Kiểm tra
         </button>
       </div>
       
-      {/* Letter keyboard */}
+      {/* Letter keyboard - improved styling */}
       <div className="mt-8">
-        <div className="flex justify-center flex-wrap gap-1 mb-1">
+        <div className="flex justify-center flex-wrap gap-1.5 mb-1.5">
           {'QWERTYUIOP'.split('').map((letter) => (
             <button
               key={letter}
@@ -126,11 +140,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                   setUserInput(userInput + letter.toLowerCase());
                 }
               }}
-              className={`w-9 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+              className={`w-10 h-11 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   disabled
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-100 hover:shadow-md active:transform active:scale-95'
                 }`}
               disabled={disabled || userInput.length >= wordLength}
             >
@@ -138,7 +152,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </button>
           ))}
         </div>
-        <div className="flex justify-center flex-wrap gap-1 mb-1">
+        <div className="flex justify-center flex-wrap gap-1.5 mb-1.5">
           {'ASDFGHJKL'.split('').map((letter) => (
             <button
               key={letter}
@@ -147,11 +161,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                   setUserInput(userInput + letter.toLowerCase());
                 }
               }}
-              className={`w-9 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+              className={`w-10 h-11 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   disabled
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-100 hover:shadow-md active:transform active:scale-95'
                 }`}
               disabled={disabled || userInput.length >= wordLength}
             >
@@ -159,18 +173,18 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </button>
           ))}
         </div>
-        <div className="flex justify-center flex-wrap gap-1">
+        <div className="flex justify-center flex-wrap gap-1.5">
           <button
             onClick={() => {
               if (!disabled) {
                 checkAnswer();
               }
             }}
-            className={`px-2 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+            className={`px-3 h-11 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
               ${
                 disabled || userInput.length !== wordLength
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:shadow-md active:transform active:scale-95'
               }`}
             disabled={disabled || userInput.length !== wordLength}
           >
@@ -184,11 +198,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                   setUserInput(userInput + letter.toLowerCase());
                 }
               }}
-              className={`w-9 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+              className={`w-10 h-11 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
                 ${
                   disabled
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                    : 'bg-gradient-to-b from-white to-gray-100 border border-gray-300 text-gray-700 hover:bg-gray-100 hover:shadow-md active:transform active:scale-95'
                 }`}
               disabled={disabled || userInput.length >= wordLength}
             >
@@ -201,11 +215,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 setUserInput(userInput.slice(0, -1));
               }
             }}
-            className={`px-2 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+            className={`px-3 h-11 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200
               ${
                 disabled || userInput.length === 0
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-md active:transform active:scale-95'
               }`}
             disabled={disabled || userInput.length === 0}
           >
@@ -214,18 +228,18 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         </div>
       </div>
       
-      {/* Feedback */}
+      {/* Feedback - improved styling */}
       {feedback && (
-        <div className={`flex items-center justify-center p-4 rounded-xl shadow-sm mt-6
-          ${isCorrect ? 'bg-green-100 text-green-800 border border-green-200' :
-                     'bg-red-100 text-red-800 border border-red-200'}`}>
+        <div className={`flex items-center justify-center p-4 rounded-xl shadow-md mt-6 transition-all duration-300
+          ${isCorrect ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200' :
+                     'bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200'}`}>
           {isCorrect ?
             <div className="flex items-center">
-              <span className="flex items-center justify-center bg-green-500 text-white rounded-full w-8 h-8 mr-3">✓</span>
+              <span className="flex items-center justify-center bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full w-8 h-8 mr-3 shadow-sm">✓</span>
               <span className="font-medium">{feedback}</span>
             </div> :
             <div className="flex items-center">
-              <span className="flex items-center justify-center bg-red-500 text-white rounded-full w-8 h-8 mr-3">✕</span>
+              <span className="flex items-center justify-center bg-gradient-to-r from-red-400 to-red-600 text-white rounded-full w-8 h-8 mr-3 shadow-sm">✕</span>
               <span>{feedback}</span>
             </div>
           }
