@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
 // Import các module cần thiết từ firebase.js và firestore
-import { db, auth } from './firebase'; // Import db và auth
+import { db, auth } from '../firebase.js'; // Import db và auth
 import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
 
