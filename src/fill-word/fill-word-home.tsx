@@ -374,7 +374,7 @@ export default function VocabularyGame() {
               <div className="w-full space-y-6">
                 {/* Image card */}
                 <div
-                  className="relative w-full bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group flex items-center justify-center" // Đã bỏ h-64 và thêm flexbox
+                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
                 >
                   {/* Sử dụng ảnh thật nếu có imageIndex, ngược lại dùng overlay */}
@@ -382,10 +382,10 @@ export default function VocabularyGame() {
                        <img
                            src={generateImageUrl(currentWord.imageIndex)}
                            alt={currentWord.word}
-                           className="max-w-full max-h-64 object-contain" // Đặt max-h-64 cho ảnh để giới hạn chiều cao
+                           className="w-full h-full object-contain" // Đã thay đổi từ object-cover sang object-contain
                        />
                   ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center h-64"> {/* Giữ h-64 cho overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
                         <span className="text-white text-8xl font-bold mb-2">?</span>
                         <span className="text-white text-lg opacity-80">Chạm để xem</span>
                       </div>
