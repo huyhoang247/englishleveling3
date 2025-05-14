@@ -33,19 +33,29 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     squares[i] = characters[i];
   }
 
-  // Tham chiếu đến phần tử input ẩn
+  // Tham chiếu đến phần tử input ẩn (vẫn cần để bắt sự kiện gõ phím từ bàn phím ảo nếu cần)
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  // Tập trung vào input ẩn khi nhấp vào container
-  const focusInput = () => {
-    if (hiddenInputRef.current && !disabled) {
-      hiddenInputRef.current.focus();
+  // Xử lý khi nhấp vào một ô vuông
+  const handleSquareClick = (index: number) => {
+    if (disabled) return;
+
+    // Kiểm tra xem ô vuông có chứa ký tự không
+    if (index < userInput.length) {
+      // Xóa ký tự tại vị trí index
+      const newUserInput = userInput.slice(0, index) + userInput.slice(index + 1);
+      setUserInput(newUserInput);
     }
+    // Giữ focus trên input ẩn sau khi xóa để bàn phím ảo vẫn hoạt động
+     if (hiddenInputRef.current) {
+        hiddenInputRef.current.focus();
+     }
   };
 
-  // Xử lý các phím backspace và delete
+  // Xử lý các phím backspace và delete từ input ẩn (nếu có)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    // Chỉ cập nhật input nếu giá trị mới ngắn hơn hoặc bằng độ dài từ
     if (value.length <= wordLength) {
       setUserInput(value);
     }
@@ -101,7 +111,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     }
     // Nếu ô vuông có chữ cái
     else if (squares[index]) {
-      return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 text-blue-700 shadow-sm';
+      return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 text-blue-700 shadow-sm cursor-pointer'; // Thêm cursor-pointer để chỉ ra có thể click
     }
     // Ô trống
     return 'bg-white border-gray-200 text-gray-400';
@@ -109,16 +119,19 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   // Lấy animation phù hợp cho từng ô chữ cái
   const getSquareAnimation = (index: number) => {
-    if (index === userInput.length && !disabled) {
+    // Animation nhấp nháy cho ô tiếp theo cần điền
+    if (index === userInput.length && !disabled && isCorrect === null) {
       return 'animate-pulse';
     }
 
+    // Animation pop khi đúng
     if (isCorrect === true) {
       // Độ trễ animation khác nhau cho mỗi chữ cái khi đúng
       const delays = ['animate-pop delay-0', 'animate-pop delay-100', 'animate-pop delay-200', 'animate-pop delay-300', 'animate-pop delay-400'];
       return delays[index % delays.length];
     }
 
+    // Animation rung khi sai
     if (isCorrect === false) {
       return 'animate-shake';
     }
@@ -142,7 +155,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      {/* Trường input ẩn để bắt đầu vào bàn phím */}
+      {/* Trường input ẩn để bắt sự kiện gõ phím từ bàn phím ảo */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -150,31 +163,30 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         onChange={handleInputChange}
         onKeyPress={handleKeyPress}
         className="opacity-0 absolute h-0 w-0"
-        autoFocus
+        autoFocus // Giữ autoFocus để input sẵn sàng nhận input từ bàn phím ảo
         disabled={disabled}
-        // Thêm onBlur để giữ focus khi click vào bàn phím
-        onBlur={(e) => {
-            // Kiểm tra nếu focus không chuyển đến một nút trong bàn phím
-            if (!e.relatedTarget || !e.relatedTarget.closest('.keyboard-button')) {
-                // Giữ focus trên input ẩn
-                 if (hiddenInputRef.current) {
-                    hiddenInputRef.current.focus();
-                 }
-            }
+         onBlur={(e) => {
+            // Giữ focus trên input ẩn trừ khi người dùng click ra ngoài hẳn component
+             if (hiddenInputRef.current && !e.relatedTarget?.closest('.keyboard-button') && !e.relatedTarget?.closest('.word-square')) {
+                hiddenInputRef.current.focus();
+             }
         }}
       />
 
       {/* Container các ô vuông từ */}
+      {/* Đã xóa onClick={focusInput} khỏi container này */}
       <div
         className="flex justify-center w-full gap-2 mb-3"
-        onClick={focusInput} // Tập trung vào input khi click vào đây
       >
         {squares.map((char, index) => (
           <div
             key={index}
-            className={`aspect-square w-12 md:w-14 flex items-center justify-center border rounded-lg text-xl font-bold transition-all duration-200 ${
-              index === userInput.length && !disabled ? 'scale-105 border-blue-400 ring-1 ring-blue-200' : ''
-            } ${getSquareStyle(index)} ${getSquareAnimation(index)}`}
+            className={`word-square aspect-square w-12 md:w-14 flex items-center justify-center border rounded-lg text-xl font-bold transition-all duration-200
+              ${
+                index === userInput.length && !disabled && isCorrect === null ? 'scale-105 border-blue-400 ring-1 ring-blue-200' : ''
+              }
+              ${getSquareStyle(index)} ${getSquareAnimation(index)}`}
+            onClick={() => handleSquareClick(index)} // Thêm xử lý click cho từng ô vuông
           >
             {char.toUpperCase()}
           </div>
@@ -220,6 +232,10 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 onClick={() => {
                   if (!disabled && userInput.length < wordLength) {
                     setUserInput(userInput + letter.toLowerCase());
+                     // Giữ focus trên input ẩn sau khi gõ phím
+                    if (hiddenInputRef.current) {
+                        hiddenInputRef.current.focus();
+                    }
                   }
                 }}
                 className={`keyboard-button w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
@@ -241,6 +257,10 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 onClick={() => {
                   if (!disabled && userInput.length > 0) {
                     setUserInput(userInput.slice(0, -1));
+                     // Giữ focus trên input ẩn sau khi xóa
+                    if (hiddenInputRef.current) {
+                        hiddenInputRef.current.focus();
+                    }
                   }
                 }}
                 className={`keyboard-button w-10 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
@@ -263,6 +283,10 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 onClick={() => {
                   if (!disabled) {
                     checkAnswer();
+                     // Giữ focus trên input ẩn sau khi gửi
+                     if (hiddenInputRef.current) {
+                        hiddenInputRef.current.focus();
+                    }
                   }
                 }}
                 className={`keyboard-button px-4 py-2 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150 w-full max-w-[200px]
