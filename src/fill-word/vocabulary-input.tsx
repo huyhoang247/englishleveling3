@@ -185,8 +185,9 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         </button>
       </div>
       
-      {/* Letter keyboard */}
+      {/* Letter keyboard - Redesigned for better balance */}
       <div className="mt-6 mx-auto max-w-md">
+        {/* First row */}
         <div className="flex justify-center flex-wrap gap-1 mb-1">
           {'QWERTYUIOP'.split('').map((letter) => (
             <button
@@ -208,7 +209,9 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </button>
           ))}
         </div>
-        <div className="flex justify-center flex-wrap gap-1 mb-1">
+        
+        {/* Second row - with offset for QWERTY layout */}
+        <div className="flex justify-center flex-wrap gap-1 mb-1 ml-4">
           {'ASDFGHJKL'.split('').map((letter) => (
             <button
               key={letter}
@@ -229,6 +232,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </button>
           ))}
         </div>
+        
+        {/* Third row with offset and action buttons */}
         <div className="flex justify-center flex-wrap gap-1">
           <button
             onClick={() => {
