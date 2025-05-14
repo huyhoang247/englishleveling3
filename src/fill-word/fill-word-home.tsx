@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
 
 // Import mảng URL ảnh từ image-urffggl (1).ts
-import { defaultImageUrls } from './image-urffggl (1).ts';
+import { defaultImageUrls } from '../image-url.ts';
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
