@@ -254,14 +254,13 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        {/* Điều chỉnh padding dựa trên currentView */}
-        <div className={`h-[calc(100%-8px)] ${currentView === 'quiz' ? 'p-0' : 'p-6'}`}> {/* 8px = height của gradient line trên cùng */}
-          {/* Navigation bar và Breadcrumbs */}
+        {/* Container chính không có padding */}
+        <div className="h-[calc(100%-8px)]"> {/* 8px = height của gradient line trên cùng */}
+          {/* Navigation bar và Breadcrumbs - Có padding */}
           {currentView !== 'main' && (
-            <div className="mb-6">
-              {/* Phần breadcrumbs giờ nằm bên trái */}
-              <div className="flex justify-start mb-2"> {/* Changed justify-end to justify-start */}
-                 {/* Sử dụng component Breadcrumbs */}
+            // Thêm padding p-6 vào div chứa breadcrumbs
+            <div className="mb-6 p-6">
+              <div className="flex justify-start mb-2">
                  <Breadcrumbs
                     currentView={currentView}
                     selectedQuiz={selectedQuiz}
@@ -274,10 +273,12 @@ export default function QuizAppHome() {
             </div>
           )}
 
-          {/* Main content */}
+          {/* Main content - Padding có điều kiện */}
           {/* Đảm bảo chiều cao của main content cũng được điều chỉnh nếu cần */}
-          {/* Nếu breadcrumbs hiển thị, trừ đi chiều cao của breadcrumbs */}
-          <div className={`overflow-y-auto ${currentView !== 'main' ? 'h-[calc(100%-48px)]' : 'h-full'}`}> {/* 48px = chiều cao navigation/breadcrumbs */}
+          {/* Nếu breadcrumbs hiển thị (currentView !== 'main'), trừ đi chiều cao của breadcrumbs container (khoảng 48px + mb-6 + p-6) */}
+          {/* Chiều cao của breadcrumbs div là mb-6 (24px) + p-6 (24px top + 24px bottom) = 72px. Sử dụng giá trị an toàn hơn như 80px hoặc tính toán chính xác */}
+          {/* Cách đơn giản hơn là để chiều cao full và overflow-y-auto, padding sẽ tự đẩy nội dung vào */}
+           <div className={`overflow-y-auto ${currentView === 'quiz' ? 'p-0' : 'p-6'}`}>
             {renderContent()}
           </div>
         </div>
