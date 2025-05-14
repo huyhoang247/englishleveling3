@@ -3,10 +3,10 @@ import WordSquaresInput from './vocabulary-input.tsx';
 import { db } from '../firebase.js'; // Import the Firestore database instance
 import { collection, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions
 
-// Define the structure of a vocabulary item
+// Define the structure of a vocabulary item (without hint)
 interface VocabularyItem {
   word: string;
-  hint: string;
+  // Removed: hint: string;
 }
 
 export default function VocabularyGame() {
@@ -31,10 +31,10 @@ export default function VocabularyGame() {
         const querySnapshot = await getDocs(collection(db, 'listVocabulary'));
         const data: VocabularyItem[] = querySnapshot.docs.map(doc => {
           const docData = doc.data();
-          // Ensure the data structure matches VocabularyItem
+          // Ensure the data structure matches VocabularyItem (only word)
           return {
             word: docData.word,
-            hint: docData.hint
+            // Removed: hint: docData.hint // No hint field
           };
         });
         setVocabularyList(data);
@@ -97,7 +97,8 @@ export default function VocabularyGame() {
         selectRandomWord();
       }, 1500);
     } else {
-      setFeedback(`Không đúng, hãy thử lại! Từ đúng là: ${currentWord.word}`);
+      // Removed hint from feedback message
+      setFeedback(`Không đúng, hãy thử lại!`);
       setIsCorrect(false);
     }
   };
@@ -254,7 +255,7 @@ export default function VocabularyGame() {
       </div>
 
       {/* Image popup */}
-      {showImagePopup && currentWord && ( // Added currentWord check
+      {showImagePopup && currentWord && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
             <button
@@ -269,10 +270,13 @@ export default function VocabularyGame() {
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full"
             />
+            {/* Removed hint display section */}
+            {/*
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
               <p className="text-gray-800">{currentWord.hint}</p>
             </div>
+            */}
           </div>
         </div>
       )}
