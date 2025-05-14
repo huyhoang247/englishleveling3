@@ -33,7 +33,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     squares[i] = characters[i];
   }
 
-  // Tham chiếu đến phần tử input ẩn (vẫn cần để bắt sự kiện gõ phím từ bàn phím ảo nếu cần)
+  // Tham chiếu đến phần tử input ẩn.
+  // Input này được giữ lại chủ yếu để có thể bắt các sự kiện bàn phím vật lý
+  // hoặc các hành vi mặc định của trình duyệt liên quan đến input,
+  // nhưng chúng ta sẽ cố gắng ngăn nó hiển thị bàn phím ảo trên di động
+  // bằng cách không gọi .focus() sau các tương tác của người dùng.
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
   // Xử lý khi nhấp vào một ô vuông
@@ -46,13 +50,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       const newUserInput = userInput.slice(0, index) + userInput.slice(index + 1);
       setUserInput(newUserInput);
     }
-    // Giữ focus trên input ẩn sau khi xóa để bàn phím ảo vẫn hoạt động
-     if (hiddenInputRef.current) {
-        hiddenInputRef.current.focus();
-     }
+    // *** Đã loại bỏ hiddenInputRef.current.focus() ở đây ***
+    // để ngăn bàn phím ảo hiện lên khi nhấn vào ô vuông.
   };
 
   // Xử lý các phím backspace và delete từ input ẩn (nếu có)
+  // Hàm này vẫn cần thiết nếu người dùng dùng bàn phím vật lý
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Chỉ cập nhật input nếu giá trị mới ngắn hơn hoặc bằng độ dài từ
@@ -155,7 +158,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      {/* Trường input ẩn để bắt sự kiện gõ phím từ bàn phím ảo */}
+      {/* Trường input ẩn. Chúng ta sử dụng autoFocus để nó có focus ban đầu,
+          nhưng sẽ không gọi .focus() sau các tương tác để tránh hiển thị bàn phím ảo. */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -163,20 +167,20 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         onChange={handleInputChange}
         onKeyPress={handleKeyPress}
         className="opacity-0 absolute h-0 w-0"
-        autoFocus // Giữ autoFocus để input sẵn sàng nhận input từ bàn phím ảo
+        autoFocus
         disabled={disabled}
-         onBlur={(e) => {
-            // Giữ focus trên input ẩn trừ khi người dùng click ra ngoài hẳn component
-             if (hiddenInputRef.current && !e.relatedTarget?.closest('.keyboard-button') && !e.relatedTarget?.closest('.word-square')) {
-                hiddenInputRef.current.focus();
-             }
+        // Loại bỏ logic onBlur phức tạp để tránh cố gắng giữ focus
+        onBlur={() => {
+            // Có thể thêm logic ở đây nếu cần xử lý khi input mất focus hoàn toàn
+            // (ví dụ: khi người dùng click ra ngoài component), nhưng không cố gắng
+            // tự động focus lại để tránh kích hoạt bàn phím ảo.
         }}
       />
 
       {/* Container các ô vuông từ */}
-      {/* Đã xóa onClick={focusInput} khỏi container này */}
       <div
         className="flex justify-center w-full gap-2 mb-3"
+        // Đã loại bỏ onClick={focusInput} khỏi container này
       >
         {squares.map((char, index) => (
           <div
@@ -232,10 +236,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 onClick={() => {
                   if (!disabled && userInput.length < wordLength) {
                     setUserInput(userInput + letter.toLowerCase());
-                     // Giữ focus trên input ẩn sau khi gõ phím
-                    if (hiddenInputRef.current) {
-                        hiddenInputRef.current.focus();
-                    }
+                    // *** Đã loại bỏ hiddenInputRef.current.focus() ở đây ***
+                    // để ngăn bàn phím ảo hiện lên khi nhấn nút trên bàn phím ảo.
                   }
                 }}
                 className={`keyboard-button w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
@@ -257,10 +259,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 onClick={() => {
                   if (!disabled && userInput.length > 0) {
                     setUserInput(userInput.slice(0, -1));
-                     // Giữ focus trên input ẩn sau khi xóa
-                    if (hiddenInputRef.current) {
-                        hiddenInputRef.current.focus();
-                    }
+                     // *** Đã loại bỏ hiddenInputRef.current.focus() ở đây ***
+                     // để ngăn bàn phím ảo hiện lên sau khi nhấn Del.
                   }
                 }}
                 className={`keyboard-button w-10 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
@@ -283,10 +283,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 onClick={() => {
                   if (!disabled) {
                     checkAnswer();
-                     // Giữ focus trên input ẩn sau khi gửi
-                     if (hiddenInputRef.current) {
-                        hiddenInputRef.current.focus();
-                    }
+                     // *** Đã loại bỏ hiddenInputRef.current.focus() ở đây ***
+                     // để ngăn bàn phím ảo hiện lên sau khi nhấn ENTER.
                   }
                 }}
                 className={`keyboard-button px-4 py-2 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150 w-full max-w-[200px]
