@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import VocabularyInput from './VocabularyInput'; // Import the new component
 
 export default function VocabularyGame() {
   const vocabularyList = [
@@ -32,7 +33,6 @@ export default function VocabularyGame() {
   const [usedWords, setUsedWords] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
-  // Removed state related to hint: showHint, hintUsed
   const [showConfetti, setShowConfetti] = useState(false);
 
   // Initialize the game
@@ -54,7 +54,6 @@ export default function VocabularyGame() {
     setUserInput('');
     setFeedback('');
     setIsCorrect(null);
-    // Removed setting showHint and hintUsed to false
   };
 
   // Check the user's answer
@@ -85,8 +84,10 @@ export default function VocabularyGame() {
 
   // Generate a placeholder image based on the word
   const generateImageUrl = (word) => {
-    return `/api/placeholder/400/320?text=${encodeURIComponent(word)}`;
+    // Using placehold.co for placeholder images with Vietnamese text support
+    return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
   };
+
 
   // Reset the game
   const resetGame = () => {
@@ -97,15 +98,13 @@ export default function VocabularyGame() {
   };
 
   // Submit form on Enter key
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       checkAnswer();
     }
   };
 
-  // Removed handleShowHint function
-
-  // Confetti component
+  // Confetti component (remains the same)
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
 
@@ -154,11 +153,6 @@ export default function VocabularyGame() {
       {showConfetti && <Confetti />}
 
       <div className="w-full flex flex-col items-center">
-        {/* Removed the h1 element containing "Trò Chơi Học Từ Vựng Tiếng Anh" */}
-        {/* <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-6 text-center">
-          Trò Chơi Học Từ Vựng Tiếng Anh
-        </h1> */}
-
         {gameOver ? (
           <div className="text-center py-8 w-full">
             <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
@@ -200,7 +194,7 @@ export default function VocabularyGame() {
 
             {currentWord && (
               <div className="w-full space-y-6">
-                {/* Image card */}
+                 {/* Image card */}
                 <div
                   className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
@@ -214,66 +208,16 @@ export default function VocabularyGame() {
                   </div>
                 </div>
 
-                {/* Removed Hint button and display */}
-                {/* <div className="w-full">
-                  {!showHint ? (
-                    <button
-                      onClick={handleShowHint}
-                      className="w-full py-3 px-4 bg-white border border-indigo-200 rounded-xl text-indigo-600 font-medium shadow-sm hover:bg-indigo-50 transition-colors flex items-center justify-center"
-                    >
-                      <span className="mr-2">💡</span>
-                      Xem gợi ý
-                    </button>
-                  ) : (
-                    <div className="p-4 bg-white border border-indigo-200 rounded-xl shadow-sm">
-                      <p className="font-medium text-gray-500 mb-1 text-sm">Gợi ý:</p>
-                      <p className="text-gray-800">{currentWord.hint}</p>
-                    </div>
-                  )}
-                </div> */}
-
-                {/* Input field */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Nhập từ vựng tiếng Anh..."
-                    className={`w-full p-4 pr-16 border-2 rounded-xl text-lg shadow-sm focus:outline-none focus:ring-2 transition-all
-                      ${isCorrect === true ? 'border-green-500 bg-green-50 focus:ring-green-200' :
-                        isCorrect === false ? 'border-red-500 bg-red-50 focus:ring-red-200' :
-                        'border-indigo-200 focus:ring-blue-200 focus:border-blue-400'}`}
-                    disabled={isCorrect === true}
-                  />
-                  <button
-                    onClick={checkAnswer}
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-3 rounded-lg transition-all shadow-sm
-                      ${userInput.trim() ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700' :
-                      'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                    disabled={isCorrect === true || !userInput.trim()}
-                  >
-                    <span className="text-lg">🔍</span>
-                  </button>
-                </div>
-
-                {/* Feedback */}
-                {feedback && (
-                  <div className={`flex items-center justify-center p-4 rounded-xl shadow-sm animation-pulse
-                    ${isCorrect ? 'bg-green-100 text-green-800 border border-green-200' :
-                               'bg-red-100 text-red-800 border border-red-200'}`}>
-                    {isCorrect ?
-                      <div className="flex items-center">
-                        <span className="flex items-center justify-center bg-green-500 text-white rounded-full w-8 h-8 mr-3">✓</span>
-                        <span className="font-medium">{feedback}</span>
-                      </div> :
-                      <div className="flex items-center">
-                        <span className="flex items-center justify-center bg-red-500 text-white rounded-full w-8 h-8 mr-3">✕</span>
-                        <span>{feedback}</span>
-                      </div>
-                    }
-                  </div>
-                )}
+                {/* Use the new VocabularyInput component */}
+                <VocabularyInput
+                  userInput={userInput}
+                  setUserInput={setUserInput}
+                  checkAnswer={checkAnswer}
+                  handleKeyPress={handleKeyPress}
+                  feedback={feedback}
+                  isCorrect={isCorrect}
+                  disabled={isCorrect === true} // Disable input when correct
+                />
               </div>
             )}
           </>
