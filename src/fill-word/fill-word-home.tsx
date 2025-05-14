@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import VocabularyInput from './VocabularyInput'; // Import the new component
+import VocabularyInput from './vocabulary-input.tsx'; // Import the new component
 
 export default function VocabularyGame() {
   const vocabularyList = [
