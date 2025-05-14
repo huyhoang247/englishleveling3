@@ -132,12 +132,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
   };
 
-  // Bố cục bàn phím mới: 26 phím chữ cái chia 4 hàng (7, 7, 6, 6)
+  // Bố cục bàn phím mới: 26 phím chữ cái chia 4 hàng (7, 7, 7, 5)
   const keyboardRows = [
     'QWERTYU'.split(''), // 7 phím
     'IOPASDF'.split(''), // 7 phím
-    'GHJKLM'.split(''), // 6 phím
-    'NBVCXZ'.split(''), // 6 phím
+    'GHJKLMN'.split(''), // 7 phím (Đã chuyển 'N' từ hàng dưới lên)
+    'BVCXZ'.split(''), // 5 phím (Đã bỏ 'N')
   ];
 
   return (
@@ -214,27 +214,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       <div className="mt-6 mx-auto max-w-md">
         {keyboardRows.map((row, rowIndex) => (
           <div key={rowIndex} className="flex justify-center flex-wrap gap-1 mb-1">
-            {/* Thêm nút ENTER và ← vào hàng cuối cùng */}
-            {rowIndex === keyboardRows.length - 1 && (
-              <button
-                onClick={() => {
-                  if (!disabled) {
-                    checkAnswer();
-                  }
-                }}
-                className={`keyboard-button px-2 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-                  ${
-                    disabled || userInput.length !== wordLength
-                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                      : 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-0.5'
-                  }`}
-                disabled={disabled || userInput.length !== wordLength}
-                tabIndex={-1} // Ngăn nút này nhận focus từ tab
-              >
-                ENTER
-              </button>
-            )}
-
             {row.map((letter) => (
               <button
                 key={letter}
@@ -256,7 +235,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
               </button>
             ))}
 
-            {/* Thêm nút ← vào hàng cuối cùng */}
+            {/* Thêm nút Del vào hàng cuối cùng */}
             {rowIndex === keyboardRows.length - 1 && (
               <button
                 onClick={() => {
@@ -273,11 +252,31 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
                 disabled={disabled || userInput.length === 0}
                 tabIndex={-1} // Ngăn nút này nhận focus từ tab
               >
-                ←
+                Del
               </button>
             )}
           </div>
         ))}
+         {/* Thêm nút ENTER riêng biệt ở dưới cùng */}
+        <div className="flex justify-center mt-2">
+             <button
+                onClick={() => {
+                  if (!disabled) {
+                    checkAnswer();
+                  }
+                }}
+                className={`keyboard-button px-4 py-2 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150 w-full max-w-[200px]
+                  ${
+                    disabled || userInput.length !== wordLength
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-0.5'
+                  }`}
+                disabled={disabled || userInput.length !== wordLength}
+                tabIndex={-1} // Ngăn nút này nhận focus từ tab
+              >
+                ENTER
+              </button>
+        </div>
       </div>
 
       {/* Phản hồi */}
