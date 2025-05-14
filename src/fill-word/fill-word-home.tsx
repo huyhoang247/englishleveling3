@@ -151,19 +151,14 @@ export default function VocabularyGame() {
   };
 
   return (
-    // Main container with rounded top corners and no rounded bottom corners
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8
-                 rounded-tl-2xl rounded-tr-2xl rounded-bl-none rounded-br-none
-                 shadow-xl font-sans">
+    // Removed rounded-2xl from this div
+    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
       {showConfetti && <Confetti />}
 
       <div className="w-full flex flex-col items-center">
         {gameOver ? (
-          // Game over card with rounded top corners and no rounded bottom corners
           <div className="text-center py-8 w-full">
-            <div className="bg-white p-8
-                          rounded-tl-2xl rounded-tr-2xl rounded-bl-none rounded-br-none
-                          shadow-lg mb-6">
+            <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
               <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
               <p className="text-xl mb-4">Điểm của bạn: <span className="font-bold text-indigo-600">{score}/{vocabularyList.length}</span></p>
               <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
@@ -183,10 +178,7 @@ export default function VocabularyGame() {
           </div>
         ) : (
           <>
-            {/* Score and progress container with rounded top corners and no rounded bottom corners */}
-            <div className="w-full flex items-center justify-between mb-6 bg-white
-                          rounded-tl-xl rounded-tr-xl rounded-bl-none rounded-br-none
-                          p-4 shadow-md">
+            <div className="w-full flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-md">
               <div className="flex items-center">
                 <span className="text-yellow-500 text-2xl mr-2">⭐</span>
                 <span className="font-bold text-gray-800">{score}/{vocabularyList.length}</span>
@@ -205,11 +197,9 @@ export default function VocabularyGame() {
 
             {currentWord && (
               <div className="w-full space-y-6">
-                {/* Image card with rounded top corners and no rounded bottom corners */}
+                {/* Image card */}
                 <div
-                  className="relative w-full h-64 bg-white
-                           rounded-tl-2xl rounded-tr-2xl rounded-bl-none rounded-br-none
-                           shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
+                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
@@ -261,10 +251,7 @@ export default function VocabularyGame() {
       {/* Image popup */}
       {showImagePopup && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          {/* Image popup container with rounded top corners and no rounded bottom corners */}
-          <div className="relative bg-white p-6 max-w-3xl max-h-full overflow-auto
-                       rounded-tl-2xl rounded-tr-2xl rounded-bl-none rounded-br-none
-                       shadow-2xl">
+          <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
             <button
               onClick={() => setShowImagePopup(false)}
               className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"
@@ -272,18 +259,12 @@ export default function VocabularyGame() {
               <span className="text-xl font-bold">✕</span>
             </button>
             <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
-            {/* Image popup image with rounded top corners and no rounded bottom corners */}
             <img
               src={generateImageUrl(currentWord.word)}
               alt={currentWord.word}
-              className="
-                       rounded-tl-lg rounded-tr-lg rounded-bl-none rounded-br-none
-                       shadow-md max-w-full max-h-full"
+              className="rounded-lg shadow-md max-w-full max-h-full"
             />
-            {/* Image popup definition with rounded top corners and no rounded bottom corners */}
-            <div className="mt-6 p-4 bg-indigo-50
-                          rounded-tl-xl rounded-tr-xl rounded-bl-none rounded-br-none
-                          border border-indigo-100">
+            <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
               <p className="text-gray-800">{currentWord.hint}</p>
             </div>
