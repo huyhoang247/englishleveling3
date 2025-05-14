@@ -254,7 +254,8 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        <div className="h-[calc(100%-8px)] p-6"> {/* 8px = height của gradient line trên cùng */}
+        {/* Điều chỉnh padding dựa trên currentView */}
+        <div className={`h-[calc(100%-8px)] ${currentView === 'quiz' ? 'p-0' : 'p-6'}`}> {/* 8px = height của gradient line trên cùng */}
           {/* Navigation bar và Breadcrumbs */}
           {currentView !== 'main' && (
             <div className="mb-6">
@@ -270,16 +271,13 @@ export default function QuizAppHome() {
                     setCurrentView={setCurrentView}
                  />
               </div>
-
-              {/* Phần breadcrumbs cố định - Đã chuyển sang component Breadcrumbs */}
-              {/* <div className="flex items-center gap-2 text-sm">
-                ... (nội dung breadcrumbs cũ) ...
-              </div> */}
             </div>
           )}
 
           {/* Main content */}
-          <div className="h-[calc(100%-48px)] overflow-y-auto"> {/* 48px = chiều cao navigation */}
+          {/* Đảm bảo chiều cao của main content cũng được điều chỉnh nếu cần */}
+          {/* Nếu breadcrumbs hiển thị, trừ đi chiều cao của breadcrumbs */}
+          <div className={`overflow-y-auto ${currentView !== 'main' ? 'h-[calc(100%-48px)]' : 'h-full'}`}> {/* 48px = chiều cao navigation/breadcrumbs */}
             {renderContent()}
           </div>
         </div>
