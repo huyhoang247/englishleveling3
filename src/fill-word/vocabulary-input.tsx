@@ -119,6 +119,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return '';
   };
   
+  // Format the word display with proper capitalization
+  const formatDisplayWord = (input: string) => {
+    if (!input) return '';
+    return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+  };
+  
   return (
     <div className="w-full space-y-4">
       {/* Hidden input field that captures keyboard input */}
@@ -149,6 +155,15 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
           </div>
         ))}
       </div>
+      
+      {/* Word display box - shows the current word with proper capitalization */}
+      {userInput.length > 0 && (
+        <div className="flex justify-center w-full">
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 transform hover:scale-105">
+            {formatDisplayWord(userInput)}
+          </div>
+        </div>
+      )}
       
       {/* Submit button */}
       <div className="flex justify-center">
