@@ -218,8 +218,8 @@ export default function QuizAppHome() {
         <div className="h-[calc(100%-8px)]"> {/* 8px = height của gradient line trên cùng */}
           {/* Navigation bar và Breadcrumbs - Có padding */}
           {currentView !== 'main' && (
-            // Thêm padding p-6 vào div chứa breadcrumbs
-            <div className="mb-6 p-6">
+            // Thêm padding p-6 vào div chứa breadcrumbs, loại bỏ mb-6
+            <div className="p-6">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
                     currentView={currentView}
