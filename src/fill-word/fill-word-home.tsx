@@ -32,8 +32,7 @@ export default function VocabularyGame() {
   const [usedWords, setUsedWords] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-  const [hintUsed, setHintUsed] = useState(false);
+  // Removed state related to hint: showHint, hintUsed
   const [showConfetti, setShowConfetti] = useState(false);
 
   // Initialize the game
@@ -55,8 +54,7 @@ export default function VocabularyGame() {
     setUserInput('');
     setFeedback('');
     setIsCorrect(null);
-    setShowHint(false);
-    setHintUsed(false);
+    // Removed setting showHint and hintUsed to false
   };
 
   // Check the user's answer
@@ -105,11 +103,7 @@ export default function VocabularyGame() {
     }
   };
 
-  // Show hint
-  const handleShowHint = () => {
-    setShowHint(true);
-    setHintUsed(true);
-  };
+  // Removed handleShowHint function
 
   // Confetti component
   const Confetti = () => {
@@ -220,8 +214,8 @@ export default function VocabularyGame() {
                   </div>
                 </div>
 
-                {/* Hint button and display */}
-                <div className="w-full">
+                {/* Removed Hint button and display */}
+                {/* <div className="w-full">
                   {!showHint ? (
                     <button
                       onClick={handleShowHint}
@@ -236,7 +230,7 @@ export default function VocabularyGame() {
                       <p className="text-gray-800">{currentWord.hint}</p>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Input field */}
                 <div className="relative">
