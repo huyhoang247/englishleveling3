@@ -4,7 +4,7 @@ import QuizApp from './quiz.tsx';
 // Import component Breadcrumbs mới tạo
 import Breadcrumbs from './bread-crumbs.tsx';
 // Import component VocabularyGame từ fill-word-home.tsx
-import VocabularyGame from './fill-word-home.tsx'; // Import VocabularyGame
+import VocabularyGame from './fill-word/fill-word-home.tsx'; // Import VocabularyGame
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
