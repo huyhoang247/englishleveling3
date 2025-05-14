@@ -86,7 +86,8 @@ export default function VocabularyGame() {
 
   // Generate a placeholder image based on the word
   const generateImageUrl = (word) => {
-    return `/api/placeholder/400/320?text=${encodeURIComponent(word)}`;
+    // Using a placeholder service URL
+    return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
   };
 
   // Reset the game
@@ -241,6 +242,13 @@ export default function VocabularyGame() {
                   isCorrect={isCorrect}
                   disabled={isCorrect === true}
                 />
+
+                {/* Feedback message */}
+                {feedback && (
+                  <div className={`mt-4 p-4 text-center text-white font-bold rounded-t-2xl shadow-md ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {feedback}
+                  </div>
+                )}
               </div>
             )}
           </>
