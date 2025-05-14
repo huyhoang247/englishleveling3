@@ -5,7 +5,9 @@ import { db, auth } from '../firebase.js'; // Import db và auth
 import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
 
-// Import mảng URL ảnh từ image-urffggl (1).ts
+// Import mảng URL ảnh từ image-url.ts
+// Giả định defaultImageUrls là mảng 0-based,
+// và imageIndex từ Firestore có thể là 1-based hoặc có offset.
 import { defaultImageUrls } from '../image-url.ts';
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
@@ -114,10 +116,13 @@ export default function VocabularyGame() {
           const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
               const imageIndex = fetchedImageIds[index]; // Lấy chỉ mục ảnh tương ứng
               // Kiểm tra xem chỉ mục ảnh có hợp lệ trong mảng defaultImageUrls không
-              const isValidImageIndex = imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length;
+              // Điều chỉnh index ở đây nếu cần thiết, ví dụ: imageIndex - 1 nếu ID là 1-based
+              // const adjustedImageIndex = imageIndex !== undefined ? imageIndex - 1 : undefined; // Ví dụ điều chỉnh
+              const isValidImageIndex = imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length; // Kiểm tra tính hợp lệ sau khi điều chỉnh (nếu có)
               return {
                   ...item,
                   // Chỉ thêm imageIndex nếu nó hợp lệ
+                  // Sử dụng adjustedImageIndex nếu bạn đã điều chỉnh ở trên
                   imageIndex: isValidImageIndex ? imageIndex : undefined
               };
           });
@@ -212,11 +217,26 @@ export default function VocabularyGame() {
 
   // Generate image URL based on the imageIndex from the vocabulary item
   const generateImageUrl = (imageIndex?: number) => {
-     // Nếu có imageIndex hợp lệ, sử dụng URL từ defaultImageUrls
-     if (imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length) {
-         return defaultImageUrls[imageIndex];
+     // Kiểm tra nếu imageIndex tồn tại và là số
+     if (imageIndex !== undefined && typeof imageIndex === 'number') {
+         // Điều chỉnh imageIndex để phù hợp với mảng 0-based nếu imageIndex từ Firestore là 1-based
+         // Ví dụ: nếu imageIndex 1 tương ứng với phần tử đầu tiên của mảng (index 0), ta trừ đi 1.
+         // Nếu imageIndex 1 tương ứng với phần tử thứ hai của mảng (index 1), ta không cần trừ.
+         // Dựa trên mô tả của bạn "id1 là bắt đầu từ hàng 2", có thể imageIndex 1 tương ứng với defaultImageUrls[0].
+         // Tuy nhiên, cách điều chỉnh chính xác phụ thuộc vào cách imageIndex được lưu trong Firestore
+         // và cách mảng defaultImageUrls được định nghĩa.
+         // Tạm thời, tôi sẽ giả định imageIndex 1 trong Firestore tương ứng với index 0 trong mảng.
+         // Nếu không đúng, bạn cần điều chỉnh lại phần này.
+         const adjustedIndex = imageIndex - 1; // Giả định imageIndex từ Firestore là 1-based
+
+         // Kiểm tra xem chỉ mục đã điều chỉnh có hợp lệ trong mảng defaultImageUrls không
+         if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) {
+             return defaultImageUrls[adjustedIndex];
+         } else {
+             console.warn(`Adjusted image index ${adjustedIndex} is out of bounds for defaultImageUrls array.`);
+         }
      }
-     // Nếu không có imageIndex hoặc không hợp lệ, sử dụng placeholder
+     // Nếu không có imageIndex hợp lệ hoặc sau khi điều chỉnh vẫn không hợp lệ, sử dụng placeholder
      return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`;
   };
 
