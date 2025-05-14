@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
-import { db } from '../firebase.js'; // Import db object from your firebase config
-import { collection, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions
+// Import db và auth (để lấy user info) từ file firebase của bạn
+import { db, auth } from '../firebase.js';
+// Import các hàm cần thiết từ Firestore để làm việc với document người dùng
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { User } from 'firebase/auth'; // Import kiểu dữ liệu User
 
 // Định nghĩa kiểu dữ liệu cho một mục từ vựng
 interface VocabularyItem {
@@ -9,8 +12,14 @@ interface VocabularyItem {
   hint: string;
 }
 
-export default function VocabularyGame() {
-  // State để lưu trữ danh sách từ vựng từ Firestore
+// Định nghĩa props cho component VocabularyGame
+interface VocabularyGameProps {
+  currentUser: User | null; // Nhận thông tin người dùng từ component cha
+}
+
+// Chú ý: Component nhận currentUser làm prop
+export default function VocabularyGame({ currentUser }: VocabularyGameProps) {
+  // State để lưu trữ danh sách từ vựng từ Firestore (của người dùng)
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   // State để theo dõi trạng thái tải dữ liệu
   const [loading, setLoading] = useState(true);
@@ -27,41 +36,70 @@ export default function VocabularyGame() {
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Effect để tải dữ liệu từ Firestore khi component mount
+  // Effect để tải dữ liệu từ vựng của người dùng từ Firestore khi component mount hoặc currentUser thay đổi
   useEffect(() => {
-    const fetchVocabulary = async () => {
-      try {
-        // Lấy tham chiếu đến collection 'listVocabulary'
-        const querySnapshot = await getDocs(collection(db, 'listVocabulary'));
-        const fetchedVocabulary: VocabularyItem[] = [];
-        querySnapshot.forEach((doc) => {
-          // Lấy dữ liệu từ mỗi document và thêm vào mảng
-          // Đảm bảo rằng dữ liệu có cấu trúc { word: string, hint: string }
-          const data = doc.data();
-          if (data && typeof data.word === 'string' && typeof data.hint === 'string') {
-             fetchedVocabulary.push({ word: data.word, hint: data.hint });
+    const fetchUserVocabulary = async () => {
+      if (currentUser) {
+        setLoading(true); // Bắt đầu tải dữ liệu
+        setError(null); // Reset lỗi
+
+        // Lấy tham chiếu đến tài liệu người dùng trong collection 'users'
+        const userDocRef = doc(db, 'users', currentUser.uid);
+
+        try {
+          // Lấy snapshot của tài liệu
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            // Lấy danh sách từ vựng từ trường 'listVocabulary'
+            // Đảm bảo rằng listVocabulary tồn tại và là một mảng
+            const userVocabArray = Array.isArray(userData?.listVocabulary) ? userData.listVocabulary : [];
+
+            // Chuyển đổi mảng string thành mảng VocabularyItem (giả định cấu trúc)
+            // Nếu listVocabulary trong Firestore chỉ là mảng string, bạn cần điều chỉnh logic này
+            // Giả định listVocabulary trong user doc là mảng các object { word: string, hint: string }
+             const formattedVocabulary: VocabularyItem[] = userVocabArray
+                .filter(item => item && typeof item.word === 'string' && typeof item.hint === 'string') // Lọc các mục không hợp lệ
+                .map(item => ({ word: item.word, hint: item.hint })); // Map sang đúng kiểu VocabularyItem
+
+
+            setVocabularyList(formattedVocabulary); // Cập nhật state với dữ liệu đã fetch
+             console.log(`Fetched ${formattedVocabulary.length} vocabulary items for user ${currentUser.uid}`);
+
           } else {
-             console.warn("Skipping document with invalid data structure:", data);
+            // Nếu tài liệu người dùng không tồn tại (trường hợp hiếm nếu index.tsx đã xử lý)
+            console.warn(`User document for ${currentUser.uid} not found when fetching vocabulary.`);
+            setVocabularyList([]); // Đặt danh sách từ vựng rỗng
           }
-        });
-        setVocabularyList(fetchedVocabulary); // Cập nhật state với dữ liệu đã fetch
-        setLoading(false); // Đã tải xong
-      } catch (err: any) {
-        console.error("Error fetching vocabulary:", err);
-        setError("Không thể tải từ vựng. Vui lòng thử lại sau."); // Cập nhật state lỗi
-        setLoading(false); // Đã tải xong (với lỗi)
+          setLoading(false); // Đã tải xong
+        } catch (err: any) {
+          console.error("Error fetching user vocabulary:", err);
+          setError("Không thể tải từ vựng của bạn. Vui lòng thử lại sau."); // Cập nhật state lỗi
+          setLoading(false); // Đã tải xong (với lỗi)
+        }
+      } else {
+        // Nếu không có người dùng đăng nhập, đặt danh sách từ vựng rỗng
+        setVocabularyList([]);
+        setLoading(false);
+        setError("Vui lòng đăng nhập để chơi game từ vựng.");
       }
     };
 
-    fetchVocabulary();
-  }, []); // Chạy một lần khi component mount
+    fetchUserVocabulary();
+  }, [currentUser, db]); // Dependency array bao gồm currentUser và db
 
   // Effect để khởi tạo game sau khi từ vựng được tải
   useEffect(() => {
     if (vocabularyList.length > 0) {
       selectRandomWord();
+    } else if (!loading && !error && !currentUser) {
+       // If not loading, no error, and no user, display message handled below
+    } else if (!loading && !error && currentUser && vocabularyList.length === 0) {
+       // If not loading, no error, user logged in, but vocabularyList is empty
+       setError("Bạn chưa có từ vựng nào. Hãy thêm từ vựng để bắt đầu game!");
     }
-  }, [vocabularyList]); // Chạy lại khi vocabularyList thay đổi (sau khi fetch xong)
+  }, [vocabularyList, loading, error, currentUser]); // Chạy lại khi vocabularyList, loading, error hoặc currentUser thay đổi
 
 
   // Select a random word that hasn't been used yet
@@ -117,7 +155,7 @@ export default function VocabularyGame() {
     setUsedWords([]);
     setScore(0);
     setGameOver(false);
-    selectRandomWord();
+    selectRandomWord(); // Chọn lại từ đầu sau khi reset
   };
 
   // Submit form on Enter key
@@ -127,7 +165,7 @@ export default function VocabularyGame() {
     }
   };
 
-  // Confetti component
+  // Confetti component (Giữ nguyên)
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
 
@@ -172,17 +210,23 @@ export default function VocabularyGame() {
     );
   };
 
-  // Hiển thị trạng thái loading hoặc lỗi
+  // Hiển thị trạng thái loading, lỗi hoặc thông báo khi không có người dùng/từ vựng
   if (loading) {
-    return <div className="flex items-center justify-center h-screen text-xl">Đang tải từ vựng...</div>;
+    return <div className="flex items-center justify-center h-screen text-xl">Đang tải từ vựng của bạn...</div>;
   }
 
   if (error) {
-    return <div className="flex items-center justify-center h-screen text-xl text-red-600">{error}</div>;
+    return <div className="flex items-center justify-center h-screen text-xl text-red-600 text-center p-4">{error}</div>;
   }
 
-  if (vocabularyList.length === 0 && !loading && !error) {
-       return <div className="flex items-center justify-center h-screen text-xl text-yellow-600">Không tìm thấy từ vựng nào trong Firestore.</div>;
+   // Nếu không có người dùng và không loading/error
+  if (!currentUser && !loading && !error) {
+     return <div className="flex items-center justify-center h-screen text-xl text-blue-600 text-center p-4">Vui lòng đăng nhập để chơi game từ vựng.</div>;
+  }
+
+  // Nếu có người dùng, không loading/error, nhưng danh sách từ vựng rỗng
+   if (currentUser && vocabularyList.length === 0 && !loading && !error) {
+       return <div className="flex items-center justify-center h-screen text-xl text-yellow-600 text-center p-4">Bạn chưa có từ vựng nào. Hãy thêm từ vựng để bắt đầu game!</div>;
   }
 
 
@@ -267,8 +311,18 @@ export default function VocabularyGame() {
                   handleKeyPress={handleKeyPress}
                   feedback={feedback}
                   isCorrect={isCorrect}
-                  disabled={isCorrect === true}
+                  disabled={answered || !currentWord} // Disable input if answered or no current word
                 />
+                 {/* Thêm nút kiểm tra đáp án */}
+                 <button
+                     onClick={checkAnswer}
+                     disabled={answered || !currentWord || !userInput.trim()} // Disable if answered, no word, or empty input
+                     className={`w-full py-3 px-4 rounded-xl text-white font-medium shadow-sm transition-colors flex items-center justify-center
+                       ${answered || !currentWord || !userInput.trim() ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700'}
+                     `}
+                   >
+                     Kiểm Tra Đáp Án
+                   </button>
               </div>
             )}
           </>
