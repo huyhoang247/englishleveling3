@@ -233,12 +233,9 @@ export default function QuizAppHome() {
             </div>
           )}
 
-          {/* Main content - Padding có điều kiện */}
-          {/* Đảm bảo chiều cao của main content cũng được điều chỉnh nếu cần */}
-          {/* Nếu breadcrumbs hiển thị (currentView !== 'main'), trừ đi chiều cao của breadcrumbs container (khoảng 48px + mb-6 + p-6) */}
-          {/* Chiều cao của breadcrumbs div là mb-6 (24px) + p-6 (24px top + 24px bottom) = 72px. Sử dụng giá trị an toàn hơn như 80px hoặc tính toán chính xác */}
-          {/* Cách đơn giản hơn là để chiều cao full và overflow-y-auto, padding sẽ tự đẩy nội dung vào */}
-           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
+          {/* Main content - Padding có điều kiện và Z-index */}
+          {/* Thêm class z-[51] khi currentView không phải là 'main' */}
+           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
             {renderContent()}
           </div>
         </div>
