@@ -1,45 +1,64 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
+import { db } from './firebase.js'; // Import the Firestore database instance
+import { collection, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions
+
+// Define the structure of a vocabulary item
+interface VocabularyItem {
+  word: string;
+  hint: string;
+}
 
 export default function VocabularyGame() {
-  const vocabularyList = [
-    { word: "Source", hint: "The origin or place where something comes from" },
-    { word: "Insurance", hint: "Protection against financial loss" },
-    { word: "Argument", hint: "A discussion involving different points of view" },
-    { word: "Influence", hint: "The capacity to have an effect on someone's behavior or opinions" },
-    { word: "Release", hint: "The action of making something available to the public" },
-    { word: "Capacity", hint: "The maximum amount that something can contain or produce" },
-    { word: "Senate", hint: "One of the chambers of a legislative body" },
-    { word: "Massive", hint: "Very large and heavy" },
-    { word: "Stick", hint: "A thin piece of wood that has fallen or been cut from a tree" },
-    { word: "District", hint: "An area of a country or city with official boundaries" },
-    { word: "Budget", hint: "An estimate of income and expenditure for a set period of time" },
-    { word: "Measure", hint: "To find the size, amount, or degree of something" },
-    { word: "Cross", hint: "To go from one side of something to the other" },
-    { word: "Central", hint: "In or near the center of something" },
-    { word: "Proud", hint: "Feeling deep pleasure or satisfaction as a result of achievements" },
-    { word: "Core", hint: "The central or most important part of something" },
-    { word: "County", hint: "An administrative division of a country or state" },
-    { word: "Species", hint: "A group of living organisms with similar characteristics" },
-    { word: "Conditions", hint: "The circumstances affecting the way people live or work" },
-    { word: "Touch", hint: "To come into or be in contact with something" }
-  ];
-
-  const [currentWord, setCurrentWord] = useState(null);
+  // Initialize vocabularyList as an empty array, it will be populated from Firestore
+  const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
+  const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [isCorrect, setIsCorrect] = useState(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
-  const [usedWords, setUsedWords] = useState([]);
+  const [usedWords, setUsedWords] = useState<string[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
-  // Removed showHint state
   const [showConfetti, setShowConfetti] = useState(false);
+  const [loading, setLoading] = useState(true); // State to track loading status
 
-  // Initialize the game
+  // Fetch vocabulary list from Firestore on component mount
   useEffect(() => {
-    selectRandomWord();
-  }, []);
+    const fetchVocabulary = async () => {
+      try {
+        setLoading(true); // Start loading
+        const querySnapshot = await getDocs(collection(db, 'listVocabulary'));
+        const data: VocabularyItem[] = querySnapshot.docs.map(doc => {
+          const docData = doc.data();
+          // Ensure the data structure matches VocabularyItem
+          return {
+            word: docData.word,
+            hint: docData.hint
+          };
+        });
+        setVocabularyList(data);
+        setLoading(false); // End loading
+      } catch (error) {
+        console.error("Error fetching vocabulary from Firestore:", error);
+        setLoading(false); // End loading even if there's an error
+        // Optionally, display an error message to the user
+      }
+    };
+
+    fetchVocabulary();
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  // Initialize the game or select a new word when vocabularyList is loaded or changes
+  useEffect(() => {
+    if (vocabularyList.length > 0 && !gameOver) {
+      selectRandomWord();
+    } else if (vocabularyList.length === 0 && !loading) {
+        // Handle case where no vocabulary is fetched
+        console.log("No vocabulary found in Firestore.");
+        setGameOver(true); // Or display a specific message
+    }
+  }, [vocabularyList, gameOver, loading]); // Depend on vocabularyList, gameOver, and loading state
 
   // Select a random word that hasn't been used yet
   const selectRandomWord = () => {
@@ -55,7 +74,6 @@ export default function VocabularyGame() {
     setUserInput('');
     setFeedback('');
     setIsCorrect(null);
-    // Removed setShowHint(false);
   };
 
   // Check the user's answer
@@ -85,28 +103,34 @@ export default function VocabularyGame() {
   };
 
   // Generate a placeholder image based on the word
-  const generateImageUrl = (word) => {
-    return `/api/placeholder/400/320?text=${encodeURIComponent(word)}`;
+  const generateImageUrl = (word: string) => {
+    // Using placehold.co for placeholder images
+    return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
   };
+
 
   // Reset the game
   const resetGame = () => {
     setUsedWords([]);
     setScore(0);
     setGameOver(false);
-    selectRandomWord();
+    // Re-select a word from the potentially updated vocabularyList
+    if (vocabularyList.length > 0) {
+        selectRandomWord();
+    } else {
+        // If vocabulary list is empty after reset (shouldn't happen if fetch was successful)
+        setLoading(true); // Maybe try fetching again or show an error
+    }
   };
 
   // Submit form on Enter key
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       checkAnswer();
     }
   };
 
-  // Removed handleShowHint function
-
-  // Confetti component
+  // Confetti component (remains the same)
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
 
@@ -151,12 +175,13 @@ export default function VocabularyGame() {
   };
 
   return (
-    // Removed rounded-2xl from this div
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
+    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans rounded-2xl"> {/* Added rounded-2xl back */}
       {showConfetti && <Confetti />}
 
       <div className="w-full flex flex-col items-center">
-        {gameOver ? (
+        {loading ? (
+            <div className="text-center py-8 text-indigo-800 font-bold">Đang tải từ vựng...</div>
+        ) : gameOver ? (
           <div className="text-center py-8 w-full">
             <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
               <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
@@ -211,26 +236,6 @@ export default function VocabularyGame() {
                   </div>
                 </div>
 
-                {/* Removed Hint button and display */}
-                {/*
-                <div className="w-full">
-                  {!showHint ? (
-                    <button
-                      onClick={handleShowHint}
-                      className="w-full py-3 px-4 bg-white border border-indigo-200 rounded-xl text-indigo-600 font-medium shadow-sm hover:bg-indigo-50 transition-colors flex items-center justify-center"
-                    >
-                      <span className="mr-2">💡</span>
-                      Xem gợi ý
-                    </button>
-                  ) : (
-                    <div className="p-4 bg-white border border-indigo-200 rounded-xl shadow-sm">
-                      <p className="font-medium text-gray-500 mb-1 text-sm">Gợi ý:</p>
-                      <p className="text-gray-800">{currentWord.hint}</p>
-                    </div>
-                  )}
-                </div>
-                */}
-
                 {/* Word Squares Input Component */}
                 <WordSquaresInput
                   word={currentWord.word}
@@ -249,7 +254,7 @@ export default function VocabularyGame() {
       </div>
 
       {/* Image popup */}
-      {showImagePopup && (
+      {showImagePopup && currentWord && ( // Added currentWord check
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
             <button
