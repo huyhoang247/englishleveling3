@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import VocabularyInput from './vocabulary-input.tsx'; // Import the new component
+import WordSquaresInput from './vocabulary-input.tsx';
 
 export default function VocabularyGame() {
   const vocabularyList = [
@@ -33,6 +33,7 @@ export default function VocabularyGame() {
   const [usedWords, setUsedWords] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   // Initialize the game
@@ -54,6 +55,7 @@ export default function VocabularyGame() {
     setUserInput('');
     setFeedback('');
     setIsCorrect(null);
+    setShowHint(false);
   };
 
   // Check the user's answer
@@ -84,10 +86,8 @@ export default function VocabularyGame() {
 
   // Generate a placeholder image based on the word
   const generateImageUrl = (word) => {
-    // Using placehold.co for placeholder images with Vietnamese text support
-    return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
+    return `/api/placeholder/400/320?text=${encodeURIComponent(word)}`;
   };
-
 
   // Reset the game
   const resetGame = () => {
@@ -98,13 +98,18 @@ export default function VocabularyGame() {
   };
 
   // Submit form on Enter key
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       checkAnswer();
     }
   };
 
-  // Confetti component (remains the same)
+  // Handle showing hint
+  const handleShowHint = () => {
+    setShowHint(true);
+  };
+
+  // Confetti component
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
 
@@ -194,7 +199,7 @@ export default function VocabularyGame() {
 
             {currentWord && (
               <div className="w-full space-y-6">
-                 {/* Image card */}
+                {/* Image card */}
                 <div
                   className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
@@ -208,15 +213,34 @@ export default function VocabularyGame() {
                   </div>
                 </div>
 
-                {/* Use the new VocabularyInput component */}
-                <VocabularyInput
+                {/* Hint button and display */}
+                <div className="w-full">
+                  {!showHint ? (
+                    <button
+                      onClick={handleShowHint}
+                      className="w-full py-3 px-4 bg-white border border-indigo-200 rounded-xl text-indigo-600 font-medium shadow-sm hover:bg-indigo-50 transition-colors flex items-center justify-center"
+                    >
+                      <span className="mr-2">💡</span>
+                      Xem gợi ý
+                    </button>
+                  ) : (
+                    <div className="p-4 bg-white border border-indigo-200 rounded-xl shadow-sm">
+                      <p className="font-medium text-gray-500 mb-1 text-sm">Gợi ý:</p>
+                      <p className="text-gray-800">{currentWord.hint}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Word Squares Input Component */}
+                <WordSquaresInput
+                  word={currentWord.word}
                   userInput={userInput}
                   setUserInput={setUserInput}
                   checkAnswer={checkAnswer}
                   handleKeyPress={handleKeyPress}
                   feedback={feedback}
                   isCorrect={isCorrect}
-                  disabled={isCorrect === true} // Disable input when correct
+                  disabled={isCorrect === true}
                 />
               </div>
             )}
