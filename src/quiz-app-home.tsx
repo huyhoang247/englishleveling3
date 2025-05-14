@@ -3,6 +3,8 @@ import { useState } from 'react';
 import QuizApp from './quiz.tsx';
 // Import component Breadcrumbs mới tạo
 import Breadcrumbs from './bread-crumbs.tsx';
+// Import component VocabularyGame từ fill-word-home.tsx
+import VocabularyGame from './fill-word-home.tsx'; // Import VocabularyGame
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -32,7 +34,7 @@ export default function QuizAppHome() {
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      // Giả định điền từ sẽ có màn hình riêng hoặc xử lý khác
+      // Nếu chọn điền từ, chuyển view sang 'fillInBlanks' để render VocabularyGame
       setCurrentView('fillInBlanks');
     }
     setSelectedPractice(null); // Reset practice khi chọn loại bài tập
@@ -55,7 +57,7 @@ export default function QuizAppHome() {
       setSelectedQuiz(null);
       setSelectedType(null); // Reset type khi quay lại main
       setSelectedPractice(null); // Reset practice khi quay lại main
-    } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
+    } else if (currentView === 'practices' || currentView === 'fillInBlanks') { // Bao gồm cả fillInBlanks khi quay lại
       setCurrentView('quizTypes');
       setSelectedType(null); // Reset type khi quay lại quizTypes
       setSelectedPractice(null); // Reset practice khi quay lại quizTypes
@@ -189,51 +191,9 @@ export default function QuizAppHome() {
         );
 
       case 'fillInBlanks':
-         // Giữ nguyên phần render cho điền từ nếu có
+         // Render component VocabularyGame khi chọn điền từ
         return (
-          <div className="text-center">
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-              <div className="flex justify-between items-center mb-6">
-                <span className="bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full">Câu 1/5</span> {/* Cần cập nhật lại logic câu hỏi */}
-                <span className="text-gray-500 text-sm">Thời gian: 00:45</span> {/* Cần thêm logic timer */}
-              </div>
-
-              <div className="p-5 bg-gray-50 rounded-lg mb-5">
-                <p className="text-lg mb-4 text-gray-700">Hoàn thành câu sau đây:</p>
-                {/* Nội dung câu hỏi điền từ - Cần thay thế bằng dữ liệu thực tế */}
-                <p className="text-xl font-medium mb-2">The cat <span className="text-yellow-600 border-b-2 border-yellow-400 px-1">___</span> on the mat.</p>
-                <div className="mt-5">
-                  <input
-                    type="text"
-                    placeholder="Điền từ vào đây"
-                    className="border-2 border-gray-300 focus:border-yellow-400 focus:ring focus:ring-yellow-100 p-3 rounded-lg w-full outline-none transition-all"
-                    // Cần thêm state để lưu giá trị input
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-between">
-                <button
-                  onClick={() => {}} // Cần cập nhật lại logic
-                  className="text-gray-500 flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Câu trước
-                </button>
-                <button
-                   onClick={() => {}} // Cần cập nhật lại logic
-                   className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center"
-                >
-                  Câu tiếp
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <VocabularyGame />
         );
 
       case 'quiz': // Case mới để render component QuizApp
@@ -278,7 +238,7 @@ export default function QuizAppHome() {
           {/* Nếu breadcrumbs hiển thị (currentView !== 'main'), trừ đi chiều cao của breadcrumbs container (khoảng 48px + mb-6 + p-6) */}
           {/* Chiều cao của breadcrumbs div là mb-6 (24px) + p-6 (24px top + 24px bottom) = 72px. Sử dụng giá trị an toàn hơn như 80px hoặc tính toán chính xác */}
           {/* Cách đơn giản hơn là để chiều cao full và overflow-y-auto, padding sẽ tự đẩy nội dung vào */}
-           <div className={`overflow-y-auto ${currentView === 'quiz' ? 'p-0' : 'p-6'}`}>
+           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
             {renderContent()}
           </div>
         </div>
