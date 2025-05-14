@@ -256,8 +256,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             )}
           </div>
         ))}
-         {/* Nút ENTER */}
-        <div className="flex justify-center mt-2">
+         {/* Nút ENTER đã được xóa */}
+        {/* <div className="flex justify-center mt-2">
              <button
                 onClick={() => {
                   if (!disabled) {
@@ -276,7 +276,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
               >
                 ENTER
               </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Phản hồi */}
