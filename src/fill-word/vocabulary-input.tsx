@@ -23,26 +23,26 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 }) => {
   // Create an array of individual characters from userInput
   const characters = userInput.split('');
-  
+
   // Create an array of empty squares for the current word length
   const wordLength = word?.length || 5;
   const squares = Array(wordLength).fill('');
-  
+
   // Populate squares with available characters
   for (let i = 0; i < characters.length && i < wordLength; i++) {
     squares[i] = characters[i];
   }
-  
+
   // Reference to hidden input element
   const hiddenInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Focus the hidden input when clicking on the container
   const focusInput = () => {
     if (hiddenInputRef.current && !disabled) {
       hiddenInputRef.current.focus();
     }
   };
-  
+
   // Handle backspace and delete keys
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -50,7 +50,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       setUserInput(value);
     }
   };
-  
+
   // Define custom animation keyframes
   useEffect(() => {
     // This adds a custom animation to the document
@@ -76,12 +76,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       }
     `;
     document.head.appendChild(style);
-    
+
     return () => {
       document.head.removeChild(style);
     };
   }, []);
-  
+
   // Get the appropriate styles for a specific letter box
   const getSquareStyle = (index: number) => {
     // If the answer has been submitted and is correct
@@ -105,26 +105,26 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     if (index === userInput.length && !disabled) {
       return 'animate-pulse';
     }
-    
+
     if (isCorrect === true) {
       // Different animation delays for each letter when correct
       const delays = ['animate-pop delay-0', 'animate-pop delay-100', 'animate-pop delay-200', 'animate-pop delay-300', 'animate-pop delay-400'];
       return delays[index % delays.length];
     }
-    
+
     if (isCorrect === false) {
       return 'animate-shake';
     }
-    
+
     return '';
   };
-  
+
   // Format the word display with proper capitalization
   const formatDisplayWord = (input: string) => {
     if (!input) return '';
     return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
   };
-  
+
   return (
     <div className="w-full space-y-4">
       {/* Hidden input field that captures keyboard input */}
@@ -138,9 +138,9 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         autoFocus
         disabled={disabled}
       />
-      
+
       {/* Word squares container */}
-      <div 
+      <div
         className="flex justify-center w-full gap-2 mb-3"
         onClick={focusInput}
       >
@@ -155,16 +155,16 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
           </div>
         ))}
       </div>
-      
+
       {/* Word display box - shows the current word with proper capitalization */}
       {userInput.length > 0 && (
         <div className="flex justify-center w-full">
-          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 transform hover:scale-105">
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 transform hover:scale-1-5">
             {formatDisplayWord(userInput)}
           </div>
         </div>
       )}
-      
+
       {/* Submit button */}
       <div className="flex justify-center">
         <button
@@ -184,10 +184,10 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
           </span>
         </button>
       </div>
-      
+
       {/* Letter keyboard */}
       <div className="mt-6 mx-auto max-w-md">
-        <div className="flex justify-center flex-wrap gap-1 mb-1">
+        <div className="flex justify-center flex-wrap gap-0.5 mb-1"> {/* Adjusted gap here */}
           {'QWERTYUIOP'.split('').map((letter) => (
             <button
               key={letter}
@@ -208,7 +208,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </button>
           ))}
         </div>
-        <div className="flex justify-center flex-wrap gap-1 mb-1">
+        <div className="flex justify-center flex-wrap gap-0.5 mb-1"> {/* Adjusted gap here */}
           {'ASDFGHJKL'.split('').map((letter) => (
             <button
               key={letter}
@@ -229,7 +229,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </button>
           ))}
         </div>
-        <div className="flex justify-center flex-wrap gap-1">
+        <div className="flex justify-center flex-wrap gap-0.5"> {/* Adjusted gap here */}
           <button
             onClick={() => {
               if (!disabled) {
@@ -283,12 +283,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
           </button>
         </div>
       </div>
-      
+
       {/* Feedback */}
       {feedback && (
         <div className={`flex items-center justify-center p-3 rounded-lg shadow-sm mt-4 text-sm transition-all duration-200
-          ${isCorrect 
-            ? 'bg-green-50 text-green-700 border border-green-100' 
+          ${isCorrect
+            ? 'bg-green-50 text-green-700 border border-green-100'
             : 'bg-red-50 text-red-700 border border-red-100'}`}>
           {isCorrect ?
             <div className="flex items-center">
