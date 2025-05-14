@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
-import { db } from '../firebase.js'; // Import the Firestore database instance
+import { db } from './firebase.js'; // Import db object from your firebase config
 import { collection, getDocs } from 'firebase/firestore'; // Import necessary Firestore functions
 
-// Define the structure of a vocabulary item (without hint)
+// Định nghĩa kiểu dữ liệu cho một mục từ vựng
 interface VocabularyItem {
   word: string;
-  // Removed: hint: string;
+  hint: string;
 }
 
 export default function VocabularyGame() {
-  // Initialize vocabularyList as an empty array, it will be populated from Firestore
+  // State để lưu trữ danh sách từ vựng từ Firestore
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
+  // State để theo dõi trạng thái tải dữ liệu
+  const [loading, setLoading] = useState(true);
+  // State để theo dõi lỗi (nếu có)
+  const [error, setError] = useState<string | null>(null);
+
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -21,44 +26,43 @@ export default function VocabularyGame() {
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [loading, setLoading] = useState(true); // State to track loading status
 
-  // Fetch vocabulary list from Firestore on component mount
+  // Effect để tải dữ liệu từ Firestore khi component mount
   useEffect(() => {
     const fetchVocabulary = async () => {
       try {
-        setLoading(true); // Start loading
+        // Lấy tham chiếu đến collection 'listVocabulary'
         const querySnapshot = await getDocs(collection(db, 'listVocabulary'));
-        const data: VocabularyItem[] = querySnapshot.docs.map(doc => {
-          const docData = doc.data();
-          // Ensure the data structure matches VocabularyItem (only word)
-          return {
-            word: docData.word,
-            // Removed: hint: docData.hint // No hint field
-          };
+        const fetchedVocabulary: VocabularyItem[] = [];
+        querySnapshot.forEach((doc) => {
+          // Lấy dữ liệu từ mỗi document và thêm vào mảng
+          // Đảm bảo rằng dữ liệu có cấu trúc { word: string, hint: string }
+          const data = doc.data();
+          if (data && typeof data.word === 'string' && typeof data.hint === 'string') {
+             fetchedVocabulary.push({ word: data.word, hint: data.hint });
+          } else {
+             console.warn("Skipping document with invalid data structure:", data);
+          }
         });
-        setVocabularyList(data);
-        setLoading(false); // End loading
-      } catch (error) {
-        console.error("Error fetching vocabulary from Firestore:", error);
-        setLoading(false); // End loading even if there's an error
-        // Optionally, display an error message to the user
+        setVocabularyList(fetchedVocabulary); // Cập nhật state với dữ liệu đã fetch
+        setLoading(false); // Đã tải xong
+      } catch (err: any) {
+        console.error("Error fetching vocabulary:", err);
+        setError("Không thể tải từ vựng. Vui lòng thử lại sau."); // Cập nhật state lỗi
+        setLoading(false); // Đã tải xong (với lỗi)
       }
     };
 
     fetchVocabulary();
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []); // Chạy một lần khi component mount
 
-  // Initialize the game or select a new word when vocabularyList is loaded or changes
+  // Effect để khởi tạo game sau khi từ vựng được tải
   useEffect(() => {
-    if (vocabularyList.length > 0 && !gameOver) {
+    if (vocabularyList.length > 0) {
       selectRandomWord();
-    } else if (vocabularyList.length === 0 && !loading) {
-        // Handle case where no vocabulary is fetched
-        console.log("No vocabulary found in Firestore.");
-        setGameOver(true); // Or display a specific message
     }
-  }, [vocabularyList, gameOver, loading]); // Depend on vocabularyList, gameOver, and loading state
+  }, [vocabularyList]); // Chạy lại khi vocabularyList thay đổi (sau khi fetch xong)
+
 
   // Select a random word that hasn't been used yet
   const selectRandomWord = () => {
@@ -97,31 +101,23 @@ export default function VocabularyGame() {
         selectRandomWord();
       }, 1500);
     } else {
-      // Removed hint from feedback message
-      setFeedback(`Không đúng, hãy thử lại!`);
+      setFeedback(`Không đúng, hãy thử lại! Từ đúng là: ${currentWord.word}`);
       setIsCorrect(false);
     }
   };
 
   // Generate a placeholder image based on the word
   const generateImageUrl = (word: string) => {
-    // Using placehold.co for placeholder images
+     // Using placehold.co for placeholder images
     return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
   };
-
 
   // Reset the game
   const resetGame = () => {
     setUsedWords([]);
     setScore(0);
     setGameOver(false);
-    // Re-select a word from the potentially updated vocabularyList
-    if (vocabularyList.length > 0) {
-        selectRandomWord();
-    } else {
-        // If vocabulary list is empty after reset (shouldn't happen if fetch was successful)
-        setLoading(true); // Maybe try fetching again or show an error
-    }
+    selectRandomWord();
   };
 
   // Submit form on Enter key
@@ -131,7 +127,7 @@ export default function VocabularyGame() {
     }
   };
 
-  // Confetti component (remains the same)
+  // Confetti component
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
 
@@ -159,6 +155,7 @@ export default function VocabularyGame() {
           );
         })}
 
+        {/* CSS cho animation confetti */}
         <style jsx>{`
           @keyframes fall {
             0% {
@@ -175,14 +172,26 @@ export default function VocabularyGame() {
     );
   };
 
+  // Hiển thị trạng thái loading hoặc lỗi
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen text-xl">Đang tải từ vựng...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-xl text-red-600">{error}</div>;
+  }
+
+  if (vocabularyList.length === 0 && !loading && !error) {
+       return <div className="flex items-center justify-center h-screen text-xl text-yellow-600">Không tìm thấy từ vựng nào trong Firestore.</div>;
+  }
+
+
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans rounded-2xl"> {/* Added rounded-2xl back */}
+    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans rounded-2xl">
       {showConfetti && <Confetti />}
 
       <div className="w-full flex flex-col items-center">
-        {loading ? (
-            <div className="text-center py-8 text-indigo-800 font-bold">Đang tải từ vựng...</div>
-        ) : gameOver ? (
+        {gameOver ? (
           <div className="text-center py-8 w-full">
             <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
               <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
@@ -228,6 +237,18 @@ export default function VocabularyGame() {
                   className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
                 >
+                   {/* Sử dụng placeholder image URL */}
+                   <img
+                     src={generateImageUrl(currentWord.word)}
+                     alt={`Image related to ${currentWord.word}`}
+                     className="absolute inset-0 w-full h-full object-cover"
+                     // Optional: Add an onerror handler for fallback
+                     onError={(e) => {
+                         const target = e.target as HTMLImageElement;
+                         target.onerror = null; // Prevent infinite loop
+                         target.src = `https://placehold.co/400x320/E0E7FF/4338CA?text=Image+Not+Available`; // Fallback image
+                     }}
+                   />
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
                     <span className="text-white text-8xl font-bold mb-2">?</span>
                     <span className="text-white text-lg opacity-80">Chạm để xem</span>
@@ -255,7 +276,7 @@ export default function VocabularyGame() {
       </div>
 
       {/* Image popup */}
-      {showImagePopup && currentWord && (
+      {showImagePopup && currentWord && ( // Ensure currentWord exists before showing popup
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
             <button
@@ -269,14 +290,16 @@ export default function VocabularyGame() {
               src={generateImageUrl(currentWord.word)}
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full"
+              onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; // Prevent infinite loop
+                  target.src = `https://placehold.co/400x320/E0E7FF/4338CA?text=Image+Not+Available`; // Fallback image
+              }}
             />
-            {/* Removed hint display section */}
-            {/*
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
               <p className="text-gray-800">{currentWord.hint}</p>
             </div>
-            */}
           </div>
         </div>
       )}
