@@ -140,7 +140,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   ];
 
   return (
-    <div className="w-full space-y-4">
+    // Thêm class rounded-none để loại bỏ bo tròn trên container chính
+    <div className="w-full space-y-4 rounded-none">
       {/* Trường input ẩn. Đặt readOnly và tabIndex="-1" để ngăn focus và nhập liệu
           trên thiết bị di động, từ đó ngăn bàn phím ảo của hệ điều hành xuất hiện.
           Loại bỏ autoFocus. */}
