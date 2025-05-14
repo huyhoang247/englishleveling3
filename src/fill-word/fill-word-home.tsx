@@ -382,7 +382,7 @@ export default function VocabularyGame() {
                        <img
                            src={generateImageUrl(currentWord.imageIndex)}
                            alt={currentWord.word}
-                           className="w-full h-full object-cover" // Đảm bảo ảnh bao phủ toàn bộ div
+                           className="w-full h-full object-contain" // Đã thay đổi từ object-cover sang object-contain
                        />
                   ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
@@ -427,7 +427,7 @@ export default function VocabularyGame() {
               // Sử dụng generateImageUrl với imageIndex từ currentWord
               src={generateImageUrl(currentWord.imageIndex)}
               alt={currentWord.word}
-              className="rounded-lg shadow-md max-w-full max-h-full"
+              className="rounded-lg shadow-md max-w-full max-h-full object-contain" // Thêm object-contain cho popup
             />
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
