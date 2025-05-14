@@ -1,22 +1,31 @@
 import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
-import { collection, getDocs } from 'firebase/firestore'; // Import Firestore functions
-import { db } from '../firebase.js'; // Import db instance
+// Import các hàm cần thiết từ Firestore
+import { collection, getDocs } from 'firebase/firestore';
+// Import đối tượng db từ file firebase.js
+import { db } from '../firebase.js';
+
+// Định nghĩa kiểu dữ liệu cho một từ vựng
+interface VocabularyItem {
+  word: string;
+  hint: string;
+}
 
 export default function VocabularyGame() {
-  // State để lưu danh sách từ vựng từ Firestore
-  const [vocabularyList, setVocabularyList] = useState([]);
+  // State để lưu trữ danh sách từ vựng từ Firestore
+  const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   // State để theo dõi trạng thái tải dữ liệu
   const [loading, setLoading] = useState(true);
-  // State để lưu lỗi nếu có
-  const [error, setError] = useState(null);
+  // State để theo dõi lỗi khi tải dữ liệu
+  const [error, setError] = useState<string | null>(null);
 
-  const [currentWord, setCurrentWord] = useState(null);
+  const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [isCorrect, setIsCorrect] = useState(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
-  const [usedWords, setUsedWords] = useState([]);
+  // Sử dụng Set để quản lý các từ đã dùng hiệu quả hơn
+  const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -25,97 +34,107 @@ export default function VocabularyGame() {
   useEffect(() => {
     const fetchVocabulary = async () => {
       try {
-        // Lấy dữ liệu từ collection 'listVocabulary'
+        setLoading(true); // Bắt đầu tải, đặt loading là true
         const querySnapshot = await getDocs(collection(db, 'listVocabulary'));
-        const vocabData = querySnapshot.docs.map(doc => ({
-          id: doc.id, // Có thể cần id cho một số mục đích sau này
-          ...doc.data()
-        }));
-        setVocabularyList(vocabData);
-        setLoading(false); // Kết thúc trạng thái tải
-        // Sau khi tải xong, chọn từ đầu tiên để bắt đầu trò chơi
-        if (vocabData.length > 0) {
-            selectRandomWord(vocabData, []); // Truyền danh sách từ vựng đã tải và danh sách từ đã dùng
-        } else {
-            setError("Không tìm thấy từ vựng nào trong Firestore.");
-        }
-      } catch (err) {
-        console.error("Lỗi khi tải từ vựng từ Firestore:", err);
-        setError("Không thể tải từ vựng. Vui lòng thử lại sau.");
-        setLoading(false); // Kết thúc trạng thái tải ngay cả khi có lỗi
+        const fetchedVocabulary: VocabularyItem[] = [];
+        querySnapshot.forEach((doc) => {
+          // Lấy dữ liệu từ mỗi document và thêm vào mảng
+          const data = doc.data();
+          // Kiểm tra cấu trúc dữ liệu trước khi thêm
+          if (data.word && data.hint) {
+             fetchedVocabulary.push({ word: data.word, hint: data.hint });
+          } else {
+             console.warn("Document with missing 'word' or 'hint' field:", doc.id);
+          }
+        });
+        setVocabularyList(fetchedVocabulary); // Cập nhật state danh sách từ vựng
+        setLoading(false); // Tải xong, đặt loading là false
+        setError(null); // Xóa lỗi nếu có
+        console.log("Vocabulary fetched successfully:", fetchedVocabulary);
+      } catch (err: any) {
+        console.error("Error fetching vocabulary:", err);
+        setError("Không thể tải dữ liệu từ vựng. Vui lòng thử lại sau."); // Cập nhật state lỗi
+        setLoading(false); // Tải thất bại, đặt loading là false
       }
     };
 
     fetchVocabulary();
-  }, []); // Chạy một lần khi component mount
+  }, []); // Chỉ chạy một lần khi component mount
+
+  // Effect để bắt đầu trò chơi sau khi dữ liệu từ vựng đã được tải
+  useEffect(() => {
+    if (vocabularyList.length > 0 && !loading && !error) {
+      selectRandomWord(); // Chọn từ đầu tiên khi danh sách từ vựng có sẵn
+    }
+  }, [vocabularyList, loading, error]); // Chạy khi vocabularyList, loading hoặc error thay đổi
 
   // Select a random word that hasn't been used yet
-  // Cập nhật hàm này để nhận vocabularyList và usedWords làm tham số
-  const selectRandomWord = (vocabList, currentUsedWords) => {
-    const unusedWords = vocabList.filter(item => !currentUsedWords.includes(item.word));
+  const selectRandomWord = () => {
+    // Lọc ra các từ chưa được sử dụng
+    const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
 
     if (unusedWords.length === 0) {
-      setGameOver(true);
-      setCurrentWord(null); // Đảm bảo currentWord là null khi game over
+      setGameOver(true); // Nếu không còn từ chưa dùng, kết thúc trò chơi
       return;
     }
 
     const randomIndex = Math.floor(Math.random() * unusedWords.length);
-    setCurrentWord(unusedWords[randomIndex]);
-    setUserInput('');
-    setFeedback('');
-    setIsCorrect(null);
+    setCurrentWord(unusedWords[randomIndex]); // Chọn một từ ngẫu nhiên từ danh sách chưa dùng
+    setUserInput(''); // Đặt lại input người dùng
+    setFeedback(''); // Đặt lại feedback
+    setIsCorrect(null); // Đặt lại trạng thái đúng/sai
   };
 
   // Check the user's answer
   const checkAnswer = () => {
-    if (!currentWord || !userInput.trim()) return;
+    if (!currentWord || !userInput.trim()) return; // Kiểm tra từ hiện tại và input không rỗng
 
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
-      setFeedback('Chính xác!');
-      setIsCorrect(true);
-      setScore(score + 1);
-      const newUsedWords = [...usedWords, currentWord.word];
-      setUsedWords(newUsedWords);
-      setShowConfetti(true);
+      setFeedback('Chính xác!'); // Feedback khi đúng
+      setIsCorrect(true); // Đặt trạng thái đúng
+      setScore(score + 1); // Tăng điểm
+      // Thêm từ đã dùng vào Set
+      setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
+      setShowConfetti(true); // Hiển thị hiệu ứng confetti
 
-      // Hide confetti after 2 seconds
+      // Ẩn confetti sau 2 giây
       setTimeout(() => {
         setShowConfetti(false);
       }, 2000);
 
-      // Wait a bit before moving to the next word
+      // Chờ một chút trước khi chuyển sang từ tiếp theo
       setTimeout(() => {
-        selectRandomWord(vocabularyList, newUsedWords); // Truyền danh sách từ vựng và danh sách đã dùng mới
+        selectRandomWord();
       }, 1500);
     } else {
+      // Feedback khi sai, hiển thị từ đúng
       setFeedback(`Không đúng, hãy thử lại! Từ đúng là: ${currentWord.word}`);
-      setIsCorrect(false);
+      setIsCorrect(false); // Đặt trạng thái sai
     }
   };
 
   // Generate a placeholder image based on the word
-  const generateImageUrl = (word) => {
-    // Sử dụng API placeholder hoặc tạo URL hình ảnh từ nguồn khác nếu có
-    return `https://placehold.co/400x320/e0e7ff/4338ca?text=${encodeURIComponent(word)}`;
+  const generateImageUrl = (word: string) => {
+     // Sử dụng placeholder image service
+    return `https://placehold.co/400x320/E0E7FF/4338CA?text=${encodeURIComponent(word)}`;
   };
 
   // Reset the game
   const resetGame = () => {
-    setUsedWords([]);
-    setScore(0);
-    setGameOver(false);
-    selectRandomWord(vocabularyList, []); // Reset game, chọn từ mới từ danh sách đầy đủ
+    setUsedWords(new Set()); // Đặt lại danh sách từ đã dùng
+    setScore(0); // Đặt lại điểm
+    setGameOver(false); // Đặt lại trạng thái kết thúc trò chơi
+    selectRandomWord(); // Bắt đầu lại với từ ngẫu nhiên
   };
 
   // Submit form on Enter key
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && currentWord && userInput.trim() && isCorrect !== true) {
-      checkAnswer();
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      checkAnswer(); // Gọi checkAnswer khi nhấn Enter
     }
   };
 
-  // Confetti component (unchanged)
+  // Confetti component (giữ nguyên như cũ)
   const Confetti = () => {
     const confettiPieces = Array(50).fill(0);
 
@@ -159,16 +178,33 @@ export default function VocabularyGame() {
     );
   };
 
-  // Hiển thị trạng thái tải hoặc lỗi
+  // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
-    return <div className="text-center text-indigo-700 text-xl font-semibold mt-8">Đang tải từ vựng...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">
+        Đang tải từ vựng...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center text-red-600 text-xl font-semibold mt-8">Lỗi: {error}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600">
+        {error}
+      </div>
+    );
   }
 
-  // Hiển thị trò chơi khi dữ liệu đã sẵn sàng
+  // Nếu không có từ vựng nào được tải
+  if (vocabularyList.length === 0) {
+      return (
+          <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600">
+              Không có từ vựng nào trong cơ sở dữ liệu.
+          </div>
+      );
+  }
+
+
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
       {showConfetti && <Confetti />}
@@ -196,26 +232,22 @@ export default function VocabularyGame() {
           </div>
         ) : (
           <>
-            {/* Đảm bảo vocabularyList.length > 0 trước khi hiển thị */}
-            {vocabularyList.length > 0 && (
-                <div className="w-full flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-md">
-                <div className="flex items-center">
-                    <span className="text-yellow-500 text-2xl mr-2">⭐</span>
-                    <span className="font-bold text-gray-800">{score}/{vocabularyList.length}</span>
-                </div>
-                <div className="h-2 w-1/2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                    style={{ width: `${(usedWords.length / vocabularyList.length) * 100}%` }}
-                    ></div>
-                </div>
-                <div className="flex items-center">
-                    <span className="text-gray-800 font-medium">{vocabularyList.length - usedWords.length}</span>
-                    <span className="ml-1 text-gray-500">còn lại</span>
-                </div>
-                </div>
-            )}
-
+            <div className="w-full flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-md">
+              <div className="flex items-center">
+                <span className="text-yellow-500 text-2xl mr-2">⭐</span>
+                <span className="font-bold text-gray-800">{score}/{vocabularyList.length}</span>
+              </div>
+              <div className="h-2 w-1/2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+                  style={{ width: `${(usedWords.size / vocabularyList.length) * 100}%` }}
+                ></div>
+              </div>
+              <div className="flex items-center">
+                <span className="text-gray-800 font-medium">{vocabularyList.length - usedWords.size}</span>
+                <span className="ml-1 text-gray-500">còn lại</span>
+              </div>
+            </div>
 
             {currentWord && (
               <div className="w-full space-y-6">
@@ -251,7 +283,7 @@ export default function VocabularyGame() {
       </div>
 
       {/* Image popup */}
-      {showImagePopup && currentWord && ( // Đảm bảo currentWord tồn tại trước khi hiển thị popup
+      {showImagePopup && currentWord && ( // Thêm kiểm tra currentWord
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
             <button
