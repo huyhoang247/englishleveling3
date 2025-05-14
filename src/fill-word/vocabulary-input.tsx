@@ -21,29 +21,29 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   isCorrect,
   disabled,
 }) => {
-  // Create an array of individual characters from userInput
+  // Tạo một mảng các ký tự riêng lẻ từ userInput
   const characters = userInput.split('');
 
-  // Create an array of empty squares for the current word length
+  // Tạo một mảng các ô trống cho độ dài từ hiện tại
   const wordLength = word?.length || 5;
   const squares = Array(wordLength).fill('');
 
-  // Populate squares with available characters
+  // Điền các ô vuông bằng các ký tự có sẵn
   for (let i = 0; i < characters.length && i < wordLength; i++) {
     squares[i] = characters[i];
   }
 
-  // Reference to hidden input element
+  // Tham chiếu đến phần tử input ẩn
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus the hidden input when clicking on the container
+  // Tập trung vào input ẩn khi nhấp vào container
   const focusInput = () => {
     if (hiddenInputRef.current && !disabled) {
       hiddenInputRef.current.focus();
     }
   };
 
-  // Handle backspace and delete keys
+  // Xử lý các phím backspace và delete
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value.length <= wordLength) {
@@ -51,9 +51,9 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     }
   };
 
-  // Define custom animation keyframes
+  // Định nghĩa các keyframe animation tùy chỉnh
   useEffect(() => {
-    // This adds a custom animation to the document
+    // Thêm animation tùy chỉnh này vào tài liệu
     const style = document.createElement('style');
     style.textContent = `
       @keyframes shake {
@@ -74,6 +74,13 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       .animate-pop {
         animation: pop 0.3s ease-out;
       }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .5; }
+      }
+      .animate-pulse {
+        animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
     `;
     document.head.appendChild(style);
 
@@ -82,32 +89,32 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     };
   }, []);
 
-  // Get the appropriate styles for a specific letter box
+  // Lấy style phù hợp cho từng ô chữ cái
   const getSquareStyle = (index: number) => {
-    // If the answer has been submitted and is correct
+    // Nếu câu trả lời đã được gửi và đúng
     if (isCorrect === true) {
       return 'bg-gradient-to-br from-green-100 to-green-200 border-green-400 text-green-700 shadow-md';
     }
-    // If the answer has been submitted and is incorrect
+    // Nếu câu trả lời đã được gửi và sai
     else if (isCorrect === false) {
       return 'bg-gradient-to-br from-red-50 to-red-100 border-red-400 text-red-700 shadow-sm';
     }
-    // If the square has a letter
+    // Nếu ô vuông có chữ cái
     else if (squares[index]) {
       return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300 text-blue-700 shadow-sm';
     }
-    // Empty square
+    // Ô trống
     return 'bg-white border-gray-200 text-gray-400';
   };
 
-  // Get the appropriate animation for a specific letter box
+  // Lấy animation phù hợp cho từng ô chữ cái
   const getSquareAnimation = (index: number) => {
     if (index === userInput.length && !disabled) {
       return 'animate-pulse';
     }
 
     if (isCorrect === true) {
-      // Different animation delays for each letter when correct
+      // Độ trễ animation khác nhau cho mỗi chữ cái khi đúng
       const delays = ['animate-pop delay-0', 'animate-pop delay-100', 'animate-pop delay-200', 'animate-pop delay-300', 'animate-pop delay-400'];
       return delays[index % delays.length];
     }
@@ -119,15 +126,23 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return '';
   };
 
-  // Format the word display with proper capitalization
+  // Định dạng hiển thị từ với chữ cái đầu viết hoa
   const formatDisplayWord = (input: string) => {
     if (!input) return '';
     return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
   };
 
+  // Bố cục bàn phím mới: 26 phím chữ cái chia 4 hàng (7, 7, 6, 6)
+  const keyboardRows = [
+    'QWERTYU'.split(''), // 7 phím
+    'IOPASDF'.split(''), // 7 phím
+    'GHJKLM'.split(''), // 6 phím
+    'NBVCXZ'.split(''), // 6 phím
+  ];
+
   return (
     <div className="w-full space-y-4">
-      {/* Hidden input field that captures keyboard input */}
+      {/* Trường input ẩn để bắt đầu vào bàn phím */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -137,12 +152,22 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         className="opacity-0 absolute h-0 w-0"
         autoFocus
         disabled={disabled}
+        // Thêm onBlur để giữ focus khi click vào bàn phím
+        onBlur={(e) => {
+            // Kiểm tra nếu focus không chuyển đến một nút trong bàn phím
+            if (!e.relatedTarget || !e.relatedTarget.closest('.keyboard-button')) {
+                // Giữ focus trên input ẩn
+                 if (hiddenInputRef.current) {
+                    hiddenInputRef.current.focus();
+                 }
+            }
+        }}
       />
 
-      {/* Word squares container */}
+      {/* Container các ô vuông từ */}
       <div
         className="flex justify-center w-full gap-2 mb-3"
-        onClick={focusInput}
+        onClick={focusInput} // Tập trung vào input khi click vào đây
       >
         {squares.map((char, index) => (
           <div
@@ -156,16 +181,16 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         ))}
       </div>
 
-      {/* Word display box - shows the current word with proper capitalization */}
+      {/* Hộp hiển thị từ - hiển thị từ hiện tại với chữ cái đầu viết hoa */}
       {userInput.length > 0 && (
         <div className="flex justify-center w-full">
-          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 transform hover:scale-1-5">
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 transform hover:scale-105">
             {formatDisplayWord(userInput)}
           </div>
         </div>
       )}
 
-      {/* Submit button */}
+      {/* Nút gửi */}
       <div className="flex justify-center">
         <button
           onClick={checkAnswer}
@@ -185,106 +210,77 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         </button>
       </div>
 
-      {/* Letter keyboard */}
+      {/* Bàn phím chữ cái */}
       <div className="mt-6 mx-auto max-w-md">
-        <div className="flex justify-center flex-wrap gap-0.5 mb-1"> {/* Adjusted gap here */}
-          {'QWERTYUIOP'.split('').map((letter) => (
-            <button
-              key={letter}
-              onClick={() => {
-                if (!disabled && userInput.length < wordLength) {
-                  setUserInput(userInput + letter.toLowerCase());
-                }
-              }}
-              className={`w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-                ${
-                  disabled
-                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-0.5'
-                }`}
-              disabled={disabled || userInput.length >= wordLength}
-            >
-              {letter}
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-center flex-wrap gap-0.5 mb-1"> {/* Adjusted gap here */}
-          {'ASDFGHJKL'.split('').map((letter) => (
-            <button
-              key={letter}
-              onClick={() => {
-                if (!disabled && userInput.length < wordLength) {
-                  setUserInput(userInput + letter.toLowerCase());
-                }
-              }}
-              className={`w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-                ${
-                  disabled
-                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-0.5'
-                }`}
-              disabled={disabled || userInput.length >= wordLength}
-            >
-              {letter}
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-center flex-wrap gap-0.5"> {/* Adjusted gap here */}
-          <button
-            onClick={() => {
-              if (!disabled) {
-                checkAnswer();
-              }
-            }}
-            className={`px-2 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-              ${
-                disabled || userInput.length !== wordLength
-                  ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                  : 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-0.5'
-              }`}
-            disabled={disabled || userInput.length !== wordLength}
-          >
-            ENTER
-          </button>
-          {'ZXCVBNM'.split('').map((letter) => (
-            <button
-              key={letter}
-              onClick={() => {
-                if (!disabled && userInput.length < wordLength) {
-                  setUserInput(userInput + letter.toLowerCase());
-                }
-              }}
-              className={`w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-                ${
-                  disabled
-                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-0.5'
-                }`}
-              disabled={disabled || userInput.length >= wordLength}
-            >
-              {letter}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              if (!disabled && userInput.length > 0) {
-                setUserInput(userInput.slice(0, -1));
-              }
-            }}
-            className={`w-10 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-              ${
-                disabled || userInput.length === 0
-                  ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                  : 'bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5'
-              }`}
-            disabled={disabled || userInput.length === 0}
-          >
-            ←
-          </button>
-        </div>
+        {keyboardRows.map((row, rowIndex) => (
+          <div key={rowIndex} className="flex justify-center flex-wrap gap-1 mb-1">
+            {/* Thêm nút ENTER và ← vào hàng cuối cùng */}
+            {rowIndex === keyboardRows.length - 1 && (
+              <button
+                onClick={() => {
+                  if (!disabled) {
+                    checkAnswer();
+                  }
+                }}
+                className={`keyboard-button px-2 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
+                  ${
+                    disabled || userInput.length !== wordLength
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-0.5'
+                  }`}
+                disabled={disabled || userInput.length !== wordLength}
+                tabIndex={-1} // Ngăn nút này nhận focus từ tab
+              >
+                ENTER
+              </button>
+            )}
+
+            {row.map((letter) => (
+              <button
+                key={letter}
+                onClick={() => {
+                  if (!disabled && userInput.length < wordLength) {
+                    setUserInput(userInput + letter.toLowerCase());
+                  }
+                }}
+                className={`keyboard-button w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
+                  ${
+                    disabled
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-0.5'
+                  }`}
+                disabled={disabled || userInput.length >= wordLength}
+                tabIndex={-1} // Ngăn nút này nhận focus từ tab
+              >
+                {letter}
+              </button>
+            ))}
+
+            {/* Thêm nút ← vào hàng cuối cùng */}
+            {rowIndex === keyboardRows.length - 1 && (
+              <button
+                onClick={() => {
+                  if (!disabled && userInput.length > 0) {
+                    setUserInput(userInput.slice(0, -1));
+                  }
+                }}
+                className={`keyboard-button w-10 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
+                  ${
+                    disabled || userInput.length === 0
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5'
+                  }`}
+                disabled={disabled || userInput.length === 0}
+                tabIndex={-1} // Ngăn nút này nhận focus từ tab
+              >
+                ←
+              </button>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Feedback */}
+      {/* Phản hồi */}
       {feedback && (
         <div className={`flex items-center justify-center p-3 rounded-lg shadow-sm mt-4 text-sm transition-all duration-200
           ${isCorrect
