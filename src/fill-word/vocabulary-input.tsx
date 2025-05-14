@@ -281,7 +281,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
       {/* Phản hồi */}
       {feedback && (
-        <div className={`flex items-center justify-center p-3 rounded-lg shadow-sm mt-4 text-sm transition-all duration-200
+        <div className={`flex items-center justify-center p-3 rounded-t-lg shadow-sm mt-4 text-sm transition-all duration-200
           ${isCorrect
             ? 'bg-green-50 text-green-700 border border-green-100'
             : 'bg-red-50 text-red-700 border border-red-100'}`}>
