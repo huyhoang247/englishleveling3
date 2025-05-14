@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// Define the props for the VocabularyInput component
-interface VocabularyInputProps {
-  userInput: string; // The current value of the input field
-  setUserInput: (value: string) => void; // Function to update the input value
-  checkAnswer: () => void; // Function to check the user's answer
-  handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void; // Function to handle key presses (like Enter)
-  feedback: string; // The feedback message to display
-  isCorrect: boolean | null; // State indicating if the answer is correct (true, false, or null)
-  disabled: boolean; // State to disable the input and button
+interface WordSquaresInputProps {
+  word: string | null;
+  userInput: string;
+  setUserInput: (value: string) => void;
+  checkAnswer: () => void;
+  handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  feedback: string;
+  isCorrect: boolean | null;
+  disabled: boolean;
 }
 
-const VocabularyInput: React.FC<VocabularyInputProps> = ({
+const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
+  word,
   userInput,
   setUserInput,
   checkAnswer,
@@ -20,85 +21,218 @@ const VocabularyInput: React.FC<VocabularyInputProps> = ({
   isCorrect,
   disabled,
 }) => {
-  // Animation states
-  const [animate, setAnimate] = useState(false);
+  // Create an array of individual characters from userInput
+  const characters = userInput.split('');
   
-  // Trigger animation when feedback changes
-  useEffect(() => {
-    if (feedback) {
-      setAnimate(true);
-      const timer = setTimeout(() => setAnimate(false), 300);
-      return () => clearTimeout(timer);
+  // Create an array of empty squares for the current word length
+  const wordLength = word?.length || 5;
+  const squares = Array(wordLength).fill('');
+  
+  // Populate squares with available characters
+  for (let i = 0; i < characters.length && i < wordLength; i++) {
+    squares[i] = characters[i];
+  }
+  
+  // Reference to hidden input element
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  
+  // Focus the hidden input when clicking on the container
+  const focusInput = () => {
+    if (hiddenInputRef.current && !disabled) {
+      hiddenInputRef.current.focus();
     }
-  }, [feedback]);
-
+  };
+  
+  // Handle backspace and delete keys
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= wordLength) {
+      setUserInput(value);
+    }
+  };
+  
+  // Get the appropriate background color for a specific letter box
+  const getSquareStyle = (index: number) => {
+    // If the answer has been submitted and is correct
+    if (isCorrect === true) {
+      return 'bg-green-100 border-green-500 text-green-800';
+    }
+    // If the answer has been submitted and is incorrect
+    else if (isCorrect === false) {
+      return 'bg-red-50 border-red-500 text-red-800';
+    }
+    // If the square has a letter
+    else if (squares[index]) {
+      return 'bg-indigo-50 border-indigo-400 text-indigo-800';
+    }
+    // Empty square
+    return 'bg-white border-gray-300 text-gray-500';
+  };
+  
   return (
     <div className="w-full space-y-6">
-      {/* Input field with enhanced design */}
-      <div className="relative">
-        <div className={`absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 ${userInput ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
-          <span className="text-lg">🔍</span>
-        </div>
-        
-        <input
-          type="text"
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Nhập từ vựng tiếng Anh..."
-          className={`w-full p-4 pl-12 pr-16 border-2 rounded-xl text-lg shadow-md focus:outline-none focus:ring-2 transition-all duration-300
-            ${isCorrect === true ? 'border-green-500 bg-green-50 focus:ring-green-200' :
-              isCorrect === false ? 'border-red-500 bg-red-50 focus:ring-red-200' :
-              'border-indigo-300 focus:ring-blue-200 focus:border-blue-500'}`}
-          disabled={disabled}
-          autoComplete="off"
-        />
-        
+      {/* Hidden input field that captures keyboard input */}
+      <input
+        ref={hiddenInputRef}
+        type="text"
+        value={userInput}
+        onChange={handleInputChange}
+        onKeyPress={handleKeyPress}
+        className="opacity-0 absolute h-0 w-0"
+        autoFocus
+        disabled={disabled}
+      />
+      
+      {/* Word squares container */}
+      <div 
+        className="flex justify-center w-full gap-2 mb-4"
+        onClick={focusInput}
+      >
+        {squares.map((char, index) => (
+          <div
+            key={index}
+            className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center border-2 rounded-lg text-2xl font-bold transition-all transform ${
+              index === userInput.length && !disabled ? 'scale-105 border-blue-500 shadow-md' : ''
+            } ${getSquareStyle(index)}`}
+          >
+            {char.toUpperCase()}
+          </div>
+        ))}
+      </div>
+      
+      {/* Submit button */}
+      <div className="flex justify-center">
         <button
           onClick={checkAnswer}
-          className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-3 rounded-lg transition-all duration-300 shadow
-            ${userInput.trim() && !disabled 
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg active:scale-95' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-          disabled={!userInput.trim() || disabled}
+          className={`px-8 py-3 rounded-xl transition-all shadow-md transform hover:shadow-lg ${
+            userInput.length === wordLength && !disabled
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 hover:scale-105'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+          disabled={userInput.length !== wordLength || disabled}
         >
-          <span className="text-lg">🔍</span>
+          Kiểm tra
         </button>
       </div>
-
-      {/* Enhanced feedback with animations */}
+      
+      {/* Letter keyboard */}
+      <div className="mt-8">
+        <div className="flex justify-center flex-wrap gap-1 mb-1">
+          {'QWERTYUIOP'.split('').map((letter) => (
+            <button
+              key={letter}
+              onClick={() => {
+                if (!disabled && userInput.length < wordLength) {
+                  setUserInput(userInput + letter.toLowerCase());
+                }
+              }}
+              className={`w-9 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+                ${
+                  disabled
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              disabled={disabled || userInput.length >= wordLength}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-center flex-wrap gap-1 mb-1">
+          {'ASDFGHJKL'.split('').map((letter) => (
+            <button
+              key={letter}
+              onClick={() => {
+                if (!disabled && userInput.length < wordLength) {
+                  setUserInput(userInput + letter.toLowerCase());
+                }
+              }}
+              className={`w-9 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+                ${
+                  disabled
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              disabled={disabled || userInput.length >= wordLength}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-center flex-wrap gap-1">
+          <button
+            onClick={() => {
+              if (!disabled) {
+                checkAnswer();
+              }
+            }}
+            className={`px-2 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+              ${
+                disabled || userInput.length !== wordLength
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-500 text-white hover:bg-green-600'
+              }`}
+            disabled={disabled || userInput.length !== wordLength}
+          >
+            ENTER
+          </button>
+          {'ZXCVBNM'.split('').map((letter) => (
+            <button
+              key={letter}
+              onClick={() => {
+                if (!disabled && userInput.length < wordLength) {
+                  setUserInput(userInput + letter.toLowerCase());
+                }
+              }}
+              className={`w-9 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+                ${
+                  disabled
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              disabled={disabled || userInput.length >= wordLength}
+            >
+              {letter}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              if (!disabled && userInput.length > 0) {
+                setUserInput(userInput.slice(0, -1));
+              }
+            }}
+            className={`px-2 h-10 flex items-center justify-center rounded-md text-sm font-medium shadow-sm 
+              ${
+                disabled || userInput.length === 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-red-500 text-white hover:bg-red-600'
+              }`}
+            disabled={disabled || userInput.length === 0}
+          >
+            ←
+          </button>
+        </div>
+      </div>
+      
+      {/* Feedback */}
       {feedback && (
-        <div 
-          className={`flex items-center p-4 rounded-xl shadow-md transition-all duration-300 transform ${animate ? 'scale-105' : 'scale-100'}
-            ${isCorrect 
-              ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200' 
-              : 'bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200'}`}
-        >
-          {isCorrect ? (
-            <div className="flex items-center w-full">
-              <div className="flex-shrink-0 flex items-center justify-center bg-green-500 text-white rounded-full w-10 h-10 shadow-sm">
-                <span className="font-bold text-xl">✓</span>
-              </div>
-              <div className="ml-4 flex-grow">
-                <p className="font-medium text-lg">{feedback}</p>
-                <p className="text-sm text-green-600 opacity-75">Tuyệt vời! Tiếp tục phát huy.</p>
-              </div>
+        <div className={`flex items-center justify-center p-4 rounded-xl shadow-sm mt-6
+          ${isCorrect ? 'bg-green-100 text-green-800 border border-green-200' :
+                     'bg-red-100 text-red-800 border border-red-200'}`}>
+          {isCorrect ?
+            <div className="flex items-center">
+              <span className="flex items-center justify-center bg-green-500 text-white rounded-full w-8 h-8 mr-3">✓</span>
+              <span className="font-medium">{feedback}</span>
+            </div> :
+            <div className="flex items-center">
+              <span className="flex items-center justify-center bg-red-500 text-white rounded-full w-8 h-8 mr-3">✕</span>
+              <span>{feedback}</span>
             </div>
-          ) : (
-            <div className="flex items-center w-full">
-              <div className="flex-shrink-0 flex items-center justify-center bg-red-500 text-white rounded-full w-10 h-10 shadow-sm">
-                <span className="font-bold text-xl">✕</span>
-              </div>
-              <div className="ml-4 flex-grow">
-                <p className="font-medium text-lg">{feedback}</p>
-                <p className="text-sm text-red-600 opacity-75">Hãy thử lại nhé.</p>
-              </div>
-            </div>
-          )}
+          }
         </div>
       )}
     </div>
   );
 };
 
-export default VocabularyInput;
+export default WordSquaresInput;
