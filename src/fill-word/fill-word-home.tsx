@@ -33,7 +33,7 @@ export default function VocabularyGame() {
   const [usedWords, setUsedWords] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
-  const [showHint, setShowHint] = useState(false);
+  // Removed showHint state
   const [showConfetti, setShowConfetti] = useState(false);
 
   // Initialize the game
@@ -55,7 +55,7 @@ export default function VocabularyGame() {
     setUserInput('');
     setFeedback('');
     setIsCorrect(null);
-    setShowHint(false);
+    // Removed setShowHint(false);
   };
 
   // Check the user's answer
@@ -104,10 +104,7 @@ export default function VocabularyGame() {
     }
   };
 
-  // Handle showing hint
-  const handleShowHint = () => {
-    setShowHint(true);
-  };
+  // Removed handleShowHint function
 
   // Confetti component
   const Confetti = () => {
@@ -213,7 +210,8 @@ export default function VocabularyGame() {
                   </div>
                 </div>
 
-                {/* Hint button and display */}
+                {/* Removed Hint button and display */}
+                {/*
                 <div className="w-full">
                   {!showHint ? (
                     <button
@@ -230,6 +228,7 @@ export default function VocabularyGame() {
                     </div>
                   )}
                 </div>
+                */}
 
                 {/* Word Squares Input Component */}
                 <WordSquaresInput
