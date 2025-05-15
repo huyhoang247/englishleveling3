@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
-import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
-import quizData from './quiz-data.ts'; // Import quizData from the new file
+import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
+import quizData from '../quiz-data.ts'; // Import quizData from the new file
 // Import GameProgressBar component (assuming its structure is suitable for adaptation)
 // We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
 // import GameProgressBar from './progress-bar.tsx';
