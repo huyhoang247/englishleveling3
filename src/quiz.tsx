@@ -4,7 +4,7 @@ import { db, auth } from './firebase'; // Import db and auth from your firebase 
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 // Import the new QuizStats component
-import QuizStats from './QuizStats';
+import QuizStats from './quiz-stats.tsx';
 
 // Keep CoinDisplay and StreakDisplay for the results screen
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
