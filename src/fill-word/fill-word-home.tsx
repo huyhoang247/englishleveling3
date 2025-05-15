@@ -451,77 +451,9 @@ export default function VocabularyGame() {
           </div>
         ) : (
           <>
-            {/* START: New Header Structure (Copied and adapted from quiz.tsx) */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl"> {/* Added w-full and rounded-t-xl */}
-                {/* Header row with word counter on the left and coins/streak on the right */}
-                <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
-                  {/* Word counter on the left - Styled like quiz counter */}
-                  <div className="relative">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
-                      <div className="flex items-center">
-                        {/* Completed words count */}
-                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
-                          {usedWords.size}
-                        </span>
-
-                        {/* Separator */}
-                        <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
-
-                        {/* Total words */}
-                        <span className="text-xs text-white/50">{vocabularyList.length}</span> {/* Adjusted color */}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Coins and Streak on the right */}
-                  <div className="flex items-center gap-2">
-                    {/* Using CoinDisplay component for coins */}
-                    {/* Pass coins state to CoinDisplay */}
-                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* isStatsFullscreen is false in game */}
-
-                    {/* Using StreakDisplay component */}
-                    {/* Pass streak and streakAnimation state to StreakDisplay */}
-                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
-                  </div>
-                </div>
-
-                {/* Progress bar under the header row */}
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
-                    {/* Progress fill with smooth animation */}
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: `${gameProgress}%` }} // Use gameProgress here
-                    >
-                      {/* Light reflex effect */}
-                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-                    </div>
-                </div>
-
-                 {/* Removed the hint display block */}
-                {/*
-                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
-                  <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
-                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
-                  <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
-                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
-                            <path d="M9 18h6"></path>
-                            <path d="M10 22h4"></path>
-                        </svg>
-                    </div>
-                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Gợi ý</h3>
-                  </div>
-                  <h2 className="text-xl font-bold text-white leading-tight">
-                    {currentWord?.hint}
-                  </h2>
-                </div>
-                */}
-            </div>
-            {/* END: New Header Structure */}
-
+            {/* Main game content - Image and Input */}
             {currentWord && (
-              <div className="w-full space-y-6">
+              <div className="w-full space-y-6 mb-6"> {/* Added mb-6 for spacing before the footer */}
                  {/* Streak text message */}
                 {streak >= 1 && getStreakText(streak) !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
                   <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
@@ -572,6 +504,56 @@ export default function VocabularyGame() {
                 />
               </div>
             )}
+
+            {/* START: Header Structure moved to bottom (Adapted from quiz.tsx) */}
+            {/* Added mt-auto to push it to the bottom if the parent is flex-col and has height */}
+            {/* Adjusted rounded classes */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-none mt-auto">
+                {/* Header row with word counter on the left and coins/streak on the right */}
+                <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
+                  {/* Word counter on the left - Styled like quiz counter */}
+                  <div className="relative">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
+                      <div className="flex items-center">
+                        {/* Completed words count */}
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
+                          {usedWords.size}
+                        </span>
+
+                        {/* Separator */}
+                        <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
+
+                        {/* Total words */}
+                        <span className="text-xs text-white/50">{vocabularyList.length}</span> {/* Adjusted color */}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Coins and Streak on the right */}
+                  <div className="flex items-center gap-2">
+                    {/* Using CoinDisplay component for coins */}
+                    {/* Pass coins state to CoinDisplay */}
+                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* isStatsFullscreen is false in game */}
+
+                    {/* Using StreakDisplay component */}
+                    {/* Pass streak and streakAnimation state to StreakDisplay */}
+                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+                  </div>
+                </div>
+
+                {/* Progress bar under the header row */}
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"> {/* Removed mb-6 */}
+                    {/* Progress fill with smooth animation */}
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                      style={{ width: `${gameProgress}%` }} // Use gameProgress here
+                    >
+                      {/* Light reflex effect */}
+                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                    </div>
+                </div>
+            </div>
+            {/* END: Header Structure moved to bottom */}
+
           </>
         )}
       </div>
@@ -593,13 +575,6 @@ export default function VocabularyGame() {
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full object-contain" // Thêm object-contain cho popup
             />
-            {/* Removed the hint display in the popup */}
-            {/*
-            <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-              <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
-              <p className="text-gray-800">{currentWord.hint}</p>
-            </div>
-            */}
           </div>
         </div>
       )}
