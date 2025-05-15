@@ -1,55 +1,125 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Component Confetti để hiển thị hiệu ứng chúc mừng
-const Confetti: React.FC = () => {
-  // Tạo mảng 50 phần tử để render 50 hạt confetti
-  const confettiPieces = Array(50).fill(0);
+const ImprovedConfetti = () => {
+  const [isActive, setIsActive] = useState(true);
+  const [pieces, setPieces] = useState([]);
+
+  // Tạo confetti khi component mount
+  useEffect(() => {
+    // Tạo 100 mảnh confetti với thuộc tính ngẫu nhiên
+    const generatePieces = () => {
+      const newPieces = [];
+      for (let i = 0; i < 100; i++) {
+        newPieces.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          size: Math.random() * 10 + 5,
+          duration: Math.random() * 4 + 3,
+          shape: Math.random() > 0.5 ? 'circle' : 
+                 Math.random() > 0.5 ? 'square' : 'triangle',
+          delay: Math.random() * 3,
+          rotationDirection: Math.random() > 0.5 ? 1 : -1,
+          color: getRandomColor(),
+          glow: Math.random() > 0.7,
+          swayAmount: Math.random() * 40 + 20
+        });
+      }
+      return newPieces;
+    };
+
+    // Khởi tạo confetti
+    setPieces(generatePieces());
+
+    // Tự động tạo confetti mới sau một khoảng thời gian
+    const interval = setInterval(() => {
+      if (isActive) {
+        setPieces(generatePieces());
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [isActive]);
+
+  // Chọn màu ngẫu nhiên từ bảng màu sáng
+  const getRandomColor = () => {
+    const vibrantColors = [
+      'bg-red-400', 'bg-pink-400', 'bg-rose-400', 
+      'bg-purple-400', 'bg-violet-400', 'bg-indigo-400',
+      'bg-blue-400', 'bg-cyan-400', 'bg-teal-400',
+      'bg-green-400', 'bg-lime-400', 'bg-yellow-400',
+      'bg-amber-400', 'bg-orange-400'
+    ];
+    return vibrantColors[Math.floor(Math.random() * vibrantColors.length)];
+  };
+
+  // Tạo hình dạng cho confetti
+  const renderShape = (shape, size, color, glow) => {
+    const baseClasses = `${color} absolute w-full h-full`;
+    
+    const glowClass = glow ? 'filter blur-sm animate-pulse' : '';
+    
+    if (shape === 'circle') {
+      return <div className={`${baseClasses} ${glowClass} rounded-full`} />;
+    } else if (shape === 'square') {
+      return <div className={`${baseClasses} ${glowClass} rounded-sm`} />;
+    } else { // triangle
+      return (
+        <div className={`${baseClasses} ${glowClass}`} style={{
+          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+        }} />
+      );
+    }
+  };
 
   return (
-    // Container cố định chiếm toàn màn hình, không nhận tương tác chuột, z-index cao để hiển thị trên cùng
-    <div className="fixed inset-0 pointer-events-none z-50">
-      {confettiPieces.map((_, index) => {
-        // Tính toán vị trí ngẫu nhiên theo chiều ngang (0% đến 100%)
-        const left = `${Math.random() * 100}%`;
-        // Tính toán thời gian animation ngẫu nhiên (2s đến 5s)
-        const animationDuration = `${Math.random() * 3 + 2}s`;
-        // Tính toán kích thước ngẫu nhiên (5px đến 15px)
-        const size = `${Math.random() * 10 + 5}px`;
-        // Chọn màu ngẫu nhiên từ danh sách các màu Tailwind
-        const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {pieces.map((piece) => (
+        <div
+          key={piece.id}
+          className="absolute"
+          style={{
+            left: piece.left,
+            top: '-20px',
+            width: `${piece.size}px`,
+            height: `${piece.size}px`,
+            animationDelay: `${piece.delay}s`,
+            animation: `
+              fall-${piece.id} ${piece.duration}s ease-in forwards,
+              sway-${piece.id} ${piece.duration * 0.8}s ease-in-out infinite alternate,
+              rotate-${piece.id} ${piece.duration * 0.5}s linear infinite
+            `
+          }}
+        >
+          {renderShape(piece.shape, piece.size, piece.color, piece.glow)}
+        </div>
+      ))}
 
-        return (
-          // Mỗi hạt confetti là một div nhỏ
-          <div
-            key={index} // Key duy nhất cho mỗi phần tử trong map
-            className={`absolute ${color} opacity-80 rounded-full`} // Vị trí tuyệt đối, màu, độ mờ, bo tròn
-            style={{
-              left, // Vị trí ngang
-              top: '-10px', // Bắt đầu từ phía trên màn hình
-              width: size, // Chiều rộng
-              height: size, // Chiều cao
-              animation: `fall ${animationDuration} linear forwards`, // Áp dụng animation 'fall'
-            }}
-          />
-        );
-      })}
-
-      {/* Định nghĩa CSS keyframes cho animation rơi */}
       <style jsx>{`
-        @keyframes fall {
-          0% {
-            transform: translateY(-10px) rotate(0deg); /* Bắt đầu từ trên, không xoay */
-            opacity: 1; /* Độ mờ ban đầu */
+        ${pieces.map((piece) => `
+          @keyframes fall-${piece.id} {
+            0% { transform: translateY(-20px); opacity: 1; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(105vh); opacity: 0; }
           }
-          100% {
-            transform: translateY(100vh) rotate(720deg); /* Rơi xuống dưới màn hình, xoay 2 vòng */
-            opacity: 0; /* Biến mất khi kết thúc */
+          
+          @keyframes sway-${piece.id} {
+            0% { transform: translateX(-${piece.swayAmount / 2}px); }
+            100% { transform: translateX(${piece.swayAmount / 2}px); }
           }
-        }
+          
+          @keyframes rotate-${piece.id} {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(${360 * piece.rotationDirection}deg); }
+          }
+        `).join('\n')}
       `}</style>
+      
+      <div className="absolute bottom-8 right-8 bg-gray-800 bg-opacity-70 text-white px-4 py-2 rounded-full cursor-pointer z-50 pointer-events-auto" 
+           onClick={() => setIsActive(!isActive)}>
+        {isActive ? "Dừng hiệu ứng" : "Tiếp tục hiệu ứng"}
+      </div>
     </div>
   );
 };
 
-export default Confetti; // Export component để sử dụng ở nơi khác
+export default ImprovedConfetti;
