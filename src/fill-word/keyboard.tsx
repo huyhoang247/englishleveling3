@@ -1,25 +1,45 @@
-import { useState } from 'react';
-// Removed import { X, Delete } from 'lucide-react'; // Removed lucide-react import
+import React from 'react';
 
-export default function VirtualKeyboard() {
-  const [input, setInput] = useState('');
-  // Removed capsLock state as Caps Lock key is removed
-  // Removed handleCapsLock function as Caps Lock key is removed
-  // showSymbols state, handleSymbols, renderSymbolKeys, and handleSend functions removed
+// Định nghĩa các props mà VirtualKeyboard sẽ nhận
+interface VirtualKeyboardProps {
+  userInput: string; // Giá trị input hiện tại từ component cha
+  setUserInput: (value: string) => void; // Hàm cập nhật input từ component cha
+  wordLength: number; // Độ dài từ cần đoán
+  disabled: boolean; // Trạng thái disable của bàn phím
+}
 
-  const handleKeyPress = (key) => {
-    // Always append lowercase as Caps Lock is removed
-    setInput(prev => prev + key.toLowerCase());
+// Component bàn phím ảo
+const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
+  userInput,
+  setUserInput,
+  wordLength,
+  disabled,
+}) => {
+
+  // Xử lý khi nhấn một phím chữ cái
+  const handleKeyPress = (key: string) => {
+    // Nếu bàn phím bị disable hoặc input đã đạt độ dài từ, không làm gì cả
+    if (disabled || userInput.length >= wordLength) {
+      return;
+    }
+    // Thêm ký tự (chuyển sang chữ thường) vào input hiện tại
+    setUserInput(userInput + key.toLowerCase());
   };
 
+  // Xử lý khi nhấn phím xóa
   const handleDelete = () => {
-    setInput(prev => prev.slice(0, -1));
+    // Nếu bàn phím bị disable hoặc input rỗng, không làm gì cả
+    if (disabled || userInput.length === 0) {
+      return;
+    }
+    // Xóa ký tự cuối cùng khỏi input
+    setUserInput(userInput.slice(0, -1));
   };
 
-  const handleClear = () => {
-    setInput('');
-  };
+  // Bàn phím ảo sẽ không có nút "Clear" hay hiển thị input riêng nữa,
+  // việc hiển thị và quản lý input sẽ do component cha (WordSquaresInput) đảm nhận.
 
+  // Render các phím chữ cái
   const renderAlphaKeys = () => {
     const letters = [
       ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
@@ -29,22 +49,24 @@ export default function VirtualKeyboard() {
 
     return letters.map((row, rowIndex) => (
       <div key={rowIndex} className="flex justify-center gap-1 mb-1">
-        {/* Removed the Caps Lock button */}
         {row.map(key => (
           <button
             key={key}
-            className="w-8 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner"
-            onClick={() => handleKeyPress(key)} // Call handleKeyPress directly with the key
+            className="w-8 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handleKeyPress(key)}
+            disabled={disabled || userInput.length >= wordLength} // Disable phím khi input đầy hoặc game over
           >
-            {key} {/* Always display lowercase */}
+            {key.toUpperCase()} {/* Hiển thị chữ in hoa trên phím */}
           </button>
         ))}
         {rowIndex === 2 && (
+          // Nút xóa (Delete)
           <button
-            className="w-10 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner"
+            className="w-10 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleDelete}
+            disabled={disabled || userInput.length === 0} // Disable nút xóa khi input rỗng hoặc game over
           >
-            {/* Replaced Delete icon with inline SVG */}
+            {/* Inline SVG cho icon xóa */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="18"
@@ -67,45 +89,25 @@ export default function VirtualKeyboard() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div>
-        {/* Input display */}
-        <div className="relative mb-3">
-          <div className="bg-white border border-gray-300 rounded-lg p-3 min-h-10 text-gray-800 break-words">
-            {input || <span className="text-gray-500">Nhập văn bản...</span>}
-          </div>
-          {input && (
-            <button
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              onClick={handleClear}
-            >
-              {/* Replaced X icon with inline SVG */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {/* Keyboard layout */}
-        <div className="mb-2 p-2">
-          {/* Render alpha keys */}
-          {renderAlphaKeys()}
-
-          {/* Removed the bottom row div */}
-        </div>
+    <div className="w-full max-w-md mx-auto p-2 bg-gray-100 rounded-xl shadow-inner">
+      {/* Bàn phím layout */}
+      <div className="mb-2">
+        {/* Render các hàng phím chữ cái */}
+        {renderAlphaKeys()}
       </div>
+      {/* Có thể thêm các phím chức năng khác ở đây nếu cần (ví dụ: Enter) */}
+      {/* Ví dụ thêm nút Enter */}
+      {/* <div className="flex justify-center gap-1">
+        <button
+          className="w-20 h-10 bg-blue-500 text-white rounded-lg flex items-center justify-center shadow active:bg-blue-600 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => checkAnswer()} // Giả định có prop checkAnswer
+          disabled={userInput.length !== wordLength || disabled}
+        >
+          Enter
+        </button>
+      </div> */}
     </div>
   );
-}
+};
+
+export default VirtualKeyboard;
