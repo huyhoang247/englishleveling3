@@ -20,31 +20,31 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   isCorrect,
   disabled,
 }) => {
-  // Tạo một mảng các ký tự riêng lẻ từ userInput
+  // Create an array of individual characters from userInput
   const characters = userInput.split('');
 
-  // Tạo một mảng các ô trống cho độ dài từ hiện tại
+  // Create an array of empty squares for the current word length
   const wordLength = word?.length || 5;
   const squares = Array(wordLength).fill('');
 
-  // Điền các ô vuông bằng các ký tự có sẵn
+  // Fill the squares with available characters
   for (let i = 0; i < characters.length && i < wordLength; i++) {
     squares[i] = characters[i];
   }
 
-  // Xử lý khi nhấp vào một ô vuông (để xóa ký tự tại vị trí đó)
+  // Handle click on a square (to delete character at that position)
   const handleSquareClick = (index: number) => {
     if (disabled) return;
 
-    // Kiểm tra xem ô vuông có chứa ký tự không
+    // Check if the square contains a character
     if (index < userInput.length) {
-      // Xóa ký tự tại vị trí index
+      // Remove character at the specified index
       const newUserInput = userInput.slice(0, index) + userInput.slice(index + 1);
       setUserInput(newUserInput);
     }
   };
 
-  // Định nghĩa các keyframe animation tùy chỉnh
+  // Define custom keyframe animations
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -81,7 +81,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     };
   }, []);
 
-  // Lấy style phù hợp cho từng ô chữ cái
+  // Get appropriate style for each letter square
   const getSquareStyle = (index: number) => {
     if (isCorrect === true) {
       return 'bg-gradient-to-br from-green-100 to-green-200 border-green-400 text-green-700 shadow-md';
@@ -93,25 +93,25 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return 'bg-white border-gray-200 text-gray-400';
   };
 
-  // Lấy animation phù hợp cho từng ô chữ cái
+  // Get appropriate animation for each letter square
   const getSquareAnimation = (index: number) => {
-    // Animation nhấp nháy cho ô trống tiếp theo khi game chưa kết thúc và chưa trả lời đúng
+    // Pulsing animation for the next empty square when game is not over and not correctly answered
     if (index === userInput.length && !disabled && isCorrect === null) {
       return 'animate-pulse';
     }
-    // Animation pop khi trả lời đúng
+    // Pop animation when correct
     if (isCorrect === true) {
       const delays = ['animate-pop delay-0', 'animate-pop delay-100', 'animate-pop delay-200', 'animate-pop delay-300', 'animate-pop delay-400'];
       return delays[index % delays.length];
     }
-    // Animation lắc khi trả lời sai
+    // Shake animation when incorrect
     if (isCorrect === false) {
       return 'animate-shake';
     }
     return '';
   };
 
-  // Định dạng hiển thị từ với chữ cái đầu viết hoa
+  // Format display word with first letter capitalized
   const formatDisplayWord = (input: string) => {
     if (!input) return '';
     return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
@@ -120,51 +120,54 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      {/* Container các ô vuông từ */}
+      {/* Container for word squares */}
       <div
         className="flex justify-center w-full gap-2 mb-3"
       >
         {squares.map((char, index) => (
           <div
             key={index}
-            className={`word-square aspect-square w-12 md:w-14 flex items-center justify-center border rounded-lg text-xl font-bold transition-all duration-200
+            // Removed fixed width (w-12 md:w-14) and added flex properties for flexible sizing
+            // Added min-w-0 to allow shrinking below content size in flex container
+            // Added overflow-hidden and text-ellipsis to handle potential text overflow
+            // Adjusted text size to text-lg by default and md:text-xl for larger screens
+            className={`word-square aspect-square flex items-center justify-center border rounded-lg font-bold transition-all duration-200
+            flex-grow flex-shrink min-w-0 overflow-hidden text-ellipsis text-lg md:text-xl
               ${
-                // Highlight ô trống tiếp theo
+                // Highlight the next empty square
                 index === userInput.length && !disabled && isCorrect === null ? 'scale-105 border-blue-400 ring-1 ring-blue-200' : ''
               }
               ${getSquareStyle(index)} ${getSquareAnimation(index)}`}
-            onClick={() => handleSquareClick(index)} // Xử lý click để xóa chữ tại vị trí đó
+            onClick={() => handleSquareClick(index)} // Handle click to delete character at that position
           >
-            {char.toUpperCase()} {/* Hiển thị chữ in hoa trong ô vuông */}
+            {char.toUpperCase()} {/* Display uppercase character in the square */}
           </div>
         ))}
       </div>
 
-      {/* Hộp hiển thị từ - Luôn hiển thị để giữ khoảng cách */}
+      {/* Word display box - Always visible to maintain spacing */}
       <div className="flex justify-center w-full min-h-[2.5rem]"> {/* Added min-h to ensure space */}
-          {/* Chỉ hiển thị từ khi có input */}
+          {/* Only display word when there is input */}
           {userInput.length > 0 && (
-            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105"
-                 style={{ wordBreak: 'break-word' }} // Thêm CSS để từ xuống dòng khi quá dài
-            >
+            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
               {formatDisplayWord(userInput)}
             </div>
           )}
       </div>
 
 
-      {/* Nút kiểm tra */}
+      {/* Check button */}
       <div className="flex justify-center">
         <button
           onClick={checkAnswer}
           className={`px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm flex items-center
           ${
-            // Nút chỉ active khi input đã đầy và game chưa kết thúc
+            // Button is only active when input is full and game is not over
             userInput.length === wordLength && !disabled
               ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white hover:shadow-md hover:-translate-y-0.5'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
-          disabled={userInput.length !== wordLength || disabled} // Disable nút khi input chưa đầy hoặc game over
+          disabled={userInput.length !== wordLength || disabled} // Disable button when input is not full or game over
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -173,8 +176,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         </button>
       </div>
 
-      {/* Bàn phím chữ cái ảo */}
-      {/* Truyền userInput, setUserInput, wordLength và disabled xuống component VirtualKeyboard */}
+      {/* Virtual alphabet keyboard */}
+      {/* Pass userInput, setUserInput, wordLength, and disabled down to VirtualKeyboard component */}
       <VirtualKeyboard
         userInput={userInput}
         setUserInput={setUserInput}
@@ -183,7 +186,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       />
 
 
-      {/* Phản hồi */}
+      {/* Feedback */}
       {feedback && (
         <div className={`flex items-center justify-center p-3 rounded-lg shadow-sm mt-4 text-sm transition-all duration-200
           ${isCorrect
