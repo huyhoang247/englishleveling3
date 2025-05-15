@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // Import component QuizApp từ file quiz.tsx
-import QuizApp from '../quiz.tsx';
+import QuizApp from './quiz.tsx';
 // Import component Breadcrumbs mới tạo
 import Breadcrumbs from '../bread-crumbs.tsx';
 // Import component VocabularyGame từ fill-word-home.tsx
