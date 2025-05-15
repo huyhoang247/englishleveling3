@@ -497,33 +497,28 @@ export default function VocabularyGame() {
                     </div>
                 </div>
 
-                 {/* START: Updated question display block (adapted for word game) */}
+                 {/* START: Updated question display block (adapted for word game) - Removed hint section */}
+                {/* Removed the div containing the hint icon, text, and content */}
+                {/* Original hint block:
                 <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
-                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
                   <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
-
-                  {/* Hiệu ứng đồ họa - đường trang trí */}
                   <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
                   <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
-
-                  {/* Icon câu hỏi (adapted for word game) */}
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
-                       {/* Using a different icon for word game, e.g., a lightbulb for hint */}
-                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
-                            <path d="M9 18h6"></path>
-                            <path d="M10 22h4"></path>
-                        </svg>
-                    </div>
-                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Gợi ý</h3> {/* Changed text to Gợi ý */}
+                       <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
+                              <path d="M9 18h6"></path>
+                              <path d="M10 22h4"></path>
+                          </svg>
+                      </div>
+                      <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Gợi ý</h3>
                   </div>
-
-                  {/* Nội dung câu hỏi (adapted for word game - showing hint) */}
                   <h2 className="text-xl font-bold text-white leading-tight">
-                    {currentWord?.hint} {/* Display hint here */}
+                    {currentWord?.hint}
                   </h2>
                 </div>
+                */}
                 {/* END: Updated question display block */}
 
             </div>
