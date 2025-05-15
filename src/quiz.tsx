@@ -419,36 +419,25 @@ export default function QuizApp() {
           ) : (
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-                {/* Header row with combined progress bar and question counter on the left and coins/streak on the right */}
+                {/* Header row with question counter on the left and coins/streak on the right */}
                 <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
-                  {/* Combined Progress bar and question counter on the left */}
-                  {/* Adapted style from progress-bar.tsx */}
-                  <div className="flex items-center gap-2">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-gray-300/30">
+                  {/* Question counter on the left - Styled like progress-bar.tsx counter */}
+                  <div className="relative">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
                       <div className="flex items-center">
-                        {/* Current question */}
-                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
+                        {/* Current question number */}
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
                           {currentQuestion + 1}
                         </span>
+
                         {/* Separator */}
-                        <span className="mx-0.5 text-gray-300 text-xs">/</span>
+                        <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
+
                         {/* Total questions */}
-                        <span className="text-xs text-gray-200">{filteredQuizData.length}</span>
-                      </div>
-                    </div>
-                    {/* Progress bar visually integrated */}
-                    <div className="w-48 h-3 bg-gray-700 rounded-full overflow-hidden relative">
-                      {/* Progress fill with smooth animation */}
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                        style={{ width: `${quizProgress}%` }}
-                      >
-                        {/* Light reflex effect */}
-                        <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                        <span className="text-xs text-white/50">{filteredQuizData.length}</span> {/* Adjusted color */}
                       </div>
                     </div>
                   </div>
-
                   {/* Coins and Streak on the right */}
                   <div className="flex items-center gap-2">
                     {/* Using CoinDisplay component for coins */}
@@ -461,7 +450,19 @@ export default function QuizApp() {
                   </div>
                 </div>
 
-                 {/* Display number of matching questions - Kept this as it's useful context */}
+                {/* Progress bar under the header row */}
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
+                    {/* Progress fill with smooth animation */}
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                      style={{ width: `${quizProgress}%` }}
+                    >
+                      {/* Light reflex effect */}
+                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                    </div>
+                </div>
+
+                 {/* Display number of matching questions */}
                  <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
                    {matchingQuestionsCount} câu hỏi khớp
                  </div>
