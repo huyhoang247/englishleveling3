@@ -1,7 +1,17 @@
 import React from 'react';
 import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay component
 
-// Define streak icon URLs
+// Define props for QuizStats component
+interface QuizStatsProps {
+  currentQuestion: number; // Current question index (0-based)
+  totalQuestions: number; // Total number of questions
+  coins: number; // User's coin count
+  streak: number; // User's correct streak count
+  streakAnimation: boolean; // Flag for streak animation
+  showScore: boolean; // Flag to indicate if score screen is shown
+}
+
+// Define streak icon URLs (assuming these are available or passed down)
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
   streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
@@ -19,7 +29,7 @@ const getStreakIconUrl = (streak: number) => {
   return streakIconUrls.default;
 };
 
-// StreakDisplay component (Integrated)
+// StreakDisplay component (Moved from quiz.tsx)
 interface StreakDisplayProps {
   displayedStreak: number; // The number of streak to display
   isAnimating: boolean; // Flag to trigger animation
@@ -65,27 +75,22 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
 };
 
 
-// Define the props for the QuizStats component
-interface QuizStatsProps {
-  currentQuestion: number; // Current question index (0-based)
-  totalQuestions: number; // Total number of questions
-  coins: number; // Current coin count
-  streak: number; // Current streak count
-  streakAnimation: boolean; // Flag for streak animation
-  quizProgress: number; // Quiz progress percentage (0-100)
-  showScore: boolean; // Flag to indicate if score is being shown
-}
-
-// QuizStats component
 const QuizStats: React.FC<QuizStatsProps> = ({
   currentQuestion,
   totalQuestions,
   coins,
   streak,
   streakAnimation,
-  quizProgress,
-  showScore
+  showScore,
 }) => {
+  // Calculate quiz progress percentage
+  const quizProgress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0; // Use currentQuestion + 1 for display
+
+  // Hide stats when score screen is shown
+  if (showScore) {
+    return null;
+  }
+
   return (
     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
       {/* Header row with question counter on the left and coins/streak on the right */}
@@ -94,7 +99,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({
         <div className="relative">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
             <div className="flex items-center">
-              {/* Current question number */}
+              {/* Current question number (1-based) */}
               <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
                 {currentQuestion + 1}
               </span>
@@ -121,14 +126,14 @@ const QuizStats: React.FC<QuizStatsProps> = ({
 
       {/* Progress bar under the header row */}
       <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
-          {/* Progress fill with smooth animation */}
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-            style={{ width: `${quizProgress}%` }}
-          >
-            {/* Light reflex effect */}
-            <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-          </div>
+        {/* Progress fill with smooth animation */}
+        <div
+          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+          style={{ width: `${quizProgress}%` }}
+        >
+          {/* Light reflex effect */}
+          <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+        </div>
       </div>
     </div>
   );
