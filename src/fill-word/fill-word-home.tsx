@@ -9,8 +9,9 @@ import { defaultImageUrls } from '../image-url.ts';
 // Import component Confetti đã tách ra
 import Confetti from './chuc-mung.tsx'; // Import component Confetti
 
-// Import component QuizStats để hiển thị thông tin game
-import QuizStats from '../quiz-stats.tsx'; // Import QuizStats component
+// Import CoinDisplay và StreakDisplay từ quiz.tsx
+import CoinDisplay from '../coin-display.tsx';
+import { getStreakIconUrl, streakIconUrls } from './quiz.tsx'; // Import các hàm và biến liên quan đến streak từ quiz.tsx
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
@@ -28,22 +29,21 @@ export default function VocabularyGame() {
   const [error, setError] = useState<string | null>(null);
   // State để lưu thông tin người dùng đã đăng nhập
   const [user, setUser] = useState<User | null>(null);
-  // State để lưu trữ mảng openedImageIds từ Firestore (hiện tại không dùng trực tiếp ở đây nhưng giữ lại)
+  // State để lưu trữ mảng openedImageIds từ Firestore
   const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
-
 
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [score, setScore] = useState(0); // Số từ đoán đúng
+  const [score, setScore] = useState(0); // Score will track correct answers
   // Sử dụng Set để quản lý các từ đã dùng hiệu quả hơn
-  const [usedWords, setUsedWords] = useState<Set<string>>(new Set()); // Số từ đã thử đoán (đúng hoặc sai)
+  const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false); // State để điều khiển hiển thị Confetti
 
-  // State mới cho Coins và Streak, Streak Animation, Coin Animation
+  // State cho Coins và Streak (thêm vào từ quiz)
   const [coins, setCoins] = useState(0);
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
@@ -68,8 +68,7 @@ export default function VocabularyGame() {
         setLoading(false);
         setVocabularyList([]); // Đặt danh sách trống nếu không có user
         setOpenedImageIds([]); // Đặt danh sách ảnh trống
-        setCoins(0); // Reset coins nếu không có user
-        setError("Vui lòng đăng nhập để chơi.");
+        // Không đặt lỗi ở đây, chỉ hiển thị thông báo "Vui lòng đăng nhập" ở UI
         return;
       }
 
@@ -85,7 +84,7 @@ export default function VocabularyGame() {
           const userData = docSnap.data();
           let fetchedVocabulary: VocabularyItem[] = [];
           let fetchedImageIds: number[] = [];
-          let fetchedCoins = 0; // Biến tạm để lưu coins
+          let fetchedCoins = 0; // Lấy coins từ Firestore
 
           // Lấy danh sách từ vựng
           if (userData && Array.isArray(userData.listVocabulary)) {
@@ -122,14 +121,14 @@ export default function VocabularyGame() {
             setOpenedImageIds([]); // Đặt mảng rỗng nếu không có
           }
 
-          // Lấy số lượng coins
+          // Lấy coins
           if (userData && typeof userData.coins === 'number') {
               fetchedCoins = userData.coins;
               console.log("Fetched coins:", fetchedCoins);
               setCoins(fetchedCoins); // Cập nhật state coins
           } else {
               console.log("User document does not contain coins or it's not a number. Defaulting to 0.");
-              setCoins(0); // Mặc định 0 coins nếu không có hoặc sai định dạng
+              setCoins(0); // Mặc định là 0 nếu không có hoặc sai định dạng
           }
 
 
@@ -140,7 +139,7 @@ export default function VocabularyGame() {
               // Kiểm tra xem chỉ mục ảnh có hợp lệ trong mảng defaultImageUrls không
               // Điều chỉnh index ở đây nếu cần thiết, ví dụ: imageIndex - 1 nếu ID là 1-based
               // const adjustedImageIndex = imageIndex !== undefined ? imageIndex - 1 : undefined; // Ví dụ điều chỉnh
-              const isValidImageIndex = imageIndex !== undefined && imageIndex !== null && imageIndex >= 0 && imageIndex < defaultImageUrls.length; // Kiểm tra tính hợp lệ sau khi điều chỉnh (nếu có)
+              const isValidImageIndex = imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length; // Kiểm tra tính hợp lệ sau khi điều chỉnh (nếu có)
               return {
                   ...item,
                   // Chỉ thêm imageIndex nếu nó hợp lệ
@@ -155,7 +154,7 @@ export default function VocabularyGame() {
           console.log("User document does not exist.");
           setVocabularyList([]); // Đặt danh sách trống nếu document không tồn tại
           setOpenedImageIds([]);
-          setCoins(0); // Reset coins
+          setCoins(0);
           setError("Không tìm thấy dữ liệu người dùng.");
         }
 
@@ -176,8 +175,8 @@ export default function VocabularyGame() {
        setLoading(false);
        setVocabularyList([]);
        setOpenedImageIds([]);
-       setCoins(0); // Reset coins
-       setError("Vui lòng đăng nhập để chơi.");
+       setCoins(0);
+       // Không đặt lỗi ở đây, chỉ hiển thị thông báo "Vui lòng đăng nhập" ở UI
     }
 
   }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
@@ -194,7 +193,7 @@ export default function VocabularyGame() {
     }
   }, [vocabularyList, loading, error]); // Chạy khi vocabularyList, loading hoặc error thay đổi
 
-   // Function to update coins in Firestore
+   // Function to update coins in Firestore (copy from quiz.tsx)
   const updateCoinsInFirestore = async (newCoins: number) => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
@@ -229,15 +228,15 @@ export default function VocabularyGame() {
   const checkAnswer = () => {
     if (!currentWord || !userInput.trim()) return; // Kiểm tra từ hiện tại và input không rỗng
 
-    // Thêm từ vào danh sách đã dùng ngay khi người dùng nhấn check
-    setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
-
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setFeedback('Chính xác!'); // Feedback khi đúng
       setIsCorrect(true); // Đặt trạng thái đúng
-      setScore(score + 1); // Tăng điểm số từ đúng
+      setScore(score + 1); // Tăng điểm
+      // Thêm từ đã dùng vào Set
+      setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
+      setShowConfetti(true); // Hiển thị hiệu ứng confetti
 
-       // Logic tính coins và streak
+      // Tăng streak và cộng coins (logic từ quiz.tsx)
       const newStreak = streak + 1;
       setStreak(newStreak);
 
@@ -257,17 +256,16 @@ export default function VocabularyGame() {
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
         setCoins(totalCoins);
-        updateCoinsInFirestore(totalCoins); // Cập nhật coins trong Firestore
+        updateCoinsInFirestore(totalCoins); // Update coins in Firestore
         setCoinAnimation(true);
         setTimeout(() => setCoinAnimation(false), 1500);
       }
 
       if (newStreak >= 1) {
-         setStreakAnimation(true);
-         setTimeout(() => setStreakAnimation(false), 1500);
+        setStreakAnimation(true);
+        setTimeout(() => setStreakAnimation(false), 1500);
       }
 
-      setShowConfetti(true); // Hiển thị hiệu ứng confetti
 
       // Ẩn confetti sau 2 giây
       setTimeout(() => {
@@ -282,7 +280,7 @@ export default function VocabularyGame() {
       // Feedback khi sai, hiển thị từ đúng
       setFeedback(`Không đúng, hãy thử lại! Từ đúng là: ${currentWord.word}`);
       setIsCorrect(false); // Đặt trạng thái sai
-      setStreak(0); // Reset streak khi sai
+      setStreak(0); // Reset streak on wrong answer
     }
   };
 
@@ -316,17 +314,21 @@ export default function VocabularyGame() {
     setUsedWords(new Set()); // Đặt lại danh sách từ đã dùng
     setScore(0); // Đặt lại điểm
     setGameOver(false); // Đặt lại trạng thái kết thúc trò chơi
-    setStreak(0); // Reset streak
-    // Coins không reset khi chơi lại
+    setStreak(0); // Reset streak on game reset
+    // Keep coins when retaking the game, coins are already saved in Firestore
     selectRandomWord(); // Bắt đầu lại với từ ngẫu nhiên
   };
 
-  // Submit form on Enter key (đã được xử lý trong WordSquaresInput)
+  // Submit form on Enter key (handled within WordSquaresInput now)
   // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
   //   if (e.key === 'Enter') {
   //     checkAnswer(); // Gọi checkAnswer khi nhấn Enter
   //   }
   // };
+
+  // Calculate game progress percentage
+  const gameProgress = vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0;
+
 
   // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
@@ -345,8 +347,18 @@ export default function VocabularyGame() {
     );
   }
 
-  // Nếu không có từ vựng nào được tải (mảng rỗng)
-  if (vocabularyList.length === 0 && !loading && !error) {
+   // Nếu không có người dùng đăng nhập
+   if (!user && !loading) {
+     return (
+       <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
+         Vui lòng đăng nhập để chơi trò chơi.
+       </div>
+     );
+   }
+
+
+  // Nếu không có từ vựng nào được tải (mảng rỗng) sau khi đã đăng nhập
+  if (vocabularyList.length === 0 && !loading && !error && user) {
       return (
           <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
               Không có từ vựng nào trong danh sách của bạn.
@@ -356,115 +368,272 @@ export default function VocabularyGame() {
 
 
   return (
-    // Đã bỏ min-h-screen để nội dung tự điều chỉnh chiều cao
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans rounded-lg"> {/* Thêm rounded-lg */}
+    // Removed min-h-screen to allow content to dictate height
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {/* Sử dụng component Confetti */}
       {showConfetti && <Confetti />}
 
-      <div className="w-full flex flex-col items-center">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
         {gameOver ? (
-          <div className="text-center py-8 w-full">
-            <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
-              <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
-              {/* Hiển thị điểm số từ đúng / tổng số từ */}
-              <p className="text-xl mb-4">Điểm của bạn: <span className="font-bold text-indigo-600">{score}/{vocabularyList.length}</span></p>
-               {/* Hiển thị tổng số từ đã thử / tổng số từ */}
-              <p className="text-lg mb-4 text-gray-700">Đã thử: <span className="font-bold text-gray-900">{usedWords.size}/{vocabularyList.length}</span></p>
-
-              <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                  // Thanh tiến trình dựa trên số từ đã thử
-                  style={{ width: `${(usedWords.size / vocabularyList.length) * 100}%` }}
-                ></div>
-              </div>
-               {/* Hiển thị coins và streak cuối cùng */}
-               <div className="flex justify-center items-center gap-4 mt-6">
-                   {/* Coin Display */}
-                   <div className="flex items-center bg-yellow-100 rounded-full px-4 py-2 shadow-inner">
-                       <img
-                           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/coin.png"
-                           alt="Coin Icon"
-                           className="w-5 h-5 mr-2"
-                           onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/20x20/FFD700/000000?text=C'; }}
-                       />
-                       <span className="font-bold text-yellow-800 text-lg">{coins}</span>
-                   </div>
-                   {/* Streak Display */}
-                    <div className="flex items-center bg-orange-100 rounded-full px-4 py-2 shadow-inner">
-                       <img
-                           src={`https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire${streak >= 20 ? ' (4)' : streak >= 10 ? ' (3)' : streak >= 5 ? ' (1)' : streak >= 1 ? ' (2)' : ''}.png`}
-                           alt="Streak Icon"
-                           className="w-5 h-5 mr-2"
-                           onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/20x20/FF4500/FFFFFF?text=🔥'; }}
-                       />
-                       <span className="font-bold text-orange-800 text-lg">{streak}</span>
-                   </div>
-               </div>
+          <div className="p-10 text-center">
+            <div className="mb-8">
+                {/* Using AwardIcon SVG - Need to define it or import */}
+                {/* For now, using a placeholder */}
+                <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                   {/* Placeholder for Award Icon */}
+                   <span className="text-indigo-600 text-6xl">🏆</span>
+                </div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">Trò chơi kết thúc!</h2>
+              <p className="text-gray-500">Bạn đã hoàn thành tất cả các từ!</p>
             </div>
+
+            <div className="bg-gray-50 rounded-xl p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-lg font-medium text-gray-700">Số từ đã đúng:</span>
+                <span className="text-2xl font-bold text-indigo-600">{score}/{vocabularyList.length}</span>
+              </div>
+
+              <div className="mb-3">
+                <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                    style={{ width: `${(score / vocabularyList.length) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-right mt-1 text-sm text-gray-600 font-medium">
+                  {Math.round((score / vocabularyList.length) * 100)}%
+                </p>
+              </div>
+
+              {/* Using CoinDisplay component for coins in results */}
+              <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center">
+                   {/* Display streak icon in results - Using img tag directly */}
+                   <img
+                     src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                     alt="Streak Icon"
+                     className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
+                   />
+                  <span className="font-medium text-gray-700">Coins hiện có:</span> {/* Corrected text */}
+                </div>
+                 {/* Pass coins to CoinDisplay */}
+                {/* Display total user coins from state */}
+                <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Always display coins here */}
+              </div>
+
+              {/* Using StreakDisplay component for streak in results */}
+              {/* Need to create StreakDisplay component or import */}
+              {/* For now, using a placeholder */}
+              <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    {/* Display streak icon in results - Using img tag directly */}
+                     <img
+                      src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                      alt="Streak Icon"
+                      className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
+                    />
+                    <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
+                  </div>
+                   {/* Pass streak to StreakDisplay, no animation in results */}
+                  {/* Placeholder for StreakDisplay */}
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-orange-400">
+                      <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="w-4 h-4"/>
+                      <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{streak}</div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-gray-600 text-sm italic mt-4">
+                {score === vocabularyList.length ?
+                  "Tuyệt vời! Bạn đã hoàn thành tất cả các từ." :
+                  score > vocabularyList.length / 2 ?
+                    "Kết quả tốt! Bạn có thể cải thiện thêm." :
+                    "Hãy thử lại để cải thiện điểm số của bạn."
+                }
+              </p>
+            </div>
+
             <button
               onClick={resetGame}
-              className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+              className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
+              {/* Using RefreshIcon SVG - Need to define it or import */}
+              {/* For now, using a placeholder */}
               <span className="mr-2">🔄</span>
               Chơi lại
             </button>
           </div>
         ) : (
           <>
-            {/* Sử dụng component QuizStats */}
-            {/* currentQuestion sẽ là số từ đã dùng, totalQuestions là tổng số từ */}
-            <QuizStats
-              currentQuestion={usedWords.size} // Số từ đã thử
-              totalQuestions={vocabularyList.length} // Tổng số từ
-              coins={coins}
-              streak={streak}
-              streakAnimation={streakAnimation}
-              coinAnimation={coinAnimation}
-            />
+            {/* New Header Section (copied and adapted from quiz.tsx) */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+              {/* Header row with word counter on the left and coins/streak on the right */}
+              <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
+                {/* Word counter on the left - Styled like quiz counter */}
+                <div className="relative">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
+                    <div className="flex items-center">
+                      {/* Current word number (usedWords.size + 1 if not game over) */}
+                      <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
+                        {usedWords.size + (currentWord ? 1 : 0)} {/* Display current word index + 1 */}
+                      </span>
 
-            {currentWord && (
-              <div className="w-full space-y-6">
-                {/* Image card */}
-                <div
-                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
-                  onClick={() => setShowImagePopup(true)}
-                >
-                  {/* Sử dụng ảnh thật nếu có imageIndex, ngược lại dùng overlay */}
-                  {currentWord.imageIndex !== undefined ? (
-                       <img
-                           src={generateImageUrl(currentWord.imageIndex)}
-                           alt={currentWord.word}
-                           className="w-full h-full object-contain" // Đã thay đổi từ object-cover sang object-contain
-                           onError={(e) => { // Thêm onError cho ảnh
-                              const target = e.target as HTMLImageElement;
-                              target.onerror = null; // Ngăn chặn lặp vô hạn
-                              target.src = `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; // Ảnh placeholder
-                           }}
-                       />
-                  ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
-                        <span className="text-white text-8xl font-bold mb-2">?</span>
-                        <span className="text-white text-lg opacity-80">Chạm để xem</span>
-                      </div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-white text-center">Đoán từ này là gì?</p>
+                      {/* Separator */}
+                      <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
+
+                      {/* Total words */}
+                      <span className="text-xs text-white/50">{vocabularyList.length}</span> {/* Adjusted color */}
+                    </div>
                   </div>
                 </div>
+                {/* Coins and Streak on the right */}
+                <div className="flex items-center gap-2">
+                  {/* Using CoinDisplay component for coins */}
+                  {/* Pass coins and showScore state to CoinDisplay - showScore is not relevant here, pass false */}
+                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
 
-                {/* Word Squares Input Component */}
-                <WordSquaresInput
-                  word={currentWord.word}
-                  userInput={userInput}
-                  setUserInput={setUserInput}
-                  checkAnswer={checkAnswer}
-                  feedback={feedback}
-                  isCorrect={isCorrect}
-                  disabled={isCorrect === true} // Vô hiệu hóa input sau khi trả lời đúng
-                />
+                  {/* Using StreakDisplay component */}
+                  {/* Need to create StreakDisplay component or import */}
+                  {/* For now, using a placeholder - will replace with actual component if available */}
+                   <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                      {/* Add necessary styles for animations used here */}
+                     <style jsx>{`
+                        @keyframes pulse-fast {
+                           0%, 100% { opacity: 1; }
+                           50% { opacity: 0.5; }
+                       }
+                       .animate-pulse-fast {
+                           animation: pulse-fast 1s infinite;
+                       }
+                     `}</style>
+                     {/* Background highlight effect - adjusted for grey scale */}
+                     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+
+                     {/* Streak Icon */}
+                     <div className="relative flex items-center justify-center">
+                       <img
+                         src={getStreakIconUrl(streak)}
+                         alt="Streak Icon"
+                         className="w-4 h-4" // Icon size is w-4 h-4
+                         // Add onerror if needed, similar to CoinDisplay
+                       />
+                     </div>
+
+                     {/* Streak Count - adjusted text color for contrast on grey background */}
+                     <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter ml-1"> {/* Added ml-1 for spacing */}
+                       {streak}
+                     </div>
+
+                      {/* Small pulsing dots - kept white/yellow as they contrast well */}
+                     <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                     <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+                   </div>
+                </div>
               </div>
-            )}
+
+              {/* Progress bar under the header row */}
+              <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
+                  {/* Progress fill with smooth animation */}
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                    style={{ width: `${gameProgress}%` }}
+                  >
+                    {/* Light reflex effect */}
+                    <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                  </div>
+              </div>
+
+               {/* START: Updated word display block */}
+               {currentWord && (
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
+                  <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+
+                  {/* Hiệu ứng đồ họa - đường trang trí */}
+                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
+                  <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
+
+                  {/* Icon từ vựng */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                      {/* Placeholder for Word Icon */}
+                      <span className="text-white text-lg">📖</span>
+                    </div>
+                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Từ vựng</h3>
+                  </div>
+
+                  {/* Nội dung từ vựng (có thể hiển thị hint hoặc phần nào đó của từ) */}
+                  {/* Hiện tại không hiển thị từ ở đây, chỉ hiển thị ảnh và hint trong popup */}
+                   <h2 className="text-xl font-bold text-white leading-tight">
+                     Đoán từ dựa trên hình ảnh
+                   </h2>
+                </div>
+               )}
+                {/* END: Updated word display block */}
+            </div>
+
+            <div className="p-6">
+              {/* Streak text message (logic from quiz.tsx) */}
+              {streak >= 1 && ( // Show streak text for streak 1 and above
+                <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                  <div className="flex items-center justify-center">
+                     <img
+                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                       alt="Streak Icon"
+                       className="h-5 w-5 mr-2 text-white" // Adjust size as needed
+                     />
+                    <span className="text-white font-medium">
+                      {/* Get streak text based on streak count */}
+                      {streak >= 20 ? "Không thể cản phá!" :
+                       streak >= 10 ? "Tuyệt đỉnh!" :
+                       streak >= 5 ? "Siêu xuất sắc!" :
+                       streak >= 3 ? "Xuất sắc!" :
+                       streak >= 1 ? "Tuyệt vời!" : ""} {/* Added text for streak 1-2 */}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+
+              {currentWord && (
+                <div className="w-full space-y-6">
+                  {/* Image card */}
+                  <div
+                    className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
+                    onClick={() => setShowImagePopup(true)}
+                  >
+                    {/* Sử dụng ảnh thật nếu có imageIndex, ngược lại dùng overlay */}
+                    {currentWord.imageIndex !== undefined ? (
+                         <img
+                             src={generateImageUrl(currentWord.imageIndex)}
+                             alt={currentWord.word}
+                             className="w-full h-full object-contain" // Đã thay đổi từ object-cover sang object-contain
+                         />
+                    ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
+                          <span className="text-white text-8xl font-bold mb-2">?</span>
+                          <span className="text-white text-lg opacity-80">Chạm để xem</span>
+                        </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-center">Đoán từ này là gì?</p>
+                    </div>
+                  </div>
+
+                  {/* Word Squares Input Component */}
+                  <WordSquaresInput
+                    word={currentWord.word}
+                    userInput={userInput}
+                    setUserInput={setUserInput}
+                    checkAnswer={checkAnswer}
+                    feedback={feedback}
+                    isCorrect={isCorrect}
+                    disabled={isCorrect === true}
+                  />
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -485,11 +654,6 @@ export default function VocabularyGame() {
               src={generateImageUrl(currentWord.imageIndex)}
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full object-contain" // Thêm object-contain cho popup
-               onError={(e) => { // Thêm onError cho ảnh popup
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null; // Ngăn chặn lặp vô hạn
-                  target.src = `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; // Ảnh placeholder
-               }}
             />
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
