@@ -12,7 +12,7 @@ const optionLabels = ['A', 'B', 'C', 'D'];
 // Define streak icon URLs (assuming these are available or passed down)
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
-  streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
+  streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
   streak5: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(1).png', // 5 consecutive correct answers
   streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', // 10 consecutive correct answers
   streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', // 20 consecutive correct answers
@@ -305,6 +305,9 @@ export default function QuizApp() {
     return "";
   };
 
+  // Calculate progress for the progress bar
+  const progress = filteredQuizData.length > 0 ? ((currentQuestion + 1) / filteredQuizData.length) * 100 : 0;
+
 
   return (
     // Removed min-h-screen to allow content to dictate height
@@ -414,10 +417,21 @@ export default function QuizApp() {
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
                 <div className="flex justify-between items-center mb-6">
-                  <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
-                    {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
-                    <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
+                  {/* Replaced text with progress bar */}
+                  <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative max-w-xs">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                      style={{ width: `${progress}%` }}
+                    >
+                       {/* Light reflex effect */}
+                       <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                    </div>
+                    {/* Optional: Add text overlay for current question/total */}
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow">
+                         {currentQuestion + 1}/{filteredQuizData.length}
+                    </div>
                   </div>
+
                   <div className="flex items-center gap-2">
                     {/* Using CoinDisplay component for coins */}
                     {/* Pass coins and showScore state to CoinDisplay */}
@@ -518,13 +532,15 @@ export default function QuizApp() {
                     <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
                   </div>
 
+                  {/* Removed the old progress bar at the bottom */}
+                  {/*
                   <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
-                     {/* Sử dụng filteredQuizData.length để tính toán tiến độ */}
-                    <div
+                     <div
                       className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
                       style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
                     ></div>
                   </div>
+                  */}
                 </div>
               </div>
             </>
