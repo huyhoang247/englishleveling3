@@ -1,17 +1,7 @@
 import React from 'react';
 import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay component
 
-// Define props for QuizStats component
-interface QuizStatsProps {
-  currentQuestion: number; // Current question index (0-based)
-  totalQuestions: number; // Total number of questions
-  coins: number; // User's coin count
-  streak: number; // User's correct streak count
-  streakAnimation: boolean; // Flag for streak animation
-  showScore: boolean; // Flag to indicate if score screen is shown
-}
-
-// Define streak icon URLs (assuming these are available or passed down)
+// Define streak icon URLs
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
   streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
@@ -75,19 +65,30 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
 };
 
 
+// Define the props for the QuizStats component
+interface QuizStatsProps {
+  currentQuestion: number; // Current question index (0-based)
+  totalQuestions: number; // Total number of questions
+  coins: number; // Current number of coins
+  streak: number; // Current streak count
+  streakAnimation: boolean; // Flag to trigger streak animation
+  quizProgress: number; // Progress percentage (0-100)
+  isStatsFullscreen: boolean; // Flag to hide/show the display when stats are fullscreen (passed to CoinDisplay)
+}
+
+// QuizStats component combining question counter, coins, streak, and progress bar
 const QuizStats: React.FC<QuizStatsProps> = ({
   currentQuestion,
   totalQuestions,
   coins,
   streak,
   streakAnimation,
-  showScore,
+  quizProgress,
+  isStatsFullscreen
 }) => {
-  // Calculate quiz progress percentage
-  const quizProgress = totalQuestions > 0 ? ((currentQuestion + 1) / totalQuestions) * 100 : 0; // Use currentQuestion + 1 for display
 
-  // Hide stats when score screen is shown
-  if (showScore) {
+  // Render null if stats are in fullscreen mode (e.g., showing results)
+  if (isStatsFullscreen) {
     return null;
   }
 
@@ -99,7 +100,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({
         <div className="relative">
           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
             <div className="flex items-center">
-              {/* Current question number (1-based) */}
+              {/* Current question number */}
               <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
                 {currentQuestion + 1}
               </span>
@@ -115,8 +116,8 @@ const QuizStats: React.FC<QuizStatsProps> = ({
         {/* Coins and Streak on the right */}
         <div className="flex items-center gap-2">
           {/* Using CoinDisplay component for coins */}
-          {/* Pass coins and showScore state to CoinDisplay */}
-          <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
+          {/* Pass coins and isStatsFullscreen state to CoinDisplay */}
+          <CoinDisplay displayedCoins={coins} isStatsFullscreen={isStatsFullscreen} />
 
           {/* Using StreakDisplay component */}
           {/* Pass streak and streakAnimation state to StreakDisplay */}
@@ -125,15 +126,15 @@ const QuizStats: React.FC<QuizStatsProps> = ({
       </div>
 
       {/* Progress bar under the header row */}
-      <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
-        {/* Progress fill with smooth animation */}
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-          style={{ width: `${quizProgress}%` }}
-        >
-          {/* Light reflex effect */}
-          <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-        </div>
+      <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"> {/* Removed margin bottom, will be added by parent */}
+          {/* Progress fill with smooth animation */}
+          <div
+            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+            style={{ width: `${quizProgress}%` }}
+          >
+            {/* Light reflex effect */}
+            <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+          </div>
       </div>
     </div>
   );
