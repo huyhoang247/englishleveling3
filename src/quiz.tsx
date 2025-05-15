@@ -420,7 +420,12 @@ export default function QuizApp() {
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
                 <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
-                  {/* Removed the old question counter display */}
+                  {/* Question counter on the left */}
+                  <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
+                    {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
+                    <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
+                  </div>
+                  {/* Coins and Streak on the right */}
                   <div className="flex items-center gap-2">
                     {/* Using CoinDisplay component for coins */}
                     {/* Pass coins and showScore state to CoinDisplay */}
@@ -432,7 +437,7 @@ export default function QuizApp() {
                   </div>
                 </div>
 
-                {/* Progress bar under coins and streak */}
+                {/* Progress bar under the header (coins, streak, and question counter) */}
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
                     {/* Progress fill with smooth animation */}
                     <div
@@ -442,23 +447,7 @@ export default function QuizApp() {
                       {/* Light reflex effect */}
                       <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
                     </div>
-                     {/* Compact level counter on the progress bar */}
-                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-gray-900 bg-opacity-70 rounded-lg px-2 py-0.5 shadow-inner border border-gray-700">
-                            <div className="flex items-center">
-                                {/* Current question */}
-                                <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-                                    {currentQuestion + 1}
-                                </span>
-
-                                {/* Separator */}
-                                <span className="mx-0.5 text-gray-400 text-xs">/</span>
-
-                                {/* Total questions */}
-                                <span className="text-xs text-gray-300">{filteredQuizData.length}</span>
-                            </div>
-                        </div>
-                     </div>
+                     {/* Removed the compact level counter from the progress bar */}
                 </div>
 
                  {/* Hiển thị số câu hỏi khớp với từ vựng */}
