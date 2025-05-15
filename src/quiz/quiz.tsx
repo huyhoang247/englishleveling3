@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 // Import necessary modules from firebase.js and firestore
-import { db, auth } from './firebase'; // Import db and auth from your firebase file
+import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
