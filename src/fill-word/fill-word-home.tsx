@@ -496,29 +496,57 @@ export default function VocabularyGame() {
                     </div>
                 </div>
 
-                 {/* Removed the hint display block */}
-                {/*
+                 {/* START: Updated question display block (adapted for word game) */}
                 <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
                   <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+
+                  {/* Hiệu ứng đồ họa - đường trang trí */}
                   <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
                   <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
+
+                  {/* Icon câu hỏi (adapted for word game) */}
                   <div className="flex items-center gap-3 mb-2">
                     <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                       {/* Using a different icon for word game, e.g., a lightbulb for hint */}
                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path>
                             <path d="M9 18h6"></path>
                             <path d="M10 22h4"></path>
                         </svg>
                     </div>
-                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Gợi ý</h3>
+                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Gợi ý</h3> {/* Changed text to Gợi ý */}
                   </div>
+
+                  {/* Nội dung câu hỏi (adapted for word game - showing hint) */}
                   <h2 className="text-xl font-bold text-white leading-tight">
-                    {currentWord?.hint}
+                    {currentWord?.hint} {/* Display hint here */}
                   </h2>
                 </div>
-                */}
+                {/* END: Updated question display block */}
+
             </div>
             {/* END: New Header Structure */}
+
+            {/* Removed the old score/progress bar div */}
+            {/*
+            <div className="w-full flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-md">
+              <div className="flex items-center">
+                <span className="text-yellow-500 text-2xl mr-2">⭐</span>
+                <span className="font-bold text-gray-800">{score}/{vocabularyList.length}</span>
+              </div>
+              <div className="h-2 w-1/2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+                  style={{ width: `${(usedWords.size / vocabularyList.length) * 100}%` }}
+                ></div>
+              </div>
+              <div className="flex items-center">
+                <span className="text-gray-800 font-medium">{vocabularyList.length - usedWords.size}</span>
+                <span className="ml-1 text-gray-500">còn lại</span>
+              </div>
+            </div>
+            */}
 
             {currentWord && (
               <div className="w-full space-y-6">
@@ -536,9 +564,9 @@ export default function VocabularyGame() {
                   </div>
                 )}
 
-                {/* Image card */}
+                {/* Image card - Added mt-6 for spacing */}
                 <div
-                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
+                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group mt-6"
                   onClick={() => setShowImagePopup(true)}
                 >
                   {/* Sử dụng ảnh thật nếu có imageIndex, ngược lại dùng overlay */}
@@ -593,13 +621,10 @@ export default function VocabularyGame() {
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full object-contain" // Thêm object-contain cho popup
             />
-            {/* Removed the hint display in the popup */}
-            {/*
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
-              <p className="text-gray-800">{currentWord.hint}</p>
+              <p className="text-gray-800">{currentWord.hint}</p> {/* Sử dụng hint đã tạo */}
             </div>
-            */}
           </div>
         </div>
       )}
