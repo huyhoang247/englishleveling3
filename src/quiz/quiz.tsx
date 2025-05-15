@@ -400,31 +400,39 @@ export default function QuizApp() {
 
                 {/* START: Updated question display block */}
                 {/* This block remains in quiz.tsx as it's specific to the current question */}
-                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
-                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
-                  <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+                {/* Added conditional rendering to check if question data exists */}
+                {filteredQuizData[currentQuestion]?.question ? (
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                    {/* Hiệu ứng đồ họa - ánh sáng góc */}
+                    <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
 
-                  {/* Hiệu ứng đồ họa - đường trang trí */}
-                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
-                  <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
+                    {/* Hiệu ứng đồ họa - đường trang trí */}
+                    <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
+                    <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
 
-                  {/* Icon câu hỏi */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
+                    {/* Icon câu hỏi */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                      </div>
+                      <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
                     </div>
-                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
-                  </div>
 
-                  {/* Nội dung câu hỏi */}
-                  <h2 className="text-xl font-bold text-white leading-tight">
-                    {filteredQuizData[currentQuestion]?.question}
-                  </h2>
-                </div>
+                    {/* Nội dung câu hỏi */}
+                    <h2 className="text-xl font-bold text-white leading-tight">
+                      {filteredQuizData[currentQuestion].question} {/* Access directly now that we've checked */}
+                    </h2>
+                  </div>
+                ) : (
+                   // Display a loading or error message if question data is missing
+                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 text-white text-center">
+                       Đang tải câu hỏi hoặc không tìm thấy dữ liệu câu hỏi.
+                   </div>
+                )}
                 {/* END: Updated question display block */}
 
 
