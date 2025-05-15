@@ -3,16 +3,19 @@ import { useState, useEffect } from 'react';
 import { db, auth } from './firebase'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
+// Import the new QuizStats component
+import QuizStats from './quiz-stats.tsx';
+
+// Keep CoinDisplay and StreakDisplay for the results screen
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 import quizData from './quiz-data.ts'; // Import quizData from the new file
-// Import GameProgressBar component (assuming its structure is suitable for adaptation)
-// We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
-// import GameProgressBar from './progress-bar.tsx';
+
 
 // Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
 
 // Define streak icon URLs (assuming these are available or passed down)
+// Keeping this here for use in the results screen
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
   streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
@@ -22,6 +25,7 @@ const streakIconUrls = {
 };
 
 // Function to get the correct streak icon URL based on streak count
+// Keeping this here for use in the results screen
 const getStreakIconUrl = (streak: number) => {
   if (streak >= 20) return streakIconUrls.streak20;
   if (streak >= 10) return streakIconUrls.streak10;
@@ -30,7 +34,8 @@ const getStreakIconUrl = (streak: number) => {
   return streakIconUrls.default;
 };
 
-// StreakDisplay component (Integrated)
+
+// StreakDisplay component (Integrated) - Keeping this for results screen
 interface StreakDisplayProps {
   displayedStreak: number; // The number of streak to display
   isAnimating: boolean; // Flag to trigger animation
@@ -308,9 +313,6 @@ export default function QuizApp() {
     return "";
   };
 
-  // Calculate quiz progress percentage
-  const quizProgress = filteredQuizData.length > 0 ? (currentQuestion / filteredQuizData.length) * 100 : 0;
-
 
   return (
     // Removed min-h-screen to allow content to dictate height
@@ -360,9 +362,14 @@ export default function QuizApp() {
                   <div className="flex items-center">
                      {/* Display streak icon in results - Using img tag directly */}
                      <img
-                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                       alt="Streak Icon"
+                       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/coin.png" // Coin icon URL
+                       alt="Coin Icon"
                        className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
+                       onError={(e) => {
+                          // Fallback if the image fails to load
+                          e.currentTarget.onerror = null; // Prevent infinite loop
+                          e.currentTarget.src = 'https://placehold.co/20x20/FFD700/000000?text=C'; // Placeholder
+                        }}
                      />
                     <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Corrected text */}
                   </div>
@@ -380,6 +387,11 @@ export default function QuizApp() {
                         src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                         alt="Streak Icon"
                         className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
+                        onError={(e) => {
+                          // Fallback if the image fails to load
+                          e.currentTarget.onerror = null; // Prevent infinite loop
+                          e.currentTarget.src = 'https://placehold.co/24x24/FF4500/FFFFFF?text=🔥'; // Placeholder
+                        }}
                       />
                       <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
                     </div>
@@ -419,48 +431,15 @@ export default function QuizApp() {
           ) : (
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-                {/* Header row with question counter on the left and coins/streak on the right */}
-                <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
-                  {/* Question counter on the left - Styled like progress-bar.tsx counter */}
-                  <div className="relative">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
-                      <div className="flex items-center">
-                        {/* Current question number */}
-                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
-                          {currentQuestion + 1}
-                        </span>
-
-                        {/* Separator */}
-                        <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
-
-                        {/* Total questions */}
-                        <span className="text-xs text-white/50">{filteredQuizData.length}</span> {/* Adjusted color */}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Coins and Streak on the right */}
-                  <div className="flex items-center gap-2">
-                    {/* Using CoinDisplay component for coins */}
-                    {/* Pass coins and showScore state to CoinDisplay */}
-                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
-
-                    {/* Using StreakDisplay component */}
-                    {/* Pass streak and streakAnimation state to StreakDisplay */}
-                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
-                  </div>
-                </div>
-
-                {/* Progress bar under the header row */}
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
-                    {/* Progress fill with smooth animation */}
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: `${quizProgress}%` }}
-                    >
-                      {/* Light reflex effect */}
-                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-                    </div>
-                </div>
+                {/* Use the new QuizStats component here */}
+                <QuizStats
+                  currentQuestion={currentQuestion}
+                  totalQuestions={filteredQuizData.length}
+                  coins={coins}
+                  streak={streak}
+                  streakAnimation={streakAnimation}
+                  coinAnimation={coinAnimation}
+                />
 
                  {/* Removed the display of matching questions count */}
                  {/*
@@ -508,6 +487,11 @@ export default function QuizApp() {
                          src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                          alt="Streak Icon"
                          className="h-5 w-5 mr-2 text-white" // Adjust size as needed
+                         onError={(e) => {
+                            // Fallback if the image fails to load
+                            e.currentTarget.onerror = null; // Prevent infinite loop
+                            e.currentTarget.src = 'https://placehold.co/20x20/FF4500/FFFFFF?text=🔥'; // Placeholder
+                          }}
                        />
                       <span className="text-white font-medium">{getStreakText()}</span>
                     </div>
@@ -570,25 +554,6 @@ export default function QuizApp() {
                   </div>
                 )}
               </div>
-
-              {/* Removed the old progress bar at the bottom */}
-              {/*
-              <div className="bg-gray-50 px-8 py-4 border-t">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
-                  </div>
-
-                  <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
-                     {/* Use filteredQuizData.length for progress calculation *
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                      style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-              */}
             </>
           )
         )}
