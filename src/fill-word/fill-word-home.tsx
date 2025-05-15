@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
 // Import các module cần thiết từ firebase.js và firestore
 import { db, auth } from '../firebase.js'; // Import db và auth
-import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
+import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Import doc, getDoc, updateDoc
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
 import { defaultImageUrls } from '../image-url.ts';
 
 // Import component Confetti đã tách ra
 import Confetti from './chuc-mung.tsx'; // Import component Confetti
+
+// Import component QuizStats để hiển thị thông tin game
+import QuizStats from './quiz-stats.tsx'; // Import QuizStats component
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
@@ -25,7 +28,7 @@ export default function VocabularyGame() {
   const [error, setError] = useState<string | null>(null);
   // State để lưu thông tin người dùng đã đăng nhập
   const [user, setUser] = useState<User | null>(null);
-  // State để lưu trữ mảng openedImageIds từ Firestore
+  // State để lưu trữ mảng openedImageIds từ Firestore (hiện tại không dùng trực tiếp ở đây nhưng giữ lại)
   const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
 
 
@@ -33,12 +36,19 @@ export default function VocabularyGame() {
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useState(0); // Số từ đoán đúng
   // Sử dụng Set để quản lý các từ đã dùng hiệu quả hơn
-  const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
+  const [usedWords, setUsedWords] = useState<Set<string>>(new Set()); // Số từ đã thử đoán (đúng hoặc sai)
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false); // State để điều khiển hiển thị Confetti
+
+  // State mới cho Coins và Streak, Streak Animation, Coin Animation
+  const [coins, setCoins] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [streakAnimation, setStreakAnimation] = useState(false);
+  const [coinAnimation, setCoinAnimation] = useState(false);
+
 
   // Lắng nghe trạng thái xác thực người dùng
   useEffect(() => {
@@ -58,6 +68,7 @@ export default function VocabularyGame() {
         setLoading(false);
         setVocabularyList([]); // Đặt danh sách trống nếu không có user
         setOpenedImageIds([]); // Đặt danh sách ảnh trống
+        setCoins(0); // Reset coins nếu không có user
         setError("Vui lòng đăng nhập để chơi.");
         return;
       }
@@ -74,6 +85,7 @@ export default function VocabularyGame() {
           const userData = docSnap.data();
           let fetchedVocabulary: VocabularyItem[] = [];
           let fetchedImageIds: number[] = [];
+          let fetchedCoins = 0; // Biến tạm để lưu coins
 
           // Lấy danh sách từ vựng
           if (userData && Array.isArray(userData.listVocabulary)) {
@@ -110,6 +122,17 @@ export default function VocabularyGame() {
             setOpenedImageIds([]); // Đặt mảng rỗng nếu không có
           }
 
+          // Lấy số lượng coins
+          if (userData && typeof userData.coins === 'number') {
+              fetchedCoins = userData.coins;
+              console.log("Fetched coins:", fetchedCoins);
+              setCoins(fetchedCoins); // Cập nhật state coins
+          } else {
+              console.log("User document does not contain coins or it's not a number. Defaulting to 0.");
+              setCoins(0); // Mặc định 0 coins nếu không có hoặc sai định dạng
+          }
+
+
           // Kết hợp danh sách từ vựng với chỉ mục ảnh tương ứng
           // Giả định rằng thứ tự trong listVocabulary tương ứng với thứ tự trong openedImageIds
           const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
@@ -117,7 +140,7 @@ export default function VocabularyGame() {
               // Kiểm tra xem chỉ mục ảnh có hợp lệ trong mảng defaultImageUrls không
               // Điều chỉnh index ở đây nếu cần thiết, ví dụ: imageIndex - 1 nếu ID là 1-based
               // const adjustedImageIndex = imageIndex !== undefined ? imageIndex - 1 : undefined; // Ví dụ điều chỉnh
-              const isValidImageIndex = imageIndex !== undefined && imageIndex >= 0 && imageIndex < defaultImageUrls.length; // Kiểm tra tính hợp lệ sau khi điều chỉnh (nếu có)
+              const isValidImageIndex = imageIndex !== undefined && imageIndex !== null && imageIndex >= 0 && imageIndex < defaultImageUrls.length; // Kiểm tra tính hợp lệ sau khi điều chỉnh (nếu có)
               return {
                   ...item,
                   // Chỉ thêm imageIndex nếu nó hợp lệ
@@ -132,6 +155,7 @@ export default function VocabularyGame() {
           console.log("User document does not exist.");
           setVocabularyList([]); // Đặt danh sách trống nếu document không tồn tại
           setOpenedImageIds([]);
+          setCoins(0); // Reset coins
           setError("Không tìm thấy dữ liệu người dùng.");
         }
 
@@ -152,6 +176,7 @@ export default function VocabularyGame() {
        setLoading(false);
        setVocabularyList([]);
        setOpenedImageIds([]);
+       setCoins(0); // Reset coins
        setError("Vui lòng đăng nhập để chơi.");
     }
 
@@ -168,6 +193,20 @@ export default function VocabularyGame() {
        setGameOver(false); // Đảm bảo không phải trạng thái game over (chỉ là không có từ để chơi)
     }
   }, [vocabularyList, loading, error]); // Chạy khi vocabularyList, loading hoặc error thay đổi
+
+   // Function to update coins in Firestore
+  const updateCoinsInFirestore = async (newCoins: number) => {
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      try {
+        await updateDoc(userRef, { coins: newCoins });
+        console.log("Coins updated successfully in Firestore!");
+      } catch (error) {
+        console.error("Error updating coins in Firestore:", error);
+      }
+    }
+  };
+
 
   // Select a random word that hasn't been used yet
   const selectRandomWord = () => {
@@ -190,12 +229,44 @@ export default function VocabularyGame() {
   const checkAnswer = () => {
     if (!currentWord || !userInput.trim()) return; // Kiểm tra từ hiện tại và input không rỗng
 
+    // Thêm từ vào danh sách đã dùng ngay khi người dùng nhấn check
+    setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
+
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setFeedback('Chính xác!'); // Feedback khi đúng
       setIsCorrect(true); // Đặt trạng thái đúng
-      setScore(score + 1); // Tăng điểm
-      // Thêm từ đã dùng vào Set
-      setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
+      setScore(score + 1); // Tăng điểm số từ đúng
+
+       // Logic tính coins và streak
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+
+      let coinsToAdd = 0;
+      if (newStreak >= 20) {
+        coinsToAdd = 20;
+      } else if (newStreak >= 10) {
+        coinsToAdd = 15;
+      } else if (newStreak >= 5) {
+        coinsToAdd = 10;
+      } else if (newStreak >= 3) {
+        coinsToAdd = 5;
+      } else if (newStreak >= 1) {
+        coinsToAdd = 1;
+      }
+
+      if (coinsToAdd > 0) {
+        const totalCoins = coins + coinsToAdd;
+        setCoins(totalCoins);
+        updateCoinsInFirestore(totalCoins); // Cập nhật coins trong Firestore
+        setCoinAnimation(true);
+        setTimeout(() => setCoinAnimation(false), 1500);
+      }
+
+      if (newStreak >= 1) {
+         setStreakAnimation(true);
+         setTimeout(() => setStreakAnimation(false), 1500);
+      }
+
       setShowConfetti(true); // Hiển thị hiệu ứng confetti
 
       // Ẩn confetti sau 2 giây
@@ -211,6 +282,7 @@ export default function VocabularyGame() {
       // Feedback khi sai, hiển thị từ đúng
       setFeedback(`Không đúng, hãy thử lại! Từ đúng là: ${currentWord.word}`);
       setIsCorrect(false); // Đặt trạng thái sai
+      setStreak(0); // Reset streak khi sai
     }
   };
 
@@ -244,15 +316,17 @@ export default function VocabularyGame() {
     setUsedWords(new Set()); // Đặt lại danh sách từ đã dùng
     setScore(0); // Đặt lại điểm
     setGameOver(false); // Đặt lại trạng thái kết thúc trò chơi
+    setStreak(0); // Reset streak
+    // Coins không reset khi chơi lại
     selectRandomWord(); // Bắt đầu lại với từ ngẫu nhiên
   };
 
-  // Submit form on Enter key
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      checkAnswer(); // Gọi checkAnswer khi nhấn Enter
-    }
-  };
+  // Submit form on Enter key (đã được xử lý trong WordSquaresInput)
+  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === 'Enter') {
+  //     checkAnswer(); // Gọi checkAnswer khi nhấn Enter
+  //   }
+  // };
 
   // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
@@ -282,7 +356,8 @@ export default function VocabularyGame() {
 
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
+    // Đã bỏ min-h-screen để nội dung tự điều chỉnh chiều cao
+    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans rounded-lg"> {/* Thêm rounded-lg */}
       {/* Sử dụng component Confetti */}
       {showConfetti && <Confetti />}
 
@@ -291,13 +366,41 @@ export default function VocabularyGame() {
           <div className="text-center py-8 w-full">
             <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
               <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
+              {/* Hiển thị điểm số từ đúng / tổng số từ */}
               <p className="text-xl mb-4">Điểm của bạn: <span className="font-bold text-indigo-600">{score}/{vocabularyList.length}</span></p>
+               {/* Hiển thị tổng số từ đã thử / tổng số từ */}
+              <p className="text-lg mb-4 text-gray-700">Đã thử: <span className="font-bold text-gray-900">{usedWords.size}/{vocabularyList.length}</span></p>
+
               <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                  style={{ width: `${(score / vocabularyList.length) * 100}%` }}
+                  // Thanh tiến trình dựa trên số từ đã thử
+                  style={{ width: `${(usedWords.size / vocabularyList.length) * 100}%` }}
                 ></div>
               </div>
+               {/* Hiển thị coins và streak cuối cùng */}
+               <div className="flex justify-center items-center gap-4 mt-6">
+                   {/* Coin Display */}
+                   <div className="flex items-center bg-yellow-100 rounded-full px-4 py-2 shadow-inner">
+                       <img
+                           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/coin.png"
+                           alt="Coin Icon"
+                           className="w-5 h-5 mr-2"
+                           onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/20x20/FFD700/000000?text=C'; }}
+                       />
+                       <span className="font-bold text-yellow-800 text-lg">{coins}</span>
+                   </div>
+                   {/* Streak Display */}
+                    <div className="flex items-center bg-orange-100 rounded-full px-4 py-2 shadow-inner">
+                       <img
+                           src={`https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire${streak >= 20 ? ' (4)' : streak >= 10 ? ' (3)' : streak >= 5 ? ' (1)' : streak >= 1 ? ' (2)' : ''}.png`}
+                           alt="Streak Icon"
+                           className="w-5 h-5 mr-2"
+                           onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/20x20/FF4500/FFFFFF?text=🔥'; }}
+                       />
+                       <span className="font-bold text-orange-800 text-lg">{streak}</span>
+                   </div>
+               </div>
             </div>
             <button
               onClick={resetGame}
@@ -309,22 +412,16 @@ export default function VocabularyGame() {
           </div>
         ) : (
           <>
-            <div className="w-full flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-md">
-              <div className="flex items-center">
-                <span className="text-yellow-500 text-2xl mr-2">⭐</span>
-                <span className="font-bold text-gray-800">{score}/{vocabularyList.length}</span>
-              </div>
-              <div className="h-2 w-1/2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                  style={{ width: `${(usedWords.size / vocabularyList.length) * 100}%` }}
-                ></div>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-800 font-medium">{vocabularyList.length - usedWords.size}</span>
-                <span className="ml-1 text-gray-500">còn lại</span>
-              </div>
-            </div>
+            {/* Sử dụng component QuizStats */}
+            {/* currentQuestion sẽ là số từ đã dùng, totalQuestions là tổng số từ */}
+            <QuizStats
+              currentQuestion={usedWords.size} // Số từ đã thử
+              totalQuestions={vocabularyList.length} // Tổng số từ
+              coins={coins}
+              streak={streak}
+              streakAnimation={streakAnimation}
+              coinAnimation={coinAnimation}
+            />
 
             {currentWord && (
               <div className="w-full space-y-6">
@@ -339,6 +436,11 @@ export default function VocabularyGame() {
                            src={generateImageUrl(currentWord.imageIndex)}
                            alt={currentWord.word}
                            className="w-full h-full object-contain" // Đã thay đổi từ object-cover sang object-contain
+                           onError={(e) => { // Thêm onError cho ảnh
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null; // Ngăn chặn lặp vô hạn
+                              target.src = `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; // Ảnh placeholder
+                           }}
                        />
                   ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
@@ -357,10 +459,9 @@ export default function VocabularyGame() {
                   userInput={userInput}
                   setUserInput={setUserInput}
                   checkAnswer={checkAnswer}
-                  // handleKeyPress={handleKeyPress} // Đã bỏ handleKeyPress ở đây vì nó được xử lý trong WordSquaresInput
                   feedback={feedback}
                   isCorrect={isCorrect}
-                  disabled={isCorrect === true}
+                  disabled={isCorrect === true} // Vô hiệu hóa input sau khi trả lời đúng
                 />
               </div>
             )}
@@ -384,6 +485,11 @@ export default function VocabularyGame() {
               src={generateImageUrl(currentWord.imageIndex)}
               alt={currentWord.word}
               className="rounded-lg shadow-md max-w-full max-h-full object-contain" // Thêm object-contain cho popup
+               onError={(e) => { // Thêm onError cho ảnh popup
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; // Ngăn chặn lặp vô hạn
+                  target.src = `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; // Ảnh placeholder
+               }}
             />
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
               <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
