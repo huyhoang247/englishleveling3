@@ -3,10 +3,83 @@ import { useState, useEffect } from 'react';
 import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
-// Import the new QuizStats component
-import QuizStats from './quiz-stats.tsx';
-
+import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import quizData from './quiz-data.ts'; // Import quizData from the new file
+// Import GameProgressBar component (assuming its structure is suitable for adaptation)
+// We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
+// import GameProgressBar from './progress-bar.tsx';
+
+// Map options to A, B, C, D
+const optionLabels = ['A', 'B', 'C', 'D'];
+
+// Define streak icon URLs (assuming these are available or passed down)
+const streakIconUrls = {
+  default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
+  streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
+  streak5: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(1).png', // 5 consecutive correct answers
+  streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', // 10 consecutive correct answers
+  streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', // 20 consecutive correct answers
+};
+
+// Function to get the correct streak icon URL based on streak count
+const getStreakIconUrl = (streak: number) => {
+  if (streak >= 20) return streakIconUrls.streak20;
+  if (streak >= 10) return streakIconUrls.streak10;
+  if (streak >= 5) return streakIconUrls.streak5;
+  if (streak >= 1) return streakIconUrls.streak1;
+  return streakIconUrls.default;
+};
+
+// StreakDisplay component (Integrated)
+interface StreakDisplayProps {
+  displayedStreak: number; // The number of streak to display
+  isAnimating: boolean; // Flag to trigger animation
+}
+
+const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => {
+  return (
+    // Streak Container - Adjusted vertical padding (py-0.5)
+    <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
+       {/* Add necessary styles for animations used here */}
+      <style jsx>{`
+         @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-fast {
+            animation: pulse-fast 1s infinite;
+        }
+      `}</style>
+      {/* Background highlight effect - adjusted for grey scale */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+
+      {/* Streak Icon */}
+      <div className="relative flex items-center justify-center">
+        <img
+          src={getStreakIconUrl(displayedStreak)}
+          alt="Streak Icon"
+          className="w-4 h-4" // Icon size is w-4 h-4
+          // Add onerror if needed, similar to CoinDisplay
+        />
+      </div>
+
+      {/* Streak Count - adjusted text color for contrast on grey background */}
+      <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter ml-1"> {/* Added ml-1 for spacing */}
+        {displayedStreak}
+      </div>
+
+       {/* Optional: Add a small decorative element like the plus button in CoinDisplay */}
+       {/* <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-orange-400 to-red-600 rounded-full flex items-center justify-center cursor-pointer border border-red-300 shadow-inner hover:shadow-red-300/50 hover:scale-110 transition-all duration-200">
+         <span className="text-white font-bold text-xs">🔥</span>
+       </div> */}
+
+       {/* Small pulsing dots - kept white/yellow as they contrast well */}
+      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+    </div>
+  );
+};
+
 
 // SVG Icons (Replaced lucide-react icons)
 const CheckIcon = ({ className }) => (
@@ -56,7 +129,7 @@ export default function QuizApp() {
   const [coins, setCoins] = useState(0);
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
-  const [coinAnimation, setCoinAnimation] = useState(false); // Kept coinAnimation for potential future use or if CoinDisplay uses it internally
+  const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null); // State to store user information
   // State to store shuffled options for the current question
   const [shuffledOptions, setShuffledOptions] = useState([]);
@@ -64,7 +137,7 @@ export default function QuizApp() {
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
   // State to store the filtered question list based on user vocabulary
   const [filteredQuizData, setFilteredQuizData] = useState(quizData);
-  // State to count the number of questions matching user vocabulary - Kept for results screen
+  // State to count the number of questions matching user vocabulary
   const [matchingQuestionsCount, setMatchingQuestionsCount] = useState(0);
 
 
@@ -184,7 +257,7 @@ export default function QuizApp() {
         const totalCoins = coins + coinsToAdd;
         setCoins(totalCoins);
         updateCoinsInFirestore(totalCoins); // Update coins in Firestore
-        setCoinAnimation(true); // Still useful if CoinDisplay uses it
+        setCoinAnimation(true);
         setTimeout(() => setCoinAnimation(false), 1500);
       }
 
@@ -235,7 +308,7 @@ export default function QuizApp() {
     return "";
   };
 
-  // Calculate quiz progress percentage - Pass this to QuizStats
+  // Calculate quiz progress percentage
   const quizProgress = filteredQuizData.length > 0 ? (currentQuestion / filteredQuizData.length) * 100 : 0;
 
 
@@ -287,7 +360,7 @@ export default function QuizApp() {
                   <div className="flex items-center">
                      {/* Display streak icon in results - Using img tag directly */}
                      <img
-                       src={`https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png`} // Use a generic fire icon here for results
+                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                        alt="Streak Icon"
                        className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
                      />
@@ -295,9 +368,7 @@ export default function QuizApp() {
                   </div>
                    {/* Pass coins to CoinDisplay */}
                   {/* Display total user coins from state */}
-                  {/* Pass isStatsFullscreen={true} to hide CoinDisplay in results */}
-                  {/* Display coins directly here as CoinDisplay is hidden */}
-                   <span className="font-bold text-amber-600">{coins}</span>
+                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Always display coins here */}
                 </div>
 
                 {/* Using StreakDisplay component for streak in results */}
@@ -306,14 +377,14 @@ export default function QuizApp() {
                     <div className="flex items-center">
                       {/* Display streak icon in results - Using img tag directly */}
                        <img
-                        src={`https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png`} // Use a generic fire icon here for results
+                        src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                         alt="Streak Icon"
                         className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
                       />
                       <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
                     </div>
-                     {/* Display streak directly here as StreakDisplay is hidden */}
-                    <span className="font-bold text-orange-600">{streak}</span>
+                     {/* Pass streak to StreakDisplay, no animation in results */}
+                    <StreakDisplay displayedStreak={streak} isAnimating={false} />
                   </div>
                 </div>
 
@@ -347,53 +418,94 @@ export default function QuizApp() {
             </div>
           ) : (
             <>
-              {/* Use the new QuizStats component here */}
-              <QuizStats
-                currentQuestion={currentQuestion}
-                totalQuestions={filteredQuizData.length}
-                coins={coins}
-                streak={streak}
-                streakAnimation={streakAnimation}
-                quizProgress={quizProgress}
-                isStatsFullscreen={showScore} // Pass showScore to hide stats when results are shown
-              />
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+                {/* Header row with question counter on the left and coins/streak on the right */}
+                <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
+                  {/* Question counter on the left - Styled like progress-bar.tsx counter */}
+                  <div className="relative">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
+                      <div className="flex items-center">
+                        {/* Current question number */}
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
+                          {currentQuestion + 1}
+                        </span>
 
-              {/* START: Updated question display block - Kept this block in quiz.tsx */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-6 mx-6 -mt-10"> {/* Added margin and negative top margin to overlap with stats header */}
-                {/* Hiệu ứng đồ họa - ánh sáng góc */}
-                <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+                        {/* Separator */}
+                        <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
 
-                {/* Hiệu ứng đồ họa - đường trang trí */}
-                <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
-                <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
-
-                {/* Icon câu hỏi */}
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-indigo-500/30 p-1.5 rounded-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
+                        {/* Total questions */}
+                        <span className="text-xs text-white/50">{filteredQuizData.length}</span> {/* Adjusted color */}
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
+                  {/* Coins and Streak on the right */}
+                  <div className="flex items-center gap-2">
+                    {/* Using CoinDisplay component for coins */}
+                    {/* Pass coins and showScore state to CoinDisplay */}
+                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
+
+                    {/* Using StreakDisplay component */}
+                    {/* Pass streak and streakAnimation state to StreakDisplay */}
+                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+                  </div>
                 </div>
 
-                {/* Nội dung câu hỏi */}
-                <h2 className="text-xl font-bold text-white leading-tight">
-                  {filteredQuizData[currentQuestion]?.question}
-                </h2>
+                {/* Progress bar under the header row */}
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
+                    {/* Progress fill with smooth animation */}
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                      style={{ width: `${quizProgress}%` }}
+                    >
+                      {/* Light reflex effect */}
+                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                    </div>
+                </div>
+
+                 {/* Removed the display of matching questions count */}
+                 {/*
+                 <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
+                   {matchingQuestionsCount} câu hỏi khớp
+                 </div>
+                 */}
+                {/* START: Updated question display block */}
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
+                  <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+
+                  {/* Hiệu ứng đồ họa - đường trang trí */}
+                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
+                  <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
+
+                  {/* Icon câu hỏi */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                    </div>
+                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
+                  </div>
+
+                  {/* Nội dung câu hỏi */}
+                  <h2 className="text-xl font-bold text-white leading-tight">
+                    {filteredQuizData[currentQuestion]?.question}
+                  </h2>
+                </div>
+                {/* END: Updated question display block */}
+
+
               </div>
-              {/* END: Updated question display block */}
 
-
-              <div className="p-6 pt-0"> {/* Adjusted top padding */}
+              <div className="p-6">
                 {/* Streak text message */}
                 {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
                   <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
                     <div className="flex items-center justify-center">
                        <img
-                         src={`https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png`} // Use a generic fire icon here
+                         src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
                          alt="Streak Icon"
                          className="h-5 w-5 mr-2 text-white" // Adjust size as needed
                        />
@@ -403,7 +515,7 @@ export default function QuizApp() {
                 )}
 
                 <div className="space-y-3 mb-6">
-                  {/* Map over shuffledOptions instead of filteredQuizData[currentQuestion].options */}
+                  {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
                   {/* Use filteredQuizData to get the correct answer */}
                   {shuffledOptions.map((option, index) => {
                     const isCorrect = option === filteredQuizData[currentQuestion]?.correctAnswer;
@@ -436,7 +548,7 @@ export default function QuizApp() {
                       >
                         <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
                           {/* Keep original index for labels A, B, C, D */}
-                          {['A', 'B', 'C', 'D'][index]}
+                          {optionLabels[index]}
                         </div>
                         <span className="flex-grow">{option}</span>
                         {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
@@ -458,6 +570,25 @@ export default function QuizApp() {
                   </div>
                 )}
               </div>
+
+              {/* Removed the old progress bar at the bottom */}
+              {/*
+              <div className="bg-gray-50 px-8 py-4 border-t">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
+                  </div>
+
+                  <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                     {/* Use filteredQuizData.length for progress calculation *
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                      style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              */}
             </>
           )
         )}
