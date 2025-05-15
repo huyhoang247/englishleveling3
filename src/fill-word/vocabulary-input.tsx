@@ -140,8 +140,9 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         ))}
       </div>
 
-      {/* Hộp hiển thị từ - Luôn hiển thị để giữ khoảng cách */}
-      <div className="flex justify-center w-full min-h-[2.5rem]"> {/* Added min-h to ensure space */}
+      {/* Hộp hiển thị từ - Luôn hiển thị container để giữ khoảng cách */}
+      {/* Đảm bảo container này có chiều cao tối thiểu và padding để giữ không gian */}
+      <div className="flex justify-center w-full min-h-[2.5rem] py-2"> {/* Added py-2 for consistent vertical padding */}
           {/* Chỉ hiển thị từ khi có input */}
           {userInput.length > 0 && (
             <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
