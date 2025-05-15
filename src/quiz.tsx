@@ -49,6 +49,9 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         .animate-pulse-fast {
             animation: pulse-fast 1s infinite;
         }
+        .text-shadow-sm {
+          text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
       `}</style>
       {/* Background highlight effect - adjusted for grey scale */}
       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
@@ -468,10 +471,27 @@ export default function QuizApp() {
                    {matchingQuestionsCount} câu hỏi khớp
                  </div>
                  */}
-                <h2 className="text-2xl font-bold mb-2">
-                  {/* Use filteredQuizData to get the current question */}
-                  {filteredQuizData[currentQuestion]?.question}
-                </h2>
+                {/* Question container with enhanced styling */}
+<div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-2 border border-white/30 shadow-inner">
+  {/* Question number badge */}
+  <div className="absolute -top-2.5 -left-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md border border-indigo-600">
+    Q{currentQuestion + 1}
+  </div>
+
+  {/* Question text with enhanced typography */}
+  <h2 className="text-2xl font-bold pl-6 pr-2 py-2 text-white text-shadow-sm leading-relaxed">
+    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-100 drop-shadow-md">
+      {filteredQuizData[currentQuestion]?.question}
+    </span>
+  </h2>
+
+  {/* Decorative elements */}
+  <div className="absolute bottom-0 right-0 w-24 h-24 opacity-10">
+    <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2zm0-10h2v8h-2z"/>
+    </svg>
+  </div>
+</div>
 
 
               </div>
@@ -573,3 +593,4 @@ export default function QuizApp() {
     </div>
   );
 }
+
