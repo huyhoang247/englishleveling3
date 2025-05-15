@@ -10,7 +10,7 @@ import { defaultImageUrls } from '../image-url.ts';
 import Confetti from './chuc-mung.tsx'; // Import component Confetti
 
 // Import component QuizStats để hiển thị thông tin game
-import QuizStats from './quiz-stats.tsx'; // Import QuizStats component
+import QuizStats from '../quiz-stats.tsx'; // Import QuizStats component
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
