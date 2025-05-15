@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import VirtualKeyboard from './keyboard.tsx'; // Import component bàn phím ảo
+import VirtualKeyboard from './keybogard.tsx'; // Import component bàn phím ảo
 
 interface WordSquaresInputProps {
   word: string | null;
