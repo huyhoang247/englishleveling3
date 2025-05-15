@@ -11,7 +11,7 @@ import Confetti from './chuc-mung.tsx'; // Import component Confetti
 
 // Import CoinDisplay và StreakDisplay từ quiz.tsx
 import CoinDisplay from '../coin-display.tsx';
-import { getStreakIconUrl, streakIconUrls } from './quiz.tsx'; // Import các hàm và biến liên quan đến streak từ quiz.tsx
+import { getStreakIconUrl, streakIconUrls } from '../quiz.tsx'; // Import các hàm và biến liên quan đến streak từ quiz.tsx
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
