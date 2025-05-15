@@ -462,10 +462,12 @@ export default function QuizApp() {
                     </div>
                 </div>
 
-                 {/* Display number of matching questions */}
+                 {/* Removed the display of matching questions count */}
+                 {/*
                  <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
                    {matchingQuestionsCount} câu hỏi khớp
                  </div>
+                 */}
                 <h2 className="text-2xl font-bold mb-2">
                   {/* Use filteredQuizData to get the current question */}
                   {filteredQuizData[currentQuestion]?.question}
