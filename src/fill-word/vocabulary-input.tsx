@@ -6,7 +6,7 @@ interface WordSquaresInputProps {
   userInput: string;
   setUserInput: (value: string) => void;
   checkAnswer: () => void;
-  handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void; // Giữ lại prop này phòng trường hợp cần xử lý bàn phím vật lý
+  // handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void; // Prop này không còn cần thiết cho input từ bàn phím ảo
   feedback: string;
   isCorrect: boolean | null;
   disabled: boolean;
@@ -17,7 +17,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   userInput,
   setUserInput,
   checkAnswer,
-  handleKeyPress, // Vẫn giữ prop này
+  // handleKeyPress, // Không sử dụng nữa
   feedback,
   isCorrect,
   disabled,
@@ -34,12 +34,10 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     squares[i] = characters[i];
   }
 
-  // Tham chiếu đến phần tử input ẩn.
-  // Input này sẽ được cấu hình để không nhận focus trên thiết bị di động,
-  // ngăn chặn bàn phím ảo của hệ điều hành xuất hiện.
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  // Tham chiếu đến phần tử input ẩn không còn cần thiết cho input từ bàn phím ảo.
+  // const hiddenInputRef = useRef<HTMLInputElement>(null); // Không sử dụng nữa
 
-  // Xử lý khi nhấp vào một ô vuông (để xóa ký tự)
+  // Xử lý khi nhấp vào một ô vuông (để xóa ký tự tại vị trí đó)
   const handleSquareClick = (index: number) => {
     if (disabled) return;
 
@@ -51,16 +49,14 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     }
   };
 
-  // Hàm này có thể không còn cần thiết cho input từ bàn phím ảo,
-  // nhưng giữ lại phòng trường hợp cần xử lý input từ bàn phím vật lý trên desktop
-  // hoặc xử lý dán văn bản.
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Chỉ cập nhật input nếu giá trị mới ngắn hơn hoặc bằng độ dài từ
-    if (value.length <= wordLength) {
-      setUserInput(value);
-    }
-  };
+  // Hàm này không còn cần thiết vì input được xử lý bởi bàn phím ảo
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = e.target.value;
+  //   // Chỉ cập nhật input nếu giá trị mới ngắn hơn hoặc bằng độ dài từ
+  //   if (value.length <= wordLength) {
+  //     setUserInput(value);
+  //   }
+  // };
 
   // Định nghĩa các keyframe animation tùy chỉnh
   useEffect(() => {
@@ -113,13 +109,16 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   // Lấy animation phù hợp cho từng ô chữ cái
   const getSquareAnimation = (index: number) => {
+    // Animation nhấp nháy cho ô trống tiếp theo khi game chưa kết thúc và chưa trả lời đúng
     if (index === userInput.length && !disabled && isCorrect === null) {
       return 'animate-pulse';
     }
+    // Animation pop khi trả lời đúng
     if (isCorrect === true) {
       const delays = ['animate-pop delay-0', 'animate-pop delay-100', 'animate-pop delay-200', 'animate-pop delay-300', 'animate-pop delay-400'];
       return delays[index % delays.length];
     }
+    // Animation lắc khi trả lời sai
     if (isCorrect === false) {
       return 'animate-shake';
     }
@@ -135,69 +134,68 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      {/* Trường input ẩn. Đặt readOnly và tabIndex="-1" để ngăn focus và nhập liệu
-          trên thiết bị di động, từ đó ngăn bàn phím ảo của hệ điều hành xuất hiện.
-          Loại bỏ autoFocus. */}
-      <input
+      {/* Trường input ẩn không còn cần thiết */}
+      {/* <input
         ref={hiddenInputRef}
         type="text"
         value={userInput}
-        onChange={handleInputChange} // Vẫn giữ onChange để xử lý input từ bàn phím vật lý nếu có
-        onKeyPress={handleKeyPress} // Vẫn giữ onKeyPress
+        onChange={handleInputChange}
+        onKeyPress={handleKeyPress}
         className="opacity-0 absolute h-0 w-0"
-        readOnly={true} // Ngăn nhập liệu trực tiếp vào input
-        tabIndex={-1} // Ngăn focus thông qua phím Tab
+        readOnly={true}
+        tabIndex={-1}
         disabled={disabled}
-        // Loại bỏ onBlur để tránh các hành vi không mong muốn liên quan đến focus
         onBlur={() => {}}
-      />
+      /> */}
 
       {/* Container các ô vuông từ */}
       <div
         className="flex justify-center w-full gap-2 mb-3"
-        // Không có onClick để focus input ở đây
+        // Không có onClick để focus input ở đây nữa
       >
         {squares.map((char, index) => (
           <div
             key={index}
             className={`word-square aspect-square w-12 md:w-14 flex items-center justify-center border rounded-lg text-xl font-bold transition-all duration-200
               ${
+                // Highlight ô trống tiếp theo
                 index === userInput.length && !disabled && isCorrect === null ? 'scale-105 border-blue-400 ring-1 ring-blue-200' : ''
               }
               ${getSquareStyle(index)} ${getSquareAnimation(index)}`}
-            onClick={() => handleSquareClick(index)} // Xử lý click để xóa chữ
+            onClick={() => handleSquareClick(index)} // Xử lý click để xóa chữ tại vị trí đó
           >
-            {char.toUpperCase()}
+            {char.toUpperCase()} {/* Hiển thị chữ in hoa trong ô vuông */}
           </div>
         ))}
       </div>
 
       {/* Hộp hiển thị từ */}
+      {/* Hiển thị từ đang nhập bên dưới các ô vuông */}
       {userInput.length > 0 && (
         <div className="flex justify-center w-full">
-          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 transform hover:scale-105">
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
             {formatDisplayWord(userInput)}
           </div>
         </div>
       )}
 
-      {/* Nút gửi */}
+      {/* Nút kiểm tra */}
       <div className="flex justify-center">
         <button
           onClick={checkAnswer}
-          className={`px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm ${
+          className={`px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm flex items-center
+          ${
+            // Nút chỉ active khi input đã đầy và game chưa kết thúc
             userInput.length === wordLength && !disabled
               ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white hover:shadow-md hover:-translate-y-0.5'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
-          disabled={userInput.length !== wordLength || disabled}
+          disabled={userInput.length !== wordLength || disabled} // Disable nút khi input chưa đầy hoặc game over
         >
-          <span className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             Kiểm tra
-          </span>
         </button>
       </div>
 
