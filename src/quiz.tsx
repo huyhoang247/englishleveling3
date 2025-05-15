@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-// Import các module cần thiết từ firebase.js và firestore
-import { db, auth } from './firebase'; // Import db và auth từ file firebase của bạn
+// Import necessary modules from firebase.js and firestore
+import { db, auth } from './firebase'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
@@ -9,7 +9,7 @@ import quizData from './quiz-data.ts'; // Import quizData from the new file
 // We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
 // import GameProgressBar from './progress-bar.tsx';
 
-// Map các đáp án thành A, B, C, D
+// Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
 
 // Define streak icon URLs (assuming these are available or passed down)
@@ -130,26 +130,26 @@ export default function QuizApp() {
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
-  const [user, setUser] = useState(null); // State để lưu thông tin người dùng
-  // State để lưu các đáp án đã xáo trộn cho câu hỏi hiện tại
+  const [user, setUser] = useState(null); // State to store user information
+  // State to store shuffled options for the current question
   const [shuffledOptions, setShuffledOptions] = useState([]);
-  // State để lưu danh sách từ vựng của người dùng
+  // State to store the user's vocabulary list
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
-  // State để lưu danh sách câu hỏi đã lọc dựa trên từ vựng của người dùng
+  // State to store the filtered question list based on user vocabulary
   const [filteredQuizData, setFilteredQuizData] = useState(quizData);
-  // State để đếm số câu hỏi khớp với từ vựng của người dùng
+  // State to count the number of questions matching user vocabulary
   const [matchingQuestionsCount, setMatchingQuestionsCount] = useState(0);
 
 
-  // Lắng nghe trạng thái xác thực người dùng
+  // Listen for user authentication state changes
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
     });
-    return () => unsubscribe(); // Hủy đăng ký lắng nghe khi component unmount
+    return () => unsubscribe(); // Unsubscribe when component unmounts
   }, []);
 
-  // Lấy dữ liệu coins và listVocabulary từ Firestore khi component mount hoặc khi user thay đổi
+  // Fetch coins and listVocabulary data from Firestore when component mounts or user changes
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
@@ -157,57 +157,57 @@ export default function QuizApp() {
         const docSnap = await getDoc(userRef);
 
         if (docSnap.exists()) {
-          // Nếu tài liệu người dùng tồn tại, lấy số coins và listVocabulary
+          // If user document exists, get coins and listVocabulary
           const userData = docSnap.data();
           setCoins(userData.coins || 0);
-          // Đảm bảo listVocabulary là một mảng, mặc định là mảng rỗng nếu không tồn tại
+          // Ensure listVocabulary is an array, default to empty array if it doesn't exist
           setUserVocabulary(userData.listVocabulary || []);
         } else {
-          // Nếu không tồn tại, tạo tài liệu mới với 0 coins và listVocabulary rỗng
+          // If it doesn't exist, create a new document with 0 coins and empty listVocabulary
           await setDoc(userRef, { coins: 0, listVocabulary: [] });
           setCoins(0);
           setUserVocabulary([]);
         }
       } else {
-        // Nếu không có người dùng đăng nhập, đặt coins và listVocabulary về trạng thái ban đầu
+        // If no user is logged in, reset coins and listVocabulary to initial state
         setCoins(0);
         setUserVocabulary([]);
       }
     };
 
     fetchData();
-  }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
+  }, [user]); // Dependency array includes user to refetch when user state changes
 
-  // Lọc câu hỏi dựa trên từ vựng của người dùng khi userVocabulary hoặc quizData thay đổi
+  // Filter questions based on user vocabulary when userVocabulary or quizData changes
   useEffect(() => {
     if (userVocabulary.length > 0) {
-      // Lọc quizData: giữ lại câu hỏi nếu bất kỳ từ vựng nào của người dùng xuất hiện trong câu hỏi
+      // Filter quizData: keep questions if any of the user's vocabulary words appear in the question
       const filtered = quizData.filter(question =>
         userVocabulary.some(vocabWord =>
-          // Sử dụng biểu thức chính quy để tìm từ vựng như một từ hoàn chỉnh
+          // Use regex to find the vocabulary word as a whole word
           new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
         )
       );
       setFilteredQuizData(filtered);
       setMatchingQuestionsCount(filtered.length);
     } else {
-      // Nếu người dùng không có từ vựng nào, hiển thị tất cả câu hỏi hoặc không hiển thị gì
-      // Ở đây tôi sẽ hiển thị tất cả câu hỏi nếu listVocabulary rỗng
+      // If the user has no vocabulary words, display all questions or none
+      // Here I will display all questions if listVocabulary is empty
       setFilteredQuizData(quizData);
-      setMatchingQuestionsCount(0); // Hoặc quizData.length nếu bạn muốn đếm tất cả khi không có từ vựng
+      setMatchingQuestionsCount(0); // Or quizData.length if you want to count all when there's no vocabulary
     }
-  }, [userVocabulary, quizData]); // Dependency array bao gồm userVocabulary và quizData
+  }, [userVocabulary, quizData]); // Dependency array includes userVocabulary and quizData
 
-  // Cập nhật đáp án xáo trộn khi câu hỏi hiện tại hoặc filteredQuizData thay đổi
+  // Update shuffled options when the current question or filteredQuizData changes
   useEffect(() => {
-    // Sử dụng filteredQuizData để lấy câu hỏi hiện tại
+    // Use filteredQuizData to get the current question
     if (filteredQuizData[currentQuestion]?.options) {
       setShuffledOptions(shuffleArray(filteredQuizData[currentQuestion].options));
     }
-  }, [currentQuestion, filteredQuizData]); // Dependency array bao gồm currentQuestion và filteredQuizData
+  }, [currentQuestion, filteredQuizData]); // Dependency array includes currentQuestion and filteredQuizData
 
 
-  // Hàm cập nhật coins lên Firestore
+  // Function to update coins in Firestore
   const updateCoinsInFirestore = async (newCoins) => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
@@ -222,13 +222,13 @@ export default function QuizApp() {
 
 
   const handleAnswer = (selectedAnswer) => {
-    // Không cho phép trả lời nếu đã trả lời câu hỏi này rồi hoặc không có câu hỏi nào
+    // Do not allow answering if already answered or no questions available
     if (answered || filteredQuizData.length === 0) return;
 
     setSelectedOption(selectedAnswer);
     setAnswered(true);
 
-    // Sử dụng correctAnswer từ filteredQuizData gốc để kiểm tra
+    // Use correctAnswer from the original filteredQuizData to check
     const isCorrect = selectedAnswer === filteredQuizData[currentQuestion].correctAnswer;
 
     if (isCorrect) {
@@ -256,7 +256,7 @@ export default function QuizApp() {
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
         setCoins(totalCoins);
-        updateCoinsInFirestore(totalCoins); // Cập nhật coins lên Firestore
+        updateCoinsInFirestore(totalCoins); // Update coins in Firestore
         setCoinAnimation(true);
         setTimeout(() => setCoinAnimation(false), 1500);
       }
@@ -268,19 +268,19 @@ export default function QuizApp() {
     } else {
       // Reset streak on wrong answer
       setStreak(0);
-      // Không reset coins khi trả lời sai
+      // Do not reset coins on wrong answer
     }
   };
 
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
 
-    // Sử dụng filteredQuizData.length để kiểm tra
+    // Use filteredQuizData.length to check
     if (nextQuestion < filteredQuizData.length) {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
-      // Đáp án xáo trộn sẽ được cập nhật bởi useEffect khi currentQuestion thay đổi
+      // Shuffled options will be updated by useEffect when currentQuestion changes
     } else {
       setShowScore(true);
     }
@@ -293,8 +293,8 @@ export default function QuizApp() {
     setSelectedOption(null);
     setAnswered(false);
     setStreak(0);
-    // Giữ lại coins khi làm lại quiz, coins đã được lưu trên Firestore
-    // filteredQuizData không cần reset vì nó phụ thuộc vào userVocabulary
+    // Keep coins when retaking the quiz, coins are already saved in Firestore
+    // filteredQuizData does not need to be reset as it depends on userVocabulary
   };
 
 
@@ -316,7 +316,7 @@ export default function QuizApp() {
     // Removed min-h-screen to allow content to dictate height
     <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
-        {/* Hiển thị thông báo nếu không có câu hỏi nào phù hợp */}
+        {/* Display message if no matching questions */}
         {filteredQuizData.length === 0 && !showScore ? (
            <div className="p-10 text-center">
              <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy câu hỏi nào phù hợp</h2>
@@ -337,19 +337,19 @@ export default function QuizApp() {
               <div className="bg-gray-50 rounded-xl p-6 mb-8">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
-                  {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
+                  {/* Use filteredQuizData.length for total questions */}
                   <span className="text-2xl font-bold text-indigo-600">{score}/{filteredQuizData.length}</span>
                 </div>
 
                 <div className="mb-3">
                   <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                    {/* Sử dụng filteredQuizData.length cho tính toán phần trăm */}
+                    {/* Use filteredQuizData.length for percentage calculation */}
                     <div
                       className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
                       style={{ width: `${(score / filteredQuizData.length) * 100}%` }}
                     ></div>
                   </div>
-                  {/* Sử dụng filteredQuizData.length cho tính toán phần trăm */}
+                  {/* Use filteredQuizData.length for percentage calculation */}
                   <p className="text-right mt-1 text-sm text-gray-600 font-medium">
                     {Math.round((score / filteredQuizData.length) * 100)}%
                   </p>
@@ -364,11 +364,11 @@ export default function QuizApp() {
                        alt="Streak Icon"
                        className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
                      />
-                    <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Đã sửa text */}
+                    <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Corrected text */}
                   </div>
                    {/* Pass coins to CoinDisplay */}
-                  {/* Hiển thị tổng số coins của người dùng từ state */}
-                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Luôn hiển thị coins ở đây */}
+                  {/* Display total user coins from state */}
+                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Always display coins here */}
                 </div>
 
                 {/* Using StreakDisplay component for streak in results */}
@@ -388,7 +388,7 @@ export default function QuizApp() {
                   </div>
                 </div>
 
-                {/* Hiển thị số câu hỏi khớp với từ vựng */}
+                {/* Display number of matching questions */}
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-gray-700">Câu hỏi khớp với từ vựng của bạn:</span>
@@ -419,10 +419,11 @@ export default function QuizApp() {
           ) : (
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+                {/* Header row with question counter on the left and coins/streak on the right */}
                 <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
                   {/* Question counter on the left */}
                   <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
-                    {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
+                    {/* Use filteredQuizData.length for total questions */}
                     <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
                   </div>
                   {/* Coins and Streak on the right */}
@@ -437,7 +438,7 @@ export default function QuizApp() {
                   </div>
                 </div>
 
-                {/* Progress bar under the header (coins, streak, and question counter) */}
+                {/* Progress bar under the header row */}
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
                     {/* Progress fill with smooth animation */}
                     <div
@@ -447,15 +448,14 @@ export default function QuizApp() {
                       {/* Light reflex effect */}
                       <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
                     </div>
-                     {/* Removed the compact level counter from the progress bar */}
                 </div>
 
-                 {/* Hiển thị số câu hỏi khớp với từ vựng */}
+                 {/* Display number of matching questions */}
                  <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
                    {matchingQuestionsCount} câu hỏi khớp
                  </div>
                 <h2 className="text-2xl font-bold mb-2">
-                  {/* Sử dụng filteredQuizData để lấy câu hỏi hiện tại */}
+                  {/* Use filteredQuizData to get the current question */}
                   {filteredQuizData[currentQuestion]?.question}
                 </h2>
 
@@ -479,7 +479,7 @@ export default function QuizApp() {
 
                 <div className="space-y-3 mb-6">
                   {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
-                  {/* Sử dụng filteredQuizData để lấy đáp án đúng */}
+                  {/* Use filteredQuizData to get the correct answer */}
                   {shuffledOptions.map((option, index) => {
                     const isCorrect = option === filteredQuizData[currentQuestion]?.correctAnswer;
                     const isSelected = option === selectedOption;
@@ -527,7 +527,7 @@ export default function QuizApp() {
                       onClick={handleNextQuestion}
                       className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
                     >
-                      {/* Sử dụng filteredQuizData.length để kiểm tra */}
+                      {/* Use filteredQuizData.length to check */}
                       {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
                     </button>
                   </div>
@@ -543,7 +543,7 @@ export default function QuizApp() {
                   </div>
 
                   <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
-                     {/* Sử dụng filteredQuizData.length để tính toán tiến độ *
+                     {/* Use filteredQuizData.length for progress calculation *
                     <div
                       className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
                       style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
