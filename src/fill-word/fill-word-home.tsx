@@ -4,11 +4,10 @@ import WordSquaresInput from './vocabulary-input.tsx';
 import { db, auth } from '../firebase.js'; // Import db và auth
 import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
-
-// Import mảng URL ảnh từ image-url.ts
-// Giả định defaultImageUrls là mảng 0-based,
-// và imageIndex từ Firestore có thể là 1-based hoặc có offset.
 import { defaultImageUrls } from '../image-url.ts';
+
+// Import component Confetti đã tách ra
+import Confetti from './chuc-mung.tsx'; // Import component Confetti
 
 // Định nghĩa kiểu dữ liệu cho một từ vựng, thêm trường imageIndex
 interface VocabularyItem {
@@ -39,7 +38,7 @@ export default function VocabularyGame() {
   const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false); // State để điều khiển hiển thị Confetti
 
   // Lắng nghe trạng thái xác thực người dùng
   useEffect(() => {
@@ -255,50 +254,6 @@ export default function VocabularyGame() {
     }
   };
 
-  // Confetti component (giữ nguyên như cũ)
-  const Confetti = () => {
-    const confettiPieces = Array(50).fill(0);
-
-    return (
-      <div className="fixed inset-0 pointer-events-none z-50">
-        {confettiPieces.map((_, index) => {
-          const left = `${Math.random() * 100}%`;
-          const animationDuration = `${Math.random() * 3 + 2}s`;
-          const size = `${Math.random() * 10 + 5}px`;
-          const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500'];
-          const color = colors[Math.floor(Math.random() * colors.length)];
-
-          return (
-            <div
-              key={index}
-              className={`absolute ${color} opacity-80 rounded-full`}
-              style={{
-                left,
-                top: '-10px',
-                width: size,
-                height: size,
-                animation: `fall ${animationDuration} linear forwards`,
-              }}
-            />
-          );
-        })}
-
-        <style jsx>{`
-          @keyframes fall {
-            0% {
-              transform: translateY(-10px) rotate(0deg);
-              opacity: 1;
-            }
-            100% {
-              transform: translateY(100vh) rotate(720deg);
-              opacity: 0;
-            }
-          }
-        `}</style>
-      </div>
-    );
-  };
-
   // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
     return (
@@ -328,6 +283,7 @@ export default function VocabularyGame() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
+      {/* Sử dụng component Confetti */}
       {showConfetti && <Confetti />}
 
       <div className="w-full flex flex-col items-center">
@@ -401,7 +357,7 @@ export default function VocabularyGame() {
                   userInput={userInput}
                   setUserInput={setUserInput}
                   checkAnswer={checkAnswer}
-                  handleKeyPress={handleKeyPress}
+                  // handleKeyPress={handleKeyPress} // Đã bỏ handleKeyPress ở đây vì nó được xử lý trong WordSquaresInput
                   feedback={feedback}
                   isCorrect={isCorrect}
                   disabled={isCorrect === true}
