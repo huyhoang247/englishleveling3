@@ -6,7 +6,6 @@ interface WordSquaresInputProps {
   userInput: string;
   setUserInput: (value: string) => void;
   checkAnswer: () => void;
-  // handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void; // Prop này không còn cần thiết cho input từ bàn phím ảo
   feedback: string;
   isCorrect: boolean | null;
   disabled: boolean;
@@ -17,7 +16,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   userInput,
   setUserInput,
   checkAnswer,
-  // handleKeyPress, // Không sử dụng nữa
   feedback,
   isCorrect,
   disabled,
@@ -34,9 +32,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     squares[i] = characters[i];
   }
 
-  // Tham chiếu đến phần tử input ẩn không còn cần thiết cho input từ bàn phím ảo.
-  // const hiddenInputRef = useRef<HTMLInputElement>(null); // Không sử dụng nữa
-
   // Xử lý khi nhấp vào một ô vuông (để xóa ký tự tại vị trí đó)
   const handleSquareClick = (index: number) => {
     if (disabled) return;
@@ -48,15 +43,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       setUserInput(newUserInput);
     }
   };
-
-  // Hàm này không còn cần thiết vì input được xử lý bởi bàn phím ảo
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const value = e.target.value;
-  //   // Chỉ cập nhật input nếu giá trị mới ngắn hơn hoặc bằng độ dài từ
-  //   if (value.length <= wordLength) {
-  //     setUserInput(value);
-  //   }
-  // };
 
   // Định nghĩa các keyframe animation tùy chỉnh
   useEffect(() => {
@@ -134,24 +120,9 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      {/* Trường input ẩn không còn cần thiết */}
-      {/* <input
-        ref={hiddenInputRef}
-        type="text"
-        value={userInput}
-        onChange={handleInputChange}
-        onKeyPress={handleKeyPress}
-        className="opacity-0 absolute h-0 w-0"
-        readOnly={true}
-        tabIndex={-1}
-        disabled={disabled}
-        onBlur={() => {}}
-      /> */}
-
       {/* Container các ô vuông từ */}
       <div
         className="flex justify-center w-full gap-2 mb-3"
-        // Không có onClick để focus input ở đây nữa
       >
         {squares.map((char, index) => (
           <div
@@ -169,15 +140,16 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         ))}
       </div>
 
-      {/* Hộp hiển thị từ */}
-      {/* Hiển thị từ đang nhập bên dưới các ô vuông */}
-      {userInput.length > 0 && (
-        <div className="flex justify-center w-full">
-          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
-            {formatDisplayWord(userInput)}
-          </div>
-        </div>
-      )}
+      {/* Hộp hiển thị từ - Luôn hiển thị để giữ khoảng cách */}
+      <div className="flex justify-center w-full min-h-[2.5rem]"> {/* Added min-h to ensure space */}
+          {/* Chỉ hiển thị từ khi có input */}
+          {userInput.length > 0 && (
+            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
+              {formatDisplayWord(userInput)}
+            </div>
+          )}
+      </div>
+
 
       {/* Nút kiểm tra */}
       <div className="flex justify-center">
