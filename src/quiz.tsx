@@ -12,7 +12,7 @@ const optionLabels = ['A', 'B', 'C', 'D'];
 // Define streak icon URLs (assuming these are available or passed down)
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', // Default icon
-  streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
+  streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', // 1 correct answer
   streak5: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(1).png', // 5 consecutive correct answers
   streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', // 10 consecutive correct answers
   streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', // 20 consecutive correct answers
@@ -136,6 +136,8 @@ export default function QuizApp() {
   const [filteredQuizData, setFilteredQuizData] = useState(quizData);
   // State để đếm số câu hỏi khớp với từ vựng của người dùng
   const [matchingQuestionsCount, setMatchingQuestionsCount] = useState(0);
+  // State để lưu tiến độ quiz (số câu hỏi đã trả lời)
+  const [quizProgress, setQuizProgress] = useState(0);
 
 
   // Lắng nghe trạng thái xác thực người dùng
@@ -277,9 +279,13 @@ export default function QuizApp() {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
+      // Cập nhật tiến độ khi chuyển câu hỏi
+      setQuizProgress(nextQuestion);
       // Đáp án xáo trộn sẽ được cập nhật bởi useEffect khi currentQuestion thay đổi
     } else {
       setShowScore(true);
+      // Khi kết thúc quiz, tiến độ đạt 100% (hoặc bằng tổng số câu hỏi)
+      setQuizProgress(filteredQuizData.length);
     }
   };
 
@@ -290,6 +296,7 @@ export default function QuizApp() {
     setSelectedOption(null);
     setAnswered(false);
     setStreak(0);
+    setQuizProgress(0); // Reset tiến độ khi làm lại quiz
     // Giữ lại coins khi làm lại quiz, coins đã được lưu trên Firestore
     // filteredQuizData không cần reset vì nó phụ thuộc vào userVocabulary
   };
@@ -305,8 +312,8 @@ export default function QuizApp() {
     return "";
   };
 
-  // Calculate progress for the progress bar
-  const progress = filteredQuizData.length > 0 ? ((currentQuestion + 1) / filteredQuizData.length) * 100 : 0;
+  // Tính toán phần trăm tiến độ
+  const progressPercentage = filteredQuizData.length > 0 ? (quizProgress / filteredQuizData.length) * 100 : 0;
 
 
   return (
@@ -417,21 +424,10 @@ export default function QuizApp() {
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
                 <div className="flex justify-between items-center mb-6">
-                  {/* Replaced text with progress bar */}
-                  <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative max-w-xs">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: `${progress}%` }}
-                    >
-                       {/* Light reflex effect */}
-                       <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-                    </div>
-                    {/* Optional: Add text overlay for current question/total */}
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow">
-                         {currentQuestion + 1}/{filteredQuizData.length}
-                    </div>
+                  <div className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg">
+                    {/* Sử dụng filteredQuizData.length cho tổng số câu hỏi */}
+                    <span className="font-medium">Câu hỏi {currentQuestion + 1}/{filteredQuizData.length}</span>
                   </div>
-
                   <div className="flex items-center gap-2">
                     {/* Using CoinDisplay component for coins */}
                     {/* Pass coins and showScore state to CoinDisplay */}
@@ -451,6 +447,15 @@ export default function QuizApp() {
                   {filteredQuizData[currentQuestion]?.question}
                 </h2>
 
+                {/* Progress Bar */}
+                {filteredQuizData.length > 0 && (
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                    <div
+                      className="bg-yellow-400 h-2.5 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${progressPercentage}%` }}
+                    ></div>
+                  </div>
+                )}
 
               </div>
 
@@ -532,15 +537,8 @@ export default function QuizApp() {
                     <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
                   </div>
 
-                  {/* Removed the old progress bar at the bottom */}
-                  {/*
-                  <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
-                     <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                      style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
-                    ></div>
-                  </div>
-                  */}
+                  {/* Removed the old progress bar here */}
+
                 </div>
               </div>
             </>
