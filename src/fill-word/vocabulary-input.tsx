@@ -144,7 +144,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       <div className="flex justify-center w-full min-h-[2.5rem]"> {/* Added min-h to ensure space */}
           {/* Chỉ hiển thị từ khi có input */}
           {userInput.length > 0 && (
-            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
+            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105 break-words"> {/* Added break-words class */}
               {formatDisplayWord(userInput)}
             </div>
           )}
