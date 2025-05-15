@@ -49,9 +49,6 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         .animate-pulse-fast {
             animation: pulse-fast 1s infinite;
         }
-        .text-shadow-sm {
-          text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
       `}</style>
       {/* Background highlight effect - adjusted for grey scale */}
       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
@@ -471,27 +468,33 @@ export default function QuizApp() {
                    {matchingQuestionsCount} câu hỏi khớp
                  </div>
                  */}
-                {/* Question container with enhanced styling */}
-<div className="relative bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-2 border border-white/30 shadow-inner">
-  {/* Question number badge */}
-  <div className="absolute -top-2.5 -left-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md border border-indigo-600">
-    Q{currentQuestion + 1}
-  </div>
+                {/* START: Updated question display block */}
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
+                  <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
 
-  {/* Question text with enhanced typography */}
-  <h2 className="text-2xl font-bold pl-6 pr-2 py-2 text-white text-shadow-sm leading-relaxed">
-    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-100 drop-shadow-md">
-      {filteredQuizData[currentQuestion]?.question}
-    </span>
-  </h2>
+                  {/* Hiệu ứng đồ họa - đường trang trí */}
+                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
+                  <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
 
-  {/* Decorative elements */}
-  <div className="absolute bottom-0 right-0 w-24 h-24 opacity-10">
-    <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2zm0-10h2v8h-2z"/>
-    </svg>
-  </div>
-</div>
+                  {/* Icon câu hỏi */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                    </div>
+                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
+                  </div>
+
+                  {/* Nội dung câu hỏi */}
+                  <h2 className="text-xl font-bold text-white leading-tight">
+                    {filteredQuizData[currentQuestion]?.question}
+                  </h2>
+                </div>
+                {/* END: Updated question display block */}
 
 
               </div>
@@ -593,4 +596,3 @@ export default function QuizApp() {
     </div>
   );
 }
-
