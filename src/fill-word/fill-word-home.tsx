@@ -452,7 +452,8 @@ export default function VocabularyGame() {
         ) : (
           <>
             {/* START: New Header Structure (Copied and adapted from quiz.tsx) */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl"> {/* Added w-full and rounded-t-xl */}
+            {/* Added rounded-b-xl here */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
                 {/* Header row with word counter on the left and coins/streak on the right */}
                 <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
                   {/* Word counter on the left - Styled like quiz counter */}
