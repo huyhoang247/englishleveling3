@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import VirtualKeyboard from './keyboard.tsx'; // Import component bàn phím ảo
 
 interface WordSquaresInputProps {
   word: string | null;
@@ -38,7 +39,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   // ngăn chặn bàn phím ảo của hệ điều hành xuất hiện.
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  // Xử lý khi nhấp vào một ô vuông
+  // Xử lý khi nhấp vào một ô vuông (để xóa ký tự)
   const handleSquareClick = (index: number) => {
     if (disabled) return;
 
@@ -48,11 +49,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       const newUserInput = userInput.slice(0, index) + userInput.slice(index + 1);
       setUserInput(newUserInput);
     }
-    // *** Không gọi focus() ở đây ***
   };
 
-  // Hàm này có thể không còn cần thiết nếu chỉ dùng bàn phím ảo,
-  // nhưng giữ lại phòng trường hợp cần xử lý input từ bàn phím vật lý trên desktop.
+  // Hàm này có thể không còn cần thiết cho input từ bàn phím ảo,
+  // nhưng giữ lại phòng trường hợp cần xử lý input từ bàn phím vật lý trên desktop
+  // hoặc xử lý dán văn bản.
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Chỉ cập nhật input nếu giá trị mới ngắn hơn hoặc bằng độ dài từ
@@ -131,13 +132,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
   };
 
-  // Bố cục bàn phím ảo
-  const keyboardRows = [
-    'QWERTYU'.split(''),
-    'IOPASDF'.split(''),
-    'GHJKLMN'.split(''),
-    'BVCXZ'.split(''),
-  ];
 
   return (
     <div className="w-full space-y-4">
@@ -207,77 +201,15 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         </button>
       </div>
 
-      {/* Bàn phím chữ cái */}
-      <div className="mt-6 mx-auto max-w-md">
-        {keyboardRows.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center flex-wrap gap-1 mb-1">
-            {row.map((letter) => (
-              <button
-                key={letter}
-                onClick={() => {
-                  if (!disabled && userInput.length < wordLength) {
-                    setUserInput(userInput + letter.toLowerCase());
-                    // Không gọi focus() sau khi gõ phím
-                  }
-                }}
-                className={`keyboard-button w-8 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-                  ${
-                    disabled
-                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:-translate-y-0.5'
-                  }`}
-                disabled={disabled || userInput.length >= wordLength}
-                tabIndex={-1} // Ngăn nút này nhận focus từ tab
-              >
-                {letter}
-              </button>
-            ))}
+      {/* Bàn phím chữ cái ảo */}
+      {/* Truyền userInput, setUserInput, wordLength và disabled xuống component VirtualKeyboard */}
+      <VirtualKeyboard
+        userInput={userInput}
+        setUserInput={setUserInput}
+        wordLength={wordLength}
+        disabled={disabled}
+      />
 
-            {/* Nút Del */}
-            {rowIndex === keyboardRows.length - 1 && (
-              <button
-                onClick={() => {
-                  if (!disabled && userInput.length > 0) {
-                    setUserInput(userInput.slice(0, -1));
-                    // Không gọi focus() sau khi xóa
-                  }
-                }}
-                className={`keyboard-button w-10 h-9 flex items-center justify-center rounded-md text-xs font-medium transition-all duration-150
-                  ${
-                    disabled || userInput.length === 0
-                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                      : 'bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5'
-                  }`}
-                disabled={disabled || userInput.length === 0}
-                tabIndex={-1} // Ngăn nút này nhận focus từ tab
-              >
-                Del
-              </button>
-            )}
-          </div>
-        ))}
-         {/* Nút ENTER đã được xóa */}
-        {/* <div className="flex justify-center mt-2">
-             <button
-                onClick={() => {
-                  if (!disabled) {
-                    checkAnswer();
-                    // Không gọi focus() sau khi gửi
-                  }
-                }}
-                className={`keyboard-button px-4 py-2 flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150 w-full max-w-[200px]
-                  ${
-                    disabled || userInput.length !== wordLength
-                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                      : 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-0.5'
-                  }`}
-                disabled={disabled || userInput.length !== wordLength}
-                tabIndex={-1} // Ngăn nút này nhận focus từ tab
-              >
-                ENTER
-              </button>
-        </div> */}
-      </div>
 
       {/* Phản hồi */}
       {feedback && (
