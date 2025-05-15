@@ -5,6 +5,9 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 import quizData from './quiz-data.ts'; // Import quizData from the new file
+// Import GameProgressBar component (assuming its structure is suitable for adaptation)
+// We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
+// import GameProgressBar from './progress-bar.tsx';
 
 // Map các đáp án thành A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
@@ -114,25 +117,6 @@ const shuffleArray = (array) => {
     [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; // Swap elements
   }
   return shuffledArray;
-};
-
-// Progress Bar Component (Simplified for Quiz)
-interface QuizProgressBarProps {
-  current: number;
-  total: number;
-}
-
-const QuizProgressBar: React.FC<QuizProgressBarProps> = ({ current, total }) => {
-  const progress = total > 0 ? (current / total) * 100 : 0;
-
-  return (
-    <div className="w-full h-2 bg-gray-300 rounded-full overflow-hidden mt-2"> {/* Added mt-2 for spacing */}
-      <div
-        className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-        style={{ width: `${progress}%` }}
-      ></div>
-    </div>
-  );
 };
 
 
@@ -324,6 +308,9 @@ export default function QuizApp() {
     return "";
   };
 
+  // Calculate quiz progress percentage
+  const quizProgress = filteredQuizData.length > 0 ? (currentQuestion / filteredQuizData.length) * 100 : 0;
+
 
   return (
     // Removed min-h-screen to allow content to dictate height
@@ -432,8 +419,8 @@ export default function QuizApp() {
           ) : (
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-                <div className="flex justify-between items-center mb-2"> {/* Adjusted mb-6 to mb-2 */}
-                  {/* Removed the old question counter */}
+                <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
+                  {/* Removed the old question counter display */}
                   <div className="flex items-center gap-2">
                     {/* Using CoinDisplay component for coins */}
                     {/* Pass coins and showScore state to CoinDisplay */}
@@ -444,13 +431,41 @@ export default function QuizApp() {
                     <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                   </div>
                 </div>
-                 {/* Progress Bar added here */}
-                 <QuizProgressBar current={currentQuestion + 1} total={filteredQuizData.length} />
+
+                {/* Progress bar under coins and streak */}
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
+                    {/* Progress fill with smooth animation */}
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                      style={{ width: `${quizProgress}%` }}
+                    >
+                      {/* Light reflex effect */}
+                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                    </div>
+                     {/* Compact level counter on the progress bar */}
+                     <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-gray-900 bg-opacity-70 rounded-lg px-2 py-0.5 shadow-inner border border-gray-700">
+                            <div className="flex items-center">
+                                {/* Current question */}
+                                <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                                    {currentQuestion + 1}
+                                </span>
+
+                                {/* Separator */}
+                                <span className="mx-0.5 text-gray-400 text-xs">/</span>
+
+                                {/* Total questions */}
+                                <span className="text-xs text-gray-300">{filteredQuizData.length}</span>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+
                  {/* Hiển thị số câu hỏi khớp với từ vựng */}
                  <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
                    {matchingQuestionsCount} câu hỏi khớp
                  </div>
-                <h2 className="text-2xl font-bold mt-4 mb-2"> {/* Adjusted mt-4 and mb-2 */}
+                <h2 className="text-2xl font-bold mb-2">
                   {/* Sử dụng filteredQuizData để lấy câu hỏi hiện tại */}
                   {filteredQuizData[currentQuestion]?.question}
                 </h2>
@@ -530,15 +545,24 @@ export default function QuizApp() {
                 )}
               </div>
 
+              {/* Removed the old progress bar at the bottom */}
+              {/*
               <div className="bg-gray-50 px-8 py-4 border-t">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
                     <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
                   </div>
 
-                  {/* Removed the old progress bar */}
+                  <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                     {/* Sử dụng filteredQuizData.length để tính toán tiến độ *
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                      style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
+              */}
             </>
           )
         )}
