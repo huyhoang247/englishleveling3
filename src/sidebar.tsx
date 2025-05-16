@@ -5,6 +5,8 @@ interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
+  // NEW: Prop to receive the toggleStatsFullscreen function from the parent
+  onToggleStats?: () => void;
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -128,7 +130,7 @@ const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // Added setToggleSidebar prop
+function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLayoutProps) { // Added onToggleStats prop
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   // State to track the active menu item
@@ -158,6 +160,8 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
   // List of sidebar menu items - Using new inline SVG components
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
+    // NEW: Added Stats menu item
+    { id: 'stats', label: 'Stats', icon: BarChart2Icon, onClick: onToggleStats }, // Added onClick handler
     { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
     { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
@@ -215,6 +219,10 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
                         onClick={(e) => {
                           e.preventDefault();
                           setActiveItem(item.id);
+                          // Call the item's onClick function if it exists
+                          if (item.onClick) {
+                            item.onClick();
+                          }
                         }}
                       >
                         <div className={`
@@ -305,7 +313,7 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
 
 
         {/* Main content - This is where the game will be rendered */}
-        <div className="flex-1 overflow-y-auto"> 
+        <div className="flex-1 overflow-y-auto">
              {children} {/* Render the wrapped content (your game) here */}
         </div>
 
