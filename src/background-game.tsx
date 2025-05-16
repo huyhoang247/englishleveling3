@@ -8,8 +8,8 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-// Import the new GemIcon component. Removed StatsIcon and MenuIcon imports.
-import { GemIcon } from './library/icon.tsx'; // Assuming StatsIcon and MenuIcon are NOT in icon.tsx
+// Import the new StatsIcon and GemIcon components. Removed MenuIcon import.
+import { StatsIcon, GemIcon } from './library/icon.tsx'; // Assuming MenuIcon is NOT in icon.tsx
 
 // NEW: Import SidebarLayout
 import { SidebarLayout } from './sidebar.tsx';
@@ -1131,7 +1131,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // Pause main shield cooldown timer if it's running
           if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
               const elapsedTime = Date.now() - shieldCooldownStartTime;
-              const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+              const remainingTimeMs = Math.max(0, SHIELD_COールドDOWN_TIME - elapsedTime);
               setPausedShieldCooldownRemaining(remainingTimeMs); // Use the setter from the hook
               clearTimeout(shieldCooldownTimerRef.current);
               shieldCooldownTimerRef.current = null;
@@ -1566,11 +1566,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   return (
-    // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop and onToggleStats
-    <SidebarLayout
-      setToggleSidebar={handleSetToggleSidebar}
-      onToggleStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function
-    >
+    // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop
+    <SidebarLayout setToggleSidebar={handleSetToggleSidebar}>
       <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
         <style>{`
           @keyframes fadeOutUp {
@@ -1719,7 +1716,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             {/* Main header container */}
             {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
+            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-1 overflow-hidden
                         rounded-b-lg shadow-2xl
                         bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                         border-b border-l border-r border-slate-700/50">
@@ -1749,8 +1746,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                  {/* REMOVED: StatsIcon component from here */}
-                  {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
+                  {/* Use the new StatsIcon component here */}
+                  <StatsIcon onClick={toggleStatsFullscreen} />
 
                   <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
