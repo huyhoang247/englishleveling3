@@ -803,7 +803,7 @@ export const defaultVocabulary: string[] = [
 "Institute",
 "Stuck",
 "Top",
-"Reports"
+"Reports",
 "Grant",
 "Sources",
 "Husband",
@@ -1203,7 +1203,7 @@ export const defaultVocabulary: string[] = [
 "Digital",
 "Generation",
 "Road",
-"Vote",
+"Vote"
   
   
 ];
