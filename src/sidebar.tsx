@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from 'react';
+
+// Define prop types for SidebarLayout
+interface SidebarLayoutProps {
+  children: React.ReactNode;
+  // New prop to expose the toggleSidebar function
+  setToggleSidebar?: (toggleFn: () => void) => void;
+}
+
+// SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -18,7 +27,6 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-// Simple placeholder/basic SVG for other icons
 const HomeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -29,7 +37,7 @@ const HomeIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
 const SettingsIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3"></circle>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
   </svg>
 );
 
@@ -127,7 +135,7 @@ const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children }: { children: React.ReactNode }) { // Added children prop
+function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // Added setToggleSidebar prop
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   // State to track the active menu item
@@ -137,35 +145,37 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
   // State for user menu dropdown
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // List of sidebar menu items - Using new inline SVG components
-  // Removed 'calendar', 'reports', and 'users' items as requested
-  const menuItems = [
-    { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
-    { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
-    { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
-    // { id: 'calendar', label: 'Lịch', icon: CalendarIcon }, // Removed
-    // { id: 'reports', label: 'Báo cáo', icon: FileTextIcon }, // Removed
-    // { id: 'users', label: 'Người dùng', icon: UsersIcon }, // Removed
-    { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
-    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon },
-    { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon },
-  ];
-
   // Function to toggle sidebar visibility
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
+
+  // Expose the toggleSidebar function via the prop
+  useEffect(() => {
+    if (setToggleSidebar) {
+      setToggleSidebar(toggleSidebar);
+    }
+  }, [setToggleSidebar, toggleSidebar]); // Depend on setToggleSidebar and toggleSidebar
 
   // Function to toggle user menu
   const toggleUserMenu = () => {
     setUserMenuOpen(!userMenuOpen);
   };
 
+  // List of sidebar menu items - Using new inline SVG components
+  const menuItems = [
+    { id: 'home', label: 'Trang chủ', icon: HomeIcon },
+    { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
+    { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
+    { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
+    { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
+    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon },
+    { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon },
+  ];
+
   return (
     <div className="relative min-h-screen flex bg-gray-100 text-gray-800 font-sans">
       {/* Overlay when sidebar is visible on mobile */}
-      {/* Keep overlay so clicking outside can close the sidebar */}
       {isSidebarVisible && (
         <div
           className="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 md:hidden transition-opacity duration-300"
@@ -173,7 +183,8 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
         />
       )}
 
-      {/* Toggle Sidebar Button - Only visible when sidebar is NOT visible */}
+      {/* REMOVED: Toggle Sidebar Button - This will be moved to the game header */}
+      {/*
       {!isSidebarVisible && (
         <button
           onClick={toggleSidebar} // This button is used to open the sidebar
@@ -181,10 +192,10 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
           aria-label="Hiện sidebar"
           title="Hiện sidebar"
         >
-          {/* Use inline SVG for Menu icon */}
           <MenuIcon size={20} />
         </button>
       )}
+      */}
 
 
       {/* Sidebar - Dark Theme Style */}
@@ -197,13 +208,9 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
           md:relative md:translate-x-0 md:flex ${isSidebarVisible ? 'md:w-72' : 'md:w-0 md:hidden'}
         `}
       >
-        {/* Search bar in sidebar - REMOVED */}
-        {/* "Điều hướng" text - REMOVED */}
-
         {/* Menu items list */}
         {isSidebarVisible && (
           <nav className="flex-1 py-4 overflow-y-auto">
-            {/* Removed "Điều hướng" text */}
             <ul className="space-y-0 px-2">
               {menuItems.map((item, index) => {
                 const Icon = item.icon;
@@ -303,45 +310,15 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
       </div>
 
       {/* Main content area */}
-      {/* MODIFIED: Added flex-1 and overflow-hidden to the main content wrapper */}
       <div className={`
         flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden
         ${isSidebarVisible ? 'md:ml-72' : 'ml-0'} {/* Maintain spacing based on sidebar visibility */}
       `}>
-        {/* Top Header Bar */}
-        <header className="bg-white shadow-sm border-b border-gray-100 py-4 px-6 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-lg font-medium text-gray-800">
-              {menuItems.find(item => item.id === activeItem)?.label || 'Trang chủ'}
-            </h2>
-            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Beta</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            {/* Search bar in header - hidden on mobile */}
-            <div className="hidden md:flex relative">
-              {/* Use inline SVG for Search icon */}
-              <SearchIcon size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm..."
-                className="pl-10 pr-4 py-2 w-64 rounded-lg text-sm bg-gray-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            {/* Notification button */}
-            <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-              {/* Use inline SVG for Bell icon */}
-              <BellIcon size={20} className="text-gray-600" />
-              {notificationCount > 0 && (
-                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
-                  {notificationCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </header>
+        {/* Top Header Bar - This will be handled by the game component */}
+        {/* The game component will render its own header */}
+
 
         {/* Main content - This is where the game will be rendered */}
-        {/* MODIFIED: Removed the empty main tag and added a div to hold children */}
         <div className="flex-1 overflow-y-auto"> {/* Added flex-1 and overflow-y-auto */}
              {children} {/* Render the wrapped content (your game) here */}
         </div>
@@ -360,14 +337,3 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
 
 // Export the SidebarLayout component
 export { SidebarLayout };
-
-// Removed the default export of App
-/*
-export default function App() {
-  return (
-    <React.StrictMode>
-      <SidebarLayout />
-    </React.StrictMode>
-  );
-}
-*/
