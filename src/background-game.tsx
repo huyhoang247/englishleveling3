@@ -8,8 +8,8 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-// Import the new StatsIcon and GemIcon components. Removed MenuIcon import.
-import { StatsIcon, GemIcon } from './library/icon.tsx'; // Assuming MenuIcon is NOT in icon.tsx
+// Import the new GemIcon component. Removed MenuIcon and StatsIcon import.
+import { GemIcon } from './library/icon.tsx';
 
 // NEW: Import SidebarLayout
 import { SidebarLayout } from './sidebar.tsx';
@@ -201,6 +201,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   // UI States
+  // Keep isStatsFullscreen here, it controls the CharacterCard visibility
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true); // NEW: State to track user data loading
 
@@ -465,7 +466,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShowHealthDamageEffect(false);
     setDamageAmount(0);
     setShowDamageNumber(false);
-    setIsStatsFullscreen(false);
+    // Keep isStatsFullscreen as is, it's not reset by starting a new game
+    // setIsStatsFullscreen(false); // Removed this line
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
@@ -544,7 +546,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setShowHealthDamageEffect(false);
         setDamageAmount(0);
         setShowDamageNumber(false);
-        setIsStatsFullscreen(false);
+        setIsStatsFullscreen(false); // Reset stats fullscreen on logout
         setCoins(0); // Reset local state
         setDisplayedCoins(0); // Reset local state
         setGems(0); // Reset local state
@@ -1131,7 +1133,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // Pause main shield cooldown timer if it's running
           if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
               const elapsedTime = Date.now() - shieldCooldownStartTime;
-              const remainingTimeMs = Math.max(0, SHIELD_COールドDOWN_TIME - elapsedTime);
+              const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
               setPausedShieldCooldownRemaining(remainingTimeMs); // Use the setter from the hook
               clearTimeout(shieldCooldownTimerRef.current);
               shieldCooldownTimerRef.current = null;
@@ -1567,7 +1569,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   return (
     // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop
-    <SidebarLayout setToggleSidebar={handleSetToggleSidebar}>
+    // Also pass the toggleStatsFullscreen function as onToggleStats
+    <SidebarLayout
+        setToggleSidebar={handleSetToggleSidebar}
+        onToggleStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function here
+    >
       <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
         <style>{`
           @keyframes fadeOutUp {
@@ -1676,7 +1682,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
               {auth.currentUser && (
                   <CharacterCard
-                      onClose={toggleStatsFullscreen}
+                      onClose={toggleStatsFullscreen} // Pass the toggle function to close the stats screen
                       coins={coins} // Pass the coin state
                       onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass the update function
                   />
@@ -1716,7 +1722,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             {/* Main header container */}
             {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-1 overflow-hidden
+            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
                         rounded-b-lg shadow-2xl
                         bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                         border-b border-l border-r border-slate-700/50">
@@ -1746,8 +1752,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                  {/* Use the new StatsIcon component here */}
-                  <StatsIcon onClick={toggleStatsFullscreen} />
+                  {/* REMOVED: StatsIcon is moved to the sidebar */}
+                  {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
 
                   <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
@@ -1787,7 +1793,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       </div>
                   </div>
               </div>
-               {!isStatsFullscreen && (
+               {!isStatsFullscreen && ( // Only show currency display when stats are NOT fullscreen
                   <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
                       {/* REMOVED: Display "OK" text */}
                       {/*
@@ -1806,7 +1812,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                           <div className="font-bold text-purple-200 text-xs tracking-wide">
                               {gems.toLocaleString()}
                           </div>
-                          <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                          <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
                               <span className="text-white font-bold text-xs">+</span>
                           </div>
                           <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
@@ -1833,6 +1839,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
+            {/* Keep these buttons, they are not part of the main header or sidebar */}
             {!isStatsFullscreen && (
               <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
                 {[
@@ -1889,7 +1896,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
-             {!isStatsFullscreen && (
+             {!isStatsFullscreen && ( // Only show shield button when stats are NOT fullscreen
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
                  <div
@@ -2012,3 +2019,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </SidebarLayout>
   );
 }
+
