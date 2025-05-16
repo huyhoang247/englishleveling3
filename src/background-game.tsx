@@ -8,8 +8,8 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-// Import the new StatsIcon and GemIcon components, and add MenuIcon
-import { StatsIcon, GemIcon, MenuIcon } from './library/icon.tsx'; // Assuming MenuIcon is in icon.tsx
+// Import the new StatsIcon and GemIcon components. Removed MenuIcon import.
+import { StatsIcon, GemIcon } from './library/icon.tsx'; // Assuming MenuIcon is NOT in icon.tsx
 
 // NEW: Import SidebarLayout
 import { SidebarLayout } from './sidebar.tsx';
@@ -400,7 +400,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           transaction.set(userDocRef, {
             coins: coins, // Use current local coins state for new doc
             gems: gems, // Use current local gems state for new doc
-            keys: amount,
+            keys: keyCount, // Use current local keys state for new doc
             createdAt: new Date()
           });
         } else {
@@ -1731,8 +1731,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     aria-label="Mở sidebar"
                     title="Mở sidebar"
                 >
-                    {/* Use the imported MenuIcon */}
-                    <MenuIcon size={20} className="text-gray-200" />
+                    {/* Use the provided image URL for the icon */}
+                     <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
+                        alt="Menu Icon"
+                        className="w-5 h-5 object-contain" // Adjust size as needed
+                        onError={(e) => {
+                            const target = e as any; // Cast to any to access target
+                            target.onerror = null;
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
+                        }}
+                     />
                 </button>
 
 
