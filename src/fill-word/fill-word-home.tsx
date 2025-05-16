@@ -142,6 +142,7 @@ export default function VocabularyGame() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0); // Score can still track correct answers if needed internally
   // Sử dụng Set để quản lý các từ đã dùng hiệu quả hơn
+  // KHỞI TẠO BAN ĐẦU LÀ SET RỖNG, SẼ ĐƯỢC CẬP NHẬT TỪ FIRESTORE KHI TẢI DỮ LIỆU
   const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
@@ -171,6 +172,7 @@ export default function VocabularyGame() {
         setVocabularyList([]); // Đặt danh sách trống nếu không có user
         setOpenedImageIds([]); // Đặt danh sách ảnh trống
         setCoins(0); // Reset coins if no user
+        setUsedWords(new Set()); // Reset used words if no user
         setError("Vui lòng đăng nhập để chơi.");
         return;
       }
@@ -187,6 +189,8 @@ export default function VocabularyGame() {
           const userData = docSnap.data();
           let fetchedVocabulary: VocabularyItem[] = [];
           let fetchedImageIds: number[] = [];
+          // Thêm biến để lưu các từ đã hoàn thành từ Firestore
+          let fetchedCompletedWords: string[] = [];
 
           // Lấy danh sách từ vựng
           if (userData && Array.isArray(userData.listVocabulary)) {
@@ -223,6 +227,20 @@ export default function VocabularyGame() {
             setOpenedImageIds([]); // Đặt mảng rỗng nếu không có
           }
 
+          // --- START: Lấy danh sách từ đã hoàn thành từ trường 'fill-word-1' ---
+          if (userData && Array.isArray(userData['fill-word-1'])) {
+              fetchedCompletedWords = userData['fill-word-1'] as string[];
+              console.log("Fetched completed words from 'fill-word-1':", fetchedCompletedWords);
+              // Cập nhật state usedWords với các từ đã lấy từ Firestore
+              setUsedWords(new Set(fetchedCompletedWords));
+          } else {
+              console.log("User document does not contain a 'fill-word-1' array or it's not an array.");
+              // Nếu không có trường 'fill-word-1' hoặc sai định dạng, khởi tạo usedWords rỗng
+              setUsedWords(new Set());
+          }
+          // --- END: Lấy danh sách từ đã hoàn thành ---
+
+
           // Lấy số coins
           if (userData && typeof userData.coins === 'number') {
             setCoins(userData.coins); // Cập nhật state coins
@@ -254,6 +272,7 @@ export default function VocabularyGame() {
           setVocabularyList([]); // Đặt danh sách trống nếu document không tồn tại
           setOpenedImageIds([]);
           setCoins(0); // Reset coins if document doesn't exist
+          setUsedWords(new Set()); // Reset used words if document doesn't exist
           setError("Không tìm thấy dữ liệu người dùng.");
         }
 
@@ -275,35 +294,40 @@ export default function VocabularyGame() {
        setVocabularyList([]);
        setOpenedImageIds([]);
        setCoins(0); // Reset coins if no user
+       setUsedWords(new Set()); // Reset used words if no user
        setError("Vui lòng đăng nhập để chơi.");
     }
 
   }, [user]); // Dependency array bao gồm user để fetch lại khi trạng thái user thay đổi
 
   // Effect để bắt đầu trò chơi sau khi dữ liệu từ vựng đã được tải VÀ không còn loading VÀ không có lỗi
+  // Đồng thời, đảm bảo usedWords cũng đã được tải xong (dù không trực tiếp trong dependency array này)
+  // Logic chọn từ ngẫu nhiên sẽ tự động loại trừ các từ trong usedWords
   useEffect(() => {
     // Bắt đầu game chỉ khi danh sách từ vựng có dữ liệu, không loading và không có lỗi
     if (vocabularyList.length > 0 && !loading && !error) {
-      selectRandomWord(); // Chọn từ đầu tiên khi danh sách từ vựng có sẵn và không có lỗi/loading
+      // Chọn từ đầu tiên. Logic selectRandomWord sẽ tự động bỏ qua các từ trong usedWords đã được tải.
+      selectRandomWord();
     } else if (vocabularyList.length === 0 && !loading && !error) {
        // Nếu danh sách trống, không loading, không lỗi (trường hợp document user tồn tại nhưng mảng rỗng)
        setCurrentWord(null); // Đảm bảo không có từ hiện tại
        setGameOver(false); // Đảm bảo không phải trạng thái game over (chỉ là không có từ để chơi)
     }
-  }, [vocabularyList, loading, error]); // Chạy khi vocabularyList, loading hoặc error thay đổi
+  }, [vocabularyList, loading, error, usedWords]); // Thêm usedWords vào dependency để đảm bảo chọn từ đúng sau khi usedWords được cập nhật
 
   // Select a random word that hasn't been used yet
   const selectRandomWord = () => {
     // Lọc ra các từ chưa được sử dụng
-    const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
+    const unusedWordsArray = vocabularyList.filter(item => !usedWords.has(item.word));
 
-    if (unusedWords.length === 0) {
+    if (unusedWordsArray.length === 0) {
       setGameOver(true); // Nếu không còn từ chưa dùng, kết thúc trò chơi
+      setCurrentWord(null); // Đảm bảo không có từ hiện tại khi game over
       return;
     }
 
-    const randomIndex = Math.floor(Math.random() * unusedWords.length);
-    setCurrentWord(unusedWords[randomIndex]); // Chọn một từ ngẫu nhiên từ danh sách chưa dùng
+    const randomIndex = Math.floor(Math.random() * unusedWordsArray.length);
+    setCurrentWord(unusedWordsArray[randomIndex]); // Chọn một từ ngẫu nhiên từ danh sách chưa dùng
     setUserInput(''); // Đặt lại input người dùng
     setFeedback(''); // Đặt lại feedback
     setIsCorrect(null); // Đặt lại trạng thái đúng/sai
@@ -316,7 +340,7 @@ export default function VocabularyGame() {
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setFeedback('Chính xác!'); // Feedback khi đúng
       setIsCorrect(true); // Đặt trạng thái đúng
-      setScore(score + 1); // Tăng điểm
+      setScore(score + 1); // Tăng điểm (có thể không cần thiết nếu chỉ dùng usedWords.size cho tiến trình)
 
       // Tăng streak khi trả lời đúng
       const newStreak = streak + 1;
@@ -324,7 +348,7 @@ export default function VocabularyGame() {
       setStreakAnimation(true); // Kích hoạt animation
       setTimeout(() => setStreakAnimation(false), 1500); // Tắt animation sau 1.5s
 
-      // Thêm từ đã dùng vào Set
+      // Thêm từ đã dùng vào Set (cập nhật state ngay lập tức để hiển thị tiến trình mới)
       setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
       setShowConfetti(true); // Hiển thị hiệu ứng confetti
 
@@ -352,9 +376,19 @@ export default function VocabularyGame() {
       }, 2000);
 
       // Chờ một chút trước khi chuyển sang từ tiếp theo
-      setTimeout(() => {
-        selectRandomWord();
-      }, 1500);
+      // Chỉ chuyển nếu vẫn còn từ chưa dùng
+      if (usedWords.size + 1 < vocabularyList.length) { // Kiểm tra xem sau khi thêm từ này, số từ đã dùng có bằng tổng số không
+           setTimeout(() => {
+             selectRandomWord();
+           }, 1500);
+      } else {
+          // Nếu đã hoàn thành tất cả các từ sau câu trả lời này
+          setTimeout(() => {
+             setGameOver(true); // Kết thúc game
+             setCurrentWord(null); // Đảm bảo không có từ hiện tại
+          }, 1500);
+      }
+
     } else {
       // Feedback khi sai, hiển thị từ đúng
       setFeedback(`Không đúng, hãy thử lại! Từ đúng là: ${currentWord.word}`);
@@ -390,11 +424,14 @@ export default function VocabularyGame() {
 
   // Reset the game
   const resetGame = () => {
-    setUsedWords(new Set()); // Đặt lại danh sách từ đã dùng
+    // Khi reset game, chúng ta không xóa dữ liệu trên Firestore
+    // Chỉ reset trạng thái trong component
+    setUsedWords(new Set()); // Đặt lại danh sách từ đã dùng trong state
     setScore(0); // Đặt lại điểm
     setGameOver(false); // Đặt lại trạng thái kết thúc trò chơi
     setStreak(0); // Reset streak on game reset
-    selectRandomWord(); // Bắt đầu lại với từ ngẫu nhiên
+    // Sau khi reset usedWords, chọn từ ngẫu nhiên sẽ bắt đầu lại từ đầu
+    selectRandomWord();
   };
 
   // Submit form on Enter key
