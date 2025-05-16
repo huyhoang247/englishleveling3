@@ -176,6 +176,9 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
         />
       )}
 
+      {/* REMOVED: Toggle Sidebar Button - This is now handled by the game component */}
+
+
       {/* Sidebar - Dark Theme Style */}
       <div
         className={`
@@ -186,62 +189,59 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
           md:relative md:translate-x-0 md:flex ${isSidebarVisible ? 'md:w-72' : 'md:w-0 md:hidden'}
         `}
       >
-        {/* Menu items list - Added top padding (pt-4) */}
+        {/* Menu items list */}
         {isSidebarVisible && (
-          <nav className="flex-1 py-4 overflow-y-auto px-4">
-            {/* Added container with top/bottom margins (my-2) */}
-            <div className="my-2">
-              <ul className="space-y-0">
-                {menuItems.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
-                      <a
-                        href="#"
-                        className={`
-                          flex items-center px-4 py-3 text-sm font-medium
-                          transition-all duration-150 ease-in-out group relative
-                          mx-2 my-1 rounded-xl
-                          ${activeItem === item.id
-                            ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
-                            : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                          }
-                        `}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setActiveItem(item.id);
-                        }}
-                      >
-                        <div className={`
-                          w-8 h-8 flex items-center justify-center rounded-lg mr-3
-                          transition-colors duration-200
-                          ${activeItem === item.id
-                            ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
-                            : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
-                          }
-                        `}>
-                          {/* Render the inline SVG icon component */}
-                          <Icon size={18} />
-                        </div>
-                        <span>{item.label}</span>
-                        {item.badge && (
-                          <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
-                            {item.badge}
-                          </span>
-                        )}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+          <nav className="flex-1 py-4 overflow-y-auto">
+            <ul className="space-y-0 px-2">
+              {menuItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
+                    <a
+                      href="#"
+                      className={`
+                        flex items-center px-4 py-3 text-sm font-medium
+                        transition-all duration-150 ease-in-out group relative
+                        mx-1 my-1 rounded-xl
+                        ${activeItem === item.id
+                          ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
+                          : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                        }
+                      `}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveItem(item.id);
+                      }}
+                    >
+                      <div className={`
+                        w-8 h-8 flex items-center justify-center rounded-lg mr-3
+                        transition-colors duration-200
+                        ${activeItem === item.id
+                          ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
+                          : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
+                        }
+                      `}>
+                        {/* Render the inline SVG icon component */}
+                        <Icon size={18} />
+                      </div>
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                          {item.badge}
+                        </span>
+                      )}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
         )}
 
-        {/* User info at the bottom of the sidebar - Added px-4 and mb-4 for padding */}
+        {/* User info at the bottom of the sidebar */}
         {isSidebarVisible && (
-          <div className="mt-auto p-3 border-t border-gray-800 px-4 mb-4">
-            <div className="relative mx-2">
+          <div className="mt-auto p-3 border-t border-gray-800">
+            <div className="relative">
               <button
                 onClick={toggleUserMenu}
                 className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
@@ -298,9 +298,9 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
         {/* Top Header Bar - This will be handled by the game component */}
         {/* The game component will render its own header */}
 
-
-        {/* Main content - This is where the game will be rendered */}
-        <div className="flex-1 overflow-y-auto"> {/* Added flex-1 and overflow-y-auto */}
+        {/* Main content - Added padding-bottom to account for the fixed navigation bar */}
+        {/* The height of the navigation bar is roughly equivalent to p-24 (6rem) based on its design */}
+        <div className="flex-1 overflow-y-auto pb-24"> {/* Added flex-1, overflow-y-auto, and pb-24 */}
              {children} {/* Render the wrapped content (your game) here */}
         </div>
 
