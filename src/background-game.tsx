@@ -8,10 +8,10 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-// Import the new GemIcon component. StatsIcon and MenuIcon imports are removed.
-import { GemIcon } from './library/icon.tsx';
+// Import the new GemIcon component. Removed StatsIcon and MenuIcon imports.
+import { GemIcon } from './library/icon.tsx'; // Assuming StatsIcon and MenuIcon are NOT in icon.tsx
 
-// Import SidebarLayout
+// NEW: Import SidebarLayout
 import { SidebarLayout } from './sidebar.tsx';
 
 
@@ -465,7 +465,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShowHealthDamageEffect(false);
     setDamageAmount(0);
     setShowDamageNumber(false);
-    setIsStatsFullscreen(false); // Ensure stats are not fullscreen on new game
+    setIsStatsFullscreen(false);
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
@@ -544,7 +544,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setShowHealthDamageEffect(false);
         setDamageAmount(0);
         setShowDamageNumber(false);
-        setIsStatsFullscreen(false); // Ensure stats are not fullscreen on logout
+        setIsStatsFullscreen(false);
         setCoins(0); // Reset local state
         setDisplayedCoins(0); // Reset local state
         setGems(0); // Reset local state
@@ -835,7 +835,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                 const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
                 const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
-                const characterTopFromTop_px = characterBottomFromTop_top_px - characterHeight_px;
+                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
                 const characterLeft_px = characterX_px;
                 const characterRight_px = characterX_px + characterWidth_px;
 
@@ -1194,7 +1194,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
                     if (initialRemainingSeconds > 0) {
-                         console.log(`Starting shield display countdown from start time with ${initialRemainingSeconds}s.`);
+                        console.log(`Starting shield display countdown from start time with ${initialRemainingSeconds}s.`);
                          setRemainingCooldown(initialRemainingSeconds);
                          countdownInterval = setInterval(() => {
                              setRemainingCooldown(prev => {
@@ -1541,9 +1541,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
-            hideNavBar(); // Hide the main navbar when stats are fullscreen
+            hideNavBar();
         } else {
-            showNavBar(); // Show the main navbar when stats are closed
+            showNavBar();
         }
         return newState;
     });
@@ -1566,8 +1566,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   return (
-    // MODIFIED: Pass the toggleStatsFullscreen function as onToggleStats prop
-    <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onToggleStats={toggleStatsFullscreen}>
+    // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop and onToggleStats
+    <SidebarLayout
+      setToggleSidebar={handleSetToggleSidebar}
+      onToggleStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function
+    >
       <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
         <style>{`
           @keyframes fadeOutUp {
@@ -1746,7 +1749,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                  {/* REMOVED: StatsIcon is moved to the sidebar */}
+                  {/* REMOVED: StatsIcon component from here */}
                   {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
 
                   <div className="w-32 relative">
