@@ -190,7 +190,7 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
           className={`
             flex flex-col w-72 bg-gray-900 shadow-xl rounded-r-2xl
             transition-all duration-300 ease-in-out
-            mx-0 my-16 h-[calc(100vh-8rem)]
+            mx-0 mt-16 mb-24 h-[calc(100vh-10rem)]
           `}
         >
           {/* Menu items list */}
