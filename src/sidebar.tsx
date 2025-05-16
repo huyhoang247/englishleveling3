@@ -5,7 +5,7 @@ interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  // NEW: Prop to receive the toggleStatsFullscreen function from the parent
+  // New prop to handle toggling the stats fullscreen view
   onToggleStats?: () => void;
 }
 
@@ -160,8 +160,8 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   // List of sidebar menu items - Using new inline SVG components
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    // NEW: Added Stats menu item
-    { id: 'stats', label: 'Stats', icon: BarChart2Icon, onClick: onToggleStats }, // Added onClick handler
+    // Added new Stats menu item
+    { id: 'stats', label: 'Stats', icon: BarChart2Icon, onClick: onToggleStats },
     { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
     { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
