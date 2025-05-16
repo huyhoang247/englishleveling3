@@ -10,6 +10,8 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { StatsIcon, GemIcon } from './library/icon.tsx'; // Import the new StatsIcon component
 
+// NEW: Import SidebarLayout
+import { SidebarLayout } from './sidebar';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -1572,425 +1574,428 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
-      <style>{`
-        @keyframes fadeOutUp {
-          0% {
-            opacity: 1;
-            transform: translate(-50%, 0);
+    // MODIFIED: Wrap the main game content with SidebarLayout
+    <SidebarLayout>
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
+        <style>{`
+          @keyframes fadeOutUp {
+            0% {
+              opacity: 1;
+              transform: translate(-50%, 0);
+            }
+            100% {
+              opacity: 0;
+              transform: translate(-50%, -20px);
+            }
           }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -20px);
+          .animate-fadeOutUp {
+            animation: fadeOutUp 0.5s ease-out forwards;
           }
-        }
-        .animate-fadeOutUp {
-          animation: fadeOutUp 0.5s ease-out forwards;
-        }
-        @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
-        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes pulse-button { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
-        .add-button-pulse { animation: pulse-button 1.5s infinite; }
-        @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
-        .number-changing { animation: number-change 0.3s ease-out; }
-         @keyframes pulse-fast {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .animate-pulse-fast {
-            animation: pulse-fast 1s infinite;
-        }
+          @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
+          @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+          @keyframes pulse-button { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
+          .add-button-pulse { animation: pulse-button 1.5s infinite; }
+          @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
+          .number-changing { animation: number-change 0.3s ease-out; }
+           @keyframes pulse-fast {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+          }
+          .animate-pulse-fast {
+              animation: pulse-fast 1s infinite;
+          }
 
-        @keyframes pulse {
-          0% { opacity: 0; }
-          50% { opacity: 0.2; }
-          100% { opacity: 0; }
-        }
-        @keyframes floatUp {
-          0% { transform: translate(-50%, 0); opacity: 1; }
-          100% { transform: translate(-50%, -20px); opacity: 0; }
-        }
-        /* REMOVED: Animation for OK text */
-        /*
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
-        .animate-fadeInOut {
-            animation: fadeInOut 2s ease-in-out forwards;
-        }
-        */
+          @keyframes pulse {
+            0% { opacity: 0; }
+            50% { opacity: 0.2; }
+            100% { opacity: 0; }
+          }
+          @keyframes floatUp {
+            0% { transform: translate(-50%, 0); opacity: 1; }
+            100% { transform: translate(-50%, -20px); opacity: 0; }
+          }
+          /* REMOVED: Animation for OK text */
+          /*
+          @keyframes fadeInOut {
+              0%, 100% { opacity: 0; }
+              50% { opacity: 1; }
+          }
+          .animate-fadeInOut {
+              animation: fadeInOut 2s ease-in-out forwards;
+          }
+          */
 
-        /* NEW: Glass Shadow Border Effect (Reduced intensity) */
-        .glass-shadow-border {
-            box-shadow:
-                0 2px 4px rgba(0, 0, 0, 0.4), /* Reduced spread and opacity */
-                0 4px 8px rgba(0, 0, 0, 0.3), /* Reduced spread and opacity */
-                inset 0 -1px 2px rgba(255, 255, 255, 0.15); /* Reduced inset highlight */
-        }
+          /* NEW: Glass Shadow Border Effect (Reduced intensity) */
+          .glass-shadow-border {
+              box-shadow:
+                  0 2px 4px rgba(0, 0, 0, 0.4), /* Reduced spread and opacity */
+                  0 4px 8px rgba(0, 0, 0, 0.3), /* Reduced spread and opacity */
+                  inset 0 -1px 2px rgba(255, 255, 255, 0.15); /* Reduced inset highlight */
+          }
 
-        /* Keyframes for the scanline animation (Copied from background-header.txt) */
-        /* REMOVED: Moved to HeaderBackground.tsx */
+          /* Keyframes for the scanline animation (Copied from background-header.txt) */
+          /* REMOVED: Moved to HeaderBackground.tsx */
 
-        /* Keyframes for the twinkling effect (Copied from background-header.txt) */
-        /* REMOVED: Moved to HeaderBackground.tsx */
+          /* Keyframes for the twinkling effect (Copied from background-header.txt) */
+          /* REMOVED: Moved to HeaderBackground.tsx */
 
-        /* Keyframes for individual particle animations (Copied from background-header.txt, though particles not used in header) */
-         /* REMOVED: Moved to HeaderBackground.tsx */
-        @keyframes particle1 {
-          0% { transform: translate(0, 0); opacity: 1; }
-          100% { transform: translate(-50px, -30px); opacity: 0; }
-        }
+          /* Keyframes for individual particle animations (Copied from background-header.txt, though particles not used in header) */
+           /* REMOVED: Moved to HeaderBackground.tsx */
+          @keyframes particle1 {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(-50px, -30px); opacity: 0; }
+          }
 
-        @keyframes particle2 {
-          0% { transform: translate(0, 0); opacity: 1; }
-          100% { transform: translate(60px, -20px); opacity: 0; }
-        }
+          @keyframes particle2 {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(60px, -20px); opacity: 0; }
+          }
 
-        @keyframes particle3 {
-          0% { transform: translate(0, 0); opacity: 1; }
-          100% { transform: translate(-30px, 40px); opacity: 0; }
-        }
+          @keyframes particle3 {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(-30px, 40px); opacity: 0; }
+          }
 
-        @keyframes particle4 {
-          0% { transform: translate(0, 0); opacity: 1; }
-          100% { transform: translate(40px, 30px); opacity: 0; }
-        }
+          @keyframes particle4 {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(40px, 30px); opacity: 0; }
+          }
 
-        @keyframes particle5 {
-          0% { transform: translate(0, 0); opacity: 1; }
-          100% { transform: translate(20px, -50px); opacity: 0; }
-        }
+          @keyframes particle5 {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(20px, -50px); opacity: 0; }
+          }
 
 
-        /* Apply animations to elements using Tailwind's utility classes (Copied from background-header.txt) */
-        /* REMOVED: Moved to HeaderBackground.tsx */
+          /* Apply animations to elements using Tailwind's utility classes (Copied from background-header.txt) */
+          /* REMOVED: Moved to HeaderBackground.tsx */
 
 
-      `}</style>
-       <style jsx global>{`
-        body {
-          overflow: hidden;
-        }
-      `}</style>
+        `}</style>
+         <style jsx global>{`
+          body {
+            overflow: hidden;
+          }
+        `}</style>
 
 
-      {isStatsFullscreen ? (
-        <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-            {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
-            {auth.currentUser && (
-                <CharacterCard
-                    onClose={toggleStatsFullscreen}
-                    coins={coins} // Pass the coin state
-                    onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass the update function
-                />
-            )}
-        </ErrorBoundary>
-      ) : (
-        <div
-          ref={gameRef}
-          className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-          onClick={handleTap} // Handle tap for start/restart
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
+        {isStatsFullscreen ? (
+          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
+              {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
+              {auth.currentUser && (
+                  <CharacterCard
+                      onClose={toggleStatsFullscreen}
+                      coins={coins} // Pass the coin state
+                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass the update function
+                  />
+              )}
+          </ErrorBoundary>
+        ) : (
+          <div
+            ref={gameRef}
+            className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
+            onClick={handleTap} // Handle tap for start/restart
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
 
-          <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
+            <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
 
-          {renderClouds()}
+            {renderClouds()}
 
-          <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
-                  <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
-                  <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
-                  <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
-                  <div className="w-6 h-3 bg-gray-900 rounded-full absolute top-8 right-10"></div>
-                  <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
-              </div>
-          </div>
-
-          {renderCharacter()}
-
-          {renderShield()}
-
-          {obstacles.map(obstacle => renderObstacle(obstacle))}
-
-          {renderCoins()}
-
-          {renderParticles()}
-
-          {/* Main header container */}
-          {/* MODIFIED: Added HeaderBackground component here */}
-          <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                      rounded-b-lg shadow-2xl
-                      bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                      border-b border-l border-r border-slate-700/50">
-
-              {/* Use the HeaderBackground component */}
-              <HeaderBackground />
-
-              <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                {/* Use the new StatsIcon component here */}
-                <StatsIcon onClick={toggleStatsFullscreen} />
-
-                <div className="w-32 relative">
-                    <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                        <div className="h-full overflow-hidden">
-                            <div
-                                className={`${getColor()} h-full transform origin-left`}
-                                style={{
-                                    transform: `scaleX(${healthPct})`,
-                                    transition: 'transform 0.5s ease-out',
-                                }}
-                            >
-                                <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                            </div>
-                        </div>
-
-                        <div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                            style={{ animation: 'pulse 3s infinite' }}
-                        />
-
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                                {Math.round(health)}/{MAX_HEALTH}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
-                        {showDamageNumber && (
-                            <div
-                                className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                style={{ animation: 'floatUp 0.8s ease-out forwards' }}
-                            >
-                                -{damageAmount}
-                            </div>
-                        )}
-                    </div>
+            <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
+                    <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
+                    <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
+                    <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
+                    <div className="w-6 h-3 bg-gray-900 rounded-full absolute top-8 right-10"></div>
+                    <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
                 </div>
             </div>
-             {!isStatsFullscreen && (
-                <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
-                    {/* REMOVED: Display "OK" text */}
-                    {/*
-                    {showCoinUpdateSuccess && (
-                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
-                            OK
-                        </div>
-                    )}
-                    */}
-                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center">
-                            {/* Sử dụng GemIcon từ file mới */}
-                            <GemIcon size={16} color="#a78bfa" className="relative z-20" />
-                        </div>
-                        <div className="font-bold text-purple-200 text-xs tracking-wide">
-                            {gems.toLocaleString()}
-                        </div>
-                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-                            <span className="text-white font-bold text-xs">+</span>
-                        </div>
-                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                    </div>
 
-                    <CoinDisplay
-                      displayedCoins={displayedCoins}
-                      isStatsFullscreen={isStatsFullscreen}
-                    />
-                </div>
-             )}
-          </div>
+            {renderCharacter()}
 
-          {gameOver && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
-              <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
-              <button
-                className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                onClick={startNewGame} // Call startNewGame on button click
-              >
-                Chơi Lại
-              </button>
-            </div>
-          )}
+            {renderShield()}
 
-          {!isStatsFullscreen && (
-            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute top-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
+            {obstacles.map(obstacle => renderObstacle(obstacle))}
+
+            {renderCoins()}
+
+            {renderParticles()}
+
+            {/* Main header container */}
+            {/* MODIFIED: Added HeaderBackground component here */}
+            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
+                        rounded-b-lg shadow-2xl
+                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                        border-b border-l border-r border-slate-700/50">
+
+                {/* Use the HeaderBackground component */}
+                <HeaderBackground />
+
+                <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
+                  {/* Use the new StatsIcon component here */}
+                  <StatsIcon onClick={toggleStatsFullscreen} />
+
+                  <div className="w-32 relative">
+                      <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                          <div className="h-full overflow-hidden">
+                              <div
+                                  className={`${getColor()} h-full transform origin-left`}
+                                  style={{
+                                      transform: `scaleX(${healthPct})`,
+                                      transition: 'transform 0.5s ease-out',
+                                  }}
+                              >
+                                  <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                              </div>
+                          </div>
+
+                          <div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
+                              style={{ animation: 'pulse 3s infinite' }}
+                          />
+
+                          <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                                  {Math.round(health)}/{MAX_HEALTH}
+                              </span>
+                          </div>
                       </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Shop",
-                  notification: true,
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute inset-0.5 bg-amber-500/30 rounded-sm flex items-center justify-center">
-                          <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                        </div>
-                      </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Inventory",
-                  notification: true,
-                  special: true,
-                  centered: true
-                }
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                  {item.special && item.centered ? (
-                      <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                          {item.icon}
-                          {item.label && (
-                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+
+                      <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
+                          {showDamageNumber && (
+                              <div
+                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
+                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }}
+                              >
+                                  -{damageAmount}
+                              </div>
                           )}
                       </div>
-                  ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                      {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-           {!isStatsFullscreen && (
-            <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-
-               <div
-                className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData check
-                onClick={activateShield}
-                title={
-                  !gameStarted || gameOver || isLoadingUserData ? "Không khả dụng" : // Added isLoadingUserData check
-                  isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
-                  isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
-                  isStatsFullscreen ? "Không khả dụng" :
-                  "Kích hoạt Khiên chắn"
-                }
-                aria-label="Sử dụng Khiên chắn"
-                role="button"
-                tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData ? -1 : 0} // Added isLoadingUserData check
-              >
-                <div className="w-10 h-10">
-                   <DotLottieReact
-                      src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
-                      loop
-                      autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData} // Autoplay only when shield is active, not fullscreen, and not loading
-                      className="w-full h-full"
-                   />
-                </div>
-                {/* MODIFIED: Conditional rendering for cooldown text */}
-                {isShieldOnCooldown && remainingCooldown > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
-                    {remainingCooldown}s
                   </div>
-                )}
               </div>
+               {!isStatsFullscreen && (
+                  <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
+                      {/* REMOVED: Display "OK" text */}
+                      {/*
+                      {showCoinUpdateSuccess && (
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
+                              OK
+                          </div>
+                      )}
+                      */}
+                      <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                          <div className="relative mr-0.5 flex items-center justify-center">
+                              {/* Sử dụng GemIcon từ file mới */}
+                              <GemIcon size={16} color="#a78bfa" className="relative z-20" />
+                          </div>
+                          <div className="font-bold text-purple-200 text-xs tracking-wide">
+                              {gems.toLocaleString()}
+                          </div>
+                          <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-purple-300 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                              <span className="text-white font-bold text-xs">+</span>
+                          </div>
+                          <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                          <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                      </div>
 
-              {[
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
-                          <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
-                          <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
-                          <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+                      <CoinDisplay
+                        displayedCoins={displayedCoins}
+                        isStatsFullscreen={isStatsFullscreen}
+                      />
+                  </div>
+               )}
+            </div>
+
+            {gameOver && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
+                <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+                <button
+                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
+                  onClick={startNewGame} // Call startNewGame on button click
+                >
+                  Chơi Lại
+                </button>
+              </div>
+            )}
+
+            {!isStatsFullscreen && (
+              <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+                {[
+                  {
+                    icon: (
+                      <div className="relative">
+                        <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
+                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                          <div className="absolute top-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
                         </div>
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                       </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Mission",
-                  notification: true,
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: (
-                    <div className="relative">
-                      <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
-                        <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                        <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
-                          <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
-                          <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
-                          <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
-                          <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
-                          <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
-                          <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+                    ),
+                    label: "Shop",
+                    notification: true,
+                    special: true,
+                    centered: true
+                  },
+                  {
+                    icon: (
+                      <div className="relative">
+                        <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
+                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                          <div className="absolute inset-0.5 bg-amber-500/30 rounded-sm flex items-center justify-center">
+                            <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
+                          </div>
                         </div>
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
                       </div>
-                      <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                    </div>
-                  ),
-                  label: "Blacksmith",
-                  notification: true,
-                  special: true,
-                  centered: true
-                },
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                  {item.special && item.centered ? (
-                      <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                          {item.icon}
-                          {item.label && (
-                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                          )}
+                    ),
+                    label: "Inventory",
+                    notification: true,
+                    special: true,
+                    centered: true
+                  }
+                ].map((item, index) => (
+                  <div key={index} className="group cursor-pointer">
+                    {item.special && item.centered ? (
+                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                            {item.icon}
+                            {item.label && (
+                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                            )}
+                        </div>
+                    ) : (
+                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                        {item.icon}
+                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
                       </div>
-                  ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                      {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+             {!isStatsFullscreen && (
+              <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+
+                 <div
+                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData check
+                  onClick={activateShield}
+                  title={
+                    !gameStarted || gameOver || isLoadingUserData ? "Không khả dụng" : // Added isLoadingUserData check
+                    isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
+                    isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
+                    isStatsFullscreen ? "Không khả dụng" :
+                    "Kích hoạt Khiên chắn"
+                  }
+                  aria-label="Sử dụng Khiên chắn"
+                  role="button"
+                  tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData ? -1 : 0} // Added isLoadingUserData check
+                >
+                  <div className="w-10 h-10">
+                     <DotLottieReact
+                        src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
+                        loop
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData} // Autoplay only when shield is active, not fullscreen, and not loading
+                        className="w-full h-full"
+                     />
+                  </div>
+                  {/* MODIFIED: Conditional rendering for cooldown text */}
+                  {isShieldOnCooldown && remainingCooldown > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
+                      {remainingCooldown}s
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
 
-          <TreasureChest
-            initialChests={3}
-            keyCount={keyCount}
-            onKeyCollect={(n) => {
-              console.log(`Chest opened using ${n} key(s).`);
-              // Update local state first
-              setKeyCount(prev => Math.max(0, prev - n));
-              // Then update Firestore
-              if (auth.currentUser) {
-                updateKeysInFirestore(auth.currentUser.uid, -n); // Subtract keys
-              } else {
-                console.log("User not authenticated, skipping Firestore key update.");
-              }
-            }}
-            // Use startCoinCountAnimation to handle coin rewards from chests
-            onCoinReward={startCoinCountAnimation}
-            onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-            isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
-            isStatsFullscreen={isStatsFullscreen}
-            currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
-          />
+                {[
+                  {
+                    icon: (
+                      <div className="relative">
+                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
+                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                          <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
+                            <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
+                            <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
+                            <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+                          </div>
+                        </div>
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+                      </div>
+                    ),
+                    label: "Mission",
+                    notification: true,
+                    special: true,
+                    centered: true
+                  },
+                  {
+                    icon: (
+                      <div className="relative">
+                        <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
+                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                          <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
+                            <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
+                            <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
+                            <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
+                            <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
+                            <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
+                            <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+                          </div>
+                        </div>
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+                      </div>
+                    ),
+                    label: "Blacksmith",
+                    notification: true,
+                    special: true,
+                    centered: true
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="group cursor-pointer">
+                    {item.special && item.centered ? (
+                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                            {item.icon}
+                            {item.label && (
+                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                            )}
+                        </div>
+                    ) : (
+                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                        {item.icon}
+                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
-        </div>
-      )}
-    </div>
+            <TreasureChest
+              initialChests={3}
+              keyCount={keyCount}
+              onKeyCollect={(n) => {
+                console.log(`Chest opened using ${n} key(s).`);
+                // Update local state first
+                setKeyCount(prev => Math.max(0, prev - n));
+                // Then update Firestore
+                if (auth.currentUser) {
+                  updateKeysInFirestore(auth.currentUser.uid, -n); // Subtract keys
+                } else {
+                  console.log("User not authenticated, skipping Firestore key update.");
+                }
+              }}
+              // Use startCoinCountAnimation to handle coin rewards from chests
+              onCoinReward={startCoinCountAnimation}
+              onGemReward={handleGemReward} // NEW: Pass the gem reward handler
+              isGamePaused={gameOver || !gameStarted || isLoadingUserData} // Added isLoadingUserData check
+              isStatsFullscreen={isStatsFullscreen}
+              currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
+            />
+
+          </div>
+        )}
+      </div>
+    </SidebarLayout>
   );
 }
