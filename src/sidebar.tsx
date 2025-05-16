@@ -75,17 +75,6 @@ const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...
   </svg>
 );
 
-// REMOVED: MenuIcon definition is not needed here anymore as it's not used internally
-/*
-const MenuIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <line x1="3" y1="12" x2="21" y2="12"></line>
-    <line x1="3" y1="6" x2="21" y2="6"></line>
-    <line x1="3" y1="18" x2="21" y2="18"></line>
-  </svg>
-);
-*/
-
 const BellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -187,72 +176,72 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
         />
       )}
 
-      {/* REMOVED: Toggle Sidebar Button - This is now handled by the game component */}
-
-
       {/* Sidebar - Dark Theme Style */}
       <div
         className={`
           flex flex-col w-72 h-screen bg-gray-900 shadow-xl
-          fixed top-0 left-0 z-60 {/* Changed z-40 to z-60 */}
+          fixed top-0 left-0 z-40
           transform transition-all duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
           md:relative md:translate-x-0 md:flex ${isSidebarVisible ? 'md:w-72' : 'md:w-0 md:hidden'}
         `}
       >
-        {/* Menu items list */}
+        {/* Menu items list - Added top padding (pt-4) */}
         {isSidebarVisible && (
-          <nav className="flex-1 py-4 overflow-y-auto">
-            <ul className="space-y-0 px-2">
-              {menuItems.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
-                    <a
-                      href="#"
-                      className={`
-                        flex items-center px-4 py-3 text-sm font-medium
-                        transition-all duration-150 ease-in-out group relative
-                        mx-1 my-1 rounded-xl
-                        ${activeItem === item.id
-                          ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
-                          : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                        }
-                      `}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setActiveItem(item.id);
-                      }}
-                    >
-                      <div className={`
-                        w-8 h-8 flex items-center justify-center rounded-lg mr-3
-                        transition-colors duration-200
-                        ${activeItem === item.id
-                          ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
-                          : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
-                        }
-                      `}>
-                        {/* Render the inline SVG icon component */}
-                        <Icon size={18} />
-                      </div>
-                      <span>{item.label}</span>
-                      {item.badge && (
-                        <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
-                          {item.badge}
-                        </span>
-                      )}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
+          <nav className="flex-1 py-4 overflow-y-auto px-4">
+            {/* Added container with top/bottom margins (my-2) */}
+            <div className="my-2">
+              <ul className="space-y-0">
+                {menuItems.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
+                      <a
+                        href="#"
+                        className={`
+                          flex items-center px-4 py-3 text-sm font-medium
+                          transition-all duration-150 ease-in-out group relative
+                          mx-2 my-1 rounded-xl
+                          ${activeItem === item.id
+                            ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
+                            : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                          }
+                        `}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setActiveItem(item.id);
+                        }}
+                      >
+                        <div className={`
+                          w-8 h-8 flex items-center justify-center rounded-lg mr-3
+                          transition-colors duration-200
+                          ${activeItem === item.id
+                            ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
+                            : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
+                          }
+                        `}>
+                          {/* Render the inline SVG icon component */}
+                          <Icon size={18} />
+                        </div>
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                            {item.badge}
+                          </span>
+                        )}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </nav>
         )}
 
-        {/* User info at the bottom of the sidebar */}
+        {/* User info at the bottom of the sidebar - Added px-4 and mb-4 for padding */}
         {isSidebarVisible && (
-          <div className="mt-auto p-3 border-t border-gray-800">
-            <div className="relative">
+          <div className="mt-auto p-3 border-t border-gray-800 px-4 mb-4">
+            <div className="relative mx-2">
               <button
                 onClick={toggleUserMenu}
                 className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
