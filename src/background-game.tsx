@@ -8,13 +8,15 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-import { StatsIcon, GemIcon } from './library/icon.tsx'; // Import the new StatsIcon component
+// Import the new StatsIcon and GemIcon components, and add MenuIcon
+import { StatsIcon, GemIcon, MenuIcon } from './library/icon.tsx'; // Assuming MenuIcon is in icon.tsx
 
 // NEW: Import SidebarLayout
 import { SidebarLayout } from './sidebar.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
+// Keeping these here for now, but ideally should be in library/icon.tsx
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -33,24 +35,6 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
-
-// REMOVED: GemIcon component definition is moved to GemIcon.tsx
-/*
-const GemIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-    <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/tourmaline.png"
-      alt="Tourmaline Gem Icon"
-      className="w-full h-full object-contain"
-      onError={(e) => {
-        const target = e as any; // Cast to any to access target
-        target.onerror = null;
-        target.src = "https://placehold.co/24x24/8a2be2/ffffff?text=Gem";
-      }}
-    />
-  </div>
-);
-*/
 
 const KeyIcon = () => (
   <img
@@ -232,6 +216,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // NEW: Ref for the main game loop interval
   const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null); // Specify type
 
+  // NEW: Ref to store the sidebar toggle function from SidebarLayout
+  const sidebarToggleRef = useRef<(() => void) | null>(null);
 
   // NEW: Firestore instance
   const db = getFirestore();
@@ -1563,6 +1549,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
+  // Handler to receive the sidebar toggle function from SidebarLayout
+  const handleSetToggleSidebar = (toggleFn: () => void) => {
+      sidebarToggleRef.current = toggleFn;
+  };
+
+
   // Show loading indicator if user data is being fetched
   if (isLoadingUserData) {
     return (
@@ -1574,8 +1566,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   return (
-    // MODIFIED: Wrap the main game content with SidebarLayout
-    <SidebarLayout>
+    // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop
+    <SidebarLayout setToggleSidebar={handleSetToggleSidebar}>
       <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
         <style>{`
           @keyframes fadeOutUp {
@@ -1723,7 +1715,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             {renderParticles()}
 
             {/* Main header container */}
-            {/* MODIFIED: Added HeaderBackground component here */}
+            {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
                         rounded-b-lg shadow-2xl
                         bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
@@ -1732,13 +1724,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {/* Use the HeaderBackground component */}
                 <HeaderBackground />
 
-                {/* MODIFIED: Adjusted flex order to place StatsIcon before HP bar */}
+                {/* NEW Menu Button - Placed before the HP bar container */}
+                <button
+                    onClick={() => sidebarToggleRef.current?.()} // Call the stored toggle function
+                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" // Added z-20 to ensure it's above background
+                    aria-label="Mở sidebar"
+                    title="Mở sidebar"
+                >
+                    {/* Use the imported MenuIcon */}
+                    <MenuIcon size={20} className="text-gray-200" />
+                </button>
+
+
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
                   {/* Use the new StatsIcon component here */}
                   <StatsIcon onClick={toggleStatsFullscreen} />
 
-                  {/* HP Bar */}
-                  <div className="w-32 relative ml-2"> {/* Added ml-2 for spacing */}
+                  <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
                           <div className="h-full overflow-hidden">
                               <div
