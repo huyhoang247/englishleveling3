@@ -1732,11 +1732,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {/* Use the HeaderBackground component */}
                 <HeaderBackground />
 
+                {/* MODIFIED: Adjusted flex order to place StatsIcon before HP bar */}
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
                   {/* Use the new StatsIcon component here */}
                   <StatsIcon onClick={toggleStatsFullscreen} />
 
-                  <div className="w-32 relative">
+                  {/* HP Bar */}
+                  <div className="w-32 relative ml-2"> {/* Added ml-2 for spacing */}
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
                           <div className="h-full overflow-hidden">
                               <div
