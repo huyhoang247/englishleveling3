@@ -8,6 +8,7 @@ interface SidebarLayoutProps {
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
+// Keeping these here for now, but ideally should be in library/icon.tsx
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -74,6 +75,8 @@ const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...
   </svg>
 );
 
+// REMOVED: MenuIcon definition is not needed here anymore as it's not used internally
+/*
 const MenuIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -81,6 +84,7 @@ const MenuIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
     <line x1="3" y1="18" x2="21" y2="18"></line>
   </svg>
 );
+*/
 
 const BellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -183,19 +187,7 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
         />
       )}
 
-      {/* REMOVED: Toggle Sidebar Button - This will be moved to the game header */}
-      {/*
-      {!isSidebarVisible && (
-        <button
-          onClick={toggleSidebar} // This button is used to open the sidebar
-          className="fixed top-4 left-4 z-50 p-2 rounded-full bg-gray-800 shadow-lg text-gray-200 hover:bg-gray-700 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400"
-          aria-label="Hiện sidebar"
-          title="Hiện sidebar"
-        >
-          <MenuIcon size={20} />
-        </button>
-      )}
-      */}
+      {/* REMOVED: Toggle Sidebar Button - This is now handled by the game component */}
 
 
       {/* Sidebar - Dark Theme Style */}
