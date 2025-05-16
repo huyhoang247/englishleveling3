@@ -194,7 +194,7 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
       <div
         className={`
           flex flex-col w-72 h-screen bg-gray-900 shadow-xl
-          fixed top-0 left-0 z-40
+          fixed top-0 left-0 z-60 {/* Changed z-40 to z-60 */}
           transform transition-all duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
           md:relative md:translate-x-0 md:flex ${isSidebarVisible ? 'md:w-72' : 'md:w-0 md:hidden'}
@@ -317,8 +317,7 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
 
 
         {/* Footer - Kept footer */}
-        {/* Added mt-4 class to move the footer up */}
-        <footer className="bg-white border-t border-gray-100 py-4 px-6 mt-4">
+        <footer className="bg-white border-t border-gray-100 py-4 px-6">
           <div className="text-center text-sm text-gray-500">
             © 2025 DASHPRO. Tất cả các quyền được bảo lưu.
           </div>
