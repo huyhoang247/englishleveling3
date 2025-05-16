@@ -11,7 +11,7 @@ import HeaderBackground from './header-background.tsx';
 import { StatsIcon, GemIcon } from './library/icon.tsx'; // Import the new StatsIcon component
 
 // NEW: Import SidebarLayout
-import { SidebarLayout } from './sidebar';
+import { SidebarLayout } from './sidebar.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
