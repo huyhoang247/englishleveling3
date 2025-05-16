@@ -75,17 +75,6 @@ const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...
   </svg>
 );
 
-// REMOVED: MenuIcon definition is not needed here anymore as it's not used internally
-/*
-const MenuIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <line x1="3" y1="12" x2="21" y2="12"></line>
-    <line x1="3" y1="6" x2="21" y2="6"></line>
-    <line x1="3" y1="18" x2="21" y2="18"></line>
-  </svg>
-);
-*/
-
 const BellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -187,14 +176,11 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
         />
       )}
 
-      {/* REMOVED: Toggle Sidebar Button - This is now handled by the game component */}
-
-
       {/* Sidebar - Dark Theme Style */}
       <div
         className={`
           flex flex-col w-72 h-screen bg-gray-900 shadow-xl
-          fixed top-0 left-0 z-40
+          fixed top-0 left-0 z-50  // Increased z-index to 50 or higher
           transform transition-all duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
           md:relative md:translate-x-0 md:flex ${isSidebarVisible ? 'md:w-72' : 'md:w-0 md:hidden'}
@@ -311,7 +297,8 @@ function SidebarLayout({ children, setToggleSidebar }: SidebarLayoutProps) { // 
 
 
         {/* Main content - This is where the game will be rendered */}
-        <div className="flex-1 overflow-y-auto"> {/* Added flex-1 and overflow-y-auto */}
+        {/* Added padding-bottom to prevent content from being hidden by the bottom navigation bar */}
+        <div className="flex-1 overflow-y-auto pb-24"> {/* Added flex-1, overflow-y-auto and pb-24 */}
              {children} {/* Render the wrapped content (your game) here */}
         </div>
 
