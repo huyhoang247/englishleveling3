@@ -432,6 +432,7 @@ export default function VocabularyGame() {
   }
 
   // Calculate game progress percentage based on completed words
+  // Logic tính toán tiến trình: (số từ đã dùng / tổng số từ) * 100
   const gameProgress = vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0;
 
 
@@ -446,11 +447,13 @@ export default function VocabularyGame() {
             <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
               <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
               {/* Display score based on completed words */}
+              {/* Hiển thị số từ đã hoàn thành theo định dạng "đã_hoàn_thành/tổng_số" */}
               <p className="text-xl mb-4">Số từ đã hoàn thành: <span className="font-bold text-indigo-600">{usedWords.size}/{vocabularyList.length}</span></p>
+              {/* Thanh tiến trình ở màn hình kết thúc game */}
               <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
                 <div
                   className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                  style={{ width: `${gameProgress}%` }} // Use gameProgress here
+                  style={{ width: `${gameProgress}%` }} // Sử dụng gameProgress đã tính
                 ></div>
               </div>
               {/* Display final streak and coins if needed in game over screen */}
@@ -480,6 +483,7 @@ export default function VocabularyGame() {
                     <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
                       <div className="flex items-center">
                         {/* Completed words count */}
+                        {/* Hiển thị số từ đã hoàn thành theo định dạng "đã_hoàn_thành/tổng_số" */}
                         <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
                           {usedWords.size}
                         </span>
@@ -505,11 +509,12 @@ export default function VocabularyGame() {
                 </div>
 
                 {/* Progress bar under the header row */}
+                 {/* Thanh tiến trình khi đang chơi game */}
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
                     {/* Progress fill with smooth animation */}
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: `${gameProgress}%` }} // Use gameProgress here
+                      style={{ width: `${gameProgress}%` }} // Sử dụng gameProgress đã tính
                     >
                       {/* Light reflex effect */}
                       <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
@@ -544,7 +549,7 @@ export default function VocabularyGame() {
             {/* END: New Header Structure */}
 
             {/* Removed the old score/progress bar div */}
-            {/*
+            {/* Phần này đã được thay thế bằng header mới ở trên
             <div className="w-full flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-md">
               <div className="flex items-center">
                 <span className="text-yellow-500 text-2xl mr-2">⭐</span>
