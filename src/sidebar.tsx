@@ -5,7 +5,7 @@ interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  // New prop to handle toggling the stats fullscreen view
+  // NEW prop to handle toggling the stats screen
   onToggleStats?: () => void;
 }
 
@@ -97,6 +97,7 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
+// Keep BarChart2Icon for the Stats menu item
 const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -160,8 +161,8 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   // List of sidebar menu items - Using new inline SVG components
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    // Added new Stats menu item
-    { id: 'stats', label: 'Stats', icon: BarChart2Icon, onClick: onToggleStats },
+    // NEW: Added Stats menu item
+    { id: 'stats', label: 'Stats', icon: BarChart2Icon },
     { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
     { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
@@ -219,10 +220,13 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
                         onClick={(e) => {
                           e.preventDefault();
                           setActiveItem(item.id);
-                          // Call the item's onClick function if it exists
-                          if (item.onClick) {
-                            item.onClick();
+                          // NEW: Handle click for the Stats item
+                          if (item.id === 'stats' && onToggleStats) {
+                            onToggleStats(); // Call the function passed from the game component
+                            toggleSidebar(); // Optionally close the sidebar after opening stats
                           }
+                           // If it's not the stats item, you might want to navigate or perform other actions
+                           // For now, just setting activeItem is enough for other items
                         }}
                       >
                         <div className={`
@@ -331,3 +335,4 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
 // Export the SidebarLayout component
 export { SidebarLayout };
+
