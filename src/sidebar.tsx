@@ -1,9 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// Removed lucide-react import
-// import { Home, Settings, Mail, Calendar, Users, HelpCircle, Menu, X, Bell, Search, ChevronDown, Zap, BarChart2, FileText, PieChart, Award, Clipboard, Activity } from 'lucide-react';
-
-// --- Inline SVG Icon Components (Replacement for lucide-react) ---
-// Reusing XIcon from background-game.tsx pattern
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -143,14 +138,15 @@ function SidebarLayout({ children }: { children: React.ReactNode }) { // Added c
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // List of sidebar menu items - Using new inline SVG components
+  // Removed 'calendar', 'reports', and 'users' items as requested
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
     { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
     { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
-    { id: 'calendar', label: 'Lịch', icon: CalendarIcon },
-    { id: 'reports', label: 'Báo cáo', icon: FileTextIcon },
-    { id: 'users', label: 'Người dùng', icon: UsersIcon },
+    // { id: 'calendar', label: 'Lịch', icon: CalendarIcon }, // Removed
+    // { id: 'reports', label: 'Báo cáo', icon: FileTextIcon }, // Removed
+    // { id: 'users', label: 'Người dùng', icon: UsersIcon }, // Removed
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon },
