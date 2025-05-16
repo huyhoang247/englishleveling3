@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
 // Import các module cần thiết từ firebase.js và firestore
 import { db, auth } from '../firebase.js'; // Import db và auth
-import { doc, getDoc } from 'firebase/firestore'; // Import doc và getDoc
+// Import doc, getDoc, updateDoc, và arrayUnion từ firestore
+import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth'; // Import onAuthStateChanged và User
 import { defaultImageUrls } from '../image-url.ts';
 
@@ -309,7 +310,7 @@ export default function VocabularyGame() {
   };
 
   // Check the user's answer
-  const checkAnswer = () => {
+  const checkAnswer = async () => { // Make checkAnswer async to use await for Firestore
     if (!currentWord || !userInput.trim()) return; // Kiểm tra từ hiện tại và input không rỗng
 
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
@@ -326,6 +327,24 @@ export default function VocabularyGame() {
       // Thêm từ đã dùng vào Set
       setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
       setShowConfetti(true); // Hiển thị hiệu ứng confetti
+
+      // --- START: Lưu từ vựng đã trả lời đúng vào Firestore với tên trường 'fill-word-1' ---
+      if (user && currentWord.word) { // Kiểm tra người dùng đã đăng nhập và có từ hiện tại
+        try {
+          const userDocRef = doc(db, 'users', user.uid); // Lấy tham chiếu document người dùng
+          // Cập nhật document, thêm từ vào mảng 'fill-word-1'.
+          // arrayUnion sẽ chỉ thêm từ nếu nó chưa tồn tại trong mảng.
+          await updateDoc(userDocRef, {
+            'fill-word-1': arrayUnion(currentWord.word) // Sử dụng tên trường 'fill-word-1'
+          });
+          console.log(`Saved correctly answered word "${currentWord.word}" to Firestore field 'fill-word-1'.`);
+        } catch (firestoreError) {
+          console.error("Error saving word to Firestore:", firestoreError);
+          // Có thể hiển thị thông báo lỗi cho người dùng nếu cần
+        }
+      }
+      // --- END: Lưu từ vựng đã trả lời đúng vào Firestore ---
+
 
       // Ẩn confetti sau 2 giây
       setTimeout(() => {
