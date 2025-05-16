@@ -44,13 +44,6 @@ const SettingsIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
   </svg>
 );
 
-const MailIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-    <polyline points="22,6 12,13 2,6"></polyline>
-  </svg>
-);
-
 const CalendarIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -97,7 +90,7 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// Keep BarChart2Icon for the Stats menu item
+// Keep BarChart2Icon for the Stats menu item (though we'll replace it for 'stats' below)
 const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -127,6 +120,18 @@ const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
   </svg>
+);
+
+// New component for the Award icon using the provided image URL
+const AwardIcon = ({ size = 24, className = '', ...props }) => (
+  <img
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
+    alt="Award Icon"
+    width={size}
+    height={size}
+    className={className}
+    {...props}
+  />
 );
 
 
@@ -161,10 +166,10 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   // List of sidebar menu items - Using new inline SVG components
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    // NEW: Added Stats menu item
-    { id: 'stats', label: 'Stats', icon: BarChart2Icon },
+    // Updated: Changed icon for Stats menu item
+    { id: 'stats', label: 'Stats', icon: AwardIcon },
     { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
-    { id: 'mail', label: 'Tin nhắn', icon: MailIcon, badge: 5 },
+    // Removed: Mail menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon },
@@ -237,7 +242,7 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
                             : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
                           }
                         `}>
-                          {/* Render the inline SVG icon component */}
+                          {/* Render the inline SVG icon component or the image icon component */}
                           <Icon size={18} />
                         </div>
                         <span>{item.label}</span>
@@ -335,4 +340,3 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
 // Export the SidebarLayout component
 export { SidebarLayout };
-
