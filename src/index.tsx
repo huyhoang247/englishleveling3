@@ -6,15 +6,14 @@ import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './profile.tsx';
 import Quiz from './quiz/quiz-app-home.tsx';
-import Rank from './rank.tsx'; // Import the Rank component
 import AuthComponent from './auth.js';
 import { auth, db } from './firebase.js'; // Import đối tượng auth và db của Firebase
 import { onAuthStateChanged, User } from 'firebase/auth';
 // Import các hàm cần thiết từ Firestore
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 
-// Định nghĩa các loại tab có thể có, thêm 'rank'
-type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'rank';
+// Định nghĩa các loại tab có thể có
+type TabType = 'home' | 'profile' | 'story' | 'quiz';
 
 // Hàm kiểm tra và tạo tài liệu người dùng trong Firestore nếu chưa có
 const ensureUserDocumentExists = async (user: User) => {
@@ -96,20 +95,21 @@ const App: React.FC = () => {
   // Hàm xử lý thay đổi tab
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Ẩn thanh điều hướng nếu tab là 'rank', hiển thị lại cho các tab khác
-    if (tab === 'rank') {
-      setIsNavBarVisible(false);
-    } else {
+    // Đảm bảo thanh điều hướng hiển thị khi chuyển tab, trừ khi đó là tab story hoặc home
+    if (tab !== 'story' && tab !== 'home') {
+      setIsNavBarVisible(true);
+    }
+    if (tab === 'story' || tab === 'home') {
       setIsNavBarVisible(true);
     }
   };
 
-  // Hàm ẩn thanh điều hướng (có thể không cần dùng trực tiếp nữa nếu dùng handleTabChange)
+  // Hàm ẩn thanh điều hướng
   const hideNavBar = () => {
     setIsNavBarVisible(false);
   };
 
-  // Hàm hiển thị thanh điều hướng (có thể không cần dùng trực tiếp nữa nếu dùng handleTabChange)
+  // Hàm hiển thị thanh điều hướng
   const showNavBar = () => {
     setIsNavBarVisible(true);
   };
@@ -144,7 +144,6 @@ const App: React.FC = () => {
         <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
       )}
       {activeTab === 'quiz' && <Quiz />}
-      {activeTab === 'rank' && <Rank />} {/* Render the Rank component */}
 
       {/* Hiển thị thanh điều hướng dưới cùng nếu isNavBarVisible là true */}
       {isNavBarVisible && (
