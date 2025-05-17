@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Medal, Crown, Star, User, Gem, Database, Coins, ArrowUp, Search, Filter, Info, Clock, AlertCircle, Calendar } from 'lucide-react'; // Removed ChevronUp, ChevronDown
+// Removed lucide-react import
 
 export default function EnhancedLeaderboard() {
   const [activeTab, setActiveTab] = useState('wealth');
@@ -132,14 +132,33 @@ export default function EnhancedLeaderboard() {
       case 1:
         return (
           <div className="relative">
-            <Crown className="w-5 h-5 text-yellow-400 transform scale-110" />
+            {/* Crown Icon (replaced lucide-react Crown) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-yellow-400 transform scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m12 16-3-9L2 2h20l-7 5-3 9Z"/>
+              <path d="M16 16l-3-9-1-2-1 2-3 9"/>
+              <path d="M2 16h20"/>
+            </svg>
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse shadow-sm shadow-yellow-400/50"></div>
           </div>
         );
       case 2:
-        return <Medal className="w-5 h-5 text-gray-300" />;
+        return (
+          // Silver Medal Icon (replaced lucide-react Medal)
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8a6 6 0 0 0-6 6v7l-3-3-3 3V14a6 6 0 0 0 6-6Z"/>
+            <path d="M14.5 17.5 12 20l-2.5-2.5"/>
+            <path d="M8 14h8"/>
+          </svg>
+        );
       case 3:
-        return <Medal className="w-5 h-5 text-amber-700" />;
+        return (
+          // Bronze Medal Icon (replaced lucide-react Medal)
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8a6 6 0 0 0-6 6v7l-3-3-3 3V14a6 6 0 0 0 6-6Z"/>
+            <path d="M14.5 17.5 12 20l-2.5-2.5"/>
+            <path d="M8 14h8"/>
+          </svg>
+        );
       default:
         return <div className="w-5 h-5 flex items-center justify-center font-bold text-gray-400">{rank}</div>;
     }
@@ -195,7 +214,18 @@ export default function EnhancedLeaderboard() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
             <div className="relative">
-              <Trophy className="w-6 h-6 text-yellow-400 mr-2" />
+              {/* Trophy Icon (replaced lucide-react Trophy) */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                <path d="M4 22h16"/>
+                <path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1-.45-1-1v-2.34"/>
+                <path d="M16 14.66V17c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2.34"/>
+                <path d="M8 8v1c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V8"/>
+                <path d="M12 17v5"/>
+                <path d="M12 17H7"/>
+                <path d="M12 17h5"/>
+              </svg>
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
             </div>
             <div>
@@ -212,7 +242,11 @@ export default function EnhancedLeaderboard() {
             </div>
           </div>
           <div className="bg-indigo-900/60 backdrop-blur-sm rounded-full px-3 py-1 text-xs flex items-center border border-indigo-700/50 shadow">
-            <Clock className="w-3 h-3 mr-1 text-indigo-300" />
+            {/* Clock Icon (replaced lucide-react Clock) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
             <span className="text-indigo-200">16/05/2025</span>
           </div>
         </div>
@@ -226,7 +260,11 @@ export default function EnhancedLeaderboard() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Search className="absolute left-2.5 top-2 w-4 h-4 text-indigo-400" />
+          {/* Search Icon (replaced lucide-react Search) */}
+          <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-2.5 top-2 w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
         </div>
 
         {/* Time Filter Selector */}
@@ -239,7 +277,11 @@ export default function EnhancedLeaderboard() {
             }`}
             onClick={() => setTimeFilter('day')}
           >
-            <Clock className="mr-1 w-3 h-3" />
+            {/* Clock Icon (replaced lucide-react Clock) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
             Ngày
           </button>
           <button
@@ -250,7 +292,10 @@ export default function EnhancedLeaderboard() {
             }`}
             onClick={() => setTimeFilter('week')}
           >
-            <Filter className="mr-1 w-3 h-3" />
+            {/* Filter Icon (replaced lucide-react Filter) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
             Tuần
           </button>
           <button
@@ -261,7 +306,13 @@ export default function EnhancedLeaderboard() {
             }`}
             onClick={() => setTimeFilter('month')}
           >
-            <Calendar className="mr-1 w-3 h-3" />
+            {/* Calendar Icon (replaced lucide-react Calendar) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 2v4"/>
+              <path d="M16 2v4"/>
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <path d="M3 10h18"/>
+            </svg>
             Tháng
           </button>
           <button
@@ -272,7 +323,10 @@ export default function EnhancedLeaderboard() {
             }`}
             onClick={() => setTimeFilter('all')}
           >
-            <Star className="mr-1 w-3 h-3" />
+            {/* Star Icon (replaced lucide-react Star) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
             Tổng
           </button>
         </div>
@@ -288,7 +342,13 @@ export default function EnhancedLeaderboard() {
             }`}
             onClick={() => setActiveTab('wealth')}
           >
-            <Coins className={`mr-1.5 w-4 h-4 ${activeTab === 'wealth' ? 'animate-pulse' : ''}`} />
+            {/* Coins Icon (replaced lucide-react Coins) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'wealth' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8" cy="8" r="6"/>
+              <path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>
+              <path d="M7 17l-2 2"/>
+              <path d="m21 7-2 2"/>
+            </svg>
             Tài Phú
           </button>
           <button
@@ -299,7 +359,12 @@ export default function EnhancedLeaderboard() {
             }`}
             onClick={() => setActiveTab('collection')}
           >
-            <Database className={`mr-1.5 w-4 h-4 ${activeTab === 'collection' ? 'animate-pulse' : ''}`} />
+            {/* Database Icon (replaced lucide-react Database) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'collection' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+              <path d="M3 12A9 3 0 0 0 21 12"/>
+            </svg>
             Collection
           </button>
         </div>
@@ -364,7 +429,12 @@ export default function EnhancedLeaderboard() {
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
-                  <AlertCircle className="w-8 h-8 mb-2 text-indigo-400" />
+                  {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
                   <p className="text-sm">Không tìm thấy người chơi phù hợp</p>
                 </div>
               )}
@@ -425,7 +495,12 @@ export default function EnhancedLeaderboard() {
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
-                  <AlertCircle className="w-8 h-8 mb-2 text-indigo-400" />
+                   {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
                   <p className="text-sm">Không tìm thấy người chơi phù hợp</p>
                 </div>
               )}
@@ -436,13 +511,21 @@ export default function EnhancedLeaderboard() {
         {/* Footer */}
         <div className="mt-3 flex justify-between items-center text-xs">
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-            <User className="w-3 h-3 mr-1 text-indigo-400" />
+            {/* User Icon (replaced lucide-react User) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
             <span className="text-indigo-300">Online: </span>
             <span className="text-white font-medium ml-1">347</span>
           </div>
 
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-            <Clock className="w-3 h-3 mr-1 text-indigo-400" />
+            {/* Clock Icon (replaced lucide-react Clock) */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
             <span className="text-indigo-300">Cập nhật: </span>
             <span className="text-white font-medium ml-1">
               {timeFilter === 'day' && '1 giờ trước'}
