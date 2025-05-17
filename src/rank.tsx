@@ -427,11 +427,11 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             </>
           ) : (
             <>
-              {/* Collection Header - Updated (added Floor back and adjusted grid-cols/col-spans) */}
+              {/* Collection Header - Updated grid columns for better layout */}
               <div className="grid grid-cols-9 gap-1 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50">
                 <div className="col-span-1 text-center">#</div>
-                <div className="col-span-5">Người chơi</div> {/* Adjusted col-span */}
-                <div className="col-span-3 text-center"> {/* Combined col-span for Floor | Vocabulary */}
+                <div className="col-span-4">Người chơi</div> {/* Adjusted col-span */}
+                <div className="col-span-4 text-center flex items-center justify-center"> {/* Adjusted col-span and added flex/center for better alignment */}
                   <span className="mr-1">Floor</span> <span className="opacity-30">|</span> <span className="ml-1">Vocabulary</span> {/* Added separator and spacing */}
                 </div>
               </div>
