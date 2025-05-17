@@ -1659,8 +1659,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           <div
             ref={gameRef}
             className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-            // FIXED: Added overflowX: 'hidden' to prevent horizontal scrolling
-            style={{ overflowX: 'hidden' }}
+            // Removed style={{ overflowX: 'hidden' }} as requested
             onClick={handleTap} // Handle tap for start/restart
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
@@ -2003,4 +2002,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </SidebarLayout>
   );
 }
-
