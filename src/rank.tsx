@@ -220,35 +220,14 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
       <div className="relative">
         {/* Header */}
+        {/* Adjusted flex properties to center the title */}
         <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <div className="relative">
-              {/* Trophy Icon (replaced lucide-react Trophy) */}
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                <path d="M4 22h16"/>
-                <path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1-.45-1-1v-2.34"/>
-                <path d="M16 14.66V17c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-2.34"/>
-                <path d="M8 8v1c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V8"/>
-                <path d="M12 17v5"/>
-                <path d="M12 17H7"/>
-                <path d="M12 17h5"/>
-              </svg>
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text">
-                Bảng Xếp Hạng
-              </h1>
-              {/* Updated header text */}
-              <div className="text-xs text-indigo-300 mt-0.5">
-                {timeFilter === 'day' && 'Xếp hạng ngày'}
-                {timeFilter === 'week' && 'Xếp hạng tuần'}
-                {timeFilter === 'month' && 'Xếp hạng tháng'}
-                {timeFilter === 'all' && 'Xếp hạng tổng'}
-              </div>
-            </div>
+          {/* Removed the div containing the trophy icon and the header text */}
+          <div className="flex-grow text-center"> {/* Added flex-grow and text-center to center the title */}
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text">
+              Bảng Xếp Hạng
+            </h1>
+            {/* Removed the subtitle div */}
           </div>
           {/* Close Button */}
           <button
@@ -257,11 +236,13 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             aria-label="Đóng bảng xếp hạng"
             title="Đóng"
           >
-             {/* X Icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+             {/* Replaced SVG icon with img tag */}
+            <img
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
+              alt="Close icon"
+              className="w-5 h-5 text-indigo-300" // Kept size classes, text-indigo-300 might not apply to img but doesn't hurt
+              onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+            />
           </button>
         </div>
 
