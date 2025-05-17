@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // Import the Rank component
 import EnhancedLeaderboard from './rank.tsx'; // Assuming rank.tsx is in the same directory
-// Import the StatsMain component
-import StatsMain from './stats/stats-main.tsx'; // Import component thống kê
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
@@ -159,7 +157,7 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   // State to track the active menu item
   const [activeItem, setActiveItem] = useState('home');
   // State to track the currently displayed content component
-  const [activeContent, setActiveContent] = useState('home'); // 'home', 'stats', 'rank', etc.
+  const [activeContent, setActiveContent] = useState('home'); // 'home', 'rank', etc. Removed 'stats' as it's fullscreen
 
   // State for new notification count
   const [notificationCount, setNotificationCount] = useState(3);
@@ -200,12 +198,14 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
   // Handle menu item click
   const handleMenuItemClick = (itemId: string) => {
-    setActiveItem(itemId); // Set active menu item for styling
-    setActiveContent(itemId); // Set active content based on clicked item id
-
-    // If the clicked item is 'stats', also call the onToggleStats prop
-    if (itemId === 'stats' && onToggleStats) {
-        onToggleStats();
+    // If the clicked item is 'stats', call the onToggleStats prop
+    if (itemId === 'stats') {
+      onToggleStats?.(); // Call the function passed from the parent (background-game)
+      // Do NOT change activeItem or activeContent for 'stats' here
+    } else {
+      // For other items, update activeItem and activeContent as before
+      setActiveItem(itemId); // Set active menu item for styling
+      setActiveContent(itemId); // Set active content based on clicked item id
     }
 
     // Optionally close the sidebar after clicking an item on mobile
@@ -357,10 +357,10 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
         <div className="flex-1 overflow-y-auto">
              {/* Conditionally render content based on activeContent state */}
              {activeContent === 'home' && children} {/* Render default children for home */}
-             {activeContent === 'stats' && <StatsMain />} {/* Render StatsMain component */}
              {activeContent === 'rank' && <EnhancedLeaderboard />} {/* Render Rank component */}
+             {/* Removed the 'stats' case here, as it's handled by the fullscreen overlay in background-game.tsx */}
              {/* Add conditions for other menu items here */}
-             {['home','stats','rank'].indexOf(activeContent) === -1 && (
+             {activeContent !== 'home' && activeContent !== 'rank' && (
                 <div className="flex items-center justify-center h-full text-gray-600 text-xl">
                     Nội dung cho "{activeItem}" đang được phát triển.
                 </div>
@@ -381,3 +381,4 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
 // Export the SidebarLayout component
 export { SidebarLayout };
+
