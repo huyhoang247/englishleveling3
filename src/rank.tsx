@@ -167,7 +167,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
 
   return (
-    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl max-w-2xl mx-auto border border-indigo-700/30 relative overflow-hidden">
+    // Removed max-w-2xl and mx-auto, added w-full for full width
+    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden">
       {/* Sparkling stars effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="star bg-white h-1 w-1 rounded-full absolute top-1/4 left-1/3 animate-twinkle"></div>
@@ -339,7 +340,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'collection' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3"/>
               <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
-              <path d="M3 12A9 3 0 0 0 21 12"/>
+              <path d="M3 12A9 9 0 0 0 21 12"/>
             </svg>
             Collection
           </button>
