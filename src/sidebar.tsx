@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
 // Import the Rank component
 import EnhancedLeaderboard from './rank.tsx'; // Assuming rank.tsx is in the same directory
+// Import the CharacterCard component (Stats screen)
+import CharacterCard from './stats/stats-main.tsx'; // Assuming stats-main.tsx is in the correct path
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  // NEW prop to handle toggling the stats screen (passed from background-game)
+  // NEW prop to handle toggling the stats screen (used by game to open/close)
   onToggleStats?: () => void;
+  // NEW props to pass coin data and update function from the game
+  coins: number; // Pass current coin amount
+  onUpdateCoins: (amount: number) => Promise<void>; // Pass coin update function
+  // NEW prop to indicate if the stats screen is currently open (controlled by game)
+  isStatsFullscreen: boolean;
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -150,15 +157,17 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLayoutProps) { // Added onToggleStats prop
+// Updated component signature to accept new props
+function SidebarLayout({ children, setToggleSidebar, onToggleStats, coins, onUpdateCoins, isStatsFullscreen }: SidebarLayoutProps) {
   // State to track sidebar visibility
   // MODIFIED: Initialize isSidebarVisible to false
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // State to track the active menu item
+  // MODIFIED: Initialize activeItem to 'home'
   const [activeItem, setActiveItem] = useState('home');
   // State to track the currently displayed content component
-  // Keep this state, but 'stats' will now be handled by onToggleStats
-  const [activeContent, setActiveContent] = useState('home'); // 'home', 'rank', etc.
+  // MODIFIED: Initialize activeContent to 'home'
+  const [activeContent, setActiveContent] = useState('home'); // 'home', 'stats', 'rank', etc.
 
   // State for new notification count
   const [notificationCount, setNotificationCount] = useState(3);
@@ -176,6 +185,14 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
       setToggleSidebar(toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]); // Depend on setToggleSidebar and toggleSidebar
+
+  // Effect to close sidebar when stats screen is opened from elsewhere (e.g., game header)
+  useEffect(() => {
+      if (isStatsFullscreen && isSidebarVisible) {
+          setIsSidebarVisible(false);
+      }
+  }, [isStatsFullscreen, isSidebarVisible]);
+
 
   // Function to toggle user menu
   const toggleUserMenu = () => {
@@ -200,17 +217,15 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   // Handle menu item click
   const handleMenuItemClick = (itemId: string) => {
     setActiveItem(itemId); // Set active menu item for styling
+    setActiveContent(itemId); // Set active content based on clicked item id
 
-    // NEW Logic: If 'stats' is clicked, call onToggleStats. Otherwise, set activeContent.
-    if (itemId === 'stats') {
-      if (onToggleStats) {
-        onToggleStats(); // Call the function to toggle the stats screen
-      }
-      // Do NOT set activeContent to 'stats' here, as stats is handled fullscreen
-    } else {
-      setActiveContent(itemId); // Set active content based on clicked item id for other items
+    // If clicking 'stats', also trigger the onToggleStats function to open the stats screen
+    if (itemId === 'stats' && onToggleStats) {
+        onToggleStats();
+    } else if (isStatsFullscreen && onToggleStats) {
+        // If clicking something else while stats are open, close the stats screen
+        onToggleStats();
     }
-
 
     // Optionally close the sidebar after clicking an item on mobile
     if (window.innerWidth < 768) { // Adjust breakpoint as needed
@@ -360,16 +375,24 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
         {/* Main content - This is where the selected content will be rendered */}
         <div className="flex-1 overflow-y-auto">
              {/* Conditionally render content based on activeContent state */}
-             {/* Only render children (game) or Rank component here */}
-             {activeContent === 'home' && children} {/* Render default children for home */}
+             {activeContent === 'home' && children} {/* Render default children (the game) for home */}
              {activeContent === 'rank' && <EnhancedLeaderboard />} {/* Render Rank component */}
-             {/* Display "under development" message for items other than home, rank, or stats */}
+
+             {/* NEW: Render CharacterCard when activeContent is 'stats' */}
+             {activeContent === 'stats' && (
+                 <CharacterCard
+                     onClose={() => handleMenuItemClick('home')} // Pass a function to return to home
+                     coins={coins} // Pass coins from props
+                     onUpdateCoins={onUpdateCoins} // Pass update function from props
+                 />
+             )}
+
+             {/* Show "under development" message for other items */}
              {activeContent !== 'home' && activeContent !== 'rank' && activeContent !== 'stats' && (
                 <div className="flex items-center justify-center h-full text-gray-600 text-xl">
                     Nội dung cho "{activeItem}" đang được phát triển.
                 </div>
              )}
-             {/* The 'stats' content is now handled by background-game.tsx */}
         </div>
 
 
@@ -386,9 +409,3 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
 // Export the SidebarLayout component
 export { SidebarLayout };
-
-```
-
-Sau khi cập nhật file `sidebar.tsx` với mã nguồn trên, khi bạn nhấn vào mục "Stats" trong sidebar, nó sẽ kích hoạt hiển thị bảng chỉ số nhân vật toàn màn hình thay vì thông báo "đang phát triển".
-
-Chúc bạn thành cô
