@@ -169,7 +169,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
-  const [particles, setParticles] = useState([]); // Array of active particles (dust)
+  const [particles, setParticles] = useState<any[]>([]); // Array of active particles (dust) - Changed to any[] for simplicity
   const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
 
@@ -228,7 +228,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const db = getFirestore();
 
   // Obstacle types with properties (added base health)
-  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[] = [
+  const obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey' | 'collided'>[] = [ // Added 'collided' to Omit
     {
       type: 'lottie-obstacle-1',
       height: 16,
@@ -319,11 +319,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // Optionally create the document here if it's missing, though fetchUserData should handle this
           // Ensure all necessary fields are set if creating
           transaction.set(userDocRef, {
-            coins: coins, // Use current local coins state for new doc
-            gems: gems, // Use current local gems state for new doc
-            keys: keyCount, // Use current local keys state for new doc
+            coins: coins + amount, // Start with current coins + new amount if doc is new
+            gems: gems, 
+            keys: keyCount,
             createdAt: new Date()
           });
+           setCoins(prevCoins => Math.max(0, prevCoins + amount)); // Update local state immediately for new doc
         } else {
           const currentCoins = userDoc.data().coins || 0;
           const newCoins = currentCoins + amount;
@@ -336,9 +337,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       });
       console.log("Firestore transaction for coins successful."); // Debug Log 6
-      // REMOVED: Set state to show "OK" text after successful transaction
-      // setShowCoinUpdateSuccess(true);
-      // console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
 
     } catch (error) {
       console.error("Firestore Transaction failed for coins: ", error); // Debug Log 8
@@ -350,10 +348,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
    // This function now only handles the animation, the Firestore update is separate.
   const startCoinCountAnimation = (reward: number) => {
       console.log("startCoinCountAnimation called with reward:", reward); // Debug Log 2
-      const oldCoins = coins; // Use the state value
-      const newCoins = oldCoins + reward;
+      // Use a functional update for `displayedCoins` if it depends on `coins`
+      // but `coins` itself will be updated via Firestore callback.
+      // The animation should reflect the change towards the *expected* new total.
+      const oldDisplayedCoins = displayedCoins;
+      const targetDisplayedCoins = coins + reward; // Target for display animation
+
       let step = Math.ceil(reward / 30);
-      let current = oldCoins;
+      if (reward === 0) return; // No animation if no reward
+      if (reward < 0) step = Math.floor(reward / 30); // Handle negative rewards (spending)
+
+      let currentAnimatedDisplay = oldDisplayedCoins;
+
 
       // Clear any existing coin count animation interval
       if (coinCountAnimationTimerRef.current) {
@@ -361,10 +367,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
 
       const countInterval = setInterval(() => {
-          current += step;
-          if (current >= newCoins) {
-              setDisplayedCoins(newCoins);
-              // setCoins(newCoins); // REMOVED: Local state update is handled by Firestore transaction callback
+          currentAnimatedDisplay += step;
+          if ((step > 0 && currentAnimatedDisplay >= targetDisplayedCoins) || (step < 0 && currentAnimatedDisplay <= targetDisplayedCoins)) {
+              setDisplayedCoins(targetDisplayedCoins);
               clearInterval(countInterval);
               coinCountAnimationTimerRef.current = null; // Clear the ref after animation
               console.log("Coin count animation finished."); // Debug Log 3
@@ -377,7 +382,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               }
 
           } else {
-              setDisplayedCoins(current);
+              setDisplayedCoins(currentAnimatedDisplay);
           }
       }, 50);
 
@@ -400,14 +405,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
           console.error("User document does not exist for key transaction.");
-           // Optionally create the document here if it's missing, though fetchUserData should handle this
-          // Ensure all necessary fields are set if creating
           transaction.set(userDocRef, {
-            coins: coins, // Use current local coins state for new doc
-            gems: gems, // Use current local gems state for new doc
-            keys: keyCount, // Use current local keys state for new doc
+            coins: coins,
+            gems: gems,
+            keys: Math.max(0, keyCount + amount), // Start with current keys + new amount if doc is new
             createdAt: new Date()
           });
+          setKeyCount(prevKeys => Math.max(0, prevKeys + amount)); // Update local state
         } else {
           const currentKeys = userDoc.data().keys || 0;
           const newKeys = currentKeys + amount;
@@ -431,19 +435,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const handleGemReward = (amount: number) => {
       setGems(prev => prev + amount);
       console.log(`Received ${amount} gems from chest.`);
-      // TODO: Implement Firestore update for gems
+      // TODO: Implement Firestore update for gems if they need to be persistent
+      // Example: if (auth.currentUser) { updateGemsInFirestore(auth.currentUser.uid, amount); }
   };
 
   // NEW: Function to handle key collection (called when obstacle with key is defeated)
   const handleKeyCollect = (amount: number) => {
       console.log(`Collected ${amount} key(s).`);
-      // Update local state first
-      setKeyCount(prev => prev + amount);
-      // Then update Firestore
+      // Firestore update will also update local state via its callback
       if (auth.currentUser) {
         updateKeysInFirestore(auth.currentUser.uid, amount);
       } else {
         console.log("User not authenticated, skipping Firestore key update.");
+        // Fallback to local update if needed, though ideally user should be auth for rewards
+        setKeyCount(prev => prev + amount);
       }
   };
 
@@ -459,9 +464,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShieldHealth(SHIELD_MAX_HEALTH);
     setIsShieldOnCooldown(false);
     setRemainingCooldown(0);
-    setShieldCooldownStartTime(null); // Use the setter from the hook
-    setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-    // Removed reset for nextKeyIn
+    setShieldCooldownStartTime(null); 
+    setPausedShieldCooldownRemaining(null);
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -470,22 +474,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShowHealthDamageEffect(false);
     setDamageAmount(0);
     setShowDamageNumber(false);
-    // Keep isStatsFullscreen and isRankOpen as is, they are not reset by starting a new game
-    // setIsStatsFullscreen(false); // Removed this line
-    // setIsRankOpen(false); // Removed this line
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
     if (obstacleTypes.length > 0) {
         const firstObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-
-        // 20% chance để có chìa khóa
         const hasKeyFirst = Math.random() < 0.2;
 
         initialObstacles.push({
           id: Date.now(),
-          // FIXED: Adjusted initial obstacle position to be slightly off-screen but not excessively
-          position: 105, // Changed from 120 to 105
+          position: 105, 
           ...firstObstacleType,
           health: firstObstacleType.baseHealth,
           maxHealth: firstObstacleType.baseHealth,
@@ -495,14 +493,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         for (let i = 1; i < 5; i++) {
           const obstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
           const spacing = i * (Math.random() * 10 + 10);
-
-          // 20% chance để có chìa khóa
           const hasKey = Math.random() < 0.2;
 
           initialObstacles.push({
             id: Date.now() + i,
-            // FIXED: Adjusted initial obstacle position to be slightly off-screen but not excessively
-            position: 150 + (i * 50), // This is still quite far, but the filtering logic will handle it
+            position: 150 + (i * 50), 
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
@@ -527,41 +522,36 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         console.log("User authenticated:", user.uid);
-        fetchUserData(user.uid); // Fetch user data when authenticated
-        // The useSessionStorage hook will automatically load game state if available
-        setGameStarted(true); // Assume game can start if user is authenticated
-        setIsRunning(true); // Start running animation
+        fetchUserData(user.uid); 
+        setGameStarted(true); 
+        setIsRunning(true); 
       } else {
         console.log("User logged out.");
-        // Reset all game states on logout, including clearing session storage
         setGameStarted(false);
-        setGameOver(false);
-        setHealth(MAX_HEALTH); // Reset session storage state
-        setCharacterPos(0); // Reset session storage state
-        setObstacles([]); // Reset session storage state
-        setActiveCoins([]); // Reset session storage state
-        setIsShieldActive(false); // Reset session storage state
-        setShieldHealth(SHIELD_MAX_HEALTH); // Reset session storage state
-        setIsShieldOnCooldown(false); // Reset session storage state
-        setRemainingCooldown(0); // Reset session storage state
-        setShieldCooldownStartTime(null); // Reset session storage state
-        setPausedShieldCooldownRemaining(null); // Reset session storage state
-        // Removed reset for nextKeyIn
-
+        setGameOver(true); // Set game over to true to stop game loops etc.
+        setHealth(MAX_HEALTH); 
+        setCharacterPos(0); 
+        setObstacles([]); 
+        setActiveCoins([]); 
+        setIsShieldActive(false); 
+        setShieldHealth(SHIELD_MAX_HEALTH); 
+        setIsShieldOnCooldown(false); 
+        setRemainingCooldown(0); 
+        setShieldCooldownStartTime(null); 
+        setPausedShieldCooldownRemaining(null); 
 
         setIsRunning(false);
         setShowHealthDamageEffect(false);
         setDamageAmount(0);
         setShowDamageNumber(false);
-        setIsStatsFullscreen(false); // Reset stats fullscreen on logout
-        setIsRankOpen(false); // Reset rank open state on logout
-        setCoins(0); // Reset local state
-        setDisplayedCoins(0); // Reset local state
-        setGems(0); // Reset local state
-        setKeyCount(0); // Reset local state
-        setIsLoadingUserData(false); // Stop loading if user logs out
+        setIsStatsFullscreen(false); 
+        setIsRankOpen(false); 
+        setCoins(0); 
+        setDisplayedCoins(0); 
+        setGems(0); 
+        setKeyCount(0); 
+        setIsLoadingUserData(false); 
 
-        // Clear all session storage related to the game on logout
         sessionStorage.removeItem('gameHealth');
         sessionStorage.removeItem('gameCharacterPos');
         sessionStorage.removeItem('gameObstacles');
@@ -572,16 +562,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         sessionStorage.removeItem('gameRemainingCooldown');
         sessionStorage.removeItem('gameShieldCooldownStartTime');
         sessionStorage.removeItem('gamePausedShieldCooldownRemaining');
-        // Removed session storage key for nextKeyIn
 
-        // Clear timers and intervals
-        clearTimeout(obstacleTimerRef.current);
-        clearInterval(runAnimationRef.current);
-        clearInterval(particleTimerRef.current);
+        if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+        if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+        if(particleTimerRef.current) clearInterval(particleTimerRef.current);
         if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
         if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-        clearInterval(coinScheduleTimerRef.current);
-        clearInterval(coinCountAnimationTimerRef.current);
+        if(coinScheduleTimerRef.current) clearInterval(coinScheduleTimerRef.current);
+        if(coinCountAnimationTimerRef.current) clearInterval(coinCountAnimationTimerRef.current);
 
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
@@ -589,32 +577,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       }
     });
-
-    // Cleanup subscription on component unmount
     return () => unsubscribe();
-  }, [auth]); // Depend on auth object
+  }, []); // Removed auth from dependency array as onAuthStateChanged handles its own lifecycle.
 
   // Effect to handle game over state when health reaches zero
   useEffect(() => {
-    if (health <= 0 && gameStarted) {
+    if (health <= 0 && gameStarted && !gameOver) { // Added !gameOver to prevent multiple triggers
       setGameOver(true);
       setIsRunning(false);
-      clearTimeout(obstacleTimerRef.current);
-      clearInterval(runAnimationRef.current);
-      clearInterval(particleTimerRef.current);
+      if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-      // No need to reset session storage states here, the hook handles saving the current state (including null)
-
-      clearInterval(coinScheduleTimerRef.current);
-      clearInterval(coinCountAnimationTimerRef.current);
+      if(coinScheduleTimerRef.current) clearInterval(coinScheduleTimerRef.current);
+      if(coinCountAnimationTimerRef.current) clearInterval(coinCountAnimationTimerRef.current);
 
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
           gameLoopIntervalRef.current = null;
       }
     };
-  }, [health, gameStarted]);
+  }, [health, gameStarted, gameOver]);
 
   // Generate initial cloud elements
   const generateInitialClouds = (count: number) => {
@@ -623,8 +607,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
       newClouds.push({
         id: Date.now() + i,
-        // FIXED: Limited initial cloud x position to a more reasonable range
-        x: Math.random() * 50 + 100, // Changed from 120 + 100 to 50 + 100 (100 to 150)
+        x: Math.random() * 50 + 100, 
         y: Math.random() * 40 + 10,
         size: Math.random() * 40 + 30,
         speed: Math.random() * 0.3 + 0.15,
@@ -636,15 +619,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, hoặc bảng thống kê/xếp hạng/rank đang mở
-    if (!gameStarted || gameOver || isStatsFullscreen || isRankOpen) return; // Added isRankOpen check
+    if (!gameStarted || gameOver || isStatsFullscreen || isRankOpen) return; 
 
-    const newParticles = [];
+    const newParticles:any[] = []; // Define type for newParticles
     for (let i = 0; i < 2; i++) {
       newParticles.push({
-        id: Date.now() + i,
+        id: Date.now() + i + Math.random(), // Add Math.random for more unique ID
         x: 5 + Math.random() * 5,
-        y: 0,
+        y: 0, // Start at character's feet approx
+        size: Math.random() * 3 + 2, // Give particles a size
         xVelocity: -Math.random() * 1 - 0.5,
         yVelocity: Math.random() * 2 - 1,
         opacity: 1,
@@ -656,8 +639,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    // Dừng hẹn giờ tạo vật cản khi game kết thúc hoặc bảng thống kê/xếp hạng/rank đang mở
-    if (gameOver || isStatsFullscreen || isRankOpen) { // Added isRankOpen check
+    if (gameOver || isStatsFullscreen || isRankOpen || !gameStarted) { 
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -665,23 +647,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         return;
     }
 
-    const randomTime = Math.floor(Math.random() * 15000) + 5000;
+    const randomTime = Math.floor(Math.random() * 15000) + 5000; // 5-20 seconds
+    if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current); // Clear previous before setting new
     obstacleTimerRef.current = setTimeout(() => {
+      if (gameOver || isStatsFullscreen || isRankOpen || !gameStarted) return; // Check again before creating
+
       const obstacleCount = Math.floor(Math.random() * 3) + 1;
       const newObstacles: GameObstacle[] = [];
 
       if (obstacleTypes.length > 0) {
           for (let i = 0; i < obstacleCount; i++) {
             const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-            const spacing = i * (Math.random() * 10 + 10);
-
-            // 20% chance để có chìa khóa
+            const spacing = i * (Math.random() * 10 + 10); 
             const hasKey = Math.random() < 0.2;
 
             newObstacles.push({
-              id: Date.now() + i,
-              // FIXED: Adjusted initial obstacle position for scheduled obstacles
-              position: 105 + spacing, // Changed from 100 + spacing to 105 + spacing
+              id: Date.now() + i + Math.random(), // More unique ID
+              position: 105 + spacing, 
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
@@ -691,14 +673,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
 
       setObstacles(prev => [...prev, ...newObstacles]);
-      scheduleNextObstacle();
+      scheduleNextObstacle(); // Schedule the next one
     }, randomTime);
   };
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    // Dừng hẹn giờ tạo xu khi game kết thúc hoặc bảng thống kê/xếp hạng/rank đang mở
-    if (gameOver || isStatsFullscreen || isRankOpen) { // Added isRankOpen check
+    if (gameOver || isStatsFullscreen || isRankOpen || !gameStarted) { 
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
@@ -706,59 +687,60 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         return;
     }
 
-    const randomTime = Math.floor(Math.random() * 4000) + 1000;
+    const randomTime = Math.floor(Math.random() * 4000) + 1000; // 1-5 seconds
     if (coinScheduleTimerRef.current) {
         clearTimeout(coinScheduleTimerRef.current);
     }
     coinScheduleTimerRef.current = setTimeout(() => {
+      if (gameOver || isStatsFullscreen || isRankOpen || !gameStarted) return; // Check again
+
       const newCoin: GameCoin = {
-        id: Date.now(),
-        // FIXED: Adjusted initial coin x position
-        x: 105, // Changed from 110 to 105
-        y: Math.random() * 60,
+        id: Date.now() + Math.random(), // More unique ID
+        x: 105, 
+        y: Math.random() * 60, // Random Y position within a range
         initialSpeedX: Math.random() * 0.5 + 0.5,
-        initialSpeedY: Math.random() * 0.3,
+        initialSpeedY: Math.random() * 0.3, // Slight downward drift
         attractSpeed: Math.random() * 0.05 + 0.03,
         isAttracted: false
       };
 
       setActiveCoins(prev => [...prev, newCoin]);
-      scheduleNextCoin();
+      scheduleNextCoin(); // Schedule next
     }, randomTime);
   };
 
 
   // Handle character jump action
   const jump = () => {
-    // Chỉ cho phép nhảy khi game bắt đầu, chưa kết thúc và bảng thống kê/xếp hạng/rank không mở
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen) { // Added isRankOpen check
+    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen) { 
       setJumping(true);
-      setCharacterPos(80);
+      setCharacterPos(80); // Jump height
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen) { // Added isRankOpen check
-          setCharacterPos(0);
+        // Check game state again before landing, in case game ended mid-jump
+        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen) { 
+          setCharacterPos(0); // Land
           setTimeout(() => {
             setJumping(false);
-          }, 100);
+          }, 100); // Short delay to reset jumping state
         } else {
-             setCharacterPos(0);
+             setCharacterPos(0); // Ensure character is on ground if game state changed
              setJumping(false);
         }
-      }, 600);
+      }, 600); // Jump duration
     }
   };
 
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
-    // Bỏ qua thao tác chạm/click nếu đang tải dữ liệu hoặc bảng thống kê/xếp hạng/rank đang mở
-    if (isStatsFullscreen || isLoadingUserData || isRankOpen) return; // Added isRankOpen check
+    if (isStatsFullscreen || isLoadingUserData || isRankOpen) return; 
 
-    if (!gameStarted) {
-      startNewGame(); // Start a new game on first tap if not started
+    if (!gameStarted && !gameOver) { // Only start if not started AND not game over
+      startNewGame(); 
     } else if (gameOver) {
-      startNewGame(); // Start a new game on tap if game over
+      startNewGame(); 
+    } else {
+        jump(); // Allow jump on tap if game is running
     }
-    // Jump logic is triggered by key press or a dedicated jump button if you add one
   };
 
 
@@ -767,7 +749,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setShowHealthDamageEffect(true);
       setTimeout(() => {
           setShowHealthDamageEffect(false);
-      }, 300);
+      }, 300); // Duration of the effect
   };
 
   // Trigger character damage effect and floating number
@@ -777,13 +759,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
       setTimeout(() => {
           setShowDamageNumber(false);
-      }, 800);
+      }, 800); // Duration of floating number
   };
 
   // --- NEW: Function to activate Shield skill ---
   const activateShield = () => {
-    // Chỉ cho phép kích hoạt khiên khi game bắt đầu, chưa kết thúc, khiên chưa active, chưa hồi chiêu, bảng thống kê/xếp hạng/rank không mở và không đang tải dữ liệu
-    if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen) { // Added isLoadingUserData and isRankOpen checks
+    if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen) { 
       console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldActive, isShieldOnCooldown, isStatsFullscreen, isLoadingUserData, isRankOpen });
       return;
     }
@@ -794,19 +775,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShieldHealth(SHIELD_MAX_HEALTH);
 
     setIsShieldOnCooldown(true);
-    // Calculate initial remaining cooldown in seconds and set the state
     setRemainingCooldown(Math.ceil(SHIELD_COOLDOWN_TIME / 1000));
 
     const now = Date.now();
-    setShieldCooldownStartTime(now); // Use the setter from the hook
-
-    // Log the value immediately after setting it
+    setShieldCooldownStartTime(now); 
     console.log(`Shield activated at: ${now}. shieldCooldownStartTime state set to: ${now}`);
+    setPausedShieldCooldownRemaining(null); 
 
-
-    setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-
-    // Set the main shield cooldown timer
     if (shieldCooldownTimerRef.current) {
         clearTimeout(shieldCooldownTimerRef.current);
     }
@@ -814,35 +789,36 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         console.log("Shield cooldown ended.");
         setIsShieldOnCooldown(false);
         setRemainingCooldown(0);
-        setShieldCooldownStartTime(null); // Use the setter from the hook
-        setPausedShieldCooldownRemaining(null); // Use the setter from the hook
+        setShieldCooldownStartTime(null); 
+        setPausedShieldCooldownRemaining(null); 
     }, SHIELD_COOLDOWN_TIME);
-
   };
 
 
-  // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
-  // This useEffect is the main game loop for movement and collision detection
+  // Main game loop for movement and collision detection
   useEffect(() => {
-    // Dừng vòng lặp game khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở hoặc đang tải dữ liệu
-    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen) { // Added isLoadingUserData and isRankOpen checks
+    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen) { 
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-         // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, hoặc bảng thống kê/xếp hạng/rank đang mở
-        if (particleTimerRef.current) {
+        if (particleTimerRef.current && (!gameStarted || gameOver || isStatsFullscreen || isRankOpen)) { // Ensure particle timer stops if game stops
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
         }
         return;
     }
 
-    // Bắt đầu vòng lặp game nếu chưa chạy
+    if (!particleTimerRef.current && gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen) { // Restart particle timer if needed
+        particleTimerRef.current = setInterval(generateParticles, 300);
+    }
+
+
     if (!gameLoopIntervalRef.current) {
         gameLoopIntervalRef.current = setInterval(() => {
-            const speed = 0.5;
+            const speed = 0.5; // Base speed for obstacles
 
+            // Obstacle movement and collision
             setObstacles(prevObstacles => {
                 const gameContainer = gameRef.current;
                 if (!gameContainer) return prevObstacles;
@@ -850,48 +826,47 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 const gameWidth = gameContainer.offsetWidth;
                 const gameHeight = gameContainer.offsetHeight;
 
-                const characterWidth_px = (24 / 4) * 16;
-                const characterHeight_px = (24 / 4) * 16;
-                const characterXPercent = 5;
+                // Character dimensions and position (approximate, adjust as needed)
+                const characterWidth_px = (24 / 4) * 16; // Assuming character is w-24 (Tailwind scale)
+                const characterHeight_px = (24 / 4) * 16; // Assuming character is h-24
+                const characterXPercent = 5; // Character's fixed X position percentage
                 const characterX_px = (characterXPercent / 100) * gameWidth;
 
                 const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
+                // Character's bounding box calculation
+                const characterBottomFromTop_px = gameHeight - ((characterPos / gameHeight * 100) / 100 * gameHeight + groundLevelPx); // characterPos is in px from ground
                 const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
                 const characterLeft_px = characterX_px;
                 const characterRight_px = characterX_px + characterWidth_px;
 
-                const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
 
-
-                return prevObstacles
-                    .map(obstacle => {
+                return prevObstacles.map(obstacle => {
                         let newPosition = obstacle.position - speed;
+                        let collisionDetectedThisFrame = false; // Renamed to avoid conflict with obstacle.collided
 
-                        let collisionDetected = false;
                         const obstacleX_px = (newPosition / 100) * gameWidth;
+                        const obstacleWidth_px = (obstacle.width / 4) * 16; // Convert Tailwind units to px
+                        const obstacleHeight_px = (obstacle.height / 4) * 16;
 
-                        let obstacleWidth_px, obstacleHeight_px;
-                        obstacleWidth_px = (obstacle.width / 4) * 16;
-                        obstacleHeight_px = (obstacle.height / 4) * 16;
-
+                        // Obstacle's bounding box calculation (assuming bottom aligned with ground)
+                        const obstacleBottomFromTop_px = gameHeight - groundLevelPx;
                         const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px;
+                        
+                        const collisionTolerance = 5; // Small tolerance for collision
 
-                        const collisionTolerance = 5;
                         if (
                             characterRight_px > obstacleX_px - collisionTolerance &&
                             characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
-                            characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance &&
+                            characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance && // Y-axis check from top of screen
                             characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance
                         ) {
-                            collisionDetected = true;
+                            collisionDetectedThisFrame = true;
                             if (isShieldActive) {
                                 setShieldHealth(prev => {
                                     const damageToShield = obstacle.damage;
                                     const newShieldHealth = Math.max(0, prev - damageToShield);
                                     if (newShieldHealth <= 0) {
-                                        console.log("Shield health depleted.");
-                                        setIsShieldActive(false);
+                                        setIsShieldActive(false); // Shield breaks
                                     }
                                     return newShieldHealth;
                                 });
@@ -901,91 +876,75 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 triggerHealthDamageEffect();
                                 triggerCharacterDamageEffect(damageTaken);
                             }
+
+                            if (obstacle.hasKey) {
+                                handleKeyCollect(1);
+                            }
+                            // Mark obstacle for removal or special handling due to collision
+                            return { ...obstacle, position: newPosition, collided: true };
                         }
-
-                        // FIXED: Applied clipping logic to obstacle position when it moves off-screen
-                        // Also adjusted the repositioning logic to use a position slightly off-screen
-                        if (newPosition < -20 && !collisionDetected) {
-                             if (Math.random() < 0.7) {
-                                if (obstacleTypes.length === 0) return obstacle;
-
+                        
+                        // If obstacle moves off screen to the left
+                        if (newPosition < -20 && !collisionDetectedThisFrame) { // -20% ensures it's well off-screen
+                            if (Math.random() < 0.7 && obstacleTypes.length > 0) { // 70% chance to respawn
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
-
-                                // 20% chance để có chìa khóa
                                 const hasKey = Math.random() < 0.2;
-
                                 return {
-                                    ...obstacle,
+                                    ...obstacle, // Keep ID for keying if needed, or generate new
+                                    id: Date.now() + Math.random(), // New ID for new obstacle
                                     ...randomObstacleType,
-                                    id: Date.now(),
-                                    // Reposition slightly off-screen
-                                    position: 105 + randomOffset, // Changed from 120 + randomOffset to 105 + randomOffset
+                                    position: 105 + randomOffset, // Reposition to the right, off-screen
                                     health: randomObstacleType.baseHealth,
                                     maxHealth: randomObstacleType.baseHealth,
                                     hasKey: hasKey,
+                                    collided: false, // Reset collided state
                                 };
                             } else {
-                                // Apply clipping logic even if not repositioning, though filtering handles this
-                                return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
+                                // Mark for removal by filtering if not respawned
+                                return { ...obstacle, position: newPosition, toRemove: true };
                             }
                         }
-
-                        if (collisionDetected) {
-                            if (obstacle.hasKey) {
-                                handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
-                            }
-                            return { ...obstacle, position: newPosition, collided: true };
-                        }
-
-                        // Apply clipping logic during normal movement
-                        return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
+                        return { ...obstacle, position: newPosition, collided: collisionDetectedThisFrame }; // Update position
                     })
-                    // Filter out collided obstacles and those far off-screen
-                    .filter(obstacle => {
-                        // Keep obstacles that haven't collided AND are within a reasonable range
-                        return !obstacle.collided && obstacle.position > -20;
-                    });
+                    .filter(obstacle => !obstacle.collided && !obstacle.toRemove && obstacle.position > -20); // Remove collided or marked for removal or too far left
             });
 
+            // Cloud movement
             setClouds(prevClouds => {
-                return prevClouds
-                    .map(cloud => {
+                return prevClouds.map(cloud => {
                         const newX = cloud.x - cloud.speed;
-
-                        // FIXED: Adjusted cloud repositioning when it moves off-screen to the left
-                        if (newX < -50) { // Keep the -50 threshold
+                        if (newX < -50) { // Cloud moved off-screen left
                             const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
-                            return {
+                            return { // Respawn cloud
                                 ...cloud,
                                 id: Date.now() + Math.random(),
-                                // Reposition slightly off-screen to the right
-                                x: 100 + Math.random() * 30, // Changed from 120 + random to 100 + random (100 to 130)
+                                x: 100 + Math.random() * 30, // Reposition to the right, off-screen
                                 y: Math.random() * 40 + 10,
                                 size: Math.random() * 40 + 30,
                                 speed: Math.random() * 0.3 + 0.15,
                                 imgSrc: randomImgSrc
                             };
                         }
-
-                        // Apply clipping logic to cloud position if needed (optional, but good practice)
-                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; // Keep clouds within -50% to 120%
-                    });
+                        return { ...cloud, x: newX };
+                    })
+                    // Optional: filter clouds that are too far off-screen if not respawning all
+                    .filter(cloud => cloud.x > -50); // Keep clouds that are still somewhat visible or about to be
             });
 
+            // Particle movement and fade
             setParticles(prevParticles =>
-                prevParticles
-                    .map(particle => ({
+                prevParticles.map(particle => ({
                         ...particle,
                         x: particle.x + particle.xVelocity,
                         y: particle.y + particle.yVelocity,
-                        opacity: particle.opacity - 0.03,
-                        size: particle.size - 0.1
+                        opacity: particle.opacity - 0.03, // Fade out
+                        size: Math.max(0, particle.size - 0.1) // Shrink
                     }))
-                    .filter(particle => particle.opacity > 0 && particle.size > 0)
+                    .filter(particle => particle.opacity > 0 && particle.size > 0) // Remove faded/shrunk particles
             );
 
-            // --- NEW: Move coins and detect collisions ---
+            // Coin movement and collection
             setActiveCoins(prevCoins => {
                 const gameContainer = gameRef.current;
                 if (!gameContainer) return prevCoins;
@@ -993,76 +952,68 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 const gameWidth = gameContainer.offsetWidth;
                 const gameHeight = gameContainer.offsetHeight;
 
+                // Character's center for attraction (more accurate)
                 const characterWidth_px = (24 / 4) * 16;
                 const characterHeight_px = (24 / 4) * 16;
                 const characterXPercent = 5;
                 const characterX_px = (characterXPercent / 100) * gameWidth;
-
                 const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
-                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
-                const characterLeft_px = characterX_px;
-                const characterRight_px = characterX_px + characterWidth_px;
+                
+                // Recalculate character's current visual center based on `characterPos` (jump height)
+                const characterVisualBottomY_px = gameHeight - groundLevelPx - characterPos;
+                const characterVisualTopY_px = characterVisualBottomY_px - characterHeight_px;
+                const characterCenterX_px = characterX_px + characterWidth_px / 2;
+                const characterCenterY_px = characterVisualTopY_px + characterHeight_px / 2;
 
-                const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
-                const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
 
-
-                return prevCoins
-                    .map(coin => {
-                        const coinSize_px = 40;
-
+                return prevCoins.map(coin => {
+                        const coinSize_px = 40; // Approximate coin size in px
                         const coinX_px = (coin.x / 100) * gameWidth;
                         const coinY_px = (coin.y / 100) * gameHeight;
 
                         let newX = coin.x;
                         let newY = coin.y;
-                        let collisionDetected = false;
+                        let collisionDetectedThisFrame = false;
                         let shouldBeAttracted = coin.isAttracted;
 
+                        // Initial collision check to start attraction (using character's bounding box)
+                        const characterVisualLeft_px = characterX_px;
+                        const characterVisualRight_px = characterX_px + characterWidth_px;
 
                         if (!shouldBeAttracted) {
                             if (
-                                characterRight_px > coinX_px &&
-                                characterLeft_px < coinX_px + coinSize_px &&
-                                characterBottomFromTop_px > coinY_px &&
-                                characterTopFromTop_px < coinY_px + coinSize_px
+                                characterVisualRight_px > coinX_px &&
+                                characterVisualLeft_px < coinX_px + coinSize_px &&
+                                characterVisualBottomY_px > coinY_px && // Y from top of screen
+                                characterVisualTopY_px < coinY_px + coinSize_px
                             ) {
                                 shouldBeAttracted = true;
                             }
                         }
 
-
                         if (shouldBeAttracted) {
                             const dx = characterCenterX_px - coinX_px;
                             const dy = characterCenterY_px - coinY_px;
                             const distance = Math.sqrt(dx * dx + dy * dy);
-
-                            const moveStep = distance * coin.attractSpeed;
+                            const moveStep = distance * coin.attractSpeed; // Proportional speed
 
                             const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
                             const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
 
-                            const newCoinX_px = coinX_px + moveX_px;
-                            const newCoinY_px = coinY_px + moveY_px;
+                            newX = ((coinX_px + moveX_px) / gameWidth) * 100;
+                            newY = ((coinY_px + moveY_px) / gameHeight) * 100;
 
-                            newX = (newCoinX_px / gameWidth) * 100;
-                            newY = (newCoinY_px / gameHeight) * 100;
-
-                            if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
-                                collisionDetected = true;
+                            // Check for collection (when coin is very close to character center)
+                            if (distance < (characterWidth_px / 4 + coinSize_px / 4)) { // Smaller collection radius
+                                collisionDetectedThisFrame = true;
                                 const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                                console.log(`Coin collected! Awarded: ${awardedCoins}. Calling startCoinCountAnimation.`); // Debug Log 1
-                                // startCoinCountAnimation(awardedCoins); // This now triggers Firestore update internally
-                                // Call the animation first, then the Firestore update will happen after animation
-                                startCoinCountAnimation(awardedCoins);
-
+                                startCoinCountAnimation(awardedCoins); // Animation triggers Firestore update
                                 console.log(`Coin collected! Awarded: ${awardedCoins}`);
                             }
-
                         } else {
+                            // Initial movement if not attracted
                             newX = coin.x - coin.initialSpeedX;
-                            newY = coin.y + coin.initialSpeedY;
+                            newY = coin.y + coin.initialSpeedY; // Slight drift
                         }
 
                         return {
@@ -1070,277 +1021,186 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             x: newX,
                             y: newY,
                             isAttracted: shouldBeAttracted,
-                            collided: collisionDetected
+                            collided: collisionDetectedThisFrame
                         };
                     })
                     .filter(coin => {
-                        // FIXED: Adjusted coin filtering logic to keep coins within a reasonable range
-                        const isOffScreen = coin.x < -20 || coin.y > 120 || coin.y < -20; // Added check for top off-screen
+                        const isOffScreen = coin.x < -20 || coin.y > 120 || coin.y < -20;
                         return !coin.collided && !isOffScreen;
                     });
             });
 
 
-        }, 30); // Tốc độ cập nhật vòng lặp game (khoảng 30ms)
+        }, 30); // Game loop interval (approx 33 FPS)
     }
 
-    // Hàm cleanup: Xóa vòng lặp game khi component unmount hoặc dependencies thay đổi
-    return () => {
+    return () => { // Cleanup function for the effect
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-         if (particleTimerRef.current) {
+        if (particleTimerRef.current) { // Also clear particle timer on cleanup
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, isRankOpen, coins, isLoadingUserData]); // Dependencies updated, added isRankOpen
+  }, [gameStarted, gameOver, characterPos, isShieldActive, isStatsFullscreen, isRankOpen, isLoadingUserData, coins, displayedCoins]); // Added more relevant dependencies
 
 
-  // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
+  // Effect to manage obstacle and coin scheduling timers
   useEffect(() => {
-      // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở hoặc đang tải dữ liệu
-      if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen) { // Added isLoadingUserData and isRankOpen check
-          if (obstacleTimerRef.current) {
-              clearTimeout(obstacleTimerRef.current);
-              obstacleTimerRef.current = null;
-          }
-          if (coinScheduleTimerRef.current) {
-              clearTimeout(coinScheduleTimerRef.current);
-              coinScheduleTimerRef.current = null;
-          }
-           // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, hoặc bảng thống kê/xếp hạng/rank đang mở
-           if (particleTimerRef.current) {
-               clearInterval(particleTimerRef.current);
-               particleTimerRef.current = null;
-           }
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added isRankOpen check)
-          if (!obstacleTimerRef.current) {
-              scheduleNextObstacle();
-          }
-          if (!coinScheduleTimerRef.current) {
-              scheduleNextCoin();
-          }
-           if (!particleTimerRef.current) {
-               particleTimerRef.current = setInterval(generateParticles, 300);
-           }
+      if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || !gameStarted) {
+          if (obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+          if (coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
+          if (particleTimerRef.current) clearInterval(particleTimerRef.current); // Stop particles too
+      } else { // Game is active and not paused by UI
+          if (!obstacleTimerRef.current) scheduleNextObstacle();
+          if (!coinScheduleTimerRef.current) scheduleNextCoin();
+          if (!particleTimerRef.current) particleTimerRef.current = setInterval(generateParticles, 300); // Restart particles
       }
 
-      // Hàm cleanup: Xóa hẹn giờ khi effect re-run hoặc component unmount
-      return () => {
-          if (obstacleTimerRef.current) {
-              clearTimeout(obstacleTimerRef.current);
-              obstacleTimerRef.current = null;
-          }
-          if (coinScheduleTimerRef.current) {
-              clearTimeout(coinScheduleTimerRef.current);
-              coinScheduleTimerRef.current = null;
-          }
-           if (particleTimerRef.current) {
-               clearInterval(particleTimerRef.current);
-               particleTimerRef.current = null;
-           }
+      return () => { // Cleanup timers
+          if (obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+          if (coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
+          if (particleTimerRef.current) clearInterval(particleTimerRef.current);
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen]); // Dependencies updated, added isRankOpen
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen]);
 
-  // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
+  // Effect for Shield Cooldown
   useEffect(() => {
       let countdownInterval: NodeJS.Timeout | null = null;
+      const logPrefix = "ShieldCooldownEffect:";
 
-      // CORRECTED: Use state variables directly
-      console.log("Shield Cooldown Effect running:", {
-          isShieldOnCooldown,
-          gameOver,
-          isStatsFullscreen, // Kiểm tra trạng thái bảng thống kê/xếp hạng
-          isLoadingUserData,
-          gameStarted,
-          shieldCooldownStartTime, // Use the state variable
-          pausedShieldCooldownRemaining, // Use the state variable
-          currentCooldownTimer: !!shieldCooldownTimerRef.current,
-          currentCountdownTimer: !!cooldownCountdownTimerRef.current,
-          isRankOpen // Added isRankOpen to log
-      });
+      console.log(`${logPrefix} State:`, { isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, gameStarted, shieldCooldownStartTime, pausedShieldCooldownRemaining, isRankOpen });
 
-
-      // Dừng/Tạm dừng bộ đếm thời gian khi game không hoạt động, kết thúc, hoặc bảng thống kê/xếp hạng/rank đang mở
-      if (isStatsFullscreen || isLoadingUserData || gameOver || !gameStarted || isRankOpen) { // Added isRankOpen check
-          console.log("Game inactive or paused. Clearing shield timers.");
-          // Tạm dừng bộ đếm thời gian hồi chiêu chính nếu đang chạy
-          if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
+      if (isStatsFullscreen || isLoadingUserData || gameOver || !gameStarted || isRankOpen) {
+          console.log(`${logPrefix} Pausing timers.`);
+          if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) {
               const elapsedTime = Date.now() - shieldCooldownStartTime;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-              setPausedShieldCooldownRemaining(remainingTimeMs); // Use the setter from the hook
+              setPausedShieldCooldownRemaining(remainingTimeMs);
               clearTimeout(shieldCooldownTimerRef.current);
               shieldCooldownTimerRef.current = null;
-              console.log(`Main shield cooldown PAUSED with ${remainingTimeMs}ms remaining.`);
+              console.log(`${logPrefix} Main cooldown PAUSED with ${remainingTimeMs}ms remaining.`);
           }
-
-          // Tạm dừng bộ đếm thời gian hiển thị hồi chiêu nếu đang chạy
           if (cooldownCountdownTimerRef.current) {
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null;
-              console.log("Shield display countdown PAUSED.");
+              console.log(`${logPrefix} Display countdown PAUSED.`);
           }
-      } else if (isShieldOnCooldown) { // Bắt đầu/Tiếp tục đếm ngược nếu khiên đang hồi chiêu và game hoạt động
-           console.log("Shield is on cooldown and game is active.");
-           // Tiếp tục bộ đếm thời gian hồi chiêu chính nếu đã tạm dừng
-           if (pausedShieldCooldownRemaining !== null && pausedShieldCooldownRemaining > 0) {
-               const remainingTimeToResume = pausedShieldCooldownRemaining;
-               console.log(`Resuming main shield cooldown with ${remainingTimeToResume}ms.`);
-               shieldCooldownTimerRef.current = setTimeout(() => {
-                   console.log("Shield cooldown ended (after pause).");
-                   setIsShieldOnCooldown(false);
-                   setRemainingCooldown(0);
-                   setShieldCooldownStartTime(null); // Use the setter from the hook
-                   setPausedShieldCooldownRemaining(null); // Use the setter from the hook
-               }, remainingTimeToResume);
+      } else if (isShieldOnCooldown) {
+          console.log(`${logPrefix} Shield on cooldown, game active.`);
+          if (pausedShieldCooldownRemaining !== null && pausedShieldCooldownRemaining > 0) {
+              console.log(`${logPrefix} Resuming main cooldown with ${pausedShieldCooldownRemaining}ms.`);
+              const resumeTime = pausedShieldCooldownRemaining;
+              shieldCooldownTimerRef.current = setTimeout(() => {
+                  console.log(`${logPrefix} Cooldown ended (after pause).`);
+                  setIsShieldOnCooldown(false);
+                  setRemainingCooldown(0);
+                  setShieldCooldownStartTime(null);
+                  setPausedShieldCooldownRemaining(null);
+              }, resumeTime);
+              setShieldCooldownStartTime(Date.now() - (SHIELD_COOLDOWN_TIME - resumeTime));
+              setPausedShieldCooldownRemaining(null); // Clear paused state
 
-               // Adjust the start time to reflect the resumed state
-               setShieldCooldownStartTime(Date.now() - (SHIELD_COOLDOWN_TIME - remainingTimeToResume)); // Use the setter from the hook
-               setPausedShieldCooldownRemaining(null); // Clear the paused remaining time
+              // Resume countdown display
+              const initialRemainingSeconds = Math.ceil(resumeTime / 1000);
+              setRemainingCooldown(initialRemainingSeconds);
+              if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current); // Clear old one
+              cooldownCountdownTimerRef.current = setInterval(() => {
+                  setRemainingCooldown(prev => {
+                      const newRemaining = Math.max(0, prev - 1);
+                      if (newRemaining === 0 && cooldownCountdownTimerRef.current) {
+                          clearInterval(cooldownCountdownTimerRef.current);
+                          cooldownCountdownTimerRef.current = null;
+                      }
+                      return newRemaining;
+                  });
+              }, 1000);
 
-               // Start countdown display immediately upon resuming
-               const initialRemainingSeconds = Math.ceil(remainingTimeToResume / 1000);
-               setRemainingCooldown(initialRemainingSeconds);
-               if (cooldownCountdownTimerRef.current === null) {
-                   console.log(`Starting shield display countdown upon resume with ${initialRemainingSeconds}s.`);
-                   countdownInterval = setInterval(() => {
-                       setRemainingCooldown(prev => {
-                           const newRemaining = Math.max(0, prev - 1);
-                           if (newRemaining === 0) {
-                               clearInterval(countdownInterval!);
-                               cooldownCountdownTimerRef.current = null;
-                               console.log("Shield display countdown finished.");
-                           }
-                           return newRemaining;
-                       });
-                   }, 1000); // Update every 1 second
-                   cooldownCountdownTimerRef.current = countdownInterval;
-               }
+          } else if (shieldCooldownStartTime !== null && cooldownCountdownTimerRef.current === null) { // Start countdown display if not already running
+              const elapsedTime = Date.now() - shieldCooldownStartTime;
+              const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+              const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000);
 
-
-           } else if (shieldCooldownStartTime !== null) { // If not paused, ensure main timer is running (should be set in activateShield)
-               // This block is primarily for ensuring the countdown display starts if it wasn't already
-               if (cooldownCountdownTimerRef.current === null) { // Only start countdown display if not already running
-                    const now = Date.now();
-                    const elapsedTime = now - shieldCooldownStartTime;
-                    const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
-                    const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000);
-
-                    console.log(`Calculating remaining cooldown: now=${now}, startTime=${shieldCooldownStartTime}, elapsedTime=${elapsedTime}, remainingMs=${remainingTimeMs}, initialSeconds=${initialRemainingSeconds}`);
-
-
-                    if (initialRemainingSeconds > 0) {
-                        console.log(`Starting shield display countdown from start time with ${initialRemainingSeconds}s.`);
-                         setRemainingCooldown(initialRemainingSeconds);
-                         countdownInterval = setInterval(() => {
-                             setRemainingCooldown(prev => {
-                                 const newRemaining = Math.max(0, prev - 1);
-                                 if (newRemaining === 0) {
-                                     clearInterval(countdownInterval!);
-                                     cooldownCountdownTimerRef.current = null;
-                                     console.log("Shield display countdown finished.");
-                                 }
-                                 return newRemaining;
-                             });
-                         }, 1000); // Update every 1 second
-                         cooldownCountdownTimerRef.current = countdownInterval;
-                    } else {
-                         // If remaining time is 0 or less, cooldown should end
-                         setIsShieldOnCooldown(false);
-                         setRemainingCooldown(0);
-                         setShieldCooldownStartTime(null);
-                         setPausedShieldCooldownRemaining(null);
-                         console.log("Shield cooldown already ended based on start time.");
-                    }
-
-               } else {
-                   // Explicitly handle the case where shieldCooldownStartTime is null/undefined
-                   console.warn("Shield is on cooldown but shieldCooldownStartTime is null/undefined. This should not happen if activateShield ran correctly.");
-                   // Potentially reset cooldown state here if this state is invalid
-                   setIsShieldOnCooldown(false);
-                   setRemainingCooldown(0);
-                   setShieldCooldownStartTime(null);
-                   setPausedShieldCooldownRemaining(null);
-               }
-           }
-      } else {
-          // Nếu khiên KHÔNG hồi chiêu, đảm bảo bộ đếm ngược hiển thị đã dừng và reset
+              if (initialRemainingSeconds > 0) {
+                  console.log(`${logPrefix} Starting display countdown with ${initialRemainingSeconds}s.`);
+                  setRemainingCooldown(initialRemainingSeconds);
+                  cooldownCountdownTimerRef.current = setInterval(() => {
+                      setRemainingCooldown(prev => {
+                          const newRemaining = Math.max(0, prev - 1);
+                          if (newRemaining === 0 && cooldownCountdownTimerRef.current) {
+                              clearInterval(cooldownCountdownTimerRef.current);
+                              cooldownCountdownTimerRef.current = null;
+                          }
+                          return newRemaining;
+                      });
+                  }, 1000);
+              } else if (remainingTimeMs <= 0) { // Cooldown should have ended
+                  setIsShieldOnCooldown(false);
+                  setRemainingCooldown(0);
+                  setShieldCooldownStartTime(null);
+              }
+          }
+      } else { // Shield not on cooldown
           if (cooldownCountdownTimerRef.current) {
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null;
-              console.log("Shield not on cooldown. Stopping display countdown.");
+              console.log(`${logPrefix} Shield not on cooldown. Display countdown stopped.`);
           }
-          if (remainingCooldown !== 0) {
-              setRemainingCooldown(0);
-          }
+          if (remainingCooldown !== 0) setRemainingCooldown(0);
       }
 
-
-      // Cleanup function to clear intervals when the effect re-runs or component unmounts
-      return () => {
-          console.log("Shield Cooldown Effect cleanup.");
-          if (countdownInterval) {
-              clearInterval(countdownInterval);
-              console.log("Cleanup: Cleared countdownInterval.");
-          }
-          // Note: The main shieldCooldownTimerRef is managed within the effect's logic,
-          // clearing it here in the cleanup might interfere with the pause/resume logic.
-          // We rely on the effect's internal logic to clear shieldCooldownTimerRef.
+      return () => { // Cleanup
+          console.log(`${logPrefix} Cleanup.`);
+          if (countdownInterval) clearInterval(countdownInterval); // This was from original, ensure it's cleared if used
+          if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+          // Main shieldCooldownTimerRef is cleared internally or when component unmounts
       };
-
-  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, isRankOpen]); // Dependencies updated, added isRankOpen
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, isRankOpen]);
 
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
     return () => {
       console.log("Component unmounting. Clearing all timers.");
-      clearTimeout(obstacleTimerRef.current);
-      clearInterval(runAnimationRef.current);
-      clearInterval(particleTimerRef.current);
+      if(obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
       if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-      // No need to clear session storage states here, the hook handles saving the current state
-
-      clearInterval(coinScheduleTimerRef.current);
-      clearInterval(coinCountAnimationTimerRef.current);
-
-      if (gameLoopIntervalRef.current) {
-          clearInterval(gameLoopIntervalRef.current);
-      }
+      if(coinScheduleTimerRef.current) clearInterval(coinScheduleTimerRef.current);
+      if(coinCountAnimationTimerRef.current) clearInterval(coinCountAnimationTimerRef.current);
+      if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
       console.log("All timers cleared on unmount.");
     };
   }, []);
 
-    // Effect for coin counter animation
+    // Effect for coin counter animation feedback (visual pulse)
   useEffect(() => {
-    // Only trigger animation if the displayed coins need to catch up to the actual coins state
-    if (displayedCoins === coins) return;
+    if (displayedCoins === coins && coins !== 0) return; // Only run if coins changed, and not initial load to 0
 
-    const coinElement = document.querySelector('.coin-counter');
+    const coinElement = document.querySelector('.coin-counter'); // Target the CoinDisplay component's counter
     if (coinElement) {
-      coinElement.classList.add('number-changing');
+      coinElement.classList.add('number-changing'); // Add class for CSS animation
       const animationEndHandler = () => {
         coinElement.classList.remove('number-changing');
-        coinElement.removeEventListener('animationend', animationEndHandler);
       };
-      coinElement.addEventListener('animationend', animationEndHandler);
+      coinElement.addEventListener('animationend', animationEndHandler, { once: true }); // Auto-remove listener
 
-      return () => {
-        if (coinElement) {
+      return () => { // Cleanup
+        if (coinElement) { // Check if element still exists
             coinElement.removeEventListener('animationend', animationEndHandler);
-             coinElement.classList.remove('number-changing');
+            coinElement.classList.remove('number-changing'); // Ensure class is removed on cleanup
         }
       };
     }
-     return () => {};
-  }, [displayedCoins, coins]); // Depend on both displayedCoins and coins state
+     return () => {}; // Return empty cleanup if no element
+  }, [displayedCoins]); // Depend only on displayedCoins for visual feedback
 
 
   // Calculate health percentage for the bar
-  const healthPct = health / MAX_HEALTH;
+  const healthPct = health > 0 ? health / MAX_HEALTH : 0; // Ensure healthPct is not negative
 
   // Determine health bar color based on health percentage
   const getColor = () => {
@@ -1350,24 +1210,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   // NEW: Calculate shield health percentage
-  const shieldHealthPct = isShieldActive ? shieldHealth / SHIELD_MAX_HEALTH : 0;
+  const shieldHealthPct = isShieldActive && shieldHealth > 0 ? shieldHealth / SHIELD_MAX_HEALTH : 0;
 
 
   // Render the character with animation and damage effect
   const renderCharacter = () => {
     return (
       <div
-        className="character-container absolute w-24 h-24 transition-all duration-300 ease-out"
+        className="character-container absolute w-24 h-24 transition-all duration-300 ease-out pointer-events-none" // Added pointer-events-none
         style={{
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
-          left: '5%',
+          left: '5%', // Character's fixed horizontal position
           transition: jumping ? 'bottom 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)' : 'bottom 0.3s cubic-bezier(0.33, 1, 0.68, 1)'
         }}
       >
         <DotLottieReact
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && gameStarted && !gameOver} // Play only if game is active
           className="w-full h-full"
         />
       </div>
@@ -1378,92 +1238,72 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const renderObstacle = (obstacle: GameObstacle) => {
     let obstacleEl;
 
-    const obstacleWidthPx = (obstacle.width / 4) * 16;
+    const obstacleWidthPx = (obstacle.width / 4) * 16; // Convert Tailwind units to px (assuming 1 unit = 0.25rem = 4px)
     const obstacleHeightPx = (obstacle.height / 4) * 16;
 
 
     switch(obstacle.type) {
-      case 'rock':
-        obstacleEl = (
-          <div className={`w-${obstacle.width} h-${obstacle.height} bg-gradient-to-br ${obstacle.color} rounded-lg`}>
-            <div className="w-2 h-1 bg-gray-600 rounded-full absolute top-1 left-0.5"></div>
-            <div className="w-1.5 h-0.5 bg-gray-600 rounded-full absolute top-3 right-1"></div>
-          </div>
-        );
-        break;
+      // Removed 'rock' case as it's not in obstacleTypes, add back if needed
       case 'lottie-obstacle-1':
+      case 'lottie-obstacle-2': // Common rendering for Lottie obstacles
         obstacleEl = (
           <div
-            className="relative"
+            className="relative" // Ensure Lottie is positioned correctly within this div
             style={{ width: `${obstacleWidthPx}px`, height: `${obstacleHeightPx}px` }}
           >
             {obstacle.lottieSrc && (
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && gameStarted && !gameOver}
                 className="w-full h-full"
               />
             )}
           </div>
         );
         break;
-      case 'lottie-obstacle-2':
+      default: // Fallback for unknown types, though ideally all types are handled
         obstacleEl = (
-          <div
-            className="relative"
+          <div 
+            className={`bg-gradient-to-b ${obstacle.color || 'from-gray-400 to-gray-600'} rounded`} // Default color
             style={{ width: `${obstacleWidthPx}px`, height: `${obstacleHeightPx}px` }}
-          >
-            {obstacle.lottieSrc && (
-              <DotLottieReact
-                src={obstacle.lottieSrc}
-                loop
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
-                className="w-full h-full"
-              />
-              )}
-          </div>
-        );
-        break;
-      default:
-        obstacleEl = (
-          <div className={`w-6 h-10 bg-gradient-to-b ${obstacle.color} rounded`}></div>
+          ></div>
         );
     }
 
-    const obstacleHealthPct = obstacle.health / obstacle.maxHealth;
+    const obstacleHealthPct = obstacle.health > 0 ? obstacle.health / obstacle.maxHealth : 0;
 
     return (
       <div
         key={obstacle.id}
-        className="absolute"
+        className="absolute pointer-events-none" // Added pointer-events-none
         style={{
-          bottom: `${GROUND_LEVEL_PERCENT}%`,
-          // FIXED: Applied clipping logic to obstacle rendering position
-          left: `${Math.min(100, Math.max(-20, obstacle.position))}%` // Ensure obstacle is rendered within a reasonable range
+          bottom: `${GROUND_LEVEL_PERCENT}%`, // Align bottom of obstacle with ground
+          left: `${Math.min(100, Math.max(-20, obstacle.position))}%`, // Clip rendering position
+          // Ensure transform origin is correct if scaling or rotating obstacles
         }}
       >
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-visible border border-gray-600 shadow-sm relative">
+        {/* Health bar above obstacle */}
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm">
             <div
                 className={`h-full ${obstacleHealthPct > 0.6 ? 'bg-green-500' : obstacleHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
-
-             {/* CORRECTED: hasKey logic is now correct, icon will render when true */}
-             {obstacle.hasKey && (
-              <img
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
-                alt="Key"
-                className="absolute w-4 h-4"
-                style={{
-                    bottom: 'calc(100% + 4px)',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                }}
-              />
-            )}
         </div>
-
+        
+        {/* Key icon above health bar if obstacle has key */}
+        {obstacle.hasKey && (
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+            alt="Key"
+            className="absolute w-4 h-4"
+            style={{
+                bottom: 'calc(100% + 10px)', // Position above health bar (h-2 + mb-1 = 8px + 4px = 12px approx)
+                left: '50%',
+                transform: 'translateX(-50%)',
+            }}
+          />
+        )}
         {obstacleEl}
       </div>
     );
@@ -1476,19 +1316,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         key={cloud.id}
         src={cloud.imgSrc}
         alt="Cloud Icon"
-        className="absolute object-contain"
+        className="absolute object-contain pointer-events-none" // Added pointer-events-none
         style={{
           width: `${cloud.size}px`,
-          height: `${cloud.size * 0.6}px`,
+          height: `${cloud.size * 0.6}px`, // Maintain aspect ratio
           top: `${cloud.y}%`,
-          // FIXED: Applied clipping logic to cloud rendering position
-          left: `${Math.min(120, Math.max(-50, cloud.x))}%`, // Ensure cloud is rendered within a reasonable range
+          left: `${Math.min(120, Math.max(-50, cloud.x))}%`, 
           opacity: 0.8
         }}
-        onError={(e) => {
-          const target = e as any; // Cast to any to access target
-          target.onerror = null;
-          target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
+        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => { // Typed event
+          const target = e.target as HTMLImageElement; // Type assertion
+          target.onerror = null; // Prevent infinite loop if fallback also fails
+          target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud"; // Fallback placeholder
         }}
       />
     ));
@@ -1499,13 +1338,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return particles.map(particle => (
       <div
         key={particle.id}
-        className={`absolute rounded-full ${particle.color}`}
+        className={`absolute rounded-full ${particle.color} pointer-events-none`} // Added pointer-events-none
         style={{
           width: `${particle.size}px`,
           height: `${particle.size}px`,
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`,
-          left: `calc(5% + ${particle.x}px)`,
-          opacity: particle.opacity
+          // Position particles relative to the character's base on the ground
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`, 
+          left: `calc(5% + ${particle.x}px)`, // 5% is character's left offset
+          opacity: particle.opacity,
+          // transform: `translate(-50%, -50%)` // Center particle if x,y are center points
         }}
       ></div>
     ));
@@ -1515,23 +1356,25 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const renderShield = () => {
     if (!isShieldActive) return null;
 
-    const shieldSizePx = 80;
+    const shieldSizePx = 80; // Shield Lottie size
 
     return (
       <div
         key="character-shield"
-        className="absolute w-20 h-20 flex flex-col items-center justify-center pointer-events-none z-20"
+        // Position shield around the character
+        className="absolute flex flex-col items-center justify-center pointer-events-none z-20"
          style={{
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + 96px)`,
-          left: '13%',
-          transform: 'translate(-50%, -50%)',
-          transition: 'bottom 0.3s ease-out, left 0.3s ease-out',
+          // Center shield on character, characterPos is jump height from ground
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + ${24/2*4}px - ${shieldSizePx/2}px)`, // (h-24 character)/2 - shieldSize/2
+          left: `calc(5% + ${24/2*4}px - ${shieldSizePx/2}px)`, // (w-24 character)/2 - shieldSize/2
           width: `${shieldSizePx}px`,
           height: `${shieldSizePx}px`,
+          // transition: 'bottom 0.3s ease-out, left 0.3s ease-out', // Smooth transition with character jump
         }}
       >
+        {/* Shield Health Bar (optional, can be displayed above character or shield Lottie) */}
         {shieldHealth > 0 && (
-            <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm mb-1">
+            <div className="absolute -top-4 w-16 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm mb-1">
                 <div
                     className={`h-full ${shieldHealthPct > 0.6 ? 'bg-green-500' : shieldHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
                     style={{ width: `${shieldHealthPct * 100}%` }}
@@ -1542,7 +1385,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
           loop
-          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && gameStarted && !gameOver}
           className="w-full h-full"
         />
       </div>
@@ -1555,19 +1398,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return activeCoins.map(coin => (
       <div
         key={coin.id}
-        className="absolute w-10 h-10"
+        className="absolute w-10 h-10 pointer-events-none" // Added pointer-events-none
         style={{
-          // FIXED: Applied clipping logic to coin rendering position
-          top: `${Math.min(120, Math.max(-20, coin.y))}%`, // Ensure coin is rendered within a reasonable range
-          left: `${Math.min(120, Math.max(-20, coin.x))}%`, // Ensure coin is rendered within a reasonable range
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none'
+          top: `${Math.min(120, Math.max(-20, coin.y))}%`, 
+          left: `${Math.min(120, Math.max(-20, coin.x))}%`, 
+          transform: 'translate(-50%, -50%)', // Center coin Lottie on its x,y position
         }}
       >
         <DotLottieReact
           src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && gameStarted && !gameOver}
           className="w-full h-full"
         />
       </div>
@@ -1577,16 +1418,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle full-screen stats
   const toggleStatsFullscreen = () => {
-    // Ngăn mở bảng thống kê/xếp hạng nếu game over hoặc đang tải dữ liệu
-    if (gameOver || isLoadingUserData) return; // Prevent opening if game over or loading data
+    if (gameOver || isLoadingUserData) return; 
 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
-            hideNavBar(); // Ẩn navbar khi mở bảng thống kê/xếp hạng
-            setIsRankOpen(false); // Ensure Rank is closed when Stats opens
+            hideNavBar(); 
+            setIsRankOpen(false); 
         } else {
-            showNavBar(); // Hiện navbar khi đóng bảng thống kê/xếp hạng
+            showNavBar(); 
         }
         return newState;
     });
@@ -1594,16 +1434,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle Rank visibility
   const toggleRank = () => {
-     // Ngăn mở bảng xếp hạng nếu game over hoặc đang tải dữ liệu
-     if (gameOver || isLoadingUserData) return; // Prevent opening if game over or loading data
+     if (gameOver || isLoadingUserData) return; 
 
      setIsRankOpen(prev => {
          const newState = !prev;
          if (newState) {
-             hideNavBar(); // Ẩn navbar khi mở bảng xếp hạng
-             setIsStatsFullscreen(false); // Ensure Stats is closed when Rank opens
+             hideNavBar(); 
+             setIsStatsFullscreen(false); 
          } else {
-             showNavBar(); // Hiện navbar khi đóng bảng xếp hạng
+             showNavBar(); 
          }
          return newState;
      });
@@ -1613,7 +1452,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const showHome = () => {
       setIsStatsFullscreen(false);
       setIsRankOpen(false);
-      showNavBar(); // Ensure navbar is visible
+      showNavBar(); 
   };
 
 
@@ -1624,7 +1463,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   // Show loading indicator if user data is being fetched
-  if (isLoadingUserData) {
+  if (isLoadingUserData && !auth.currentUser) { // Only show initial loading if no user yet
     return (
       <div className="flex items-center justify-center w-full h-screen bg-gray-900 text-white">
         Đang tải dữ liệu người dùng...
@@ -1637,12 +1476,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   if (isStatsFullscreen) {
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-              {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
               {auth.currentUser && (
                   <CharacterCard
-                      onClose={toggleStatsFullscreen} // Pass the toggle function to close the stats screen
-                      coins={coins} // Pass the coin state
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass the update function
+                      onClose={toggleStatsFullscreen} 
+                      coins={coins} 
+                      onUpdateCoins={(amount) => {
+                        if (auth.currentUser) { // Ensure currentUser is not null
+                           updateCoinsInFirestore(auth.currentUser.uid, amount);
+                        }
+                      }}
                   />
               )}
           </ErrorBoundary>
@@ -1650,7 +1492,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   } else if (isRankOpen) {
        mainContent = (
            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-               <EnhancedLeaderboard onClose={toggleRank} /> {/* Render Rank component and pass toggleRank as onClose */}
+               <EnhancedLeaderboard onClose={toggleRank} /> 
            </ErrorBoundary>
        );
   } else {
@@ -1658,20 +1500,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       mainContent = (
           <div
             ref={gameRef}
-            className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-            // FIXED: Added overflowX: 'hidden' to prevent horizontal scrolling
-            style={{ overflowX: 'hidden' }}
-            onClick={handleTap} // Handle tap for start/restart
+            // The className includes `overflow-hidden` which handles both x and y overflow.
+            // `h-screen` makes this div attempt to take full viewport height.
+            className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl cursor-pointer`} // Added cursor-pointer for tap
+            // Removed redundant style={{ overflowX: 'hidden' }} as `overflow-hidden` class covers it.
+            onClick={handleTap} 
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
-
-            <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
+            {/* Background layers */}
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600 pointer-events-none"></div>
+            <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10 pointer-events-none"></div>
 
             {renderClouds()}
 
-            <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
+            {/* Ground */}
+            <div className="absolute bottom-0 w-full pointer-events-none" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
                     <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
+                    {/* Decorative elements on ground */}
                     <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
                     <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
                     <div className="w-6 h-3 bg-gray-900 rounded-full absolute top-8 right-10"></div>
@@ -1680,81 +1525,65 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </div>
 
             {renderCharacter()}
-
             {renderShield()}
-
             {obstacles.map(obstacle => renderObstacle(obstacle))}
-
             {renderCoins()}
-
             {renderParticles()}
 
-            {/* Main header container */}
-            {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                        rounded-b-lg shadow-2xl
-                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                        border-b border-l border-r border-slate-700/50">
-
-                {/* Use the HeaderBackground component */}
+            {/* Main header UI */}
+            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 px-3 overflow-hidden rounded-b-lg shadow-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950 border-b border-l border-r border-slate-700/50">
                 <HeaderBackground />
-
-                {/* NEW Menu Button - Placed before the HP bar container */}
                 <button
-                    onClick={() => sidebarToggleRef.current?.()} // Call the stored toggle function
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" // Added z-20 to ensure it's above background
+                    onClick={(e) => { e.stopPropagation(); sidebarToggleRef.current?.(); }} // Prevent tap propagation
+                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
                     aria-label="Mở sidebar"
                     title="Mở sidebar"
                 >
-                    {/* Use the provided image URL for the icon */}
                      <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
                         alt="Menu Icon"
-                        className="w-5 h-5 object-contain" // Adjust size as needed
-                        onError={(e) => {
-                            const target = e as any; // Cast to any to access target
+                        className="w-5 h-5 object-contain"
+                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                            const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; 
                         }}
                      />
                 </button>
 
-
-                <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                  {/* REMOVED: StatsIcon is moved to the sidebar */}
-                  {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
-
-                  <div className="w-32 relative">
+                {/* Health Bar and Damage Display */}
+                <div className="flex items-center relative z-10">
+                  <div className="w-32 relative"> {/* Container for health bar and damage number */}
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                          <div className="h-full overflow-hidden">
+                          <div className="h-full overflow-hidden"> {/* Inner div for smooth scaling */}
                               <div
                                   className={`${getColor()} h-full transform origin-left`}
                                   style={{
                                       transform: `scaleX(${healthPct})`,
-                                      transition: 'transform 0.5s ease-out',
+                                      transition: 'transform 0.5s ease-out', // Smooth health change
                                   }}
                               >
-                                  <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                                  <div className="w-full h-1/2 bg-white bg-opacity-20" /> {/* Highlight effect */}
                               </div>
                           </div>
-
+                          {/* Animated gloss effect */}
                           <div
                               className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                              style={{ animation: 'pulse 3s infinite' }}
+                              style={{ animation: 'pulse 3s infinite' }} // CSS animation for pulse
                           />
-
+                          {/* Health text */}
                           <div className="absolute inset-0 flex items-center justify-center">
                               <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
                                   {Math.round(health)}/{MAX_HEALTH}
                               </span>
                           </div>
                       </div>
-
-                      <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
+                      {/* Floating damage number */}
+                      <div className="absolute -top-2 left-0 right-0 h-4 w-full overflow-visible pointer-events-none"> {/* Changed top to -top-2, overflow-visible */}
                           {showDamageNumber && (
                               <div
-                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }}
+                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-sm" // Increased text size
+                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }} // CSS animation for float up
                               >
                                   -{damageAmount}
                               </div>
@@ -1762,245 +1591,158 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       </div>
                   </div>
               </div>
-               {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
-               {(!isStatsFullscreen && !isRankOpen) && ( // Only show currency display when stats and rank are NOT fullscreen (added isRankOpen)
-                  <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
-                      {/* REMOVED: Display "OK" text */}
-                      {/*
-                      {showCoinUpdateSuccess && (
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
-                              OK
-                          </div>
-                      )}
-                      */}
-                      <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+              
+               {/* Currency Display: Coins and Gems */}
+               {(!isStatsFullscreen && !isRankOpen) && (
+                  <div className="flex items-center space-x-1 currency-display-container relative z-10">
+                      {/* Gem Display */}
+                      <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer" title="Số Gem bạn có">
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                           <div className="relative mr-0.5 flex items-center justify-center">
-                              {/* Sử dụng GemIcon từ file mới */}
                               <GemIcon size={16} color="#a78bfa" className="relative z-20" />
                           </div>
                           <div className="font-bold text-purple-200 text-xs tracking-wide">
                               {gems.toLocaleString()}
                           </div>
+                          {/* Plus button (decorative or for future use) */}
                           <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
                               <span className="text-white font-bold text-xs">+</span>
                           </div>
+                          {/* Decorative pulse dots */}
                           <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                           <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                       </div>
 
+                      {/* Coin Display Component */}
                       <CoinDisplay
                         displayedCoins={displayedCoins}
-                        isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
+                        isStatsFullscreen={isStatsFullscreen} 
                       />
                   </div>
                )}
             </div>
 
+            {/* Game Over Screen */}
             {gameOver && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
                 <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
                 <button
-                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                  onClick={startNewGame} // Call startNewGame on button click
+                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold transform transition hover:scale-105 shadow-lg" // Added text-white
+                  onClick={(e) => { e.stopPropagation(); startNewGame(); }} // Prevent tap propagation
                 >
                   Chơi Lại
                 </button>
               </div>
             )}
 
-            {/* Keep these buttons, they are not part of the main header or sidebar */}
-            {/* Chỉ hiển thị các nút này khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
-            {(!isStatsFullscreen && !isRankOpen) && ( // Added isRankOpen check
+            {/* Left Action Buttons (Shop, Inventory) */}
+            {(!isStatsFullscreen && !isRankOpen && gameStarted && !gameOver) && ( 
               <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
                 {[
-                  {
-                    icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute top-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
-                    ),
-                    label: "Shop",
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                  {
-                    icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute inset-0.5 bg-amber-500/30 rounded-sm flex items-center justify-center">
-                            <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                          </div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
-                    ),
-                    label: "Inventory",
-                    notification: true,
-                    special: true,
-                    centered: true
-                  }
+                  { label: "Shop", iconType: "shop" },
+                  { label: "Inventory", iconType: "inventory" }
                 ].map((item, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    {item.special && item.centered ? (
-                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                            {item.icon}
-                            {item.label && (
-                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                            )}
-                        </div>
-                    ) : (
-                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                        {item.icon}
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      </div>
-                    )}
-                  </div>
+                  <button 
+                    key={index} 
+                    onClick={(e) => e.stopPropagation()} // Prevent tap propagation
+                    className="group cursor-pointer scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title={item.label}
+                  >
+                    {/* Placeholder for actual icons */}
+                    {item.iconType === "shop" && <span className="text-2xl">🛍️</span>}
+                    {item.iconType === "inventory" && <span className="text-2xl">🎒</span>}
+                    <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                  </button>
                 ))}
               </div>
             )}
 
-             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
-             {(!isStatsFullscreen && !isRankOpen) && ( // Added isRankOpen check
+             {/* Right Action Buttons (Shield, Mission, Blacksmith) */}
+             {(!isStatsFullscreen && !isRankOpen && gameStarted && !gameOver) && ( 
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-
-                 <div
-                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData and isRankOpen checks
-                  onClick={activateShield}
+                 {/* Shield Button */}
+                 <button
+                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative focus:outline-none focus:ring-2 focus:ring-sky-400 ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`}
+                  onClick={(e) => { e.stopPropagation(); activateShield(); }} // Prevent tap propagation
                   title={
-                    !gameStarted || gameOver || isLoadingUserData || isRankOpen ? "Không khả dụng" : // Added isLoadingUserData and isRankOpen checks
+                    !gameStarted || gameOver || isLoadingUserData || isRankOpen ? "Không khả dụng" :
                     isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
                     isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
-                    isStatsFullscreen ? "Không khả dụng" :
                     "Kích hoạt Khiên chắn"
                   }
                   aria-label="Sử dụng Khiên chắn"
-                  role="button"
-                  tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen ? -1 : 0} // Added isLoadingUserData and isRankOpen checks
+                  disabled={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen}
                 >
                   <div className="w-10 h-10">
                      <DotLottieReact
                         src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                         loop
-                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && gameStarted && !gameOver}
                         className="w-full h-full"
                      />
                   </div>
-                  {/* MODIFIED: Conditional rendering for cooldown text */}
                   {isShieldOnCooldown && remainingCooldown > 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold pointer-events-none">
                       {remainingCooldown}s
                     </div>
                   )}
-                </div>
+                </button>
 
+                {/* Other Right Buttons (Mission, Blacksmith) */}
                 {[
-                  {
-                    icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
-                            <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
-                            <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
-                            <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
-                          </div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
-                    ),
-                    label: "Mission",
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                  {
-                    icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
-                            <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
-                            <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
-                            <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
-                            <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
-                            <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
-                            <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
-                          </div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
-                    ),
-                    label: "Blacksmith",
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
+                  { label: "Mission", iconType: "mission" },
+                  { label: "Blacksmith", iconType: "blacksmith" },
                 ].map((item, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    {item.special && item.centered ? (
-                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
-                            {item.icon}
-                            {item.label && (
-                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                            )}
-                        </div>
-                    ) : (
-                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                        {item.icon}
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      </div>
-                    )}
-                  </div>
+                  <button 
+                    key={index} 
+                    onClick={(e) => e.stopPropagation()} // Prevent tap propagation
+                    className="group cursor-pointer scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title={item.label}
+                  >
+                     {/* Placeholder for actual icons */}
+                    {item.iconType === "mission" && <span className="text-2xl">🎯</span>}
+                    {item.iconType === "blacksmith" && <span className="text-2xl">⚔️</span>}
+                    <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                  </button>
                 ))}
               </div>
             )}
 
+            {/* Treasure Chest Component */}
             <TreasureChest
               initialChests={3}
               keyCount={keyCount}
               onKeyCollect={(n) => {
                 console.log(`Chest opened using ${n} key(s).`);
-                // Update local state first
-                setKeyCount(prev => Math.max(0, prev - n));
-                // Then update Firestore
                 if (auth.currentUser) {
                   updateKeysInFirestore(auth.currentUser.uid, -n); // Subtract keys
                 } else {
                   console.log("User not authenticated, skipping Firestore key update.");
+                  setKeyCount(prev => Math.max(0, prev - n)); // Local fallback
                 }
               }}
-              // Use startCoinCountAnimation to handle coin rewards from chests
               onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen} // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở) (added isRankOpen)
-              isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
-              currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
+              onGemReward={handleGemReward} 
+              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen} 
+              isStatsFullscreen={isStatsFullscreen} 
+              currentUserId={currentUser ? currentUser.uid : null} 
             />
 
           </div>
       );
   }
 
-
+  // **FIX APPLIED HERE**: Wrap SidebarLayout in a div that constrains size and hides overflow.
   return (
-    // Pass specific handlers to SidebarLayout
-    <SidebarLayout
-        setToggleSidebar={handleSetToggleSidebar}
-        onShowStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function here
-        onShowRank={toggleRank} // Pass the toggleRank function here
-        onShowHome={showHome} // Pass the new showHome function
-        // Add handlers for other menu items here if needed
-    >
-      {mainContent} {/* Render the determined main content as children */}
-    </SidebarLayout>
+    <div className="w-screen h-screen overflow-hidden bg-gray-900"> {/* Added bg-gray-900 as a fallback page background */}
+      <SidebarLayout
+          setToggleSidebar={handleSetToggleSidebar}
+          onShowStats={toggleStatsFullscreen} 
+          onShowRank={toggleRank} 
+          onShowHome={showHome} 
+      >
+        {mainContent} {/* Render the determined main content as children */}
+      </SidebarLayout>
+    </div>
   );
 }
-
