@@ -196,7 +196,7 @@ export default function EnhancedLeaderboard() {
 
 
   return (
-    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 rounded-xl shadow-2xl max-w-2xl mx-auto border border-indigo-700/30 relative overflow-hidden">
+    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl max-w-2xl mx-auto border border-indigo-700/30 relative overflow-hidden">
       {/* Sparkling stars effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="star bg-white h-1 w-1 rounded-full absolute top-1/4 left-1/3 animate-twinkle"></div>
