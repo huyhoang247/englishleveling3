@@ -227,9 +227,8 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
           `}
         >
           {/* Menu items list */}
-          {/* Removed overflow-y-auto from nav */}
           {isSidebarVisible && (
-            <nav className="flex-1 py-4">
+            <nav className="flex-1 py-4 overflow-y-auto">
               <ul className="space-y-0 px-2">
                 {menuItems.map((item, index) => {
                   const Icon = item.icon;
