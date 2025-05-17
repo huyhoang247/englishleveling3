@@ -623,8 +623,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
       newClouds.push({
         id: Date.now() + i,
-        // FIXED: Limited initial cloud x position to a more reasonable range
-        x: Math.random() * 50 + 100, // Changed from 120 + 100 to 50 + 100 (100 to 150)
+        // FIX 1: Limited initial cloud x position to a more reasonable range (50-100%)
+        x: Math.random() * 50 + 50, // Changed from 120 + 100 to 50 + 50 (50 to 100)
         y: Math.random() * 40 + 10,
         size: Math.random() * 40 + 30,
         speed: Math.random() * 0.3 + 0.15,
@@ -680,7 +680,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             newObstacles.push({
               id: Date.now() + i,
-              // FIXED: Adjusted initial obstacle position for scheduled obstacles
+              // Adjusted initial obstacle position for scheduled obstacles
               position: 105 + spacing, // Changed from 100 + spacing to 105 + spacing
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
@@ -713,7 +713,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     coinScheduleTimerRef.current = setTimeout(() => {
       const newCoin: GameCoin = {
         id: Date.now(),
-        // FIXED: Adjusted initial coin x position
+        // Adjusted initial coin x position
         x: 105, // Changed from 110 to 105
         y: Math.random() * 60,
         initialSpeedX: Math.random() * 0.5 + 0.5,
@@ -868,6 +868,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     .map(obstacle => {
                         let newPosition = obstacle.position - speed;
 
+                        // FIX 3: Hard limit obstacle position values to prevent them from going too far off-screen
+                        newPosition = Math.min(100, Math.max(-20, newPosition));
+
                         let collisionDetected = false;
                         const obstacleX_px = (newPosition / 100) * gameWidth;
 
@@ -903,31 +906,30 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             }
                         }
 
-                        // FIXED: Applied clipping logic to obstacle position when it moves off-screen
-                        // Also adjusted the repositioning logic to use a position slightly off-screen
-                        if (newPosition < -20 && !collisionDetected) {
+                        // Repositioning logic when obstacle moves far off-screen to the left
+                        if (newPosition < -20 && !collisionDetected) { // Check if it's off-screen AND not collided
                              if (Math.random() < 0.7) {
                                 if (obstacleTypes.length === 0) return obstacle;
 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                                 const randomOffset = Math.floor(Math.random() * 20);
 
-                                // 20% chance để có chìa khóa
+                                // 20% chance to have a key
                                 const hasKey = Math.random() < 0.2;
 
                                 return {
                                     ...obstacle,
                                     ...randomObstacleType,
                                     id: Date.now(),
-                                    // Reposition slightly off-screen
+                                    // Reposition slightly off-screen to the right
                                     position: 105 + randomOffset, // Changed from 120 + randomOffset to 105 + randomOffset
                                     health: randomObstacleType.baseHealth,
                                     maxHealth: randomObstacleType.baseHealth,
                                     hasKey: hasKey,
                                 };
                             } else {
-                                // Apply clipping logic even if not repositioning, though filtering handles this
-                                return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
+                                // If not repositioning, still return the obstacle with its (clipped) new position
+                                return { ...obstacle, position: newPosition };
                             }
                         }
 
@@ -935,15 +937,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             if (obstacle.hasKey) {
                                 handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
                             }
+                             // Mark as collided and keep the current (clipped) position for one frame before filtering
                             return { ...obstacle, position: newPosition, collided: true };
                         }
 
-                        // Apply clipping logic during normal movement
-                        return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
+                        // Return the obstacle with its (clipped) new position
+                        return { ...obstacle, position: newPosition };
                     })
-                    // Filter out collided obstacles and those far off-screen
+                    // Filter out collided obstacles and those far off-screen to the left
                     .filter(obstacle => {
-                        // Keep obstacles that haven't collided AND are within a reasonable range
+                        // FIX 3: Filter out collided obstacles AND those whose position is less than -20%
                         return !obstacle.collided && obstacle.position > -20;
                     });
             });
@@ -953,7 +956,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     .map(cloud => {
                         const newX = cloud.x - cloud.speed;
 
-                        // FIXED: Adjusted cloud repositioning when it moves off-screen to the left
+                        // Adjusted cloud repositioning when it moves off-screen to the left
                         if (newX < -50) { // Keep the -50 threshold
                             const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
                             return {
@@ -969,7 +972,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }
 
                         // Apply clipping logic to cloud position if needed (optional, but good practice)
-                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; // Keep clouds within -50% to 120%
+                        // Keeping existing clipping range (-50% to 120%)
+                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) };
                     });
             });
 
@@ -1065,6 +1069,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             newY = coin.y + coin.initialSpeedY;
                         }
 
+                        // Apply clipping logic to coin position during movement
+                        newX = Math.min(120, Math.max(-20, newX));
+                        newY = Math.min(120, Math.max(-20, newY));
+
+
                         return {
                             ...coin,
                             x: newX,
@@ -1074,17 +1083,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         };
                     })
                     .filter(coin => {
-                        // FIXED: Adjusted coin filtering logic to keep coins within a reasonable range
+                        // Adjusted coin filtering logic to keep coins within a reasonable range
                         const isOffScreen = coin.x < -20 || coin.y > 120 || coin.y < -20; // Added check for top off-screen
                         return !coin.collided && !isOffScreen;
                     });
             });
 
 
-        }, 30); // Tốc độ cập nhật vòng lặp game (khoảng 30ms)
+        }, 30); // Game loop update speed (approx 30ms)
     }
 
-    // Hàm cleanup: Xóa vòng lặp game khi component unmount hoặc dependencies thay đổi
+    // Cleanup function: Clear the game loop interval when the component unmounts or dependencies change
     return () => {
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
@@ -1100,7 +1109,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
   useEffect(() => {
-      // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở hoặc đang tải dữ liệu
+      // Stop obstacle and coin timers when game is over, stats/rank is open, or data is loading
       if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen) { // Added isLoadingUserData and isRankOpen check
           if (obstacleTimerRef.current) {
               clearTimeout(obstacleTimerRef.current);
@@ -1110,12 +1119,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-           // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, hoặc bảng thống kê/xếp hạng/rank đang mở
+           // Stop particle generation when game is not started, over, or stats/rank is open
            if (particleTimerRef.current) {
                clearInterval(particleTimerRef.current);
                particleTimerRef.current = null;
            }
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added isRankOpen check)
+      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen) { // Continue/Start timers when game is active (added isRankOpen check)
           if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
           }
@@ -1127,7 +1136,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
            }
       }
 
-      // Hàm cleanup: Xóa hẹn giờ khi effect re-run hoặc component unmount
+      // Cleanup function: Clear timers when effect re-runs or component unmounts
       return () => {
           if (obstacleTimerRef.current) {
               clearTimeout(obstacleTimerRef.current);
@@ -1152,7 +1161,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.log("Shield Cooldown Effect running:", {
           isShieldOnCooldown,
           gameOver,
-          isStatsFullscreen, // Kiểm tra trạng thái bảng thống kê/xếp hạng
+          isStatsFullscreen, // Check stats/rank state
           isLoadingUserData,
           gameStarted,
           shieldCooldownStartTime, // Use the state variable
@@ -1163,10 +1172,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       });
 
 
-      // Dừng/Tạm dừng bộ đếm thời gian khi game không hoạt động, kết thúc, hoặc bảng thống kê/xếp hạng/rank đang mở
+      // Stop/Pause timers when game is inactive, over, or stats/rank is open
       if (isStatsFullscreen || isLoadingUserData || gameOver || !gameStarted || isRankOpen) { // Added isRankOpen check
           console.log("Game inactive or paused. Clearing shield timers.");
-          // Tạm dừng bộ đếm thời gian hồi chiêu chính nếu đang chạy
+          // Pause the main cooldown timer if running
           if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
               const elapsedTime = Date.now() - shieldCooldownStartTime;
               const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
@@ -1176,15 +1185,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               console.log(`Main shield cooldown PAUSED with ${remainingTimeMs}ms remaining.`);
           }
 
-          // Tạm dừng bộ đếm thời gian hiển thị hồi chiêu nếu đang chạy
+          // Pause the countdown display timer if running
           if (cooldownCountdownTimerRef.current) {
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null;
               console.log("Shield display countdown PAUSED.");
           }
-      } else if (isShieldOnCooldown) { // Bắt đầu/Tiếp tục đếm ngược nếu khiên đang hồi chiêu và game hoạt động
+      } else if (isShieldOnCooldown) { // Start/Resume countdown if shield is on cooldown and game is active
            console.log("Shield is on cooldown and game is active.");
-           // Tiếp tục bộ đếm thời gian hồi chiêu chính nếu đã tạm dừng
+           // Resume the main cooldown timer if it was paused
            if (pausedShieldCooldownRemaining !== null && pausedShieldCooldownRemaining > 0) {
                const remainingTimeToResume = pausedShieldCooldownRemaining;
                console.log(`Resuming main shield cooldown with ${remainingTimeToResume}ms.`);
@@ -1266,7 +1275,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                }
            }
       } else {
-          // Nếu khiên KHÔNG hồi chiêu, đảm bảo bộ đếm ngược hiển thị đã dừng và reset
+          // If shield is NOT on cooldown, ensure display countdown is stopped and reset
           if (cooldownCountdownTimerRef.current) {
               clearInterval(cooldownCountdownTimerRef.current);
               cooldownCountdownTimerRef.current = null;
@@ -1367,7 +1376,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Auto-play animation when stats/rank are NOT open and NOT loading data (added isRankOpen)
           className="w-full h-full"
         />
       </div>
@@ -1401,7 +1410,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Auto-play animation when stats/rank are NOT open and NOT loading data (added isRankOpen)
                 className="w-full h-full"
               />
             )}
@@ -1418,7 +1427,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Auto-play animation when stats/rank are NOT open and NOT loading data (added isRankOpen)
                 className="w-full h-full"
               />
               )}
@@ -1439,7 +1448,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         className="absolute"
         style={{
           bottom: `${GROUND_LEVEL_PERCENT}%`,
-          // FIXED: Applied clipping logic to obstacle rendering position
+          // Applied clipping logic to obstacle rendering position (matches filtering/movement)
           left: `${Math.min(100, Math.max(-20, obstacle.position))}%` // Ensure obstacle is rendered within a reasonable range
         }}
       >
@@ -1481,7 +1490,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           width: `${cloud.size}px`,
           height: `${cloud.size * 0.6}px`,
           top: `${cloud.y}%`,
-          // FIXED: Applied clipping logic to cloud rendering position
+          // Applied clipping logic to cloud rendering position (matches filtering/repositioning)
           left: `${Math.min(120, Math.max(-50, cloud.x))}%`, // Ensure cloud is rendered within a reasonable range
           opacity: 0.8
         }}
@@ -1542,7 +1551,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
           loop
-          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Auto-play animation when shield is active, stats/rank are NOT open, and NOT loading data (added isRankOpen)
           className="w-full h-full"
         />
       </div>
@@ -1557,7 +1566,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         key={coin.id}
         className="absolute w-10 h-10"
         style={{
-          // FIXED: Applied clipping logic to coin rendering position
+          // FIX 4: Applied clipping logic to coin rendering position (matches filtering/movement)
           top: `${Math.min(120, Math.max(-20, coin.y))}%`, // Ensure coin is rendered within a reasonable range
           left: `${Math.min(120, Math.max(-20, coin.x))}%`, // Ensure coin is rendered within a reasonable range
           transform: 'translate(-50%, -50%)',
@@ -1567,7 +1576,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Auto-play animation when stats/rank are NOT open and NOT loading data (added isRankOpen)
           className="w-full h-full"
         />
       </div>
@@ -1577,16 +1586,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle full-screen stats
   const toggleStatsFullscreen = () => {
-    // Ngăn mở bảng thống kê/xếp hạng nếu game over hoặc đang tải dữ liệu
+    // Prevent opening stats if game is over or data is loading
     if (gameOver || isLoadingUserData) return; // Prevent opening if game over or loading data
 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
-            hideNavBar(); // Ẩn navbar khi mở bảng thống kê/xếp hạng
+            hideNavBar(); // Hide navbar when opening stats/rank
             setIsRankOpen(false); // Ensure Rank is closed when Stats opens
         } else {
-            showNavBar(); // Hiện navbar khi đóng bảng thống kê/xếp hạng
+            showNavBar(); // Show navbar when closing stats/rank
         }
         return newState;
     });
@@ -1594,16 +1603,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle Rank visibility
   const toggleRank = () => {
-     // Ngăn mở bảng xếp hạng nếu game over hoặc đang tải dữ liệu
+     // Prevent opening rank if game is over or data is loading
      if (gameOver || isLoadingUserData) return; // Prevent opening if game over or loading data
 
      setIsRankOpen(prev => {
          const newState = !prev;
          if (newState) {
-             hideNavBar(); // Ẩn navbar khi mở bảng xếp hạng
+             hideNavBar(); // Hide navbar when opening rank
              setIsStatsFullscreen(false); // Ensure Stats is closed when Rank opens
          } else {
-             showNavBar(); // Hiện navbar khi đóng bảng xếp hạng
+             showNavBar(); // Show navbar when closing rank
          }
          return newState;
      });
@@ -1658,9 +1667,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       mainContent = (
           <div
             ref={gameRef}
-            className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
-            // FIXED: Added overflowX: 'hidden' to prevent horizontal scrolling
-            style={{ overflowX: 'hidden' }}
+            className={`${className ?? ''} relative w-full h-screen rounded-lg shadow-2xl`}
+            // FIX 2: Added overflow: 'hidden' and willChange: 'transform' directly to style
+            style={{
+              overflow: 'hidden', // Add overflow hidden directly
+              willChange: 'transform' // Optimize rendering
+            }}
             onClick={handleTap} // Handle tap for start/restart
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
@@ -1762,7 +1774,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       </div>
                   </div>
               </div>
-               {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+               {/* Only display currency info when stats and rank are NOT open */}
                {(!isStatsFullscreen && !isRankOpen) && ( // Only show currency display when stats and rank are NOT fullscreen (added isRankOpen)
                   <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
                       {/* REMOVED: Display "OK" text */}
@@ -1776,7 +1788,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                           <div className="relative mr-0.5 flex items-center justify-center">
-                              {/* Sử dụng GemIcon từ file mới */}
+                              {/* Use GemIcon from the new file */}
                               <GemIcon size={16} color="#a78bfa" className="relative z-20" />
                           </div>
                           <div className="font-bold text-purple-200 text-xs tracking-wide">
@@ -1791,7 +1803,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                       <CoinDisplay
                         displayedCoins={displayedCoins}
-                        isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
+                        isStatsFullscreen={isStatsFullscreen} // Pass isStatsFullscreen state
                       />
                   </div>
                )}
@@ -1810,7 +1822,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             )}
 
             {/* Keep these buttons, they are not part of the main header or sidebar */}
-            {/* Chỉ hiển thị các nút này khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+            {/* Only display these buttons when stats and rank are NOT open */}
             {(!isStatsFullscreen && !isRankOpen) && ( // Added isRankOpen check
               <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
                 {[
@@ -1867,7 +1879,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
-             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+             {/* Only display the shield button when stats and rank are NOT open */}
              {(!isStatsFullscreen && !isRankOpen) && ( // Added isRankOpen check
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
@@ -1889,7 +1901,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      <DotLottieReact
                         src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                         loop
-                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Auto-play animation when shield is active, stats/rank are NOT open, and NOT loading data (added isRankOpen)
                         className="w-full h-full"
                      />
                   </div>
@@ -1980,8 +1992,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               // Use startCoinCountAnimation to handle coin rewards from chests
               onCoinReward={startCoinCountAnimation}
               onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen} // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở) (added isRankOpen)
-              isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
+              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen} // Pass game pause state (including when stats/rank are open) (added isRankOpen)
+              isStatsFullscreen={isStatsFullscreen} // Pass isStatsFullscreen state
               currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
             />
 
@@ -2003,4 +2015,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </SidebarLayout>
   );
 }
-
