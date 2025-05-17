@@ -9,6 +9,11 @@ export default function EnhancedLeaderboard() {
   const [animation, setAnimation] = useState(false);
   const [timeFilter, setTimeFilter] = useState('all'); // Added timeFilter state
 
+  // Function to format wealth number (replace comma with period)
+  const formatWealth = (wealth) => {
+    return wealth.replace(/,/g, '.');
+  };
+
   // Sample data for wealth leaderboard (All time) - Removed 'change' property
   const wealthData = [
     { rank: 1, name: 'Dragon_Master', avatar: '🐉', wealth: '8,750,000' },
@@ -21,7 +26,7 @@ export default function EnhancedLeaderboard() {
     { rank: 8, name: 'DiamondQueen', avatar: '💎', wealth: '3,785,450' },
     { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '3,150,200' },
     { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '2,950,750' }
-  ];
+  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
 
   // Sample data for collection leaderboard (All time) - Added 'floor' back
   const collectionData = [
@@ -49,7 +54,7 @@ export default function EnhancedLeaderboard() {
     { rank: 8, name: 'TigerKing', avatar: '🐯', wealth: '180,200' },
     { rank: 9, name: 'IronHeart', avatar: '❤️', wealth: '160,300' },
     { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '145,750' }
-  ];
+  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
 
   // Dữ liệu theo tuần cho wealth leaderboard - Removed 'change' property
   const weeklyWealthData = [
@@ -63,7 +68,7 @@ export default function EnhancedLeaderboard() {
     { rank: 8, name: 'GoldenEagle', avatar: '🦅', wealth: '815,100' },
     { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '750,200' },
     { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '650,750' }
-  ];
+  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
 
   // Dữ liệu theo tháng cho wealth leaderboard - Removed 'change' property
   const monthlyWealthData = [
@@ -77,47 +82,7 @@ export default function EnhancedLeaderboard() {
     { rank: 8, name: 'GoldenEagle', avatar: '🦅', wealth: '2,215,100' },
     { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '2,150,200' },
     { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '1,950,750' }
-  ];
-
-  // Tương tự cho collection data - Updated (added floor back)
-  const dailyCollectionData = [
-    { rank: 1, name: 'RarityFinder', avatar: '🧿', floor: '6', vocabulary: '4' },
-    { rank: 2, name: 'LootMaster', avatar: '🎁', floor: '5', vocabulary: '3' },
-    { rank: 3, name: 'CollectorKing', avatar: '👑', floor: '4', vocabulary: '3' },
-    { rank: 4, name: 'ArtifactHunter', avatar: '🔍', floor: '4', vocabulary: '2' },
-    { rank: 5, name: 'TreasureSeeker', avatar: '💰', floor: '3', vocabulary: '2' },
-    { rank: 6, name: 'GemCollector', avatar: '💎', floor: '3', vocabulary: '2' },
-    { rank: 7, name: 'MysticFinder', avatar: '✨', floor: '2', vocabulary: '2' },
-    { rank: 8, name: 'RelicHoarder', avatar: '🏺', floor: '2', vocabulary: '1' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '2', vocabulary: '1' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '1', vocabulary: '1' }
-  ];
-
-  const weeklyCollectionData = [
-    { rank: 1, name: 'CollectorKing', avatar: '👑', floor: '18', vocabulary: '9' },
-    { rank: 2, name: 'ArtifactHunter', avatar: '🔍', floor: '16', vocabulary: '8' },
-    { rank: 3, name: 'RarityFinder', avatar: '🧿', floor: '14', vocabulary: '7' },
-    { rank: 4, name: 'TreasureSeeker', avatar: '💰', floor: '13', vocabulary: '6' },
-    { rank: 5, name: 'LootMaster', avatar: '🎁', floor: '12', vocabulary: '5' },
-    { rank: 6, name: 'GemCollector', avatar: '💎', floor: '11', vocabulary: '5' },
-    { rank: 7, name: 'MysticFinder', avatar: '✨', floor: '10', vocabulary: '4' },
-    { rank: 8, name: 'RelicHoarder', avatar: '🏺', floor: '9', vocabulary: '4' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '8', vocabulary: '3' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '7', vocabulary: '3' }
-  ];
-
-  const monthlyCollectionData = [
-    { rank: 1, name: 'CollectorKing', avatar: '👑', floor: '56', vocabulary: '35' },
-    { rank: 2, name: 'ArtifactHunter', avatar: '🔍', floor: '53', vocabulary: '28' },
-    { rank: 3, name: 'TreasureSeeker', avatar: '💰', floor: '48', vocabulary: '23' },
-    { rank: 4, name: 'RarityFinder', avatar: '🧿', floor: '45', vocabulary: '20' },
-    { rank: 5, name: 'LootMaster', avatar: '🎁', floor: '42', vocabulary: '22' },
-    { rank: 6, name: 'GemCollector', avatar: '💎', floor: '38', vocabulary: '20' },
-    { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '35', vocabulary: '18' },
-    { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '32', vocabulary: '16' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '30', vocabulary: '14' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '27', vocabulary: '13' }
-  ];
+  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
 
 
   useEffect(() => {
@@ -377,7 +342,11 @@ export default function EnhancedLeaderboard() {
               <div className="grid grid-cols-11 gap-2 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-7">Người chơi</div>
-                <div className="col-span-3 text-right">Tài sản</div> {/* Adjusted col-span */}
+                <div className="col-span-3 text-right flex items-center justify-end"> {/* Adjusted col-span and added flex, justify-end */}
+                  <span>Tài sản</span> {/* Text "Tài sản" */}
+                  {/* Coin Icon */}
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className="w-3 h-3 ml-1 inline-block align-middle" onError={(e) => e.target.style.display = 'none'} /> {/* Moved icon here and adjusted size */}
+                </div>
               </div>
 
               {filteredWealthData.length > 0 ? (
@@ -411,18 +380,19 @@ export default function EnhancedLeaderboard() {
                         )}
                       </div>
                     </div>
-                    <div className="col-span-3 text-right font-mono font-medium text-sm"> {/* Adjusted col-span */}
+                    <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end"> {/* Changed text-sm to text-xs and font-medium to font-bold */}
                       <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
                         {player.wealth}
                       </div>
+                      {/* Removed Coin Icon from here */}
                       {isHovering === index && timeFilter === 'day' && (
-                        <div className="text-xs text-green-400 mt-0.5">+124,500/ngày</div>
+                        <div className="text-xs text-green-400 mt-0.5">+124.500/ngày</div> // Updated comma to period
                       )}
                        {isHovering === index && timeFilter === 'week' && (
-                        <div className="text-xs text-green-400 mt-0.5">+500,000/tuần</div>
+                        <div className="text-xs text-green-400 mt-0.5">+500.000/tuần</div> // Updated comma to period
                       )}
                        {isHovering === index && timeFilter === 'month' && (
-                        <div className="text-xs text-green-400 mt-0.5">+1,500,000/tháng</div>
+                        <div className="text-xs text-green-400 mt-0.5">+1.500.000/tháng</div> // Updated comma to period
                       )}
                     </div>
                   </div>
