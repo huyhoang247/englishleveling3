@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-// Import the Rank component
-import EnhancedLeaderboard from './rank.tsx'; // Assuming rank.tsx is in the same directory
+// Import the Rank component - REMOVED: Rank is now rendered by the parent
+// import EnhancedLeaderboard from './rank.tsx';
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  // NEW prop to handle toggling the stats screen
-  onToggleStats?: () => void;
+  // NEW props to handle toggling specific screens in the parent
+  onShowStats?: () => void; // Handler for showing Stats
+  onShowRank?: () => void;   // Handler for showing Rank
+  // Add handlers for other menu items that need parent interaction here
+  onShowHome?: () => void;
+  onShowTasks?: () => void;
+  onShowPerformance?: () => void;
+  onShowSettings?: () => void;
+  onShowHelp?: () => void;
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -150,14 +157,11 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLayoutProps) { // Added onToggleStats prop
+// Accept new specific handlers for menu items
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowPerformance, onShowSettings, onShowHelp }: SidebarLayoutProps) {
   // State to track sidebar visibility
-  // MODIFIED: Initialize isSidebarVisible to false
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  // State to track the active menu item
-  const [activeItem, setActiveItem] = useState('home');
-  // State to track the currently displayed content component
-  const [activeContent, setActiveContent] = useState('home'); // 'home', 'rank', etc. Removed 'stats' as it's fullscreen
+  // Removed activeItem and activeContent states
 
   // State for new notification count
   const [notificationCount, setNotificationCount] = useState(3);
@@ -183,36 +187,15 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
   // List of sidebar menu items - Using new inline SVG components and the new FrameIcon
   const menuItems = [
-    { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    // Reverted: Icon for Stats menu item is now AwardIcon again
-    { id: 'stats', label: 'Stats', icon: AwardIcon },
-    // Updated: Changed label from 'Phân tích' to 'Rank' and icon to FrameIcon
-    // Updated id to 'rank' to match the state
-    { id: 'rank', label: 'Rank', icon: FrameIcon },
-    // Removed: Mail menu item
-    { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
-    { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
-    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon },
-    { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon },
+    // Added onClick handlers calling the specific props
+    { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
+    { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
+    { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
+    { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
+    { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance },
+    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
+    { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
   ];
-
-  // Handle menu item click
-  const handleMenuItemClick = (itemId: string) => {
-    // If the clicked item is 'stats', call the onToggleStats prop
-    if (itemId === 'stats') {
-      onToggleStats?.(); // Call the function passed from the parent (background-game)
-      // Do NOT change activeItem or activeContent for 'stats' here
-    } else {
-      // For other items, update activeItem and activeContent as before
-      setActiveItem(itemId); // Set active menu item for styling
-      setActiveContent(itemId); // Set active content based on clicked item id
-    }
-
-    // Optionally close the sidebar after clicking an item on mobile
-    if (window.innerWidth < 768) { // Adjust breakpoint as needed
-      toggleSidebar();
-    }
-  };
 
 
   return (
@@ -248,6 +231,11 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
               <ul className="space-y-0 px-2">
                 {menuItems.map((item, index) => {
                   const Icon = item.icon;
+                  // Determine if the item is currently "active" based on which content is being shown in the parent
+                  // This requires knowing the parent's state, which is not ideal here.
+                  // A simpler approach is to rely on the parent rendering the correct content.
+                  // For now, we'll keep a basic active state logic if needed, but it might not perfectly sync.
+                  // Let's remove the activeItem state and just use the onClick handler.
                   return (
                     <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
                       <a
@@ -256,20 +244,25 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
                           flex items-center px-4 py-3 text-sm font-medium
                           transition-all duration-150 ease-in-out group relative
                           mx-1 my-1 rounded-xl
-                          ${activeItem === item.id
+                          ${false // Placeholder for active state, will be handled by parent rendering
                             ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
                             : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
                           }
                         `}
                         onClick={(e) => {
                           e.preventDefault();
-                          handleMenuItemClick(item.id); // Use the new handler
+                          // Call the specific handler prop if it exists
+                          item.onClick?.();
+                           // Optionally close the sidebar after clicking an item on mobile
+                           if (window.innerWidth < 768) { // Adjust breakpoint as needed
+                              toggleSidebar();
+                           }
                         }}
                       >
                         <div className={`
                           w-8 h-8 flex items-center justify-center rounded-lg mr-3
                           transition-colors duration-200
-                          ${activeItem === item.id
+                          ${false // Placeholder for active state
                             ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
                             : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
                           }
@@ -344,36 +337,12 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
         </div>
       </div>
 
-      {/* Main content area */}
+      {/* Main content area - Always render children here */}
       <div className={`
         flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden
         ${isSidebarVisible ? 'md:ml-72' : 'ml-0'} {/* Maintain spacing based on sidebar visibility */}
       `}>
-        {/* Top Header Bar - This will be handled by the game component */}
-        {/* The game component will render its own header */}
-
-
-        {/* Main content - This is where the selected content will be rendered */}
-        <div className="flex-1 overflow-y-auto">
-             {/* Conditionally render content based on activeContent state */}
-             {activeContent === 'home' && children} {/* Render default children for home */}
-             {activeContent === 'rank' && <EnhancedLeaderboard />} {/* Render Rank component */}
-             {/* Removed the 'stats' case here, as it's handled by the fullscreen overlay in background-game.tsx */}
-             {/* Add conditions for other menu items here */}
-             {activeContent !== 'home' && activeContent !== 'rank' && (
-                <div className="flex items-center justify-center h-full text-gray-600 text-xl">
-                    Nội dung cho "{activeItem}" đang được phát triển.
-                </div>
-             )}
-        </div>
-
-
-        {/* Footer - Kept footer */}
-        <footer className="bg-white border-t border-gray-100 py-4 px-6">
-          <div className="text-center text-sm text-gray-500">
-            © 2025 DASHPRO. Tất cả các quyền được bảo lưu.
-          </div>
-        </footer>
+        {children} {/* Render the content passed from the parent */}
       </div>
     </div>
   );
@@ -381,4 +350,3 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
 
 // Export the SidebarLayout component
 export { SidebarLayout };
-
