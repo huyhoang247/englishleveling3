@@ -203,6 +203,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // UI States
   // Keep isStatsFullscreen here, it controls the CharacterCard visibility
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false); // Trạng thái kiểm soát hiển thị bảng thống kê/xếp hạng
+
+  // NEW: State to track if the stats screen is opened from the sidebar
+  const [isStatsOpenedFromSidebar, setIsStatsOpenedFromSidebar] = useState(false);
+
+
   const [isLoadingUserData, setIsLoadingUserData] = useState(true); // NEW: State to track user data loading
 
   // Define the new ground level percentage
@@ -547,6 +552,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDamageAmount(0);
         setShowDamageNumber(false);
         setIsStatsFullscreen(false); // Reset stats fullscreen on logout
+        setIsStatsOpenedFromSidebar(false); // Reset sidebar stats state on logout
         setCoins(0); // Reset local state
         setDisplayedCoins(0); // Reset local state
         setGems(0); // Reset local state
@@ -1550,16 +1556,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   // NEW: Function to toggle full-screen stats
-  const toggleStatsFullscreen = () => {
+  // MODIFIED: Add a parameter to indicate if the toggle is from the sidebar
+  const toggleStatsFullscreen = (fromSidebar = false) => {
     // Ngăn mở bảng thống kê/xếp hạng nếu game over hoặc đang tải dữ liệu
     if (gameOver || isLoadingUserData) return; // Prevent opening if game over or loading data
 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
+        setIsStatsOpenedFromSidebar(fromSidebar); // Set the state indicating source of toggle
+
         if (newState) {
             hideNavBar(); // Ẩn navbar khi mở bảng thống kê/xếp hạng
         } else {
             showNavBar(); // Hiện navbar khi đóng bảng thống kê/xếp hạng
+            setIsStatsOpenedFromSidebar(false); // Reset state when closing
         }
         return newState;
     });
@@ -1584,9 +1594,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   return (
     // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop
     // Also pass the toggleStatsFullscreen function as onToggleStats
+    // NEW: Pass coins, onUpdateCoins, and isStatsFullscreen props to SidebarLayout
     <SidebarLayout
         setToggleSidebar={handleSetToggleSidebar}
-        onToggleStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function here
+        onToggleStats={() => toggleStatsFullscreen(true)} // Pass the toggleStatsFullscreen function here, indicating it's from sidebar
+        coins={coins} // Pass coin state
+        onUpdateCoins={updateCoinsInFirestore} // Pass coin update function
+        isStatsFullscreen={isStatsFullscreen} // Pass isStatsFullscreen state
     >
       <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
         <style>{`
@@ -1697,7 +1711,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
               {auth.currentUser && (
                   <CharacterCard
-                      onClose={toggleStatsFullscreen} // Pass the toggle function to close the stats screen
+                      // If opened from sidebar, close should return to home.
+                      // If opened from game header, close should just hide the stats screen.
+                      // We pass a function that toggles the fullscreen state,
+                      // the sidebar handles changing activeContent to 'home' if needed.
+                      onClose={() => toggleStatsFullscreen(false)} // Pass the toggle function to close the stats screen
                       coins={coins} // Pass the coin state
                       onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass the update function
                   />
@@ -2038,5 +2056,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </SidebarLayout>
   );
 }
-
-
