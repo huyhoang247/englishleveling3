@@ -138,7 +138,8 @@ const AwardIcon = ({ size = 24, className = '', ...props }) => (
 // SidebarLayout component including Sidebar and main content area
 function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLayoutProps) { // Added onToggleStats prop
   // State to track sidebar visibility
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  // MODIFIED: Initialize isSidebarVisible to false
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // State to track the active menu item
   const [activeItem, setActiveItem] = useState('home');
   // State for new notification count
