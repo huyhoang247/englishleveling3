@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 // Removed lucide-react import
 
-export default function EnhancedLeaderboard() {
+// Define prop types for EnhancedLeaderboard
+interface EnhancedLeaderboardProps {
+  onClose: () => void; // Add a prop for the close function
+}
+
+// Accept the onClose prop
+export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProps) {
   const [activeTab, setActiveTab] = useState('wealth');
   const [isHovering, setIsHovering] = useState(null);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -206,14 +212,19 @@ export default function EnhancedLeaderboard() {
               </div>
             </div>
           </div>
-          <div className="bg-indigo-900/60 backdrop-blur-sm rounded-full px-3 py-1 text-xs flex items-center border border-indigo-700/50 shadow">
-            {/* Clock Icon (replaced lucide-react Clock) */}
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
+          {/* Close Button */}
+          <button
+            onClick={onClose} // Call the onClose prop when clicked
+            className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors"
+            aria-label="Đóng bảng xếp hạng"
+            title="Đóng"
+          >
+             {/* X Icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
-            <span className="text-indigo-200">16/05/2025</span>
-          </div>
+          </button>
         </div>
 
         {/* Search */}
