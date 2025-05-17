@@ -1565,6 +1565,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const newState = !prev;
         if (newState) {
             hideNavBar(); // Ẩn navbar khi mở bảng thống kê/xếp hạng
+            setIsRankOpen(false); // Ensure Rank is closed when Stats opens
         } else {
             showNavBar(); // Hiện navbar khi đóng bảng thống kê/xếp hạng
         }
@@ -1581,11 +1582,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
          const newState = !prev;
          if (newState) {
              hideNavBar(); // Ẩn navbar khi mở bảng xếp hạng
+             setIsStatsFullscreen(false); // Ensure Stats is closed when Rank opens
          } else {
              showNavBar(); // Hiện navbar khi đóng bảng xếp hạng
          }
          return newState;
      });
+  };
+
+  // NEW: Function to show Home content (close any fullscreen overlays)
+  const showHome = () => {
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      showNavBar(); // Ensure navbar is visible
   };
 
 
@@ -1604,121 +1613,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-
-  return (
-    // MODIFIED: Wrap the main game content with SidebarLayout and pass the setToggleSidebar prop
-    // Also pass the toggleStatsFullscreen function as onToggleStats
-    // And pass the toggleRank function as onToggleRank
-    <SidebarLayout
-        setToggleSidebar={handleSetToggleSidebar}
-        onToggleStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function here
-        onToggleRank={toggleRank} // Pass the toggleRank function here
-    >
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-900 text-white overflow-hidden relative">
-        <style>{`
-          @keyframes fadeOutUp {
-            0% {
-              opacity: 1;
-              transform: translate(-50%, 0);
-            }
-            100% {
-              opacity: 0;
-              transform: translate(-50%, -20px);
-            }
-          }
-          .animate-fadeOutUp {
-            animation: fadeOutUp 0.5s ease-out forwards;
-          }
-          @keyframes pulse-subtle { 0%, 100% { opacity: 0.8; box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); } 50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8); } }
-          @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-          @keyframes pulse-button { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
-          .add-button-pulse { animation: pulse-button 1.5s infinite; }
-          @keyframes number-change { 0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); } 100% { color: #fff; text-shadow: none; transform: scale(1); } }
-          .number-changing { animation: number-change 0.3s ease-out; }
-           @keyframes pulse-fast {
-              0%, 100% { opacity: 1; }
-              50% { opacity: 0.5; }
-          }
-          .animate-pulse-fast {
-              animation: pulse-fast 1s infinite;
-          }
-
-          @keyframes pulse {
-            0% { opacity: 0; }
-            50% { opacity: 0.2; }
-            100% { opacity: 0; }
-          }
-          @keyframes floatUp {
-            0% { transform: translate(-50%, 0); opacity: 1; }
-            100% { transform: translate(-50%, -20px); opacity: 0; }
-          }
-          /* REMOVED: Animation for OK text */
-          /*
-          @keyframes fadeInOut {
-              0%, 100% { opacity: 0; }
-              50% { opacity: 1; }
-          }
-          .animate-fadeInOut {
-              animation: fadeInOut 2s ease-in-out forwards;
-          }
-          */
-
-          /* NEW: Glass Shadow Border Effect (Reduced intensity) */
-          .glass-shadow-border {
-              box-shadow:
-                  0 2px 4px rgba(0, 0, 0, 0.4), /* Reduced spread and opacity */
-                  0 4px 8px rgba(0, 0, 0, 0.3), /* Reduced spread and opacity */
-                  inset 0 -1px 2px rgba(255, 255, 255, 0.15); /* Reduced inset highlight */
-          }
-
-          /* Keyframes for the scanline animation (Copied from background-header.txt) */
-          /* REMOVED: Moved to HeaderBackground.tsx */
-
-          /* Keyframes for the twinkling effect (Copied from background-header.txt) */
-          /* REMOVED: Moved to HeaderBackground.tsx */
-
-          /* Keyframes for individual particle animations (Copied from background-header.txt, though particles not used in header) */
-           /* REMOVED: Moved to HeaderBackground.tsx */
-          @keyframes particle1 {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(-50px, -30px); opacity: 0; }
-          }
-
-          @keyframes particle2 {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(60px, -20px); opacity: 0; }
-          }
-
-          @keyframes particle3 {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(-30px, 40px); opacity: 0; }
-          }
-
-          @keyframes particle4 {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(40px, 30px); opacity: 0; }
-          }
-
-          @keyframes particle5 {
-            0% { transform: translate(0, 0); opacity: 1; }
-            100% { transform: translate(20px, -50px); opacity: 0; }
-          }
-
-
-          /* Apply animations to elements using Tailwind's utility classes (Copied from background-header.txt) */
-          /* REMOVED: Moved to HeaderBackground.tsx */
-
-
-        `}</style>
-         <style jsx global>{`
-          body {
-            overflow: hidden;
-          }
-        `}</style>
-
-
-        {/* Hiển thị bảng thống kê/xếp hạng khi isStatsFullscreen là true */}
-        {isStatsFullscreen ? (
+  // Determine which content to render inside SidebarLayout based on state
+  let mainContent;
+  if (isStatsFullscreen) {
+      mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
               {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
               {auth.currentUser && (
@@ -1729,12 +1627,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   />
               )}
           </ErrorBoundary>
-        ) : isRankOpen ? ( // NEW: Conditionally render Rank when isRankOpen is true
-             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-                 <EnhancedLeaderboard onClose={toggleRank} /> {/* Render Rank component and pass toggleRank as onClose */}
-             </ErrorBoundary>
-        ) : (
-          // Hiển thị game nền khi isStatsFullscreen và isRankOpen đều là false
+      );
+  } else if (isRankOpen) {
+       mainContent = (
+           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
+               <EnhancedLeaderboard onClose={toggleRank} /> {/* Render Rank component and pass toggleRank as onClose */}
+           </ErrorBoundary>
+       );
+  } else {
+      // Default game content
+      mainContent = (
           <div
             ref={gameRef}
             className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
@@ -2063,8 +1965,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             />
 
           </div>
-        )}
-      </div>
+      );
+  }
+
+
+  return (
+    // Pass specific handlers to SidebarLayout
+    <SidebarLayout
+        setToggleSidebar={handleSetToggleSidebar}
+        onShowStats={toggleStatsFullscreen} // Pass the toggleStatsFullscreen function here
+        onShowRank={toggleRank} // Pass the toggleRank function here
+        onShowHome={showHome} // Pass the new showHome function
+        // Add handlers for other menu items here if needed
+    >
+      {mainContent} {/* Render the determined main content as children */}
     </SidebarLayout>
   );
 }
