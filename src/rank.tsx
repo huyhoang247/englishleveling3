@@ -226,6 +226,9 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
   return (
     // Removed max-w-2xl and mx-auto, added w-full for full width
     // Added overflow-hidden to the main container to remove overall scroll
+    // NOTE: For this component to display correctly without the footer being cut off,
+    // its parent container MUST have a defined height (e.g., h-screen, height: 500px, etc.)
+    // The internal flexbox layout manages space, but the total height is determined by the parent.
     <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden h-full flex flex-col">
       {/* Sparkling stars effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -584,3 +587,4 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     </div>
   );
 }
+
