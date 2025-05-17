@@ -9,9 +9,6 @@ interface SidebarLayoutProps {
   setToggleSidebar?: (toggleFn: () => void) => void;
   // NEW prop to handle toggling the stats screen
   onToggleStats?: () => void;
-  // NEW props to control the visibility of the bottom navigation bar
-  hideNavBar: () => void; // Function to hide the nav bar
-  showNavBar: () => void; // Function to show the nav bar
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -97,7 +94,7 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
 
 // Icon for Performance menu item
 const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="18" y1="20" x2="18" y2="10"></line>
     <line x1="12" y1="20" x2="12" y2="4"></line>
     <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -122,7 +119,7 @@ const ClipboardIcon = ({ size = 24, color = 'currentColor', className = '', ...p
 );
 
 const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
   </svg>
 );
@@ -153,7 +150,7 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onToggleStats, hideNavBar, showNavBar }: SidebarLayoutProps) { // Added hideNavBar and showNavBar props
+function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLayoutProps) { // Added onToggleStats prop
   // State to track sidebar visibility
   // MODIFIED: Initialize isSidebarVisible to false
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
@@ -205,19 +202,10 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats, hideNavBar, 
     if (itemId === 'stats') {
       onToggleStats?.(); // Call the function passed from the parent (background-game)
       // Do NOT change activeItem or activeContent for 'stats' here
-      // Also, hide the nav bar for the stats screen
-      hideNavBar();
     } else {
       // For other items, update activeItem and activeContent as before
       setActiveItem(itemId); // Set active menu item for styling
       setActiveContent(itemId); // Set active content based on clicked item id
-
-      // Control nav bar visibility based on the selected item
-      if (itemId === 'rank') {
-        hideNavBar(); // Hide nav bar when 'rank' is selected
-      } else {
-        showNavBar(); // Show nav bar for other items (like 'home' within the sidebar)
-      }
     }
 
     // Optionally close the sidebar after clicking an item on mobile
@@ -372,9 +360,9 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats, hideNavBar, 
              {activeContent === 'rank' && <EnhancedLeaderboard />} {/* Render Rank component */}
              {/* Removed the 'stats' case here, as it's handled by the fullscreen overlay in background-game.tsx */}
              {/* Add conditions for other menu items here */}
-             {activeContent !== 'home' && activeContent !== 'rank' && activeContent !== 'stats' && ( // Added 'stats' to the condition
+             {activeContent !== 'home' && activeContent !== 'rank' && (
                 <div className="flex items-center justify-center h-full text-gray-600 text-xl">
-                    Nội dung cho "{menuItems.find(item => item.id === activeItem)?.label || activeItem}" đang được phát triển. {/* Display the correct label */}
+                    Nội dung cho "{activeItem}" đang được phát triển.
                 </div>
              )}
         </div>
@@ -393,3 +381,4 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats, hideNavBar, 
 
 // Export the SidebarLayout component
 export { SidebarLayout };
+
