@@ -1,21 +1,16 @@
 import React, { useState, useEffect } from 'react';
 // Import the Rank component
 import EnhancedLeaderboard from './rank.tsx'; // Assuming rank.tsx is in the same directory
-// Import the CharacterCard component (Stats screen)
-import CharacterCard from './stats/stats-main.tsx'; // Assuming stats-main.tsx is in the correct path
+// Import the StatsMain component
+import StatsMain from './stats/stats-main.tsx'; // Import component thống kê
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  // NEW prop to handle toggling the stats screen (used by game to open/close)
+  // NEW prop to handle toggling the stats screen
   onToggleStats?: () => void;
-  // NEW props to pass coin data and update function from the game
-  coins: number; // Pass current coin amount
-  onUpdateCoins: (amount: number) => Promise<void>; // Pass coin update function
-  // NEW prop to indicate if the stats screen is currently open (controlled by game)
-  isStatsFullscreen: boolean;
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -157,16 +152,13 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-// Updated component signature to accept new props
-function SidebarLayout({ children, setToggleSidebar, onToggleStats, coins, onUpdateCoins, isStatsFullscreen }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLayoutProps) { // Added onToggleStats prop
   // State to track sidebar visibility
   // MODIFIED: Initialize isSidebarVisible to false
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // State to track the active menu item
-  // MODIFIED: Initialize activeItem to 'home'
   const [activeItem, setActiveItem] = useState('home');
   // State to track the currently displayed content component
-  // MODIFIED: Initialize activeContent to 'home'
   const [activeContent, setActiveContent] = useState('home'); // 'home', 'stats', 'rank', etc.
 
   // State for new notification count
@@ -185,14 +177,6 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats, coins, onUpd
       setToggleSidebar(toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]); // Depend on setToggleSidebar and toggleSidebar
-
-  // Effect to close sidebar when stats screen is opened from elsewhere (e.g., game header)
-  useEffect(() => {
-      if (isStatsFullscreen && isSidebarVisible) {
-          setIsSidebarVisible(false);
-      }
-  }, [isStatsFullscreen, isSidebarVisible]);
-
 
   // Function to toggle user menu
   const toggleUserMenu = () => {
@@ -219,11 +203,8 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats, coins, onUpd
     setActiveItem(itemId); // Set active menu item for styling
     setActiveContent(itemId); // Set active content based on clicked item id
 
-    // If clicking 'stats', also trigger the onToggleStats function to open the stats screen
+    // If the clicked item is 'stats', also call the onToggleStats prop
     if (itemId === 'stats' && onToggleStats) {
-        onToggleStats();
-    } else if (isStatsFullscreen && onToggleStats) {
-        // If clicking something else while stats are open, close the stats screen
         onToggleStats();
     }
 
@@ -375,20 +356,11 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats, coins, onUpd
         {/* Main content - This is where the selected content will be rendered */}
         <div className="flex-1 overflow-y-auto">
              {/* Conditionally render content based on activeContent state */}
-             {activeContent === 'home' && children} {/* Render default children (the game) for home */}
+             {activeContent === 'home' && children} {/* Render default children for home */}
+             {activeContent === 'stats' && <StatsMain />} {/* Render StatsMain component */}
              {activeContent === 'rank' && <EnhancedLeaderboard />} {/* Render Rank component */}
-
-             {/* NEW: Render CharacterCard when activeContent is 'stats' */}
-             {activeContent === 'stats' && (
-                 <CharacterCard
-                     onClose={() => handleMenuItemClick('home')} // Pass a function to return to home
-                     coins={coins} // Pass coins from props
-                     onUpdateCoins={onUpdateCoins} // Pass update function from props
-                 />
-             )}
-
-             {/* Show "under development" message for other items */}
-             {activeContent !== 'home' && activeContent !== 'rank' && activeContent !== 'stats' && (
+             {/* Add conditions for other menu items here */}
+             {['home','stats','rank'].indexOf(activeContent) === -1 && (
                 <div className="flex items-center justify-center h-full text-gray-600 text-xl">
                     Nội dung cho "{activeItem}" đang được phát triển.
                 </div>
