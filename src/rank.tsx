@@ -11,7 +11,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
   const [activeTab, setActiveTab] = useState('wealth');
   const [isHovering, setIsHovering] = useState(null);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  // Removed searchTerm state
   const [animation, setAnimation] = useState(false);
   const [timeFilter, setTimeFilter] = useState('all'); // Added timeFilter state
 
@@ -90,6 +90,47 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '1,950,750' }
   ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
 
+  // --- Dữ liệu mẫu cho Collection theo Ngày, Tuần, Tháng ---
+  const dailyCollectionData = [
+    { rank: 1, name: 'TreasureSeeker', avatar: '💰', floor: '10', vocabulary: '5' },
+    { rank: 2, name: 'RarityFinder', avatar: '🧿', floor: '8', vocabulary: '4' },
+    { rank: 3, name: 'GemCollector', avatar: '💎', floor: '7', vocabulary: '4' },
+    { rank: 4, name: 'CollectorKing', avatar: '👑', floor: '6', vocabulary: '3' },
+    { rank: 5, name: 'ArtifactHunter', avatar: '🔍', floor: '5', vocabulary: '3' },
+    { rank: 6, name: 'LootMaster', avatar: '🎁', floor: '4', vocabulary: '2' },
+    { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '3', vocabulary: '2' },
+    { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '2', vocabulary: '1' },
+    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '1', vocabulary: '1' },
+    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '1', vocabulary: '0' }
+  ];
+
+  const weeklyCollectionData = [
+    { rank: 1, name: 'ArtifactHunter', avatar: '🔍', floor: '30', vocabulary: '15' },
+    { rank: 2, name: 'CollectorKing', avatar: '👑', floor: '28', vocabulary: '14' },
+    { rank: 3, name: 'TreasureSeeker', avatar: '💰', floor: '25', vocabulary: '13' },
+    { rank: 4, name: 'RarityFinder', avatar: '🧿', floor: '22', vocabulary: '11' },
+    { rank: 5, name: 'LootMaster', avatar: '🎁', floor: '20', vocabulary: '10' },
+    { rank: 6, name: 'GemCollector', avatar: '💎', floor: '18', vocabulary: '9' },
+    { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '15', vocabulary: '8' },
+    { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '12', vocabulary: '6' },
+    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '10', vocabulary: '5' },
+    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '8', vocabulary: '4' }
+  ];
+
+  const monthlyCollectionData = [
+    { rank: 1, name: 'CollectorKing', avatar: '👑', floor: '80', vocabulary: '40' },
+    { rank: 2, name: 'ArtifactHunter', avatar: '🔍', floor: '75', vocabulary: '38' },
+    { rank: 3, name: 'RarityFinder', avatar: '🧿', floor: '70', vocabulary: '35' },
+    { rank: 4, name: 'TreasureSeeker', avatar: '💰', floor: '65', vocabulary: '33' },
+    { rank: 5, name: 'GemCollector', avatar: '💎', floor: '60', vocabulary: '30' },
+    { rank: 6, name: 'LootMaster', avatar: '🎁', floor: '55', vocabulary: '28' },
+    { rank: 7, name: 'MysticFinder', avatar: '✨', floor: '50', vocabulary: '25' },
+    { rank: 8, name: 'RelicHoarder', avatar: '🏺', floor: '45', vocabulary: '23' },
+    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '40', vocabulary: '20' },
+    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '35', vocabulary: '18' }
+  ];
+  // --- Kết thúc dữ liệu mẫu ---
+
 
   useEffect(() => {
     setAnimation(true);
@@ -149,21 +190,17 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
   const getFilteredCollectionData = () => {
     switch(timeFilter) {
-      case 'day': return dailyCollectionData;
-      case 'week': return weeklyCollectionData;
-      case 'month': return monthlyCollectionData;
-      default: return collectionData; // 'all'
+      case 'day': return dailyCollectionData; // Sử dụng dữ liệu theo ngày
+      case 'week': return weeklyCollectionData; // Sử dụng dữ liệu theo tuần
+      case 'month': return monthlyCollectionData; // Sử dụng dữ liệu theo tháng
+      default: return collectionData; // 'all' - Sử dụng dữ liệu tổng
     }
   };
 
-  // Filter data based on search term and time filter
-  const filteredWealthData = getFilteredWealthData().filter(player =>
-    player.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter data based on time filter (Removed search term filter)
+  const filteredWealthData = getFilteredWealthData();
 
-  const filteredCollectionData = getFilteredCollectionData().filter(player =>
-    player.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCollectionData = getFilteredCollectionData();
 
 
   return (
@@ -228,21 +265,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
           </button>
         </div>
 
-        {/* Search */}
-        <div className="mb-4 relative">
-          <input
-            type="text"
-            placeholder="Tìm kiếm người chơi..."
-            className="w-full bg-indigo-900/30 border border-indigo-700/50 rounded-lg py-1.5 pl-8 pr-4 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 text-sm text-indigo-100 placeholder-indigo-400"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {/* Search Icon (replaced lucide-react Search) */}
-          <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-2.5 top-2 w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.3-4.3"/>
-          </svg>
-        </div>
+        {/* Removed Search input section */}
 
         {/* Time Filter Selector */}
         <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between">
@@ -340,7 +363,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'collection' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3"/>
               <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
-              <path d="M3 12A9 9 0 0 0 21 12"/>
+              <path d="M3 12A9 3 0 0 0 21 12"/>
             </svg>
             Collection
           </button>
