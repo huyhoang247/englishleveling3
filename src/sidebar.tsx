@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Import the Rank component
+import EnhancedLeaderboard from './rank.tsx'; // Assuming rank.tsx is in the same directory
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
@@ -154,6 +156,9 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // State to track the active menu item
   const [activeItem, setActiveItem] = useState('home');
+  // State to track the currently displayed content component
+  const [activeContent, setActiveContent] = useState('home'); // 'home', 'stats', 'rank', etc.
+
   // State for new notification count
   const [notificationCount, setNotificationCount] = useState(3);
   // State for user menu dropdown
@@ -182,13 +187,25 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
     // Reverted: Icon for Stats menu item is now AwardIcon again
     { id: 'stats', label: 'Stats', icon: AwardIcon },
     // Updated: Changed label from 'Phân tích' to 'Rank' and icon to FrameIcon
-    { id: 'analytics', label: 'Rank', icon: FrameIcon },
+    // Updated id to 'rank' to match the state
+    { id: 'rank', label: 'Rank', icon: FrameIcon },
     // Removed: Mail menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon },
   ];
+
+  // Handle menu item click
+  const handleMenuItemClick = (itemId: string) => {
+    setActiveItem(itemId); // Set active menu item for styling
+    setActiveContent(itemId); // Set active content based on clicked item id
+    // Optionally close the sidebar after clicking an item on mobile
+    if (window.innerWidth < 768) { // Adjust breakpoint as needed
+      toggleSidebar();
+    }
+  };
+
 
   return (
     <div className="relative min-h-screen flex bg-gray-100 text-gray-800 font-sans">
@@ -238,14 +255,7 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
                         `}
                         onClick={(e) => {
                           e.preventDefault();
-                          setActiveItem(item.id);
-                          // NEW: Handle click for the Stats item
-                          if (item.id === 'stats' && onToggleStats) {
-                            onToggleStats(); // Call the function passed from the game component
-                            toggleSidebar(); // Optionally close the sidebar after opening stats
-                          }
-                           // If it's not the stats item, you might want to navigate or perform other actions
-                           // For now, just setting activeItem is enough for other items
+                          handleMenuItemClick(item.id); // Use the new handler
                         }}
                       >
                         <div className={`
@@ -335,9 +345,17 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
         {/* The game component will render its own header */}
 
 
-        {/* Main content - This is where the game will be rendered */}
+        {/* Main content - This is where the selected content will be rendered */}
         <div className="flex-1 overflow-y-auto">
-             {children} {/* Render the wrapped content (your game) here */}
+             {/* Conditionally render content based on activeContent state */}
+             {activeContent === 'home' && children} {/* Render default children for home */}
+             {activeContent === 'rank' && <EnhancedLeaderboard />} {/* Render Rank component */}
+             {/* Add conditions for other menu items here */}
+             {activeContent !== 'home' && activeContent !== 'rank' && (
+                <div className="flex items-center justify-center h-full text-gray-600 text-xl">
+                    Nội dung cho "{activeItem}" đang được phát triển.
+                </div>
+             )}
         </div>
 
 
