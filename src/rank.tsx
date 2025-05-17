@@ -446,7 +446,7 @@ export default function EnhancedLeaderboard() {
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-5">Người chơi</div> {/* Adjusted col-span */}
                 <div className="col-span-3 text-center"> {/* Combined col-span for Floor | Vocabulary */}
-                  <span className="mr-1">Floor</span> | <span className="ml-1">Vocabulary</span> {/* Added separator and spacing */}
+                  <span className="mr-1">Floor</span> <span className="opacity-30">|</span> <span className="ml-1">Vocabulary</span> {/* Added separator and spacing */}
                 </div>
               </div>
 
@@ -486,7 +486,7 @@ export default function EnhancedLeaderboard() {
                        <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1"> {/* Added margin-right */}
                         {player.floor}
                       </span>
-                      |
+                      <span className="opacity-30">|</span> {/* Added opacity-30 class */}
                       <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1"> {/* Added margin-left */}
                         {player.vocabulary}
                       </span>
