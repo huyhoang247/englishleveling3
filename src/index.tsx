@@ -129,7 +129,8 @@ const App: React.FC = () => {
   // Nếu người dùng đã được xác thực (đã đăng nhập)
   // Hiển thị nội dung chính của ứng dụng
   return (
-    <div className="app-container">
+    // Đã sửa: Thêm style overflow: 'hidden' để ngăn cuộn ở cấp độ container chính
+    <div className="app-container" style={{ overflow: 'hidden' }}>
       {/* Hiển thị component dựa trên activeTab state */}
       {activeTab === 'home' && (
         <Home
