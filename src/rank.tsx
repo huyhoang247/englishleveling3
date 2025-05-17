@@ -31,7 +31,17 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     { rank: 7, name: 'GoldenEagle', avatar: '🦅', wealth: '4,215,100' },
     { rank: 8, name: 'DiamondQueen', avatar: '💎', wealth: '3,785,450' },
     { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '3,150,200' },
-    { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '2,950,750' }
+    { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '2,950,750' },
+     { rank: 11, name: 'CyberKnight', avatar: '🤖', wealth: '2,500,000' },
+    { rank: 12, name: 'OceanDeep', avatar: '🌊', wealth: '2,300,000' },
+    { rank: 13, name: 'ForestSprite', avatar: '🌳', wealth: '2,100,000' },
+    { rank: 14, name: 'MountainKing', avatar: '⛰️', wealth: '1,900,000' },
+    { rank: 15, name: 'DesertFox', avatar: '🦊', wealth: '1,700,000' },
+    { rank: 16, name: 'SkyDancer', avatar: '☁️', wealth: '1,500,000' },
+    { rank: 17, name: 'SunSeeker', avatar: '☀️', wealth: '1,300,000' },
+    { rank: 18, name: 'IceQueen', avatar: '❄️', wealth: '1,100,000' },
+    { rank: 19, name: 'ThunderBolt', avatar: '⚡', wealth: '900,000' },
+    { rank: 20, name: 'EarthShaker', avatar: '🌍', wealth: '700,000' }
   ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
 
   // Sample data for collection leaderboard (All time) - Added 'floor' back
@@ -45,7 +55,17 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '102', vocabulary: '57' },
     { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '98', vocabulary: '52' },
     { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '92', vocabulary: '48' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '87', vocabulary: '45' }
+    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '87', vocabulary: '45' },
+     { rank: 11, name: 'HoardMaster', avatar: '📦', floor: '80', vocabulary: '40' },
+    { rank: 12, name: 'ItemGatherer', avatar: '🛍️', floor: '75', vocabulary: '38' },
+    { rank: 13, name: 'VaultKeeper', avatar: '🏦', floor: '70', vocabulary: '35' },
+    { rank: 14, name: 'StashPro', avatar: '🗄️', floor: '65', vocabulary: '33' },
+    { rank: 15, name: 'InventoryKing', avatar: '🎒', floor: '60', vocabulary: '30' },
+    { rank: 16, name: 'PackRat', avatar: '🐀', floor: '55', vocabulary: '28' },
+    { rank: 17, name: 'Accumulator', avatar: '📈', floor: '50', vocabulary: '25' },
+    { rank: 18, name: 'Stockpiler', avatar: '🧺', floor: '45', vocabulary: '23' },
+    { rank: 19, name: 'Resourceful', avatar: '💡', floor: '40', vocabulary: '20' },
+    { rank: 20, name: 'KeeperOfThings', avatar: '🗝️', floor: '35', vocabulary: '18' }
   ];
 
   // Dữ liệu theo ngày cho wealth leaderboard - Removed 'change' property
@@ -205,7 +225,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
   return (
     // Removed max-w-2xl and mx-auto, added w-full for full width
-    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden">
+    // Added overflow-hidden to the main container to remove overall scroll
+    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden h-full flex flex-col">
       {/* Sparkling stars effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="star bg-white h-1 w-1 rounded-full absolute top-1/4 left-1/3 animate-twinkle"></div>
@@ -218,10 +239,10 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       <div className="absolute -top-10 -left-10 w-20 h-20 bg-indigo-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
       <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-purple-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
 
-      <div className="relative">
+      <div className="relative flex flex-col h-full"> {/* Added flex-col and h-full to enable flex layout */}
         {/* Header */}
         {/* Adjusted flex properties to center the title */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
           {/* Removed the div containing the trophy icon and the header text */}
           <div className="flex-grow text-center"> {/* Added flex-grow and text-center to center the title */}
             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text">
@@ -232,7 +253,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
           {/* Close Button */}
           <button
             onClick={onClose} // Call the onClose prop when clicked
-            className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors"
+            className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors flex-shrink-0" // Added flex-shrink-0
             aria-label="Đóng bảng xếp hạng"
             title="Đóng"
           >
@@ -249,7 +270,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         {/* Removed Search input section */}
 
         {/* Time Filter Selector */}
-        <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between">
+        <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between flex-shrink-0"> {/* Added flex-shrink-0 */}
           <button
             className={`py-1.5 px-3 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-xs flex-1 ${
               timeFilter === 'day'
@@ -314,7 +335,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
 
         {/* Tabs with enhanced design */}
-        <div className="flex mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40">
+        <div className="flex mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex-shrink-0"> {/* Added flex-shrink-0 */}
           <button
             className={`flex-1 py-1.5 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-sm ${
               activeTab === 'wealth'
@@ -344,18 +365,20 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'collection' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3"/>
               <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
-              <path d="M3 12A9 3 0 0 0 21 12"/>
+              <path d="M3 12A9 9 0 0 0 21 12"/>
             </svg>
             Collection
           </button>
         </div>
 
-        {/* Content with enhanced visuals */}
-        <div className={`bg-indigo-900/20 backdrop-blur-sm rounded-xl p-3 border border-indigo-700/30 shadow-lg ${animation ? 'animate-fadeIn' : ''}`}>
+        {/* Main Content Area - Contains fixed header and scrollable list */}
+        {/* Added flex flex-col and overflow-hidden */}
+        <div className={`bg-indigo-900/20 backdrop-blur-sm rounded-xl p-3 border border-indigo-700/30 shadow-lg ${animation ? 'animate-fadeIn' : ''} flex-grow flex flex-col overflow-hidden`}>
           {activeTab === 'wealth' ? (
             <>
-              {/* Wealth Header */}
-              <div className="grid grid-cols-11 gap-2 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50">
+              {/* Wealth Header - Fixed */}
+              {/* Added flex-shrink-0 to prevent header from shrinking */}
+              <div className="grid grid-cols-11 gap-2 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50 flex-shrink-0">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-7">Người chơi</div>
                 <div className="col-span-3 text-right flex items-center justify-end"> {/* Adjusted col-span and added flex, justify-end */}
@@ -365,70 +388,75 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 </div>
               </div>
 
-              {filteredWealthData.length > 0 ? (
-                filteredWealthData.map((player, index) => (
-                  <div
-                    key={index}
-                    className={`grid grid-cols-11 gap-2 py-2 px-3 rounded-lg mb-1.5 items-center transition-all duration-200 ${
-                      player.rank <= 3
-                        ? 'bg-gradient-to-r from-indigo-800/60 to-purple-800/60 shadow-sm border border-indigo-600/40'
-                        : 'bg-indigo-900/20 hover:bg-indigo-800/30 border border-indigo-800/20'
-                    }`}
-                    onMouseEnter={() => setIsHovering(index)}
-                    onMouseLeave={() => setIsHovering(null)}
-                  >
-                    <div className="col-span-1 flex justify-center"> {/* Removed relative and change icon call */}
-                      {getRankIcon(player.rank)}
-                    </div>
-                    <div className="col-span-7 flex items-center overflow-hidden">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center mr-2 text-sm ${
-                        player.rank === 1 ? 'bg-gradient-to-br from-yellow-500 to-amber-700 shadow-sm shadow-yellow-500/20' :
-                        player.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-sm' :
-                        player.rank === 3 ? 'bg-gradient-to-br from-amber-700 to-amber-900 shadow-sm' :
-                        'bg-gradient-to-br from-indigo-600 to-indigo-800'
-                      }`}>
-                        {player.avatar}
+              {/* Wealth List - Scrollable */}
+              {/* Added overflow-y-auto to make this section scroll, and custom-scrollbar-hidden class */}
+              <div className="overflow-y-auto custom-scrollbar-hidden"> {/* Changed class to custom-scrollbar-hidden */}
+                {filteredWealthData.length > 0 ? (
+                  filteredWealthData.map((player, index) => (
+                    <div
+                      key={index}
+                      className={`grid grid-cols-11 gap-2 py-2 px-3 rounded-lg mb-1.5 items-center transition-all duration-200 ${
+                        player.rank <= 3
+                          ? 'bg-gradient-to-r from-indigo-800/60 to-purple-800/60 shadow-sm border border-indigo-600/40'
+                          : 'bg-indigo-900/20 hover:bg-indigo-800/30 border border-indigo-800/20'
+                      }`}
+                      onMouseEnter={() => setIsHovering(index)}
+                      onMouseLeave={() => setIsHovering(null)}
+                    >
+                      <div className="col-span-1 flex justify-center"> {/* Removed relative and change icon call */}
+                        {getRankIcon(player.rank)}
                       </div>
-                      <div className="truncate">
-                        <span className="font-medium text-sm">{player.name}</span>
-                        {isHovering === index && (
-                          <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: 03/2025</div>
+                      <div className="col-span-7 flex items-center overflow-hidden">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center mr-2 text-sm ${
+                          player.rank === 1 ? 'bg-gradient-to-br from-yellow-500 to-amber-700 shadow-sm shadow-yellow-500/20' :
+                          player.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-sm' :
+                          player.rank === 3 ? 'bg-gradient-to-br from-amber-700 to-amber-900 shadow-sm' :
+                          'bg-gradient-to-br from-indigo-600 to-indigo-800'
+                        }`}>
+                          {player.avatar}
+                        </div>
+                        <div className="truncate">
+                          <span className="font-medium text-sm">{player.name}</span>
+                          {isHovering === index && (
+                            <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: 03/2025</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end"> {/* Changed text-sm to text-xs and font-medium to font-bold */}
+                        <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
+                          {player.wealth}
+                        </div>
+                        {/* Removed Coin Icon from here */}
+                        {isHovering === index && timeFilter === 'day' && (
+                          <div className="text-xs text-green-400 mt-0.5">+124.500/ngày</div> // Updated comma to period
+                        )}
+                         {isHovering === index && timeFilter === 'week' && (
+                          <div className="text-xs text-green-400 mt-0.5">+500.000/tuần</div> // Updated comma to period
+                        )}
+                         {isHovering === index && timeFilter === 'month' && (
+                          <div className="text-xs text-green-400 mt-0.5">+1.500.000/tháng</div> // Updated comma to period
                         )}
                       </div>
                     </div>
-                    <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end"> {/* Changed text-sm to text-xs and font-medium to font-bold */}
-                      <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
-                        {player.wealth}
-                      </div>
-                      {/* Removed Coin Icon from here */}
-                      {isHovering === index && timeFilter === 'day' && (
-                        <div className="text-xs text-green-400 mt-0.5">+124.500/ngày</div> // Updated comma to period
-                      )}
-                       {isHovering === index && timeFilter === 'week' && (
-                        <div className="text-xs text-green-400 mt-0.5">+500.000/tuần</div> // Updated comma to period
-                      )}
-                       {isHovering === index && timeFilter === 'month' && (
-                        <div className="text-xs text-green-400 mt-0.5">+1.500.000/tháng</div> // Updated comma to period
-                      )}
-                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
+                    {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <p className="text-sm">Không tìm thấy người chơi phù hợp</p>
                   </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
-                  {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  <p className="text-sm">Không tìm thấy người chơi phù hợp</p>
-                </div>
-              )}
+                )}
+              </div>
             </>
           ) : (
             <>
-              {/* Collection Header - Updated grid columns for better layout */}
-              <div className="grid grid-cols-9 gap-1 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50">
+              {/* Collection Header - Fixed */}
+              {/* Added flex-shrink-0 to prevent header from shrinking */}
+              <div className="grid grid-cols-9 gap-1 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50 flex-shrink-0">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-4">Người chơi</div> {/* Adjusted col-span */}
                 <div className="col-span-4 text-center flex items-center justify-center"> {/* Adjusted col-span and added flex/center for better alignment */}
@@ -436,66 +464,70 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 </div>
               </div>
 
-              {filteredCollectionData.length > 0 ? (
-                filteredCollectionData.map((player, index) => (
-                  <div
-                    key={index}
-                    className={`grid grid-cols-9 gap-1 py-2 px-3 rounded-lg mb-1.5 items-center transition-all duration-200 ${
-                      player.rank <= 3
-                        ? 'bg-gradient-to-r from-indigo-800/60 to-purple-800/60 shadow-sm border border-indigo-600/40'
-                        : 'bg-indigo-900/20 hover:bg-indigo-800/30 border border-indigo-800/20'
-                    }`}
-                    onMouseEnter={() => setIsHovering(index + 100)}
-                    onMouseLeave={() => setIsHovering(null)}
-                  >
-                    <div className="col-span-1 flex justify-center">
-                      {getRankIcon(player.rank)}
-                    </div>
-                    <div className="col-span-5 flex items-center overflow-hidden"> {/* Adjusted col-span */}
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center mr-2 text-sm ${
-                        player.rank === 1 ? 'bg-gradient-to-br from-yellow-500 to-amber-700 shadow-sm shadow-yellow-500/20' :
-                        player.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-sm' :
-                        player.rank === 3 ? 'bg-gradient-to-br from-amber-700 to-amber-900 shadow-sm' :
-                        'bg-gradient-to-br from-indigo-600 to-indigo-800'
-                      }`}>
-                        {player.avatar}
+              {/* Collection List - Scrollable */}
+              {/* Added overflow-y-auto to make this section scroll, and custom-scrollbar-hidden class */}
+              <div className="overflow-y-auto custom-scrollbar-hidden"> {/* Changed class to custom-scrollbar-hidden */}
+                {filteredCollectionData.length > 0 ? (
+                  filteredCollectionData.map((player, index) => (
+                    <div
+                      key={index}
+                      className={`grid grid-cols-9 gap-1 py-2 px-3 rounded-lg mb-1.5 items-center transition-all duration-200 ${
+                        player.rank <= 3
+                          ? 'bg-gradient-to-r from-indigo-800/60 to-purple-800/60 shadow-sm border border-indigo-600/40'
+                          : 'bg-indigo-900/20 hover:bg-indigo-800/30 border border-indigo-800/20'
+                      }`}
+                      onMouseEnter={() => setIsHovering(index + 100)}
+                      onMouseLeave={() => setIsHovering(null)}
+                    >
+                      <div className="col-span-1 flex justify-center">
+                        {getRankIcon(player.rank)}
                       </div>
-                      <div className="truncate">
-                        <span className="font-medium text-sm">{player.name}</span>
-                        {isHovering === index + 100 && (
-                          <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: {/* You might want to add a relevant stat here */}</div>
-                        )}
+                      <div className="col-span-5 flex items-center overflow-hidden"> {/* Adjusted col-span */}
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center mr-2 text-sm ${
+                          player.rank === 1 ? 'bg-gradient-to-br from-yellow-500 to-amber-700 shadow-sm shadow-yellow-500/20' :
+                          player.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-sm' :
+                          player.rank === 3 ? 'bg-gradient-to-br from-amber-700 to-amber-900 shadow-sm' :
+                          'bg-gradient-to-br from-indigo-600 to-indigo-800'
+                        }`}>
+                          {player.avatar}
+                        </div>
+                        <div className="truncate">
+                          <span className="font-medium text-sm">{player.name}</span>
+                          {isHovering === index + 100 && (
+                            <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: {/* You might want to add a relevant stat here */}</div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Combined Floor and Vocabulary */}
+                      <div className="col-span-3 text-center"> {/* Combined col-span */}
+                         <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1"> {/* Added margin-right */}
+                          {player.floor}
+                        </span>
+                        <span className="opacity-30">|</span> {/* Added opacity-30 class */}
+                        <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1"> {/* Added margin-left */}
+                          {player.vocabulary}
+                        </span>
                       </div>
                     </div>
-                    {/* Combined Floor and Vocabulary */}
-                    <div className="col-span-3 text-center"> {/* Combined col-span */}
-                       <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1"> {/* Added margin-right */}
-                        {player.floor}
-                      </span>
-                      <span className="opacity-30">|</span> {/* Added opacity-30 class */}
-                      <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1"> {/* Added margin-left */}
-                        {player.vocabulary}
-                      </span>
-                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
+                     {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <p className="text-sm">Không tìm thấy người chơi phù hợp</p>
                   </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
-                   {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  <p className="text-sm">Không tìm thấy người chơi phù hợp</p>
-                </div>
-              )}
+                )}
+              </div>
             </>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="mt-3 flex justify-between items-center text-xs">
+        {/* Footer - Added flex-shrink-0 to prevent footer from shrinking */}
+        <div className="mt-3 flex justify-between items-center text-xs flex-shrink-0">
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
             {/* User Icon (replaced lucide-react User) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -537,6 +569,16 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         }
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out forwards;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .custom-scrollbar-hidden::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .custom-scrollbar-hidden {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
         }
       `}</style>
     </div>
