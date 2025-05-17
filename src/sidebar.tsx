@@ -338,9 +338,9 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
         </div>
       </div>
 
-      {/* Main content area - Added overflow-y-auto */}
+      {/* Main content area - Changed overflow-y-auto to overflow: 'hidden' */}
       <div className={`
-        flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-y-auto
+        flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden
         ${isSidebarVisible ? 'md:ml-72' : 'ml-0'} {/* Maintain spacing based on sidebar visibility */}
       `}>
         {children} {/* Render the content passed from the parent */}
