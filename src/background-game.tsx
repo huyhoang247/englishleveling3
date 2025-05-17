@@ -1546,7 +1546,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }}
       >
         <DotLottieReact
-          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
+          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db7868c/i88e6svjxV.lottie"
           loop
           autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
           className="w-full h-full"
@@ -1641,7 +1641,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             ref={gameRef}
             className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
             onClick={handleTap} // Handle tap for start/restart
-            style={{ overflow: 'hidden', msOverflowStyle: 'none', scrollbarWidth: 'none' }} // Added styles to remove scrollbar
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
 
