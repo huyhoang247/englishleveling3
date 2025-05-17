@@ -90,7 +90,7 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// Keep BarChart2Icon for the Performance menu item
+// Icon for Performance menu item
 const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -120,6 +120,18 @@ const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
   </svg>
+);
+
+// Icon for the original Stats menu item
+const AwardIcon = ({ size = 24, className = '', ...props }) => (
+  <img
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
+    alt="Award Icon"
+    width={size}
+    height={size}
+    className={className}
+    {...props}
+  />
 );
 
 // New component for the Frame icon using the provided image URL
@@ -167,10 +179,10 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
   // List of sidebar menu items - Using new inline SVG components and the new FrameIcon
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    // Updated: Changed icon for Stats menu item to FrameIcon
-    { id: 'stats', label: 'Stats', icon: FrameIcon },
-    // Updated: Changed label from 'Phân tích' to 'Rank'
-    { id: 'analytics', label: 'Rank', icon: BarChart2Icon },
+    // Reverted: Icon for Stats menu item is now AwardIcon again
+    { id: 'stats', label: 'Stats', icon: AwardIcon },
+    // Updated: Changed label from 'Phân tích' to 'Rank' and icon to FrameIcon
+    { id: 'analytics', label: 'Rank', icon: FrameIcon },
     // Removed: Mail menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
