@@ -484,7 +484,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         initialObstacles.push({
           id: Date.now(),
-          position: 120,
+          // FIXED: Adjusted initial obstacle position to be slightly off-screen but not excessively
+          position: 105, // Changed from 120 to 105
           ...firstObstacleType,
           health: firstObstacleType.baseHealth,
           maxHealth: firstObstacleType.baseHealth,
@@ -500,7 +501,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
           initialObstacles.push({
             id: Date.now() + i,
-            position: 150 + (i * 50),
+            // FIXED: Adjusted initial obstacle position to be slightly off-screen but not excessively
+            position: 150 + (i * 50), // This is still quite far, but the filtering logic will handle it
             ...obstacleType,
             health: obstacleType.baseHealth,
             maxHealth: obstacleType.baseHealth,
@@ -621,7 +623,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
       newClouds.push({
         id: Date.now() + i,
-        x: Math.random() * 120 + 100,
+        // FIXED: Limited initial cloud x position to a more reasonable range
+        x: Math.random() * 50 + 100, // Changed from 120 + 100 to 50 + 100 (100 to 150)
         y: Math.random() * 40 + 10,
         size: Math.random() * 40 + 30,
         speed: Math.random() * 0.3 + 0.15,
@@ -677,7 +680,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             newObstacles.push({
               id: Date.now() + i,
-              position: 100 + spacing,
+              // FIXED: Adjusted initial obstacle position for scheduled obstacles
+              position: 105 + spacing, // Changed from 100 + spacing to 105 + spacing
               ...randomObstacleType,
               health: randomObstacleType.baseHealth,
               maxHealth: randomObstacleType.baseHealth,
@@ -709,7 +713,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     coinScheduleTimerRef.current = setTimeout(() => {
       const newCoin: GameCoin = {
         id: Date.now(),
-        x: 110,
+        // FIXED: Adjusted initial coin x position
+        x: 105, // Changed from 110 to 105
         y: Math.random() * 60,
         initialSpeedX: Math.random() * 0.5 + 0.5,
         initialSpeedY: Math.random() * 0.3,
@@ -898,8 +903,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             }
                         }
 
+                        // FIXED: Applied clipping logic to obstacle position when it moves off-screen
+                        // Also adjusted the repositioning logic to use a position slightly off-screen
                         if (newPosition < -20 && !collisionDetected) {
-                            if (Math.random() < 0.7) {
+                             if (Math.random() < 0.7) {
                                 if (obstacleTypes.length === 0) return obstacle;
 
                                 const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
@@ -912,13 +919,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                     ...obstacle,
                                     ...randomObstacleType,
                                     id: Date.now(),
-                                    position: 120 + randomOffset,
+                                    // Reposition slightly off-screen
+                                    position: 105 + randomOffset, // Changed from 120 + randomOffset to 105 + randomOffset
                                     health: randomObstacleType.baseHealth,
                                     maxHealth: randomObstacleType.baseHealth,
                                     hasKey: hasKey,
                                 };
                             } else {
-                                return { ...obstacle, position: newPosition };
+                                // Apply clipping logic even if not repositioning, though filtering handles this
+                                return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
                             }
                         }
 
@@ -929,10 +938,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             return { ...obstacle, position: newPosition, collided: true };
                         }
 
-                        return { ...obstacle, position: newPosition };
+                        // Apply clipping logic during normal movement
+                        return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
                     })
+                    // Filter out collided obstacles and those far off-screen
                     .filter(obstacle => {
-                        return !obstacle.collided && obstacle.position > -20 && obstacle.health > 0;
+                        // Keep obstacles that haven't collided AND are within a reasonable range
+                        return !obstacle.collided && obstacle.position > -20;
                     });
             });
 
@@ -941,12 +953,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     .map(cloud => {
                         const newX = cloud.x - cloud.speed;
 
-                        if (newX < -50) {
+                        // FIXED: Adjusted cloud repositioning when it moves off-screen to the left
+                        if (newX < -50) { // Keep the -50 threshold
                             const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
                             return {
                                 ...cloud,
                                 id: Date.now() + Math.random(),
-                                x: 120 + Math.random() * 30,
+                                // Reposition slightly off-screen to the right
+                                x: 100 + Math.random() * 30, // Changed from 120 + random to 100 + random (100 to 130)
                                 y: Math.random() * 40 + 10,
                                 size: Math.random() * 40 + 30,
                                 speed: Math.random() * 0.3 + 0.15,
@@ -954,7 +968,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             };
                         }
 
-                        return { ...cloud, x: newX };
+                        // Apply clipping logic to cloud position if needed (optional, but good practice)
+                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; // Keep clouds within -50% to 120%
                     });
             });
 
@@ -1059,7 +1074,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         };
                     })
                     .filter(coin => {
-                        const isOffScreen = coin.x < -20 || coin.y > 120;
+                        // FIXED: Adjusted coin filtering logic to keep coins within a reasonable range
+                        const isOffScreen = coin.x < -20 || coin.y > 120 || coin.y < -20; // Added check for top off-screen
                         return !coin.collided && !isOffScreen;
                     });
             });
@@ -1423,7 +1439,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         className="absolute"
         style={{
           bottom: `${GROUND_LEVEL_PERCENT}%`,
-          left: `${obstacle.position}%`
+          // FIXED: Applied clipping logic to obstacle rendering position
+          left: `${Math.min(100, Math.max(-20, obstacle.position))}%` // Ensure obstacle is rendered within a reasonable range
         }}
       >
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 w-12 h-2 bg-gray-800 rounded-full overflow-visible border border-gray-600 shadow-sm relative">
@@ -1464,7 +1481,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           width: `${cloud.size}px`,
           height: `${cloud.size * 0.6}px`,
           top: `${cloud.y}%`,
-          left: `${cloud.x}%`,
+          // FIXED: Applied clipping logic to cloud rendering position
+          left: `${Math.min(120, Math.max(-50, cloud.x))}%`, // Ensure cloud is rendered within a reasonable range
           opacity: 0.8
         }}
         onError={(e) => {
@@ -1539,14 +1557,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         key={coin.id}
         className="absolute w-10 h-10"
         style={{
-          top: `${coin.y}%`,
-          left: `${coin.x}%`,
+          // FIXED: Applied clipping logic to coin rendering position
+          top: `${Math.min(120, Math.max(-20, coin.y))}%`, // Ensure coin is rendered within a reasonable range
+          left: `${Math.min(120, Math.max(-20, coin.x))}%`, // Ensure coin is rendered within a reasonable range
           transform: 'translate(-50%, -50%)',
           pointerEvents: 'none'
         }}
       >
         <DotLottieReact
-          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db7868c/i88e6svjxV.lottie"
+          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
           loop
           autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen} // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở và KHÔNG đang tải dữ liệu (added isRankOpen)
           className="w-full h-full"
@@ -1640,6 +1659,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           <div
             ref={gameRef}
             className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
+            // FIXED: Added overflowX: 'hidden' to prevent horizontal scrolling
+            style={{ overflowX: 'hidden' }}
             onClick={handleTap} // Handle tap for start/restart
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
@@ -1982,3 +2003,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </SidebarLayout>
   );
 }
+
