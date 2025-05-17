@@ -1641,6 +1641,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             ref={gameRef}
             className={`${className ?? ''} relative w-full h-screen rounded-lg overflow-hidden shadow-2xl`}
             onClick={handleTap} // Handle tap for start/restart
+            style={{ overflow: 'hidden', msOverflowStyle: 'none', scrollbarWidth: 'none' }} // Added styles to remove scrollbar
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
 
