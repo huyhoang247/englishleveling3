@@ -90,7 +90,7 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// Keep BarChart2Icon for the Stats menu item (though we'll replace it for 'stats' below)
+// Keep BarChart2Icon for the Performance menu item
 const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -122,11 +122,11 @@ const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
   </svg>
 );
 
-// New component for the Award icon using the provided image URL
-const AwardIcon = ({ size = 24, className = '', ...props }) => (
+// New component for the Frame icon using the provided image URL
+const FrameIcon = ({ size = 24, className = '', ...props }) => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
-    alt="Award Icon"
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/frame.png"
+    alt="Frame Icon"
     width={size}
     height={size}
     className={className}
@@ -164,12 +164,13 @@ function SidebarLayout({ children, setToggleSidebar, onToggleStats }: SidebarLay
     setUserMenuOpen(!userMenuOpen);
   };
 
-  // List of sidebar menu items - Using new inline SVG components
+  // List of sidebar menu items - Using new inline SVG components and the new FrameIcon
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon },
-    // Updated: Changed icon for Stats menu item
-    { id: 'stats', label: 'Stats', icon: AwardIcon },
-    { id: 'analytics', label: 'Phân tích', icon: BarChart2Icon },
+    // Updated: Changed icon for Stats menu item to FrameIcon
+    { id: 'stats', label: 'Stats', icon: FrameIcon },
+    // Updated: Changed label from 'Phân tích' to 'Rank'
+    { id: 'analytics', label: 'Rank', icon: BarChart2Icon },
     // Removed: Mail menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2 },
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon },
