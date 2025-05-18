@@ -34,7 +34,8 @@ export default function GameUnlockModal() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80">
+    // Removed bg-black bg-opacity-80 class to remove the grey background
+    <div className="fixed inset-0 flex items-center justify-center">
       {/* Background particles - Removed */}
       {/* Removed div with class "absolute inset-0 overflow-hidden" and its content */}
 
