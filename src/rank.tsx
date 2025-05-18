@@ -13,7 +13,8 @@ interface UserData {
   username: string;
   coins: number;
   avatar?: string; // Optional avatar field
-  // Add other fields if necessary (e.g., floor, vocabulary for collection tab)
+  // Add other fields if necessary (e.g., floor)
+  vocabularyCount: number; // Add field for vocabulary count
 }
 
 // Accept the onClose prop
@@ -33,11 +34,23 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     setLoading(true);
     setError(null);
     try {
-      // Create a query to the 'users' collection, ordered by 'coins' descending
-      // You might need to adjust the collection name and field names based on your Firestore structure
+      // Create a query to the 'users' collection
       const usersCollectionRef = collection(db, 'users');
-      // For wealth tab, order by coins
-      let q = query(usersCollectionRef, orderBy('coins', 'desc'));
+
+      // Determine the sorting criteria based on the active tab
+      let q;
+      if (activeTab === 'wealth') {
+          q = query(usersCollectionRef, orderBy('coins', 'desc'));
+      } else { // activeTab === 'collection'
+          // For collection tab, we might want to order by vocabulary count or floor
+          // Assuming 'listVocabulary' exists and we want to order by its size
+          // Firestore doesn't directly support ordering by array size in a query.
+          // We will fetch all and sort in memory for simplicity, or you might need
+          // to store the vocabulary count as a separate field in Firestore documents.
+          // For now, let's just fetch all and sort by vocabularyCount in memory later.
+           q = query(usersCollectionRef); // Fetch all users
+      }
+
 
       // TODO: Implement time-based filtering if your data structure supports it
       // This would likely involve adding a timestamp field to your user documents
@@ -53,8 +66,11 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       const querySnapshot = await getDocs(q);
       const fetchedUsers: UserData[] = [];
       querySnapshot.forEach((doc) => {
-        // Assuming each user document has 'username' and 'coins' fields
+        // Assuming each user document has 'username', 'coins', and 'listVocabulary' fields
         const data = doc.data();
+        const listVocabulary = data.listVocabulary || []; // Get the listVocabulary array, default to empty array if not exists
+        const vocabularyCount = listVocabulary.length; // Get the count of vocabulary words
+
         fetchedUsers.push({
           id: doc.id,
           username: data.username,
@@ -62,15 +78,11 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
           avatar: data.avatar || '❓', // Use a default avatar if not present
           // Add other fields if needed for the collection tab
           // floor: data.floor,
-          // vocabulary: data.vocabulary,
+          vocabularyCount: vocabularyCount, // Store the vocabulary count
         });
       });
 
-      // For simplicity, let's just sort by coins descending for the wealth tab
-      // If you implement time filtering in the query, the data will already be sorted.
-      const sortedUsers = fetchedUsers.sort((a, b) => b.coins - a.coins);
-
-      setUsersData(sortedUsers);
+      setUsersData(fetchedUsers); // Set the fetched data
     } catch (err) {
       console.error("Error fetching users: ", err);
       setError("Không thể tải dữ liệu người dùng.");
@@ -129,9 +141,9 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     }
   };
 
-  // Function to format coins number (add commas/periods for readability)
-  const formatCoins = (coins: number): string => {
-      return coins.toLocaleString('vi-VN'); // Format with Vietnamese locale for thousands separator
+  // Function to format numbers (add commas/periods for readability)
+  const formatNumber = (num: number): string => {
+      return num.toLocaleString('vi-VN'); // Format with Vietnamese locale for thousands separator
   };
 
 
@@ -143,9 +155,10 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     .sort((a, b) => {
         if (activeTab === 'wealth') {
             return b.coins - a.coins; // Sort by coins descending
+        } else if (activeTab === 'collection') {
+            // Sort by vocabulary count descending for the collection tab
+            return b.vocabularyCount - a.vocabularyCount;
         }
-        // TODO: Add sorting logic for 'collection' tab if needed
-        // Example: return b.floor - a.floor;
         return 0; // Default no sort
     })
     .map((user, index) => ({
@@ -355,7 +368,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                       </div>
                       <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end">
                         <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
-                          {formatCoins(player.coins)}
+                          {formatNumber(player.coins)}
                         </div>
                         {/* Add logic for daily/weekly/monthly change if you have the data */}
                       </div>
@@ -388,9 +401,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
               {/* Collection List - Scrollable */}
               <div className="overflow-y-auto custom-scrollbar-hidden">
-                {/* You will need to fetch and display collection data similarly to wealth data */}
-                {/* For now, displaying a placeholder or adapting the existing logic if 'floor' and 'vocabulary' are in user docs */}
-                 {filteredAndSortedData.length > 0 ? ( // Using the same data for now, adapt as needed
+                {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
                     <div
                       key={player.id} // Use document ID as key
@@ -423,13 +434,13 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                         </div>
                       </div>
                       <div className="col-span-3 text-center">
-                        {/* Assuming 'floor' and 'vocabulary' fields exist in user documents for collection tab */}
+                        {/* Display Floor and Vocabulary Count */}
                          <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1">
-                          {/* {player.floor || 'N/A'} */} N/A {/* Placeholder */}
+                          {/* {player.floor || 'N/A'} */} N/A {/* Placeholder for Floor */}
                         </span>
                         <span className="opacity-30">|</span>
                         <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1">
-                           {/* {player.vocabulary || 'N/A'} */} N/A {/* Placeholder */}
+                           {formatNumber(player.vocabularyCount)} {/* Display vocabulary count */}
                         </span>
                       </div>
                     </div>
