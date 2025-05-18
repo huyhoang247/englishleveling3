@@ -3,25 +3,6 @@ import { useState, useEffect } from 'react';
 
 // SVG Icons (replacing lucide-react)
 
-// Lock Icon SVG
-const LockIcon = ({ size = 24, color = 'currentColor', className = '' }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide lucide-lock ${className}`}
-  >
-    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-);
-
 // ChevronRight Icon SVG
 const ChevronRightIcon = ({ size = 24, color = 'currentColor', className = '' }) => (
   <svg
@@ -34,7 +15,7 @@ const ChevronRightIcon = ({ size = 24, color = 'currentColor', className = '' })
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={`lucide lucide-chevron-right ${className}`}
+    className={`lucide lucude-chevron-right ${className}`}
   >
     <path d="m9 18 6-6-6-6" />
   </svg>
@@ -368,7 +349,7 @@ export default function GameUnlockModal() {
                 </div>
 
                 <h2 className="text-2xl font-bold text-white mb-4">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">ĐANG MỞ KHÓA...</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">ĐANG HỒI SINH...</span> {/* Changed text */}
                 </h2>
 
                 {/* Enhanced progress bar */}
@@ -428,7 +409,12 @@ export default function GameUnlockModal() {
                 <div className="absolute -inset-2 rounded-full bg-blue-500 opacity-30 blur-md animate-pulse"></div>
                 <div className="w-28 h-28 rounded-full bg-gradient-to-r from-blue-800 to-indigo-900 flex items-center justify-center">
                   <div className="w-24 h-24 rounded-full bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-400 flex items-center justify-center shadow-inner">
-                    <LockIcon className="text-blue-300" size={50} />
+                    {/* Replaced LockIcon with img tag */}
+                    <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/heart.png"
+                        alt="Heart icon"
+                        className="w-12 h-12" // Adjust size as needed
+                    />
                   </div>
                 </div>
                 {/* Decorative elements */}
@@ -437,8 +423,8 @@ export default function GameUnlockModal() {
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-3">MỞ KHÓA</h2>
-            <p className="text-center text-slate-300 text-sm mb-8 font-medium">Chọn phương thức mở khóa</p>
+            <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-3">HỒI SINH</h2> {/* Changed text */}
+            <p className="text-center text-slate-300 text-sm mb-8 font-medium">Chọn phương thức hồi sinh</p> {/* Changed text */}
 
             {/* Enhanced gold unlock button */}
             <div className="relative mb-6">
@@ -466,7 +452,7 @@ export default function GameUnlockModal() {
                   </div>
                   <div>
                     <p className="font-bold text-yellow-900 text-lg">DÙNG VÀNG</p>
-                    <p className="text-xs text-yellow-800">Mở khóa ngay lập tức</p>
+                    <p className="text-xs text-yellow-800">Hồi sinh ngay lập tức</p> {/* Changed text */}
                   </div>
                 </div>
 
