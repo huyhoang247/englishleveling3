@@ -20,7 +20,15 @@ const ChevronRightIcon = ({ size = 20, color = 'currentColor', className = '' })
   </svg>
 );
 
-export default function GameUnlockModal() {
+// NEW: Define props interface for the modal
+interface GameUnlockModalProps {
+    isOpen: boolean; // State to control modal visibility
+    onClose: () => void; // Function to call when the modal should close
+    onRevive: () => void; // Function to call when the player chooses to revive
+}
+
+// Update component signature to accept props
+export default function GameUnlockModal({ isOpen, onClose, onRevive }: GameUnlockModalProps) {
   // Removed state variables for unlocking, success, sparkles, countdown, shake, glowPulse
 
   // Removed useEffect hooks
@@ -28,14 +36,19 @@ export default function GameUnlockModal() {
   // Removed handleUnlock and handleButtonHover functions
 
   // Placeholder function for closing modal
-  const handleCloseModal = () => {
-    console.log("Close modal clicked");
-    // In a real application, you would update state here to hide the modal
-  };
+  // const handleCloseModal = () => {
+  //   console.log("Close modal clicked");
+  //   // In a real application, you would update state here to hide the modal
+  // };
+
+  // If modal is not open, return null to render nothing
+  if (!isOpen) {
+      return null;
+  }
+
 
   return (
-    // Removed bg-black bg-opacity-80 class to remove the grey background
-    <div className="fixed inset-0 flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-50"> {/* Added z-50 to ensure it's on top */}
       {/* Background particles - Removed */}
       {/* Removed div with class "absolute inset-0 overflow-hidden" and its content */}
 
@@ -56,7 +69,7 @@ export default function GameUnlockModal() {
         {/* Close Button */}
         <button
           className="absolute top-3 right-3 z-10 p-1 rounded-full hover:bg-white hover:bg-opacity-10 transition-colors"
-          onClick={handleCloseModal}
+          onClick={onClose} // Use the onClose prop
         >
           <img
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
@@ -97,6 +110,7 @@ export default function GameUnlockModal() {
             <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-xl opacity-70 blur-sm"></div> {/* Adjusted inset */}
             <button
               className={`relative flex items-center justify-between w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 p-4 rounded-xl transition-all duration-200 group border border-amber-400`} // Reduced padding
+               onClick={onRevive} // Call onRevive when gold button is clicked
             >
               <div className="absolute inset-0 rounded-xl overflow-hidden">
                 <div className="absolute inset-0 bg-white opacity-10"></div>
@@ -134,6 +148,7 @@ export default function GameUnlockModal() {
             <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-400 rounded-xl opacity-70 blur-sm"></div> {/* Adjusted inset */}
             <button
               className={`relative flex items-center justify-between w-full bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 p-4 rounded-xl transition-all duration-200 group border border-blue-400`} // Reduced padding
+              // TODO: Implement ad watching logic here
             >
               <div className="absolute inset-0 rounded-xl overflow-hidden">
                 <div className="absolute inset-0 bg-white opacity-10"></div>
@@ -179,3 +194,4 @@ export default function GameUnlockModal() {
     </div>
   );
 }
+
