@@ -27,24 +27,16 @@ export default function GameUnlockModal() {
 
   // Removed handleUnlock and handleButtonHover functions
 
+  // Placeholder function for closing modal
+  const handleCloseModal = () => {
+    console.log("Close modal clicked");
+    // In a real application, you would update state here to hide the modal
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80">
-      {/* Background particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {Array(15).fill().map((_, i) => ( // Reduced number of particles
-          <div
-            key={i}
-            className="absolute rounded-full bg-blue-500 opacity-20"
-            style={{
-              width: `${Math.random() * 8 + 2}px`, // Reduced particle size
-              height: `${Math.random() * 8 + 2}px`, // Reduced particle size
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `float ${Math.random() * 15 + 7}s linear infinite` // Adjusted animation duration
-            }}
-          ></div>
-        ))}
-      </div>
+      {/* Background particles - Removed */}
+      {/* Removed div with class "absolute inset-0 overflow-hidden" and its content */}
 
       {/* Adjusted width and padding */}
       <div className={`relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-2xl p-6 w-80 shadow-2xl border border-blue-700`}> {/* Reduced width and padding */}
@@ -59,6 +51,19 @@ export default function GameUnlockModal() {
 
         {/* Enhanced edge glow */}
         <div className="absolute inset-0 rounded-2xl shadow-[0_0_10px_rgba(56,189,248,0.3)] pointer-events-none"></div> {/* Reduced shadow blur */}
+
+        {/* Close Button */}
+        <button
+          className="absolute top-3 right-3 z-10 p-1 rounded-full hover:bg-white hover:bg-opacity-10 transition-colors"
+          onClick={handleCloseModal}
+        >
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
+            alt="Close icon"
+            className="w-5 h-5 text-white" // Adjust size as needed
+          />
+        </button>
+
 
         {/* Only render the initial state */}
         <>
@@ -110,7 +115,7 @@ export default function GameUnlockModal() {
                 </div>
                 <div>
                   <p className="font-bold text-yellow-900 text-base">DÙNG VÀNG</p> {/* Reduced font size */}
-                  <p className="text-xs text-yellow-800">Hồi sinh ngay lập tức</p>
+                  <p className="text-xs text-yellow-800">Hồi sinh ngay lập tức</p> {/* Changed text */}
                 </div>
               </div>
 
@@ -159,7 +164,7 @@ export default function GameUnlockModal() {
         </>
       </div>
 
-      {/* Custom CSS */}
+      {/* Custom CSS - Removed float animation */}
       <style jsx global>{`
         @keyframes float {
           0% { transform: translateY(0) translateX(0); }
@@ -168,10 +173,7 @@ export default function GameUnlockModal() {
           75% { transform: translateY(10px) translateX(10px); }
           100% { transform: translateY(0) translateX(0); }
         }
-
-        .animate-float {
-           animation: float 20s linear infinite; /* Apply float animation */
-        }
+        /* Removed .animate-float class */
       `}</style>
     </div>
   );
