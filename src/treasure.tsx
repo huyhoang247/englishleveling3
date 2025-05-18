@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-// Import the image URLs list
-import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
+// Import the image URLs lists for both levels
+import { defaultImageUrls } from './image-url.ts'; // Basic level images
+import { defaultImageUrlslevel2 } from './image-url-level2.ts'; // Elementary level images
 
 // Import db from your firebase.js file
 import { db } from './firebase.js'; // Adjust the path if necessary
@@ -119,6 +120,7 @@ interface TreasureChestProps {
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
   isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
   currentUserId: string | null; // Pass the current user ID as a prop (can be null if not logged in)
+  chestLevel: 'basic' | 'elementary'; // NEW: Pass the selected chest level
 }
 
 // Define interface for card data (keeping this for potential future use or if other rewards are still cards)
@@ -151,7 +153,7 @@ const getRarityColor = (rarity: Card['rarity']) => {
 
 
 // Removed initialChests from props default value as it's no longer used for opening logic
-export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
+export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId, chestLevel }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   // State to hold the revealed image data (ID and URL) - MANAGED HERE
@@ -165,21 +167,27 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
   // State to hold pending gem reward - MANAGED HERE
   const [pendingGemReward, setPendingGemReward] = useState(0);
 
-  // State to manage the list of available image indices (0-based)
+  // State to manage the list of available image indices (0-based) for the *current* level
   const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
   // State to track if data is being loaded from Firestore
   const [isLoading, setIsLoading] = useState(true);
 
+  // Determine which image list to use based on the selected chest level
+  const currentImageUrls = chestLevel === 'elementary' ? defaultImageUrlslevel2 : defaultImageUrls;
+  // Determine the Firestore field name based on the selected chest level
+  const openedImageIdsFieldName = chestLevel === 'elementary' ? 'openedImageIdsElementary' : 'openedImageIdsBasic';
+
+
   // --- Firestore Interaction ---
-  // Effect to fetch opened image IDs (1-based) from Firestore on component mount or user change
+  // Effect to fetch opened image IDs (1-based) from Firestore on component mount, user change, or chest level change
   useEffect(() => {
       const fetchOpenedImages = async () => {
-          // If no user is logged in, initialize with all images and stop loading
+          // If no user is logged in, initialize with all images for the current level and stop loading
           if (!currentUserId) {
-              console.log("User not logged in, cannot fetch opened images. Initializing with all images.");
+              console.log("User not logged in, cannot fetch opened images. Initializing with all images for the current level.");
               setIsLoading(false);
-              // Initialize with all indices (0 to length-1)
-              const initialIndices = defaultImageUrls.map((_, index) => index);
+              // Initialize with all indices (0 to length-1) for the current level's image list
+              const initialIndices = currentImageUrls.map((_, index) => index);
               setAvailableImageIndices(initialIndices);
               return;
           }
@@ -193,29 +201,36 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
               let openedImageIds: number[] = []; // These are 1-based IDs
               if (userDocSnap.exists()) {
                   const userData = userDocSnap.data();
-                  // Ensure openedImageIds is treated as an array of numbers (1-based)
-                  if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
+                  // Get the opened image IDs for the *current* level
+                  const levelOpenedImageIds = userData?.[openedImageIdsFieldName];
+
+                  // Ensure the data for the current level is treated as an array of numbers (1-based)
+                  if (levelOpenedImageIds && Array.isArray(levelOpenedImageIds)) {
                       // Filter to ensure only valid numbers (greater than 0) are included
-                      openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number' && id > 0);
+                      openedImageIds = levelOpenedImageIds.filter(id => typeof id === 'number' && id > 0);
+                  } else {
+                       // If the field for the current level doesn't exist or is not an array, initialize it
+                       console.log(`Firestore field '${openedImageIdsFieldName}' not found or invalid for user ${currentUserId}. Initializing with empty array.`);
+                       await setDoc(userDocRef, { [openedImageIdsFieldName]: [] }, { merge: true });
                   }
               } else {
-                  // If user document doesn't exist, create it with an empty array.
-                  console.warn(`User document for ${currentUserId} not found during fetch. Creating...`);
-                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); // Use merge: true
+                  // If user document doesn't exist, create it with an empty array for the current level.
+                  console.warn(`User document for ${currentUserId} not found during fetch. Creating with field '${openedImageIdsFieldName}'...`);
+                   await setDoc(userDocRef, { [openedImageIdsFieldName]: [] }, { merge: true }); // Use merge: true
               }
 
-              // Convert openedImageIds (1-based) to openedImageIndices (0-based)
-              const openedImageIndices = openedImageIds.map(id => id - 1).filter(index => index >= 0 && index < defaultImageUrls.length);
+              // Convert openedImageIds (1-based) to openedImageIndices (0-based) based on the current level's image list length
+              const openedImageIndices = openedImageIds.map(id => id - 1).filter(index => index >= 0 && index < currentImageUrls.length);
 
-              // Filter out the opened image indices from the full list of indices (0-based)
-              const allIndices = defaultImageUrls.map((_, index) => index);
+              // Filter out the opened image indices from the full list of indices (0-based) for the current level
+              const allIndices = currentImageUrls.map((_, index) => index);
               const remainingIndices = allIndices.filter(index => !openedImageIndices.includes(index));
               setAvailableImageIndices(remainingIndices);
 
           } catch (error) {
               console.error("Error fetching opened images:", error);
-              // In case of error, initialize with all images to allow some functionality
-              const initialIndices = defaultImageUrls.map((_, index) => index);
+              // In case of error, initialize with all images for the current level to allow some functionality
+              const initialIndices = currentImageUrls.map((_, index) => index);
               setAvailableImageIndices(initialIndices);
           } finally {
               setIsLoading(false);
@@ -224,9 +239,10 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
 
       fetchOpenedImages();
 
-  }, [currentUserId, db]); // Re-run effect if currentUserId or db instance changes
+  }, [currentUserId, db, chestLevel, currentImageUrls, openedImageIdsFieldName]); // Re-run effect if currentUserId, db, or chestLevel changes
 
-  // Function to add a revealed image ID (1-based) to Firestore
+
+  // Function to add a revealed image ID (1-based) to Firestore for the current level
   const addOpenedImageToFirestore = async (imageId: number) => {
       if (!currentUserId) {
           console.log("User not logged in, cannot save opened image.");
@@ -241,11 +257,11 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
       const userDocRef = doc(db, 'users', currentUserId);
 
       try {
-          // Use arrayUnion to add the imageId (1-based) to the openedImageIds array
+          // Use arrayUnion to add the imageId (1-based) to the array field for the *current* level
           await updateDoc(userDocRef, {
-              openedImageIds: arrayUnion(imageId)
+              [openedImageIdsFieldName]: arrayUnion(imageId)
           });
-          console.log(`Image ID ${imageId} added to Firestore for user ${currentUserId}`);
+          console.log(`Image ID ${imageId} added to Firestore field '${openedImageIdsFieldName}' for user ${currentUserId}`);
       } catch (error) {
           console.error("Error adding opened image to Firestore:", error);
       }
@@ -260,7 +276,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
 
   // Function to open the chest
   const openChest = () => {
-    // Prevent opening chest if game is paused, already open, not enough keys, or no images left
+    // Prevent opening chest if game is paused, already open, not enough keys, or no images left for the current level
     // Also prevent if data is still loading, or user is not logged in
     // Removed chestsRemaining <= 0 condition
     if (isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
@@ -271,7 +287,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
         } else if (keyCount < 1) {
             console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
         } else if (availableImageIndices.length === 0) {
-             console.log("Đã mở hết tất cả hình ảnh!"); // Log or show a message if all images are revealed
+             console.log(`Đã mở hết tất cả hình ảnh cho cấp độ ${chestLevel}!`); // Log or show a message if all images are revealed for the current level
         }
         return;
     }
@@ -289,27 +305,27 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
 
       setTimeout(() => {
         // --- Image Selection Logic ---
-        // Select a random index (0-based) from the available indices
+        // Select a random index (0-based) from the available indices for the *current* level
         const randomIndex = Math.floor(Math.random() * availableImageIndices.length);
         const selectedImageIndex = availableImageIndices[randomIndex];
-        const selectedImageUrl = defaultImageUrls[selectedImageIndex];
+        const selectedImageUrl = currentImageUrls[selectedImageIndex]; // Use the correct image list
 
         // Store the revealed image data (ID is index + 1)
         setRevealedImage({ id: selectedImageIndex + 1, url: selectedImageUrl });
 
-        // Remove the selected index from the available indices state immediately
+        // Remove the selected index from the available indices state for the *current* level immediately
         setAvailableImageIndices(prevIndices =>
             prevIndices.filter(index => index !== selectedImageIndex)
         );
 
-        // --- Save the opened image ID (1-based) to Firestore ---
+        // --- Save the opened image ID (1-based) to Firestore for the *current* level ---
         addOpenedImageToFirestore(selectedImageIndex + 1);
         // --- End Save to Firestore ---
 
         // --- Reward Logic (Example: Still give a small coin/gem reward with each image) ---
         // You can adjust or remove this if opening a chest only gives an image
-        let coinReward = 10; // Example: Always give 10 coins per image
-        let gemReward = 1; // Example: Always give 1 gem per image
+        let coinReward = chestLevel === 'elementary' ? 15 : 10; // Example: Elementary gives slightly more coins
+        let gemReward = chestLevel === 'elementary' ? 2 : 1; // Example: Elementary gives slightly more gems
         setPendingCoinReward(coinReward);
         setPendingGemReward(gemReward);
         // --- End Reward Logic ---
@@ -413,7 +429,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
         {/* Display available images count - Positioned above the chest */}
         {/* Use margin-bottom to create space below this element */}
         <div className={`${verticalSpacing} bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative`}>
-             <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
+             <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại ({chestLevel === 'elementary' ? 'Elementary' : 'Basic'}): {availableImageIndices.length}</span>
         </div>
 
 
@@ -430,7 +446,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
           }
           onClick={openChest}
           // Updated aria-label to reflect dependency on keys and available images
-          aria-label={availableImageIndices.length > 0 && keyCount > 0 ? "Mở rương báu" : availableImageIndices.length === 0 ? "Hết hình ảnh" : "Không đủ chìa khóa"}
+          aria-label={availableImageIndices.length > 0 && keyCount > 0 ? `Mở rương báu ${chestLevel === 'elementary' ? 'Elementary' : 'Basic'}` : availableImageIndices.length === 0 ? `Hết hình ảnh ${chestLevel === 'elementary' ? 'Elementary' : 'Basic'}` : "Không đủ chìa khóa"}
           role="button"
           // Updated tabIndex condition
           tabIndex={!isGamePaused && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1}
@@ -463,7 +479,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
                     </div>
                   </div>
                   <div className="flex justify-center items-center h-full pt-7 pb-4">
-                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
+                    <div className="bg-gradient-to-br from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
                       <div className="absolute inset-0 rounded-lg overflow-hidden">
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
                         <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
@@ -552,4 +568,3 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
     </>
   );
 }
-
