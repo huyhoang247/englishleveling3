@@ -32,9 +32,19 @@ const ensureUserDocumentExists = async (user: User) => {
     // Kiểm tra xem tài liệu có tồn tại không
     if (!userDocSnap.exists()) {
       console.log(`User document for ${user.uid} does not exist. Creating...`);
-      // Nếu không tồn tại, tạo tài liệu mới với email và timestamp
+      // Nếu không tồn tại, tạo tài liệu mới
+      // Bao gồm email, timestamp và các trường mặc định khác
+      // Quan trọng: Nếu người dùng đăng ký bằng email/password, username đã được lưu trong Auth.js.
+      // Nếu người dùng đăng nhập bằng Google, ta có thể lấy displayName làm username ban đầu
+      // hoặc để trống và yêu cầu người dùng cập nhật sau.
       await setDoc(userDocRef, {
         email: user.email, // Lưu email của người dùng
+        // Thêm username. Nếu đăng nhập Google, user.displayName có thể là username ban đầu.
+        // Nếu đăng ký email/password, username đã được xử lý trong Auth.js trước khi gọi hàm này.
+        // Tuy nhiên, để đảm bảo, ta có thể kiểm tra user.displayName ở đây.
+        // Cách tốt nhất là đảm bảo Auth.js đã lưu username khi đăng ký email/password.
+        // Đối với Google Sign-in, user.displayName sẽ được sử dụng làm username ban đầu nếu có.
+        username: user.displayName || null, // Sử dụng displayName của Google làm username ban đầu nếu có
         createdAt: new Date(), // Thêm timestamp thời gian tạo
         coins: 0, // Giá trị mặc định ban đầu
         gems: 0,   // Giá trị mặc định ban đầu
@@ -45,17 +55,28 @@ const ensureUserDocumentExists = async (user: User) => {
       console.log(`User document for ${user.uid} created successfully.`);
     } else {
       console.log(`User document for ${user.uid} already exists.`);
-      // Nếu tài liệu đã tồn tại, bạn có thể kiểm tra và cập nhật email nếu cần
-      // Ví dụ: nếu email trong auth khác với email trong firestore (ít xảy ra sau đăng ký)
+      // Nếu tài liệu đã tồn tại, bạn có thể kiểm tra và cập nhật các trường nếu cần
       const userData = userDocSnap.data();
+
+      // Cập nhật email nếu khác (ít xảy ra sau đăng ký)
       if (userData?.email !== user.email) {
           console.log(`Updating email for user ${user.uid} in Firestore.`);
-          await setDoc(userDocRef, { email: user.email }, { merge: true }); // Sử dụng merge để chỉ cập nhật trường email
+          await setDoc(userDocRef, { email: user.email }, { merge: true });
       }
-       // Ensure openedImageIds field exists if it's missing (for existing users before this change)
+
+      // Đảm bảo trường openedImageIds tồn tại
        if (!userData?.openedImageIds) {
            console.log(`Adding openedImageIds field for user ${user.uid}.`);
            await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
+       }
+
+       // Kiểm tra và thêm trường username nếu chưa có (cho người dùng cũ)
+       if (!userData?.username) {
+           console.log(`Adding username field for user ${user.uid}.`);
+           // Nếu người dùng cũ chưa có username, bạn có thể đặt giá trị mặc định
+           // hoặc để null và yêu cầu họ cập nhật sau.
+           // Ở đây, ta sẽ để null và có thể thêm logic yêu cầu người dùng cập nhật username sau.
+           await setDoc(userDocRef, { username: null }, { merge: true });
        }
     }
   } catch (error) {
@@ -82,6 +103,8 @@ const App: React.FC = () => {
 
       if (user) {
         // Nếu có người dùng đăng nhập, đảm bảo tài liệu của họ tồn tại trong Firestore
+        // Hàm này sẽ được gọi sau khi đăng ký email/password (username đã được lưu trong Auth.js)
+        // và sau khi đăng nhập Google (username ban đầu có thể là displayName).
         await ensureUserDocumentExists(user);
       }
 
