@@ -1,170 +1,103 @@
 import { useState, useEffect } from 'react';
-// Removed lucide-react import
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
+import { db } from './firebase.js'; // Import the db instance from your firebase config file
 
 // Define prop types for EnhancedLeaderboard
 interface EnhancedLeaderboardProps {
   onClose: () => void; // Add a prop for the close function
 }
 
+// Define interface for user data fetched from Firestore
+interface UserData {
+  id: string; // Document ID
+  username: string;
+  coins: number;
+  avatar?: string; // Optional avatar field
+  // Add other fields if necessary (e.g., floor, vocabulary for collection tab)
+}
+
 // Accept the onClose prop
 export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProps) {
   const [activeTab, setActiveTab] = useState('wealth');
-  const [isHovering, setIsHovering] = useState(null);
-  const [showTooltip, setShowTooltip] = useState(false);
-  // Removed searchTerm state
+  const [isHovering, setIsHovering] = useState<number | null>(null); // Use number or null for index
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
   const [animation, setAnimation] = useState(false);
   const [timeFilter, setTimeFilter] = useState('all'); // Added timeFilter state
 
-  // Function to format wealth number (replace comma with period)
-  const formatWealth = (wealth) => {
-    return wealth.replace(/,/g, '.');
+  // State to hold fetched user data
+  const [usersData, setUsersData] = useState<UserData[]>([]);
+
+  // Function to fetch data from Firestore
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Create a query to the 'users' collection, ordered by 'coins' descending
+      // You might need to adjust the collection name and field names based on your Firestore structure
+      const usersCollectionRef = collection(db, 'users');
+      // For wealth tab, order by coins
+      let q = query(usersCollectionRef, orderBy('coins', 'desc'));
+
+      // TODO: Implement time-based filtering if your data structure supports it
+      // This would likely involve adding a timestamp field to your user documents
+      // and filtering based on that timestamp. For now, we fetch all data and filter/sort in memory if needed,
+      // or ideally adjust the query based on timeFilter if your data model allows efficient querying.
+      // Example (assuming a 'lastUpdated' timestamp field):
+      // if (timeFilter === 'day') {
+      //   const startOfDay = new Date();
+      //   startOfDay.setHours(0, 0, 0, 0);
+      //   q = query(usersCollectionRef, where('lastUpdated', '>=', startOfDay), orderBy('coins', 'desc'));
+      // } // Add similar logic for week and month
+
+      const querySnapshot = await getDocs(q);
+      const fetchedUsers: UserData[] = [];
+      querySnapshot.forEach((doc) => {
+        // Assuming each user document has 'username' and 'coins' fields
+        const data = doc.data();
+        fetchedUsers.push({
+          id: doc.id,
+          username: data.username,
+          coins: data.coins,
+          avatar: data.avatar || '❓', // Use a default avatar if not present
+          // Add other fields if needed for the collection tab
+          // floor: data.floor,
+          // vocabulary: data.vocabulary,
+        });
+      });
+
+      // For simplicity, let's just sort by coins descending for the wealth tab
+      // If you implement time filtering in the query, the data will already be sorted.
+      const sortedUsers = fetchedUsers.sort((a, b) => b.coins - a.coins);
+
+      setUsersData(sortedUsers);
+    } catch (err) {
+      console.error("Error fetching users: ", err);
+      setError("Không thể tải dữ liệu người dùng.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Sample data for wealth leaderboard (All time) - Removed 'change' property
-  const wealthData = [
-    { rank: 1, name: 'Dragon_Master', avatar: '🐉', wealth: '8,750,000' },
-    { rank: 2, name: 'StarLord99', avatar: '⭐', wealth: '7,320,150' },
-    { rank: 3, name: 'PhoenixRising', avatar: '🔥', wealth: '6,485,200' },
-    { rank: 4, name: 'MoonWalker', avatar: '🌙', wealth: '5,965,750' },
-    { rank: 5, name: 'IronHeart', avatar: '❤️', wealth: '5,125,300' },
-    { rank: 6, name: 'ShadowNinja', avatar: '👤', wealth: '4,836,250' },
-    { rank: 7, name: 'GoldenEagle', avatar: '🦅', wealth: '4,215,100' },
-    { rank: 8, name: 'DiamondQueen', avatar: '💎', wealth: '3,785,450' },
-    { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '3,150,200' },
-    { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '2,950,750' },
-     { rank: 11, name: 'CyberKnight', avatar: '🤖', wealth: '2,500,000' },
-    { rank: 12, name: 'OceanDeep', avatar: '🌊', wealth: '2,300,000' },
-    { rank: 13, name: 'ForestSprite', avatar: '🌳', wealth: '2,100,000' },
-    { rank: 14, name: 'MountainKing', avatar: '⛰️', wealth: '1,900,000' },
-    { rank: 15, name: 'DesertFox', avatar: '🦊', wealth: '1,700,000' },
-    { rank: 16, name: 'SkyDancer', avatar: '☁️', wealth: '1,500,000' },
-    { rank: 17, name: 'SunSeeker', avatar: '☀️', wealth: '1,300,000' },
-    { rank: 18, name: 'IceQueen', avatar: '❄️', wealth: '1,100,000' },
-    { rank: 19, name: 'ThunderBolt', avatar: '⚡', wealth: '900,000' },
-    { rank: 20, name: 'EarthShaker', avatar: '🌍', wealth: '700,000' }
-  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
+  // Fetch data when the component mounts or activeTab/timeFilter changes
+  useEffect(() => {
+    fetchUsers();
+  }, [activeTab, timeFilter]); // Re-run fetch when tab or time filter changes
 
-  // Sample data for collection leaderboard (All time) - Added 'floor' back
-  const collectionData = [
-    { rank: 1, name: 'CollectorKing', avatar: '👑', floor: '156', vocabulary: '85' },
-    { rank: 2, name: 'ArtifactHunter', avatar: '🔍', floor: '143', vocabulary: '78' },
-    { rank: 3, name: 'TreasureSeeker', avatar: '💰', floor: '132', vocabulary: '73' },
-    { rank: 4, name: 'RarityFinder', avatar: '🧿', floor: '125', vocabulary: '68' },
-    { rank: 5, name: 'GemCollector', avatar: '💎', floor: '118', vocabulary: '65' },
-    { rank: 6, name: 'LootMaster', avatar: '🎁', floor: '110', vocabulary: '62' },
-    { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '102', vocabulary: '57' },
-    { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '98', vocabulary: '52' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '92', vocabulary: '48' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '87', vocabulary: '45' },
-     { rank: 11, name: 'HoardMaster', avatar: '📦', floor: '80', vocabulary: '40' },
-    { rank: 12, name: 'ItemGatherer', avatar: '🛍️', floor: '75', vocabulary: '38' },
-    { rank: 13, name: 'VaultKeeper', avatar: '🏦', floor: '70', vocabulary: '35' },
-    { rank: 14, name: 'StashPro', avatar: '🗄️', floor: '65', vocabulary: '33' },
-    { rank: 15, name: 'InventoryKing', avatar: '🎒', floor: '60', vocabulary: '30' },
-    { rank: 16, name: 'PackRat', avatar: '🐀', floor: '55', vocabulary: '28' },
-    { rank: 17, name: 'Accumulator', avatar: '📈', floor: '50', vocabulary: '25' },
-    { rank: 18, name: 'Stockpiler', avatar: '🧺', floor: '45', vocabulary: '23' },
-    { rank: 19, name: 'Resourceful', avatar: '💡', floor: '40', vocabulary: '20' },
-    { rank: 20, name: 'KeeperOfThings', avatar: '🗝️', floor: '35', vocabulary: '18' }
-  ];
-
-  // Dữ liệu theo ngày cho wealth leaderboard - Removed 'change' property
-  const dailyWealthData = [
-    { rank: 1, name: 'PhoenixRising', avatar: '🔥', wealth: '350,000' },
-    { rank: 2, name: 'ShadowNinja', avatar: '👤', wealth: '320,250' },
-    { rank: 3, name: 'GoldenEagle', avatar: '🦅', wealth: '285,100' },
-    { rank: 4, name: 'StarLord99', avatar: '⭐', wealth: '260,150' },
-    { rank: 5, name: 'MoonWalker', avatar: '🌙', wealth: '235,750' },
-    { rank: 6, name: 'Dragon_Master', avatar: '🐉', wealth: '210,000' },
-    { rank: 7, name: 'DiamondQueen', avatar: '💎', wealth: '195,450' },
-    { rank: 8, name: 'TigerKing', avatar: '🐯', wealth: '180,200' },
-    { rank: 9, name: 'IronHeart', avatar: '❤️', wealth: '160,300' },
-    { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '145,750' }
-  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
-
-  // Dữ liệu theo tuần cho wealth leaderboard - Removed 'change' property
-  const weeklyWealthData = [
-    { rank: 1, name: 'Dragon_Master', avatar: '🐉', wealth: '1,750,000' },
-    { rank: 2, name: 'PhoenixRising', avatar: '🔥', wealth: '1,485,200' },
-    { rank: 3, name: 'StarLord99', avatar: '⭐', wealth: '1,320,150' },
-    { rank: 4, name: 'MoonWalker', avatar: '🌙', wealth: '1,165,750' },
-    { rank: 5, name: 'DiamondQueen', avatar: '💎', wealth: '985,450' },
-    { rank: 6, name: 'IronHeart', avatar: '❤️', wealth: '925,300' },
-    { rank: 7, name: 'ShadowNinja', avatar: '👤', wealth: '836,250' },
-    { rank: 8, name: 'GoldenEagle', avatar: '🦅', wealth: '815,100' },
-    { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '750,200' },
-    { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '650,750' }
-  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
-
-  // Dữ liệu theo tháng cho wealth leaderboard - Removed 'change' property
-  const monthlyWealthData = [
-    { rank: 1, name: 'Dragon_Master', avatar: '🐉', wealth: '4,750,000' },
-    { rank: 2, name: 'StarLord99', avatar: '⭐', wealth: '4,320,150' },
-    { rank: 3, name: 'MoonWalker', avatar: '🌙', wealth: '3,965,750' },
-    { rank: 4, name: 'PhoenixRising', avatar: '🔥', wealth: '3,485,200' },
-    { rank: 5, name: 'IronHeart', avatar: '❤️', wealth: '3,125,300' },
-    { rank: 6, name: 'ShadowNinja', avatar: '👤', wealth: '2,836,250' },
-    { rank: 7, name: 'DiamondQueen', avatar: '💎', wealth: '2,785,450' },
-    { rank: 8, name: 'GoldenEagle', avatar: '🦅', wealth: '2,215,100' },
-    { rank: 9, name: 'TigerKing', avatar: '🐯', wealth: '2,150,200' },
-    { rank: 10, name: 'MagicWizard', avatar: '🧙', wealth: '1,950,750' }
-  ].map(player => ({ ...player, wealth: formatWealth(player.wealth) })); // Format wealth data
-
-  // --- Dữ liệu mẫu cho Collection theo Ngày, Tuần, Tháng ---
-  const dailyCollectionData = [
-    { rank: 1, name: 'TreasureSeeker', avatar: '💰', floor: '10', vocabulary: '5' },
-    { rank: 2, name: 'RarityFinder', avatar: '🧿', floor: '8', vocabulary: '4' },
-    { rank: 3, name: 'GemCollector', avatar: '💎', floor: '7', vocabulary: '4' },
-    { rank: 4, name: 'CollectorKing', avatar: '👑', floor: '6', vocabulary: '3' },
-    { rank: 5, name: 'ArtifactHunter', avatar: '🔍', floor: '5', vocabulary: '3' },
-    { rank: 6, name: 'LootMaster', avatar: '🎁', floor: '4', vocabulary: '2' },
-    { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '3', vocabulary: '2' },
-    { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '2', vocabulary: '1' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '1', vocabulary: '1' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '1', vocabulary: '0' }
-  ];
-
-  const weeklyCollectionData = [
-    { rank: 1, name: 'ArtifactHunter', avatar: '🔍', floor: '30', vocabulary: '15' },
-    { rank: 2, name: 'CollectorKing', avatar: '👑', floor: '28', vocabulary: '14' },
-    { rank: 3, name: 'TreasureSeeker', avatar: '💰', floor: '25', vocabulary: '13' },
-    { rank: 4, name: 'RarityFinder', avatar: '🧿', floor: '22', vocabulary: '11' },
-    { rank: 5, name: 'LootMaster', avatar: '🎁', floor: '20', vocabulary: '10' },
-    { rank: 6, name: 'GemCollector', avatar: '💎', floor: '18', vocabulary: '9' },
-    { rank: 7, name: 'RelicHoarder', avatar: '🏺', floor: '15', vocabulary: '8' },
-    { rank: 8, name: 'MysticFinder', avatar: '✨', floor: '12', vocabulary: '6' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '10', vocabulary: '5' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '8', vocabulary: '4' }
-  ];
-
-  const monthlyCollectionData = [
-    { rank: 1, name: 'CollectorKing', avatar: '👑', floor: '80', vocabulary: '40' },
-    { rank: 2, name: 'ArtifactHunter', avatar: '🔍', floor: '75', vocabulary: '38' },
-    { rank: 3, name: 'RarityFinder', avatar: '🧿', floor: '70', vocabulary: '35' },
-    { rank: 4, name: 'TreasureSeeker', avatar: '💰', floor: '65', vocabulary: '33' },
-    { rank: 5, name: 'GemCollector', avatar: '💎', floor: '60', vocabulary: '30' },
-    { rank: 6, name: 'LootMaster', avatar: '🎁', floor: '55', vocabulary: '28' },
-    { rank: 7, name: 'MysticFinder', avatar: '✨', floor: '50', vocabulary: '25' },
-    { rank: 8, name: 'RelicHoarder', avatar: '🏺', floor: '45', vocabulary: '23' },
-    { rank: 9, name: 'AntiqueDealer', avatar: '🕰️', floor: '40', vocabulary: '20' },
-    { rank: 10, name: 'CurioCollector', avatar: '🔮', floor: '35', vocabulary: '18' }
-  ];
-  // --- Kết thúc dữ liệu mẫu ---
-
-
+  // Animation effect
   useEffect(() => {
     setAnimation(true);
     const timer = setTimeout(() => setAnimation(false), 700);
     return () => clearTimeout(timer);
-  }, [activeTab, timeFilter]); // Added timeFilter to dependency array
+  }, [activeTab, timeFilter]);
 
   // Getting rank icon with animation
-  const getRankIcon = (rank) => {
+  const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
         return (
           <div className="relative">
-            {/* Crown Icon (replaced lucide-react Crown) */}
+            {/* Crown Icon */}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-yellow-400 transform scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="m12 16-3-9L2 2h20l-7 5-3 9Z"/>
               <path d="M16 16l-3-9-1-2-1 2-3 9"/>
@@ -175,7 +108,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         );
       case 2:
         return (
-          // Silver Medal Icon (replaced lucide-react Medal)
+          // Silver Medal Icon
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8a6 6 0 0 0-6 6v7l-3-3-3 3V14a6 6 0 0 0 6-6Z"/>
             <path d="M14.5 17.5 12 20l-2.5-2.5"/>
@@ -184,7 +117,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         );
       case 3:
         return (
-          // Bronze Medal Icon (replaced lucide-react Medal)
+          // Bronze Medal Icon
           <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8a6 6 0 0 0-6 6v7l-3-3-3 3V14a6 6 0 0 0 6-6Z"/>
             <path d="M14.5 17.5 12 20l-2.5-2.5"/>
@@ -196,36 +129,32 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     }
   };
 
-  // Removed getChangeIcon function
-
-  // Lấy dữ liệu dựa vào bộ lọc thời gian
-  const getFilteredWealthData = () => {
-    switch(timeFilter) {
-      case 'day': return dailyWealthData;
-      case 'week': return weeklyWealthData;
-      case 'month': return monthlyWealthData;
-      default: return wealthData; // 'all'
-    }
+  // Function to format coins number (add commas/periods for readability)
+  const formatCoins = (coins: number): string => {
+      return coins.toLocaleString('vi-VN'); // Format with Vietnamese locale for thousands separator
   };
 
-  const getFilteredCollectionData = () => {
-    switch(timeFilter) {
-      case 'day': return dailyCollectionData; // Sử dụng dữ liệu theo ngày
-      case 'week': return weeklyCollectionData; // Sử dụng dữ liệu theo tuần
-      case 'month': return monthlyCollectionData; // Sử dụng dữ liệu theo tháng
-      default: return collectionData; // 'all' - Sử dụng dữ liệu tổng
-    }
-  };
 
-  // Filter data based on time filter (Removed search term filter)
-  const filteredWealthData = getFilteredWealthData();
-
-  const filteredCollectionData = getFilteredCollectionData();
+  // Filter and sort data based on activeTab and timeFilter
+  // Note: Time filtering based on Firestore query is more efficient if your data structure supports it.
+  // If not, you'd need to implement in-memory filtering based on a timestamp field.
+  const filteredAndSortedData = usersData
+    // .filter(...) // Add in-memory filtering here if needed (e.g., based on a timestamp)
+    .sort((a, b) => {
+        if (activeTab === 'wealth') {
+            return b.coins - a.coins; // Sort by coins descending
+        }
+        // TODO: Add sorting logic for 'collection' tab if needed
+        // Example: return b.floor - a.floor;
+        return 0; // Default no sort
+    })
+    .map((user, index) => ({
+        ...user,
+        rank: index + 1, // Assign rank based on sorted order
+    }));
 
 
   return (
-    // Removed max-w-2xl and mx-auto, added w-full for full width
-    // Added overflow-hidden to the main container to remove overall scroll
     <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden h-full flex flex-col">
       {/* Sparkling stars effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -241,36 +170,30 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
       <div className="relative flex flex-col h-full"> {/* Added flex-col and h-full to enable flex layout */}
         {/* Header */}
-        {/* Adjusted flex properties to center the title */}
-        <div className="flex justify-between items-center mb-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
-          {/* Removed the div containing the trophy icon and the header text */}
-          <div className="flex-grow text-center"> {/* Added flex-grow and text-center to center the title */}
+        <div className="flex justify-between items-center mb-4 flex-shrink-0">
+          <div className="flex-grow text-center">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text">
               Bảng Xếp Hạng
             </h1>
-            {/* Removed the subtitle div */}
           </div>
           {/* Close Button */}
           <button
             onClick={onClose} // Call the onClose prop when clicked
-            className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors flex-shrink-0" // Added flex-shrink-0
+            className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors flex-shrink-0"
             aria-label="Đóng bảng xếp hạng"
             title="Đóng"
           >
-             {/* Replaced SVG icon with img tag */}
             <img
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
               alt="Close icon"
-              className="w-5 h-5 text-indigo-300" // Kept size classes, text-indigo-300 might not apply to img but doesn't hurt
-              onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+              className="w-5 h-5 text-indigo-300"
+              onError={(e) => e.target.style.display = 'none'}
             />
           </button>
         </div>
 
-        {/* Removed Search input section */}
-
         {/* Time Filter Selector */}
-        <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between flex-shrink-0"> {/* Added flex-shrink-0 */}
+        <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between flex-shrink-0">
           <button
             className={`py-1.5 px-3 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-xs flex-1 ${
               timeFilter === 'day'
@@ -279,7 +202,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             }`}
             onClick={() => setTimeFilter('day')}
           >
-            {/* Clock Icon (replaced lucide-react Clock) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
@@ -294,7 +216,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             }`}
             onClick={() => setTimeFilter('week')}
           >
-            {/* Filter Icon (replaced lucide-react Filter) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
@@ -308,7 +229,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             }`}
             onClick={() => setTimeFilter('month')}
           >
-            {/* Calendar Icon (replaced lucide-react Calendar) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 2v4"/>
               <path d="M16 2v4"/>
@@ -325,7 +245,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             }`}
             onClick={() => setTimeFilter('all')}
           >
-            {/* Star Icon (replaced lucide-react Star) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
@@ -333,9 +252,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
           </button>
         </div>
 
-
         {/* Tabs with enhanced design */}
-        <div className="flex mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex-shrink-0"> {/* Added flex-shrink-0 */}
+        <div className="flex mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex-shrink-0">
           <button
             className={`flex-1 py-1.5 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-sm ${
               activeTab === 'wealth'
@@ -344,7 +262,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             }`}
             onClick={() => setActiveTab('wealth')}
           >
-            {/* Coins Icon (replaced lucide-react Coins) */}
             <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'wealth' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="8" cy="8" r="6"/>
               <path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>
@@ -361,7 +278,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             }`}
             onClick={() => setActiveTab('collection')}
           >
-            {/* Database Icon (replaced lucide-react Database) */}
             <svg xmlns="http://www.w3.org/2000/svg" className={`mr-1.5 w-4 h-4 ${activeTab === 'collection' ? 'animate-pulse' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3"/>
               <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
@@ -372,29 +288,43 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         </div>
 
         {/* Main Content Area - Contains fixed header and scrollable list */}
-        {/* Added flex flex-col and overflow-hidden */}
         <div className={`bg-indigo-900/20 backdrop-blur-sm rounded-xl p-3 border border-indigo-700/30 shadow-lg ${animation ? 'animate-fadeIn' : ''} flex-grow flex flex-col overflow-hidden`}>
-          {activeTab === 'wealth' ? (
+
+          {loading && (
+            <div className="flex items-center justify-center py-6 text-indigo-300">
+              Đang tải dữ liệu...
+            </div>
+          )}
+
+          {error && (
+            <div className="flex flex-col items-center justify-center py-6 text-red-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && activeTab === 'wealth' && (
             <>
               {/* Wealth Header - Fixed */}
-              {/* Added flex-shrink-0 to prevent header from shrinking */}
               <div className="grid grid-cols-11 gap-2 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50 flex-shrink-0">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-7">Người chơi</div>
-                <div className="col-span-3 text-right flex items-center justify-end"> {/* Adjusted col-span and added flex, justify-end */}
-                  <span>Tài sản</span> {/* Text "Tài sản" */}
-                  {/* Coin Icon */}
-                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className="w-3 h-3 ml-1 inline-block align-middle" onError={(e) => e.target.style.display = 'none'} /> {/* Moved icon here and adjusted size */}
+                <div className="col-span-3 text-right flex items-center justify-end">
+                  <span>Tài sản</span>
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className="w-3 h-3 ml-1 inline-block align-middle" onError={(e) => e.target.style.display = 'none'} />
                 </div>
               </div>
 
               {/* Wealth List - Scrollable */}
-              {/* Added overflow-y-auto to make this section scroll, and custom-scrollbar-hidden class */}
-              <div className="overflow-y-auto custom-scrollbar-hidden"> {/* Changed class to custom-scrollbar-hidden */}
-                {filteredWealthData.length > 0 ? (
-                  filteredWealthData.map((player, index) => (
+              <div className="overflow-y-auto custom-scrollbar-hidden">
+                {filteredAndSortedData.length > 0 ? (
+                  filteredAndSortedData.map((player, index) => (
                     <div
-                      key={index}
+                      key={player.id} // Use document ID as key
                       className={`grid grid-cols-11 gap-2 py-2 px-3 rounded-lg mb-1.5 items-center transition-all duration-200 ${
                         player.rank <= 3
                           ? 'bg-gradient-to-r from-indigo-800/60 to-purple-800/60 shadow-sm border border-indigo-600/40'
@@ -403,7 +333,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                       onMouseEnter={() => setIsHovering(index)}
                       onMouseLeave={() => setIsHovering(null)}
                     >
-                      <div className="col-span-1 flex justify-center"> {/* Removed relative and change icon call */}
+                      <div className="col-span-1 flex justify-center">
                         {getRankIcon(player.rank)}
                       </div>
                       <div className="col-span-7 flex items-center overflow-hidden">
@@ -416,32 +346,23 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                           {player.avatar}
                         </div>
                         <div className="truncate">
-                          <span className="font-medium text-sm">{player.name}</span>
-                          {isHovering === index && (
-                            <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: 03/2025</div>
-                          )}
+                          <span className="font-medium text-sm">{player.username}</span>
+                          {/* You might want to add user-specific details on hover if available in Firestore */}
+                          {/* {isHovering === index && (
+                            <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: ...</div>
+                          )} */}
                         </div>
                       </div>
-                      <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end"> {/* Changed text-sm to text-xs and font-medium to font-bold */}
+                      <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end">
                         <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
-                          {player.wealth}
+                          {formatCoins(player.coins)}
                         </div>
-                        {/* Removed Coin Icon from here */}
-                        {isHovering === index && timeFilter === 'day' && (
-                          <div className="text-xs text-green-400 mt-0.5">+124.500/ngày</div> // Updated comma to period
-                        )}
-                         {isHovering === index && timeFilter === 'week' && (
-                          <div className="text-xs text-green-400 mt-0.5">+500.000/tuần</div> // Updated comma to period
-                        )}
-                         {isHovering === index && timeFilter === 'month' && (
-                          <div className="text-xs text-green-400 mt-0.5">+1.500.000/tháng</div> // Updated comma to period
-                        )}
+                        {/* Add logic for daily/weekly/monthly change if you have the data */}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
-                    {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
+                   <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="12" y1="8" x2="12" y2="12"/>
@@ -452,37 +373,39 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 )}
               </div>
             </>
-          ) : (
+          )}
+
+          {!loading && !error && activeTab === 'collection' && (
             <>
               {/* Collection Header - Fixed */}
-              {/* Added flex-shrink-0 to prevent header from shrinking */}
               <div className="grid grid-cols-9 gap-1 py-2 px-3 bg-indigo-800/40 rounded-lg text-indigo-200 text-xs font-medium mb-2 border-b border-indigo-700/50 flex-shrink-0">
                 <div className="col-span-1 text-center">#</div>
-                <div className="col-span-4">Người chơi</div> {/* Adjusted col-span */}
-                <div className="col-span-4 text-center flex items-center justify-center"> {/* Adjusted col-span and added flex/center for better alignment */}
-                  <span className="mr-1">Floor</span> <span className="opacity-30">|</span> <span className="ml-1">Vocabulary</span> {/* Added separator and spacing */}
+                <div className="col-span-4">Người chơi</div>
+                <div className="col-span-4 text-center flex items-center justify-center">
+                  <span className="mr-1">Floor</span> <span className="opacity-30">|</span> <span className="ml-1">Vocabulary</span>
                 </div>
               </div>
 
               {/* Collection List - Scrollable */}
-              {/* Added overflow-y-auto to make this section scroll, and custom-scrollbar-hidden class */}
-              <div className="overflow-y-auto custom-scrollbar-hidden"> {/* Changed class to custom-scrollbar-hidden */}
-                {filteredCollectionData.length > 0 ? (
-                  filteredCollectionData.map((player, index) => (
+              <div className="overflow-y-auto custom-scrollbar-hidden">
+                {/* You will need to fetch and display collection data similarly to wealth data */}
+                {/* For now, displaying a placeholder or adapting the existing logic if 'floor' and 'vocabulary' are in user docs */}
+                 {filteredAndSortedData.length > 0 ? ( // Using the same data for now, adapt as needed
+                  filteredAndSortedData.map((player, index) => (
                     <div
-                      key={index}
+                      key={player.id} // Use document ID as key
                       className={`grid grid-cols-9 gap-1 py-2 px-3 rounded-lg mb-1.5 items-center transition-all duration-200 ${
                         player.rank <= 3
                           ? 'bg-gradient-to-r from-indigo-800/60 to-purple-800/60 shadow-sm border border-indigo-600/40'
                           : 'bg-indigo-900/20 hover:bg-indigo-800/30 border border-indigo-800/20'
                       }`}
-                      onMouseEnter={() => setIsHovering(index + 100)}
-                      onMouseLeave={() => setIsHovering(null)}
+                       onMouseEnter={() => setIsHovering(index + 100)} // Offset index to differentiate from wealth
+                       onMouseLeave={() => setIsHovering(null)}
                     >
                       <div className="col-span-1 flex justify-center">
                         {getRankIcon(player.rank)}
                       </div>
-                      <div className="col-span-5 flex items-center overflow-hidden"> {/* Adjusted col-span */}
+                      <div className="col-span-5 flex items-center overflow-hidden">
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center mr-2 text-sm ${
                           player.rank === 1 ? 'bg-gradient-to-br from-yellow-500 to-amber-700 shadow-sm shadow-yellow-500/20' :
                           player.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-sm' :
@@ -492,27 +415,27 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                           {player.avatar}
                         </div>
                         <div className="truncate">
-                          <span className="font-medium text-sm">{player.name}</span>
-                          {isHovering === index + 100 && (
-                            <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: {/* You might want to add a relevant stat here */}</div>
-                          )}
+                          <span className="font-medium text-sm">{player.username}</span>
+                           {/* Add collection-specific details on hover if available */}
+                           {/* {isHovering === index + 100 && (
+                            <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: ...</div>
+                          )} */}
                         </div>
                       </div>
-                      {/* Combined Floor and Vocabulary */}
-                      <div className="col-span-3 text-center"> {/* Combined col-span */}
-                         <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1"> {/* Added margin-right */}
-                          {player.floor}
+                      <div className="col-span-3 text-center">
+                        {/* Assuming 'floor' and 'vocabulary' fields exist in user documents for collection tab */}
+                         <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1">
+                          {/* {player.floor || 'N/A'} */} N/A {/* Placeholder */}
                         </span>
-                        <span className="opacity-30">|</span> {/* Added opacity-30 class */}
-                        <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1"> {/* Added margin-left */}
-                          {player.vocabulary}
+                        <span className="opacity-30">|</span>
+                        <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1">
+                           {/* {player.vocabulary || 'N/A'} */} N/A {/* Placeholder */}
                         </span>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center py-6 text-indigo-300">
-                     {/* AlertCircle Icon (replaced lucide-react AlertCircle) */}
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="12" y1="8" x2="12" y2="12"/>
@@ -526,27 +449,25 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
           )}
         </div>
 
-        {/* Footer - Added flex-shrink-0 to prevent footer from shrinking */}
-        {/* Added mb-12 class for more margin-bottom */}
+        {/* Footer */}
         <div className="mt-3 mb-12 flex justify-between items-center text-xs flex-shrink-0">
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-            {/* User Icon (replaced lucide-react User) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
             <span className="text-indigo-300">Online: </span>
-            <span className="text-white font-medium ml-1">347</span>
+            <span className="text-white font-medium ml-1">...</span> {/* Placeholder for online count */}
           </div>
 
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-            {/* Clock Icon (replaced lucide-react Clock) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
             <span className="text-indigo-300">Cập nhật: </span>
             <span className="text-white font-medium ml-1">
+              {/* You might want to display the actual last updated time from Firestore */}
               {timeFilter === 'day' && '1 giờ trước'}
               {timeFilter === 'week' && '12:00 hôm nay'}
               {timeFilter === 'month' && '01/05/2025'}
@@ -585,4 +506,3 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     </div>
   );
 }
-
