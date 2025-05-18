@@ -108,33 +108,30 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     switch (rank) {
       case 1:
         return (
-          <div className="relative">
-            {/* Crown Icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-yellow-400 transform scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m12 16-3-9L2 2h20l-7 5-3 9Z"/>
-              <path d="M16 16l-3-9-1-2-1 2-3 9"/>
-              <path d="M2 16h20"/>
-            </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse shadow-sm shadow-yellow-400/50"></div>
-          </div>
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/first.png"
+            alt="Rank 1 Icon"
+            className="w-5 h-5 object-contain" // Adjust size as needed
+            onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+          />
         );
       case 2:
         return (
-          // Silver Medal Icon
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8a6 6 0 0 0-6 6v7l-3-3-3 3V14a6 6 0 0 0 6-6Z"/>
-            <path d="M14.5 17.5 12 20l-2.5-2.5"/>
-            <path d="M8 14h8"/>
-          </svg>
+           <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/number-2.png"
+            alt="Rank 2 Icon"
+            className="w-5 h-5 object-contain" // Adjust size as needed
+            onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+          />
         );
       case 3:
         return (
-          // Bronze Medal Icon
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8a6 6 0 0 0-6 6v7l-3-3-3 3V14a6 6 0 0 0 6-6Z"/>
-            <path d="M14.5 17.5 12 20l-2.5-2.5"/>
-            <path d="M8 14h8"/>
-          </svg>
+           <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/number-3.png"
+            alt="Rank 3 Icon"
+            className="w-5 h-5 object-contain" // Adjust size as needed
+            onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+          />
         );
       default:
         return <div className="w-5 h-5 flex items-center justify-center font-bold text-gray-400">{rank}</div>;
