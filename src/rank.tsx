@@ -527,8 +527,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         </div>
 
         {/* Footer - Added flex-shrink-0 to prevent footer from shrinking */}
-        {/* Added mb-6 class for more margin-bottom */}
-        <div className="mt-3 mb-6 flex justify-between items-center text-xs flex-shrink-0">
+        {/* Added mb-10 class for more margin-bottom */}
+        <div className="mt-3 mb-10 flex justify-between items-center text-xs flex-shrink-0">
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
             {/* User Icon (replaced lucide-react User) */}
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
