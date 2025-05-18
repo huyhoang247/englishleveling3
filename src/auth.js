@@ -8,10 +8,14 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
+// Import db từ firebase.js để lưu thông tin người dùng vào Firestore
+import { db } from './firebase.js';
+import { doc, setDoc } from 'firebase/firestore'; // Import các hàm cần thiết cho Firestore
 
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(''); // Thêm state cho username
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false); // Thêm trạng thái loading
   const [error, setError] = useState('');     // Thêm trạng thái lỗi để hiển thị trên UI
@@ -33,9 +37,27 @@ export default function Auth() {
     e.preventDefault();
     setError(''); // Xóa lỗi cũ
     setLoading(true);
-    console.log("Attempting registration with:", email);
+    console.log("Attempting registration with:", email, "and username:", username);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Tạo người dùng mới bằng email và mật khẩu
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Lưu thông tin người dùng bao gồm username vào Firestore
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+          email: user.email,
+          username: username, // Lưu username vào tài liệu người dùng
+          createdAt: new Date(),
+          coins: 0,
+          gems: 0,
+          keys: 0,
+          openedImageIds: []
+        });
+        console.log("User document created in Firestore with username.");
+      }
+
       // onAuthStateChanged sẽ tự động cập nhật user state
       console.log("Registration successful, waiting for onAuthStateChanged.");
     } catch (err) {
@@ -65,8 +87,14 @@ export default function Auth() {
     setLoading(true);
     console.log("Attempting Google Sign-in");
     try {
-      await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged sẽ tự động cập nhật user state
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const user = userCredential.user;
+
+      // Đối với đăng nhập Google, kiểm tra và tạo tài liệu người dùng nếu chưa có
+      // Hàm ensureUserDocumentExists trong index.tsx sẽ xử lý việc này
+      // Tuy nhiên, nếu muốn lưu username từ Google Profile (nếu có), có thể thêm logic ở đây
+      // hoặc trong ensureUserDocumentExists. Tạm thời, ta dựa vào ensureUserDocumentExists.
+
       console.log("Google Sign-in successful, waiting for onAuthStateChanged.");
     } catch (err) {
       console.error('Google Sign‑in lỗi:', err);
@@ -97,7 +125,8 @@ export default function Auth() {
     <div className="max-w-md mx-auto p-4">
       {user ? (
         <div className="text-center">
-          <p className="mb-2">Xin chào, {user.displayName || user.email}</p>
+          {/* Hiển thị username nếu có, nếu không thì hiển thị email hoặc displayName */}
+          <p className="mb-2">Xin chào, {user.username || user.displayName || user.email}</p>
           {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
           <button
             onClick={handleSignOut}
@@ -118,6 +147,18 @@ export default function Auth() {
               onChange={e => setEmail(e.target.value)}
               placeholder="Email"
               required
+              className="w-full p-2 border rounded"
+              disabled={loading}
+            />
+          </div>
+          <div>
+             {/* Thêm input cho Username */}
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Username"
+              required // Đặt required nếu bạn muốn username là bắt buộc
               className="w-full p-2 border rounded"
               disabled={loading}
             />
