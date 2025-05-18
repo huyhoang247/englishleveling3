@@ -111,9 +111,9 @@ const KeyIcon = () => (
 
 // Define interface for component props
 interface TreasureChestProps {
-  initialChests?: number; // Initial number of chests (still needed for logic)
-  keyCount?: number; // NEW: Number of keys collected
-  onKeyCollect?: (amount: number) => void; // NEW: Callback for when a key is collected (used for unlocking chests)
+  initialChests?: number; // Initial number of chests (no longer used for opening logic)
+  keyCount?: number; // Number of keys collected
+  onKeyCollect?: (amount: number) => void; // Callback for when a key is collected (used for unlocking chests)
   onCoinReward: (amount: number) => void; // Callback function to add coins
   onGemReward: (amount: number) => void; // Callback function to add gems
   isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
@@ -150,16 +150,16 @@ const getRarityColor = (rarity: Card['rarity']) => {
 };
 
 
-export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
+// Removed initialChests from props default value as it's no longer used for opening logic
+export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
   // States for chest and popup
   const [isChestOpen, setIsChestOpen] = useState(false);
   // State to hold the revealed image data (ID and URL) - MANAGED HERE
   const [revealedImage, setRevealedImage] = useState<RevealedImage | null>(null);
   const [showShine, setShowShine] = useState(false);
   const [chestShake, setChestShake] = useState(false);
-  // State for chests remaining - This state will now represent chests that can be opened with keys
-  // It's still needed for the openChest logic, but won't be displayed directly as a number
-  const [chestsRemaining, setChestsRemaining] = useState(initialChests);
+  // Removed chestsRemaining state as it's no longer used for opening logic
+  // const [chestsRemaining, setChestsRemaining] = useState(initialChests);
   // State to hold pending coin reward - MANAGED HERE
   const [pendingCoinReward, setPendingCoinReward] = useState(0);
   // State to hold pending gem reward - MANAGED HERE
@@ -260,17 +260,16 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
   // Function to open the chest
   const openChest = () => {
-    // Prevent opening chest if game is paused, already open, no chests left, or not enough keys
-    // Also prevent if there are no images left to reveal, data is still loading, or user is not logged in
-    if (isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
+    // Prevent opening chest if game is paused, already open, not enough keys, or no images left
+    // Also prevent if data is still loading, or user is not logged in
+    // Removed chestsRemaining <= 0 condition
+    if (isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
         if (isLoading) {
              console.log("Đang tải dữ liệu...");
         } else if (!currentUserId) {
              console.log("Vui lòng đăng nhập để mở rương!");
         } else if (keyCount < 1) {
             console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
-        } else if (chestsRemaining <= 0) {
-             console.log("Hết rương để mở!"); // Log or show a message if no chests are left
         } else if (availableImageIndices.length === 0) {
              console.log("Đã mở hết tất cả hình ảnh!"); // Log or show a message if all images are revealed
         }
@@ -282,8 +281,8 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
       setChestShake(false);
       setIsChestOpen(true);
       setShowShine(true);
-      // Decrease chests remaining and use one key
-      setChestsRemaining(prev => prev - 1);
+      // Removed Decrease chests remaining logic
+      // setChestsRemaining(prev => prev - 1);
       if (onKeyCollect) {
           onKeyCollect(1); // Signal that 1 key was used (e.g., to decrease key count in parent)
       }
@@ -420,20 +419,21 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
 
         {/* Treasure chest button */}
         <button // Changed from div to button for accessibility and disabled state
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${!currentUserId || isGamePaused || isChestOpen || chestsRemaining <= 0 || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions
+          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${!currentUserId || isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions, Removed chestsRemaining <= 0
           disabled={
             isGamePaused
             || isChestOpen
-            || chestsRemaining === 0
             || keyCount < 1
             || availableImageIndices.length === 0 // Use availableImageIndices.length
             || isLoading
             || !currentUserId // Disable if no user ID
           }
           onClick={openChest}
-          aria-label={availableImageIndices.length > 0 ? "Mở rương báu" : "Hết hình ảnh"}
+          // Updated aria-label to reflect dependency on keys and available images
+          aria-label={availableImageIndices.length > 0 && keyCount > 0 ? "Mở rương báu" : availableImageIndices.length === 0 ? "Hết hình ảnh" : "Không đủ chìa khóa"}
           role="button"
-          tabIndex={!isGamePaused && chestsRemaining > 0 && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1} // Make focusable only when usable
+          // Updated tabIndex condition
+          tabIndex={!isGamePaused && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1}
         >
           <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
             {/* Chest main body */}
@@ -552,3 +552,4 @@ export default function TreasureChest({ initialChests = 3, keyCount = 0, onKeyCo
     </>
   );
 }
+
