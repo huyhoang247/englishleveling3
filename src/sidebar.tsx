@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Import the Rank component - REMOVED: Rank is now rendered by the parent
+// import EnhancedLeaderboard from './rank.tsx';
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
@@ -12,7 +14,7 @@ interface SidebarLayoutProps {
   onShowHome?: () => void;
   onShowTasks?: () => void;
   onShowPerformance?: () => void;
-  onShowSettings?: () => void; // Handler for showing Settings
+  onShowSettings?: () => void;
   onShowHelp?: () => void;
 }
 
@@ -191,7 +193,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance },
-    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings }, // Added onClick for Settings
+    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
   ];
 
