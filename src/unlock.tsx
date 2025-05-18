@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 // SVG Icons (replacing lucide-react)
 
 // ChevronRight Icon SVG
-const ChevronRightIcon = ({ size = 24, color = 'currentColor', className = '' }) => (
+const ChevronRightIcon = ({ size = 20, color = 'currentColor', className = '' }) => ( // Reduced size
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -31,66 +31,66 @@ export default function GameUnlockModal() {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80">
       {/* Background particles */}
       <div className="absolute inset-0 overflow-hidden">
-        {Array(20).fill().map((_, i) => (
+        {Array(15).fill().map((_, i) => ( // Reduced number of particles
           <div
             key={i}
             className="absolute rounded-full bg-blue-500 opacity-20"
             style={{
-              width: `${Math.random() * 10 + 2}px`,
-              height: `${Math.random() * 10 + 2}px`,
+              width: `${Math.random() * 8 + 2}px`, // Reduced particle size
+              height: `${Math.random() * 8 + 2}px`, // Reduced particle size
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `float ${Math.random() * 20 + 10}s linear infinite`
+              animation: `float ${Math.random() * 15 + 7}s linear infinite` // Adjusted animation duration
             }}
           ></div>
         ))}
       </div>
 
-      <div className={`relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-2xl p-8 w-96 shadow-2xl border border-blue-700`}> {/* Simplified border */}
+      {/* Adjusted width and padding */}
+      <div className={`relative bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-2xl p-6 w-80 shadow-2xl border border-blue-700`}> {/* Reduced width and padding */}
         {/* Glass effect overlay */}
         <div className="absolute inset-0 bg-white opacity-5 rounded-2xl"></div>
 
-        {/* Background glow effects */}
-        {/* Kept some glow effects for visual style */}
-        <div className={`absolute -top-20 left-1/2 transform -translate-x-1/2 w-60 h-60 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse`}></div>
-        <div className="absolute -bottom-20 left-1/4 w-40 h-40 bg-purple-500 rounded-full filter blur-3xl opacity-10 animate-pulse"></div>
-        <div className="absolute top-1/4 -right-20 w-40 h-40 bg-cyan-500 rounded-full filter blur-3xl opacity-10"></div>
+        {/* Background glow effects - Adjusted positions and sizes */}
+        <div className={`absolute -top-16 left-1/2 transform -translate-x-1/2 w-48 h-48 bg-blue-500 rounded-full filter blur-3xl opacity-20 animate-pulse`}></div>
+        <div className="absolute -bottom-16 left-1/4 w-32 h-32 bg-purple-500 rounded-full filter blur-3xl opacity-10 animate-pulse"></div>
+        <div className="absolute top-1/4 -right-16 w-32 h-32 bg-cyan-500 rounded-full filter blur-3xl opacity-10"></div>
 
 
         {/* Enhanced edge glow */}
-        <div className="absolute inset-0 rounded-2xl shadow-[0_0_15px_rgba(56,189,248,0.3)] pointer-events-none"></div>
+        <div className="absolute inset-0 rounded-2xl shadow-[0_0_10px_rgba(56,189,248,0.3)] pointer-events-none"></div> {/* Reduced shadow blur */}
 
         {/* Only render the initial state */}
         <>
-          {/* Enhanced main heart icon */}
-          <div className="flex justify-center mb-8">
+          {/* Adjusted main heart icon container size and margin */}
+          <div className="flex justify-center mb-6"> {/* Reduced margin-bottom */}
             <div className="relative">
-              <div className="absolute -inset-2 rounded-full bg-blue-500 opacity-30 blur-md animate-pulse"></div>
-              <div className="w-28 h-28 rounded-full bg-gradient-to-r from-blue-800 to-indigo-900 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-400 flex items-center justify-center shadow-inner">
-                  {/* Using img tag for heart icon */}
+              <div className="absolute -inset-1 rounded-full bg-blue-500 opacity-30 blur-md animate-pulse"></div> {/* Adjusted inset */}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-800 to-indigo-900 flex items-center justify-center"> {/* Reduced size */}
+                <div className="w-20 h-20 rounded-full bg-gradient-to-b from-blue-700 to-blue-900 border border-blue-400 flex items-center justify-center shadow-inner"> {/* Reduced size */}
+                  {/* Using img tag for heart icon - Adjusted size */}
                   <img
                       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/heart.png"
                       alt="Heart icon"
-                      className="w-12 h-12" // Adjust size as needed
+                      className="w-10 h-10" // Reduced size as needed
                   />
                 </div>
               </div>
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-5 h-5 bg-cyan-400 rounded-full opacity-70 animate-pulse"></div>
-              <div className="absolute bottom-0 left-0 w-3 h-3 bg-purple-400 rounded-full opacity-70 animate-pulse"></div>
+              {/* Decorative elements - Adjusted positions and sizes */}
+              <div className="absolute top-0 right-0 w-4 h-4 bg-cyan-400 rounded-full opacity-70 animate-pulse"></div> {/* Reduced size */}
+              <div className="absolute bottom-0 left-0 w-2 h-2 bg-purple-400 rounded-full opacity-70 animate-pulse"></div> {/* Reduced size */}
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-3">HỒI SINH</h2> {/* Changed text */}
-          <p className="text-center text-slate-300 text-sm mb-8 font-medium">Chọn phương thức hồi sinh</p> {/* Changed text */}
+          {/* Adjusted font sizes and margins */}
+          <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 mb-2">HỒI SINH</h2> {/* Reduced font size and margin */}
+          <p className="text-center text-slate-300 text-sm mb-6 font-medium">Chọn phương thức hồi sinh</p> {/* Reduced margin */}
 
-          {/* Enhanced gold unlock button */}
-          <div className="relative mb-6">
-            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-xl opacity-70 blur-sm"></div>
+          {/* Enhanced gold unlock button - Adjusted padding and margin */}
+          <div className="relative mb-4"> {/* Reduced margin */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-xl opacity-70 blur-sm"></div> {/* Adjusted inset */}
             <button
-              // Removed onMouseEnter and onClick handlers
-              className={`relative flex items-center justify-between w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 p-5 rounded-xl transition-all duration-200 group border border-amber-400`} // Removed shake class
+              className={`relative flex items-center justify-between w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 p-4 rounded-xl transition-all duration-200 group border border-amber-400`} // Reduced padding
             >
               <div className="absolute inset-0 rounded-xl overflow-hidden">
                 <div className="absolute inset-0 bg-white opacity-10"></div>
@@ -98,37 +98,36 @@ export default function GameUnlockModal() {
               </div>
 
               <div className="flex items-center relative">
-                <div className="relative mr-4">
-                  <div className="absolute -inset-1 rounded-full bg-yellow-300 opacity-30 animate-pulse"></div>
-                  {/* Using img tag for dollar icon */}
+                <div className="relative mr-3"> {/* Reduced margin */}
+                  <div className="absolute -inset-0.5 rounded-full bg-yellow-300 opacity-30 animate-pulse"></div> {/* Adjusted inset */}
+                  {/* Using img tag for dollar icon - Adjusted size */}
                   <img
                       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
                       alt="Dollar icon"
-                      className="w-8 h-8" // Adjust size as needed
+                      className="w-7 h-7" // Reduced size as needed
                   />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-300 rounded-full animate-ping opacity-70"></div>
+                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-300 rounded-full animate-ping opacity-70"></div> {/* Reduced size */}
                 </div>
                 <div>
-                  <p className="font-bold text-yellow-900 text-lg">DÙNG VÀNG</p>
-                  <p className="text-xs text-yellow-800">Hồi sinh ngay lập tức</p> {/* Changed text */}
+                  <p className="font-bold text-yellow-900 text-base">DÙNG VÀNG</p> {/* Reduced font size */}
+                  <p className="text-xs text-yellow-800">Hồi sinh ngay lập tức</p>
                 </div>
               </div>
 
               <div className="flex items-center">
-                <div className="bg-gradient-to-r from-yellow-300 to-amber-300 px-4 py-2 rounded-full text-yellow-900 font-bold flex items-center shadow-md">
+                <div className="bg-gradient-to-r from-yellow-300 to-amber-300 px-3 py-1.5 rounded-full text-yellow-900 font-bold flex items-center shadow-md"> {/* Adjusted padding */}
                   <span>100</span>
-                  <ChevronRightIcon className="ml-1 transition-transform group-hover:translate-x-1 text-yellow-900" size={18} />
+                  <ChevronRightIcon className="ml-1 transition-transform group-hover:translate-x-1 text-yellow-900" size={16} /> {/* Reduced size */}
                 </div>
               </div>
             </button>
           </div>
 
-          {/* Enhanced ad watch button */}
+          {/* Enhanced ad watch button - Adjusted padding */}
           <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-blue-400 rounded-xl opacity-70 blur-sm"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-400 rounded-xl opacity-70 blur-sm"></div> {/* Adjusted inset */}
             <button
-              // Removed onMouseEnter and onClick handlers
-              className={`relative flex items-center justify-between w-full bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 p-5 rounded-xl transition-all duration-200 group border border-blue-400`} // Removed shake class
+              className={`relative flex items-center justify-between w-full bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 p-4 rounded-xl transition-all duration-200 group border border-blue-400`} // Reduced padding
             >
               <div className="absolute inset-0 rounded-xl overflow-hidden">
                 <div className="absolute inset-0 bg-white opacity-10"></div>
@@ -136,24 +135,24 @@ export default function GameUnlockModal() {
               </div>
 
               <div className="flex items-center relative">
-                <div className="relative mr-4">
-                  <div className="absolute -inset-1 rounded-full bg-blue-300 opacity-30 animate-pulse"></div>
-                  {/* Updated img tag for play icon */}
+                <div className="relative mr-3"> {/* Reduced margin */}
+                  <div className="absolute -inset-0.5 rounded-full bg-blue-300 opacity-30 animate-pulse"></div> {/* Adjusted inset */}
+                  {/* Updated img tag for play icon - Adjusted size */}
                   <img
                       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/play.png"
                       alt="Play icon"
-                      className="w-8 h-8" // Adjust size as needed
+                      className="w-7 h-7" // Reduced size as needed
                   />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-300 rounded-full animate-ping opacity-70"></div>
+                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-300 rounded-full animate-ping opacity-70"></div> {/* Reduced size */}
                 </div>
                 <div>
-                  <p className="font-bold text-white text-lg">XEM QUẢNG CÁO</p>
+                  <p className="font-bold text-white text-base">XEM QUẢNG CÁO</p> {/* Reduced font size */}
                   <p className="text-xs text-blue-200">Miễn phí sau khi xem</p>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 rounded-full flex items-center shadow-md group-hover:from-blue-500 group-hover:to-indigo-500">
-                <ChevronRightIcon className="transition-transform group-hover:translate-x-1 text-white" size={20} />
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 rounded-full flex items-center shadow-md group-hover:from-blue-500 group-hover:to-indigo-500"> {/* Adjusted padding */}
+                <ChevronRightIcon className="transition-transform group-hover:translate-x-1 text-white" size={16} /> {/* Reduced size */}
               </div>
             </button>
           </div>
