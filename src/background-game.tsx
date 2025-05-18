@@ -15,7 +15,7 @@ import { GemIcon } from './library/icon.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 
-// NEW: Import GameUnlockModal
+// NEW: Import the GameUnlockModal component
 import GameUnlockModal from './unlock.tsx';
 
 
@@ -186,7 +186,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // States that do NOT need session storage persistence (reset on refresh)
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
-  // const [gameOver, setGameOver] = useState(false); // Removed gameOver state
+  // REMOVED: gameOver state is no longer needed
+  // const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
@@ -196,6 +197,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // NEW: State to track if the game is paused due to being in the background
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
+  // NEW: State to control the visibility of the revive heart icon
+  const [showReviveIcon, setShowReviveIcon] = useState(false);
   // NEW: State to control the visibility of the Unlock Modal
   const [showUnlockModal, setShowUnlockModal] = useState(false);
 
@@ -453,60 +456,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-   // --- NEW: Function to update user's gem count in Firestore using a transaction ---
-  const updateGemsInFirestore = async (userId: string, amount: number) => {
-    console.log("updateGemsInFirestore called with amount:", amount);
-    if (!userId) {
-      console.error("Cannot update gems: User not authenticated.");
-      return;
-    }
-
-    const userDocRef = doc(db, 'users', userId);
-
-    try {
-      console.log("Attempting Firestore transaction for gems...");
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          console.error("User document does not exist for gem transaction.");
-           // Optionally create the document here if it's missing, though fetchUserData should handle this
-          // Ensure all necessary fields are set if creating
-          transaction.set(userDocRef, {
-            coins: coins, // Use current local coins state for new doc
-            gems: gems, // Use current local gems state for new doc
-            keys: keyCount, // Use current local keys state for new doc
-            createdAt: new Date()
-          });
-        } else {
-          const currentGems = userDoc.data().gems || 0;
-          const newGems = currentGems + amount;
-          // Ensure gems don't go below zero if deducting
-          const finalGems = Math.max(0, newGems);
-          transaction.update(userDocRef, { gems: finalGems });
-          console.log(`Gems updated in Firestore for user ${userId}: ${currentGems} -> ${finalGems}`);
-          // Update local state after successful Firestore update
-          setGems(finalGems);
-        }
-      });
-      console.log("Firestore transaction for gems successful.");
-    } catch (error) {
-      console.error("Firestore Transaction failed for gems: ", error);
-      // Handle the error, maybe retry or inform the user
-    }
-  };
-
 
   // NEW: Function to handle gem rewards received from TreasureChest
   const handleGemReward = (amount: number) => {
-      // Update local state first
       setGems(prev => prev + amount);
       console.log(`Received ${amount} gems from chest.`);
-      // Then update Firestore
-      if (auth.currentUser) {
-        updateGemsInFirestore(auth.currentUser.uid, amount);
-      } else {
-        console.log("User not authenticated, skipping Firestore gem update.");
-      }
+      // TODO: Implement Firestore update for gems
   };
 
   // NEW: Function to handle key collection (called when obstacle with key is defeated)
@@ -525,6 +480,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Function to start a NEW game (resets session storage states)
   const startNewGame = () => {
+    console.log("Starting new game...");
     // Reset session storage states to initial values
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
@@ -540,16 +496,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     // Reset states that don't use session storage
     setGameStarted(true);
-    // setGameOver(false); // Removed gameOver state
-    setShowUnlockModal(false); // Hide unlock modal on new game
+    // REMOVED: setGameOver(false);
+    setJumping(false); // Ensure jumping is false
     setIsRunning(true);
     setShowHealthDamageEffect(false);
     setDamageAmount(0);
     setShowDamageNumber(false);
     setIsBackgroundPaused(false); // Ensure background pause state is false on new game
-    // Keep isStatsFullscreen and isRankOpen as is, they are not reset by starting a new game
-    // setIsStatsFullscreen(false); // Removed this line
-    // setIsRankOpen(false); // Removed this line
+    // NEW: Reset revive icon and unlock modal states
+    setShowReviveIcon(false);
+    setShowUnlockModal(false);
 
     // Game elements setup
     const initialObstacles: GameObstacle[] = [];
@@ -591,28 +547,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setObstacles(initialObstacles);
     generateInitialClouds(5);
 
+    // Clear existing timers before starting new ones
     if (particleTimerRef.current) clearInterval(particleTimerRef.current);
+    if (obstacleTimerRef.current) clearTimeout(obstacleTimerRef.current);
+    if (coinScheduleTimerRef.current) clearTimeout(coinScheduleTimerRef.current);
+    if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
+
+
     // Only start particle timer if not paused
     if (!isBackgroundPaused) {
       particleTimerRef.current = setInterval(generateParticles, 300);
     }
 
-
-    // Only schedule obstacles and coins if not paused
-    if (!isBackgroundPaused) {
+    // Only schedule obstacles and coins if not paused AND health is above zero
+    if (!isBackgroundPaused && health > 0) {
         scheduleNextObstacle();
         scheduleNextCoin();
+        // Start the main game loop
+        if (!gameLoopIntervalRef.current) {
+             startGameLoop();
+        }
     }
   };
 
-  // NEW: Function to handle resurrection
-  const handleResurrect = () => {
-      console.log("Attempting resurrection...");
-      // Reset game state similar to starting a new game, but keep some progress?
-      // For now, let's reset like a new game for simplicity
-      startNewGame();
-      console.log("Resurrection successful!");
-  };
 
   // Effect to fetch user data from Firestore on authentication state change
   useEffect(() => {
@@ -627,8 +584,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         console.log("User logged out.");
         // Reset all game states on logout, including clearing session storage
         setGameStarted(false);
-        // setGameOver(false); // Removed gameOver state
-        setShowUnlockModal(false); // Hide unlock modal on logout
+        // REMOVED: setGameOver(false);
         setHealth(MAX_HEALTH); // Reset session storage state
         setCharacterPos(0); // Reset session storage state
         setObstacles([]); // Reset session storage state
@@ -640,6 +596,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setShieldCooldownStartTime(null); // Reset session storage state
         setPausedShieldCooldownRemaining(null); // Reset session storage state
         // Removed reset for nextKeyIn
+
+        // NEW: Reset revive icon and unlock modal states
+        setShowReviveIcon(false);
+        setShowUnlockModal(false);
 
 
         setIsRunning(false);
@@ -688,28 +648,45 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return () => unsubscribe();
   }, [auth]); // Depend on auth object
 
-  // Effect to handle game over state when health reaches zero
+  // *** MODIFIED Effect: Handle health reaching zero ***
   useEffect(() => {
+    // When health reaches zero and game is started
     if (health <= 0 && gameStarted) {
-      // setGameOver(true); // Removed setting gameOver state
-      setShowUnlockModal(true); // Show unlock modal when health reaches zero
-      setIsRunning(false);
+      console.log("Health reached zero. Showing revive icon.");
+      // REMOVED: setGameOver(true);
+      setIsRunning(false); // Stop character running animation
+      setShowReviveIcon(true); // Show the revive heart icon
+
+      // Pause game elements (obstacles, coins, particles, main game loop)
       clearTimeout(obstacleTimerRef.current);
-      clearInterval(runAnimationRef.current);
+      obstacleTimerRef.current = null;
       clearInterval(particleTimerRef.current);
-      if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
-      if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
-      // No need to reset session storage states here, the hook handles saving the current state (including null)
-
-      clearInterval(coinScheduleTimerRef.current);
-      clearInterval(coinCountAnimationTimerRef.current);
-
+      particleTimerRef.current = null;
+      clearTimeout(coinScheduleTimerRef.current);
+      coinScheduleTimerRef.current = null;
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
           gameLoopIntervalRef.current = null;
       }
-    };
-  }, [health, gameStarted]); // Depend on health and gameStarted
+      // Shield cooldown timers should pause based on isBackgroundPaused or modal open state, handled in their own effect.
+
+    } else if (health > 0 && showReviveIcon) {
+        // If health becomes positive again (e.g., after reviving), hide the icon and resume game elements
+        console.log("Health is positive. Hiding revive icon and resuming game.");
+        setShowReviveIcon(false);
+        setShowUnlockModal(false); // Also hide the modal if open
+
+        // Resume game elements if not otherwise paused (e.g., by background, stats, rank)
+        if (!isBackgroundPaused && !isStatsFullscreen && !isRankOpen) {
+            setIsRunning(true); // Resume character running animation
+            if (!obstacleTimerRef.current) scheduleNextObstacle();
+            if (!particleTimerRef.current) particleTimerRef.current = setInterval(generateParticles, 300);
+            if (!coinScheduleTimerRef.current) scheduleNextCoin();
+             if (!gameLoopIntervalRef.current) startGameLoop(); // Resume main game loop
+        }
+    }
+     // Note: No cleanup needed here for timers as they are cleared/managed by other effects based on state changes.
+  }, [health, gameStarted, showReviveIcon, isBackgroundPaused, isStatsFullscreen, isRankOpen]); // Dependencies updated
 
 
   // NEW: Effect to handle tab visibility changes (pause/resume game)
@@ -753,8 +730,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Generate dust particles for visual effect
   const generateParticles = () => {
-    // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
-    if (!gameStarted || showUnlockModal || isStatsFullscreen || isRankOpen || isBackgroundPaused) return; // Added showUnlockModal, isRankOpen and isBackgroundPaused check
+    // Dừng tạo hạt khi game chưa bắt đầu, kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
+    if (!gameStarted || showReviveIcon || isStatsFullscreen || isRankOpen || isBackgroundPaused || showUnlockModal) return; // Added showReviveIcon and showUnlockModal check
 
     const newParticles = [];
     for (let i = 0; i < 2; i++) {
@@ -773,8 +750,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Schedule the next obstacle to appear
   const scheduleNextObstacle = () => {
-    // Dừng hẹn giờ tạo vật cản khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
-    if (showUnlockModal || isStatsFullscreen || isRankOpen || isBackgroundPaused) { // Added showUnlockModal, isRankOpen and isBackgroundPaused check
+    // Dừng hẹn giờ tạo vật cản khi game kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
+    if (showReviveIcon || isStatsFullscreen || isRankOpen || isBackgroundPaused || showUnlockModal) { // Added showReviveIcon and showUnlockModal check
         if (obstacleTimerRef.current) {
             clearTimeout(obstacleTimerRef.current);
             obstacleTimerRef.current = null;
@@ -814,8 +791,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Schedule the next coin to appear ---
   const scheduleNextCoin = () => {
-    // Dừng hẹn giờ tạo xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
-    if (showUnlockModal || isStatsFullscreen || isRankOpen || isBackgroundPaused) { // Added showUnlockModal, isRankOpen and isBackgroundPaused check
+    // Dừng hẹn giờ tạo xu khi game kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
+    if (showReviveIcon || isStatsFullscreen || isRankOpen || isBackgroundPaused || showUnlockModal) { // Added showReviveIcon and showUnlockModal check
         if (coinScheduleTimerRef.current) {
             clearTimeout(coinScheduleTimerRef.current);
             coinScheduleTimerRef.current = null;
@@ -847,12 +824,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Handle character jump action
   const jump = () => {
-    // Chỉ cho phép nhảy khi game bắt đầu, chưa kết thúc, bảng thống kê/xếp hạng/rank không mở, modal hồi sinh không mở VÀ game KHÔNG tạm dừng do chạy nền
-    if (!jumping && gameStarted && !showUnlockModal && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused) { // Added showUnlockModal, isRankOpen and isBackgroundPaused check
+    // Chỉ cho phép nhảy khi game bắt đầu, chưa kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank không mở, modal unlock không mở VÀ game KHÔNG tạm dừng do chạy nền
+    if (!jumping && gameStarted && !showReviveIcon && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !showUnlockModal) { // Added showReviveIcon and showUnlockModal check
       setJumping(true);
       setCharacterPos(80);
       setTimeout(() => {
-        if (gameStarted && !showUnlockModal && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused) { // Added showUnlockModal, isRankOpen and isBackgroundPaused check
+        // Kiểm tra lại trạng thái trước khi hạ xuống để tránh hạ xuống khi game đã kết thúc (thay bằng showReviveIcon) hoặc UI overlay đang mở
+        if (gameStarted && !showReviveIcon && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !showUnlockModal) { // Added showReviveIcon and showUnlockModal check
           setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
@@ -867,13 +845,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
-    // Bỏ qua thao tác chạm/click nếu đang tải dữ liệu, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
-    if (isStatsFullscreen || isLoadingUserData || isRankOpen || showUnlockModal || isBackgroundPaused) return; // Added isRankOpen, showUnlockModal and isBackgroundPaused check
+    // Bỏ qua thao tác chạm/click nếu đang tải dữ liệu, bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
+    if (isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || showUnlockModal) return; // Added showUnlockModal check
 
+    // Nếu game chưa bắt đầu, bắt đầu game mới
     if (!gameStarted) {
-      startNewGame(); // Start a new game on first tap if not started
+      startNewGame();
+    } else if (showReviveIcon) {
+        // Nếu icon hồi sinh đang hiển thị, không làm gì khi tap vào màn hình game (chỉ tap vào icon mới mở modal)
+        return;
     }
-    // Removed game over restart logic here, it's handled by the unlock modal
+    // Logic nhảy được kích hoạt bởi phím hoặc nút nhảy riêng biệt
   };
 
 
@@ -897,9 +879,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // --- NEW: Function to activate Shield skill ---
   const activateShield = () => {
-    // Chỉ cho phép kích hoạt khiên khi game bắt đầu, chưa kết thúc, khiên chưa active, chưa hồi chiêu, bảng thống kê/xếp hạng/rank không mở, modal hồi sinh không mở, không đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-    if (!gameStarted || showUnlockModal || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused) { // Added showUnlockModal, isLoadingUserData, isRankOpen, and isBackgroundPaused checks
-      console.log("Cannot activate Shield:", { gameStarted, showUnlockModal, isShieldActive, isShieldOnCooldown, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused });
+    // Chỉ cho phép kích hoạt khiên khi game bắt đầu, chưa kết thúc (thay bằng showReviveIcon), khiên chưa active, chưa hồi chiêu, bảng thống kê/xếp hạng/rank không mở, modal unlock không mở, không đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
+    if (!gameStarted || showReviveIcon || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || showUnlockModal) { // Added showReviveIcon and showUnlockModal checks
+      console.log("Cannot activate Shield:", { gameStarted, showReviveIcon, isShieldActive, isShieldOnCooldown, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, showUnlockModal });
       return;
     }
 
@@ -938,14 +920,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   // This useEffect is the main game loop for movement and collision detection
+  // *** MODIFIED Effect: Game Loop ***
   useEffect(() => {
-    // Dừng vòng lặp game khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
-    if (!gameStarted || showUnlockModal || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused) { // Added showUnlockModal, isLoadingUserData, isRankOpen, and isBackgroundPaused checks
+    // Dừng vòng lặp game khi game chưa bắt đầu, kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
+    const shouldPauseGameLoop = !gameStarted || showReviveIcon || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || showUnlockModal; // Added showReviveIcon and showUnlockModal
+
+    if (shouldPauseGameLoop) {
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
+            console.log("Game loop paused.");
         }
-         // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
+         // Dừng tạo hạt khi game chưa bắt đầu, kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
         if (particleTimerRef.current) {
             clearInterval(particleTimerRef.current);
             particleTimerRef.current = null;
@@ -953,8 +939,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         return;
     }
 
-    // Bắt đầu vòng lặp game nếu chưa chạy VÀ game KHÔNG tạm dừng do chạy nền
-    if (!gameLoopIntervalRef.current && !isBackgroundPaused) {
+    // Bắt đầu vòng lặp game nếu chưa chạy VÀ game KHÔNG tạm dừng do các yếu tố trên
+    if (!gameLoopIntervalRef.current && !shouldPauseGameLoop) {
+        console.log("Starting game loop.");
         gameLoopIntervalRef.current = setInterval(() => {
             const speed = 0.5;
 
@@ -1012,9 +999,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                                 });
                             } else {
                                 const damageTaken = obstacle.damage;
-                                setHealth(prev => Math.max(0, prev - damageTaken));
-                                triggerHealthDamageEffect();
-                                triggerCharacterDamageEffect(damageTaken);
+                                // Only take damage if health is above zero
+                                if (health > 0) {
+                                    setHealth(prev => Math.max(0, prev - damageTaken));
+                                    triggerHealthDamageEffect();
+                                    triggerCharacterDamageEffect(damageTaken);
+                                }
                             }
                         }
 
@@ -1210,13 +1200,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, showUnlockModal, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused]); // Dependencies updated, added showUnlockModal, isRankOpen and isBackgroundPaused
+  }, [gameStarted, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, showReviveIcon, showUnlockModal]); // Dependencies updated, added showReviveIcon and showUnlockModal
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
+  // *** MODIFIED Effect: Obstacle and Coin Scheduling ***
   useEffect(() => {
-      // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
-      if (showUnlockModal || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused) { // Added showUnlockModal, isLoadingUserData, isRankOpen, and isBackgroundPaused check
+      // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
+      const shouldPauseScheduling = showReviveIcon || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || showUnlockModal; // Added showReviveIcon and showUnlockModal check
+
+      if (shouldPauseScheduling) {
           if (obstacleTimerRef.current) {
               clearTimeout(obstacleTimerRef.current);
               obstacleTimerRef.current = null;
@@ -1225,12 +1218,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               clearTimeout(coinScheduleTimerRef.current);
               coinScheduleTimerRef.current = null;
           }
-           // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
+           // Dừng tạo hạt khi game chưa bắt đầu, kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
            if (particleTimerRef.current) {
                clearInterval(particleTimerRef.current);
                particleTimerRef.current = null;
            }
-      } else if (gameStarted && !showUnlockModal && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added showUnlockModal, isRankOpen and isBackgroundPaused check)
+      } else if (gameStarted && !shouldPauseScheduling) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường
           if (!obstacleTimerRef.current) {
               scheduleNextObstacle();
           }
@@ -1257,7 +1250,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, showUnlockModal, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused]); // Dependencies updated, added showUnlockModal, isRankOpen and isBackgroundPaused
+  }, [gameStarted, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, showReviveIcon, showUnlockModal]); // Dependencies updated, added showReviveIcon and showUnlockModal
 
   // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
   useEffect(() => {
@@ -1266,7 +1259,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       // CORRECTED: Use state variables directly
       console.log("Shield Cooldown Effect running:", {
           isShieldOnCooldown,
-          showUnlockModal, // Kiểm tra trạng thái modal hồi sinh
+          // REMOVED: gameOver,
           isStatsFullscreen, // Kiểm tra trạng thái bảng thống kê/xếp hạng
           isLoadingUserData,
           gameStarted,
@@ -1275,12 +1268,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           currentCooldownTimer: !!shieldCooldownTimerRef.current,
           currentCountdownTimer: !!cooldownCountdownTimerRef.current,
           isRankOpen, // Added isRankOpen to log
-          isBackgroundPaused // Added isBackgroundPaused to log
+          isBackgroundPaused, // Added isBackgroundPaused to log
+          showReviveIcon, // Added showReviveIcon to log
+          showUnlockModal // Added showUnlockModal to log
       });
 
 
-      // Dừng/Tạm dừng bộ đếm thời gian khi game không hoạt động, kết thúc, bảng thống kê/xếp hạng/rank đang mở, modal hồi sinh đang mở HOẶC game đang tạm dừng do chạy nền
-      if (isStatsFullscreen || isLoadingUserData || showUnlockModal || !gameStarted || isRankOpen || isBackgroundPaused) { // Added showUnlockModal, isRankOpen and isBackgroundPaused check
+      // Dừng/Tạm dừng bộ đếm thời gian khi game không hoạt động, kết thúc (thay bằng showReviveIcon), bảng thống kê/xếp hạng/rank đang mở, modal unlock đang mở HOẶC game đang tạm dừng do chạy nền
+      const shouldPauseShieldTimers = isStatsFullscreen || isLoadingUserData || !gameStarted || isRankOpen || isBackgroundPaused || showReviveIcon || showUnlockModal; // Added showReviveIcon and showUnlockModal
+
+      if (shouldPauseShieldTimers) {
           console.log("Game inactive or paused. Clearing shield timers.");
           // Tạm dừng bộ đếm thời gian hồi chiêu chính nếu đang chạy
           if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
@@ -1406,7 +1403,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // We rely on the effect's internal logic to clear shieldCooldownTimerRef.
       };
 
-  }, [isShieldOnCooldown, showUnlockModal, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, isRankOpen, isBackgroundPaused]); // Dependencies updated, added showUnlockModal, isRankOpen and isBackgroundPaused
+  }, [isShieldOnCooldown, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, isRankOpen, isBackgroundPaused, showReviveIcon, showUnlockModal]); // Dependencies updated, added showReviveIcon and showUnlockModal
 
 
   // Effect to clean up all timers when the component unmounts
@@ -1483,8 +1480,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
-          // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, modal hồi sinh KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-          autoplay={!isStatsFullscreen && !isRankOpen && !showUnlockModal && !isLoadingUserData && !isBackgroundPaused} // Added isRankOpen, showUnlockModal and isBackgroundPaused
+          // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu, KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở VÀ game KHÔNG tạm dừng do chạy nền
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !showReviveIcon && !showUnlockModal} // Added showReviveIcon and showUnlockModal
           className="w-full h-full"
         />
       </div>
@@ -1518,8 +1515,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, modal hồi sinh KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-                autoplay={!isStatsFullscreen && !isRankOpen && !showUnlockModal && !isLoadingUserData && !isBackgroundPaused} // Added isRankOpen, showUnlockModal and isBackgroundPaused
+                // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu, KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở VÀ game KHÔNG tạm dừng do chạy nền
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !showReviveIcon && !showUnlockModal} // Added showReviveIcon and showUnlockModal
                 className="w-full h-full"
               />
             )}
@@ -1536,8 +1533,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               <DotLottieReact
                 src={obstacle.lottieSrc}
                 loop
-                // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, modal hồi sinh KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-                autoplay={!isStatsFullscreen && !isRankOpen && !showUnlockModal && !isLoadingUserData && !isBackgroundPaused} // Added isRankOpen, showUnlockModal and isBackgroundPaused
+                // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu, KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở VÀ game KHÔNG tạm dừng do chạy nền
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !showReviveIcon && !showUnlockModal} // Added showReviveIcon and showUnlockModal
                 className="w-full h-full"
               />
               )}
@@ -1661,8 +1658,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
           loop
-          // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, modal hồi sinh KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-          autoplay={isShieldActive && !isStatsFullscreen && !isRankOpen && !showUnlockModal && !isLoadingUserData && !isBackgroundPaused} // Added isRankOpen, showUnlockModal and isBackgroundPaused
+          // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu, KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở VÀ game KHÔNG tạm dừng do chạy nền
+          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !showReviveIcon && !showUnlockModal} // Added showReviveIcon and showUnlockModal
           className="w-full h-full"
         />
       </div>
@@ -1687,8 +1684,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
           loop
-          // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, modal hồi sinh KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-          autoplay={!isStatsFullscreen && !isRankOpen && !showUnlockModal && !isLoadingUserData && !isBackgroundPaused} // Added isRankOpen, showUnlockModal and isBackgroundPaused
+           // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu, KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở VÀ game KHÔNG tạm dừng do chạy nền
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !showReviveIcon && !showUnlockModal} // Added showReviveIcon and showUnlockModal
           className="w-full h-full"
         />
       </div>
@@ -1698,8 +1695,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle full-screen stats
   const toggleStatsFullscreen = () => {
-    // Ngăn mở bảng thống kê/xếp hạng nếu game over hoặc đang tải dữ liệu hoặc modal hồi sinh đang mở
-    if (showUnlockModal || isLoadingUserData) return; // Prevent opening if unlock modal is open or loading data
+    // Ngăn mở bảng thống kê/xếp hạng nếu đang tải dữ liệu hoặc icon hồi sinh đang hiển thị hoặc modal unlock đang mở
+    if (isLoadingUserData || showReviveIcon || showUnlockModal) return; // Added showReviveIcon and showUnlockModal
 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
@@ -1715,8 +1712,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Function to toggle Rank visibility
   const toggleRank = () => {
-     // Ngăn mở bảng xếp hạng nếu game over hoặc đang tải dữ liệu hoặc modal hồi sinh đang mở
-     if (showUnlockModal || isLoadingUserData) return; // Prevent opening if unlock modal is open or loading data
+     // Ngăn mở bảng xếp hạng nếu đang tải dữ liệu hoặc icon hồi sinh đang hiển thị hoặc modal unlock đang mở
+     if (isLoadingUserData || showReviveIcon || showUnlockModal) return; // Added showReviveIcon and showUnlockModal
 
      setIsRankOpen(prev => {
          const newState = !prev;
@@ -1734,6 +1731,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const showHome = () => {
       setIsStatsFullscreen(false);
       setIsRankOpen(false);
+      setShowUnlockModal(false); // Also close the unlock modal
       showNavBar(); // Ensure navbar is visible
   };
 
@@ -1741,6 +1739,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Handler to receive the sidebar toggle function from SidebarLayout
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
+  };
+
+  // NEW: Function to handle closing the unlock modal
+  const handleCloseUnlockModal = () => {
+      setShowUnlockModal(false);
+      // Optionally, resume game elements here if needed, but the main health effect should handle it.
+      // If the user doesn't revive, the revive icon remains.
+  };
+
+  // NEW: Function to handle successful revive from the modal
+  const handleRevive = () => {
+      console.log("Player revived!");
+      setHealth(MAX_HEALTH / 2); // Example: Revive with half health
+      setShowUnlockModal(false); // Close the modal
+      setShowReviveIcon(false); // Hide the revive icon
+      // The health effect will detect health > 0 and resume game elements
   };
 
 
@@ -1755,7 +1769,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Determine which content to render inside SidebarLayout based on state
   let mainContent;
-  if (isStatsFullscreen) {
+  // Prioritize modal unlock if open
+  if (showUnlockModal) {
+      mainContent = (
+          <GameUnlockModal
+              isOpen={showUnlockModal}
+              onClose={handleCloseUnlockModal}
+              onRevive={handleRevive} // Pass the revive handler to the modal
+          />
+      );
+  } else if (isStatsFullscreen) {
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
               {/* Pass coins and updateCoinsInFirestore to CharacterCard */}
@@ -1782,7 +1805,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             // THAY ĐỔI BƯỚC 2 Ở ĐÂY: className từ h-screen thành h-full
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer`}
             // Đã bỏ style={{ overflowX: 'hidden' }} vì overflow-hidden đã bao gồm
-            onClick={handleTap} // Handle tap for start/restart
+            onClick={handleTap} // Handle tap for start/restart (only if game not started or revive icon not shown)
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
 
@@ -1821,24 +1844,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 <HeaderBackground />
 
                 {/* NEW Menu Button - Placed before the HP bar container */}
-                <button
-                    onClick={() => sidebarToggleRef.current?.()} // Call the stored toggle function
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" // Added z-20 to ensure it's above background
-                    aria-label="Mở sidebar"
-                    title="Mở sidebar"
-                >
-                    {/* Use the provided image URL for the icon */}
-                     <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
-                        alt="Menu Icon"
-                        className="w-5 h-5 object-contain" // Adjust size as needed
-                        onError={(e) => {
-                            const target = e as any; // Cast to any to access target
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
-                        }}
-                     />
-                </button>
+                {/* Chỉ hiển thị nút menu khi không hiển thị icon hồi sinh và modal unlock */}
+                {!showReviveIcon && !showUnlockModal && (
+                    <button
+                        onClick={() => sidebarToggleRef.current?.()} // Call the stored toggle function
+                        className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" // Added z-20 to ensure it's above background
+                        aria-label="Mở sidebar"
+                        title="Mở sidebar"
+                    >
+                        {/* Use the provided image URL for the icon */}
+                         <img
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
+                            alt="Menu Icon"
+                            className="w-5 h-5 object-contain" // Adjust size as needed
+                            onError={(e) => {
+                                const target = e as any; // Cast to any to access target
+                                target.onerror = null;
+                                target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
+                            }}
+                         />
+                    </button>
+                )}
 
 
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
@@ -1883,8 +1909,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       </div>
                   </div>
               </div>
-               {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở và modal hồi sinh KHÔNG mở */}
-               {(!isStatsFullscreen && !isRankOpen && !showUnlockModal) && ( // Only show currency display when stats, rank, and unlock modal are NOT fullscreen (added isRankOpen and showUnlockModal)
+               {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở VÀ KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở*/}
+               {(!isStatsFullscreen && !isRankOpen && !showReviveIcon && !showUnlockModal) && ( // Added showReviveIcon and showUnlockModal checks
                   <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
                       {/* REMOVED: Display "OK" text */}
                       {/*
@@ -1912,13 +1938,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                       <CoinDisplay
                         displayedCoins={displayedCoins}
-                        isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
+                        // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở, icon hồi sinh hiển thị, modal unlock mở VÀ game đang tạm dừng do chạy nền)
+                        isGamePaused={isStatsFullscreen || isRankOpen || isBackgroundPaused || showReviveIcon || showUnlockModal} // Added showReviveIcon and showUnlockModal
                       />
                   </div>
                )}
             </div>
 
-            {/* REMOVED: Old Game Over screen */}
+            {/* REMOVED: Game Over Screen */}
             {/*
             {gameOver && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
@@ -1933,9 +1960,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             )}
             */}
 
+            {/* NEW: Revive Heart Icon */}
+            {showReviveIcon && !showUnlockModal && (
+                <div className="absolute inset-0 flex items-center justify-center z-40">
+                    <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/heart.png"
+                        alt="Revive Icon"
+                        className="w-24 h-24 cursor-pointer animate-pulse"
+                        onClick={() => setShowUnlockModal(true)} // Open the modal on click
+                    />
+                </div>
+            )}
+
+
             {/* Keep these buttons, they are not part of the main header or sidebar */}
-            {/* Chỉ hiển thị các nút này khi bảng thống kê/xếp hạng và rank KHÔNG mở và modal hồi sinh KHÔNG mở */}
-            {(!isStatsFullscreen && !isRankOpen && !showUnlockModal) && ( // Added isRankOpen and showUnlockModal check
+            {/* Chỉ hiển thị các nút này khi bảng thống kê/xếp hạng và rank KHÔNG mở VÀ KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở */}
+            {(!isStatsFullscreen && !isRankOpen && !showReviveIcon && !showUnlockModal) && ( // Added showReviveIcon and showUnlockModal checks
               <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
                 {[
                   {
@@ -1991,15 +2031,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
-             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở và modal hồi sinh KHÔNG mở */}
-             {(!isStatsFullscreen && !isRankOpen && !showUnlockModal) && ( // Added isRankOpen and showUnlockModal check
+             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở VÀ KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở */}
+             {(!isStatsFullscreen && !isRankOpen && !showReviveIcon && !showUnlockModal) && ( // Added showReviveIcon and showUnlockModal checks
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
                  <div
-                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || showUnlockModal || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added showUnlockModal, isLoadingUserData, isRankOpen, and isBackgroundPaused checks
+                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || showReviveIcon || showUnlockModal ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added showReviveIcon and showUnlockModal checks
                   onClick={activateShield}
                   title={
-                    !gameStarted || showUnlockModal || isLoadingUserData || isRankOpen || isBackgroundPaused ? "Không khả dụng" : // Added showUnlockModal, isLoadingUserData, isRankOpen, and isBackgroundPaused checks
+                    !gameStarted || isLoadingUserData || isRankOpen || isBackgroundPaused || showReviveIcon || showUnlockModal ? "Không khả dụng" : // Added showReviveIcon and showUnlockModal checks
                     isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
                     isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
                     isStatsFullscreen ? "Không khả dụng" :
@@ -2007,14 +2047,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   }
                   aria-label="Sử dụng Khiên chắn"
                   role="button"
-                  tabIndex={!gameStarted || showUnlockModal || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused ? -1 : 0} // Added showUnlockModal, isLoadingUserData, isRankOpen, and isBackgroundPaused checks
+                  tabIndex={!gameStarted || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || showReviveIcon || showUnlockModal ? -1 : 0} // Added showReviveIcon and showUnlockModal checks
                 >
                   <div className="w-10 h-10">
                      <DotLottieReact
                         src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                         loop
-                        // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, modal hồi sinh KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-                        autoplay={isShieldActive && !isStatsFullscreen && !isRankOpen && !showUnlockModal && !isLoadingUserData && !isBackgroundPaused} // Added isRankOpen, showUnlockModal and isBackgroundPaused
+                        // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu, KHÔNG hiển thị icon hồi sinh, modal unlock KHÔNG mở VÀ game KHÔNG tạm dừng do chạy nền
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !showReviveIcon && !showUnlockModal} // Added showReviveIcon and showUnlockModal
                         className="w-full h-full"
                      />
                   </div>
@@ -2105,8 +2145,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               // Use startCoinCountAnimation to handle coin rewards from chests
               onCoinReward={startCoinCountAnimation}
               onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-              // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở, modal hồi sinh mở VÀ game đang tạm dừng do chạy nền)
-              isGamePaused={showUnlockModal || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused} // Added showUnlockModal, isRankOpen and isBackgroundPaused
+              // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở, icon hồi sinh hiển thị, modal unlock mở VÀ game đang tạm dừng do chạy nền)
+              isGamePaused={isStatsFullscreen || isRankOpen || isBackgroundPaused || showReviveIcon || showUnlockModal} // Added showReviveIcon and showUnlockModal
               isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
               currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
             />
@@ -2128,36 +2168,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // Add handlers for other menu items here if needed
       >
         {mainContent} {/* Render the determined main content as children */}
-        {/* NEW: Conditionally render the Unlock Modal */}
-        {showUnlockModal && (
-            <GameUnlockModal
-                onResurrect={handleResurrect} // Pass the resurrect handler
-                onClose={() => setShowUnlockModal(false)} // Pass a function to close the modal if needed (e.g., for a "Give Up" button)
-                currentCoins={coins} // Pass current coin count
-                currentGems={gems} // Pass current gem count
-                onUseCoins={(cost) => {
-                    if (auth.currentUser) {
-                        updateCoinsInFirestore(auth.currentUser.uid, -cost); // Deduct coins
-                        handleResurrect(); // Resurrect after successful deduction
-                    } else {
-                        console.error("User not authenticated, cannot use coins for resurrection.");
-                        // Handle error: show message to user
-                    }
-                }}
-                onUseGems={(cost) => {
-                     if (auth.currentUser) {
-                        updateGemsInFirestore(auth.currentUser.uid, -cost); // Deduct gems
-                        handleResurrect(); // Resurrect after successful deduction
-                    } else {
-                        console.error("User not authenticated, cannot use gems for resurrection.");
-                        // Handle error: show message to user
-                    }
-                }}
-                // TODO: Add handler for watching ad if implemented in unlock.tsx
-                // onWatchAd={() => { ... }}
-            />
-        )}
       </SidebarLayout>
     </div>
   );
 }
+
