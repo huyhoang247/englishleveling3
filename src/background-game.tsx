@@ -872,8 +872,244 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
 
+  // --- OPTIMIZATION: Pure functions to calculate next state for game elements ---
+
+  // Calculate next state for obstacles
+  const calculateNextObstacles = (
+    currentObstacles: GameObstacle[],
+    speed: number,
+    gameContainer: HTMLDivElement | null,
+    characterPos: number,
+    isShieldActive: boolean,
+    setShieldHealth: React.Dispatch<React.SetStateAction<number>>,
+    setHealth: React.Dispatch<React.SetStateAction<number>>,
+    triggerHealthDamageEffect: () => void,
+    triggerCharacterDamageEffect: (amount: number) => void,
+    obstacleTypes: Omit<GameObstacle, 'id' | 'position' | 'health' | 'maxHealth' | 'hasKey'>[],
+    handleKeyCollect: (amount: number) => void
+  ): GameObstacle[] => {
+    if (!gameContainer) return currentObstacles;
+
+    const gameWidth = gameContainer.offsetWidth;
+    const gameHeight = gameContainer.offsetHeight;
+
+    const characterWidth_px = (24 / 4) * 16; // Assuming character is 24 Tailwind units wide (w-24)
+    const characterHeight_px = (24 / 4) * 16; // Assuming character is 24 Tailwind units tall (h-24)
+    const characterXPercent = 5; // Character's fixed horizontal position
+    const characterX_px = (characterXPercent / 100) * gameWidth;
+
+    const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+    const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
+    const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
+    const characterLeft_px = characterX_px;
+    const characterRight_px = characterX_px + characterWidth_px;
+
+    const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+
+    return currentObstacles
+      .map(obstacle => {
+        let newPosition = obstacle.position - speed;
+        let collisionDetected = false;
+        let obstacleHit = false; // Flag to indicate if this obstacle was hit
+
+        const obstacleX_px = (newPosition / 100) * gameWidth;
+
+        // Calculate obstacle dimensions in pixels based on Tailwind units (assuming 1 unit = 4px)
+        const obstacleWidth_px = (obstacle.width / 4) * 16; // Adjusted based on common Tailwind w/h classes
+        const obstacleHeight_px = (obstacle.height / 4) * 16; // Adjusted based on common Tailwind w/h classes
+
+
+        const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px;
+
+        const collisionTolerance = 5; // Tolerance in pixels for collision detection
+        if (
+          characterRight_px > obstacleX_px - collisionTolerance &&
+          characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
+          characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance &&
+          characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance
+        ) {
+          collisionDetected = true;
+          obstacleHit = true; // Mark this obstacle as hit
+
+          // Collision logic - directly update state using the setters passed as props
+          if (isShieldActive) {
+            setShieldHealth(prev => {
+              const damageToShield = obstacle.damage;
+              const newShieldHealth = Math.max(0, prev - damageToShield);
+              if (newShieldHealth <= 0) {
+                console.log("Shield health depleted.");
+                setIsShieldActive(false); // Directly update shield active state
+              }
+              return newShieldHealth;
+            });
+          } else {
+            const damageTaken = obstacle.damage;
+            setHealth(prev => Math.max(0, prev - damageTaken)); // Directly update health state
+            triggerHealthDamageEffect(); // Trigger effect
+            triggerCharacterDamageEffect(damageTaken); // Trigger effect
+          }
+
+          // Handle key collection if the obstacle has a key
+          if (obstacle.hasKey) {
+            handleKeyCollect(1); // Call the key collection handler
+          }
+        }
+
+        // If collided, mark it for filtering, otherwise update position
+        if (obstacleHit) {
+          return { ...obstacle, position: newPosition, collided: true };
+        } else {
+           // Apply clipping logic during normal movement
+           return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
+        }
+      })
+      // Filter out collided obstacles and those far off-screen
+      .filter(obstacle => {
+        // Keep obstacles that haven't collided AND are within a reasonable range
+        return !obstacle.collided && obstacle.position > -20;
+      });
+  };
+
+  // Calculate next state for clouds
+  const calculateNextClouds = (currentClouds: GameCloud[], speed: number, cloudImageUrls: string[]): GameCloud[] => {
+      return currentClouds
+          .map(cloud => {
+              const newX = cloud.x - cloud.speed;
+
+              // Reposition when it moves off-screen to the left
+              if (newX < -50) {
+                  const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
+                  return {
+                      ...cloud,
+                      id: Date.now() + Math.random(),
+                      // Reposition slightly off-screen to the right
+                      x: 100 + Math.random() * 30,
+                      y: Math.random() * 40 + 10,
+                      size: Math.random() * 40 + 30,
+                      speed: Math.random() * 0.3 + 0.15,
+                      imgSrc: randomImgSrc
+                  };
+              }
+
+              // Apply clipping logic to cloud position if needed (optional, but good practice)
+              return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; // Keep clouds within -50% to 120%
+          });
+  };
+
+  // Calculate next state for particles
+  const calculateNextParticles = (currentParticles: any[]): any[] => {
+      return currentParticles
+          .map(particle => ({
+              ...particle,
+              x: particle.x + particle.xVelocity,
+              y: particle.y + particle.yVelocity,
+              opacity: particle.opacity - 0.03,
+              size: particle.size - 0.1
+          }))
+          .filter(particle => particle.opacity > 0 && particle.size > 0);
+  };
+
+  // Calculate next state for coins
+  const calculateNextCoins = (
+    currentCoins: GameCoin[],
+    speed: number,
+    gameContainer: HTMLDivElement | null,
+    characterPos: number,
+    startCoinCountAnimation: (reward: number) => void
+  ): GameCoin[] => {
+      if (!gameContainer) return currentCoins;
+
+      const gameWidth = gameContainer.offsetWidth;
+      const gameHeight = gameContainer.offsetHeight;
+
+      const characterWidth_px = (24 / 4) * 16;
+      const characterHeight_px = (24 / 4) * 16;
+      const characterXPercent = 5;
+      const characterX_px = (characterXPercent / 100) * gameWidth;
+
+      const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
+      const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
+      const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
+      const characterLeft_px = characterX_px;
+      const characterRight_px = characterX_px + characterWidth_px;
+
+      const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
+      const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
+
+      return currentCoins
+          .map(coin => {
+              const coinSize_px = 40; // Assuming coin size is 40px
+
+              const coinX_px = (coin.x / 100) * gameWidth;
+              const coinY_px = (coin.y / 100) * gameHeight;
+
+              let newX = coin.x;
+              let newY = coin.y;
+              let collisionDetected = false;
+              let shouldBeAttracted = coin.isAttracted;
+
+              // Check for initial collision to start attraction
+              if (!shouldBeAttracted) {
+                  if (
+                      characterRight_px > coinX_px &&
+                      characterLeft_px < coinX_px + coinSize_px &&
+                      characterBottomFromTop_px > coinY_px &&
+                      characterTopFromTop_px < coinY_px + coinSize_px
+                  ) {
+                      shouldBeAttracted = true;
+                  }
+              }
+
+              // Move coin towards character if attracted
+              if (shouldBeAttracted) {
+                  const dx = characterCenterX_px - coinX_px;
+                  const dy = characterCenterY_px - coinY_px;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+
+                  const moveStep = distance * coin.attractSpeed;
+
+                  const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
+                  const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
+
+                  const newCoinX_px = coinX_px + moveX_px;
+                  const newCoinY_px = coinY_px + moveY_px;
+
+                  newX = (newCoinX_px / gameWidth) * 100;
+                  newY = (newCoinY_px / gameHeight) * 100;
+
+                  // Check for collection collision (when close enough)
+                  if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
+                      collisionDetected = true;
+                      const awardedCoins = Math.floor(Math.random() * 5) + 1;
+                      console.log(`Coin collected! Awarded: ${awardedCoins}. Calling startCoinCountAnimation.`);
+                      startCoinCountAnimation(awardedCoins); // Trigger coin animation and Firestore update
+                  }
+
+              } else {
+                  // Move coin horizontally if not attracted
+                  newX = coin.x - coin.initialSpeedX;
+                  newY = coin.y + coin.initialSpeedY; // Coins might have a slight vertical drift
+              }
+
+              return {
+                  ...coin,
+                  x: newX,
+                  y: newY,
+                  isAttracted: shouldBeAttracted,
+                  collided: collisionDetected
+              };
+          })
+          .filter(coin => {
+              // Filter out collected coins and those far off-screen
+              const isOffScreen = coin.x < -20 || coin.y > 120 || coin.y < -20;
+              return !coin.collided && !isOffScreen;
+          });
+  };
+
+
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   // This useEffect is the main game loop for movement and collision detection
+  // OPTIMIZATION: Now calculates all next states before updating state
   useEffect(() => {
     // Dừng vòng lặp game khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
     if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused) { // Added isLoadingUserData, isRankOpen, and isBackgroundPaused checks
@@ -892,244 +1128,25 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Bắt đầu vòng lặp game nếu chưa chạy VÀ game KHÔNG tạm dừng do chạy nền
     if (!gameLoopIntervalRef.current && !isBackgroundPaused) {
         gameLoopIntervalRef.current = setInterval(() => {
-            const speed = 0.5;
+            const speed = 0.5; // Game speed
 
-            setObstacles(prevObstacles => {
-                const gameContainer = gameRef.current;
-                if (!gameContainer) return prevObstacles;
-
-                const gameWidth = gameContainer.offsetWidth;
-                const gameHeight = gameContainer.offsetHeight;
-
-                const characterWidth_px = (24 / 4) * 16;
-                const characterHeight_px = (24 / 4) * 16;
-                const characterXPercent = 5;
-                const characterX_px = (characterXPercent / 100) * gameWidth;
-
-                const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
-                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
-                const characterLeft_px = characterX_px;
-                const characterRight_px = characterX_px + characterWidth_px;
-
-                const obstacleBottomFromTop_px = gameHeight - (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-
-
-                return prevObstacles
-                    .map(obstacle => {
-                        let newPosition = obstacle.position - speed;
-
-                        let collisionDetected = false;
-                        const obstacleX_px = (newPosition / 100) * gameWidth;
-
-                        let obstacleWidth_px, obstacleHeight_px;
-                        obstacleWidth_px = (obstacle.width / 4) * 16;
-                        obstacleHeight_px = (obstacle.height / 4) * 16;
-
-                        const obstacleTopFromTop_px = obstacleBottomFromTop_px - obstacleHeight_px;
-
-                        const collisionTolerance = 5;
-                        if (
-                            characterRight_px > obstacleX_px - collisionTolerance &&
-                            characterLeft_px < obstacleX_px + obstacleWidth_px + collisionTolerance &&
-                            characterBottomFromTop_px > obstacleTopFromTop_px - collisionTolerance &&
-                            characterTopFromTop_px < obstacleBottomFromTop_px + collisionTolerance
-                        ) {
-                            collisionDetected = true;
-                            if (isShieldActive) {
-                                setShieldHealth(prev => {
-                                    const damageToShield = obstacle.damage;
-                                    const newShieldHealth = Math.max(0, prev - damageToShield);
-                                    if (newShieldHealth <= 0) {
-                                        console.log("Shield health depleted.");
-                                        setIsShieldActive(false);
-                                    }
-                                    return newShieldHealth;
-                                });
-                            } else {
-                                const damageTaken = obstacle.damage;
-                                setHealth(prev => Math.max(0, prev - damageTaken));
-                                triggerHealthDamageEffect();
-                                triggerCharacterDamageEffect(damageTaken);
-                            }
-                        }
-
-                        // FIXED: Applied clipping logic to obstacle position when it moves off-screen
-                        // Also adjusted the repositioning logic to use a position slightly off-screen
-                        if (newPosition < -20 && !collisionDetected) {
-                             if (Math.random() < 0.7) {
-                                if (obstacleTypes.length === 0) return obstacle;
-
-                                const randomObstacleType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                                const randomOffset = Math.floor(Math.random() * 20);
-
-                                // 20% chance để có chìa khóa
-                                const hasKey = Math.random() < 0.2;
-
-                                return {
-                                    ...obstacle,
-                                    ...randomObstacleType,
-                                    id: Date.now(),
-                                    // Reposition slightly off-screen
-                                    position: 105 + randomOffset, // Changed from 120 + randomOffset to 105 + randomOffset
-                                    health: randomObstacleType.baseHealth,
-                                    maxHealth: randomObstacleType.baseHealth,
-                                    hasKey: hasKey,
-                                };
-                            } else {
-                                // Apply clipping logic even if not repositioning, though filtering handles this
-                                return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
-                            }
-                        }
-
-                        if (collisionDetected) {
-                            if (obstacle.hasKey) {
-                                handleKeyCollect(1); // Call handleKeyCollect when obstacle with key is hit
-                            }
-                            return { ...obstacle, position: newPosition, collided: true };
-                        }
-
-                        // Apply clipping logic during normal movement
-                        return { ...obstacle, position: Math.min(100, Math.max(-20, newPosition)) };
-                    })
-                    // Filter out collided obstacles and those far off-screen
-                    .filter(obstacle => {
-                        // Keep obstacles that haven't collided AND are within a reasonable range
-                        return !obstacle.collided && obstacle.position > -20;
-                    });
-            });
-
-            setClouds(prevClouds => {
-                return prevClouds
-                    .map(cloud => {
-                        const newX = cloud.x - cloud.speed;
-
-                        // FIXED: Adjusted cloud repositioning when it moves off-screen to the left
-                        if (newX < -50) { // Keep the -50 threshold
-                            const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
-                            return {
-                                ...cloud,
-                                id: Date.now() + Math.random(),
-                                // Reposition slightly off-screen to the right
-                                x: 100 + Math.random() * 30, // Changed from 120 + random to 100 + random (100 to 130)
-                                y: Math.random() * 40 + 10,
-                                size: Math.random() * 40 + 30,
-                                speed: Math.random() * 0.3 + 0.15,
-                                imgSrc: randomImgSrc
-                            };
-                        }
-
-                        // Apply clipping logic to cloud position if needed (optional, but good practice)
-                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; // Keep clouds within -50% to 120%
-                    });
-            });
-
-            setParticles(prevParticles =>
-                prevParticles
-                    .map(particle => ({
-                        ...particle,
-                        x: particle.x + particle.xVelocity,
-                        y: particle.y + particle.yVelocity,
-                        opacity: particle.opacity - 0.03,
-                        size: particle.size - 0.1
-                    }))
-                    .filter(particle => particle.opacity > 0 && particle.size > 0)
+            // OPTIMIZATION: Calculate all next states
+            const nextObstacles = calculateNextObstacles(
+                obstacles, speed, gameRef.current, characterPos, isShieldActive,
+                setShieldHealth, setHealth, triggerHealthDamageEffect, triggerCharacterDamageEffect,
+                obstacleTypes, handleKeyCollect
+            );
+            const nextClouds = calculateNextClouds(clouds, speed, cloudImageUrls);
+            const nextParticles = calculateNextParticles(particles);
+            const nextActiveCoins = calculateNextCoins(
+                activeCoins, speed, gameRef.current, characterPos, startCoinCountAnimation
             );
 
-            // --- NEW: Move coins and detect collisions ---
-            setActiveCoins(prevCoins => {
-                const gameContainer = gameRef.current;
-                if (!gameContainer) return prevCoins;
-
-                const gameWidth = gameContainer.offsetWidth;
-                const gameHeight = gameContainer.offsetHeight;
-
-                const characterWidth_px = (24 / 4) * 16;
-                const characterHeight_px = (24 / 4) * 16;
-                const characterXPercent = 5;
-                const characterX_px = (characterXPercent / 100) * gameWidth;
-
-                const groundLevelPx = (GROUND_LEVEL_PERCENT / 100) * gameHeight;
-                const characterBottomFromTop_px = gameHeight - (characterPos + groundLevelPx);
-                const characterTopFromTop_px = characterBottomFromTop_px - characterHeight_px;
-                const characterLeft_px = characterX_px;
-                const characterRight_px = characterX_px + characterWidth_px;
-
-                const characterCenterX_px = characterLeft_px + characterWidth_px / 2;
-                const characterCenterY_px = characterTopFromTop_px + characterHeight_px / 2;
-
-
-                return prevCoins
-                    .map(coin => {
-                        const coinSize_px = 40;
-
-                        const coinX_px = (coin.x / 100) * gameWidth;
-                        const coinY_px = (coin.y / 100) * gameHeight;
-
-                        let newX = coin.x;
-                        let newY = coin.y;
-                        let collisionDetected = false;
-                        let shouldBeAttracted = coin.isAttracted;
-
-
-                        if (!shouldBeAttracted) {
-                            if (
-                                characterRight_px > coinX_px &&
-                                characterLeft_px < coinX_px + coinSize_px &&
-                                characterBottomFromTop_px > coinY_px &&
-                                characterTopFromTop_px < coinY_px + coinSize_px
-                            ) {
-                                shouldBeAttracted = true;
-                            }
-                        }
-
-
-                        if (shouldBeAttracted) {
-                            const dx = characterCenterX_px - coinX_px;
-                            const dy = characterCenterY_px - coinY_px;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
-
-                            const moveStep = distance * coin.attractSpeed;
-
-                            const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
-                            const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
-
-                            const newCoinX_px = coinX_px + moveX_px;
-                            const newCoinY_px = coinY_px + moveY_px;
-
-                            newX = (newCoinX_px / gameWidth) * 100;
-                            newY = (newCoinY_px / gameHeight) * 100;
-
-                            if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
-                                collisionDetected = true;
-                                const awardedCoins = Math.floor(Math.random() * 5) + 1;
-                                console.log(`Coin collected! Awarded: ${awardedCoins}. Calling startCoinCountAnimation.`); // Debug Log 1
-                                // startCoinCountAnimation(awardedCoins); // This now triggers Firestore update internally
-                                // Call the animation first, then the Firestore update will happen after animation
-                                startCoinCountAnimation(awardedCoins);
-
-                                console.log(`Coin collected! Awarded: ${awardedCoins}`);
-                            }
-
-                        } else {
-                            newX = coin.x - coin.initialSpeedX;
-                            newY = coin.y + coin.initialSpeedY;
-                        }
-
-                        return {
-                            ...coin,
-                            x: newX,
-                            y: newY,
-                            isAttracted: shouldBeAttracted,
-                            collided: collisionDetected
-                        };
-                    })
-                    .filter(coin => {
-                        // FIXED: Adjusted coin filtering logic to keep coins within a reasonable range
-                        const isOffScreen = coin.x < -20 || coin.y > 120 || coin.y < -20; // Added check for top off-screen
-                        return !coin.collided && !isOffScreen;
-                    });
-            });
+            // OPTIMIZATION: Update all states together
+            setObstacles(nextObstacles);
+            setClouds(nextClouds);
+            setParticles(nextParticles);
+            setActiveCoins(nextActiveCoins);
 
 
         }, 30); // Tốc độ cập nhật vòng lặp game (khoảng 30ms)
@@ -1146,7 +1163,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, isShieldActive, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused]); // Dependencies updated, added isRankOpen and isBackgroundPaused
+  }, [
+      gameStarted, gameOver, jumping, characterPos, obstacles, activeCoins, clouds, particles, // Added clouds and particles to dependencies
+      isShieldActive, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused,
+      // Include functions that are called within the loop if they are not stable
+      setShieldHealth, setHealth, triggerHealthDamageEffect, triggerCharacterDamageEffect, handleKeyCollect, startCoinCountAnimation,
+      obstacleTypes, cloudImageUrls // Include these if they can change (unlikely but good practice)
+    ]); // Dependencies updated for the pure functions
 
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
@@ -1427,10 +1450,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  // Render obstacles based on their type
-  const renderObstacle = (obstacle: GameObstacle) => {
+
+  // --- OPTIMIZATION: Memoized Components for Rendering Game Elements ---
+
+  // Memoized component to render a single obstacle
+  const MemoizedObstacle = React.memo(({ obstacle, GROUND_LEVEL_PERCENT, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused }: {
+      obstacle: GameObstacle;
+      GROUND_LEVEL_PERCENT: number;
+      isStatsFullscreen: boolean;
+      isLoadingUserData: boolean;
+      isRankOpen: boolean;
+      isBackgroundPaused: boolean;
+  }) => {
     let obstacleEl;
 
+    // Calculate obstacle dimensions in pixels (assuming 1 Tailwind unit = 4px)
     const obstacleWidthPx = (obstacle.width / 4) * 16;
     const obstacleHeightPx = (obstacle.height / 4) * 16;
 
@@ -1455,7 +1489,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 src={obstacle.lottieSrc}
                 loop
                 // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused} // Added isRankOpen and isBackgroundPaused
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused}
                 className="w-full h-full"
               />
             )}
@@ -1473,7 +1507,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 src={obstacle.lottieSrc}
                 loop
                 // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused} // Added isRankOpen and isBackgroundPaused
+                autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused}
                 className="w-full h-full"
               />
               )}
@@ -1494,7 +1528,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         className="absolute"
         style={{
           bottom: `${GROUND_LEVEL_PERCENT}%`,
-          // FIXED: Applied clipping logic to obstacle rendering position
+          // Applied clipping logic to obstacle rendering position
           left: `${Math.min(100, Math.max(-20, obstacle.position))}%` // Ensure obstacle is rendered within a reasonable range
         }}
       >
@@ -1504,7 +1538,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 style={{ width: `${obstacleHealthPct * 100}%` }}
             ></div>
 
-             {/* CORRECTED: hasKey logic is now correct, icon will render when true */}
+             {/* hasKey logic is now correct, icon will render when true */}
              {obstacle.hasKey && (
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
@@ -1522,11 +1556,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         {obstacleEl}
       </div>
     );
-  };
+  });
 
-  // Render clouds
-  const renderClouds = () => {
-    return clouds.map(cloud => (
+  // Memoized component to render a single cloud
+  const MemoizedCloud = React.memo(({ cloud }: { cloud: GameCloud }) => (
       <img
         key={cloud.id}
         src={cloud.imgSrc}
@@ -1536,7 +1569,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           width: `${cloud.size}px`,
           height: `${cloud.size * 0.6}px`,
           top: `${cloud.y}%`,
-          // FIXED: Applied clipping logic to cloud rendering position
+          // Applied clipping logic to cloud rendering position
           left: `${Math.min(120, Math.max(-50, cloud.x))}%`, // Ensure cloud is rendered within a reasonable range
           opacity: 0.8
         }}
@@ -1546,12 +1579,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
         }}
       />
-    ));
-  };
+  ));
 
-  // Render dust particles
-  const renderParticles = () => {
-    return particles.map(particle => (
+  // Memoized component to render a single particle
+  const MemoizedParticle = React.memo(({ particle, GROUND_LEVEL_PERCENT }: { particle: any; GROUND_LEVEL_PERCENT: number; }) => (
       <div
         key={particle.id}
         className={`absolute rounded-full ${particle.color}`}
@@ -1563,8 +1594,37 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           opacity: particle.opacity
         }}
       ></div>
-    ));
-  };
+  ));
+
+  // Memoized component to render a single coin
+  const MemoizedCoin = React.memo(({ coin, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused }: {
+      coin: GameCoin;
+      isStatsFullscreen: boolean;
+      isLoadingUserData: boolean;
+      isRankOpen: boolean;
+      isBackgroundPaused: boolean;
+  }) => (
+      <div
+        key={coin.id}
+        className="absolute w-10 h-10"
+        style={{
+          // Applied clipping logic to coin rendering position
+          top: `${Math.min(120, Math.max(-20, coin.y))}%`, // Ensure coin is rendered within a reasonable range
+          left: `${Math.min(120, Math.max(-20, coin.x))}%`, // Ensure coin is rendered within a reasonable range
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none'
+        }}
+      >
+        <DotLottieReact
+          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
+          loop
+          // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused}
+          className="w-full h-full"
+        />
+      </div>
+  ));
+
 
   // --- NEW: Render Shield ---
   const renderShield = () => {
@@ -1598,38 +1658,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
           loop
           // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused} // Added isRankOpen and isBackgroundPaused
+          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused}
           className="w-full h-full"
         />
       </div>
     );
   };
 
-
-  // --- NEW: Render Coins ---
-  const renderCoins = () => {
-    return activeCoins.map(coin => (
-      <div
-        key={coin.id}
-        className="absolute w-10 h-10"
-        style={{
-          // FIXED: Applied clipping logic to coin rendering position
-          top: `${Math.min(120, Math.max(-20, coin.y))}%`, // Ensure coin is rendered within a reasonable range
-          left: `${Math.min(120, Math.max(-20, coin.x))}%`, // Ensure coin is rendered within a reasonable range
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none'
-        }}
-      >
-        <DotLottieReact
-          src="https://lottie.host/9a6ca3bb-cc97-4e95-ba15-3f67db78868c/i88e6svjxV.lottie"
-          loop
-          // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused} // Added isRankOpen and isBackgroundPaused
-          className="w-full h-full"
-        />
-      </div>
-    ));
-  };
 
 
   // NEW: Function to toggle full-screen stats
@@ -1710,21 +1745,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                <EnhancedLeaderboard onClose={toggleRank} /> {/* Render Rank component and pass toggleRank as onClose */}
            </ErrorBoundary>
        );
+  );
   } else {
       // Default game content
       mainContent = (
           <div
             ref={gameRef}
-            // THAY ĐỔI BƯỚC 2 Ở ĐÂY: className từ h-screen thành h-full
+            // className from h-screen to h-full
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer`}
-            // Đã bỏ style={{ overflowX: 'hidden' }} vì overflow-hidden đã bao gồm
+            // Removed style={{ overflowX: 'hidden' }} as overflow-hidden covers this
             onClick={handleTap} // Handle tap for start/restart
           >
             <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
 
             <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
 
-            {renderClouds()}
+            {/* OPTIMIZATION: Render memoized clouds */}
+            {clouds.map(cloud => <MemoizedCloud key={cloud.id} cloud={cloud} />)}
 
             <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
@@ -1740,11 +1777,33 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             {renderShield()}
 
-            {obstacles.map(obstacle => renderObstacle(obstacle))}
+            {/* OPTIMIZATION: Render memoized obstacles */}
+            {obstacles.map(obstacle => (
+                <MemoizedObstacle
+                    key={obstacle.id}
+                    obstacle={obstacle}
+                    GROUND_LEVEL_PERCENT={GROUND_LEVEL_PERCENT}
+                    isStatsFullscreen={isStatsFullscreen}
+                    isLoadingUserData={isLoadingUserData}
+                    isRankOpen={isRankOpen}
+                    isBackgroundPaused={isBackgroundPaused}
+                />
+            ))}
 
-            {renderCoins()}
+            {/* OPTIMIZATION: Render memoized coins */}
+            {activeCoins.map(coin => (
+                <MemoizedCoin
+                    key={coin.id}
+                    coin={coin}
+                    isStatsFullscreen={isStatsFullscreen}
+                    isLoadingUserData={isLoadingUserData}
+                    isRankOpen={isRankOpen}
+                    isBackgroundPaused={isBackgroundPaused}
+                />
+            ))}
 
-            {renderParticles()}
+            {/* OPTIMIZATION: Render memoized particles */}
+            {particles.map(particle => <MemoizedParticle key={particle.id} particle={particle} GROUND_LEVEL_PERCENT={GROUND_LEVEL_PERCENT} />)}
 
             {/* Main header container */}
             {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
@@ -1947,7 +2006,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                         loop
                         // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused} // Added isRankOpen and isBackgroundPaused
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused}
                         className="w-full h-full"
                      />
                   </div>
@@ -2038,9 +2097,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               // Use startCoinCountAnimation to handle coin rewards from chests
               onCoinReward={startCoinCountAnimation}
               onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-              // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở VÀ game đang tạm dừng do chạy nền)
-              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused} // Added isRankOpen and isBackgroundPaused
-              isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
+              // Pass game paused state (including when stats/rank are open AND background paused)
+              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused}
+              isStatsFullscreen={isStatsFullscreen} // Pass isStatsFullscreen state
               currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
             />
 
@@ -2050,7 +2109,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   return (
-    // THAY ĐỔI BƯỚC 3 Ở ĐÂY: Bọc SidebarLayout trong div mới
     // Outermost container that strictly controls viewport size and overflow
     <div className="w-screen h-screen overflow-hidden bg-gray-950"> {/* Fallback background for the entire page */}
       <SidebarLayout
