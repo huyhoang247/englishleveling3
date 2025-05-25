@@ -26,6 +26,7 @@ const App = () => {
   const [selectedTowerType, setSelectedTowerType] = useState(null);
   const [showTowerMenu, setShowTowerMenu] = useState(false);
   const [inspectingTowerId, setInspectingTowerId] = useState(null);
+  const [gameSpeed, setGameSpeed] = useState(1); // 1x, 2x, 3x
 
   const [towers, setTowers] = useState([]);
   const [enemies, setEnemies] = useState([]);
@@ -139,18 +140,21 @@ const App = () => {
       const dx = targetX - enemy.x;
       const dy = targetY - enemy.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Áp dụng game speed multiplier
+      const effectiveSpeed = enemy.speed * gameSpeed;
 
-      if (distance < enemy.speed) {
+      if (distance < effectiveSpeed) {
         return { ...enemy, x: targetX, y: targetY, pathIndex: enemy.pathIndex + 1 };
       } else {
         return {
           ...enemy,
-          x: enemy.x + (dx / distance) * enemy.speed,
-          y: enemy.y + (dy / distance) * enemy.speed
+          x: enemy.x + (dx / distance) * effectiveSpeed,
+          y: enemy.y + (dy / distance) * effectiveSpeed
         };
       }
     }).filter(Boolean));
-  }, [path]); // Thêm path vào dependency array
+  }, [path, gameSpeed]); // Thêm gameSpeed vào dependency
 
   const towerShooting = useCallback(() => {
     towers.forEach(tower => {
@@ -240,8 +244,11 @@ const App = () => {
       const dx = projectile.targetX - projectile.x;
       const dy = projectile.targetY - projectile.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Tăng tốc projectile theo game speed
+      const effectiveSpeed = projectile.speed * gameSpeed;
 
-      if (distance < projectile.speed) { 
+      if (distance < effectiveSpeed) { 
         setEnemies(prevEnemies => prevEnemies.map(enemy => {
           const enemyDx = enemy.x - projectile.targetX;
           const enemyDy = enemy.y - projectile.targetY;
@@ -271,19 +278,21 @@ const App = () => {
       }
       return {
         ...projectile,
-        x: projectile.x + (dx / distance) * projectile.speed,
-        y: projectile.y + (dy / distance) * projectile.speed
+        x: projectile.x + (dx / distance) * effectiveSpeed,
+        y: projectile.y + (dy / distance) * effectiveSpeed
       };
     }).filter(Boolean));
-  }, []);
+  }, [gameSpeed]); // Thêm gameSpeed vào dependency
 
   const moveEnemyProjectiles = useCallback(() => {
     setEnemyProjectiles(prevProjectiles => prevProjectiles.map(projectile => {
       const dx = projectile.targetX - projectile.x;
       const dy = projectile.targetY - projectile.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      const effectiveSpeed = projectile.speed * gameSpeed;
 
-      if (distance < projectile.speed) {
+      if (distance < effectiveSpeed) {
         setTowers(prevTowers => prevTowers.map(tower => {
           if (tower.id === projectile.targetTowerId) {
             const newHp = (tower.hp || 100) - projectile.damage;
@@ -299,11 +308,11 @@ const App = () => {
       
       return {
         ...projectile,
-        x: projectile.x + (dx / distance) * projectile.speed,
-        y: projectile.y + (dy / distance) * projectile.speed
+        x: projectile.x + (dx / distance) * effectiveSpeed,
+        y: projectile.y + (dy / distance) * effectiveSpeed
       };
     }).filter(Boolean));
-  }, []);
+  }, [gameSpeed]);
 
   // Lỗi dependency array trong useEffect đã được sửa
   useEffect(() => {
@@ -311,15 +320,19 @@ const App = () => {
         clearInterval(gameLoopRef.current);
         return;
     }
+    // Giảm interval khi tăng speed để game mượt hơn
+    const baseInterval = 50;
+    const adjustedInterval = Math.max(16, baseInterval / gameSpeed); // Tối thiểu 16ms (60fps)
+    
     gameLoopRef.current = setInterval(() => {
       moveEnemies();
       towerShooting();
       enemyShooting();
       moveProjectiles();
       moveEnemyProjectiles();
-    }, 50); 
+    }, adjustedInterval); 
     return () => clearInterval(gameLoopRef.current);
-  }, [gameState, moveEnemies, towerShooting, enemyShooting, moveProjectiles, moveEnemyProjectiles, towers, enemies]); // Thêm towers và enemies
+  }, [gameState, moveEnemies, towerShooting, enemyShooting, moveProjectiles, moveEnemyProjectiles, towers, enemies, gameSpeed]); // Thêm gameSpeed
 
   useEffect(() => {
     if (gameState !== 'playing') {
@@ -478,7 +491,9 @@ const App = () => {
             refundAmount += Math.floor(towerTypeData.upgradeCosts[i] * 0.5); 
         }
     }
-    return refundAmount;
+    // Giảm giá bán theo HP hiện tại
+    const hpPercentage = tower.hp / tower.maxHp;
+    return Math.floor(refundAmount * hpPercentage);
   };
 
   const handleSellTower = (towerId) => {
@@ -503,6 +518,7 @@ const App = () => {
     setKeys(0); 
     setWave(1);
     setScore(0);
+    setGameSpeed(1); // Reset speed về 1x
     setTowers([]);
     setEnemies([]);
     setProjectiles([]);
@@ -740,6 +756,19 @@ const App = () => {
             {gameState === 'playing' ? '⏸️' : '▶️'}
           </button>
           
+          {/* Nút Speed Control */}
+          <button
+            onClick={() => setGameSpeed(prev => prev >= 3 ? 1 : prev + 1)}
+            className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-bold text-white text-base sm:text-lg shadow-md transition-transform active:scale-95 ${
+              gameSpeed === 1 ? 'bg-green-600 hover:bg-green-700' : 
+              gameSpeed === 2 ? 'bg-yellow-600 hover:bg-yellow-700' : 
+              'bg-red-600 hover:bg-red-700'
+            }`}
+            disabled={gameState !== 'playing'}
+          >
+            ⚡ {gameSpeed}x
+          </button>
+          
           <button
             onClick={() => { setShowTowerMenu(!showTowerMenu); setInspectingTowerId(null); setSelectedTowerType(null); }}
             className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-bold text-white text-base sm:text-lg shadow-md transition-transform active:scale-95 ${
@@ -936,6 +965,20 @@ const App = () => {
         }
         .animate-pulse {
             animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        /* Thêm hiệu ứng cho speed button */
+        .speed-1x { background: linear-gradient(135deg, #059669, #047857); }
+        .speed-2x { background: linear-gradient(135deg, #d97706, #b45309); }
+        .speed-3x { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+
+        /* Smooth animation cho tất cả transitions */
+        * {
+          box-sizing: border-box;
+        }
+
+        .transition-all {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
       `}</style>
     </div>
