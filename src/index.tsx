@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx'; // Assuming Home is in background-game.tsx
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
-import Profile from './profile.tsx';
+import Profile from './newgame.tsx';
 import Quiz from './quiz/quiz-app-home.tsx';
 import AuthComponent from './auth.js';
 import { auth, db } from './firebase.js'; // Import đối tượng auth và db của Firebase
