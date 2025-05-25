@@ -3,7 +3,7 @@ import React, { useReducer } from 'react';
 // Constants
 const BOARD_SIZE = 9;
 const COLORS = ['#EF4444', '#3B82F6', '#22C5E0', '#FACC15', '#A855F7', '#EC4899']; // Red, Blue, Cyan, Yellow, Purple, Pink
-const BALLS_TO_ADD = 3;
+const BALLS_TO_ADD = 3; // Number of balls to add/preview each turn
 const LINE_LENGTH_TO_CLEAR = 5;
 
 // --- Type Definitions ---
@@ -19,10 +19,10 @@ interface Ball extends CellPosition {
 type Board = (string | null)[][];
 
 interface GameState {
-  board: Board;
+  board: Board; // Stores actual (matured) balls
   score: number;
   selectedBall: Ball | null;
-  nextBalls: string[];
+  previewBalls: Ball[]; // Stores upcoming balls with their r, c, color
   gameOver: boolean;
   message: string;
   isPlayerTurn: boolean;
@@ -52,10 +52,8 @@ const getEmptyCells = (board: Board): CellPosition[] => {
 // --- Game Logic Functions ---
 
 const isPathPossible = (board: Board, start: CellPosition, end: CellPosition): boolean => {
-  // Ensure start has a ball and end is empty for a valid move path check.
-  // The actual placement logic will handle if end already has a ball (re-selection).
+  // Ensure start has a ball. End cell must be empty for a move.
   if (!board[start.r][start.c] || board[end.r][end.c]) return false;
-
 
   const queue: CellPosition[] = [{ r: start.r, c: start.c }];
   const visited = new Set<string>([`${start.r}-${start.c}`]);
@@ -63,7 +61,6 @@ const isPathPossible = (board: Board, start: CellPosition, end: CellPosition): b
 
   while (queue.length > 0) {
     const current = queue.shift()!;
-    // Path found if current reaches end. The end cell itself is allowed to be the destination.
     if (current.r === end.r && current.c === end.c) return true;
 
     for (const dir of directions) {
@@ -85,7 +82,7 @@ const isPathPossible = (board: Board, start: CellPosition, end: CellPosition): b
 
 const checkAndClearLinesForPoints = (
   board: Board,
-  checkPositions: CellPosition[],
+  checkPositions: CellPosition[], // Positions of newly placed/moved balls
 ): { newBoard: Board; clearedCount: number; linesFound: boolean } => {
   let newBoard = board.map(row => [...row]);
   let totalClearedCount = 0;
@@ -93,8 +90,8 @@ const checkAndClearLinesForPoints = (
   const ballsToClearGlobal = new Set<string>();
 
   const directions = [
-    { dr: 0, dc: 1 }, { dr: 1, dc: 0 },
-    { dr: 1, dc: 1 }, { dr: 1, dc: -1 }
+    { dr: 0, dc: 1 }, { dr: 1, dc: 0 }, // Horizontal, Vertical
+    { dr: 1, dc: 1 }, { dr: 1, dc: -1 }  // Diagonal
   ];
 
   for (const { r: r_check, c: c_check } of checkPositions) {
@@ -102,30 +99,27 @@ const checkAndClearLinesForPoints = (
     if (!colorToMatch) continue;
 
     directions.forEach(({ dr, dc }) => {
-      let lineInDirection = 0;
-      const tempLine: CellPosition[] = [];
-      // Positive pass
-      for(let i = 0; i < BOARD_SIZE; i++){
+      const line: CellPosition[] = [{r: r_check, c: c_check}];
+      // Positive direction
+      for (let i = 1; i < BOARD_SIZE; i++) {
         const r = r_check + dr * i;
         const c = c_check + dc * i;
-        if(r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && newBoard[r][c] === colorToMatch){
-          tempLine.push({r,c});
-          lineInDirection++;
+        if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && newBoard[r][c] === colorToMatch) {
+          line.push({ r, c });
         } else break;
       }
-      // Negative pass (excluding start point)
-      for(let i = 1; i < BOARD_SIZE; i++){
+      // Negative direction
+      for (let i = 1; i < BOARD_SIZE; i++) {
         const r = r_check - dr * i;
         const c = c_check - dc * i;
-        if(r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && newBoard[r][c] === colorToMatch){
-          tempLine.push({r,c});
-          lineInDirection++;
+        if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && newBoard[r][c] === colorToMatch) {
+          line.push({ r, c });
         } else break;
       }
 
-      if (lineInDirection >= LINE_LENGTH_TO_CLEAR) {
+      if (line.length >= LINE_LENGTH_TO_CLEAR) {
         anyLinesFound = true;
-        tempLine.forEach(ball => ballsToClearGlobal.add(`${ball.r}-${ball.c}`));
+        line.forEach(ball => ballsToClearGlobal.add(`${ball.r}-${ball.c}`));
       }
     });
   }
@@ -133,7 +127,7 @@ const checkAndClearLinesForPoints = (
   if (anyLinesFound) {
     ballsToClearGlobal.forEach(key => {
       const [row, col] = key.split('-').map(Number);
-      if (newBoard[row][col]) {
+      if (newBoard[row][col]) { // Check if not already cleared by another line
           newBoard[row][col] = null;
           totalClearedCount++;
       }
@@ -145,48 +139,139 @@ const checkAndClearLinesForPoints = (
 };
 
 
-const addBallsToBoard = (
+// Places regular balls, used for initial setup.
+const addRegularBallsToBoard = (
   currentBoard: Board,
-  ballsArray: string[]
-): { updatedBoard: Board; ballsPlacedCount: number; allBallsPlaced: boolean; placedPositions: Ball[] } => {
+  colors: string[]
+): { updatedBoard: Board; allBallsPlaced: boolean; placedPositions: CellPosition[] } => {
   let newBoard = currentBoard.map(row => [...row]);
   const emptyCells = getEmptyCells(newBoard);
-  let ballsPlacedCount = 0;
-  const placedPositions: Ball[] = [];
+  const placedPositions: CellPosition[] = [];
 
-  if (emptyCells.length === 0) {
-    return { updatedBoard: newBoard, ballsPlacedCount, allBallsPlaced: false, placedPositions };
+  if (emptyCells.length < colors.length) {
+      // Not enough space for all balls, place what we can
+      for (let i = 0; i < emptyCells.length; i++) {
+        const { r, c } = emptyCells[i]; // Simplistic placement for this scenario
+        newBoard[r][c] = colors[i];
+        placedPositions.push({ r, c });
+    }
+    return { updatedBoard: newBoard, allBallsPlaced: false, placedPositions };
   }
 
-  for (let i = 0; i < ballsArray.length; i++) {
-    if (emptyCells.length === 0) break;
+  for (const color of colors) {
+    if (emptyCells.length === 0) break; // Should not happen if previous check passed
     const randomIndex = Math.floor(Math.random() * emptyCells.length);
     const { r, c } = emptyCells.splice(randomIndex, 1)[0];
-    newBoard[r][c] = ballsArray[i];
-    placedPositions.push({ r, c, color: ballsArray[i] });
-    ballsPlacedCount++;
+    newBoard[r][c] = color;
+    placedPositions.push({ r, c });
   }
-  return { updatedBoard: newBoard, ballsPlacedCount, allBallsPlaced: ballsPlacedCount === ballsArray.length, placedPositions };
+  return { updatedBoard: newBoard, allBallsPlaced: true, placedPositions };
 };
 
-const generateNextBalls = (): string[] => {
-  return Array(BALLS_TO_ADD).fill(null).map(getRandomColor);
+// Generates colors for new balls (regular or preview)
+const generateBallColors = (count: number): string[] => {
+  return Array(count).fill(null).map(getRandomColor);
 };
+
+// Places new preview balls on the board
+const placeNewPreviewBalls = (
+  currentBoard: Board, // Board with only regular balls
+  colorsToPlace: string[]
+): { newPreviewBalls: Ball[]; allPlaced: boolean } => {
+  const emptyCells = getEmptyCells(currentBoard);
+  const newPreviewBalls: Ball[] = [];
+  let availableEmptyCells = [...emptyCells];
+
+  if (availableEmptyCells.length === 0 && colorsToPlace.length > 0) {
+    return { newPreviewBalls, allPlaced: false };
+  }
+
+  for (const color of colorsToPlace) {
+    if (availableEmptyCells.length === 0) break;  
+    const randomIndex = Math.floor(Math.random() * availableEmptyCells.length);
+    const { r, c } = availableEmptyCells.splice(randomIndex, 1)[0];
+    newPreviewBalls.push({ r, c, color });
+  }
+  
+  return {  
+    newPreviewBalls,  
+    allPlaced: newPreviewBalls.length === colorsToPlace.length  
+  };
+};
+
 
 // --- Reducer ---
 const initialStateFactory = (): GameState => {
-  const initialEmptyBoard = createInitialBoard();
-  const firstBalls = generateNextBalls(); // Generate first set of balls to add
-  const { updatedBoard: boardWithInitialBalls } = addBallsToBoard(initialEmptyBoard, firstBalls);
+  let board = createInitialBoard();
+  let score = 0;
+  let selectedBall = null;
+  let previewBalls: Ball[] = [];
+  let gameOver = false;
+  let message = 'Chọn một quả bóng để di chuyển.';
+  let isPlayerTurn = true;
+
+  // 1. Add initial regular balls
+  const initialRegularBallColors = generateBallColors(BALLS_TO_ADD);
+  const { updatedBoard: boardAfterInitialRegular, allBallsPlaced: regularPlaced } =
+    addRegularBallsToBoard(board, initialRegularBallColors);
   
+  board = boardAfterInitialRegular;
+
+  if (!regularPlaced && initialRegularBallColors.length > 0) {
+    gameOver = true;
+    message = 'Lỗi khởi tạo: không đủ chỗ cho bóng ban đầu.';
+  }
+
+  // 2. If not game over, add initial preview balls
+  if (!gameOver) {
+    const initialPreviewColors = generateBallColors(BALLS_TO_ADD);
+    const { newPreviewBalls, allPlaced: previewsPlaced } =  
+      placeNewPreviewBalls(board, initialPreviewColors);
+    previewBalls = newPreviewBalls;
+
+    if (!previewsPlaced && initialPreviewColors.length > 0) {
+      gameOver = true;
+      message = 'Trò chơi kết thúc! Không đủ chỗ cho bóng xem trước ban đầu.';
+      previewBalls = [];  
+    }
+  }
+  
+  // More robust game over check at start, e.g., if board is tiny
+  if(!gameOver && getEmptyCells(board).length - previewBalls.length === 0) { // All cells filled by balls or previews
+    let canMove = false;
+    const ballsOnBoard: CellPosition[] = [];
+    for(let r_idx=0; r_idx<BOARD_SIZE; r_idx++) for(let c_idx=0; c_idx<BOARD_SIZE; c_idx++) if(board[r_idx][c_idx]) ballsOnBoard.push({r:r_idx, c:c_idx});
+    const emptyCellsForMove = getEmptyCells(board); // For pathfinding, previews are not obstacles
+
+    if (ballsOnBoard.length > 0 && emptyCellsForMove.length > 0) {
+        for (const ball of ballsOnBoard) {
+            for (const empty of emptyCellsForMove) {
+                if (isPathPossible(board, ball, empty)) {
+                    canMove = true; break;
+                }
+            }
+            if (canMove) break;
+        }
+    } else if (ballsOnBoard.length === 0 && emptyCellsForMove.length > 0) {
+        canMove = true; // Empty board, game continues
+    }
+
+
+    if (!canMove && ballsOnBoard.length > 0) {
+        gameOver = true;
+        message = "Trò chơi kết thúc! Không có nước đi nào ngay từ đầu.";
+    }
+  }
+
+
   return {
-    board: boardWithInitialBalls,
-    score: 0,
-    selectedBall: null,
-    nextBalls: generateNextBalls(), // Preview for the *next* turn
-    gameOver: false,
-    message: 'Chọn một quả bóng để di chuyển.',
-    isPlayerTurn: true,
+    board,
+    score,
+    selectedBall,
+    previewBalls,
+    gameOver,
+    message: gameOver ? message : 'Chọn một quả bóng để di chuyển.',
+    isPlayerTurn: !gameOver,
   };
 };
 
@@ -199,110 +284,149 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.gameOver || !state.isPlayerTurn) return state;
       const { r, c } = action.payload;
 
-      if (state.selectedBall) {
-        if (state.selectedBall.r === r && state.selectedBall.c === c) {
+      if (state.selectedBall) { // A ball is already selected
+        if (state.selectedBall.r === r && state.selectedBall.c === c) { // Clicked selected ball again
           return { ...state, selectedBall: null, message: 'Đã bỏ chọn. Chọn một quả bóng.' };
         }
-        if (state.board[r][c]) {
+        if (state.board[r][c]) { // Clicked another ball
           return { ...state, selectedBall: { r, c, color: state.board[r][c]! }, message: 'Đã chọn bóng mới. Chọn ô trống để di chuyển.' };
         }
 
+        // Clicked an empty cell to move
         if (isPathPossible(state.board, state.selectedBall, { r, c })) {
-          let newBoard = state.board.map(row => [...row]);
-          newBoard[r][c] = state.selectedBall.color;
-          newBoard[state.selectedBall.r][state.selectedBall.c] = null;
+          let boardAfterPlayerMove = state.board.map(row => [...row]);
+          boardAfterPlayerMove[r][c] = state.selectedBall.color;
+          boardAfterPlayerMove[state.selectedBall.r][state.selectedBall.c] = null;
 
-          const { newBoard: boardAfterPlayerMoveClear, clearedCount, linesFound } = 
-            checkAndClearLinesForPoints(newBoard, [{r, c, color: state.selectedBall.color}]);
+          const {  
+              newBoard: boardAfterPlayerClear,  
+              clearedCount: playerClearedCount,  
+              linesFound: playerLinesFound  
+          } = checkAndClearLinesForPoints(boardAfterPlayerMove, [{r, c}]);
 
-          if (linesFound) {
-            return {
-              ...state,
-              board: boardAfterPlayerMoveClear,
-              score: state.score + clearedCount * 10,
-              selectedBall: null,
-              nextBalls: generateNextBalls(),
-              message: `Tuyệt vời! +${clearedCount * 10} điểm.`,
-              isPlayerTurn: true, 
-            };
+          let currentScore = state.score;
+          let currentBoard = boardAfterPlayerClear;
+          let currentMessage = '';
+          let nextPreviewBalls: Ball[] = [];
+          let allNewPreviewsWerePlaced = true;
+
+          if (playerLinesFound) {
+            currentScore += playerClearedCount * 10;
+            currentMessage = `Tuyệt vời! +${playerClearedCount * 10} điểm.`;
+            // Discard old previews, generate new ones
+            const previewColors = generateBallColors(BALLS_TO_ADD);
+            const { newPreviewBalls: placed, allPlaced } = placeNewPreviewBalls(currentBoard, previewColors);
+            nextPreviewBalls = placed;
+            allNewPreviewsWerePlaced = allPlaced;
           } else {
-            const { updatedBoard: boardWithNewBalls, allBallsPlaced, placedPositions } = 
-              addBallsToBoard(boardAfterPlayerMoveClear, state.nextBalls);
-            
-            const { newBoard: boardAfterNewBallsClear, clearedCount: newBallsClearedCount, linesFound: newBallsLinesFound } =
-              checkAndClearLinesForPoints(boardWithNewBalls, placedPositions);
+            currentMessage = 'Di chuyển thành công.';
+            // Mature preview balls
+            let boardWithMaturedBalls = currentBoard.map(row => [...row]);
+            const maturedBallCheckPositions: CellPosition[] = [];
 
-            let currentScore = state.score;
-            let currentMessage = 'Di chuyển thành công. Đến lượt bóng mới.';
-            if (newBallsLinesFound) {
-                currentScore += newBallsClearedCount * 10;
-                currentMessage = `Bóng mới tạo thành hàng! +${newBallsClearedCount * 10} điểm.`;
+            for (const pBall of state.previewBalls) {
+              if (boardWithMaturedBalls[pBall.r][pBall.c] === null) { // If cell is still empty
+                boardWithMaturedBalls[pBall.r][pBall.c] = pBall.color;
+                maturedBallCheckPositions.push({ r: pBall.r, c: pBall.c });
+              }
             }
             
-            const nextGeneratedBalls = generateNextBalls();
-            const finalBoardState = boardAfterNewBallsClear;
-            const finalEmptyCells = getEmptyCells(finalBoardState);
-            let isGameOver = false;
-            let gameOverMessage = '';
+            currentBoard = boardWithMaturedBalls; // Update currentBoard before checking lines from matured balls
 
-            if (!allBallsPlaced && finalEmptyCells.length < BALLS_TO_ADD - (BALLS_TO_ADD - placedPositions.length)) {
-                // This condition means not all balls from nextBalls could be placed
-                // and the remaining empty cells are fewer than what was needed.
-                isGameOver = true;
-                gameOverMessage = 'Trò chơi kết thúc! Bảng gần đầy, không thể thêm bóng.';
-            } else if (finalEmptyCells.length === 0) {
-                isGameOver = true;
-                gameOverMessage = 'Trò chơi kết thúc! Bảng đã đầy.';
-            }
-            
-            if (!isGameOver) {
-                let canMove = false;
-                const ballsOnBoard: Ball[] = [];
-                for(let i=0; i<BOARD_SIZE; i++){
-                    for(let j=0; j<BOARD_SIZE; j++){
-                        if(finalBoardState[i][j]) ballsOnBoard.push({r:i, c:j, color: finalBoardState[i][j]!});
-                    }
+            if (maturedBallCheckPositions.length > 0) {
+                const {  
+                    newBoard: boardAfterMatureClear,  
+                    clearedCount: maturedClearedCount,  
+                    linesFound: maturedLinesFound  
+                } = checkAndClearLinesForPoints(currentBoard, maturedBallCheckPositions);
+                
+                currentBoard = boardAfterMatureClear; // Update currentBoard again after potential clear
+                if (maturedLinesFound) {
+                    currentScore += maturedClearedCount * 10;
+                    currentMessage = `Bóng mới tạo thành hàng! +${maturedClearedCount * 10} điểm.`;
                 }
-                if(finalEmptyCells.length > 0 && ballsOnBoard.length > 0){
+            }
+
+            // Generate and place new preview balls
+            const previewColors = generateBallColors(BALLS_TO_ADD);
+            const { newPreviewBalls: placed, allPlaced } = placeNewPreviewBalls(currentBoard, previewColors);
+            nextPreviewBalls = placed;
+            allNewPreviewsWerePlaced = allPlaced;
+          }
+
+          // --- Game Over Checks ---
+          let gameIsOver = false;
+          let finalMessage = currentMessage;
+
+          if (!allNewPreviewsWerePlaced && generateBallColors(BALLS_TO_ADD).length > 0) {
+            gameIsOver = true;
+            finalMessage = 'Trò chơi kết thúc! Không đủ chỗ cho bóng xem trước.';
+          }
+          
+          if (!gameIsOver) { // Check for no moves only if not already game over by board full/preview placement fail
+            const emptyCellsOnBoard = getEmptyCells(currentBoard);
+            // If board is full of regular balls (no empty cells) AND no previews could be placed (covered by !allNewPreviewsWerePlaced)
+            // OR if board is full and no previews are even needed (BALLS_TO_ADD = 0, not our case)
+            if (emptyCellsOnBoard.length === 0 && nextPreviewBalls.length < BALLS_TO_ADD && BALLS_TO_ADD > 0) {
+                // This means board is full and we failed to place all required previews
+                gameIsOver = true;
+                finalMessage = 'Trò chơi kết thúc! Bảng đã đầy, không thể thêm bóng xem trước.';
+            } else if (emptyCellsOnBoard.length === 0 && BALLS_TO_ADD === 0) { // Edge case: board full, no previews needed
+                // This means board is full, game might still be playable if moves exist
+                // but if no moves, then game over. This specific condition is "board full".
+                // If BALLS_TO_ADD > 0, this is covered by the first check in this block.
+            }
+
+
+            if (!gameIsOver) { // Check for no moves only if not already game over by board full/preview placement fail
+                let canMove = false;
+                const ballsOnBoard: CellPosition[] = [];
+                for(let r_idx=0; r_idx<BOARD_SIZE; r_idx++) for(let c_idx=0; c_idx<BOARD_SIZE; c_idx++) if(currentBoard[r_idx][c_idx]) ballsOnBoard.push({r:r_idx,c:c_idx});
+                
+                // Empty cells for pathfinding are actual empty cells on currentBoard
+                const emptyCellsForPathfinding = getEmptyCells(currentBoard);
+
+                if (ballsOnBoard.length > 0 && emptyCellsForPathfinding.length > 0) {
                     for(const ball of ballsOnBoard){
-                        for(const empty of finalEmptyCells){
-                            // Check path from ball to empty cell (target for move)
-                            if(isPathPossible(finalBoardState, ball, empty)){
-                                canMove = true;
-                                break;
+                        for(const empty of emptyCellsForPathfinding){
+                            if(isPathPossible(currentBoard, ball, empty)){
+                                canMove = true; break;
                             }
                         }
                         if(canMove) break;
                     }
-                } else if (ballsOnBoard.length === 0 && finalEmptyCells.length > 0) {
-                    // Board is not full but has no balls to move (edge case after massive clear)
-                    canMove = true; // Game continues, new balls will be added.
-                } else if (finalEmptyCells.length === 0) {
-                    // No empty cells already covered by isGameOver = true
+                } else if (ballsOnBoard.length === 0 && emptyCellsForPathfinding.length > 0) {
+                    // Board became empty after clears, game continues, new previews will fill.
+                    canMove = true;
+                } else if (emptyCellsForPathfinding.length === 0 && ballsOnBoard.length > 0) {
+                    // Board is full of balls, no empty cells to move to.
+                    canMove = false;
                 }
 
 
-                if (!canMove && ballsOnBoard.length > 0) { // Only game over if there are balls but none can move
-                    isGameOver = true;
-                    gameOverMessage = 'Trò chơi kết thúc! Không còn nước đi nào.';
+                if (!canMove && ballsOnBoard.length > 0) {  
+                    gameIsOver = true;
+                    finalMessage = 'Trò chơi kết thúc! Không còn nước đi nào.';
                 }
             }
-
-            return {
-              ...state,
-              board: finalBoardState,
-              score: currentScore,
-              selectedBall: null,
-              nextBalls: nextGeneratedBalls,
-              message: isGameOver ? gameOverMessage : currentMessage,
-              gameOver: isGameOver,
-              isPlayerTurn: !isGameOver,
-            };
           }
-        } else {
+
+
+          return {
+            ...state,
+            board: currentBoard,
+            score: currentScore,
+            selectedBall: null,
+            previewBalls: gameIsOver ? [] : nextPreviewBalls,
+            gameOver: gameIsOver,
+            message: gameIsOver ? finalMessage : currentMessage,
+            isPlayerTurn: !gameIsOver,
+          };
+
+        } else { // Path not possible
           return { ...state, message: 'Không có đường đi! Chọn ô khác hoặc bóng khác.' };
         }
-      } else {
+      } else { // No ball selected, try to select one
         if (state.board[r][c]) {
           return { ...state, selectedBall: { r, c, color: state.board[r][c]! }, message: 'Đã chọn bóng. Chọn ô trống để di chuyển.' };
         } else {
@@ -312,7 +436,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
     default:
       // https://github.com/microsoft/TypeScript/issues/13499
-      const exhaustiveCheck: never = action;
+      // const exhaustiveCheck: never = action; // Removed as it causes issues with some TS setups
       return state;
   }
 }
@@ -320,7 +444,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 // --- Component ---
 function App() {
   const [gameState, dispatch] = useReducer(gameReducer, undefined, initialStateFactory);
-  const { board, score, selectedBall, nextBalls, gameOver, message } = gameState;
+  const { board, score, selectedBall, previewBalls, gameOver, message } = gameState;
 
   const handleCellClick = (r: number, c: number) => {
     dispatch({ type: 'CELL_CLICK', payload: { r, c } });
@@ -356,18 +480,9 @@ function App() {
             Chơi lại
           </button>
         </div>
-
-        <div className="mb-3 sm:mb-4 flex justify-center items-center space-x-1.5 sm:space-x-2 bg-slate-700 p-2 sm:p-3 rounded-lg">
-          <span className="text-xs sm:text-sm text-gray-300 mr-1">Sắp tới:</span>
-          {nextBalls.map((color, index) => (
-            <div
-              key={index}
-              className="w-5 h-5 sm:w-6 sm:h-6 rounded-full shadow-inner border-2 border-slate-600"
-              style={{ backgroundColor: color }}
-            />
-          ))}
-        </div>
         
+        {/* Removed "Sắp tới" (Next Balls) display area */}
+
         <div aria-live="polite" aria-atomic="true" className="min-h-[60px] sm:min-h-[76px] flex items-center justify-center">
             {gameOver && (
             <div className="my-3 sm:my-4 p-3 sm:p-4 bg-red-600/90 text-white text-center rounded-lg shadow-lg flex items-center justify-center w-full animate-fadeIn">
@@ -388,33 +503,48 @@ function App() {
 
         <main className="grid grid-cols-9 gap-[3px] sm:gap-1 bg-slate-900/80 p-1.5 sm:p-2 rounded-lg shadow-inner w-full">
           {board.map((row, rIndex) =>
-            row.map((cellColor, cIndex) => (
-              <div
-                key={`${rIndex}-${cIndex}`}
-                className={`aspect-square flex items-center justify-center rounded-sm sm:rounded-md cursor-pointer transition-all duration-200 ease-out
-                                  ${selectedBall && selectedBall.r === rIndex && selectedBall.c === cIndex 
-                                    ? 'bg-slate-600 scale-105 ring-1 ring-inset ring-cyan-400'
-                                    : 'bg-slate-700/80 hover:bg-slate-600/90'}`}
-                onClick={() => handleCellClick(rIndex, cIndex)}
-                role="button"
-                aria-label={`Cell ${rIndex}-${cIndex} ${cellColor ? 'contains a ' + cellColor + ' ball' : 'is empty'}`}
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCellClick(rIndex,cIndex)}}
-              >
-                {cellColor && (
-                  <div
-                    className="w-[70%] h-[70%] sm:w-[75%] sm:h-[75%] rounded-full shadow-lg transition-transform duration-200 ease-out"
-                    style={{ 
-                        backgroundColor: cellColor, 
-                        transform: selectedBall && selectedBall.r === rIndex && selectedBall.c === cIndex ? 'scale(0.85)' : 'scale(1)' ,
-                        animation: selectedBall && selectedBall.r === rIndex && selectedBall.c === cIndex ? 'pulse-ball 1.5s infinite' : 'none'
-                    }}
-                  />
-                )}
-                  {/* Ball appearance animation placeholder - can be tricky without dedicated state for "newly added" */}
-                  {/* One way is to have a temporary "newly_added_at_r_c" state that useEffect clears */}
-              </div>
-            ))
+            row.map((cellColor, cIndex) => {
+              const isCellSelected = selectedBall && selectedBall.r === rIndex && selectedBall.c === cIndex;
+              const previewBallHere = !cellColor ? previewBalls.find(p => p.r === rIndex && p.c === cIndex) : null;
+
+              return (
+                <div
+                  key={`${rIndex}-${cIndex}`}
+                  className={`aspect-square flex items-center justify-center rounded-sm sm:rounded-md cursor-pointer transition-all duration-200 ease-out
+                                ${isCellSelected  
+                                  ? 'bg-slate-600 scale-105 ring-1 ring-inset ring-cyan-400'
+                                  : 'bg-slate-700/80 hover:bg-slate-600/90'}`}
+                  onClick={() => handleCellClick(rIndex, cIndex)}
+                  role="button"
+                  aria-label={`Cell ${rIndex}-${cIndex} ${cellColor ? 'contains a ' + cellColor + ' ball' : (previewBallHere ? 'has a ' + previewBallHere.color + ' preview ball' : 'is empty')}`}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCellClick(rIndex,cIndex)}}
+                >
+                  {cellColor && ( // Regular ball
+                    <div
+                      className="w-[70%] h-[70%] sm:w-[75%] sm:h-[75%] rounded-full shadow-lg transition-transform duration-200 ease-out"
+                      style={{  
+                          backgroundColor: cellColor,  
+                          transform: isCellSelected ? 'scale(0.85)' : 'scale(1)' ,
+                          animation: isCellSelected ? 'pulse-ball 1.5s infinite' : 'none'
+                      }}
+                    />
+                  )}
+                  {!cellColor && previewBallHere && ( // Preview ball
+                    <div
+                      className="w-[45%] h-[45%] sm:w-[50%] sm:h-[50%] rounded-full border-2 border-dashed flex items-center justify-center"
+                      style={{ borderColor: previewBallHere.color, opacity: 0.7 }}
+                      title={`Preview: ${previewBallHere.color}`}
+                    >
+                      <div  
+                          className="w-[60%] h-[60%] rounded-full"
+                          style={{backgroundColor: previewBallHere.color, opacity: 0.8}}
+                      ></div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </main>
         <footer className="mt-4 sm:mt-6 text-center text-xs text-gray-400/80">
@@ -427,17 +557,11 @@ function App() {
           0%, 100% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
           50% { transform: scale(0.95); box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
         }
-        @keyframes newBallPop { /* Example, not fully implemented in logic */
-          0% { transform: scale(0.3); opacity: 0.5; }
-          70% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
-        /* .animate-newBallPop { animation: newBallPop 0.3s ease-out forwards; } */
       `}</style>
     </div>
   );
