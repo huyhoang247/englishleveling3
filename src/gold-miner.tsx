@@ -30,12 +30,6 @@ const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
   </svg>
 );
-// UpgradeIcon không còn cần thiết cho việc nâng cấp hiệu suất chung, nhưng có thể giữ lại nếu có mục đích khác trong tương lai
-// const UpgradeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-//   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props} >
-//     <circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line>
-//   </svg>
-// );
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" />
@@ -57,12 +51,15 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
         <h2 className="text-2xl font-bold text-yellow-400 mb-4 border-b border-slate-600 pb-3">{title}</h2>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-gray-300 hover:text-white"
+          className="absolute top-4 right-4 p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors z-20 backdrop-blur-sm flex items-center justify-center"
           aria-label="Đóng"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <img 
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
+            alt="Close" 
+            className="w-5 h-5" 
+            onError="this.onerror=null;this.src='https://placehold.co/20x20/cccccc/000000?text=X';" 
+          />
         </button>
         {children}
       </div>
@@ -465,12 +462,15 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
       <button
         onClick={onClose}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-700/80 hover:bg-slate-600/80 transition-all duration-200 z-20 backdrop-blur-sm"
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-700/80 hover:bg-slate-600/80 transition-all duration-200 z-20 backdrop-blur-sm flex items-center justify-center"
         aria-label="Đóng"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 hover:text-white">
-          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
+        <img 
+          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
+          alt="Close" 
+          className="w-5 h-5" 
+          onError="this.onerror=null;this.src='https://placehold.co/20x20/cccccc/000000?text=X';" 
+        />
       </button>
 
       <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-yellow-400 drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)] z-10 flex items-center">
@@ -496,43 +496,12 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
               <span className="text-slate-400 text-xs uppercase tracking-wider">Tổng Thợ Mỏ</span>
               <span className="font-bold text-2xl text-white mt-1">{totalMinersCount}</span>
             </div>
-            {/* Cấp hiệu suất đã bị loại bỏ */}
-            {/* <div className="flex flex-col items-center bg-slate-700/50 p-3 rounded-lg">
-              <span className="text-slate-400 text-xs uppercase tracking-wider">Cấp Hiệu Suất</span>
-              <span className="font-bold text-2xl text-green-400 mt-1">{minerEfficiencyLevel}</span>
-            </div> */}
             <div className="col-span-1 sm:col-span-2 flex flex-col items-center bg-slate-700/50 p-3 rounded-lg">
                <span className="text-slate-400 text-xs uppercase tracking-wider">Tổng Tốc Độ Đào</span>
               <span className="font-bold text-2xl text-yellow-400 mt-1">{totalMiningRate.toFixed(2)} vàng/s</span>
             </div>
           </div>
         </div>
-
-        {/* Phần Nâng Cấp Hiệu Suất Chung đã bị loại bỏ */}
-        {/* <div className="bg-slate-800/70 backdrop-blur-md p-5 rounded-xl shadow-xl border border-slate-700/80">
-          <h3 className="text-xl font-semibold text-green-300 mb-3 border-b border-slate-600/70 pb-3 flex items-center gap-2">
-            <UpgradeIcon size={22} className="text-green-400" />
-            Nâng Cấp Hiệu Suất Chung
-          </h3>
-          <p className="text-sm text-gray-400 mb-4">Tăng sản lượng vàng mỗi thợ mỏ khai thác được.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-lg font-medium text-white">Cấp hiện tại: <span className="font-bold text-xl">{minerEfficiencyLevel}</span></span>
-            </div>
-            <button
-              onClick={handleUpgradeEfficiency}
-              disabled={currentCoins < upgradeEfficiencyCost}
-              className={`w-full sm:w-auto py-3 px-6 rounded-lg font-bold text-base transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-100
-                ${currentCoins < upgradeEfficiencyCost
-                  ? 'bg-slate-600 text-gray-500 cursor-not-allowed ring-1 ring-slate-500'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
-                }`}
-            >
-              <CoinIcon size={20} className="inline -mt-0.5 text-yellow-300" />
-              <span>Nâng cấp ({upgradeEfficiencyCost.toLocaleString()})</span>
-            </button>
-          </div>
-        </div> */}
 
         <button
           onClick={() => setIsMinerHiringModalOpen(true)}
@@ -580,9 +549,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           handleSellMiner={handleSellMiner}
           currentCoins={currentCoins}
           CoinIcon={CoinIcon}
-          // Các props liên quan đến hiệu suất đã bị loại bỏ
-          // minerEfficiencyLevel={minerEfficiencyLevel} 
-          // efficiencyBonusPerLevel={EFFICIENCY_BONUS_PER_LEVEL}
         />
       </Modal>
     </div>
