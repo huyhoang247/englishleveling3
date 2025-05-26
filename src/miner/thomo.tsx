@@ -41,7 +41,6 @@ const MasterMinerIcon = ({ size = 20, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// PlusIcon và MinusIcon không còn được sử dụng trực tiếp
 const TrendingUpIcon = ({ size = 14, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -295,7 +294,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                     <>
                       <span>Sell</span> {/* Changed from MinusIcon */}
                       <DollarIcon size={12} /> {/* Added DollarIcon for sell */}
-                      <span>+{formatCoinValue(miner.sellValue)}</span>
+                      <span>{formatCoinValue(miner.sellValue)}</span> {/* Removed '+' */}
                     </>
                   )}
                 </button>
