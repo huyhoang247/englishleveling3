@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // Define props interface for MinerHiringSection component
 interface MinerHiringSectionProps {
@@ -69,6 +69,10 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   currentCoins,
   CoinIcon,
 }) => {
+  // State to manage the number of miners currently displayed
+  const [displayedMinerCount, setDisplayedMinerCount] = useState(3); // Display 3 miners initially
+  const loadingRef = useRef(null); // Ref for the loading indicator element
+
   // Function to get rarity-based colors for miner cards
   const getRarityColor = (minerId: string) => {
     switch (minerId) {
@@ -134,6 +138,37 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
     };
   });
 
+  // Function to load more miners
+  const loadMoreMiners = useCallback(() => {
+    setDisplayedMinerCount(prevCount =>
+      Math.min(prevCount + 3, minerTypesWithData.length) // Load 3 more miners, up to total
+    );
+  }, [minerTypesWithData.length]);
+
+  // Effect for Intersection Observer to trigger lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // If the loading element is visible and there are more miners to load
+        if (entries[0].isIntersecting && displayedMinerCount < minerTypesWithData.length) {
+          loadMoreMiners();
+        }
+      },
+      { threshold: 1.0 } // Trigger when 100% of the loading element is visible
+    );
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (loadingRef.current) {
+        observer.unobserve(loadingRef.current);
+      }
+    };
+  }, [displayedMinerCount, minerTypesWithData.length, loadMoreMiners]);
+
+
   return (
     <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-sm p-4 sm:p-5 rounded-lg shadow-xl border border-slate-700/50">
       {/* Section Header */}
@@ -150,8 +185,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
       </div>
 
       {/* Miner Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"> {/* Changed lg:grid-cols-2 to md:grid-cols-2 for better tablet layout */}
-        {minerTypesWithData.map((miner) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {minerTypesWithData.slice(0, displayedMinerCount).map((miner) => ( // Only render up to displayedMinerCount
           <div
             key={miner.id}
             className={`relative group overflow-hidden rounded-lg border ${miner.colors.border} ${miner.colors.glow} bg-gradient-to-br ${miner.colors.bgFrom} ${miner.colors.bgTo} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-xl`}
@@ -230,9 +265,17 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
         ))}
       </div>
 
+      {/* Loading indicator / "Load More" trigger */}
+      {displayedMinerCount < minerTypesWithData.length && (
+        <div ref={loadingRef} className="text-center py-4">
+          <p className="text-slate-400 text-sm">Đang tải thêm thợ mỏ...</p>
+          {/* You can add a spinner here if you want */}
+        </div>
+      )}
+
       {/* Summary Section */}
       <div className="mt-6 p-3 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-lg border border-slate-600/60 shadow-md">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-center"> {/* Adjusted grid for mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
           <div>
             <p className="text-[0.7rem] sm:text-xs text-slate-400 uppercase font-medium mb-0.5">Tổng Thợ Mỏ</p>
             <p className="text-xl font-bold text-white">
