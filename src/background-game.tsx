@@ -1757,6 +1757,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       onClose={toggleGoldMine}
                       currentCoins={coins}
                       onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} // NEW: Pass the setter for displayedCoins
                       currentUserId={auth.currentUser!.uid}
                       isGamePaused={isGoldMineGamePaused} // Use the new calculation here
                   />
