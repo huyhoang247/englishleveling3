@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getFirestore, doc, getDoc, runTransaction, setDoc } from 'firebase/firestore';
 import { auth } from './firebase.js'; // Assuming firebase.js exports auth
-import MinerHiringSection from './miner/thomo.tsx'; // Import the new component
+import MinerHiringSection from './miner/thomo.tsx'; // Import the MinerHiringSection component
 
 // Define props interface for GoldMine component
 interface GoldMineProps {
@@ -27,7 +27,7 @@ const CoinIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
     <path d="M12 6c-1.028 0-1.96.491-2.567 1.296A3.942 3.942 0 008.5 9c0 .978.357 1.859.933 2.533.667.768 1.592 1.267 2.567 1.267.975 0 1.899-.5 2.567-1.267.576-.674.933-1.555.933-2.533a3.94 3.94 0 00-.933-1.704C13.96 6.491 13.028 6 12 6zm0 5.5c-.414 0-.75-.336-.75-.75s.336-.75.75-.75.75.336.75.75-.336.75-.75.75z" />
   </svg>
 );
-// Miners Icon (User Group) - Kept here for general use, but MinerHiringSection uses its own for self-containment
+// Miners Icon (User Group)
 const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props} >
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
@@ -40,21 +40,42 @@ const UpgradeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
   </svg>
 );
 
-// New Icon for Advanced Miner (using a gear for now) - Kept here for general use, but MinerHiringSection uses its own for self-containment
+// New Icon for Advanced Miner (using a gear for now)
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" />
   </svg>
 );
 
-// New Icon for Master Miner (using a crown for now) - Kept here for general use, but MinerHiringSection uses its own for self-containment
+// New Icon for Master Miner (using a crown for now)
 const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="m2 16 2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2 2-2v-2l-2-2-2 2-2-2-2 2-2-2-2 2-2-2-2 2v2z" /><path d="M12 14v-2" /><path d="M12 10V8" /><path d="M12 6V4" /><path d="M12 2v2" /><path d="M12 22v-2" /><path d="M12 18v-2" /><path d="M12 20v-2" />
   </svg>
 );
 
-// ------------------------------------------------------------------------------------
+// Modal Component
+const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode; title: string }> = ({ isOpen, onClose, children, title }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="relative bg-slate-900 rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-700">
+        <h2 className="text-2xl font-bold text-white mb-4 border-b border-slate-600 pb-2">{title}</h2>
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-gray-300"
+          aria-label="Đóng"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoins, onUpdateDisplayedCoins, currentUserId, isGamePaused }) => {
   const [minedGold, setMinedGold] = useState(0);
@@ -65,6 +86,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
+  const [isMinerHiringModalOpen, setIsMinerHiringModalOpen] = useState(false); // State for modal
 
   const miningIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const db = getFirestore();
@@ -482,14 +504,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           </div>
         </div>
 
-        {/* Miner Hiring Section - Now a separate component */}
-        <MinerHiringSection
-          MINER_TYPES={MINER_TYPES}
-          handleHireMiner={handleHireMiner}
-          currentCoins={currentCoins}
-          CoinIcon={CoinIcon}
-        />
-
         {/* Upgrade Efficiency Section */}
         <div className="bg-slate-800/70 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-700">
           <h3 className="text-xl font-semibold text-green-300 mb-3 border-b border-slate-600 pb-2">Nâng Cấp Hiệu Suất</h3>
@@ -513,6 +527,15 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
             </button>
           </div>
         </div>
+
+        {/* Update Miners Button */}
+        <button
+          onClick={() => setIsMinerHiringModalOpen(true)}
+          className="w-full py-3 rounded-lg font-bold text-lg transition-all duration-200 bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-700 hover:to-pink-800 text-white shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
+        >
+          <MinersIcon size={24} />
+          <span>Cập nhật Thợ Mỏ</span>
+        </button>
 
         {/* Collection Section */}
         <div className="bg-slate-800/70 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-700">
@@ -545,6 +568,16 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           {currentCoins.toLocaleString()} <CoinIcon size={14} className="inline -mt-0.5" color="gold" />
         </span>
       </p>
+
+      {/* Miner Hiring Modal */}
+      <Modal isOpen={isMinerHiringModalOpen} onClose={() => setIsMinerHiringModalOpen(false)} title="Thuê Thợ Mỏ">
+        <MinerHiringSection
+          MINER_TYPES={MINER_TYPES}
+          handleHireMiner={handleHireMiner}
+          currentCoins={currentCoins}
+          CoinIcon={CoinIcon}
+        />
+      </Modal>
     </div>
   );
 };
