@@ -16,8 +16,9 @@ interface MinerHiringSectionProps {
   handleSellMiner: (minerId: string) => Promise<void>;
   currentCoins: number;
   CoinIcon: React.FC<any>;
-  minerEfficiencyLevel: number;
-  efficiencyBonusPerLevel: number;
+  // minerEfficiencyLevel và efficiencyBonusPerLevel đã bị loại bỏ
+  // minerEfficiencyLevel: number;
+  // efficiencyBonusPerLevel: number;
 }
 
 // --- BIỂU TƯỢNG SVG NÂNG CAO ---
@@ -70,8 +71,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   handleSellMiner,
   currentCoins,
   CoinIcon,
-  minerEfficiencyLevel,
-  efficiencyBonusPerLevel,
+  // minerEfficiencyLevel, // Đã loại bỏ
+  // efficiencyBonusPerLevel, // Đã loại bỏ
 }) => {
   const getRarityColor = (minerId: string) => {
     switch (minerId) {
@@ -116,7 +117,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
 
   const minerTypesWithData = MINER_TYPES.map(miner => {
     const IconComponent = miner.icon;
-    const currentRate = miner.baseRate + minerEfficiencyLevel * efficiencyBonusPerLevel;
+    // currentRate chỉ sử dụng baseRate vì hiệu suất chung đã bị loại bỏ
+    const currentRate = miner.baseRate;
     const totalOutput = currentRate * miner.count;
     const sellValue = Math.floor(miner.baseCost * miner.sellReturnFactor);
     const colors = getRarityColor(miner.id);
@@ -221,13 +223,14 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                 </button>
               </div>
 
-              {minerEfficiencyLevel > 0 && (
+              {/* Phần hiển thị hiệu suất đã bị loại bỏ */}
+              {/* {minerEfficiencyLevel > 0 && (
                 <div className="mt-3 p-1.5 bg-yellow-900/20 border border-yellow-700/30 rounded-md text-center">
                   <p className="text-[0.7rem] text-yellow-300">
                     ⚡ Hiệu suất: +{((minerEfficiencyLevel * efficiencyBonusPerLevel) / miner.baseRate * 100).toFixed(0)}%
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         ))}
@@ -247,12 +250,13 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
               {minerTypesWithData.reduce((sum, miner) => sum + miner.totalOutput, 0).toFixed(2)}
             </p>
           </div>
-          <div className="border-t sm:border-t-0 sm:border-l border-slate-600/50 pt-2 sm:pt-0 sm:pl-3">
+          {/* Phần hiển thị cấp hiệu suất đã bị loại bỏ */}
+          {/* <div className="border-t sm:border-t-0 sm:border-l border-slate-600/50 pt-2 sm:pt-0 sm:pl-3">
             <p className="text-[0.7rem] sm:text-xs text-slate-400 uppercase font-medium mb-0.5">Cấp Hiệu Suất</p>
             <p className="text-xl font-bold text-yellow-400">
               {minerEfficiencyLevel}
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
