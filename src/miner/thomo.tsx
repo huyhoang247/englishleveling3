@@ -7,20 +7,26 @@ interface MinerHiringSectionProps {
     name: string;
     description: string;
     baseCost: number;
-    baseRate: number; // Gold per second
-    icon: React.FC<any>; // Icon component
-    count: number;
-    setCount: React.Dispatch<React.SetStateAction<number>>;
-    upgradeCostMultiplier: number; // Cost multiplier for upgrades
+    baseRate: number; // Initial Gold per second
+    levelRateBonusPerLevel: number; // Rate bonus per level for this specific miner type
+    levelUpCostMultiplier: number; // Cost multiplier for leveling up this specific miner type
     sellReturnFactor: number; // Factor for selling miners
+    count: number;
+    level: number; // New: Current level of this miner type
+    setCount: React.Dispatch<React.SetStateAction<number>>;
+    // setLevel: React.Dispatch<React.SetStateAction<number>>; // Not directly used here for updating level
+    currentRate: number; // Calculated rate per individual miner (based on its level)
+    totalOutput: number; // Total output for this miner type (count * currentRate)
+    upgradeCost: number; // Cost to upgrade this miner type to the next level
+    sellValue: number; // Value when selling one miner
   }>;
   handleHireMiner: (minerId: string) => Promise<void>;
-  handleUpgradeMiner: (minerId: string) => Promise<void>; // New: handle upgrade
-  handleSellMiner: (minerId: string) => Promise<void>; // New: handle sell
+  handleUpgradeMiner: (minerId: string) => Promise<void>; // This now handles actual level upgrades
+  handleSellMiner: (minerId: string) => Promise<void>;
   currentCoins: number;
   CoinIcon: React.FC<any>; // Pass CoinIcon as a prop
-  minerEfficiencyLevel: number; // Pass efficiency level
-  efficiencyBonusPerLevel: number; // Pass efficiency bonus
+  minerEfficiencyLevel: number; // Pass global efficiency level
+  efficiencyBonusPerLevel: number; // Pass global efficiency bonus
 }
 
 // --- ENHANCED SVG ICONS ---
@@ -36,7 +42,7 @@ const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-1 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" />
   </svg>
 );
 
@@ -61,7 +67,7 @@ const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
 );
 
 const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
     <polyline points="17 6 23 6 23 12"></polyline>
   </svg>
@@ -70,7 +76,7 @@ const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...
 const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   MINER_TYPES,
   handleHireMiner,
-  handleUpgradeMiner,
+  handleUpgradeMiner, // This now handles actual level upgrades
   handleSellMiner,
   currentCoins,
   CoinIcon,
@@ -85,33 +91,37 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
           border: 'border-slate-500',
           glow: 'shadow-slate-500/20',
           accent: 'text-slate-300',
-          bg: 'bg-slate-700/60'
+          bg: 'bg-slate-700/60',
+          levelBar: 'bg-blue-500'
         };
       case 'advanced':
         return {
           border: 'border-blue-500',
           glow: 'shadow-blue-500/30',
           accent: 'text-blue-300',
-          bg: 'bg-blue-900/20'
+          bg: 'bg-blue-900/20',
+          levelBar: 'bg-purple-500'
         };
       case 'master':
         return {
           border: 'border-purple-500',
           glow: 'shadow-purple-500/40',
           accent: 'text-purple-300',
-          bg: 'bg-purple-900/20'
+          bg: 'bg-purple-900/20',
+          levelBar: 'bg-amber-500'
         };
       default:
         return {
           border: 'border-slate-500',
           glow: 'shadow-slate-500/20',
           accent: 'text-slate-300',
-          bg: 'bg-slate-700/60'
+          bg: 'bg-slate-700/60',
+          levelBar: 'bg-gray-500'
         };
     }
   };
 
-  // Map MINER_TYPES to include the actual icon components and enhanced data
+  // Map MINER_TYPES to include the actual icon components and enhanced data for rendering
   const minerTypesWithIcons = MINER_TYPES.map(miner => {
     let IconComponent;
     switch (miner.id) {
@@ -128,27 +138,29 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
         IconComponent = MinersIcon;
     }
 
-    const currentRate = miner.baseRate + minerEfficiencyLevel * efficiencyBonusPerLevel;
-    const totalOutput = currentRate * miner.count;
-    const upgradeCost = Math.floor(miner.baseCost * miner.upgradeCostMultiplier);
-    const sellValue = Math.floor(miner.baseCost * miner.sellReturnFactor);
+    // Calculate current rate per miner including its individual level bonus
+    const currentRatePerMiner = miner.baseRate * (1 + (miner.level - 1) * miner.levelRateBonusPerLevel);
+    // Calculate total output including global efficiency
+    const totalOutputWithGlobalEfficiency = miner.count * (currentRatePerMiner + minerEfficiencyLevel * efficiencyBonusPerLevel);
+
     const colors = getRarityColor(miner.id);
 
     const canAffordHire = currentCoins >= miner.baseCost;
-    const canAffordUpgrade = currentCoins >= upgradeCost && miner.count > 0;
+    // Can upgrade if current coins are sufficient AND there's at least one miner of this type AND not at max level (e.g., level 20)
+    const MAX_MINER_LEVEL = 20; // Needs to match the constant in GoldMine.tsx
+    const canAffordUpgrade = currentCoins >= miner.upgradeCost && miner.count > 0 && miner.level < MAX_MINER_LEVEL;
     const canSell = miner.count > 0;
 
     return {
       ...miner,
       icon: IconComponent,
-      currentRate,
-      totalOutput,
-      upgradeCost,
-      sellValue,
+      currentRatePerMiner, // Rate of a single miner of this type, based on its level
+      totalOutputWithGlobalEfficiency, // Total output of all miners of this type, including global efficiency
       colors,
       canAffordHire,
       canAffordUpgrade,
       canSell,
+      MAX_MINER_LEVEL // Pass max level for display purposes
     };
   });
 
@@ -202,8 +214,22 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                   </div>
                   <div className="w-px h-8 bg-slate-600"></div>
                   <div className="text-center flex-1">
-                    <p className="text-xs text-slate-400 uppercase font-medium">Tỷ lệ</p>
-                    <p className="text-lg font-bold text-green-400">{miner.currentRate.toFixed(1)}/s</p>
+                    <p className="text-xs text-slate-400 uppercase font-medium">Tỷ lệ/thợ</p>
+                    <p className="text-lg font-bold text-green-400">{miner.currentRatePerMiner.toFixed(2)}/s</p>
+                  </div>
+                </div>
+
+                {/* Level Display */}
+                <div className="p-2 bg-slate-800/60 rounded-lg border border-slate-600/50">
+                  <p className="text-xs text-slate-400 uppercase font-medium text-center mb-1">Cấp độ</p>
+                  <div className="relative h-4 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${miner.colors.levelBar} transition-all duration-500 ease-out`} 
+                      style={{ width: `${(miner.level / miner.MAX_MINER_LEVEL) * 100}%` }}
+                    ></div>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-sm">
+                      Lv. {miner.level} / {miner.MAX_MINER_LEVEL}
+                    </span>
                   </div>
                 </div>
 
@@ -214,7 +240,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                       <TrendingUpIcon className="text-green-400" />
                       <span className="text-sm text-green-300">Tổng sản lượng:</span>
                     </div>
-                    <span className="font-bold text-green-400">{miner.totalOutput.toFixed(1)} vàng/s</span>
+                    <span className="font-bold text-green-400">{totalOutputWithGlobalEfficiency.toFixed(2)} vàng/s</span>
                   </div>
                 )}
               </div>
@@ -238,20 +264,18 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                 {/* Upgrade and Sell Row */}
                 <div className="grid grid-cols-2 gap-2">
                   {/* Upgrade Button */}
-                  {miner.id !== 'master' && (
-                    <button
-                      onClick={() => handleUpgradeMiner(miner.id)}
-                      disabled={!miner.canAffordUpgrade}
-                      className={`py-2.5 px-3 rounded-lg font-medium text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
-                        miner.canAffordUpgrade
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]'
-                          : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/30'
-                      }`}
-                    >
-                      <UpgradeIcon size={14} />
-                      <span>{miner.upgradeCost.toLocaleString()}</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleUpgradeMiner(miner.id)}
+                    disabled={!miner.canAffordUpgrade}
+                    className={`py-2.5 px-3 rounded-lg font-medium text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                      miner.canAffordUpgrade
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]'
+                        : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/30'
+                    }`}
+                  >
+                    <UpgradeIcon size={14} />
+                    <span>Nâng cấp - {miner.upgradeCost.toLocaleString()}</span>
+                  </button>
 
                   {/* Sell Button */}
                   <button
@@ -261,7 +285,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                       miner.canSell
                         ? 'bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]'
                         : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/30'
-                    } ${miner.id === 'master' ? 'col-span-2' : ''}`}
+                    }`}
                   >
                     <SellIcon size={14} />
                     <span>Bán - {miner.sellValue.toLocaleString()}</span>
@@ -269,11 +293,11 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                 </div>
               </div>
 
-              {/* Efficiency Indicator */}
+              {/* Efficiency Indicator (Global) */}
               {minerEfficiencyLevel > 0 && (
                 <div className="mt-3 p-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
                   <p className="text-xs text-yellow-300 text-center">
-                    ⚡ Hiệu suất +{((minerEfficiencyLevel * efficiencyBonusPerLevel) / miner.baseRate * 100).toFixed(0)}%
+                    ⚡ Hiệu suất tổng thể +{((minerEfficiencyLevel * efficiencyBonusPerLevel) / miner.baseRate * 100).toFixed(0)}%
                   </p>
                 </div>
               )}
@@ -294,11 +318,11 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
           <div>
             <p className="text-xs text-slate-400 uppercase font-medium mb-1">Thu nhập/giây</p>
             <p className="text-xl font-bold text-green-400">
-              {minerTypesWithIcons.reduce((sum, miner) => sum + miner.totalOutput, 0).toFixed(1)}
+              {minerTypesWithIcons.reduce((sum, miner) => sum + miner.totalOutputWithGlobalEfficiency, 0).toFixed(2)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-400 uppercase font-medium mb-1">Hiệu suất</p>
+            <p className="text-xs text-slate-400 uppercase font-medium mb-1">Hiệu suất tổng thể</p>
             <p className="text-xl font-bold text-yellow-400">
               Cấp {minerEfficiencyLevel}
             </p>
