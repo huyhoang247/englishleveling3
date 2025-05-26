@@ -54,6 +54,13 @@ const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
+// Sell Icon (Dollar Sign)
+const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+  </svg>
+);
+
 // Modal Component
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode; title: string }> = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
@@ -107,6 +114,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       icon: MinersIcon, // Icon component reference
       count: basicMiners,
       setCount: setBasicMiners,
+      upgradeCostMultiplier: 2.5, // Cost to upgrade one basic miner to advanced
+      sellReturnFactor: 0.5, // 50% return on sell
     },
     {
       id: 'advanced',
@@ -117,6 +126,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       icon: AdvancedMinerIcon, // Icon component reference
       count: advancedMiners,
       setCount: setAdvancedMiners,
+      upgradeCostMultiplier: 2.0, // Cost to upgrade one advanced miner to master
+      sellReturnFactor: 0.5, // 50% return on sell
     },
     {
       id: 'master',
@@ -127,6 +138,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       icon: MasterMinerIcon, // Icon component reference
       count: masterMiners,
       setCount: setMasterMiners,
+      upgradeCostMultiplier: 1, // No further upgrade
+      sellReturnFactor: 0.6, // Slightly better return for master
     },
   ];
 
@@ -138,7 +151,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     return totalRate;
   };
 
-  const getCurrentUpgradeCost = () => {
+  const getCurrentUpgradeEfficiencyCost = () => {
     return Math.floor(UPGRADE_EFFICIENCY_BASE_COST * Math.pow(UPGRADE_EFFICIENCY_COST_SCALING_FACTOR, minerEfficiencyLevel));
   };
 
@@ -340,8 +353,150 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     }
   };
 
+  const handleUpgradeMiner = async (minerId: string) => {
+    const minerType = MINER_TYPES.find(m => m.id === minerId);
+    if (!minerType) return;
+
+    if (minerType.count === 0) {
+      showMessage(`Bạn không có ${minerType.name} để nâng cấp!`, "error");
+      return;
+    }
+
+    const upgradeCost = minerType.upgradeCost;
+    if (currentCoins < upgradeCost) {
+      showMessage(`Không đủ vàng để nâng cấp ${minerType.name}!`, "error");
+      return;
+    }
+    if (!currentUserId) return;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDocRef = doc(db, 'users', currentUserId);
+        const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
+        const userDocSnap = await transaction.get(userDocRef);
+        const mineDocSnap = await transaction.get(mineDocRef);
+
+        if (!userDocSnap.exists() || !mineDocSnap.exists()) throw new Error("Dữ liệu không tồn tại.");
+
+        const currentMainCoins = userDocSnap.data().coins || 0;
+        if (currentMainCoins < upgradeCost) throw new Error("Không đủ vàng.");
+
+        const currentBasicMinersInDb = mineDocSnap.data().basicMiners || mineDocSnap.data().miners || 0;
+        const currentAdvancedMinersInDb = mineDocSnap.data().advancedMiners || 0;
+        const currentMasterMinersInDb = mineDocSnap.data().masterMiners || 0;
+        const currentMinedGoldInDb = mineDocSnap.data().minedGold || 0;
+        const currentEfficiencyInDb = mineDocSnap.data().minerEfficiencyLevel || 0;
+
+        let updatedBasic = currentBasicMinersInDb;
+        let updatedAdvanced = currentAdvancedMinersInDb;
+        let updatedMaster = currentMasterMinersInDb;
+
+        if (minerId === 'basic') {
+          if (updatedBasic === 0) throw new Error("Không có thợ mỏ cơ bản để nâng cấp.");
+          updatedBasic -= 1;
+          updatedAdvanced += 1;
+          setBasicMiners(prev => prev - 1);
+          setAdvancedMiners(prev => prev + 1);
+        } else if (minerId === 'advanced') {
+          if (updatedAdvanced === 0) throw new Error("Không có thợ mỏ cao cấp để nâng cấp.");
+          updatedAdvanced -= 1;
+          updatedMaster += 1;
+          setAdvancedMiners(prev => prev - 1);
+          setMasterMiners(prev => prev + 1);
+        } else {
+          throw new Error("Loại thợ mỏ này không thể nâng cấp.");
+        }
+
+        transaction.update(userDocRef, { coins: currentMainCoins - upgradeCost });
+        transaction.update(mineDocRef, {
+          basicMiners: updatedBasic,
+          advancedMiners: updatedAdvanced,
+          masterMiners: updatedMaster,
+          lastMineActivityTime: Date.now(),
+          minedGold: Math.max(0, currentMinedGoldInDb),
+          minerEfficiencyLevel: currentEfficiencyInDb
+        });
+
+        onUpdateCoins(-upgradeCost);
+        onUpdateDisplayedCoins(currentCoins - upgradeCost);
+        showMessage(`Đã nâng cấp ${minerType.name} thành công!`, "success");
+      });
+    } catch (error: any) {
+      console.error("GoldMine: Lỗi khi nâng cấp thợ mỏ:", error);
+      showMessage(`Lỗi: ${error.message || "Không thể nâng cấp thợ mỏ."}`, "error");
+    }
+  };
+
+  const handleSellMiner = async (minerId: string) => {
+    const minerType = MINER_TYPES.find(m => m.id === minerId);
+    if (!minerType) return;
+
+    if (minerType.count === 0) {
+      showMessage(`Bạn không có ${minerType.name} để bán!`, "error");
+      return;
+    }
+
+    const sellValue = minerType.sellValue;
+    if (!currentUserId) return;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDocRef = doc(db, 'users', currentUserId);
+        const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
+        const userDocSnap = await transaction.get(userDocRef);
+        const mineDocSnap = await transaction.get(mineDocRef);
+
+        if (!userDocSnap.exists() || !mineDocSnap.exists()) throw new Error("Dữ liệu không tồn tại.");
+
+        const currentMainCoins = userDocSnap.data().coins || 0;
+        const currentBasicMinersInDb = mineDocSnap.data().basicMiners || mineDocSnap.data().miners || 0;
+        const currentAdvancedMinersInDb = mineDocSnap.data().advancedMiners || 0;
+        const currentMasterMinersInDb = mineDocSnap.data().masterMiners || 0;
+        const currentMinedGoldInDb = mineDocSnap.data().minedGold || 0;
+        const currentEfficiencyInDb = mineDocSnap.data().minerEfficiencyLevel || 0;
+
+        let updatedBasic = currentBasicMinersInDb;
+        let updatedAdvanced = currentAdvancedMinersInDb;
+        let updatedMaster = currentMasterMinersInDb;
+
+        if (minerId === 'basic') {
+          if (updatedBasic === 0) throw new Error("Không có thợ mỏ cơ bản để bán.");
+          updatedBasic -= 1;
+          setBasicMiners(prev => prev - 1);
+        } else if (minerId === 'advanced') {
+          if (updatedAdvanced === 0) throw new Error("Không có thợ mỏ cao cấp để bán.");
+          updatedAdvanced -= 1;
+          setAdvancedMiners(prev => prev - 1);
+        } else if (minerId === 'master') {
+          if (updatedMaster === 0) throw new Error("Không có thợ mỏ bậc thầy để bán.");
+          updatedMaster -= 1;
+          setMasterMiners(prev => prev - 1);
+        } else {
+          throw new Error("Loại thợ mỏ không hợp lệ để bán.");
+        }
+
+        transaction.update(userDocRef, { coins: currentMainCoins + sellValue });
+        transaction.update(mineDocRef, {
+          basicMiners: updatedBasic,
+          advancedMiners: updatedAdvanced,
+          masterMiners: updatedMaster,
+          lastMineActivityTime: Date.now(),
+          minedGold: Math.max(0, currentMinedGoldInDb),
+          minerEfficiencyLevel: currentEfficiencyInDb
+        });
+
+        onUpdateCoins(sellValue);
+        onUpdateDisplayedCoins(currentCoins + sellValue);
+        showMessage(`Đã bán ${minerType.name} thành công, nhận được ${sellValue} vàng!`, "success");
+      });
+    } catch (error: any) {
+      console.error("GoldMine: Lỗi khi bán thợ mỏ:", error);
+      showMessage(`Lỗi: ${error.message || "Không thể bán thợ mỏ."}`, "error");
+    }
+  };
+
   const handleUpgradeEfficiency = async () => {
-    const cost = getCurrentUpgradeCost();
+    const cost = getCurrentUpgradeEfficiencyCost();
     if (currentCoins < cost) {
       showMessage("Không đủ vàng để nâng cấp!", "error");
       return;
@@ -442,7 +597,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     );
   }
 
-  const upgradeCost = getCurrentUpgradeCost();
+  const upgradeEfficiencyCost = getCurrentUpgradeEfficiencyCost();
   const totalMiningRate = getCurrentMiningRate();
   const totalMinersCount = basicMiners + advancedMiners + masterMiners;
 
@@ -506,7 +661,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         {/* Upgrade Efficiency Section */}
         <div className="bg-slate-800/70 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-700">
-          <h3 className="text-xl font-semibold text-green-300 mb-3 border-b border-slate-600 pb-2">Nâng Cấp Hiệu Suất</h3>
+          <h3 className="text-xl font-semibold text-green-300 mb-3 border-b border-slate-600 pb-2">Nâng Cấp Hiệu Suất Tổng Thể</h3>
           <p className="text-sm text-gray-400 mb-3">Tăng lượng vàng mỗi thợ mỏ khai thác được cho tất cả các loại thợ mỏ.</p>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
@@ -515,15 +670,15 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
             </div>
             <button
               onClick={handleUpgradeEfficiency}
-              disabled={currentCoins < upgradeCost}
+              disabled={currentCoins < upgradeEfficiencyCost}
               className={`py-2.5 px-4 rounded-lg font-bold text-base transition-all duration-200 flex items-center justify-center space-x-2
-                ${currentCoins < upgradeCost
+                ${currentCoins < upgradeEfficiencyCost
                   ? 'bg-slate-600 text-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
                 }`}
             >
               <CoinIcon size={18} className="inline -mt-0.5" color="gold" />
-              <span>Nâng cấp ({upgradeCost.toLocaleString()})</span>
+              <span>Nâng cấp ({upgradeEfficiencyCost.toLocaleString()})</span>
             </button>
           </div>
         </div>
@@ -534,7 +689,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           className="w-full py-3 rounded-lg font-bold text-lg transition-all duration-200 bg-gradient-to-r from-purple-600 to-pink-700 hover:from-purple-700 hover:to-pink-800 text-white shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
         >
           <MinersIcon size={24} />
-          <span>Cập nhật Thợ Mỏ</span>
+          <span>Quản Lý Thợ Mỏ</span>
         </button>
 
         {/* Collection Section */}
@@ -570,12 +725,16 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       </p>
 
       {/* Miner Hiring Modal */}
-      <Modal isOpen={isMinerHiringModalOpen} onClose={() => setIsMinerHiringModalOpen(false)} title="Thuê Thợ Mỏ">
+      <Modal isOpen={isMinerHiringModalOpen} onClose={() => setIsMinerHiringModalOpen(false)} title="Quản Lý Thợ Mỏ">
         <MinerHiringSection
           MINER_TYPES={MINER_TYPES}
           handleHireMiner={handleHireMiner}
+          handleUpgradeMiner={handleUpgradeMiner}
+          handleSellMiner={handleSellMiner}
           currentCoins={currentCoins}
           CoinIcon={CoinIcon}
+          minerEfficiencyLevel={minerEfficiencyLevel}
+          efficiencyBonusPerLevel={EFFICIENCY_BONUS_PER_LEVEL}
         />
       </Modal>
     </div>
