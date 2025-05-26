@@ -15,7 +15,7 @@ interface MinerHiringSectionProps {
   handleHireMiner: (minerId: string) => Promise<void>;
   handleSellMiner: (minerId: string) => Promise<void>;
   currentCoins: number;
-  CoinIcon: React.FC<any>;
+  // CoinIcon không còn được sử dụng trực tiếp, thay vào đó là DollarIcon
 }
 
 // --- BIỂU TƯỢNG SVG COMPACT ---
@@ -62,12 +62,29 @@ const TrendingUpIcon = ({ size = 14, color = 'currentColor', className = '', ...
   </svg>
 );
 
+// New Dollar Icon component
+const DollarIcon = ({ size = 12, className = '', ...props }) => (
+  <img
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+    alt="Dollar Icon"
+    style={{ width: size, height: size }}
+    className={className}
+    onError={(e) => {
+      // Fallback for image loading errors
+      e.currentTarget.onerror = null; // prevents infinite loop
+      e.currentTarget.src = "https://placehold.co/12x12/cccccc/000000?text=$"; // Placeholder image
+    }}
+    {...props}
+  />
+);
+
+
 const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   MINER_TYPES,
   handleHireMiner,
   handleSellMiner,
   currentCoins,
-  CoinIcon,
+  // CoinIcon không còn được nhận qua props
 }) => {
   const [displayedMinerCount, setDisplayedMinerCount] = useState(6);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
@@ -121,6 +138,14 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
           glow: 'shadow-sm shadow-slate-500/20',
         };
     }
+  };
+
+  // Helper function to format coin values
+  const formatCoinValue = (value: number) => {
+    if (value < 1000) {
+      return value.toFixed(0); // Display exact number if less than 1k
+    }
+    return `${(value / 1000).toFixed(0)}k`; // Display in 'k' format otherwise
   };
 
   const minerTypesWithData = MINER_TYPES.map(miner => {
@@ -259,8 +284,9 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                   ) : (
                     <>
                       <PlusIcon size={12} />
-                      <CoinIcon size={12} color={miner.canAffordHire ? "gold" : "currentColor"} />
-                      <span>{(miner.baseCost / 1000).toFixed(0)}k</span>
+                      {/* Sử dụng DollarIcon mới */}
+                      <DollarIcon size={12} /> 
+                      <span>{formatCoinValue(miner.baseCost)}</span>
                     </>
                   )}
                 </button>
@@ -283,7 +309,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                   ) : (
                     <>
                       <MinusIcon size={12} />
-                      <span>+{(miner.sellValue / 1000).toFixed(0)}k</span>
+                      <span>+{formatCoinValue(miner.sellValue)}</span>
                     </>
                   )}
                 </button>
