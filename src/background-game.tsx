@@ -15,7 +15,7 @@ import { GemIcon } from './library/icon.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 // NEW: Import GoldMine component
-import GoldMine from './gold-mine.tsx';
+import GoldMine from './gold-miner.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
