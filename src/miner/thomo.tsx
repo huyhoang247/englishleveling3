@@ -9,23 +9,17 @@ interface MinerHiringSectionProps {
     baseCost: number;
     baseRate: number;
     icon: React.FC<any>;
-    count: number; // Số lượng hiện tại của loại thợ mỏ này
-    // setCount không còn cần thiết ở đây vì count được truyền trực tiếp từ GoldMine
-    // upgradeCostMultiplier?: number; // Không còn dùng để nâng cấp loại thợ mỏ
+    count: number;
     sellReturnFactor: number;
   }>;
   handleHireMiner: (minerId: string) => Promise<void>;
-  // handleUpgradeMiner đã bị loại bỏ
   handleSellMiner: (minerId: string) => Promise<void>;
   currentCoins: number;
   CoinIcon: React.FC<any>;
-  minerEfficiencyLevel: number;
-  efficiencyBonusPerLevel: number;
+  // minerEfficiencyLevel và efficiencyBonusPerLevel đã bị loại bỏ
 }
 
-// --- BIỂU TƯỢNG SVG NÂNG CAO ---
-// (Giữ nguyên các biểu tượng SVG đã có trong tệp thomo.tsx của bạn)
-// Biểu tượng Thợ Mỏ (Nhóm người dùng)
+// --- BIỂU TƯỢNG SVG ---
 const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -35,7 +29,6 @@ const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
   </svg>
 );
 
-// Biểu tượng Thợ Mỏ Cao Cấp (Bánh răng)
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3" />
@@ -43,14 +36,12 @@ const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', 
   </svg>
 );
 
-// Biểu tượng Thợ Mỏ Bậc Thầy (Vương miện - sử dụng từ gold-miner.tsx để đồng bộ)
 const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <path d="M2 13.17A2 2 0 0 0 3.17 12H0V9h3.17A2 2 0 0 0 2 7.83L4.93 2 12 6l7.07-4L22 7.83A2 2 0 0 0 20.83 9H24v3h-3.17A2 2 0 0 0 22 13.17L19.07 19H4.93Z"></path><path d="M12 6v12"></path>
     </svg>
   );
 
-// Biểu tượng Bán (Đô la)
 const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -58,7 +49,6 @@ const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
   </svg>
 );
 
-// Biểu tượng Tăng trưởng (Mũi tên đi lên)
 const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -73,8 +63,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   handleSellMiner,
   currentCoins,
   CoinIcon,
-  minerEfficiencyLevel,
-  efficiencyBonusPerLevel,
+  // minerEfficiencyLevel, // Đã loại bỏ
+  // efficiencyBonusPerLevel, // Đã loại bỏ
 }) => {
   const getRarityColor = (minerId: string) => {
     switch (minerId) {
@@ -118,8 +108,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   };
 
   const minerTypesWithData = MINER_TYPES.map(miner => {
-    const IconComponent = miner.icon; // Sử dụng icon đã được truyền từ MINER_TYPES
-    const currentRate = miner.baseRate + minerEfficiencyLevel * efficiencyBonusPerLevel;
+    const IconComponent = miner.icon;
+    const currentRate = miner.baseRate; // Chỉ sử dụng baseRate
     const totalOutput = currentRate * miner.count;
     const sellValue = Math.floor(miner.baseCost * miner.sellReturnFactor);
     const colors = getRarityColor(miner.id);
@@ -224,20 +214,21 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                 </button>
               </div>
 
-              {minerEfficiencyLevel > 0 && (
+              {/* Thông tin hiệu suất chung đã bị loại bỏ */}
+              {/* {minerEfficiencyLevel > 0 && (
                 <div className="mt-4 p-2 bg-yellow-900/30 border border-yellow-700/40 rounded-lg text-center">
                   <p className="text-xs text-yellow-300">
                     ⚡ Hiệu suất chung: +{((minerEfficiencyLevel * efficiencyBonusPerLevel) / miner.baseRate * 100).toFixed(0)}%
                   </p>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         ))}
       </div>
 
       <div className="mt-8 p-4 bg-gradient-to-r from-slate-800/70 to-slate-700/70 rounded-xl border border-slate-600/70 shadow-lg">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center"> {/* Giảm xuống 2 cột vì không còn Cấp Hiệu Suất */}
           <div>
             <p className="text-xs text-slate-400 uppercase font-medium mb-1">Tổng Thợ Mỏ Đang Có</p>
             <p className="text-2xl font-bold text-white">
@@ -250,12 +241,13 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
               {minerTypesWithData.reduce((sum, miner) => sum + miner.totalOutput, 0).toFixed(2)}
             </p>
           </div>
-          <div>
+          {/* Mục Cấp Hiệu Suất Chung đã bị loại bỏ */}
+          {/* <div>
             <p className="text-xs text-slate-400 uppercase font-medium mb-1">Cấp Hiệu Suất Chung</p>
             <p className="text-2xl font-bold text-yellow-400">
               {minerEfficiencyLevel}
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
