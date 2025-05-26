@@ -72,7 +72,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
   const [basicMiners, setBasicMiners] = useState(0);
   const [advancedMiners, setAdvancedMiners] = useState(0);
   const [masterMiners, setMasterMiners] = useState(0);
-  // const [minerEfficiencyLevel, setMinerEfficiencyLevel] = useState(0); // Đã loại bỏ
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
@@ -80,11 +79,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
   const miningIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const db = getFirestore();
-
-  // Các hằng số liên quan đến hiệu suất đã bị loại bỏ
-  // const EFFICIENCY_BONUS_PER_LEVEL = 0.02;
-  // const UPGRADE_EFFICIENCY_BASE_COST = 100;
-  // const UPGRADE_EFFICIENCY_COST_SCALING_FACTOR = 1.8;
 
   const MINER_TYPES = [
     {
@@ -133,8 +127,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     return totalRate;
   };
 
-  // getCurrentUpgradeEfficiencyCost không còn cần thiết
-
   const showMessage = (msg: string, type: 'success' | 'error') => {
     setMessage(msg);
     setMessageType(type);
@@ -149,7 +141,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     currentBasicMiners: number,
     currentAdvancedMiners: number,
     currentMasterMiners: number
-    // currentEfficiencyLevel đã bị loại bỏ
   ) => {
     if (!currentUserId) return;
     try {
@@ -159,7 +150,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         basicMiners: currentBasicMiners,
         advancedMiners: currentAdvancedMiners,
         masterMiners: currentMasterMiners,
-        // minerEfficiencyLevel: currentEfficiencyLevel, // Đã loại bỏ
         lastMineActivityTime: Date.now(),
       }, { merge: true });
     } catch (error) {
@@ -182,7 +172,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         let initialBasicMiners = 0;
         let initialAdvancedMiners = 0;
         let initialMasterMiners = 0;
-        // let initialEfficiencyLevel = 0; // Đã loại bỏ
         let lastMineActivityTime = 0;
 
         if (mineDocSnap.exists()) {
@@ -191,7 +180,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           initialBasicMiners = data.basicMiners || data.miners || 0;
           initialAdvancedMiners = data.advancedMiners || 0;
           initialMasterMiners = data.masterMiners || 0;
-          // initialEfficiencyLevel = data.minerEfficiencyLevel || 0; // Đã loại bỏ
           lastMineActivityTime = data.lastMineActivityTime || 0;
 
           if ((initialBasicMiners > 0 || initialAdvancedMiners > 0 || initialMasterMiners > 0) && lastMineActivityTime > 0) {
@@ -211,7 +199,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
             basicMiners: 0,
             advancedMiners: 0,
             masterMiners: 0,
-            // minerEfficiencyLevel: 0, // Đã loại bỏ
             lastMineActivityTime: Date.now(),
             createdAt: new Date()
           });
@@ -222,7 +209,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         setBasicMiners(initialBasicMiners);
         setAdvancedMiners(initialAdvancedMiners);
         setMasterMiners(initialMasterMiners);
-        // setMinerEfficiencyLevel(initialEfficiencyLevel); // Đã loại bỏ
         saveMineData(initialMinedGold, initialBasicMiners, initialAdvancedMiners, initialMasterMiners);
       } catch (error) {
         console.error("GoldMine: Error fetching/initializing gold mine data:", error);
@@ -270,7 +256,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         saveMineData(minedGold, basicMiners, advancedMiners, masterMiners);
       }
     };
-  }, [basicMiners, advancedMiners, masterMiners, isGamePaused, isLoading, db, minedGold]); // minerEfficiencyLevel đã bị loại bỏ khỏi dependencies
+  }, [basicMiners, advancedMiners, masterMiners, isGamePaused, isLoading, db, minedGold]);
 
   const handleHireMiner = async (minerId: string) => {
     const minerType = MINER_TYPES.find(m => m.id === minerId);
@@ -397,8 +383,6 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     }
   };
 
-  // handleUpgradeEfficiency đã bị loại bỏ
-
   const handleCollectGold = async () => {
     if (minedGold <= 0) {
       showMessage("Không có vàng để thu thập!", "error");
@@ -445,12 +429,12 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     );
   }
 
-  // upgradeEfficiencyCost không còn cần thiết
   const totalMiningRate = getCurrentMiningRate();
   const totalMinersCount = basicMiners + advancedMiners + masterMiners;
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-start bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-gray-200 p-4 sm:p-6 rounded-xl shadow-2xl overflow-y-auto">
+    <div className="relative w-full h-full flex flex-col items-center justify-start bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900/20 text-gray-200 p-4 sm:p-6 rounded-xl shadow-2xl overflow-y-auto before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] before:from-amber-900/10 before:via-transparent before:to-transparent before:pointer-events-none">
+      {/* Existing SVG pattern */}
       <svg className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none" width="100%" height="100%">
         <defs>
           <pattern id="rockPattern" patternUnits="userSpaceOnUse" width="80" height="80" patternTransform="scale(1) rotate(30)">
@@ -460,9 +444,25 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         <rect width="100%" height="100%" fill="url(#rockPattern)" />
       </svg>
 
+      {/* Animated particles for background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-yellow-400/30 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
       <button
         onClick={onClose}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 transition-all duration-200 z-20 backdrop-blur-sm flex items-center justify-center" // Removed rounded-full and bg-slate-700/80
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 transition-all duration-200 z-20 backdrop-blur-sm flex items-center justify-center"
         aria-label="Đóng"
       >
         <img 
@@ -473,10 +473,19 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         />
       </button>
 
-      <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-yellow-400 drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)] z-10 flex items-center">
-        <PickaxeIcon size={36} className="inline-block mr-3 -mt-1 text-orange-500" />
-        Mỏ Vàng Bất Tận
-      </h2>
+      {/* Upgraded Header Title */}
+      <div className="relative mb-8 z-10">
+        <h2 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center">
+          <div className="relative mr-4">
+            <PickaxeIcon size={42} className="text-amber-500 drop-shadow-lg" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+          </div>
+          <span className="relative">
+            Mỏ Vàng Bất Tận
+            <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+          </span>
+        </h2>
+      </div>
 
       {message && (
         <div className={`fixed top-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg text-base font-semibold z-[100] shadow-xl transition-all duration-300
@@ -486,61 +495,85 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       )}
 
       <div className="w-full max-w-xl z-10 space-y-6">
-        <div className="bg-slate-800/70 backdrop-blur-md p-5 rounded-xl shadow-xl border border-slate-700/80">
-          <h3 className="text-xl font-semibold text-yellow-300 mb-4 border-b border-slate-600/70 pb-3 flex items-center gap-2">
-            <MinersIcon size={22} className="text-blue-400" />
+        {/* Upgraded "Tổng Quan Mỏ" section */}
+        <div className="bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-slate-600/30 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
+          <h3 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-4 border-b border-slate-600/50 pb-3 flex items-center gap-2 relative z-10">
+            <MinersIcon size={24} className="text-cyan-400 drop-shadow-lg" />
             Tổng Quan Mỏ
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base">
-            <div className="flex flex-col items-center bg-slate-700/50 p-3 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base relative z-10">
+            <div className="flex flex-col items-center bg-slate-700/30 backdrop-blur-sm p-4 rounded-xl border border-slate-600/20 hover:bg-slate-700/40 transition-all duration-300">
               <span className="text-slate-400 text-xs uppercase tracking-wider">Tổng Thợ Mỏ</span>
-              <span className="font-bold text-2xl text-white mt-1">{totalMinersCount}</span>
+              <span className="font-bold text-3xl text-white mt-2 drop-shadow-lg">{totalMinersCount}</span>
             </div>
-            <div className="col-span-1 sm:col-span-2 flex flex-col items-center bg-slate-700/50 p-3 rounded-lg">
-               <span className="text-slate-400 text-xs uppercase tracking-wider">Tổng Tốc Độ Đào</span>
-              <span className="font-bold text-2xl text-yellow-400 mt-1">{totalMiningRate.toFixed(2)} vàng/s</span>
+            <div className="col-span-1 sm:col-span-2 flex flex-col items-center bg-gradient-to-br from-yellow-500/10 to-amber-500/10 backdrop-blur-sm p-4 rounded-xl border border-yellow-500/20 hover:from-yellow-500/15 hover:to-amber-500/15 transition-all duration-300">
+              <span className="text-amber-300 text-xs uppercase tracking-wider font-medium">Tổng Tốc Độ Đào</span>
+              <div className="flex items-center mt-2">
+                <span className="font-bold text-3xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300 drop-shadow-lg">{totalMiningRate.toFixed(2)}</span>
+                <span className="text-amber-400 ml-2 text-lg">vàng/s</span>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Upgraded "Quản Lý Đội Ngũ Thợ Mỏ" button */}
         <button
           onClick={() => setIsMinerHiringModalOpen(true)}
-          className="w-full py-3.5 rounded-xl font-bold text-lg transition-all duration-200 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-100 flex items-center justify-center space-x-3"
+          className="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 flex items-center justify-center space-x-3 border border-purple-500/30 relative overflow-hidden group"
         >
-          <MinersIcon size={24} />
-          <span>Quản Lý Đội Ngũ Thợ Mỏ</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+          <MinersIcon size={26} className="drop-shadow-lg" />
+          <span className="relative z-10">Quản Lý Đội Ngũ Thợ Mỏ</span>
         </button>
 
-        <div className="bg-slate-800/70 backdrop-blur-md p-5 rounded-xl shadow-xl border border-slate-700/80">
-          <div className="flex flex-col items-center mb-4">
-            <p className="text-base text-gray-300 mb-1">Vàng Sẵn Sàng Thu Thập</p>
-            <div className="flex items-center space-x-2 text-yellow-300">
-              <CoinIcon size={36} className="text-yellow-400 animate-pulse" style={{animationDuration: '1.5s'}} />
-              <p className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
-                {Math.floor(minedGold).toLocaleString()}
-              </p>
+        {/* Upgraded Gold Collection Section */}
+        <div className="bg-gradient-to-br from-slate-800/40 via-amber-900/10 to-slate-800/40 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-amber-500/20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent"></div>
+          <div className="flex flex-col items-center mb-6 relative z-10">
+            <p className="text-base text-gray-300 mb-2 font-medium">Vàng Sẵn Sàng Thu Thập</p>
+            <div className="flex items-center space-x-3 text-yellow-300 relative">
+              <div className="relative">
+                <CoinIcon size={42} className="text-yellow-400 drop-shadow-xl" />
+                <div className="absolute inset-0 animate-ping">
+                  <CoinIcon size={42} className="text-yellow-400/50" />
+                </div>
+              </div>
+              <div className="relative">
+                <p className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 drop-shadow-2xl">
+                  {Math.floor(minedGold).toLocaleString()}
+                </p>
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent blur-sm"></div>
+              </div>
             </div>
           </div>
           <button
             onClick={handleCollectGold}
             disabled={minedGold < 1}
-            className={`w-full py-3.5 rounded-xl font-bold text-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-100
+            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 relative overflow-hidden group
               ${minedGold < 1
-                ? 'bg-slate-600 text-gray-500 cursor-not-allowed ring-1 ring-slate-500'
-                : 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-900'
+                ? 'bg-slate-600/50 text-gray-500 cursor-not-allowed border border-slate-500/30'
+                : 'bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-600 hover:via-amber-600 hover:to-yellow-700 text-slate-900 border border-yellow-400/30'
               }`}
           >
-            Thu Thập Toàn Bộ
+            {minedGold >= 1 && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+            )}
+            <span className="relative z-10 font-black text-xl">Thu Thập Toàn Bộ</span>
           </button>
         </div>
       </div>
 
-      <p className="mt-8 text-base text-gray-400 z-10">
-        Số vàng bạn đang có:
-        <span className="font-bold text-xl text-yellow-300 ml-2">
-          {currentCoins.toLocaleString()} <CoinIcon size={16} className="inline -mt-1 text-yellow-400" />
-        </span>
-      </p>
+      {/* Upgraded coin info in footer */}
+      <div className="mt-8 text-center z-10 bg-slate-800/30 backdrop-blur-sm rounded-2xl p-4 border border-slate-600/20">
+        <p className="text-base text-gray-400 mb-2">Số vàng bạn đang có:</p>
+        <div className="flex items-center justify-center space-x-2">
+          <CoinIcon size={24} className="text-yellow-400 drop-shadow-lg" />
+          <span className="font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">
+            {currentCoins.toLocaleString()}
+          </span>
+        </div>
+      </div>
 
       <Modal isOpen={isMinerHiringModalOpen} onClose={() => setIsMinerHiringModalOpen(false)} title="Miner">
         <MinerHiringSection
