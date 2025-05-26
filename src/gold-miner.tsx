@@ -52,7 +52,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
           <h2 className="text-lg font-bold text-yellow-400">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 bg-slate-700 rounded-lg transition-colors"
+            className="p-1.5 rounded-lg transition-colors" // Removed bg-slate-700
             aria-label="Đóng"
           >
             <img 
@@ -448,7 +448,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       {/* Optimized Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-2 right-2 p-1.5 bg-slate-700/80 rounded-lg transition-colors z-20"
+        className="absolute top-2 right-2 p-1.5 rounded-lg transition-colors z-20" // Removed bg-slate-700/80
         aria-label="Đóng"
       >
         <img 
