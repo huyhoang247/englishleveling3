@@ -46,13 +46,14 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-end sm:items-center justify-center z-50 p-2">
+    // Changed items-end to items-center to center the modal vertically
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-2"> 
       <div className="relative bg-slate-900 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-[85vh] overflow-y-auto border border-slate-700">
         <div className="sticky top-0 bg-slate-900 border-b border-slate-600 p-3 flex items-center justify-between">
           <h2 className="text-lg font-bold text-yellow-400">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg transition-colors" // Removed bg-slate-700
+            className="p-1.5 rounded-lg transition-colors"
             aria-label="Đóng"
           >
             <img 
