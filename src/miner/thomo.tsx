@@ -102,7 +102,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
 
   return (
     <div className="bg-slate-800/70 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-700">
-      <h3 className="text-xl font-semibold text-blue-300 mb-3 border-b border-slate-600 pb-2">Quản Lý Thợ Mỏ</h3>
+      {/* Removed the duplicate h3 title here */}
       <div className="grid sm:grid-cols-2 gap-4">
         {minerTypesWithIcons.map((miner) => (
           <div key={miner.id} className="flex flex-col justify-between p-4 bg-slate-700/50 rounded-lg shadow-md border border-slate-600 hover:border-blue-500 transition-colors duration-200">
