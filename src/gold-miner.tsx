@@ -81,7 +81,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
   useEffect(() => {
     const fetchMineData = async () => {
       if (!currentUserId) {
-        console.error("No user ID available for fetching mine data.");
+        console.error("GoldMine: No user ID available for fetching mine data.");
         setIsLoading(false);
         return;
       }
@@ -95,16 +95,16 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           const data = mineDocSnap.data();
           setMinedGold(data.minedGold || 0);
           setMiners(data.miners || 0);
-          console.log("Gold mine data fetched:", data);
+          console.log("GoldMine: Gold mine data fetched:", data);
         } else {
           // Initialize mine data if it doesn't exist
           await setDoc(mineDocRef, { minedGold: 0, miners: 0, createdAt: new Date() });
           setMinedGold(0);
           setMiners(0);
-          console.log("Gold mine data initialized.");
+          console.log("GoldMine: Gold mine data initialized.");
         }
       } catch (error) {
-        console.error("Error fetching gold mine data:", error);
+        console.error("GoldMine: Error fetching gold mine data:", error);
         showMessage("Lỗi khi tải dữ liệu mỏ vàng.", "error");
       } finally {
         setIsLoading(false);
@@ -116,29 +116,38 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
   // Effect for gold mining interval
   useEffect(() => {
+    console.log("GoldMine: Mining effect running. isGamePaused:", isGamePaused, "isLoading:", isLoading, "miners:", miners);
     // Pause mining if the game is paused or loading
     if (isGamePaused || isLoading) {
       if (miningIntervalRef.current) {
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
+        console.log("GoldMine: Mining interval cleared due to game paused or loading.");
       }
       return;
     }
 
     // Start mining if not already running and not paused/loading
     if (miners > 0 && miningIntervalRef.current === null) {
+      console.log("GoldMine: Starting mining interval.");
       miningIntervalRef.current = setInterval(() => {
         setMinedGold(prevGold => {
           const newGold = prevGold + (miners * MINING_RATE_PER_MINER);
+          console.log(`GoldMine: Mined gold increased to ${newGold}. Miners: ${miners}`);
           // Update Firestore periodically to save minedGold
           if (auth.currentUser) {
             const mineDocRef = doc(db, 'users', auth.currentUser.uid, 'goldMine', 'data');
             setDoc(mineDocRef, { minedGold: newGold, miners: miners }, { merge: true })
-              .catch(e => console.error("Error updating mined gold in Firestore:", e));
+              .catch(e => console.error("GoldMine: Error updating mined gold in Firestore:", e));
           }
           return newGold;
         });
       }, 1000); // Update every 1 second
+    } else if (miners === 0 && miningIntervalRef.current) {
+        // If miners become 0, clear the interval
+        clearInterval(miningIntervalRef.current);
+        miningIntervalRef.current = null;
+        console.log("GoldMine: Mining interval cleared because miners count is 0.");
     }
 
     // Cleanup function
@@ -146,6 +155,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       if (miningIntervalRef.current) {
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
+        console.log("GoldMine: Mining interval cleanup.");
       }
     };
   }, [miners, isGamePaused, isLoading, db]); // Depend on miners, game pause state, and loading state
@@ -153,11 +163,13 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
   const handleHireMiner = async () => {
     if (currentCoins < HIRE_COST) {
       showMessage("Không đủ vàng để thuê thợ mỏ!", "error");
+      console.log("GoldMine: Not enough coins to hire miner.");
       return;
     }
 
     if (!currentUserId) {
       showMessage("Lỗi: Không tìm thấy ID người dùng.", "error");
+      console.error("GoldMine: No user ID available for hiring miner.");
       return;
     }
 
@@ -193,9 +205,10 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         setMiners(prev => prev + 1);
         onUpdateCoins(-HIRE_COST); // Notify parent to update its coin state
         showMessage("Đã thuê thợ mỏ thành công!", "success");
+        console.log("GoldMine: Miner hired successfully. New miners count:", currentMiners + 1);
       });
     } catch (error: any) {
-      console.error("Lỗi khi thuê thợ mỏ:", error);
+      console.error("GoldMine: Lỗi khi thuê thợ mỏ:", error);
       showMessage(`Lỗi: ${error.message || "Không thể thuê thợ mỏ."}`, "error");
     }
   };
@@ -203,11 +216,13 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
   const handleCollectGold = async () => {
     if (minedGold <= 0) {
       showMessage("Không có vàng để thu thập!", "error");
+      console.log("GoldMine: No gold to collect.");
       return;
     }
 
     if (!currentUserId) {
       showMessage("Lỗi: Không tìm thấy ID người dùng.", "error");
+      console.error("GoldMine: No user ID available for collecting gold.");
       return;
     }
 
@@ -240,9 +255,10 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         setMinedGold(prev => prev - goldToCollect);
         onUpdateCoins(goldToCollect); // Notify parent to update its coin state
         showMessage(`Đã thu thập ${goldToCollect} vàng!`, "success");
+        console.log(`GoldMine: Collected ${goldToCollect} gold. Remaining mined gold: ${minedGold - goldToCollect}`);
       });
     } catch (error: any) {
-      console.error("Lỗi khi thu thập vàng:", error);
+      console.error("GoldMine: Lỗi khi thu thập vàng:", error);
       showMessage(`Lỗi: ${error.message || "Không thể thu thập vàng."}`, "error");
     }
   };
