@@ -51,7 +51,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
         <h2 className="text-2xl font-bold text-yellow-400 mb-4 border-b border-slate-600 pb-3">{title}</h2>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors z-20 backdrop-blur-sm flex items-center justify-center"
+          className="absolute top-4 right-4 p-2 transition-colors z-20 backdrop-blur-sm flex items-center justify-center" // Removed rounded-full and bg-slate-700/80
           aria-label="Đóng"
         >
           <img 
@@ -462,7 +462,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
       <button
         onClick={onClose}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-full bg-slate-700/80 hover:bg-slate-600/80 transition-all duration-200 z-20 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 transition-all duration-200 z-20 backdrop-blur-sm flex items-center justify-center" // Removed rounded-full and bg-slate-700/80
         aria-label="Đóng"
       >
         <img 
