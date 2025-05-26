@@ -1372,7 +1372,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Effect for coin counter animation
   useEffect(() => {
     // Only trigger animation if the displayed coins need to catch up to the actual coins state
+    // AND the change is not coming from GoldMine (which updates 'coins' directly)
     if (displayedCoins === coins) return;
+
+    // If the difference is large (e.g., from GoldMine collection), update displayedCoins immediately
+    // Otherwise, run the animation for small increments (from game collection)
+    if (Math.abs(coins - displayedCoins) > 10) { // Threshold for immediate update vs. animation
+        setDisplayedCoins(coins);
+        return;
+    }
+
 
     const coinElement = document.querySelector('.coin-counter');
     if (coinElement) {
