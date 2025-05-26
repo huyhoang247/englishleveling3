@@ -7,6 +7,7 @@ interface GoldMineProps {
   onClose: () => void; // Function to close the Gold Mine screen
   currentCoins: number; // Current main coin balance from parent
   onUpdateCoins: (amount: number) => Promise<void>; // Function to update main coins in parent (and Firestore)
+  onUpdateDisplayedCoins: (amount: number) => void; // NEW: Function to update displayed coins in parent immediately
   currentUserId: string; // Current authenticated user ID
   isGamePaused: boolean; // Prop to indicate if the main game is paused
 }
@@ -54,7 +55,7 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
 );
 
 
-const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoins, currentUserId, isGamePaused }) => {
+const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoins, onUpdateDisplayedCoins, currentUserId, isGamePaused }) => {
   const [minedGold, setMinedGold] = useState(0);
   const [miners, setMiners] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -254,7 +255,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         // Update local state after successful transaction
         setMiners(prev => prev + 1);
-        onUpdateCoins(-HIRE_COST); // Notify parent to update its coin state
+        onUpdateCoins(-HIRE_COST); // Notify parent to update its coin state (and Firestore)
+        onUpdateDisplayedCoins(currentCoins - HIRE_COST); // NEW: Cập nhật displayedCoins ngay lập tức
         showMessage("Đã thuê thợ mỏ thành công!", "success");
         console.log("GoldMine: Miner hired successfully. New miners count:", currentMiners + 1);
       });
@@ -309,7 +311,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         // Update local state after successful transaction
         setMinedGold(remainingFractionalGold);
-        onUpdateCoins(goldToCollect);
+        onUpdateCoins(goldToCollect); // Notify parent to update its coin state (and Firestore)
+        onUpdateDisplayedCoins(currentCoins + goldToCollect); // NEW: Cập nhật displayedCoins ngay lập tức
         showMessage(`Đã thu thập ${goldToCollect} vàng!`, "success");
         console.log(`GoldMine: Collected ${goldToCollect} gold. Remaining mined gold: ${remainingFractionalGold}`);
       });
