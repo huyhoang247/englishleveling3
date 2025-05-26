@@ -41,27 +41,31 @@ const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// Modal Component
+// Modal Component - Optimized for Mobile
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode; title: string }> = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
-      <div className="relative bg-slate-900 rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-700">
-        <h2 className="text-2xl font-bold text-yellow-400 mb-4 border-b border-slate-600 pb-3">{title}</h2>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 transition-colors z-20 backdrop-blur-sm flex items-center justify-center" // Removed rounded-full and bg-slate-700/80
-          aria-label="Đóng"
-        >
-          <img 
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
-            alt="Close" 
-            className="w-5 h-5" 
-            onError="this.onerror=null;this.src='https://placehold.co/20x20/cccccc/000000?text=X';" 
-          />
-        </button>
-        {children}
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-end sm:items-center justify-center z-50 p-2">
+      <div className="relative bg-slate-900 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-2xl max-h-[85vh] overflow-y-auto border border-slate-700">
+        <div className="sticky top-0 bg-slate-900 border-b border-slate-600 p-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-yellow-400">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 bg-slate-700 rounded-lg transition-colors"
+            aria-label="Đóng"
+          >
+            <img 
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
+              alt="Close" 
+              className="w-4 h-4" 
+              onError="this.onerror=null;this.src='https://placehold.co/16x16/cccccc/000000?text=X';" 
+            />
+          </button>
+        </div>
+        <div className="p-4">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -421,157 +425,120 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     }
   };
 
+  const totalMiningRate = getCurrentMiningRate();
+  const totalMinersCount = basicMiners + advancedMiners + masterMiners;
+
+  // Responsive Loading State
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center w-full h-full bg-slate-900 text-yellow-400 rounded-lg text-xl font-semibold p-4">
-        <PickaxeIcon className="animate-spin mr-3 text-yellow-500" size={32} /> Đang tải dữ liệu mỏ vàng...
+      <div className="flex items-center justify-center w-full h-full bg-slate-900 text-yellow-400 rounded-lg p-4">
+        <div className="text-center">
+          <PickaxeIcon className="animate-spin mx-auto mb-2 text-yellow-500" size={24} />
+          <div className="text-sm">Đang tải...</div>
+        </div>
       </div>
     );
   }
 
-  const totalMiningRate = getCurrentMiningRate();
-  const totalMinersCount = basicMiners + advancedMiners + masterMiners;
-
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-start bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900/20 text-gray-200 p-4 sm:p-6 rounded-xl shadow-2xl overflow-y-auto before:absolute before:inset-0 before:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] before:from-amber-900/10 before:via-transparent before:to-transparent before:pointer-events-none">
-      {/* Existing SVG pattern */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none" width="100%" height="100%">
-        <defs>
-          <pattern id="rockPattern" patternUnits="userSpaceOnUse" width="80" height="80" patternTransform="scale(1) rotate(30)">
-            <path d="M0 40 Q20 0 40 40 Q60 80 80 40 Q60 0 40 40 Q20 80 0 40" stroke="#FFFFFF" strokeWidth="0.3" fill="transparent" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#rockPattern)" />
-      </svg>
+    // Main container optimized for mobile
+    <div className="relative w-full h-full flex flex-col items-center justify-start bg-gradient-to-br from-slate-900 to-slate-800 text-gray-200 p-3 rounded-lg shadow-xl overflow-y-auto">
+      {/* Removed SVG pattern and animated particles for mobile optimization */}
 
-      {/* Animated particles for background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-yellow-400/30 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
+      {/* Optimized Close Button */}
       <button
         onClick={onClose}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 transition-all duration-200 z-20 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-2 right-2 p-1.5 bg-slate-700/80 rounded-lg transition-colors z-20"
         aria-label="Đóng"
       >
         <img 
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
           alt="Close" 
-          className="w-5 h-5" 
-          onError="this.onerror=null;this.src='https://placehold.co/20x20/cccccc/000000?text=X';" 
+          className="w-4 h-4" 
+          onError="this.onerror=null;this.src='https://placehold.co/16x16/cccccc/000000?text=X';" 
         />
       </button>
 
-      {/* Upgraded Header Title */}
-      <div className="relative mb-8 z-10">
-        <h2 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] flex items-center justify-center">
-          <div className="relative mr-4">
-            <PickaxeIcon size={42} className="text-amber-500 drop-shadow-lg" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-          </div>
-          <span className="relative">
-            Mỏ Vàng Bất Tận
-            <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
-          </span>
+      {/* Optimized Header Title for Mobile */}
+      <div className="relative mb-4 z-10 w-full">
+        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300 flex items-center justify-center">
+          <PickaxeIcon size={28} className="text-amber-500 mr-2" />
+          <span>Mỏ Vàng</span>
         </h2>
+        <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent mx-auto mt-1"></div>
       </div>
 
+      {/* Optimized Message Notification */}
       {message && (
-        <div className={`fixed top-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg text-base font-semibold z-[100] shadow-xl transition-all duration-300
+        <div className={`fixed top-3 left-3 right-3 px-4 py-2 rounded-lg text-sm font-medium z-[100] shadow-lg transition-all duration-300
           ${messageType === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
           {message}
         </div>
       )}
 
-      <div className="w-full max-w-xl z-10 space-y-6">
-        {/* Upgraded "Tổng Quan Mỏ" section */}
-        <div className="bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-slate-600/30 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 pointer-events-none"></div>
-          <h3 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-4 border-b border-slate-600/50 pb-3 flex items-center gap-2 relative z-10">
-            <MinersIcon size={24} className="text-cyan-400 drop-shadow-lg" />
-            Tổng Quan Mỏ
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base relative z-10">
-            <div className="flex flex-col items-center bg-slate-700/30 backdrop-blur-sm p-4 rounded-xl border border-slate-600/20 hover:bg-slate-700/40 transition-all duration-300">
-              <span className="text-slate-400 text-xs uppercase tracking-wider">Tổng Thợ Mỏ</span>
-              <span className="font-bold text-3xl text-white mt-2 drop-shadow-lg">{totalMinersCount}</span>
+      {/* Optimized Layout for all content */}
+      <div className="w-full max-w-sm mx-auto z-10 space-y-3 flex-1 flex flex-col">
+        {/* Compact Stats Overview */}
+        <div className="w-full bg-slate-800/50 backdrop-blur-sm p-3 rounded-xl border border-slate-600/30 mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-cyan-400 flex items-center gap-1">
+              <MinersIcon size={16} />
+              Tổng Quan
+            </h3>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <div className="text-center">
+              <div className="text-white font-bold text-lg">{totalMinersCount}</div>
+              <div className="text-slate-400 text-xs">Thợ Mỏ</div>
             </div>
-            <div className="col-span-1 sm:col-span-2 flex flex-col items-center bg-gradient-to-br from-yellow-500/10 to-amber-500/10 backdrop-blur-sm p-4 rounded-xl border border-yellow-500/20 hover:from-yellow-500/15 hover:to-amber-500/15 transition-all duration-300">
-              <span className="text-amber-300 text-xs uppercase tracking-wider font-medium">Tổng Tốc Độ Đào</span>
-              <div className="flex items-center mt-2">
-                <span className="font-bold text-3xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300 drop-shadow-lg">{totalMiningRate.toFixed(2)}</span>
-                <span className="text-amber-400 ml-2 text-lg">vàng/s</span>
-              </div>
+            <div className="w-px h-8 bg-slate-600"></div>
+            <div className="text-center">
+              <div className="text-yellow-400 font-bold text-lg">{totalMiningRate.toFixed(1)}/s</div>
+              <div className="text-slate-400 text-xs">Tốc Độ</div>
             </div>
           </div>
         </div>
 
-        {/* Upgraded "Quản Lý Đội Ngũ Thợ Mỏ" button */}
+        {/* Compact Button for Miner Management */}
         <button
           onClick={() => setIsMinerHiringModalOpen(true)}
-          className="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 flex items-center justify-center space-x-3 border border-purple-500/30 relative overflow-hidden group"
+          className="w-full py-3 rounded-lg font-semibold text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mb-3"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-          <MinersIcon size={26} className="drop-shadow-lg" />
-          <span className="relative z-10">Quản Lý Đội Ngũ Thợ Mỏ</span>
+          <MinersIcon size={18} />
+          <span>Quản Lý Thợ Mỏ</span>
         </button>
 
-        {/* Upgraded Gold Collection Section */}
-        <div className="bg-gradient-to-br from-slate-800/40 via-amber-900/10 to-slate-800/40 backdrop-blur-xl p-6 rounded-2xl shadow-2xl border border-amber-500/20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent"></div>
-          <div className="flex flex-col items-center mb-6 relative z-10">
-            <p className="text-base text-gray-300 mb-2 font-medium">Vàng Sẵn Sàng Thu Thập</p>
-            <div className="flex items-center space-x-3 text-yellow-300 relative">
-              <div className="relative">
-                <CoinIcon size={42} className="text-yellow-400 drop-shadow-xl" />
-                <div className="absolute inset-0 animate-ping">
-                  <CoinIcon size={42} className="text-yellow-400/50" />
-                </div>
-              </div>
-              <div className="relative">
-                <p className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 drop-shadow-2xl">
-                  {Math.floor(minedGold).toLocaleString()}
-                </p>
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent blur-sm"></div>
-              </div>
+        {/* Compact Gold Collection */}
+        <div className="w-full bg-gradient-to-r from-amber-900/20 to-yellow-900/20 backdrop-blur-sm p-4 rounded-xl border border-amber-500/30 mb-3">
+          <div className="text-center mb-3">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <CoinIcon size={24} className="text-yellow-400" />
+              <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">
+                {Math.floor(minedGold).toLocaleString()}
+              </span>
             </div>
+            <div className="text-xs text-amber-300">Vàng Sẵn Sàng</div>
           </div>
           <button
             onClick={handleCollectGold}
             disabled={minedGold < 1}
-            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95 relative overflow-hidden group
+            className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all duration-200
               ${minedGold < 1
-                ? 'bg-slate-600/50 text-gray-500 cursor-not-allowed border border-slate-500/30'
-                : 'bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-600 hover:via-amber-600 hover:to-yellow-700 text-slate-900 border border-yellow-400/30'
+                ? 'bg-slate-600/50 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-slate-900 shadow-lg'
               }`}
           >
-            {minedGold >= 1 && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            )}
-            <span className="relative z-10 font-black text-xl">Thu Thập Toàn Bộ</span>
+            Thu Thập
           </button>
         </div>
       </div>
 
-      {/* Upgraded coin info in footer */}
-      <div className="mt-8 text-center z-10 bg-slate-800/30 backdrop-blur-sm rounded-2xl p-4 border border-slate-600/20">
-        <p className="text-base text-gray-400 mb-2">Số vàng bạn đang có:</p>
-        <div className="flex items-center justify-center space-x-2">
-          <CoinIcon size={24} className="text-yellow-400 drop-shadow-lg" />
-          <span className="font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">
-            {currentCoins.toLocaleString()}
-          </span>
+      {/* Compact Footer Coins Display */}
+      <div className="mt-auto pt-3 w-full">
+        <div className="flex items-center justify-center gap-2 bg-slate-800/30 rounded-lg p-2 border border-slate-600/20">
+          <CoinIcon size={16} className="text-yellow-400" />
+          <span className="text-sm text-gray-300">Đang có:</span>
+          <span className="font-bold text-yellow-400">{currentCoins.toLocaleString()}</span>
         </div>
       </div>
 
