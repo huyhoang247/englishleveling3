@@ -23,42 +23,49 @@ interface MinerHiringSectionProps {
   efficiencyBonusPerLevel: number; // Pass efficiency bonus
 }
 
-// --- SVG ICONS (Moved here for self-containment, but can be imported if preferred) ---
-// Miners Icon (User Group)
+// --- ENHANCED SVG ICONS ---
 const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props} >
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
   </svg>
 );
 
-// New Icon for Advanced Miner (using a gear for now)
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" />
   </svg>
 );
 
-// New Icon for Master Miner (using a crown for now)
 const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="m2 16 2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2 2-2v-2l-2-2-2 2-2-2-2 2-2-2-2 2-2-2-2 2v2z" /><path d="M12 14v-2" /><path d="M12 10V8" /><path d="M12 6V4" /><path d="M12 2v2" /><path d="M12 22v-2" /><path d="M12 18v-2" /><path d="M12 20v-2" />
+    <path d="m2 16 20-10-4 12L6 14l-4 2z"/>
+    <path d="m6 16 2 2 4-4"/>
   </svg>
 );
 
-// Upgrade Icon (Arrow Up Circle)
 const UpgradeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props} >
-    <circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line>
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M12 2v20m8-8-8-8-8 8"/>
   </svg>
 );
 
-// Sell Icon (Dollar Sign)
 const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+    <line x1="12" y1="1" x2="12" y2="23"></line>
+    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
   </svg>
 );
-// ------------------------------------------------------------------------------------
+
+const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+    <polyline points="17 6 23 6 23 12"></polyline>
+  </svg>
+);
 
 const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   MINER_TYPES,
@@ -70,7 +77,41 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   minerEfficiencyLevel,
   efficiencyBonusPerLevel,
 }) => {
-  // Map MINER_TYPES to include the actual icon components
+  // Get rarity colors based on miner type
+  const getRarityColor = (minerId: string) => {
+    switch (minerId) {
+      case 'basic':
+        return {
+          border: 'border-slate-500',
+          glow: 'shadow-slate-500/20',
+          accent: 'text-slate-300',
+          bg: 'bg-slate-700/60'
+        };
+      case 'advanced':
+        return {
+          border: 'border-blue-500',
+          glow: 'shadow-blue-500/30',
+          accent: 'text-blue-300',
+          bg: 'bg-blue-900/20'
+        };
+      case 'master':
+        return {
+          border: 'border-purple-500',
+          glow: 'shadow-purple-500/40',
+          accent: 'text-purple-300',
+          bg: 'bg-purple-900/20'
+        };
+      default:
+        return {
+          border: 'border-slate-500',
+          glow: 'shadow-slate-500/20',
+          accent: 'text-slate-300',
+          bg: 'bg-slate-700/60'
+        };
+    }
+  };
+
+  // Map MINER_TYPES to include the actual icon components and enhanced data
   const minerTypesWithIcons = MINER_TYPES.map(miner => {
     let IconComponent;
     switch (miner.id) {
@@ -84,87 +125,185 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
         IconComponent = MasterMinerIcon;
         break;
       default:
-        IconComponent = MinersIcon; // Fallback
+        IconComponent = MinersIcon;
     }
 
     const currentRate = miner.baseRate + minerEfficiencyLevel * efficiencyBonusPerLevel;
+    const totalOutput = currentRate * miner.count;
     const upgradeCost = Math.floor(miner.baseCost * miner.upgradeCostMultiplier);
     const sellValue = Math.floor(miner.baseCost * miner.sellReturnFactor);
+    const colors = getRarityColor(miner.id);
+
+    const canAffordHire = currentCoins >= miner.baseCost;
+    const canAffordUpgrade = currentCoins >= upgradeCost && miner.count > 0;
+    const canSell = miner.count > 0;
 
     return {
       ...miner,
       icon: IconComponent,
       currentRate,
+      totalOutput,
       upgradeCost,
       sellValue,
+      colors,
+      canAffordHire,
+      canAffordUpgrade,
+      canSell,
     };
   });
 
   return (
-    <div className="bg-slate-800/70 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-700">
-      {/* Removed the duplicate h3 title here */}
-      <div className="grid sm:grid-cols-2 gap-4">
+    <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-lg p-6 rounded-2xl shadow-2xl border border-slate-700/50">
+      {/* Header Section */}
+      <div className="mb-6">
+        <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+            <MinersIcon size={24} className="text-white" />
+          </div>
+          Trung Tâm Tuyển Dụng Thợ Mỏ
+        </h3>
+        <p className="text-slate-300 text-sm">
+          Thuê và quản lý đội ngũ thợ mỏ của bạn để tối ưu hóa thu nhập
+        </p>
+      </div>
+
+      {/* Miners Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {minerTypesWithIcons.map((miner) => (
-          <div key={miner.id} className="flex flex-col justify-between p-4 bg-slate-700/50 rounded-lg shadow-md border border-slate-600 hover:border-blue-500 transition-colors duration-200">
-            <div className="flex items-center space-x-3 mb-2">
-              <miner.icon size={28} className="text-white" />
-              <h4 className="text-xl font-bold text-white">{miner.name}</h4>
-            </div>
-            <p className="text-xs text-gray-400 mb-2">{miner.description}</p>
-            <p className="text-sm text-gray-300">
-              Số lượng hiện có: <span className="font-bold text-yellow-300">{miner.count}</span>
-            </p>
-            <p className="text-sm text-gray-300 mb-3">
-              Khai thác: <span className="font-bold text-green-400">{miner.currentRate.toFixed(2)} vàng/s</span>
-            </p>
+          <div 
+            key={miner.id} 
+            className={`relative group overflow-hidden rounded-xl border-2 ${miner.colors.border} ${miner.colors.glow} shadow-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 ${miner.colors.bg} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl`}
+          >
+            {/* Animated background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            
+            {/* Content */}
+            <div className="relative p-5">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 ${miner.colors.border} border shadow-lg`}>
+                    <miner.icon size={28} className={miner.colors.accent} />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white">{miner.name}</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed">{miner.description}</p>
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex flex-col space-y-2 mt-auto">
-              {/* Hire Button */}
-              <button
-                onClick={() => handleHireMiner(miner.id)}
-                disabled={currentCoins < miner.baseCost}
-                className={`w-full py-2 px-3 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center space-x-2
-                  ${currentCoins < miner.baseCost
-                    ? 'bg-slate-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
-                  }`}
-              >
-                <CoinIcon size={16} className="inline -mt-0.5" color="gold" />
-                <span>Thuê ({miner.baseCost.toLocaleString()})</span>
-              </button>
+              {/* Stats Section */}
+              <div className="space-y-3 mb-5">
+                {/* Count and Rate */}
+                <div className="flex justify-between items-center p-3 bg-slate-800/60 rounded-lg border border-slate-600/50">
+                  <div className="text-center flex-1">
+                    <p className="text-xs text-slate-400 uppercase font-medium">Số lượng</p>
+                    <p className="text-lg font-bold text-yellow-400">{miner.count}</p>
+                  </div>
+                  <div className="w-px h-8 bg-slate-600"></div>
+                  <div className="text-center flex-1">
+                    <p className="text-xs text-slate-400 uppercase font-medium">Tỷ lệ</p>
+                    <p className="text-lg font-bold text-green-400">{miner.currentRate.toFixed(1)}/s</p>
+                  </div>
+                </div>
 
-              {/* Upgrade Button (if applicable) */}
-              {miner.id !== 'master' && ( // Example: Master miners cannot be upgraded further
+                {/* Total Output */}
+                {miner.count > 0 && (
+                  <div className="flex items-center justify-between p-2 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-lg border border-green-700/30">
+                    <div className="flex items-center gap-2">
+                      <TrendingUpIcon className="text-green-400" />
+                      <span className="text-sm text-green-300">Tổng sản lượng:</span>
+                    </div>
+                    <span className="font-bold text-green-400">{miner.totalOutput.toFixed(1)} vàng/s</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                {/* Hire Button */}
                 <button
-                  onClick={() => handleUpgradeMiner(miner.id)}
-                  disabled={currentCoins < miner.upgradeCost || miner.count === 0}
-                  className={`w-full py-2 px-3 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center space-x-2
-                    ${currentCoins < miner.upgradeCost || miner.count === 0
-                      ? 'bg-slate-600 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-green-600 to-teal-700 hover:from-green-700 hover:to-teal-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
-                    }`}
-                >
-                  <UpgradeIcon size={16} className="inline -mt-0.5" color="white" />
-                  <span>Nâng cấp ({miner.upgradeCost.toLocaleString()})</span>
-                </button>
-              )}
-
-              {/* Sell Button */}
-              <button
-                onClick={() => handleSellMiner(miner.id)}
-                disabled={miner.count === 0}
-                className={`w-full py-2 px-3 rounded-lg font-bold text-sm transition-all duration-200 flex items-center justify-center space-x-2
-                  ${miner.count === 0
-                    ? 'bg-slate-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+                  onClick={() => handleHireMiner(miner.id)}
+                  disabled={!miner.canAffordHire}
+                  className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                    miner.canAffordHire
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]'
+                      : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/50'
                   }`}
-              >
-                <SellIcon size={16} className="inline -mt-0.5" color="white" />
-                <span>Bán ({miner.sellValue.toLocaleString()})</span>
-              </button>
+                >
+                  <CoinIcon size={18} color={miner.canAffordHire ? "gold" : "currentColor"} />
+                  <span>Thuê - {miner.baseCost.toLocaleString()}</span>
+                </button>
+
+                {/* Upgrade and Sell Row */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Upgrade Button */}
+                  {miner.id !== 'master' && (
+                    <button
+                      onClick={() => handleUpgradeMiner(miner.id)}
+                      disabled={!miner.canAffordUpgrade}
+                      className={`py-2.5 px-3 rounded-lg font-medium text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                        miner.canAffordUpgrade
+                          ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]'
+                          : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/30'
+                      }`}
+                    >
+                      <UpgradeIcon size={14} />
+                      <span>{miner.upgradeCost.toLocaleString()}</span>
+                    </button>
+                  )}
+
+                  {/* Sell Button */}
+                  <button
+                    onClick={() => handleSellMiner(miner.id)}
+                    disabled={!miner.canSell}
+                    className={`py-2.5 px-3 rounded-lg font-medium text-xs transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                      miner.canSell
+                        ? 'bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]'
+                        : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/30'
+                    } ${miner.id === 'master' ? 'col-span-2' : ''}`}
+                  >
+                    <SellIcon size={14} />
+                    <span>Bán - {miner.sellValue.toLocaleString()}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Efficiency Indicator */}
+              {minerEfficiencyLevel > 0 && (
+                <div className="mt-3 p-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+                  <p className="text-xs text-yellow-300 text-center">
+                    ⚡ Hiệu suất +{((minerEfficiencyLevel * efficiencyBonusPerLevel) / miner.baseRate * 100).toFixed(0)}%
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Summary Stats */}
+      <div className="mt-6 p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-xl border border-slate-600/50">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-xs text-slate-400 uppercase font-medium mb-1">Tổng thợ mỏ</p>
+            <p className="text-xl font-bold text-white">
+              {minerTypesWithIcons.reduce((sum, miner) => sum + miner.count, 0)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 uppercase font-medium mb-1">Thu nhập/giây</p>
+            <p className="text-xl font-bold text-green-400">
+              {minerTypesWithIcons.reduce((sum, miner) => sum + miner.totalOutput, 0).toFixed(1)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 uppercase font-medium mb-1">Hiệu suất</p>
+            <p className="text-xl font-bold text-yellow-400">
+              Cấp {minerEfficiencyLevel}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
