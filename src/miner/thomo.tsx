@@ -9,7 +9,7 @@ interface MinerHiringSectionProps {
     baseCost: number;
     baseRate: number;
     icon: React.FC<any>;
-    count: number; // Số lượng hiện tại của loại thợ mỏ này
+    count: number;
     sellReturnFactor: number;
   }>;
   handleHireMiner: (minerId: string) => Promise<void>;
@@ -18,9 +18,7 @@ interface MinerHiringSectionProps {
   CoinIcon: React.FC<any>;
 }
 
-// --- BIỂU TƯỢNG SVG NÂNG CAO ---
-// (Giữ nguyên các biểu tượng SVG đã có trong tệp thomo.tsx của bạn)
-// Biểu tượng Thợ Mỏ (Nhóm người dùng)
+// --- BIỂU TƯỢNG SVG NÂNG CAP ---
 const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -30,7 +28,6 @@ const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
   </svg>
 );
 
-// Biểu tượng Thợ Mỏ Cao Cấp (Bánh răng)
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3" />
@@ -38,14 +35,13 @@ const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', 
   </svg>
 );
 
-// Biểu tượng Thợ Mỏ Bậc Thầy (Vương miện - sử dụng từ gold-miner.tsx để đồng bộ)
 const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-      <path d="M2 13.17A2 2 0 0 0 3.17 12H0V9h3.17A2 2 0 0 0 2 7.83L4.93 2 12 6l7.07-4L22 7.83A2 2 0 0 0 20.83 9H24v3h-3.17A2 2 0 0 0 22 13.17L19.07 19H4.93Z"></path><path d="M12 6v12"></path>
-    </svg>
-  );
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M2 13.17A2 2 0 0 0 3.17 12H0V9h3.17A2 2 0 0 0 2 7.83L4.93 2 12 6l7.07-4L22 7.83A2 2 0 0 0 20.83 9H24v3h-3.17A2 2 0 0 0 22 13.17L19.07 19H4.93Z"></path>
+    <path d="M12 6v12"></path>
+  </svg>
+);
 
-// Biểu tượng Bán (Đô la)
 const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -53,7 +49,6 @@ const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
   </svg>
 );
 
-// Biểu tượng Tăng trưởng (Mũi tên đi lên)
 const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -61,6 +56,20 @@ const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...
   </svg>
 );
 
+const PlusIcon = ({ size = 16, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <line x1="12" y1="5" x2="12" y2="19"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+);
+
+const LoadingSpinner = ({ size = 20, className = '' }) => (
+  <svg className={`animate-spin ${className}`} width={size} height={size} viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="60" strokeDashoffset="60" strokeLinecap="round">
+      <animate attributeName="stroke-dashoffset" dur="2s" values="60;0" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+);
 
 const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   MINER_TYPES,
@@ -69,60 +78,84 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   currentCoins,
   CoinIcon,
 }) => {
-  // State để quản lý số lượng thợ mỏ hiện đang hiển thị
-  const [displayedMinerCount, setDisplayedMinerCount] = useState(3); // Hiển thị 3 thợ mỏ ban đầu
-  const loadingRef = useRef(null); // Ref cho phần tử chỉ báo tải
+  const [displayedMinerCount, setDisplayedMinerCount] = useState(3);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const [animatingCards, setAnimatingCards] = useState<Record<string, boolean>>({});
+  const loadingRef = useRef<HTMLDivElement>(null);
 
-  // Hàm để lấy màu sắc dựa trên độ hiếm của thợ mỏ
+  // Hàm xử lý animation cho các hành động
+  const handleActionWithAnimation = async (action: () => Promise<void>, minerId: string, actionType: 'hire' | 'sell') => {
+    const loadingKey = `${minerId}-${actionType}`;
+    setLoadingActions(prev => ({ ...prev, [loadingKey]: true }));
+    setAnimatingCards(prev => ({ ...prev, [minerId]: true }));
+    
+    try {
+      await action();
+      // Thêm delay nhỏ để người dùng thấy được feedback
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } finally {
+      setLoadingActions(prev => ({ ...prev, [loadingKey]: false }));
+      setTimeout(() => {
+        setAnimatingCards(prev => ({ ...prev, [minerId]: false }));
+      }, 500);
+    }
+  };
+
   const getRarityColor = (minerId: string) => {
     switch (minerId) {
       case 'basic':
         return {
-          border: 'border-slate-500 hover:border-slate-400',
-          glow: 'shadow-[0_0_12px_0px_rgba(100,116,139,0.3)] hover:shadow-[0_0_18px_0px_rgba(100,116,139,0.5)]',
-          accent: 'text-slate-300',
-          bgFrom: 'from-slate-700/70',
-          bgTo: 'to-slate-800/70',
-          iconBg: 'bg-slate-600/50',
+          border: 'border-slate-400/70 hover:border-slate-300',
+          glow: 'shadow-[0_0_20px_-5px_rgba(148,163,184,0.3)] hover:shadow-[0_0_25px_-3px_rgba(148,163,184,0.5)]',
+          accent: 'text-slate-200',
+          bgFrom: 'from-slate-800/80',
+          bgTo: 'to-slate-900/90',
+          iconBg: 'bg-slate-700/60',
+          progressBg: 'bg-slate-600',
+          buttonGradient: 'from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600',
         };
       case 'advanced':
         return {
-          border: 'border-blue-500 hover:border-blue-400',
-          glow: 'shadow-[0_0_12px_0px_rgba(59,130,246,0.4)] hover:shadow-[0_0_18px_0px_rgba(59,130,246,0.6)]',
-          accent: 'text-blue-300',
-          bgFrom: 'from-blue-800/50',
-          bgTo: 'to-blue-900/50',
-          iconBg: 'bg-blue-700/40',
+          border: 'border-blue-400/70 hover:border-blue-300',
+          glow: 'shadow-[0_0_20px_-5px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_-3px_rgba(59,130,246,0.6)]',
+          accent: 'text-blue-200',
+          bgFrom: 'from-blue-900/70',
+          bgTo: 'to-blue-950/90',
+          iconBg: 'bg-blue-800/50',
+          progressBg: 'bg-blue-600',
+          buttonGradient: 'from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600',
         };
       case 'master':
         return {
-          border: 'border-purple-500 hover:border-purple-400',
-          glow: 'shadow-[0_0_12px_0px_rgba(168,85,247,0.4)] hover:shadow-[0_0_18px_0px_rgba(168,85,247,0.6)]',
-          accent: 'text-purple-300',
-          bgFrom: 'from-purple-800/50',
-          bgTo: 'to-purple-900/50',
-          iconBg: 'bg-purple-700/40',
+          border: 'border-purple-400/70 hover:border-purple-300',
+          glow: 'shadow-[0_0_20px_-5px_rgba(168,85,247,0.4)] hover:shadow-[0_0_25px_-3px_rgba(168,85,247,0.6)]',
+          accent: 'text-purple-200',
+          bgFrom: 'from-purple-900/70',
+          bgTo: 'to-purple-950/90',
+          iconBg: 'bg-purple-800/50',
+          progressBg: 'bg-purple-600',
+          buttonGradient: 'from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600',
         };
       default:
         return {
-          border: 'border-slate-500',
+          border: 'border-slate-400/70',
           glow: 'shadow-slate-500/20',
-          accent: 'text-slate-300',
-          bgFrom: 'from-slate-700/60',
-          bgTo: 'to-slate-800/60',
-          iconBg: 'bg-slate-600/50',
+          accent: 'text-slate-200',
+          bgFrom: 'from-slate-800/80',
+          bgTo: 'to-slate-900/90',
+          iconBg: 'bg-slate-700/60',
+          progressBg: 'bg-slate-600',
+          buttonGradient: 'from-slate-600 to-slate-700',
         };
     }
   };
 
-  // Chuẩn bị dữ liệu thợ mỏ với các giá trị đã tính toán và trạng thái dẫn xuất
   const minerTypesWithData = MINER_TYPES.map(miner => {
     const IconComponent = miner.icon;
-    const currentRate = miner.baseRate; // Sử dụng baseRate vì hiệu suất chung đã bị loại bỏ
+    const currentRate = miner.baseRate;
     const totalOutput = currentRate * miner.count;
     const sellValue = Math.floor(miner.baseCost * miner.sellReturnFactor);
     const colors = getRarityColor(miner.id);
-
     const canAffordHire = currentCoins >= miner.baseCost;
     const canSell = miner.count > 0;
 
@@ -138,23 +171,20 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
     };
   });
 
-  // Hàm để tải thêm thợ mỏ
   const loadMoreMiners = useCallback(() => {
     setDisplayedMinerCount(prevCount =>
-      Math.min(prevCount + 3, minerTypesWithData.length) // Tải thêm 3 thợ mỏ, tối đa bằng tổng số
+      Math.min(prevCount + 3, minerTypesWithData.length)
     );
   }, [minerTypesWithData.length]);
 
-  // Effect cho Intersection Observer để kích hoạt tải lười
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        // Nếu phần tử tải đang hiển thị và vẫn còn thợ mỏ để tải
         if (entries[0].isIntersecting && displayedMinerCount < minerTypesWithData.length) {
           loadMoreMiners();
         }
       },
-      { threshold: 1.0 } // Kích hoạt khi 100% phần tử tải hiển thị
+      { threshold: 1.0 }
     );
 
     if (loadingRef.current) {
@@ -168,96 +198,133 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
     };
   }, [displayedMinerCount, minerTypesWithData.length, loadMoreMiners]);
 
-
   return (
-    <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-sm p-4 sm:p-5 rounded-lg shadow-xl border border-slate-700/50">
-      {/* Tiêu đề phần */}
-      <div className="mb-5 text-center sm:text-left">
-        <h3 className="text-lg sm:text-xl font-bold text-yellow-400 mb-1 flex items-center justify-center sm:justify-start gap-2.5">
-          <div className="p-2 bg-gradient-to-r from-sky-500 to-indigo-600 rounded-md shadow-sm">
-            <MinersIcon size={20} className="text-white" />
+    <div className="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-md p-4 md:p-6 rounded-2xl shadow-2xl border border-slate-700/60">
+      {/* Header với animation */}
+      <div className="mb-6 text-center">
+        <div className="inline-flex items-center gap-3 mb-2 p-3 bg-gradient-to-r from-sky-500/20 to-indigo-600/20 rounded-xl border border-sky-400/30 backdrop-blur-sm">
+          <div className="p-2 bg-gradient-to-r from-sky-500 to-indigo-600 rounded-lg shadow-lg animate-pulse">
+            <MinersIcon size={24} className="text-white" />
           </div>
-          Quản Lý Thợ Mỏ
-        </h3>
-        <p className="text-slate-400 text-xs sm:text-sm">
-          Thuê và bán thợ mỏ để tối ưu hóa sản lượng vàng.
+          <h3 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+            Quản Lý Thợ Mỏ
+          </h3>
+        </div>
+        <p className="text-slate-300 text-sm md:text-base">
+          Thuê và bán thợ mỏ để tối ưu hóa sản lượng vàng
         </p>
       </div>
 
-      {/* Lưới thẻ thợ mỏ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {minerTypesWithData.slice(0, displayedMinerCount).map((miner) => ( // Chỉ render số lượng thợ mỏ hiển thị
+      {/* Grid cards với staggered animation */}
+      <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:space-y-0">
+        {minerTypesWithData.slice(0, displayedMinerCount).map((miner, index) => (
           <div
             key={miner.id}
-            className={`relative group overflow-hidden rounded-lg border ${miner.colors.border} ${miner.colors.glow} bg-gradient-to-br ${miner.colors.bgFrom} ${miner.colors.bgTo} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-xl`}
+            className={`relative group overflow-hidden rounded-xl border ${miner.colors.border} ${miner.colors.glow} bg-gradient-to-br ${miner.colors.bgFrom} ${miner.colors.bgTo} backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in-up ${animatingCards[miner.id] ? 'animate-pulse scale-[1.02]' : ''}`}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
-            {/* Hiệu ứng di chuột cho thẻ */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 opacity-30 group-hover:opacity-60"></div>
+            {/* Shine effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
             
-            <div className="relative p-4">
-              {/* Biểu tượng và Tên/Mô tả thợ mỏ */}
-              <div className="flex items-start gap-3 mb-3">
-                <div className={`p-2.5 rounded-md ${miner.colors.iconBg} ${miner.colors.border} border shadow-md`}>
-                  <miner.iconComponent size={28} className={miner.colors.accent} />
+            <div className="relative p-4 md:p-5">
+              {/* Header section */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className={`p-3 rounded-xl ${miner.colors.iconBg} ${miner.colors.border} border shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                  <miner.iconComponent size={32} className={miner.colors.accent} />
                 </div>
-                <div className="flex-1">
-                  <h4 className={`text-md font-semibold ${miner.colors.accent}`}>{miner.name}</h4>
-                  <p className="text-xs text-slate-400 leading-snug mt-0.5">{miner.description}</p>
+                <div className="flex-1 min-w-0">
+                  <h4 className={`text-lg font-bold ${miner.colors.accent} truncate`}>
+                    {miner.name}
+                  </h4>
+                  <p className="text-xs text-slate-400 leading-relaxed mt-1 line-clamp-2">
+                    {miner.description}
+                  </p>
                 </div>
               </div>
 
-              {/* Thống kê thợ mỏ (Số lượng & Tỷ lệ) */}
-              <div className="space-y-2.5 mb-4">
-                <div className="flex justify-around items-baseline p-2.5 bg-slate-800/60 rounded-md border border-slate-600/50 shadow-inner">
-                  <div className="text-center">
-                    <p className="text-[0.65rem] sm:text-xs text-slate-400 uppercase font-medium">Số Lượng</p>
-                    <p className={`text-lg font-bold ${miner.count > 0 ? 'text-yellow-400' : 'text-slate-500'}`}>{miner.count}</p>
+              {/* Stats section với improved mobile layout */}
+              <div className="space-y-3 mb-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-600/50 text-center backdrop-blur-sm">
+                    <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Số Lượng</p>
+                    <p className={`text-xl font-bold ${miner.count > 0 ? 'text-yellow-400' : 'text-slate-500'} transition-colors duration-300`}>
+                      {miner.count}
+                    </p>
                   </div>
-                  <div className="w-px h-8 bg-slate-600/70"></div>
-                  <div className="text-center">
-                    <p className="text-[0.65rem] sm:text-xs text-slate-400 uppercase font-medium">Năng Suất</p>
-                    <p className="text-lg font-bold text-green-400">{miner.currentRate.toFixed(2)}/s</p>
+                  <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-600/50 text-center backdrop-blur-sm">
+                    <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Năng Suất</p>
+                    <p className="text-xl font-bold text-green-400">
+                      {miner.currentRate.toFixed(1)}/s
+                    </p>
                   </div>
                 </div>
 
-                {/* Tổng sản lượng (nếu số lượng thợ mỏ > 0) */}
+                {/* Total output với progress bar effect */}
                 {miner.count > 0 && (
-                  <div className="flex items-center justify-between p-2 text-xs bg-gradient-to-r from-green-800/30 to-emerald-900/30 rounded-md border border-green-700/30 shadow-sm">
-                    <div className="flex items-center gap-1.5">
-                      <TrendingUpIcon className="text-green-400" size={16} />
-                      <span className="text-green-300">Tổng:</span>
+                  <div className="relative p-3 bg-gradient-to-r from-green-900/30 to-emerald-900/40 rounded-lg border border-green-700/40 overflow-hidden">
+                    <div className="absolute inset-0 bg-green-400/5 animate-pulse"></div>
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <TrendingUpIcon className="text-green-400 animate-bounce" size={18} />
+                        <span className="text-sm text-green-300 font-medium">Tổng Thu Nhập:</span>
+                      </div>
+                      <span className="text-lg font-bold text-green-400">
+                        {miner.totalOutput.toFixed(1)} vàng/s
+                      </span>
                     </div>
-                    <span className="font-semibold text-green-400">{miner.totalOutput.toFixed(2)} vàng/s</span>
                   </div>
                 )}
               </div>
 
-              {/* Nút Thuê và Bán */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Action buttons với improved mobile touch targets */}
+              <div className="space-y-2 md:space-y-0 md:grid md:grid-cols-2 md:gap-2">
                 <button
-                  onClick={() => handleHireMiner(miner.id)}
-                  disabled={!miner.canAffordHire}
-                  className={`w-full py-2 px-3 rounded-md font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transform hover:scale-[1.03] active:scale-[1]
-                    ${miner.canAffordHire
-                      ? 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white'
-                      : 'bg-slate-700 text-slate-500 cursor-not-allowed ring-1 ring-slate-600'
+                  onClick={() => handleActionWithAnimation(
+                    () => handleHireMiner(miner.id), 
+                    miner.id, 
+                    'hire'
+                  )}
+                  disabled={!miner.canAffordHire || loadingActions[`${miner.id}-hire`]}
+                  className={`w-full h-12 md:h-10 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none
+                    ${miner.canAffordHire && !loadingActions[`${miner.id}-hire`]
+                      ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-emerald-500/25'
+                      : 'bg-slate-700/80 text-slate-400 cursor-not-allowed border border-slate-600/50'
                     }`}
                 >
-                  <CoinIcon size={16} color={miner.canAffordHire ? "gold" : "currentColor"} />
-                  <span>Thuê ({miner.baseCost.toLocaleString()})</span>
+                  {loadingActions[`${miner.id}-hire`] ? (
+                    <LoadingSpinner size={16} className="text-white" />
+                  ) : (
+                    <>
+                      <PlusIcon size={16} />
+                      <CoinIcon size={16} color={miner.canAffordHire ? "gold" : "currentColor"} />
+                    </>
+                  )}
+                  <span className="truncate">
+                    Thuê ({miner.baseCost.toLocaleString()})
+                  </span>
                 </button>
 
                 <button
-                  onClick={() => handleSellMiner(miner.id)}
-                  disabled={!miner.canSell}
-                  className={`w-full py-2 px-3 rounded-md font-medium text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md transform hover:scale-[1.03] active:scale-[1]
-                    ${miner.canSell
-                      ? 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white'
-                      : 'bg-slate-700 text-slate-500 cursor-not-allowed ring-1 ring-slate-600'
+                  onClick={() => handleActionWithAnimation(
+                    () => handleSellMiner(miner.id), 
+                    miner.id, 
+                    'sell'
+                  )}
+                  disabled={!miner.canSell || loadingActions[`${miner.id}-sell`]}
+                  className={`w-full h-12 md:h-10 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none
+                    ${miner.canSell && !loadingActions[`${miner.id}-sell`]
+                      ? 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white shadow-rose-500/25'
+                      : 'bg-slate-700/80 text-slate-400 cursor-not-allowed border border-slate-600/50'
                     }`}
                 >
-                  <SellIcon size={14} />
-                  <span>Bán (+{miner.sellValue.toLocaleString()})</span>
+                  {loadingActions[`${miner.id}-sell`] ? (
+                    <LoadingSpinner size={16} className="text-white" />
+                  ) : (
+                    <SellIcon size={16} />
+                  )}
+                  <span className="truncate">
+                    Bán (+{miner.sellValue.toLocaleString()})
+                  </span>
                 </button>
               </div>
             </div>
@@ -265,31 +332,58 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
         ))}
       </div>
 
-      {/* Chỉ báo tải / Kích hoạt "Tải thêm" */}
+      {/* Loading indicator */}
       {displayedMinerCount < minerTypesWithData.length && (
-        <div ref={loadingRef} className="text-center py-4">
-          <p className="text-slate-400 text-sm">Đang tải thêm thợ mỏ...</p>
-          {/* Bạn có thể thêm một spinner ở đây nếu muốn */}
+        <div ref={loadingRef} className="text-center py-6">
+          <div className="inline-flex items-center gap-3 p-4 bg-slate-800/60 rounded-xl border border-slate-600/50 backdrop-blur-sm">
+            <LoadingSpinner size={24} className="text-sky-400" />
+            <p className="text-slate-300 text-sm font-medium">Đang tải thêm thợ mỏ...</p>
+          </div>
         </div>
       )}
 
-      {/* Phần tóm tắt */}
-      <div className="mt-6 p-3 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-lg border border-slate-600/60 shadow-md">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
-          <div>
-            <p className="text-[0.7rem] sm:text-xs text-slate-400 uppercase font-medium mb-0.5">Tổng Thợ Mỏ</p>
-            <p className="text-xl font-bold text-white">
+      {/* Enhanced summary section */}
+      <div className="mt-8 p-5 bg-gradient-to-r from-slate-800/80 to-slate-700/80 rounded-xl border border-slate-600/60 shadow-xl backdrop-blur-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="text-center p-4 bg-slate-900/50 rounded-lg">
+            <p className="text-xs text-slate-400 uppercase font-bold mb-2 tracking-wider">Tổng Thợ Mỏ</p>
+            <p className="text-3xl font-bold text-white">
               {minerTypesWithData.reduce((sum, miner) => sum + miner.count, 0)}
             </p>
           </div>
-          <div className="border-t sm:border-t-0 sm:border-l border-slate-600/50 pt-2 sm:pt-0 sm:pl-3">
-            <p className="text-[0.7rem] sm:text-xs text-slate-400 uppercase font-medium mb-0.5">Tổng Thu Nhập/s</p>
-            <p className="text-xl font-bold text-green-400">
-              {minerTypesWithData.reduce((sum, miner) => sum + miner.totalOutput, 0).toFixed(2)}
+          <div className="text-center p-4 bg-slate-900/50 rounded-lg">
+            <p className="text-xs text-slate-400 uppercase font-bold mb-2 tracking-wider">Tổng Thu Nhập/s</p>
+            <p className="text-3xl font-bold text-green-400">
+              {minerTypesWithData.reduce((sum, miner) => sum + miner.totalOutput, 0).toFixed(1)}
             </p>
           </div>
         </div>
       </div>
+
+      {/* Custom CSS animations */}
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.6s ease-out forwards;
+        }
+        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 };
