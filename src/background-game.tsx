@@ -1095,11 +1095,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                             const moveStep = distance * coin.attractSpeed;
 
-                            const moveX_px = distance === 0 ? 0 : (dx / distance) * moveStep;
-                            const moveY_px = distance === 0 ? 0 : (dy / distance) * moveStep;
+                            // Corrected: Calculate newCoinX_px and newCoinY_px correctly
+                            const newCoinX_px_calculated = coinX_px + (dx / distance) * moveStep;
+                            const newCoinY_px_calculated = coinY_px + (dy / distance) * moveStep;
 
-                            newX = (newCoinX_px / gameWidth) * 100;
-                            newY = (newCoinY_px / gameHeight) * 100;
+                            newX = (newCoinX_px_calculated / gameWidth) * 100;
+                            newY = (newCoinY_px_calculated / gameHeight) * 100;
 
                             if (distance < (characterWidth_px / 2 + coinSize_px / 2) * 0.8) {
                                 collisionDetected = true;
