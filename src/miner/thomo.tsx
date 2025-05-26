@@ -1,5 +1,3 @@
---- START OF FILE thomo.tsx (1).txt ---
-
 import React from 'react';
 
 // Define props interface for MinerHiringSection component
@@ -219,5 +217,3 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
 };
 
 export default MinerHiringSection;
-
---- END OF FILE thomo.tsx (1).txt ---
