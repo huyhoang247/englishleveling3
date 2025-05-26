@@ -54,7 +54,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
       <div className="relative bg-slate-900 rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-700">
-        <h2 className="text-2xl font-bold text-yellow-400 mb-4 border-b border-slate-600 pb-3">{title}</h2>
+        <h2 className="text-2xl font-bold text-yellow-400 mb-4 pb-3">{title}</h2>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors text-gray-300 hover:text-white"
@@ -573,7 +573,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         </span>
       </p>
 
-      <Modal isOpen={isMinerHiringModalOpen} onClose={() => setIsMinerHiringModalOpen(false)} title="Trung Tâm Tuyển Dụng & Quản Lý Thợ Mỏ">
+      <Modal isOpen={isMinerHiringModalOpen} onClose={() => setIsMinerHiringModalOpen(false)} title="Quản Lý Thợ Mỏ">
         <MinerHiringSection
           MINER_TYPES={MINER_TYPES.map(mt => ({...mt, count: mt.id === 'basic' ? basicMiners : mt.id === 'advanced' ? advancedMiners : masterMiners}))}
           handleHireMiner={handleHireMiner}
