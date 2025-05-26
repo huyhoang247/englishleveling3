@@ -1,91 +1,123 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getFirestore, doc, getDoc, runTransaction } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, runTransaction, setDoc } from 'firebase/firestore';
 import { auth } from './firebase.js'; // Assuming firebase.js exports auth
 
+// Define props interface for GoldMine component
 interface GoldMineProps {
-  currentCoins: number; // Current main coin balance
-  onUpdateCoins: (amount: number) => void; // Function to update main coin balance
-  isGamePaused: boolean; // Prop to check if the game is paused
-  currentUserId: string | null; // Current authenticated user ID
+  onClose: () => void; // Function to close the Gold Mine screen
+  currentCoins: number; // Current main coin balance from parent
+  onUpdateCoins: (amount: number) => Promise<void>; // Function to update main coins in parent (and Firestore)
+  currentUserId: string; // Current authenticated user ID
+  isGamePaused: boolean; // Prop to indicate if the main game is paused
 }
 
-const MINER_COST = 200; // Cost to hire one miner
-const MINING_RATE_PER_MINER = 0.1; // Gold per second per miner
+// Inline SVG for a pickaxe icon
+const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M14 14l-4 4-2-2 4-4 2-2 2-2 2-2 2-2 2-2"></path>
+    <path d="M18 6l-2-2"></path>
+    <path d="M12 8l-2-2"></path>
+    <path d="M8 12l-2-2"></path>
+    <path d="M6 18l-2-2"></path>
+    <path d="M16 10l-2-2"></path>
+    <path d="M20 14l-2-2"></path>
+    <path d="M14 18l-2-2"></path>
+    <path d="M10 22l-2-2"></path>
+    <path d="M2 10l-2-2"></path>
+    <path d="M22 2l-2-2"></path>
+    <path d="M20 20l-2-2"></path>
+    <path d="M18 22l-2-2"></path>
+    <path d="M22 18l-2-2"></path>
+    <path d="M10 2l-2-2"></path>
+    <path d="M6 6l-2-2"></path>
+    <path d="M2 2l-2-2"></path>
+    <path d="M22 6l-2-2"></path>
+    <path d="M12 20l-2-2"></path>
+    <path d="M16 22l-2-2"></path>
+    <path d="M20 10l-2-2"></path>
+    <path d="M14 2l-2-2"></path>
+    <path d="M8 2l-2-2"></path>
+    <path d="M4 22l-2-2"></path>
+  </svg>
+);
 
-export default function GoldMine({ currentCoins, onUpdateCoins, isGamePaused, currentUserId }: GoldMineProps) {
-  const [miners, setMiners] = useState(0); // Number of hired miners
-  const [minedGold, setMinedGold] = useState(0); // Gold currently mined and awaiting collection
-  const [showMineModal, setShowMineModal] = useState(false); // State to control modal visibility
-  const [isLoadingMineData, setIsLoadingMineData] = useState(true); // State to track loading of mine data
 
-  const miningIntervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for the mining interval
+const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoins, currentUserId, isGamePaused }) => {
+  const [minedGold, setMinedGold] = useState(0);
+  const [miners, setMiners] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState(''); // For displaying messages to the user
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>(''); // Type of message
 
-  const db = getFirestore(); // Firestore instance
+  const miningIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const db = getFirestore();
 
-  // Function to fetch mine data from Firestore
-  const fetchMineData = async (userId: string) => {
-    setIsLoadingMineData(true);
-    try {
-      const mineDocRef = doc(db, 'users', userId, 'mine', 'data');
-      const mineDocSnap = await getDoc(mineDocRef);
+  const HIRE_COST = 200;
+  const MINING_RATE_PER_MINER = 0.1; // Gold per second per miner
 
-      if (mineDocSnap.exists()) {
-        const mineData = mineDocSnap.data();
-        setMiners(mineData.miners || 0);
-        setMinedGold(mineData.minedGold || 0);
-        console.log("Mine data fetched:", mineData);
-      } else {
-        // If mine document doesn't exist, create it with default values
-        console.log("No mine document found, creating default.");
-        await runTransaction(db, async (transaction) => {
-          const newMineData = { miners: 0, minedGold: 0 };
-          transaction.set(mineDocRef, newMineData);
-        });
-        setMiners(0);
-        setMinedGold(0);
+  // Function to show a temporary message
+  const showMessage = (msg: string, type: 'success' | 'error') => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => {
+      setMessage('');
+      setMessageType('');
+    }, 3000); // Message disappears after 3 seconds
+  };
+
+  // Fetch gold mine data from Firestore
+  useEffect(() => {
+    const fetchMineData = async () => {
+      if (!currentUserId) {
+        console.error("No user ID available for fetching mine data.");
+        setIsLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching mine data:", error);
-    } finally {
-      setIsLoadingMineData(false);
-    }
-  };
 
-  // Function to update mine data in Firestore using a transaction
-  const updateMineDataInFirestore = async (userId: string, newMiners: number, newMinedGold: number) => {
-    if (!userId) {
-      console.error("Cannot update mine data: User not authenticated.");
-      return;
-    }
+      setIsLoading(true);
+      try {
+        const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
+        const mineDocSnap = await getDoc(mineDocRef);
 
-    const mineDocRef = doc(db, 'users', userId, 'mine', 'data');
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        const mineDoc = await transaction.get(mineDocRef);
-        if (!mineDoc.exists()) {
-          // Create if not exists (should be handled by fetchMineData, but good fallback)
-          transaction.set(mineDocRef, { miners: newMiners, minedGold: newMinedGold });
+        if (mineDocSnap.exists()) {
+          const data = mineDocSnap.data();
+          setMinedGold(data.minedGold || 0);
+          setMiners(data.miners || 0);
+          console.log("Gold mine data fetched:", data);
         } else {
-          transaction.update(mineDocRef, { miners: newMiners, minedGold: newMinedGold });
+          // Initialize mine data if it doesn't exist
+          await setDoc(mineDocRef, { minedGold: 0, miners: 0, createdAt: new Date() });
+          setMinedGold(0);
+          setMiners(0);
+          console.log("Gold mine data initialized.");
         }
-      });
-      console.log(`Mine data updated in Firestore: Miners=${newMiners}, MinedGold=${newMinedGold}`);
-    } catch (error) {
-      console.error("Firestore Transaction failed for mine data: ", error);
-    }
-  };
+      } catch (error) {
+        console.error("Error fetching gold mine data:", error);
+        showMessage("Lỗi khi tải dữ liệu mỏ vàng.", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Effect to fetch mine data when the user is authenticated
-  useEffect(() => {
-    if (currentUserId) {
-      fetchMineData(currentUserId);
-    }
-  }, [currentUserId]);
+    fetchMineData();
+  }, [currentUserId, db]);
 
-  // Effect for mining gold over time
+  // Effect for gold mining interval
   useEffect(() => {
-    if (isGamePaused || !currentUserId || isLoadingMineData) {
+    // Pause mining if the game is paused or loading
+    if (isGamePaused || isLoading) {
       if (miningIntervalRef.current) {
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
@@ -93,131 +125,229 @@ export default function GoldMine({ currentCoins, onUpdateCoins, isGamePaused, cu
       return;
     }
 
+    // Start mining if not already running and not paused/loading
     if (miners > 0 && miningIntervalRef.current === null) {
       miningIntervalRef.current = setInterval(() => {
-        setMinedGold(prev => {
-          const newGold = prev + (miners * MINING_RATE_PER_MINER);
-          // Update Firestore periodically to save mined gold
-          if (currentUserId) {
-            updateMineDataInFirestore(currentUserId, miners, newGold);
+        setMinedGold(prevGold => {
+          const newGold = prevGold + (miners * MINING_RATE_PER_MINER);
+          // Update Firestore periodically to save minedGold
+          if (auth.currentUser) {
+            const mineDocRef = doc(db, 'users', auth.currentUser.uid, 'goldMine', 'data');
+            setDoc(mineDocRef, { minedGold: newGold, miners: miners }, { merge: true })
+              .catch(e => console.error("Error updating mined gold in Firestore:", e));
           }
           return newGold;
         });
       }, 1000); // Update every 1 second
-    } else if (miners === 0 && miningIntervalRef.current) {
-      clearInterval(miningIntervalRef.current);
-      miningIntervalRef.current = null;
     }
 
+    // Cleanup function
     return () => {
       if (miningIntervalRef.current) {
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
       }
     };
-  }, [miners, isGamePaused, currentUserId, isLoadingMineData]);
+  }, [miners, isGamePaused, isLoading, db]); // Depend on miners, game pause state, and loading state
 
-  // Handle hiring a miner
   const handleHireMiner = async () => {
-    if (!currentUserId) {
-      console.error("User not authenticated.");
+    if (currentCoins < HIRE_COST) {
+      showMessage("Không đủ vàng để thuê thợ mỏ!", "error");
       return;
     }
 
-    if (currentCoins >= MINER_COST) {
-      onUpdateCoins(-MINER_COST); // Deduct cost from main coins
-      const newMiners = miners + 1;
-      setMiners(newMiners);
-      await updateMineDataInFirestore(currentUserId, newMiners, minedGold);
-    } else {
-      console.log("Not enough coins to hire a miner!");
-      // Optionally show a message to the user
+    if (!currentUserId) {
+      showMessage("Lỗi: Không tìm thấy ID người dùng.", "error");
+      return;
+    }
+
+    try {
+      // Use a transaction to ensure atomicity for both main coins and mine data
+      await runTransaction(db, async (transaction) => {
+        const userDocRef = doc(db, 'users', currentUserId);
+        const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
+
+        const userDocSnap = await transaction.get(userDocRef);
+        const mineDocSnap = await transaction.get(mineDocRef);
+
+        if (!userDocSnap.exists()) {
+          throw new Error("Tài liệu người dùng không tồn tại!");
+        }
+        if (!mineDocSnap.exists()) {
+          throw new Error("Tài liệu mỏ vàng không tồn tại!");
+        }
+
+        const currentMainCoins = userDocSnap.data().coins || 0;
+        const currentMiners = mineDocSnap.data().miners || 0;
+
+        if (currentMainCoins < HIRE_COST) {
+          throw new Error("Không đủ vàng để thuê thợ mỏ.");
+        }
+
+        // Update main coins (deduct cost)
+        transaction.update(userDocRef, { coins: currentMainCoins - HIRE_COST });
+        // Update miners count
+        transaction.update(mineDocRef, { miners: currentMiners + 1 });
+
+        // Update local state after successful transaction
+        setMiners(prev => prev + 1);
+        onUpdateCoins(-HIRE_COST); // Notify parent to update its coin state
+        showMessage("Đã thuê thợ mỏ thành công!", "success");
+      });
+    } catch (error: any) {
+      console.error("Lỗi khi thuê thợ mỏ:", error);
+      showMessage(`Lỗi: ${error.message || "Không thể thuê thợ mỏ."}`, "error");
     }
   };
 
-  // Handle collecting mined gold
   const handleCollectGold = async () => {
-    if (!currentUserId) {
-      console.error("User not authenticated.");
+    if (minedGold <= 0) {
+      showMessage("Không có vàng để thu thập!", "error");
       return;
     }
 
-    if (minedGold > 0) {
-      onUpdateCoins(minedGold); // Add mined gold to main coins
-      setMinedGold(0); // Reset mined gold
-      await updateMineDataInFirestore(currentUserId, miners, 0); // Update Firestore
-    } else {
-      console.log("No gold to collect!");
+    if (!currentUserId) {
+      showMessage("Lỗi: Không tìm thấy ID người dùng.", "error");
+      return;
+    }
+
+    const goldToCollect = Math.floor(minedGold); // Collect whole gold amounts
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDocRef = doc(db, 'users', currentUserId);
+        const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
+
+        const userDocSnap = await transaction.get(userDocRef);
+        const mineDocSnap = await transaction.get(mineDocRef);
+
+        if (!userDocSnap.exists()) {
+          throw new Error("Tài liệu người dùng không tồn tại!");
+        }
+        if (!mineDocSnap.exists()) {
+          throw new Error("Tài liệu mỏ vàng không tồn tại!");
+        }
+
+        const currentMainCoins = userDocSnap.data().coins || 0;
+        const currentMinedGold = mineDocSnap.data().minedGold || 0;
+
+        // Update main coins (add collected gold)
+        transaction.update(userDocRef, { coins: currentMainCoins + goldToCollect });
+        // Reset mined gold in the mine
+        transaction.update(mineDocRef, { minedGold: currentMinedGold - goldToCollect });
+
+        // Update local state after successful transaction
+        setMinedGold(prev => prev - goldToCollect);
+        onUpdateCoins(goldToCollect); // Notify parent to update its coin state
+        showMessage(`Đã thu thập ${goldToCollect} vàng!`, "success");
+      });
+    } catch (error: any) {
+      console.error("Lỗi khi thu thập vàng:", error);
+      showMessage(`Lỗi: ${error.message || "Không thể thu thập vàng."}`, "error");
     }
   };
 
-  if (isLoadingMineData) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center w-full h-full bg-gray-900 text-white">
+      <div className="flex items-center justify-center w-full h-full bg-gray-900 text-white rounded-lg">
         Đang tải dữ liệu mỏ vàng...
       </div>
     );
   }
 
   return (
-    <>
-      {/* Button to open the Gold Mine modal */}
+    <div className="relative w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-950 text-white p-4 rounded-lg shadow-2xl overflow-hidden">
+      {/* Background elements */}
+      <div className="absolute inset-0 opacity-10">
+        <PickaxeIcon size={200} color="gray" className="absolute top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 rotate-45" />
+        <PickaxeIcon size={150} color="gray" className="absolute bottom-1/4 right-1/4 transform translate-x-1/2 translate-y-1/2 -rotate-30" />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-yellow-500 rounded-full mix-blend-overlay opacity-5 transform -translate-x-1/2 -translate-y-1/2 animate-pulse-slow"></div>
+      </div>
+
+      {/* Close Button */}
       <button
-        onClick={() => setShowMineModal(true)}
-        className="absolute left-4 bottom-4 flex flex-col items-center justify-center w-14 h-14 bg-yellow-600 rounded-lg shadow-lg border-2 border-yellow-500 text-white font-bold transition-transform duration-200 hover:scale-110 z-30"
-        title="Mỏ Vàng"
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors z-10"
+        aria-label="Đóng"
       >
-        <img
-          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/gold-mine.png" // Placeholder for a gold mine icon
-          alt="Mỏ Vàng"
-          className="w-8 h-8 object-contain"
-          onError={(e) => {
-            const target = e as any;
-            target.onerror = null;
-            target.src = "https://placehold.co/32x32/gold/black?text=Mine";
-          }}
-        />
-        <span className="text-xs mt-0.5">Mỏ Vàng</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-gray-300"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
 
-      {showMineModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-950 rounded-xl shadow-2xl p-6 w-full max-w-md border border-gray-700 relative">
-            <button
-              onClick={() => setShowMineModal(false)}
-              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
+      <h2 className="text-4xl font-bold mb-6 text-yellow-400 drop-shadow-lg">Mỏ Vàng</h2>
 
-            <h2 className="text-2xl font-bold text-yellow-400 mb-4 text-center">Mỏ Vàng</h2>
-
-            <div className="mb-4 text-center">
-              <p className="text-gray-300 text-lg">Thợ mỏ: <span className="font-bold text-white">{miners}</span></p>
-              <p className="text-gray-300 text-lg">Vàng đang khai thác: <span className="font-bold text-yellow-300">{minedGold.toFixed(2)}</span></p>
-              <p className="text-gray-400 text-sm">Tốc độ khai thác: {MINING_RATE_PER_MINER} vàng/giây/thợ</p>
-            </div>
-
-            <div className="flex flex-col space-y-3">
-              <button
-                onClick={handleHireMiner}
-                disabled={currentCoins < MINER_COST}
-                className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Thuê Thợ Mỏ ({MINER_COST} vàng)
-              </button>
-
-              <button
-                onClick={handleCollectGold}
-                disabled={minedGold <= 0}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:from-green-600 hover:to-emerald-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Thu Thập Vàng ({minedGold.toFixed(2)} vàng)
-              </button>
-            </div>
-          </div>
+      {message && (
+        <div className={`absolute top-16 px-4 py-2 rounded-lg text-sm font-semibold z-20
+          ${messageType === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+          {message}
         </div>
       )}
-    </>
+
+      <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-gray-700 w-full max-w-md z-10">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-lg text-gray-300">Thợ mỏ:</p>
+          <p className="text-2xl font-bold text-yellow-300">{miners}</p>
+        </div>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-lg text-gray-300">Tốc độ khai thác:</p>
+          <p className="text-2xl font-bold text-yellow-300">{miners * MINING_RATE_PER_MINER} vàng/s</p>
+        </div>
+
+        <button
+          onClick={handleHireMiner}
+          disabled={currentCoins < HIRE_COST}
+          className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-200
+            ${currentCoins < HIRE_COST
+              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+            }`}
+        >
+          Thuê thợ mỏ ({HIRE_COST} vàng)
+        </button>
+
+        <div className="my-6 border-t border-gray-700"></div>
+
+        <div className="flex flex-col items-center mb-6">
+          <p className="text-lg text-gray-300 mb-2">Vàng đã khai thác:</p>
+          <div className="flex items-center space-x-2">
+            <PickaxeIcon size={24} color="#FFD700" />
+            <p className="text-4xl font-extrabold text-yellow-300 drop-shadow-md">
+              {Math.floor(minedGold).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleCollectGold}
+          disabled={minedGold <= 0}
+          className={`w-full py-3 rounded-lg font-bold text-lg transition-all duration-200
+            ${minedGold <= 0
+              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+            }`}
+        >
+          Thu thập vàng
+        </button>
+      </div>
+
+      <p className="mt-8 text-sm text-gray-500">
+        Số vàng hiện có: <span className="font-bold text-yellow-300">{currentCoins.toLocaleString()}</span>
+      </p>
+    </div>
   );
-}
+};
+
+export default GoldMine;
