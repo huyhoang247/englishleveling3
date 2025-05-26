@@ -372,7 +372,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         </div>
         <div className="flex items-center justify-between mb-6">
           <p className="text-lg text-gray-300">Tốc độ khai thác:</p>
-          <p className="text-2xl font-bold text-yellow-300">{miners * MINING_RATE_PER_MINER} vàng/s</p>
+          <p className="text-2xl font-bold text-yellow-300">{(miners * MINING_RATE_PER_MINER).toFixed(1)} vàng/s</p>
         </div>
 
         <button
