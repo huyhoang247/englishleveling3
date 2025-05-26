@@ -15,7 +15,6 @@ interface MinerHiringSectionProps {
   handleHireMiner: (minerId: string) => Promise<void>;
   handleSellMiner: (minerId: string) => Promise<void>;
   currentCoins: number;
-  // CoinIcon không còn được sử dụng trực tiếp, thay vào đó là DollarIcon
 }
 
 // --- BIỂU TƯỢNG SVG COMPACT ---
@@ -42,19 +41,7 @@ const MasterMinerIcon = ({ size = 20, color = 'currentColor', className = '', ..
   </svg>
 );
 
-const PlusIcon = ({ size = 14, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <line x1="12" y1="5" x2="12" y2="19"></line>
-    <line x1="5" y1="12" x2="19" y2="12"></line>
-  </svg>
-);
-
-const MinusIcon = ({ size = 14, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <line x1="5" y1="12" x2="19" y2="12"></line>
-  </svg>
-);
-
+// PlusIcon và MinusIcon không còn được sử dụng trực tiếp
 const TrendingUpIcon = ({ size = 14, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -84,7 +71,6 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   handleHireMiner,
   handleSellMiner,
   currentCoins,
-  // CoinIcon không còn được nhận qua props
 }) => {
   const [displayedMinerCount, setDisplayedMinerCount] = useState(6);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
@@ -283,8 +269,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                     <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <PlusIcon size={12} />
-                      {/* Sử dụng DollarIcon mới */}
+                      <span>Buy</span> {/* Changed from PlusIcon */}
                       <DollarIcon size={12} /> 
                       <span>{formatCoinValue(miner.baseCost)}</span>
                     </>
@@ -308,7 +293,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                     <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <MinusIcon size={12} />
+                      <span>Sell</span> {/* Changed from MinusIcon */}
+                      <DollarIcon size={12} /> {/* Added DollarIcon for sell */}
                       <span>+{formatCoinValue(miner.sellValue)}</span>
                     </>
                   )}
