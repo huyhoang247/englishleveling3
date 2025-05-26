@@ -77,6 +77,25 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     }, 3000); // Message disappears after 3 seconds
   };
 
+  // Function to save gold mine data to Firestore
+  const saveMineData = async (currentMinedGold: number, currentMiners: number) => {
+    if (!currentUserId) {
+      console.error("GoldMine: No user ID available for saving mine data.");
+      return;
+    }
+    try {
+      const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
+      await setDoc(mineDocRef, {
+        minedGold: currentMinedGold,
+        miners: currentMiners,
+        lastMineActivityTime: Date.now(), // Save current timestamp
+      }, { merge: true });
+      console.log("GoldMine: Mine data saved to Firestore.");
+    } catch (error) {
+      console.error("GoldMine: Error saving mine data:", error);
+    }
+  };
+
   // Fetch gold mine data from Firestore
   useEffect(() => {
     const fetchMineData = async () => {
@@ -91,18 +110,37 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
         const mineDocSnap = await getDoc(mineDocRef);
 
+        let initialMinedGold = 0;
+        let initialMiners = 0;
+        let lastMineActivityTime = 0;
+
         if (mineDocSnap.exists()) {
           const data = mineDocSnap.data();
-          setMinedGold(data.minedGold || 0);
-          setMiners(data.miners || 0);
+          initialMinedGold = data.minedGold || 0;
+          initialMiners = data.miners || 0;
+          lastMineActivityTime = data.lastMineActivityTime || 0;
           console.log("GoldMine: Gold mine data fetched:", data);
+
+          // Calculate offline mining
+          if (initialMiners > 0 && lastMineActivityTime > 0) {
+            const timeElapsedMs = Date.now() - lastMineActivityTime;
+            const timeElapsedSeconds = timeElapsedMs / 1000;
+            const goldAccumulatedOffline = initialMiners * MINING_RATE_PER_MINER * timeElapsedSeconds;
+            initialMinedGold += goldAccumulatedOffline;
+            console.log(`GoldMine: Accumulated ${goldAccumulatedOffline.toFixed(2)} gold offline over ${timeElapsedSeconds.toFixed(0)} seconds.`);
+          }
+
         } else {
           // Initialize mine data if it doesn't exist
-          await setDoc(mineDocRef, { minedGold: 0, miners: 0, createdAt: new Date() });
-          setMinedGold(0);
-          setMiners(0);
+          await setDoc(mineDocRef, { minedGold: 0, miners: 0, lastMineActivityTime: Date.now(), createdAt: new Date() });
           console.log("GoldMine: Gold mine data initialized.");
         }
+
+        setMinedGold(initialMinedGold);
+        setMiners(initialMiners);
+        // Save the updated minedGold (after offline calculation) back to Firestore
+        saveMineData(initialMinedGold, initialMiners);
+
       } catch (error) {
         console.error("GoldMine: Error fetching gold mine data:", error);
         showMessage("Lỗi khi tải dữ liệu mỏ vàng.", "error");
@@ -123,6 +161,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
         console.log("GoldMine: Mining interval cleared due to game paused or loading.");
+        // Save current state when pausing
+        saveMineData(minedGold, miners);
       }
       return;
     }
@@ -133,12 +173,11 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       miningIntervalRef.current = setInterval(() => {
         setMinedGold(prevGold => {
           const newGold = prevGold + (miners * MINING_RATE_PER_MINER);
-          console.log(`GoldMine: Mined gold increased to ${newGold}. Miners: ${miners}`);
+          console.log(`GoldMine: Mined gold increased to ${newGold.toFixed(2)}. Miners: ${miners}`);
           // Update Firestore periodically to save minedGold
+          // We'll save more frequently now to keep lastMineActivityTime updated
           if (auth.currentUser) {
-            const mineDocRef = doc(db, 'users', auth.currentUser.uid, 'goldMine', 'data');
-            setDoc(mineDocRef, { minedGold: newGold, miners: miners }, { merge: true })
-              .catch(e => console.error("GoldMine: Error updating mined gold in Firestore:", e));
+            saveMineData(newGold, miners);
           }
           return newGold;
         });
@@ -148,6 +187,8 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
         console.log("GoldMine: Mining interval cleared because miners count is 0.");
+        // Save current state when stopping
+        saveMineData(minedGold, miners);
     }
 
     // Cleanup function
@@ -156,9 +197,11 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         clearInterval(miningIntervalRef.current);
         miningIntervalRef.current = null;
         console.log("GoldMine: Mining interval cleanup.");
+        // Save current state when component unmounts or effect re-runs
+        saveMineData(minedGold, miners);
       }
     };
-  }, [miners, isGamePaused, isLoading, db]); // Depend on miners, game pause state, and loading state
+  }, [miners, isGamePaused, isLoading, db, minedGold]); // Added minedGold to dependencies for saveMineData in cleanup
 
   const handleHireMiner = async () => {
     if (currentCoins < HIRE_COST) {
@@ -191,6 +234,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         const currentMainCoins = userDocSnap.data().coins || 0;
         const currentMiners = mineDocSnap.data().miners || 0;
+        const currentMinedGold = mineDocSnap.data().minedGold || 0; // Get current mined gold from Firestore
 
         if (currentMainCoins < HIRE_COST) {
           throw new Error("Không đủ vàng để thuê thợ mỏ.");
@@ -198,8 +242,12 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         // Update main coins (deduct cost)
         transaction.update(userDocRef, { coins: currentMainCoins - HIRE_COST });
-        // Update miners count
-        transaction.update(mineDocRef, { miners: currentMiners + 1 });
+        // Update miners count and last activity time
+        transaction.update(mineDocRef, {
+            miners: currentMiners + 1,
+            lastMineActivityTime: Date.now(),
+            minedGold: currentMinedGold // Ensure minedGold is also passed
+        });
 
         // Update local state after successful transaction
         setMiners(prev => prev + 1);
@@ -245,11 +293,16 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         const currentMainCoins = userDocSnap.data().coins || 0;
         const currentMinedGold = mineDocSnap.data().minedGold || 0;
+        const currentMiners = mineDocSnap.data().miners || 0; // Get current miners from Firestore
 
         // Update main coins (add collected gold)
         transaction.update(userDocRef, { coins: currentMainCoins + goldToCollect });
-        // Reset mined gold in the mine
-        transaction.update(mineDocRef, { minedGold: currentMinedGold - goldToCollect });
+        // Reset mined gold in the mine and update last activity time
+        transaction.update(mineDocRef, {
+            minedGold: currentMinedGold - goldToCollect,
+            lastMineActivityTime: Date.now(),
+            miners: currentMiners // Ensure miners is also passed
+        });
 
         // Update local state after successful transaction
         setMinedGold(prev => prev - goldToCollect);
