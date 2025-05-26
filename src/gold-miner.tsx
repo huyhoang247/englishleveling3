@@ -86,7 +86,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     try {
       const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
       await setDoc(mineDocRef, {
-        minedGold: currentMinedGold,
+        minedGold: Math.max(0, currentMinedGold), // Ensure saved value is non-negative
         miners: currentMiners,
         lastMineActivityTime: Date.now(), // Save current timestamp
       }, { merge: true });
@@ -135,6 +135,9 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           await setDoc(mineDocRef, { minedGold: 0, miners: 0, lastMineActivityTime: Date.now(), createdAt: new Date() });
           console.log("GoldMine: Gold mine data initialized.");
         }
+
+        // Ensure initialMinedGold is never negative before setting state and saving
+        initialMinedGold = Math.max(0, initialMinedGold);
 
         setMinedGold(initialMinedGold);
         setMiners(initialMiners);
@@ -234,7 +237,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         const currentMainCoins = userDocSnap.data().coins || 0;
         const currentMiners = mineDocSnap.data().miners || 0;
-        const currentMinedGold = mineDocSnap.data().minedGold || 0; // Get current mined gold from Firestore
+        const currentMinedGoldFromFirestore = mineDocSnap.data().minedGold || 0; // Get current mined gold from Firestore
 
         if (currentMainCoins < HIRE_COST) {
           throw new Error("Không đủ vàng để thuê thợ mỏ.");
@@ -246,7 +249,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         transaction.update(mineDocRef, {
             miners: currentMiners + 1,
             lastMineActivityTime: Date.now(),
-            minedGold: currentMinedGold // Ensure minedGold is also passed
+            minedGold: Math.max(0, currentMinedGoldFromFirestore) // Ensure minedGold is non-negative when hiring
         });
 
         // Update local state after successful transaction
@@ -274,7 +277,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
       return;
     }
 
-    const goldToCollect = Math.floor(minedGold); // Collect whole gold amounts
+    const goldToCollect = Math.floor(minedGold); // Collect whole gold amounts from local state
 
     try {
       await runTransaction(db, async (transaction) => {
@@ -282,33 +285,33 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
 
         const userDocSnap = await transaction.get(userDocRef);
-        const mineDocSnap = await transaction.get(mineDocRef);
+        const mineDocSnap = await transaction.get(mineDocRef); // Need this to get current miners
 
-        if (!userDocSnap.exists()) {
-          throw new Error("Tài liệu người dùng không tồn tại!");
-        }
-        if (!mineDocSnap.exists()) {
-          throw new Error("Tài liệu mỏ vàng không tồn tại!");
+        if (!userDocSnap.exists() || !mineDocSnap.exists()) {
+          throw new Error("Tài liệu người dùng hoặc mỏ vàng không tồn tại!");
         }
 
         const currentMainCoins = userDocSnap.data().coins || 0;
-        const currentMinedGold = mineDocSnap.data().minedGold || 0;
         const currentMiners = mineDocSnap.data().miners || 0; // Get current miners from Firestore
 
         // Update main coins (add collected gold)
         transaction.update(userDocRef, { coins: currentMainCoins + goldToCollect });
-        // Reset mined gold in the mine and update last activity time
+
+        // Calculate remaining fractional gold. Ensure it's not negative.
+        const remainingFractionalGold = Math.max(0, minedGold - goldToCollect);
+
+        // Update mined gold in the mine to the remaining fractional part, ensuring it's non-negative.
         transaction.update(mineDocRef, {
-            minedGold: currentMinedGold - goldToCollect,
+            minedGold: remainingFractionalGold,
             lastMineActivityTime: Date.now(),
-            miners: currentMiners // Ensure miners is also passed
+            miners: currentMiners
         });
 
         // Update local state after successful transaction
-        setMinedGold(prev => prev - goldToCollect);
-        onUpdateCoins(goldToCollect); // Notify parent to update its coin state
+        setMinedGold(remainingFractionalGold);
+        onUpdateCoins(goldToCollect);
         showMessage(`Đã thu thập ${goldToCollect} vàng!`, "success");
-        console.log(`GoldMine: Collected ${goldToCollect} gold. Remaining mined gold: ${minedGold - goldToCollect}`);
+        console.log(`GoldMine: Collected ${goldToCollect} gold. Remaining mined gold: ${remainingFractionalGold}`);
       });
     } catch (error: any) {
       console.error("GoldMine: Lỗi khi thu thập vàng:", error);
