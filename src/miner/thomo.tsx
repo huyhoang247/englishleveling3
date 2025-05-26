@@ -186,27 +186,8 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
 
   return (
     <div className="bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-700/50 shadow-lg">
-      {/* Compact Header */}
-      <div className="px-4 py-3 border-b border-slate-700/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-sky-500 rounded-md">
-              <MinersIcon size={16} className="text-white" />
-            </div>
-            <h3 className="text-lg font-bold text-yellow-400">Thợ Mỏ</h3>
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1">
-              <span className="text-slate-400">Tổng:</span>
-              <span className="font-semibold text-white">{totalMiners}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <TrendingUpIcon className="text-green-400" />
-              <span className="font-semibold text-green-400">{totalIncome.toFixed(1)}/s</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Removed Compact Header */}
+      {/* Removed border-b border-slate-700/50 */}
 
       {/* Compact Grid */}
       <div className="p-3">
@@ -268,7 +249,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                     <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Buy</span> {/* Changed from PlusIcon */}
+                      <span>Buy</span>
                       <DollarIcon size={12} /> 
                       <span>{formatCoinValue(miner.baseCost)}</span>
                     </>
@@ -292,9 +273,9 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                     <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>Sell</span> {/* Changed from MinusIcon */}
-                      <DollarIcon size={12} /> {/* Added DollarIcon for sell */}
-                      <span>{formatCoinValue(miner.sellValue)}</span> {/* Removed '+' */}
+                      <span>Sell</span>
+                      <DollarIcon size={12} />
+                      <span>{formatCoinValue(miner.sellValue)}</span>
                     </>
                   )}
                 </button>
