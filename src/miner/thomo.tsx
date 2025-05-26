@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// Define props interface for MinerHiringSection component
+// Định nghĩa props interface cho MinerHiringSection component
 interface MinerHiringSectionProps {
   MINER_TYPES: Array<{
     id: string;
@@ -9,7 +9,7 @@ interface MinerHiringSectionProps {
     baseCost: number;
     baseRate: number;
     icon: React.FC<any>;
-    count: number; // Current count of this miner type
+    count: number; // Số lượng hiện tại của loại thợ mỏ này
     sellReturnFactor: number;
   }>;
   handleHireMiner: (minerId: string) => Promise<void>;
@@ -18,9 +18,9 @@ interface MinerHiringSectionProps {
   CoinIcon: React.FC<any>;
 }
 
-// --- ADVANCED SVG ICONS ---
-// (Keep existing SVG icons from your thomo.tsx file)
-// Miner Icon (User group)
+// --- BIỂU TƯỢNG SVG NÂNG CAO ---
+// (Giữ nguyên các biểu tượng SVG đã có trong tệp thomo.tsx của bạn)
+// Biểu tượng Thợ Mỏ (Nhóm người dùng)
 const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -30,7 +30,7 @@ const MinersIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
   </svg>
 );
 
-// Advanced Miner Icon (Gear)
+// Biểu tượng Thợ Mỏ Cao Cấp (Bánh răng)
 const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3" />
@@ -38,14 +38,14 @@ const AdvancedMinerIcon = ({ size = 24, color = 'currentColor', className = '', 
   </svg>
 );
 
-// Master Miner Icon (Crown - synchronized from gold-miner.tsx)
+// Biểu tượng Thợ Mỏ Bậc Thầy (Vương miện - sử dụng từ gold-miner.tsx để đồng bộ)
 const MasterMinerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <path d="M2 13.17A2 2 0 0 0 3.17 12H0V9h3.17A2 2 0 0 0 2 7.83L4.93 2 12 6l7.07-4L22 7.83A2 2 0 0 0 20.83 9H24v3h-3.17A2 2 0 0 0 22 13.17L19.07 19H4.93Z"></path><path d="M12 6v12"></path>
     </svg>
   );
 
-// Sell Icon (Dollar)
+// Biểu tượng Bán (Đô la)
 const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -53,7 +53,7 @@ const SellIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
   </svg>
 );
 
-// Trending Up Icon (Arrow pointing up)
+// Biểu tượng Tăng trưởng (Mũi tên đi lên)
 const TrendingUpIcon = ({ size = 16, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -69,11 +69,11 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
   currentCoins,
   CoinIcon,
 }) => {
-  // State to manage the number of miners currently displayed
-  const [displayedMinerCount, setDisplayedMinerCount] = useState(3); // Display 3 miners initially
-  const loadingRef = useRef(null); // Ref for the loading indicator element
+  // State để quản lý số lượng thợ mỏ hiện đang hiển thị
+  const [displayedMinerCount, setDisplayedMinerCount] = useState(3); // Hiển thị 3 thợ mỏ ban đầu
+  const loadingRef = useRef(null); // Ref cho phần tử chỉ báo tải
 
-  // Function to get rarity-based colors for miner cards
+  // Hàm để lấy màu sắc dựa trên độ hiếm của thợ mỏ
   const getRarityColor = (minerId: string) => {
     switch (minerId) {
       case 'basic':
@@ -115,10 +115,10 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
     }
   };
 
-  // Prepare miner data with calculated values and derived states
+  // Chuẩn bị dữ liệu thợ mỏ với các giá trị đã tính toán và trạng thái dẫn xuất
   const minerTypesWithData = MINER_TYPES.map(miner => {
     const IconComponent = miner.icon;
-    const currentRate = miner.baseRate; // Using baseRate as general efficiency is removed
+    const currentRate = miner.baseRate; // Sử dụng baseRate vì hiệu suất chung đã bị loại bỏ
     const totalOutput = currentRate * miner.count;
     const sellValue = Math.floor(miner.baseCost * miner.sellReturnFactor);
     const colors = getRarityColor(miner.id);
@@ -138,23 +138,23 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
     };
   });
 
-  // Function to load more miners
+  // Hàm để tải thêm thợ mỏ
   const loadMoreMiners = useCallback(() => {
     setDisplayedMinerCount(prevCount =>
-      Math.min(prevCount + 3, minerTypesWithData.length) // Load 3 more miners, up to total
+      Math.min(prevCount + 3, minerTypesWithData.length) // Tải thêm 3 thợ mỏ, tối đa bằng tổng số
     );
   }, [minerTypesWithData.length]);
 
-  // Effect for Intersection Observer to trigger lazy loading
+  // Effect cho Intersection Observer để kích hoạt tải lười
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        // If the loading element is visible and there are more miners to load
+        // Nếu phần tử tải đang hiển thị và vẫn còn thợ mỏ để tải
         if (entries[0].isIntersecting && displayedMinerCount < minerTypesWithData.length) {
           loadMoreMiners();
         }
       },
-      { threshold: 1.0 } // Trigger when 100% of the loading element is visible
+      { threshold: 1.0 } // Kích hoạt khi 100% phần tử tải hiển thị
     );
 
     if (loadingRef.current) {
@@ -171,7 +171,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
 
   return (
     <div className="bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90 backdrop-blur-sm p-4 sm:p-5 rounded-lg shadow-xl border border-slate-700/50">
-      {/* Section Header */}
+      {/* Tiêu đề phần */}
       <div className="mb-5 text-center sm:text-left">
         <h3 className="text-lg sm:text-xl font-bold text-yellow-400 mb-1 flex items-center justify-center sm:justify-start gap-2.5">
           <div className="p-2 bg-gradient-to-r from-sky-500 to-indigo-600 rounded-md shadow-sm">
@@ -184,18 +184,18 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
         </p>
       </div>
 
-      {/* Miner Cards Grid */}
+      {/* Lưới thẻ thợ mỏ */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {minerTypesWithData.slice(0, displayedMinerCount).map((miner) => ( // Only render up to displayedMinerCount
+        {minerTypesWithData.slice(0, displayedMinerCount).map((miner) => ( // Chỉ render số lượng thợ mỏ hiển thị
           <div
             key={miner.id}
             className={`relative group overflow-hidden rounded-lg border ${miner.colors.border} ${miner.colors.glow} bg-gradient-to-br ${miner.colors.bgFrom} ${miner.colors.bgTo} backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-xl`}
           >
-            {/* Hover effect for card */}
+            {/* Hiệu ứng di chuột cho thẻ */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 opacity-30 group-hover:opacity-60"></div>
             
             <div className="relative p-4">
-              {/* Miner Icon and Name/Description */}
+              {/* Biểu tượng và Tên/Mô tả thợ mỏ */}
               <div className="flex items-start gap-3 mb-3">
                 <div className={`p-2.5 rounded-md ${miner.colors.iconBg} ${miner.colors.border} border shadow-md`}>
                   <miner.iconComponent size={28} className={miner.colors.accent} />
@@ -206,7 +206,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                 </div>
               </div>
 
-              {/* Miner Stats (Count & Rate) */}
+              {/* Thống kê thợ mỏ (Số lượng & Tỷ lệ) */}
               <div className="space-y-2.5 mb-4">
                 <div className="flex justify-around items-baseline p-2.5 bg-slate-800/60 rounded-md border border-slate-600/50 shadow-inner">
                   <div className="text-center">
@@ -220,7 +220,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Total Output (if miner count > 0) */}
+                {/* Tổng sản lượng (nếu số lượng thợ mỏ > 0) */}
                 {miner.count > 0 && (
                   <div className="flex items-center justify-between p-2 text-xs bg-gradient-to-r from-green-800/30 to-emerald-900/30 rounded-md border border-green-700/30 shadow-sm">
                     <div className="flex items-center gap-1.5">
@@ -232,7 +232,7 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
                 )}
               </div>
 
-              {/* Hire and Sell Buttons */}
+              {/* Nút Thuê và Bán */}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleHireMiner(miner.id)}
@@ -265,15 +265,15 @@ const MinerHiringSection: React.FC<MinerHiringSectionProps> = ({
         ))}
       </div>
 
-      {/* Loading indicator / "Load More" trigger */}
+      {/* Chỉ báo tải / Kích hoạt "Tải thêm" */}
       {displayedMinerCount < minerTypesWithData.length && (
         <div ref={loadingRef} className="text-center py-4">
           <p className="text-slate-400 text-sm">Đang tải thêm thợ mỏ...</p>
-          {/* You can add a spinner here if you want */}
+          {/* Bạn có thể thêm một spinner ở đây nếu muốn */}
         </div>
       )}
 
-      {/* Summary Section */}
+      {/* Phần tóm tắt */}
       <div className="mt-6 p-3 bg-gradient-to-r from-slate-800/60 to-slate-700/60 rounded-lg border border-slate-600/60 shadow-md">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
           <div>
