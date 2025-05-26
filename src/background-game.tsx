@@ -1736,6 +1736,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
            </ErrorBoundary>
        );
   } else if (isGoldMineOpen) { // NEW: Render GoldMine when isGoldMineOpen is true
+      console.log("Rendering GoldMine. Current isGamePaused prop:", gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen);
+      console.log("GoldMine paused factors: gameOver:", gameOver, "gameStarted:", gameStarted, "isLoadingUserData:", isLoadingUserData, "isStatsFullscreen:", isStatsFullscreen, "isRankOpen:", isRankOpen, "isBackgroundPaused:", isBackgroundPaused, "isGoldMineOpen:", isGoldMineOpen);
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
               {auth.currentUser && (
@@ -1943,6 +1945,103 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     special: true,
                     centered: true
                   }
+                ].map((item, index) => (
+                  <div key={index} className="group cursor-pointer">
+                    {item.special && item.centered ? (
+                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                            {item.icon}
+                            {item.label && (
+                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                            )}
+                        </div>
+                    ) : (
+                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                        {item.icon}
+                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen) && ( // Added isRankOpen and isGoldMineOpen check
+              <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+
+                 <div
+                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData, isRankOpen, isBackgroundPaused, and isGoldMineOpen checks
+                  onClick={activateShield}
+                  title={
+                    !gameStarted || gameOver || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen ? "Không khả dụng" : // Added isLoadingUserData, isRankOpen, isBackgroundPaused, and isGoldMineOpen checks
+                    isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
+                    isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
+                    isStatsFullscreen ? "Không khả dụng" :
+                    "Kích hoạt Khiên chắn"
+                  }
+                  aria-label="Sử dụng Khiên chắn"
+                  role="button"
+                  tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen ? -1 : 0} // Added isLoadingUserData, isRankOpen, isBackgroundPaused, and isGoldMineOpen checks
+                >
+                  <div className="w-10 h-10">
+                     <DotLottieReact
+                        src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
+                        loop
+                        // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen} // Added isRankOpen, isBackgroundPaused, and isGoldMineOpen
+                        className="w-full h-full"
+                     />
+                  </div>
+                  {/* MODIFIED: Conditional rendering for cooldown text */}
+                  {isShieldOnCooldown && remainingCooldown > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
+                      {remainingCooldown}s
+                    </div>
+                  )}
+                </div>
+
+                {[
+                  {
+                    icon: (
+                      <div className="relative">
+                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
+                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                          <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
+                            <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
+                            <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
+                            <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
+                          </div>
+                        </div>
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+                      </div>
+                    ),
+                    label: "Mission",
+                    notification: true,
+                    special: true,
+                    centered: true
+                  },
+                  {
+                    icon: (
+                      <div className="relative">
+                        <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
+                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
+                          <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
+                            <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
+                            <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
+                            <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
+                            <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
+                            <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
+                            <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
+                          </div>
+                        </div>
+                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
+                      </div>
+                    ),
+                    label: "Blacksmith",
+                    notification: true,
+                    special: true,
+                    centered: true
+                  },
                 ].map((item, index) => (
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
