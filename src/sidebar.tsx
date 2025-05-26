@@ -16,6 +16,7 @@ interface SidebarLayoutProps {
   onShowPerformance?: () => void;
   onShowSettings?: () => void;
   onShowHelp?: () => void;
+  onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -155,10 +156,52 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
   />
 );
 
+// NEW: Inline SVG for a pickaxe icon (for Gold Mine)
+const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M14 14l-4 4-2-2 4-4 2-2 2-2 2-2 2-2 2-2"></path>
+    <path d="M18 6l-2-2"></path>
+    <path d="M12 8l-2-2"></path>
+    <path d="M8 12l-2-2"></path>
+    <path d="M6 18l-2-2"></path>
+    <path d="M16 10l-2-2"></path>
+    <path d="M20 14l-2-2"></path>
+    <path d="M14 18l-2-2"></path>
+    <path d="M10 22l-2-2"></path>
+    <path d="M2 10l-2-2"></path>
+    <path d="M22 2l-2-2"></path>
+    <path d="M20 20l-2-2"></path>
+    <path d="M18 22l-2-2"></path>
+    <path d="M22 18l-2-2"></path>
+    <path d="M10 2l-2-2"></path>
+    <path d="M6 6l-2-2"></path>
+    <path d="M2 2l-2-2"></path>
+    <path d="M22 6l-2-2"></path>
+    <path d="M12 20l-2-2"></path>
+    <path d="M16 22l-2-2"></path>
+    <path d="M20 10l-2-2"></path>
+    <path d="M14 2l-2-2"></path>
+    <path d="M8 2l-2-2"></path>
+    <path d="M4 22l-2-2"></path>
+  </svg>
+);
+
 
 // SidebarLayout component including Sidebar and main content area
 // Accept new specific handlers for menu items
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowPerformance, onShowSettings, onShowHelp }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowPerformance, onShowSettings, onShowHelp, onShowGoldMine }: SidebarLayoutProps) {
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // Removed activeItem and activeContent states
@@ -191,6 +234,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
+    { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
     { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance },
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
@@ -351,3 +395,4 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
 
 // Export the SidebarLayout component
 export { SidebarLayout };
+
