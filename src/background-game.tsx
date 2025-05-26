@@ -14,6 +14,8 @@ import { GemIcon } from './library/icon.tsx';
 // NEW: Import SidebarLayout and EnhancedLeaderboard
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
+// NEW: Import GoldMine component
+import GoldMine from './gold-mine.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -2044,6 +2046,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
             />
 
+            {/* NEW: Render GoldMine component */}
+            {auth.currentUser && (
+              <GoldMine
+                currentCoins={coins}
+                onUpdateCoins={startCoinCountAnimation} // Use the existing animation function for collecting gold
+                isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused}
+                currentUserId={auth.currentUser.uid}
+              />
+            )}
+
           </div>
       );
   }
@@ -2065,3 +2077,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+
