@@ -243,10 +243,9 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         setMinedGold(prevGold => {
           const rate = getCurrentMiningRate();
           const newGold = prevGold + rate;
-          // Lưu dữ liệu định kỳ, không phải mỗi giây
-          // if (auth.currentUser && Math.random() < 0.1) { // Giữ lại logic này nếu muốn lưu định kỳ
-          //   saveMineData(newGold, basicMiners, advancedMiners, masterMiners);
-          // }
+          if (auth.currentUser && Math.random() < 0.1) {
+            saveMineData(newGold, basicMiners, advancedMiners, masterMiners);
+          }
           return newGold;
         });
       }, 1000);
@@ -269,49 +268,29 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     const minerType = MINER_TYPES.find(m => m.id === minerId);
     if (!minerType) return;
 
-    if (!currentUserId) {
-      showMessage("Người dùng chưa đăng nhập.", "error");
+    if (currentCoins < minerType.baseCost) {
+      showMessage(`Không đủ vàng để thuê ${minerType.name}!`, "error");
       return;
     }
+    if (!currentUserId) return;
 
     try {
+      // 1. Thực hiện transaction chỉ với thao tác lên Firestore
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', currentUserId);
         const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
-        
-        // Đọc dữ liệu mới nhất trong giao dịch
         const userDocSnap = await transaction.get(userDocRef);
         const mineDocSnap = await transaction.get(mineDocRef);
 
-        if (!userDocSnap.exists()) {
-          throw new Error("Dữ liệu người dùng không tồn tại.");
-        }
-        if (!mineDocSnap.exists()) {
-          // Khởi tạo dữ liệu mỏ vàng nếu chưa có
-          transaction.set(mineDocRef, {
-            minedGold: 0,
-            basicMiners: 0,
-            advancedMiners: 0,
-            masterMiners: 0,
-            lastMineActivityTime: Date.now(),
-            createdAt: new Date()
-          });
-          // Đọc lại snap sau khi set để đảm bảo mineDocSnap có dữ liệu
-          // Hoặc đơn giản là sử dụng các giá trị mặc định cho lần đầu tiên
-          // Đối với trường hợp này, chúng ta sẽ giả định nó đã được tạo ở useEffect,
-          // nếu không thì sẽ tạo mới trong transaction.
-          // Để an toàn hơn, có thể thêm logic khởi tạo ở đây nếu mineDocSnap không tồn tại.
-        }
+        if (!userDocSnap.exists() || !mineDocSnap.exists()) throw new Error("Dữ liệu không tồn tại.");
 
-        const currentMainCoins = userDocSnap.data()?.coins || 0;
-        const currentBasicMinersInDb = mineDocSnap.data()?.basicMiners || mineDocSnap.data()?.miners || 0;
-        const currentAdvancedMinersInDb = mineDocSnap.data()?.advancedMiners || 0;
-        const currentMasterMinersInDb = mineDocSnap.data()?.masterMiners || 0;
+        const currentMainCoins = userDocSnap.data().coins || 0;
+        if (currentMainCoins < minerType.baseCost) throw new Error("Không đủ vàng.");
+
+        const currentBasicMinersInDb = mineDocSnap.data().basicMiners || mineDocSnap.data().miners || 0;
+        const currentAdvancedMinersInDb = mineDocSnap.data().advancedMiners || 0;
+        const currentMasterMinersInDb = mineDocSnap.data().masterMiners || 0;
         
-        if (currentMainCoins < minerType.baseCost) {
-          throw new Error("Không đủ vàng để thuê thợ mỏ.");
-        }
-
         transaction.update(userDocRef, { coins: currentMainCoins - minerType.baseCost });
 
         const updatedMinerCounts = {
@@ -327,24 +306,19 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           ...updatedMinerCounts,
           lastMineActivityTime: Date.now(),
         });
-
-        // Cập nhật state cục bộ sau khi transaction thành công
-        if (minerId === 'basic') setBasicMiners(prev => prev + 1);
-        else if (minerId === 'advanced') setAdvancedMiners(prev => prev + 1);
-        else if (minerId === 'master') setMasterMiners(prev => prev + 1);
-
-        onUpdateCoins(-minerType.baseCost);
-        onUpdateDisplayedCoins(currentCoins - minerType.baseCost);
-        showMessage(`Đã thuê ${minerType.name} thành công!`, "success");
       });
+
+      // 2. Sau khi transaction thành công mới cập nhật UI
+      if (minerId === 'basic') setBasicMiners(prev => prev + 1);
+      else if (minerId === 'advanced') setAdvancedMiners(prev => prev + 1);
+      else if (minerId === 'master') setMasterMiners(prev => prev + 1);
+
+      onUpdateCoins(-minerType.baseCost);
+      onUpdateDisplayedCoins(currentCoins - minerType.baseCost);
+      showMessage(`Đã thuê ${minerType.name} thành công!`, "success");
     } catch (error: any) {
       console.error("GoldMine: Lỗi khi thuê thợ mỏ:", error);
-      // Kiểm tra lỗi cụ thể của Firebase để đưa ra thông báo phù hợp
-      if (error.code === 'ABORTED') {
-        showMessage("Có xung đột dữ liệu, đang thử lại. Vui lòng thử lại sau giây lát.", "error");
-      } else {
-        showMessage(`Lỗi: ${error.message || "Không thể thuê thợ mỏ."}`, "error");
-      }
+      showMessage(`Lỗi: ${error.message || "Không thể thuê thợ mỏ."}`, "error");
     }
   };
 
@@ -352,53 +326,50 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     const minerType = MINER_TYPES.find(m => m.id === minerId);
     if (!minerType) return;
 
-    if (!currentUserId) {
-      showMessage("Người dùng chưa đăng nhập.", "error");
+    let currentMinerCount = 0;
+    if (minerId === 'basic') currentMinerCount = basicMiners;
+    else if (minerId === 'advanced') currentMinerCount = advancedMiners;
+    else if (minerId === 'master') currentMinerCount = masterMiners;
+    
+    if (currentMinerCount === 0) {
+      showMessage(`Bạn không có ${minerType.name} để bán!`, "error");
       return;
     }
 
+    const sellValue = Math.floor(minerType.baseCost * minerType.sellReturnFactor);
+    if (!currentUserId) return;
+
     try {
+      // 1. Thực hiện transaction chỉ với thao tác lên Firestore
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', currentUserId);
         const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
-        
-        // Đọc dữ liệu mới nhất trong giao dịch
         const userDocSnap = await transaction.get(userDocRef);
         const mineDocSnap = await transaction.get(mineDocRef);
 
-        if (!userDocSnap.exists() || !mineDocSnap.exists()) {
-          throw new Error("Dữ liệu không tồn tại.");
-        }
+        if (!userDocSnap.exists() || !mineDocSnap.exists()) throw new Error("Dữ liệu không tồn tại.");
 
-        const currentMainCoins = userDocSnap.data()?.coins || 0;
-        const currentBasicMinersInDb = mineDocSnap.data()?.basicMiners || mineDocSnap.data()?.miners || 0;
-        const currentAdvancedMinersInDb = mineDocSnap.data()?.advancedMiners || 0;
-        const currentMasterMinersInDb = mineDocSnap.data()?.masterMiners || 0;
+        const currentMainCoins = userDocSnap.data().coins || 0;
+        const currentBasicMinersInDb = mineDocSnap.data().basicMiners || mineDocSnap.data().miners || 0;
+        const currentAdvancedMinersInDb = mineDocSnap.data().advancedMiners || 0;
+        const currentMasterMinersInDb = mineDocSnap.data().masterMiners || 0;
 
         let updatedBasic = currentBasicMinersInDb;
         let updatedAdvanced = currentAdvancedMinersInDb;
         let updatedMaster = currentMasterMinersInDb;
 
-        let minerCountBeforeSell = 0;
-        if (minerId === 'basic') minerCountBeforeSell = updatedBasic;
-        else if (minerId === 'advanced') minerCountBeforeSell = updatedAdvanced;
-        else if (minerId === 'master') minerCountBeforeSell = updatedMaster;
-
-        if (minerCountBeforeSell === 0) {
-          throw new Error(`Bạn không có ${minerType.name} để bán!`);
-        }
-
         if (minerId === 'basic') {
+          if (updatedBasic === 0) throw new Error("Không có thợ mỏ cơ bản để bán.");
           updatedBasic -= 1;
         } else if (minerId === 'advanced') {
+          if (updatedAdvanced === 0) throw new Error("Không có thợ mỏ cao cấp để bán.");
           updatedAdvanced -= 1;
         } else if (minerId === 'master') {
+          if (updatedMaster === 0) throw new Error("Không có thợ mỏ bậc thầy để bán.");
           updatedMaster -= 1;
         } else {
           throw new Error("Loại thợ mỏ không hợp lệ để bán.");
         }
-
-        const sellValue = Math.floor(minerType.baseCost * minerType.sellReturnFactor);
 
         transaction.update(userDocRef, { coins: currentMainCoins + sellValue });
         transaction.update(mineDocRef, {
@@ -407,23 +378,19 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           masterMiners: updatedMaster,
           lastMineActivityTime: Date.now(),
         });
-
-        // Cập nhật state cục bộ sau khi transaction thành công
-        if (minerId === 'basic') setBasicMiners(prev => prev - 1);
-        else if (minerId === 'advanced') setAdvancedMiners(prev => prev - 1);
-        else if (minerId === 'master') setMasterMiners(prev => prev - 1);
-
-        onUpdateCoins(sellValue);
-        onUpdateDisplayedCoins(currentCoins + sellValue);
-        showMessage(`Đã bán ${minerType.name} thành công, nhận được ${sellValue} vàng!`, "success");
       });
+
+      // 2. Sau khi transaction thành công mới cập nhật UI
+      if (minerId === 'basic') setBasicMiners(prev => prev - 1);
+      else if (minerId === 'advanced') setAdvancedMiners(prev => prev - 1);
+      else if (minerId === 'master') setMasterMiners(prev => prev - 1);
+
+      onUpdateCoins(sellValue);
+      onUpdateDisplayedCoins(currentCoins + sellValue);
+      showMessage(`Đã bán ${minerType.name} thành công, nhận được ${sellValue} vàng!`, "success");
     } catch (error: any) {
       console.error("GoldMine: Lỗi khi bán thợ mỏ:", error);
-      if (error.code === 'ABORTED') {
-        showMessage("Có xung đột dữ liệu, đang thử lại. Vui lòng thử lại sau giây lát.", "error");
-      } else {
-        showMessage(`Lỗi: ${error.message || "Không thể bán thợ mỏ."}`, "error");
-      }
+      showMessage(`Lỗi: ${error.message || "Không thể bán thợ mỏ."}`, "error");
     }
   };
 
@@ -437,6 +404,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
     const goldToCollect = Math.floor(minedGold);
 
     try {
+      // 1. Thực hiện transaction chỉ với thao tác lên Firestore
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', currentUserId);
         const mineDocRef = doc(db, 'users', currentUserId, 'goldMine', 'data');
@@ -445,7 +413,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
 
         if (!userDocSnap.exists() || !mineDocSnap.exists()) throw new Error("Dữ liệu không tồn tại.");
 
-        const currentMainCoins = userDocSnap.data()?.coins || 0;
+        const currentMainCoins = userDocSnap.data().coins || 0;
         
         transaction.update(userDocRef, { coins: currentMainCoins + goldToCollect });
         const remainingFractionalGold = Math.max(0, minedGold - goldToCollect);
@@ -453,12 +421,13 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           minedGold: remainingFractionalGold,
           lastMineActivityTime: Date.now(),
         });
-
-        setMinedGold(remainingFractionalGold);
-        onUpdateCoins(goldToCollect);
-        onUpdateDisplayedCoins(currentCoins + goldToCollect);
-        showMessage(`Đã thu thập ${goldToCollect} vàng!`, "success");
       });
+
+      // 2. Sau khi transaction thành công mới cập nhật UI
+      setMinedGold(prev => Math.max(0, prev - goldToCollect)); // Cập nhật minedGold sau khi thu thập
+      onUpdateCoins(goldToCollect);
+      onUpdateDisplayedCoins(currentCoins + goldToCollect);
+      showMessage(`Đã thu thập ${goldToCollect} vàng!`, "success");
     } catch (error: any) {
       console.error("GoldMine: Lỗi khi thu thập vàng:", error);
       showMessage(`Lỗi: ${error.message || "Không thể thu thập vàng."}`, "error");
@@ -588,7 +557,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
           handleHireMiner={handleHireMiner}
           handleSellMiner={handleSellMiner}
           currentCoins={currentCoins}
-          // CoinIcon={CoinIcon} // This prop is not needed in MinerHiringSection
+          // CoinIcon={CoinIcon} // This prop is not used in MinerHiringSection, can be removed
         />
       </Modal>
     </div>
