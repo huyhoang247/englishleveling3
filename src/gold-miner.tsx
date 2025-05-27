@@ -60,7 +60,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
             <img 
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
               alt="Close" 
-              className="w-4 h-4" 
+              className="w-5 h-5" // Changed from w-4 h-4 to w-5 h-5
               onError="this.onerror=null;this.src='https://placehold.co/16x16/cccccc/000000?text=X';" 
             />
           </button>
@@ -463,7 +463,7 @@ const GoldMine: React.FC<GoldMineProps> = ({ onClose, currentCoins, onUpdateCoin
         <img 
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
           alt="Close" 
-          className="w-4 h-4" 
+          className="w-5 h-5" // Changed from w-4 h-4 to w-5 h-5
           onError="this.onerror=null;this.src='https://placehold.co/16x16/cccccc/000000?text=X';" 
         />
       </button>
