@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  setToggleSidebar?: (toggleFn: () => void) => void; // Hàm để truyền toggleSidebar ra ngoài
+  setToggleSidebar?: (toggleFn: () => void) => void;
   onShowStats?: () => void;
   onShowRank?: () => void;
   onShowHome?: () => void;
@@ -128,8 +128,7 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
 );
 // --- Hết SVG Icon Components ---
 
-const SIDEBAR_WIDTH = 'w-72'; // Định nghĩa chiều rộng sidebar ở một chỗ cho dễ quản lý
-const SIDEBAR_WIDTH_PX = 288; // 72 * 4 (Tailwind spacing unit) - Gần đúng với w-72 (18rem = 288px)
+const SIDEBAR_WIDTH_CLASS = 'w-72'; // Class chiều rộng sidebar của Tailwind
 
 function SidebarLayout({
   children,
@@ -144,21 +143,16 @@ function SidebarLayout({
   onShowGoldMine,
   activeScreen
 }: SidebarLayoutProps) {
-  // State duy nhất kiểm soát việc sidebar có hiển thị hay không
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false); // Mặc định là đóng
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // Hàm để bật/tắt sidebar, được memoized bằng useCallback
   const toggleSidebar = useCallback(() => {
     setIsSidebarVisible(prev => !prev);
   }, []);
 
-  // Truyền hàm toggleSidebar ra component cha (VerticalFlashcardGallery)
-  // useEffect này chỉ chạy khi setToggleSidebar (prop) hoặc toggleSidebar (hàm nội bộ) thay đổi
-  // Vì toggleSidebar được memoized, nó chỉ chạy lại nếu setToggleSidebar thay đổi (hiếm khi)
   useEffect(() => {
     if (setToggleSidebar) {
-      setToggleSidebar(() => toggleSidebar); // Truyền một hàm để đảm bảo tính ổn định
+      setToggleSidebar(() => toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]);
 
@@ -178,32 +172,41 @@ function SidebarLayout({
   ];
 
   return (
+    // Container chính, relative để các element con fixed định vị theo nó
     <div className="relative h-screen flex bg-gray-100 text-gray-800 font-sans overflow-hidden">
-      {/* Overlay: chỉ hiển thị khi sidebar mở, và click vào sẽ đóng sidebar */}
+
+      {/* Main content area (VerticalFlashcardGallery) */}
+      {/* Luôn chiếm toàn bộ không gian còn lại, không bị margin-left */}
+      <main className="flex-1 flex flex-col overflow-y-auto w-full h-full">
+        {children}
+      </main>
+
+      {/* Overlay làm mờ nội dung chính */}
+      {/* Hiển thị khi sidebar mở, nằm dưới sidebar (z-30) nhưng trên content (mặc định z) */}
       {isSidebarVisible && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
-          onClick={toggleSidebar}
-          aria-hidden="true" // Tốt cho accessibility
+          onClick={toggleSidebar} // Click vào overlay này cũng sẽ đóng sidebar
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar Container */}
       {/* Luôn là 'fixed', vị trí được kiểm soát bởi 'isSidebarVisible' */}
-      {/* Chiều rộng được đặt bởi SIDEBAR_WIDTH */}
-      <div
+      {/* Nằm trên cùng (z-40) */}
+      <aside // Sử dụng <aside> cho semantic HTML
         className={`
-          fixed top-0 left-0 z-40 h-screen ${SIDEBAR_WIDTH}
+          fixed top-0 left-0 z-40 h-screen ${SIDEBAR_WIDTH_CLASS}
           bg-gray-900 shadow-xl rounded-r-2xl
-          flex flex-col {/* Thêm flex-col để user info ở dưới cùng */}
+          flex flex-col 
           transform transition-transform duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
         `}
-        role="navigation" // Tốt cho accessibility
+        role="navigation"
         aria-label="Main sidebar"
       >
-        {/* Inner Sidebar Content Wrapper (cho phép scroll nếu nội dung dài) */}
-        <nav className="flex-1 py-4 overflow-y-auto"> {/* flex-1 để chiếm không gian còn lại */}
+        {/* Inner Sidebar Content Wrapper */}
+        <nav className="flex-1 py-4 overflow-y-auto">
           <ul className="space-y-0 px-2">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
@@ -223,8 +226,7 @@ function SidebarLayout({
                     onClick={(e) => {
                       e.preventDefault();
                       item.onClick?.();
-                      // Luôn đóng sidebar sau khi click item
-                      toggleSidebar();
+                      toggleSidebar(); // Luôn đóng sidebar sau khi click item
                     }}
                   >
                     <div className={`
@@ -250,15 +252,14 @@ function SidebarLayout({
           </ul>
         </nav>
 
-        {/* User info at the bottom of the sidebar */}
-        {/* mt-auto để đẩy xuống dưới cùng khi Sidebar container là flex-col */}
+        {/* User info */}
         <div className="mt-auto p-3 border-t border-gray-800">
           <div className="relative">
             <button
               onClick={toggleUserMenu}
               className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
               aria-expanded={userMenuOpen}
-              aria-controls="user-menu"
+              aria-controls="user-menu-dropdown"
             >
               <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 shadow-sm flex items-center justify-center text-white font-semibold text-sm">
                 TD
@@ -271,55 +272,26 @@ function SidebarLayout({
               </div>
             </button>
 
-            {/* User dropdown menu */}
             {userMenuOpen && (
               <div
-                id="user-menu"
-                className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-10"
+                id="user-menu-dropdown"
+                className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-10" // z-10 này là cục bộ trong sidebar, không ảnh hưởng z-index tổng thể
               >
                 <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                  <div className="w-6 h-6 rounded-full bg-gray-700 text-blue-400 flex items-center justify-center mr-2">
-                    <UsersIcon size={14} />
-                  </div>
-                  Hồ sơ
+                  <UsersIcon size={14} className="mr-2" /> Hồ sơ
                 </a>
                 <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                  <div className="w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center mr-2">
-                    <SettingsIcon size={14} />
-                  </div>
-                  Cài đặt
+                  <SettingsIcon size={14} className="mr-2" /> Cài đặt
                 </a>
                 <div className="my-1 border-t border-gray-700"></div>
                 <a href="#" className="flex items-center px-3 py-2 text-sm text-red-400 hover:bg-gray-700">
-                  <div className="w-6 h-6 rounded-full bg-gray-700 text-red-400 flex items-center justify-center mr-2">
-                    <XIcon size={14} />
-                  </div>
-                  Đăng xuất
+                  <XIcon size={14} className="mr-2" /> Đăng xuất
                 </a>
               </div>
             )}
           </div>
         </div>
-      </div>
-
-      {/* Main content area */}
-      {/* Margin bên trái của nội dung chính thay đổi dựa trên 'isSidebarVisible' */}
-      {/* Sử dụng `transition-all` hoặc `transition-margin` (nếu Tailwind hỗ trợ) */}
-      <main // Sử dụng <main> cho semantic HTML
-        className={`
-          flex-1 flex flex-col overflow-y-auto
-          transition-all duration-300 ease-in-out
-          ${isSidebarVisible ? `ml-[${SIDEBAR_WIDTH_PX}px]` : 'ml-0'}
-          `}
-        // Lưu ý: Tailwind JIT mode cần thiết để `ml-[${SIDEBAR_WIDTH_PX}px]` hoạt động.
-        // Nếu không dùng JIT, bạn có thể cần định nghĩa class này trong file CSS:
-        // .ml-sidebar-width { margin-left: 288px; /* hoặc giá trị chính xác của w-72 */ }
-        // Và dùng: ${isSidebarVisible ? 'ml-sidebar-width' : 'ml-0'}
-        // Hoặc đơn giản là dùng class của Tailwind nếu nó khớp, ví dụ 'ml-72'
-        // ${isSidebarVisible ? 'ml-72' : 'ml-0'} // Cách này đơn giản hơn và nên hoạt động
-      >
-        {children}
-      </main>
+      </aside>
     </div>
   );
 }
