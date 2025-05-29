@@ -149,23 +149,29 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
 
 
 function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowPerformance, onShowSettings, onShowHelp, onShowGoldMine, activeScreen }: SidebarLayoutProps) {
+  // State to control sidebar visibility (primarily for mobile)
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  // State for user menu dropdown
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
+  // Function to toggle sidebar visibility
   const toggleSidebar = () => {
-    setIsSidebarVisible(!isSidebarVisible);
+    setIsSidebarVisible(prev => !prev);
   };
 
+  // Expose the toggleSidebar function to the parent component
   useEffect(() => {
     if (setToggleSidebar) {
       setToggleSidebar(toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]);
 
+  // Function to toggle user menu
   const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
+    setUserMenuOpen(prev => !prev);
   };
 
+  // List of sidebar menu items
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
@@ -177,33 +183,40 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
   ];
 
-
   return (
     <div className="relative h-screen flex bg-gray-100 text-gray-800 font-sans overflow-hidden">
-      {/* Overlay when sidebar is visible on mobile */}
+      {/* Overlay for mobile when sidebar is open */}
       {isSidebarVisible && (
         <div
           className="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 md:hidden transition-opacity duration-300"
-          onClick={toggleSidebar}
+          onClick={toggleSidebar} // Close sidebar when clicking overlay
         />
       )}
 
-      {/* Sidebar container with fixed positioning for mobile and relative for desktop */}
+      {/* Sidebar Container */}
+      {/*
+        - On mobile (<md): fixed, full height, uses transform for slide in/out.
+        - On desktop (md>=): relative, full height, always visible, takes up space (w-72, flex-shrink-0).
+          No transform on desktop as it's always present.
+      */}
       <div
         className={`
-          fixed left-0 top-0 z-40 h-screen flex items-center
+          fixed top-0 left-0 z-40 h-screen
           transform transition-transform duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
-          md:relative md:translate-x-0 md:block md:w-72 md:flex-shrink-0 md:h-full
+          md:relative md:translate-x-0 md:block md:w-72 md:flex-shrink-0
         `}
       >
-        {/* Floating sidebar content area */}
+        {/* Inner Sidebar Content Wrapper */}
+        {/*
+          - On mobile: adjusted margin to account for header/footer space if needed, rounded corners.
+          - On desktop: full height, no top/bottom margins, no rounded top-left corner.
+        */}
         <div
           className={`
             flex flex-col w-72 bg-gray-900 shadow-xl rounded-r-2xl
-            transition-all duration-300 ease-in-out
-            mx-0 mt-16 mb-32 h-[calc(100vh-12rem)]
-            md:mt-0 md:mb-0 md:h-full md:rounded-none md:rounded-r-2xl
+            h-full
+            md:rounded-none md:rounded-r-2xl
           `}
         >
           {/* Menu items list */}
@@ -227,7 +240,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
                       onClick={(e) => {
                         e.preventDefault();
                         item.onClick?.();
-                        // Optionally close the sidebar after clicking an item on mobile
+                        // Close sidebar on mobile after click
                         if (window.innerWidth < 768) {
                            toggleSidebar();
                         }
@@ -296,18 +309,22 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
                     </div>
                     Đăng xuất
                   </a>
-                  </div>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main content area - Adjusted ml classes for responsiveness */}
+      {/* Main content area */}
+      {/*
+        - On mobile (<md): margin-left changes based on sidebar visibility.
+        - On desktop (md>=): always has ml-72 because sidebar is always present and takes space.
+      */}
       <div className={`
         flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-y-auto
-        ${isSidebarVisible ? 'ml-72' : 'ml-0'} /* Mobile spacing based on sidebar visibility */
-        md:ml-72 /* Always 72 units margin on desktop */
+        ${isSidebarVisible ? 'ml-72' : 'ml-0'} /* Mobile: adjust margin based on sidebar state */
+        md:ml-72 /* Desktop: always have margin for sidebar */
       `}>
         {children}
       </div>
