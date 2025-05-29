@@ -144,7 +144,7 @@ function SidebarLayout({
   activeScreen
 }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // const [userMenuOpen, setUserMenuOpen] = useState(false); // No longer needed as footer is removed
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarVisible(prev => !prev);
@@ -156,9 +156,9 @@ function SidebarLayout({
     }
   }, [setToggleSidebar, toggleSidebar]);
 
-  const toggleUserMenu = () => {
-    setUserMenuOpen(prev => !prev);
-  };
+  // const toggleUserMenu = () => { // No longer needed as footer is removed
+  //   setUserMenuOpen(prev => !prev);
+  // };
 
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
@@ -253,8 +253,8 @@ function SidebarLayout({
           </ul>
         </nav>
 
-        {/* User info */}
-        <div className="mt-auto p-3 border-t border-gray-800">
+        {/* User info - Removed as per user request */}
+        {/* <div className="mt-auto p-3 border-t border-gray-800">
           <div className="relative">
             <button
               onClick={toggleUserMenu}
@@ -291,7 +291,7 @@ function SidebarLayout({
               </div>
             )}
           </div>
-        </div>
+        </div> */}
       </aside>
     </div>
   );
