@@ -191,7 +191,8 @@ function SidebarLayout({
       {/* Nằm trên cùng (z-40) */}
       <aside // Sử dụng <aside> cho semantic HTML
         className={`
-          fixed top-0 left-0 z-40 ${SIDEBAR_WIDTH_CLASS}
+          fixed left-0 z-40 ${SIDEBAR_WIDTH_CLASS}
+          top-1/2 -translate-y-1/2 // Centered vertically
           max-h-screen overflow-y-auto rounded-r-2xl // Adjusted height to be content-based and added overflow
           bg-gray-900 shadow-xl
           flex flex-col
