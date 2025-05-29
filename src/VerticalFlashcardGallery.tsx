@@ -13,7 +13,7 @@ import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import defaultVocabulary - Adjust the path if necessary
 
 // Import SidebarLayout
-import { SidebarLayout } from './sidebar.tsx'; // Import the SidebarLayout component
+import { SidebarLayout } from './sidebar-story.tsx'; // Import the SidebarLayout component
 
 
 // Define the props interface for VerticalFlashcardGallery
