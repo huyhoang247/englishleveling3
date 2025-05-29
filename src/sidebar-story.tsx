@@ -144,7 +144,6 @@ function SidebarLayout({
   activeScreen
 }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  // const [userMenuOpen, setUserMenuOpen] = useState(false); // No longer needed as footer is removed
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarVisible(prev => !prev);
@@ -155,10 +154,6 @@ function SidebarLayout({
       setToggleSidebar(() => toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]);
-
-  // const toggleUserMenu = () => { // No longer needed as footer is removed
-  //   setUserMenuOpen(prev => !prev);
-  // };
 
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
@@ -196,9 +191,9 @@ function SidebarLayout({
       {/* Nằm trên cùng (z-40) */}
       <aside // Sử dụng <aside> cho semantic HTML
         className={`
-          fixed top-2 left-0 z-40 ${SIDEBAR_WIDTH_CLASS}
-          h-[calc(100vh-1rem)] mt-2 mb-2 rounded-2xl // Adjusted height and added margin for top and bottom
-          bg-gray-900 shadow-xl rounded-r-2xl
+          fixed top-0 left-0 z-40 ${SIDEBAR_WIDTH_CLASS}
+          max-h-screen overflow-y-auto rounded-r-2xl // Adjusted height to be content-based and added overflow
+          bg-gray-900 shadow-xl
           flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
@@ -207,7 +202,7 @@ function SidebarLayout({
         aria-label="Main sidebar"
       >
         {/* Inner Sidebar Content Wrapper */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="py-4 overflow-y-auto"> {/* Removed flex-1 */}
           <ul className="space-y-0 px-2">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
@@ -252,46 +247,6 @@ function SidebarLayout({
             })}
           </ul>
         </nav>
-
-        {/* User info - Removed as per user request */}
-        {/* <div className="mt-auto p-3 border-t border-gray-800">
-          <div className="relative">
-            <button
-              onClick={toggleUserMenu}
-              className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
-              aria-expanded={userMenuOpen}
-              aria-controls="user-menu-dropdown"
-            >
-              <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 shadow-sm flex items-center justify-center text-white font-semibold text-sm">
-                TD
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-200 truncate">Trần Đức</p>
-              </div>
-              <div className="w-6 h-6 rounded-full bg-gray-900 flex items-center justify-center shadow-sm">
-                <ChevronDownIcon size={14} className={`text-gray-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
-              </div>
-            </button>
-
-            {userMenuOpen && (
-              <div
-                id="user-menu-dropdown"
-                className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-10" // z-10 này là cục bộ trong sidebar, không ảnh hưởng z-index tổng thể
-              >
-                <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                  <UsersIcon size={14} className="mr-2" /> Hồ sơ
-                </a>
-                <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                  <SettingsIcon size={14} className="mr-2" /> Cài đặt
-                </a>
-                <div className="my-1 border-t border-gray-700"></div>
-                <a href="#" className="flex items-center px-3 py-2 text-sm text-red-400 hover:bg-gray-700">
-                  <XIcon size={14} className="mr-2" /> Đăng xuất
-                </a>
-              </div>
-            )}
-          </div>
-        </div> */}
       </aside>
     </div>
   );
