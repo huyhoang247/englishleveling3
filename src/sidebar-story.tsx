@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -155,16 +155,18 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Function to toggle sidebar visibility
-  const toggleSidebar = () => {
+  // 1. Use useCallback to ensure toggleSidebar's reference remains constant
+  const toggleSidebar = useCallback(() => {
     setIsSidebarVisible(prev => !prev);
-  };
+  }, []); // Empty dependency array means this function is created once
 
   // Expose the toggleSidebar function to the parent component
+  // 2. Reduce useEffect dependency to only setToggleSidebar
   useEffect(() => {
     if (setToggleSidebar) {
       setToggleSidebar(toggleSidebar);
     }
-  }, [setToggleSidebar, toggleSidebar]);
+  }, [setToggleSidebar]); // Only re-run if setToggleSidebar prop changes
 
   // Function to toggle user menu
   const toggleUserMenu = () => {
