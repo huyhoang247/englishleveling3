@@ -196,9 +196,10 @@ function SidebarLayout({
       {/* Nằm trên cùng (z-40) */}
       <aside // Sử dụng <aside> cho semantic HTML
         className={`
-          fixed top-0 left-0 z-40 h-screen ${SIDEBAR_WIDTH_CLASS}
+          fixed top-2 left-0 z-40 ${SIDEBAR_WIDTH_CLASS}
+          h-[calc(100vh-1rem)] mt-2 mb-2 rounded-2xl // Adjusted height and added margin for top and bottom
           bg-gray-900 shadow-xl rounded-r-2xl
-          flex flex-col 
+          flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
         `}
