@@ -13,7 +13,7 @@ import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import defaultVocabulary - Adjust the path if necessary
 
 // Import SidebarLayout
-import { SidebarLayout } from './sidebar-story.tsx'; // Import the SidebarLayout component
+import { SidebarLayout } from './sidebar.tsx'; // Import the SidebarLayout component
 
 
 // Define the props interface for VerticalFlashcardGallery
@@ -300,6 +300,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   // NEW: State to manage the active screen for the sidebar
   const [activeScreen, setActiveScreen] = useState('home'); // Default to 'home' or 'gallery'
 
+  // Ref to store the toggleSidebar function from SidebarLayout
+  const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
+
+
   // Functions to handle showing different screens
   const handleShowHome = () => setActiveScreen('home');
   const handleShowStats = () => setActiveScreen('stats');
@@ -467,6 +471,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   return (
     // Wrap the entire content in SidebarLayout
     <SidebarLayout
+      setToggleSidebar={setToggleSidebar} // Pass the setter for toggleSidebar
       onShowHome={handleShowHome}
       onShowStats={handleShowStats}
       onShowRank={handleShowRank}
@@ -493,27 +498,52 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               <div className="flex justify-between items-center mb-4 px-4"> {/* Added px-4 back here to keep padding around header content */}
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1> {/* Added dark mode text color */}
 
-                {/* Setting Button with hover effect */}
-                <div
-                  id="settings-button"
-                  className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} // Added dark mode styles
-                  onMouseEnter={() => setIsSettingsHovered(true)}
-                  onMouseLeave={() => setIsSettingsHovered(false)}
-                  onClick={() => setShowSettings(!showSettings)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} // Added dark mode styles
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* Buttons for Sidebar and Settings */}
+                <div className="flex items-center space-x-2"> {/* Added a flex container for buttons */}
+                  {/* Sidebar Toggle Button */}
+                  <button
+                    onClick={() => toggleSidebar?.()} // Call toggleSidebar if it's not null
+                    className="relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800"
+                    aria-label="Toggle Sidebar"
                   >
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                  </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-gray-600 dark:text-gray-400 transition-all duration-300"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="3" y1="12" x2="21" y2="12"></line>
+                      <line x1="3" y1="6" x2="21" y2="6"></line>
+                      <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                  </button>
+
+                  {/* Setting Button with hover effect */}
+                  <div
+                    id="settings-button"
+                    className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} // Added dark mode styles
+                    onMouseEnter={() => setIsSettingsHovered(true)}
+                    onMouseLeave={() => setIsSettingsHovered(false)}
+                    onClick={() => setShowSettings(!showSettings)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} // Added dark mode styles
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                  </div>
                 </div>
               </div>
 
@@ -737,7 +767,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           }`}
                         >
                           {index + 1}
-                        </button>
+                      </button>
                       ))}
 
                       {/* Next Button */}
