@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  setToggleSidebar?: (toggleFn: () => void) => void;
+  setToggleSidebar?: (toggleFn: () => void) => void; // Hàm để truyền toggleSidebar ra ngoài
   onShowStats?: () => void;
   onShowRank?: () => void;
   onShowHome?: () => void;
@@ -14,7 +14,7 @@ interface SidebarLayoutProps {
   activeScreen: string;
 }
 
-// SVG Icon Components (Giữ nguyên như bạn cung cấp)
+// --- SVG Icon Components (Giữ nguyên như bạn cung cấp) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -107,41 +107,60 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
 );
 
 const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-    {...props}
-  >
-    {/* Using a simpler pickaxe icon for brevity and clarity */}
-    <path d="M14.5 6.5l-8 8"></path>
-    <path d="M11.5 3.5L5 10l-2-2 6.5-6.5z"></path>
-    <path d="M14 11l3 3-2 2-3-3z"></path>
-    <path d="M5.5 11.5L2 15l6 6 3.5-3.5L10 16l-4.5-4.5z"></path>
-  </svg>
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        {...props}
+    >
+        <path d="M14.5 6.5l-8 8" />
+        <path d="M11.5 3.5L5 10l-2-2 6.5-6.5z" />
+        <path d="M14 11l3 3-2 2-3-3z" />
+        <path d="M5.5 11.5L2 15l6 6 3.5-3.5L10 16l-4.5-4.5z" />
+    </svg>
 );
+// --- Hết SVG Icon Components ---
 
+const SIDEBAR_WIDTH = 'w-72'; // Định nghĩa chiều rộng sidebar ở một chỗ cho dễ quản lý
+const SIDEBAR_WIDTH_PX = 288; // 72 * 4 (Tailwind spacing unit) - Gần đúng với w-72 (18rem = 288px)
 
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowPerformance, onShowSettings, onShowHelp, onShowGoldMine, activeScreen }: SidebarLayoutProps) {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+function SidebarLayout({
+  children,
+  setToggleSidebar,
+  onShowStats,
+  onShowRank,
+  onShowHome,
+  onShowTasks,
+  onShowPerformance,
+  onShowSettings,
+  onShowHelp,
+  onShowGoldMine,
+  activeScreen
+}: SidebarLayoutProps) {
+  // State duy nhất kiểm soát việc sidebar có hiển thị hay không
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false); // Mặc định là đóng
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
+  // Hàm để bật/tắt sidebar, được memoized bằng useCallback
   const toggleSidebar = useCallback(() => {
     setIsSidebarVisible(prev => !prev);
   }, []);
 
+  // Truyền hàm toggleSidebar ra component cha (VerticalFlashcardGallery)
+  // useEffect này chỉ chạy khi setToggleSidebar (prop) hoặc toggleSidebar (hàm nội bộ) thay đổi
+  // Vì toggleSidebar được memoized, nó chỉ chạy lại nếu setToggleSidebar thay đổi (hiếm khi)
   useEffect(() => {
     if (setToggleSidebar) {
-      setToggleSidebar(toggleSidebar);
+      setToggleSidebar(() => toggleSidebar); // Truyền một hàm để đảm bảo tính ổn định
     }
-  }, [setToggleSidebar]); // Giữ nguyên dependency array này là tốt nhất
+  }, [setToggleSidebar, toggleSidebar]);
 
   const toggleUserMenu = () => {
     setUserMenuOpen(prev => !prev);
@@ -160,148 +179,147 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
 
   return (
     <div className="relative h-screen flex bg-gray-100 text-gray-800 font-sans overflow-hidden">
-      {/* Overlay for mobile when sidebar is open (hoặc mọi kích thước màn hình nếu isSidebarVisible) */}
+      {/* Overlay: chỉ hiển thị khi sidebar mở, và click vào sẽ đóng sidebar */}
       {isSidebarVisible && (
         <div
-          className="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 transition-opacity duration-300 md:hidden" // md:hidden giữ overlay chỉ cho mobile nếu muốn, hoặc bỏ đi nếu muốn overlay cả trên desktop
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
           onClick={toggleSidebar}
+          aria-hidden="true" // Tốt cho accessibility
         />
       )}
 
-      {/* Sidebar Container - Đã cập nhật class */}
-      {/*
-        - Sidebar giờ đây sẽ là 'fixed' trên mọi kích thước màn hình.
-        - Vị trí của nó (trong/ngoài màn hình) được kiểm soát hoàn toàn bởi 'isSidebarVisible'.
-        - Class 'w-72' được áp dụng trực tiếp để sidebar luôn có chiều rộng này khi hiển thị.
-      */}
+      {/* Sidebar Container */}
+      {/* Luôn là 'fixed', vị trí được kiểm soát bởi 'isSidebarVisible' */}
+      {/* Chiều rộng được đặt bởi SIDEBAR_WIDTH */}
       <div
         className={`
-          fixed top-0 left-0 z-40 h-screen w-72 
+          fixed top-0 left-0 z-40 h-screen ${SIDEBAR_WIDTH}
+          bg-gray-900 shadow-xl rounded-r-2xl
+          flex flex-col {/* Thêm flex-col để user info ở dưới cùng */}
           transform transition-transform duration-300 ease-in-out
-          bg-gray-900 shadow-xl rounded-r-2xl 
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
         `}
+        role="navigation" // Tốt cho accessibility
+        aria-label="Main sidebar"
       >
-        {/* Inner Sidebar Content Wrapper - không cần 'w-72' ở đây nữa nếu đã đặt ở trên, nhưng giữ lại cũng không sao */}
-        <div
-          className={`
-            flex flex-col w-full h-full 
-            overflow-y-auto 
-            rounded-r-2xl 
-          `}
-        >
-          {/* Menu items list */}
-          <nav className="flex-1 py-4">
-            <ul className="space-y-0 px-2">
-              {menuItems.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
-                    <a
-                      href="#"
-                      className={`
-                        flex items-center px-4 py-3 text-sm font-medium
-                        transition-all duration-150 ease-in-out group relative
-                        mx-1 my-1 rounded-xl
-                        ${activeScreen === item.id
-                          ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
-                          : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                        }
-                      `}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        item.onClick?.();
-                        // Luôn đóng sidebar sau khi click item, bất kể kích thước màn hình
-                        // vì giờ đây sidebar có thể đóng/mở trên mọi kích thước.
-                        toggleSidebar();
-                      }}
-                    >
-                      <div className={`
-                        w-8 h-8 flex items-center justify-center rounded-lg mr-3
-                        transition-colors duration-200
-                        ${activeScreen === item.id
-                          ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
-                          : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
-                        }
-                      `}>
-                        <Icon size={18} />
-                      </div>
-                      <span>{item.label}</span>
-                      {item.badge && (
-                        <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
-                          {item.badge}
-                        </span>
-                      )}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+        {/* Inner Sidebar Content Wrapper (cho phép scroll nếu nội dung dài) */}
+        <nav className="flex-1 py-4 overflow-y-auto"> {/* flex-1 để chiếm không gian còn lại */}
+          <ul className="space-y-0 px-2">
+            {menuItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
+                  <a
+                    href="#"
+                    className={`
+                      flex items-center px-4 py-3 text-sm font-medium
+                      transition-all duration-150 ease-in-out group relative
+                      mx-1 my-1 rounded-xl
+                      ${activeScreen === item.id
+                        ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                      }
+                    `}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      item.onClick?.();
+                      // Luôn đóng sidebar sau khi click item
+                      toggleSidebar();
+                    }}
+                  >
+                    <div className={`
+                      w-8 h-8 flex items-center justify-center rounded-lg mr-3
+                      transition-colors duration-200
+                      ${activeScreen === item.id
+                        ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
+                        : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
+                      }
+                    `}>
+                      <Icon size={18} />
+                    </div>
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                        {item.badge}
+                      </span>
+                    )}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-          {/* User info at the bottom of the sidebar */}
-          <div className="mt-auto p-3 border-t border-gray-800">
-            <div className="relative">
-              <button
-                onClick={toggleUserMenu}
-                className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
+        {/* User info at the bottom of the sidebar */}
+        {/* mt-auto để đẩy xuống dưới cùng khi Sidebar container là flex-col */}
+        <div className="mt-auto p-3 border-t border-gray-800">
+          <div className="relative">
+            <button
+              onClick={toggleUserMenu}
+              className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
+              aria-expanded={userMenuOpen}
+              aria-controls="user-menu"
+            >
+              <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 shadow-sm flex items-center justify-center text-white font-semibold text-sm">
+                TD
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-200 truncate">Trần Đức</p>
+              </div>
+              <div className="w-6 h-6 rounded-full bg-gray-900 flex items-center justify-center shadow-sm">
+                <ChevronDownIcon size={14} className={`text-gray-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </button>
+
+            {/* User dropdown menu */}
+            {userMenuOpen && (
+              <div
+                id="user-menu"
+                className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-10"
               >
-                <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 shadow-sm flex items-center justify-center text-white font-semibold text-sm">
-                  TD
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200 truncate">Trần Đức</p>
-                </div>
-                <div className="w-6 h-6 rounded-full bg-gray-900 flex items-center justify-center shadow-sm">
-                  <ChevronDownIcon size={14} className="text-gray-400" />
-                </div>
-              </button>
-
-              {/* User dropdown menu */}
-              {userMenuOpen && (
-                <div className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-10">
-                  <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                    <div className="w-6 h-6 rounded-full bg-gray-700 text-blue-400 flex items-center justify-center mr-2">
-                      <UsersIcon size={14} />
-                    </div>
-                    Hồ sơ
-                  </a>
-                  <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                    <div className="w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center mr-2">
-                      <SettingsIcon size={14} />
-                    </div>
-                    Cài đặt
-                  </a>
-                  <div className="my-1 border-t border-gray-700"></div>
-                  <a href="#" className="flex items-center px-3 py-2 text-sm text-red-400 hover:bg-gray-700">
-                    <div className="w-6 h-6 rounded-full bg-gray-700 text-red-400 flex items-center justify-center mr-2">
-                      <XIcon size={14} />
-                    </div>
-                    Đăng xuất
-                  </a>
-                </div>
-              )}
-            </div>
+                <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                  <div className="w-6 h-6 rounded-full bg-gray-700 text-blue-400 flex items-center justify-center mr-2">
+                    <UsersIcon size={14} />
+                  </div>
+                  Hồ sơ
+                </a>
+                <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                  <div className="w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center mr-2">
+                    <SettingsIcon size={14} />
+                  </div>
+                  Cài đặt
+                </a>
+                <div className="my-1 border-t border-gray-700"></div>
+                <a href="#" className="flex items-center px-3 py-2 text-sm text-red-400 hover:bg-gray-700">
+                  <div className="w-6 h-6 rounded-full bg-gray-700 text-red-400 flex items-center justify-center mr-2">
+                    <XIcon size={14} />
+                  </div>
+                  Đăng xuất
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main content area - Đã cập nhật class */}
-      {/*
-        - Margin bên trái của nội dung chính giờ đây sẽ thay đổi dựa trên 'isSidebarVisible'
-          cho TẤT CẢ các kích thước màn hình.
-        - Sử dụng 'transition-margin-left' để có hiệu ứng mượt mà hơn cho margin.
-      */}
-      <div className={`
-        flex-1 flex flex-col overflow-y-auto
-        transition-all duration-300 ease-in-out 
-        ${isSidebarVisible ? 'ml-0 sm:ml-72' : 'ml-0'} 
-        // Nếu muốn sidebar KHÔNG đẩy nội dung trên mobile (mà đè lên), thì chỉ cần ml-72 cho sm trở lên.
-        // Nếu muốn sidebar LUÔN đẩy nội dung khi mở: ${isSidebarVisible ? 'ml-72' : 'ml-0'}
-        // Hiện tại: trên mobile (<sm) sidebar sẽ đè lên nội dung, từ sm trở lên sẽ đẩy nội dung.
-      `}>
+      {/* Main content area */}
+      {/* Margin bên trái của nội dung chính thay đổi dựa trên 'isSidebarVisible' */}
+      {/* Sử dụng `transition-all` hoặc `transition-margin` (nếu Tailwind hỗ trợ) */}
+      <main // Sử dụng <main> cho semantic HTML
+        className={`
+          flex-1 flex flex-col overflow-y-auto
+          transition-all duration-300 ease-in-out
+          ${isSidebarVisible ? `ml-[${SIDEBAR_WIDTH_PX}px]` : 'ml-0'}
+          `}
+        // Lưu ý: Tailwind JIT mode cần thiết để `ml-[${SIDEBAR_WIDTH_PX}px]` hoạt động.
+        // Nếu không dùng JIT, bạn có thể cần định nghĩa class này trong file CSS:
+        // .ml-sidebar-width { margin-left: 288px; /* hoặc giá trị chính xác của w-72 */ }
+        // Và dùng: ${isSidebarVisible ? 'ml-sidebar-width' : 'ml-0'}
+        // Hoặc đơn giản là dùng class của Tailwind nếu nó khớp, ví dụ 'ml-72'
+        // ${isSidebarVisible ? 'ml-72' : 'ml-0'} // Cách này đơn giản hơn và nên hoạt động
+      >
         {children}
-      </div>
+      </main>
     </div>
   );
 }
