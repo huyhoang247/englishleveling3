@@ -1,74 +1,65 @@
-import React from 'react';
-import { User } from 'firebase/auth'; // Import User nếu bạn cần truyền currentUser
+import React, { useState } from 'react';
 
-interface GameProps {
-  onWordClick: (word: string) => void;
-  currentUser: User | null; // Prop này có thể cần hoặc không tùy theo logic game sau này
-}
+const GameBrowser: React.FC = () => {
+  const [url, setUrl] = useState('https://www.google.com'); // Default URL
+  const [inputUrl, setInputUrl] = useState('https://www.google.com'); // State for the input field
 
-// Nội dung HTML mẫu cho "trình duyệt"
-// Các từ tiếng Anh quan trọng được bọc trong <span class="english-word"></span>
-const sampleHtmlContent = `
-  <div class="p-4 text-gray-800 dark:text-gray-200">
-    <h1 class="text-2xl font-bold mb-4">Welcome to the Learning Browser!</h1>
-    <p class="mb-2">
-      This is a simple simulation of a browser page. You can read the text below.
-      If you click on an <strong class="english-word text-blue-500 hover:underline cursor-pointer">English</strong>
-      word like <strong class="english-word text-blue-500 hover:underline cursor-pointer">example</strong>
-      or <strong class="english-word text-blue-500 hover:underline cursor-pointer">vocabulary</strong>,
-      its definition will pop up.
-    </p>
-    <p class="mb-2">
-      We hope you <strong class="english-word text-blue-500 hover:underline cursor-pointer">enjoy</strong>
-      this interactive <strong class="english-word text-blue-500 hover:underline cursor-pointer">feature</strong>.
-      Try clicking on words such as
-      <strong class="english-word text-blue-500 hover:underline cursor-pointer">learning</strong>,
-      <strong class="english-word text-blue-500 hover:underline cursor-pointer">language</strong>,
-      or <strong class="english-word text-blue-500 hover:underline cursor-pointer">source</strong>.
-    </p>
-    <div class="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-      <h2 class="text-lg font-semibold mb-1">A Short Story</h2>
-      <p>
-        Once upon a time, in a land full of <strong class="english-word text-blue-500 hover:underline cursor-pointer">adventure</strong>,
-        a young <strong class="english-word text-blue-500 hover:underline cursor-pointer">explorer</strong> decided to
-        <strong class="english-word text-blue-500 hover:underline cursor-pointer">discover</strong> new
-        <strong class="english-word text-blue-500 hover:underline cursor-pointer">knowledge</strong>.
-        Their <strong class="english-word text-blue-500 hover:underline cursor-pointer">journey</strong> was filled with
-        many <strong class="english-word text-blue-500 hover:underline cursor-pointer">challenges</strong>.
-      </p>
-    </div>
-    <p class="mt-3">
-      Remember to check your <strong class="english-word text-blue-500 hover:underline cursor-pointer">insurance</strong>
-      and have a solid <strong class="english-word text-blue-500 hover:underline cursor-pointer">argument</strong> for your
-      <strong class="english-word text-blue-500 hover:underline cursor-pointer">influence</strong>.
-    </p>
-  </div>
-`;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputUrl(e.target.value);
+  };
 
-const Game: React.FC<GameProps> = ({ onWordClick, currentUser }) => {
-  // Xử lý sự kiện click trên nội dung HTML
-  const handleContentClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement;
-    // Kiểm tra xem phần tử được nhấp có class 'english-word' không
-    if (target.classList.contains('english-word')) {
-      const word = target.textContent;
-      if (word) {
-        onWordClick(word.trim());
-      }
+  const handleGoClick = () => {
+    // Basic URL validation and prefixing with https:// if missing
+    let formattedUrl = inputUrl.trim();
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+    setUrl(formattedUrl);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleGoClick();
     }
   };
 
   return (
-    <div className="game-browser-container h-full overflow-y-auto bg-white dark:bg-gray-900">
-      {/* Sử dụng dangerouslySetInnerHTML để hiển thị HTML.
-          Lưu ý: Chỉ sử dụng với nội dung HTML đáng tin cậy. */}
-      <div
-        dangerouslySetInnerHTML={{ __html: sampleHtmlContent }}
-        onClick={handleContentClick}
-        className="prose dark:prose-invert max-w-none" // TailwindCSS typography plugin cho styling
-      />
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      {/* Browser Bar */}
+      <div className="flex items-center p-3 bg-white dark:bg-gray-800 shadow-md flex-shrink-0">
+        <input
+          type="text"
+          value={inputUrl}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
+          placeholder="Nhập URL hoặc tìm kiếm..."
+          className="flex-grow p-2 mr-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={handleGoClick}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+        >
+          Đi
+        </button>
+      </div>
+
+      {/* Iframe for browsing */}
+      <div className="flex-grow relative">
+        <iframe
+          src={url}
+          title="Web Browser"
+          className="w-full h-full border-0"
+          // Add sandbox attributes for security, restricting scripts and popups
+          // 'allow-forms' and 'allow-modals' are included to enable basic interactions
+          // 'allow-popups' is intentionally excluded to prevent new windows
+          // 'allow-scripts' is necessary for most websites to function
+          sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups-to-escape-sandbox"
+        >
+          Trình duyệt của bạn không hỗ trợ iframe.
+        </iframe>
+      </div>
     </div>
   );
 };
 
-export default Game;
+export default GameBrowser;
