@@ -33,82 +33,25 @@ interface FlashcardDetailModalProps {
   currentVisualStyle: string; // Add currentVisualStyle prop
 }
 
-// Animation styles (can be moved to a shared CSS file or kept here)
+// Animation styles - Clean and minimal
 const animations = `
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(-10px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
-  }
-
-  @keyframes slideIn {
-    0% { transform: translateY(20px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-  }
-
   @keyframes fadeIn {
     0% { opacity: 0; }
     100% { opacity: 1; }
   }
 
-  @keyframes scaleIn {
-    0% { transform: scale(0.95); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-
-  /* Animation for backdrop */
   @keyframes modalBackdropIn {
     0% { opacity: 0; }
-    100% { opacity: 0.4; } /* Use 0.4 opacity as requested */
+    100% { opacity: 0.4; }
   }
 
-  /* Enhanced tab animations */
-  @keyframes tabSlideIn {
-    0% { transform: translateX(-100%); opacity: 0; }
-    100% { transform: translateX(0); opacity: 1; }
-  }
-
-  @keyframes tabIndicatorSlide {
-    0% { transform: scaleX(0); }
-    100% { transform: scaleX(1); }
-  }
-
-  @keyframes tabGlow {
-    0% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
-    50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
-    100% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
-  }
-
-  /* Tab content fade transition */
-  @keyframes contentFadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(8px); }
     100% { opacity: 1; transform: translateY(0); }
   }
 
-  .tab-content-enter {
-    animation: contentFadeIn 0.3s ease-out forwards;
-  }
-
-  .tab-indicator {
-    animation: tabIndicatorSlide 0.3s ease-out;
-  }
-
-  .tab-glow:hover {
-    animation: tabGlow 1s ease-in-out;
-  }
-
-  /* Glassmorphism effect for tabs */
-  .glass-tab {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .glass-tab-dark {
-    backdrop-filter: blur(10px);
-    background: rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .content-transition {
+    animation: slideUp 0.2s ease-out;
   }
 `;
 
@@ -151,35 +94,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     return url;
   };
 
-  // Tab configuration with icons and enhanced styling
+  // Clean tab configuration
   const tabs = [
-    {
-      key: 'basic' as const,
-      label: 'Ảnh Gốc',
-      icon: '🖼️',
-      gradient: 'from-blue-500 to-purple-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      textColor: 'text-blue-700 dark:text-blue-300',
-      borderColor: 'border-blue-500',
-    },
-    {
-      key: 'example' as const,
-      label: 'Ví Dụ',
-      icon: '🌟',
-      gradient: 'from-green-500 to-teal-600',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      textColor: 'text-green-700 dark:text-green-300',
-      borderColor: 'border-green-500',
-    },
-    {
-      key: 'vocabulary' as const,
-      label: 'Cơ Bản',
-      icon: '📚',
-      gradient: 'from-purple-500 to-pink-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      textColor: 'text-purple-700 dark:text-purple-300',
-      borderColor: 'border-purple-500',
-    },
+    { key: 'basic' as const, label: 'Ảnh Gốc' },
+    { key: 'example' as const, label: 'Ví Dụ' },
+    { key: 'vocabulary' as const, label: 'Từ Vựng' },
   ];
 
   // Function to render modal content based on activeTab
@@ -190,7 +109,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     switch (activeTab) {
       case 'basic':
         return (
-          <div className="flex justify-center items-start flex-grow px-4 pt-2 pb-4 overflow-hidden tab-content-enter">
+          <div className="flex justify-center items-start flex-grow px-4 pt-2 pb-4 overflow-hidden content-transition">
             <img
               src={getImageUrlForStyle(selectedCard, currentVisualStyle)}
               alt="Ảnh Gốc"
@@ -204,7 +123,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
-          <div className="flex justify-center items-center flex-grow p-4 overflow-hidden tab-content-enter">
+          <div className="flex justify-center items-center flex-grow p-4 overflow-hidden content-transition">
             <img
               src={exampleImageUrl}
               alt="Hình Ảnh Ví Dụ"
@@ -218,7 +137,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'vocabulary':
         return (
-          <div className="p-5 overflow-y-auto flex-grow tab-content-enter">
+          <div className="p-5 overflow-y-auto flex-grow content-transition">{/* Rest of vocabulary content remains the same */}
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3>
             
             {/* Nghĩa */}
@@ -338,57 +257,28 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Enhanced Tab Navigation */}
-          <div className="relative bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-2 pt-3 pb-1">
-            <div className="flex space-x-1 relative">
-              {tabs.map((tab, index) => {
+          {/* Modern Minimalist Tab Navigation */}
+          <div className="flex justify-center bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex-shrink-0 px-6 py-4">
+            <div className="inline-flex bg-gray-50 dark:bg-gray-800 rounded-xl p-1 space-x-1">
+              {tabs.map((tab) => {
                 const isActive = activeTab === tab.key;
                 return (
                   <button
                     key={tab.key}
                     className={`
-                      relative flex-1 py-3 px-4 text-sm font-medium text-center 
-                      transition-all duration-300 ease-out transform hover:scale-105
-                      rounded-t-xl tab-glow group overflow-hidden
+                      px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-out
                       ${isActive 
-                        ? `${tab.textColor} ${tab.bgColor} shadow-lg border-b-3 ${tab.borderColor} font-bold` 
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                       }
                     `}
                     onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      animation: `tabSlideIn 0.4s ease-out ${index * 0.1}s both`,
-                    }}
                   >
-                    {/* Background gradient for active tab */}
-                    {isActive && (
-                      <div 
-                        className={`absolute inset-0 bg-gradient-to-r ${tab.gradient} opacity-10 tab-indicator`}
-                      />
-                    )}
-                    
-                    {/* Tab content */}
-                    <div className="relative flex items-center justify-center space-x-2">
-                      <span className="text-lg">{tab.icon}</span>
-                      <span className="font-semibold">{tab.label}</span>
-                    </div>
-
-                    {/* Active indicator line */}
-                    {isActive && (
-                      <div 
-                        className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tab.gradient} tab-indicator`}
-                      />
-                    )}
-
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {tab.label}
                   </button>
                 );
               })}
             </div>
-
-            {/* Decorative border */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent" />
           </div>
 
           {/* Body - Render content based on renderModalContent function */}
