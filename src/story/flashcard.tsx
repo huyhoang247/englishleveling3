@@ -115,7 +115,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       case 'basic':
         return (
           // Content for Basic Image (Original Image)
-          <div className="flex justify-center items-center flex-grow p-4 overflow-hidden">
+          // Adjusted padding to bring image closer to the tab
+          <div className="flex justify-center items-start flex-grow px-4 pt-2 pb-4 overflow-hidden">
             <img
               src={getImageUrlForStyle(selectedCard, currentVisualStyle)} // Use the styled image
               alt="Ảnh Gốc"
@@ -269,27 +270,27 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex bg-gray-100 dark:bg-gray-800 p-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          {/* Tab Navigation - Enhanced Styling */}
+          <div className="flex bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-4 pt-2">
             <button
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors duration-200
-                ${activeTab === 'basic' ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}
+              className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 relative
+                ${activeTab === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'}
               `}
               onClick={() => setActiveTab('basic')}
             >
               Ảnh Gốc
             </button>
             <button
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors duration-200
-                ${activeTab === 'example' ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}
+              className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 relative
+                ${activeTab === 'example' ? 'text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'}
               `}
               onClick={() => setActiveTab('example')}
             >
               Ví Dụ
             </button>
             <button
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors duration-200
-                ${activeTab === 'vocabulary' ? 'bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}
+              className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 relative
+                ${activeTab === 'vocabulary' ? 'text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'}
               `}
               onClick={() => setActiveTab('vocabulary')}
             >
