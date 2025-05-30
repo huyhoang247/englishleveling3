@@ -194,10 +194,10 @@ for (let i = 0; i < totalPossibleFlashcards; i++) {
 
 
     ALL_POSSIBLE_FLASHCARDS.push({
-        id: i + 1, // ID dựa trên vị trí (bắt đầu từ 1)
+        id: i + 1, // ID based on position (starting from 1)
         imageUrl: imageUrls,
-        isFavorite: false, // Đặt trạng thái yêu thích mặc định
-        vocabulary: vocab, // Gán dữ liệu từ vựng theo index
+        isFavorite: false, // Set default favorite status
+        vocabulary: vocab, // Assign vocabulary data by index
     });
 }
 
@@ -281,8 +281,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   // Add a new state variable for visual style
   const [visualStyle, setVisualStyle] = useState('default'); // 'default', 'anime', 'comic', or 'realistic'
 
-  // Add this after the visualStyle state
-  const [imageDetail, setImageDetail] = useState('basic'); // 'basic', 'phrase', or 'example'
+  // imageDetail state is no longer needed here as it's handled internally by FlashcardDetailModal
+  // const [imageDetail, setImageDetail] = useState('basic'); // 'basic', 'phrase', or 'example'
 
   // State to manage the selected card for detail view
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null); // Use Flashcard type
@@ -525,14 +525,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   {/* Setting Button with hover effect */}
                   <div
                     id="settings-button"
-                    className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} // Added dark mode styles
+                    className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`}
                     onMouseEnter={() => setIsSettingsHovered(true)}
                     onMouseLeave={() => setIsSettingsHovered(false)}
                     onClick={() => setShowSettings(!showSettings)}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} // Added dark mode styles
+                      className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`}
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -549,18 +549,18 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
               {/* Redesigned Tab Navigation - With improved background color */}
               {/* Removed px-4 from this div as well */}
-              <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4"> {/* Added dark mode styles, added mx-4 to keep padding around tabs */}
+              <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
                 <button
                   onClick={() => { setActiveTab('collection'); setCurrentPage(1); }} // Reset page on tab change
                   className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     activeTab === 'collection'
-                      ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' // Added dark mode styles
-                      : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700' // Added dark mode styles
+                      ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} // Added dark mode styles
+                    className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`}
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -573,20 +573,20 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </svg>
                   <span>Collection</span>
                   {/* Display the count of opened images for the collection tab */}
-                  <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span> {/* Added dark mode styles */}
+                  <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab('favorite'); setCurrentPage(1); }} // Reset page on tab change
                   className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
                     activeTab === 'favorite'
-                      ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' // Added dark mode styles
-                      : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700' // Added dark mode styles
+                      ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} // Added dark mode styles
+                    className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}
                     viewBox="0 0 24 24"
                     fill={activeTab === 'favorite' ? "currentColor" : "none"}
                     stroke="currentColor"
@@ -597,7 +597,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                   </svg>
                   <span>Favorite</span>
-                  <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span> {/* Added dark mode styles */}
+                  <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
                 </button>
               </div>
             </div>
@@ -608,7 +608,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             {/* Removed p-4 from this div */}
             <div className="min-h-0">
               {/* Removed px-4 from this div */}
-              <div className="w-full max-w-6xl mx-auto"> {/* Added mx-auto for centering */}
+              <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
                   // Wrapped flashcard mapping in a grid div based on layoutMode
                   // Removed pb-12 from here as we are adding it to the pagination container
@@ -627,14 +627,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           id={`flashcard-${card.id}`}
                           // Removed border classes from here
                           // Removed rounded-xl from here
-                          className={`flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group`} // Added dark mode styles, removed mb-8/mb-0 as gap handles spacing
+                          className={`flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group`}
                         >
                           {/* Hover effect for flashcard */}
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
 
                           {/* Heart Icon - Favorite/Unfavorite - Removed background and padding classes */}
                           <button
-                            className={`absolute top-3 right-3 transition-all duration-300 z-10 flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`} // Removed rounded-full, bg-*, p-* classes
+                            className={`absolute top-3 right-3 transition-all duration-300 z-10 flex items-center justify-center ${card.isFavorite ? 'scale-110' : 'scale-100'}`}
                             onClick={() => toggleFavorite(card.id)}
                             aria-label={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
                           >
@@ -649,7 +649,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                                 layoutMode === 'double'
                                   ? 'h-4 w-4'
                                   : 'h-6 w-6'
-                              } ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} // Added conditional opacity class
+                              } ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`}
                             />
                           </button>
 
@@ -657,7 +657,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           <div className="w-full">
                             {/* Removed conditional border classes from this div */}
                             <div className={`relative w-full ${
-                              visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : // Added dark mode styles
+                              visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' :
                               ''
                             }`}>
                               {/* Apply style-specific overlays */}
@@ -665,7 +665,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                                 <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>
                               )}
                               {visualStyle === 'comic' && (
-                                <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" // Added dark mode styles
+                                <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900"
                                   style={{
                                     backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)',
                                     backgroundSize: '4px 4px'
@@ -685,18 +685,18 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                                   visualStyle === 'comic' ? 'contrast-125 brightness-105' :
                                   visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' :
                                   ''
-                                } cursor-pointer`} // Added cursor-pointer
+                                } cursor-pointer`}
                                 style={{
                                   aspectRatio: '1024/1536',
                                   filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
                                 }}
                                 onClick={() => openVocabDetail(card)} // Added click event
                                 onError={(e) => {
-                                  console.error(`Error loading image for card ID ${card.id}, URL: ${e.currentTarget.src}`); // Log image load error
+                                  console.error(`Error loading image for card ID ${card.id}, URL: ${e.currentTarget.src}`);
                                   e.currentTarget.onerror = null;
                                   // Fallback to default image if the styled image fails to load
                                   e.currentTarget.src = card.imageUrl.default;
-                                  console.log(`Falling back to default image for card ID ${card.id}:`, card.imageUrl.default); // Log fallback URL
+                                  console.log(`Falling back to default image for card ID ${card.id}:`, card.imageUrl.default);
                                 }}
                               />
 
@@ -711,11 +711,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 ) : (
                   // Display empty state for Favorite tab if no items
-                  <div className="flex flex-col items-center justify-center py-16 text-center px-4"> {/* Added px-4 here */}
-                    <div className="bg-pink-50 dark:bg-pink-900 p-6 rounded-full mb-4"> {/* Added dark mode styles */}
+                  <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+                    <div className="bg-pink-50 dark:bg-pink-900 p-6 rounded-full mb-4">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-16 w-16 text-pink-300 dark:text-pink-600" // Added dark mode styles
+                        className="h-16 w-16 text-pink-300 dark:text-pink-600"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                       >
@@ -724,12 +724,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </div>
                     <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">
                         {activeTab === 'collection' ? 'Bộ sưu tập trống' : 'Không có flashcard yêu thích'}
-                    </h3> {/* Added dark mode styles */}
+                    </h3>
                     <p className="text-gray-500 dark:text-gray-400 max-w-md">
                         {activeTab === 'collection'
                           ? 'Hãy mở rương để nhận thêm flashcard mới!'
                           : 'Nhấn vào biểu tượng trái tim trên flashcard để thêm vào danh sách yêu thích của bạn'}
-                    </p> {/* Added dark mode styles */}
+                    </p>
                   </div>
                 )}
 
@@ -738,7 +738,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 {totalPages > 1 && ( // Only show pagination if there's more than one page
                   // Removed border-t and border-gray classes from this container
                   // Added px-4 to the pagination container
-                  <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4"> {/* Removed fixed, bottom-0, left-0, right-0, z-30 classes, added mt-4 for spacing, CHANGED pb-12 to pb-24, Added px-4 */}
+                  <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex space-x-2" aria-label="Pagination">
                       {/* Previous Button */}
                       <button
@@ -747,8 +747,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         // Removed border classes from here
                         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
                           currentPage === 1
-                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
-                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                       >
                         Trước
@@ -763,7 +763,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
                             currentPage === index + 1
                               ? 'bg-indigo-600 text-white shadow-md'
-                              : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                              : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                         >
                           {index + 1}
@@ -777,8 +777,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         // Removed border classes from here
                         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
                           currentPage === totalPages
-                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' // Added dark mode styles
-                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' // Added dark mode styles
+                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                         }`}
                       >
                         Sau
@@ -805,17 +805,17 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 {/* Modal Popup */}
                 <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
                   <div
-                    className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" // Added max-h and flex-col, dark mode styles
+                    className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
                     style={{ animation: 'scaleIn 0.3s ease-out forwards' }}
                     id="settings-panel"
                   >
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0"> {/* Added flex-shrink-0 */}
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0">
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-white flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 01 0 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 01 0-2.83l-.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 01 0-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 012.83 0 2 2 0 01 0 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 01 0 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01 0-2.83 2 2 0 01 0-2.83l-.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 01 0-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 012.83 0 2 2 0 01 0 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path>
                           </svg>
                           Cài đặt hiển thị
                         </h3>
@@ -831,221 +831,217 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </div>
 
                     {/* Body */}
-                    <div className="p-6 overflow-y-auto max-h-[70vh] flex-grow"> {/* Added overflow-y-auto, max-h and flex-grow */}
+                    <div className="p-6 overflow-y-auto max-h-[70vh] flex-grow">
                       {/* Layout Mode */}
-                      <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
-                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"> {/* Changed mb-3 to mb-2, Added dark mode styles */}
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                           </svg>
                           Bố cục hiển thị
                         </h4>
-                        <div className="flex space-x-2"> {/* Changed space-x-3 to space-x-2 */}
+                        <div className="flex space-x-2">
                           <div
-                            className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${
                               layoutMode === 'single'
-                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30' // Added dark mode styles
+                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30'
                             }`}
                             onClick={() => setLayoutMode('single')}
                           >
-                            <div className="w-8 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm mb-1"></div> {/* Changed w-10 h-16 to w-8 h-12, mb-2 to mb-1, Added dark mode styles */}
-                            <span className={`text-xs ${layoutMode === 'single' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>1 Cột</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <div className="w-8 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm mb-1"></div>
+                            <span className={`text-xs ${layoutMode === 'single' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>1 Cột</span>
                           </div>
 
                           <div
-                            className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${
                               layoutMode === 'double'
-                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30' // Added dark mode styles
+                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30'
                             }`}
                             onClick={() => setLayoutMode('double')}
                           >
-                            <div className="flex space-x-1 mb-1"> {/* Changed space-x-1 mb-2 to space-x-1 mb-1 */}
-                              <div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div> {/* Changed w-5 h-16 to w-4 h-12, Added dark mode styles */}
-                              <div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div> {/* Changed w-5 h-16 to w-4 h-12, Added dark mode styles */}
+                            <div className="flex space-x-1 mb-1">
+                              <div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div>
+                              <div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div>
                             </div>
-                            <span className={`text-xs ${layoutMode === 'double' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>2 Cột</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <span className={`text-xs ${layoutMode === 'double' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>2 Cột</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Visual Style */}
-                      <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
-                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"> {/* Changed mb-3 to mb-2, Added dark mode styles */}
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" />
                           </svg>
                           Phong cách hiển thị
                         </h4>
 
                         {/* Style Buttons */}
-                        <div className="grid grid-cols-2 gap-2"> {/* Changed grid-cols-2 gap-3 to grid-cols-2 gap-2 */}
+                        <div className="grid grid-cols-2 gap-2">
                           {/* Default Style */}
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${
                               visualStyle === 'default'
-                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30' // Added dark mode styles
+                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900'
+                                : 'border-gray-200 dark:border-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30'
                             }`}
                             onClick={() => setVisualStyle('default')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
-                              visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                              visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                               </svg>
                             </div>
-                            <span className={`text-xs ${visualStyle === 'default' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Mặc định</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <span className={`text-xs ${visualStyle === 'default' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Mặc định</span>
                           </div>
 
                           {/* Anime Style */}
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${
                               visualStyle === 'anime'
-                                ? 'border-pink-500 bg-pink-50 dark:border-pink-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-600 hover:bg-pink-50/30 dark:hover:bg-pink-900/30' // Added dark mode styles
+                                ? 'border-pink-500 bg-pink-50 dark:border-pink-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-600 hover:bg-pink-50/30 dark:hover:bg-pink-900/30'
                             }`}
                             onClick={() => setVisualStyle('anime')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
-                              visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                              visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                                 <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                               </svg>
                             </div>
-                            <span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span>
                           </div>
 
                           {/* Comic Style */}
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${
                               visualStyle === 'comic'
-                                ? 'border-blue-500 bg-blue-50 dark:border-blue-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/30' // Added dark mode styles
+                                ? 'border-blue-500 bg-blue-50 dark:border-blue-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/30'
                             }`}
                             onClick={() => setVisualStyle('comic')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
-                              visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                              visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
                               </svg>
                             </div>
-                            <span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span>
                           </div>
 
                           {/* Realistic Style */}
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${
                               visualStyle === 'realistic'
-                                ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-600 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/30' // Added dark mode styles
+                                ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-600 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/30'
                             }`}
                             onClick={() => setVisualStyle('realistic')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${ // Changed w-8 h-8 mr-3 to w-6 h-6 mr-2
-                              visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
+                              visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                               </svg>
                             </div>
-                            <span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Image Detail */}
-                      <div className="mb-4"> {/* Changed mb-6 to mb-4 */}
-                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"> {/* Changed mb-3 to mb-2, Added dark mode styles */}
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"> {/* Added dark mode styles */}
+                      {/* Image Detail - This section is now removed as the FlashcardDetailModal handles its own tabs */}
+                      {/* <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                             <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                           </svg>
                           Chi tiết hiển thị khi click ảnh
                         </h4>
 
-                        {/* Detail Level Buttons */}
-                        <div className="grid grid-cols-3 gap-2"> {/* Changed grid-cols-3 gap-3 to grid-cols-3 gap-2 */}
-                          {/* Basic Detail */}
+                        <div className="grid grid-cols-3 gap-2">
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${
                               imageDetail === 'basic'
-                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30' // Added dark mode styles
+                                ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/30'
                             }`}
                             onClick={() => setImageDetail('basic')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
-                              imageDetail === 'basic' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
+                              imageDetail === 'basic' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'basic' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" />
                               </svg>
                             </div>
-                            <span className={`text-xs text-center ${imageDetail === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ảnh gốc</span> {/* Changed text-sm to text-xs, and text to "Cơ Bản", Added dark mode styles */}
+                            <span className={`text-xs text-center ${imageDetail === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ảnh gốc</span>
                           </div>
 
-                          {/* Phrase Detail */}
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${
                               imageDetail === 'phrase'
-                                ? 'border-purple-500 bg-purple-50 dark:border-purple-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-600 hover:bg-purple-50/30 dark:hover:bg-purple-900/30' // Added dark mode styles
+                                ? 'border-purple-500 bg-purple-50 dark:border-purple-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-600 hover:bg-purple-50/30 dark:hover:bg-purple-900/30'
                             }`}
                             onClick={() => setImageDetail('phrase')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
-                              imageDetail === 'phrase' ? 'bg-purple-100 dark:bg-purple-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
+                              imageDetail === 'phrase' ? 'bg-purple-100 dark:bg-purple-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'phrase' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'phrase' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5z" />
                                 <path d="M11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
                               </svg>
                             </div>
-                            <span className={`text-xs text-center ${imageDetail === 'phrase' ? 'text-purple-700 dark:text-purple-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Cơ Bản</span> {/* Changed text-sm to text-xs, and text to "Cơ Bản", Added dark mode styles */}
+                            <span className={`text-xs text-center ${imageDetail === 'phrase' ? 'text-purple-700 dark:text-purple-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Cơ Bản</span>
                           </div>
 
-                          {/* Example Detail */}
                           <div
-                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${ // Changed p-3 to p-2, rounded-xl to rounded-lg
+                            className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${
                               imageDetail === 'example'
-                                ? 'border-teal-500 bg-teal-50 dark:border-teal-900' // Added dark mode styles
-                                : 'border-gray-200 dark:border-gray-700 hover:border-teal-200 dark:hover:border-teal-600 hover:bg-teal-50/30 dark:hover:bg-teal-900/30' // Added dark mode styles
+                                ? 'border-teal-500 bg-teal-50 dark:border-teal-900'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-teal-200 dark:hover:border-teal-600 hover:bg-teal-50/30 dark:hover:bg-teal-900/30'
                             }`}
                             onClick={() => setImageDetail('example')}
                           >
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${ // Changed w-8 h-8 mb-2 to w-6 h-6 mb-1
-                              imageDetail === 'example' ? 'bg-teal-100 dark:bg-teal-800' : 'bg-gray-100 dark:bg-gray-700' // Added dark mode styles
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 ${
+                              imageDetail === 'example' ? 'bg-teal-100 dark:bg-teal-800' : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'example' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"> {/* Changed h-4 w-4 to h-3 w-3, Added dark mode styles */}
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${imageDetail === 'example' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                               </svg>
                             </div>
-                            <span className={`text-xs text-center ${imageDetail === 'example' ? 'text-teal-700 dark:text-teal-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ví dụ</span> {/* Changed text-sm to text-xs, Added dark mode styles */}
+                            <span className={`text-xs text-center ${imageDetail === 'example' ? 'text-teal-700 dark:text-teal-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Ví dụ</span>
                           </div>
                         </div>
-                      </div>
+                      </div> */}
 
 
                       {/* Buttons */}
                     </div> {/* Closed the body div here */}
 
                     {/* Buttons - Fixed Footer */}
-                    <div className="sticky bottom-0 left-0 right-0 mt-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 p-4 flex space-x-3 flex-shrink-0"> {/* Added sticky, bottom-0, left-0, right-0, mt-2, flex-shrink-0, dark mode styles */}
+                    <div className="sticky bottom-0 left-0 right-0 mt-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 p-4 flex space-x-3 flex-shrink-0">
                       <button
-                        className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg transition-all duration-300" // Changed py-2 to py-2.5, Added dark mode styles
+                        className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg transition-all duration-300"
                         onClick={() => setShowSettings(false)}
                       >
                         Hủy
                       </button>
                       <button
-                        className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center" // Changed py-2 to py-2.5
+                        className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-300 flex items-center justify-center"
                         onClick={() => setShowSettings(false)}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
@@ -1062,12 +1058,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             {/* Toast thông báo khi thay đổi trạng thái yêu thích */}
             {showFavoriteToast && (
               <div
-                className="fixed top-24 right-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-pink-200 dark:border-pink-700 z-50 flex items-center" // Added dark mode styles
+                className="fixed top-24 right-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-pink-200 dark:border-pink-700 z-50 flex items-center"
                 style={{ animation: 'fadeInOut 2s forwards' }}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2 text-pink-600 dark:text-pink-400" // Added dark mode styles
+                  className="h-5 w-5 mr-2 text-pink-600 dark:text-pink-400"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -1077,7 +1073,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     clipRule="evenodd"
                   />
                 </svg>
-                <span className="text-gray-700 dark:text-gray-300 font-medium">Đã cập nhật danh sách yêu thích!</span> {/* Added dark mode styles */}
+                <span className="text-gray-700 dark:text-gray-300 font-medium">Đã cập nhật danh sách yêu thích!</span>
               </div>
             )}
 
@@ -1085,9 +1081,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             <FlashcardDetailModal
               selectedCard={selectedCard}
               showVocabDetail={showVocabDetail}
-              imageDetail={imageDetail}
-              exampleImages={exampleImages} // Keep this if you still use it in the modal
-              onClose={closeVocabDetail} // Pass the close function
+              exampleImages={exampleImages}
+              onClose={closeVocabDetail}
+              currentVisualStyle={visualStyle} // Pass the current visual style
             />
           </>
         )}
