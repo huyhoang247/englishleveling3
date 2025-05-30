@@ -1,50 +1,20 @@
 // src/index.tsx
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import Home from './background-game.tsx';
+import Home from './background-game.tsx'; // Assuming Home is in background-game.tsx
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
-import Story from './VerticalFlashcardGallery.tsx'; // Vẫn import Story để lấy kiểu dữ liệu và exampleImages
+import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './newgame.tsx';
 import Quiz from './quiz/quiz-app-home.tsx';
-import Game from './game.tsx'; // Import component Game mới
+import GameBrowser from './game.tsx'; // Import the new GameBrowser component
 import AuthComponent from './auth.js';
-import { auth, db } from './firebase.js';
+import { auth, db } from './firebase.js'; // Import đối tượng auth và db của Firebase
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+// Import các hàm cần thiết từ Firestore
+import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 
-// Import FlashcardDetailModal và các kiểu dữ liệu liên quan
-import FlashcardDetailModal from './story/flashcard.tsx'; // Đường dẫn tới file flashcard.tsx của bạn
-
-// Giả định bạn có file list-vocabulary.ts export defaultVocabulary
-// Hãy đảm bảo file này tồn tại và có cấu trúc dữ liệu đúng
-import { defaultVocabulary, VocabularyData } from './list-vocabulary.ts'; // Cần tạo file này
-
-// Định nghĩa kiểu Flashcard (có thể lấy từ VerticalFlashcardGallery.tsx hoặc định nghĩa lại ở đây)
-interface Flashcard {
-  id: number;
-  imageUrl: {
-    default: string;
-    anime?: string;
-    comic?: string;
-    realistic?: string;
-  };
-  isFavorite: boolean;
-  vocabulary: VocabularyData;
-}
-
-// Lấy exampleImages từ VerticalFlashcardGallery.tsx (hoặc định nghĩa lại)
-// Đây là một mảng các URL hình ảnh ví dụ
-const exampleImages: string[] = [
-  "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1",
-  "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
-  "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
-  "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
-  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
-];
-
-
-// Định nghĩa các loại tab có thể có, bao gồm 'game'
-type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
+// Định nghĩa các loại tab có thể có
+type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game'; // Add 'game' tab
 
 // Hàm kiểm tra và tạo tài liệu người dùng trong Firestore nếu chưa có
 const ensureUserDocumentExists = async (user: User) => {
@@ -52,165 +22,171 @@ const ensureUserDocumentExists = async (user: User) => {
     console.error("User object or UID is missing.");
     return;
   }
+
+  // Lấy tham chiếu đến tài liệu người dùng trong collection 'users'
   const userDocRef = doc(db, 'users', user.uid);
+
   try {
+    // Lấy snapshot của tài liệu
     const userDocSnap = await getDoc(userDocRef);
+
+    // Kiểm tra xem tài liệu có tồn tại không
     if (!userDocSnap.exists()) {
       console.log(`User document for ${user.uid} does not exist. Creating...`);
+      // Nếu không tồn tại, tạo tài liệu mới
+      // Bao gồm email, timestamp và các trường mặc định khác
+      // Quan trọng: Nếu người dùng đăng ký bằng email/password, username đã được lưu trong Auth.js.
+      // Nếu người dùng đăng nhập bằng Google, ta có thể lấy displayName làm username ban đầu
+      // hoặc để trống và yêu cầu người dùng cập nhật sau.
       await setDoc(userDocRef, {
-        email: user.email,
-        username: user.displayName || user.email?.split('@')[0] || `user_${user.uid.substring(0,5)}`,
-        createdAt: new Date(),
-        coins: 0,
-        gems: 0,
-        keys: 0,
-        openedImageIds: [],
-        listVocabulary: [], // Thêm trường listVocabulary
+        email: user.email, // Lưu email của người dùng
+        // Thêm username. Nếu đăng nhập Google, user.displayName có thể là username ban đầu.
+        // Nếu đăng ký email/password, username đã được xử lý trong Auth.js trước khi gọi hàm này.
+        // Đối với Google Sign-in, user.displayName sẽ được sử dụng làm username ban đầu nếu có.
+        username: user.displayName || null, // Sử dụng displayName của Google làm username ban đầu nếu có
+        createdAt: new Date(), // Thêm timestamp thời gian tạo
+        coins: 0, // Giá trị mặc định ban đầu
+        gems: 0,   // Giá trị mặc định ban đầu
+        keys: 0,    // Giá trị mặc định ban đầu
+        openedImageIds: [] // Initialize openedImageIds as an empty array
+        // Thêm các trường mặc định khác nếu cần
       });
       console.log(`User document for ${user.uid} created successfully.`);
     } else {
       console.log(`User document for ${user.uid} already exists.`);
+      // Nếu tài liệu đã tồn tại, bạn có thể kiểm tra và cập nhật các trường nếu cần
       const userData = userDocSnap.data();
+
+      // Cập nhật email nếu khác (ít xảy ra sau đăng ký)
       if (userData?.email !== user.email) {
           console.log(`Updating email for user ${user.uid} in Firestore.`);
           await setDoc(userDocRef, { email: user.email }, { merge: true });
       }
-      if (!userData?.openedImageIds) {
+
+      // Đảm bảo trường openedImageIds tồn tại
+       if (!userData?.openedImageIds) {
            console.log(`Adding openedImageIds field for user ${user.uid}.`);
            await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
        }
+
+       // Kiểm tra và thêm trường username nếu chưa có (cho người dùng cũ)
        if (!userData?.username) {
            console.log(`Adding username field for user ${user.uid}.`);
-           await setDoc(userDocRef, { username: user.displayName || user.email?.split('@')[0] || `user_${user.uid.substring(0,5)}` }, { merge: true });
+           // Nếu người dùng cũ chưa có username, bạn có thể đặt giá trị mặc định
+           // hoặc để null và yêu cầu họ cập nhật sau.
+           // Ở đây, ta sẽ để null và có thể thêm logic yêu cầu người dùng cập nhật username sau.
+           await setDoc(userDocRef, { username: null }, { merge: true });
        }
-       if (!userData?.listVocabulary) { // Đảm bảo trường listVocabulary tồn tại
-        console.log(`Adding listVocabulary field for user ${user.uid}.`);
-        await setDoc(userDocRef, { listVocabulary: [] }, { merge: true });
-    }
     }
   } catch (error) {
     console.error("Error ensuring user document exists:", error);
+    // Xử lý lỗi nếu có
   }
 };
 
 
 const App: React.FC = () => {
+  // State để theo dõi tab đang hoạt động, mặc định là 'home'
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  // State để kiểm soát hiển thị của thanh điều hướng
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
+  // State để lưu thông tin người dùng đã đăng nhập
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // State để xử lý quá trình kiểm tra trạng thái đăng nhập ban đầu
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // State cho popup flashcard từ tab Game
-  const [selectedCardForPopup, setSelectedCardForPopup] = useState<Flashcard | null>(null);
-  const [showVocabPopup, setShowVocabPopup] = useState(false);
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
+    // Lắng nghe sự thay đổi trạng thái xác thực từ Firebase
+    const unsubscribe = onAuthStateChanged(auth, async (user) => { // Sử dụng async vì gọi hàm async bên trong
+      setCurrentUser(user); // Cập nhật người dùng hiện tại
+
       if (user) {
+        // Nếu có người dùng đăng nhập, đảm bảo tài liệu của họ tồn tại trong Firestore
+        // Hàm này sẽ được gọi sau khi đăng ký email/password (username đã được lưu trong Auth.js)
+        // và sau khi đăng nhập Google (username ban đầu có thể là displayName).
         await ensureUserDocumentExists(user);
       }
-      setLoadingAuth(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
+      setLoadingAuth(false); // Đã kiểm tra xong trạng thái, không còn loading nữa
+    });
+
+    // Cleanup subscription khi component unmount
+    return () => unsubscribe();
+  }, [auth]); // Depend on auth object (implicitly used by onAuthStateChanged)
+
+  // Hàm xử lý thay đổi tab
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Luôn hiển thị navbar khi chuyển tab, trừ khi có logic ẩn đặc biệt (hiện tại không có)
-    setIsNavBarVisible(true);
-  };
-
-  const hideNavBar = () => setIsNavBarVisible(false);
-  const showNavBar = () => setIsNavBarVisible(true);
-
-  // Xử lý khi một từ tiếng Anh được nhấp trong tab Game
-  const handleWordClickInGame = (word: string) => {
-    console.log("Word clicked in Game tab:", word);
-    const vocabularyEntry = defaultVocabulary.find(
-      (vocab) => vocab.word.toLowerCase() === word.toLowerCase()
-    );
-
-    if (vocabularyEntry) {
-      // Tạo một đối tượng Flashcard tạm thời để hiển thị trong modal
-      const cardForPopup: Flashcard = {
-        id: Date.now(), // ID tạm thời
-        imageUrl: { default: `https://placehold.co/600x400/eee/ccc?text=${encodeURIComponent(vocabularyEntry.word)}` }, // Ảnh placeholder
-        isFavorite: false, // Mặc định
-        vocabulary: vocabularyEntry,
-      };
-      setSelectedCardForPopup(cardForPopup);
-      setShowVocabPopup(true);
-      hideNavBar(); // Ẩn navbar khi popup hiện
-    } else {
-      console.warn(`Vocabulary not found for word: ${word}`);
-      // Có thể hiển thị thông báo không tìm thấy từ
+    // Đảm bảo thanh điều hướng hiển thị khi chuyển tab, trừ khi đó là tab story hoặc home
+    if (tab !== 'story' && tab !== 'home') {
+      setIsNavBarVisible(true);
+    }
+    if (tab === 'story' || tab === 'home') {
+      setIsNavBarVisible(true);
     }
   };
 
-  // Đóng popup flashcard
-  const closeVocabPopup = () => {
-    setShowVocabPopup(false);
-    setSelectedCardForPopup(null);
-    showNavBar(); // Hiện lại navbar
+  // Hàm ẩn thanh điều hướng
+  const hideNavBar = () => {
+    setIsNavBarVisible(false);
   };
 
+  // Hàm hiển thị thanh điều hướng
+  const showNavBar = () => {
+    setIsNavBarVisible(true);
+  };
+
+  // Trong khi đang kiểm tra trạng thái đăng nhập, có thể hiển thị một loader
   if (loadingAuth) {
-    return <div className="flex justify-center items-center h-screen">Đang tải...</div>;
+    return <div>Đang tải...</div>; // Hoặc một component loading đẹp hơn
   }
 
+  // Nếu không có người dùng nào được xác thực (chưa đăng nhập)
   if (!currentUser) {
+    // Hiển thị component AuthComponent để người dùng đăng nhập hoặc đăng ký
+    // AuthComponent sẽ tự xử lý việc hiển thị form hoặc thông báo chào mừng (nếu có logic đó)
     return <AuthComponent />;
   }
 
+  // Nếu người dùng đã được xác thực (đã đăng nhập)
+  // Hiển thị nội dung chính của ứng dụng
   return (
-    <div className="app-container h-screen flex flex-col"> {/* Đảm bảo app-container chiếm toàn bộ chiều cao */}
-      {/* Phần nội dung chính, cho phép cuộn nếu cần */}
-      <div className="flex-grow overflow-y-auto">
-        {activeTab === 'home' && (
-          <Home
-            hideNavBar={hideNavBar}
-            showNavBar={showNavBar}
-            currentUser={currentUser}
-          />
-        )}
-        {activeTab === 'profile' && <Profile />}
-        {activeTab === 'story' && (
-          <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
-        )}
-        {activeTab === 'quiz' && <Quiz />}
-        {activeTab === 'game' && (
-          <Game onWordClick={handleWordClickInGame} currentUser={currentUser} />
-        )}
-      </div>
+    <div className="app-container">
+      {/* Hiển thị component dựa trên activeTab state */}
+      {activeTab === 'home' && (
+        <Home
+          hideNavBar={hideNavBar}
+          showNavBar={showNavBar}
+          currentUser={currentUser} // Truyền currentUser ở đây
+        />
+      )}
+      {activeTab === 'profile' && <Profile />}
+      {activeTab === 'story' && (
+        // Truyền currentUser cho component Story
+        <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
+      )}
+      {activeTab === 'quiz' && <Quiz />}
+      {activeTab === 'game' && <GameBrowser />} {/* Render GameBrowser for 'game' tab */}
 
-      {/* Thanh điều hướng dưới cùng */}
+      {/* Hiển thị thanh điều hướng dưới cùng nếu isNavBarVisible là true */}
       {isNavBarVisible && (
         <NavigationBarBottom
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
       )}
-
-      {/* Modal hiển thị chi tiết Flashcard */}
-      {showVocabPopup && selectedCardForPopup && (
-        <FlashcardDetailModal
-          selectedCard={selectedCardForPopup}
-          showVocabDetail={showVocabPopup}
-          exampleImages={exampleImages} // Truyền exampleImages
-          onClose={closeVocabPopup}
-          currentVisualStyle={'default'} // Kiểu hiển thị mặc định cho popup
-        />
-      )}
     </div>
   );
 };
 
+// Lấy root element từ HTML
 const container = document.getElementById('root');
+// Báo lỗi nếu không tìm thấy root element
 if (!container) {
   throw new Error('Root element with ID "root" not found in the document.');
 }
 
+// Tạo root và render App component
 const root = createRoot(container);
 root.render(<App />);
 
