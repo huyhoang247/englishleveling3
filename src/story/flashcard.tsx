@@ -62,6 +62,54 @@ const animations = `
     0% { opacity: 0; }
     100% { opacity: 0.4; } /* Use 0.4 opacity as requested */
   }
+
+  /* Enhanced tab animations */
+  @keyframes tabSlideIn {
+    0% { transform: translateX(-100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes tabIndicatorSlide {
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
+  }
+
+  @keyframes tabGlow {
+    0% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+    50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+    100% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+  }
+
+  /* Tab content fade transition */
+  @keyframes contentFadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab-content-enter {
+    animation: contentFadeIn 0.3s ease-out forwards;
+  }
+
+  .tab-indicator {
+    animation: tabIndicatorSlide 0.3s ease-out;
+  }
+
+  .tab-glow:hover {
+    animation: tabGlow 1s ease-in-out;
+  }
+
+  /* Glassmorphism effect for tabs */
+  .glass-tab {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-tab-dark {
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
@@ -69,10 +117,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   showVocabDetail,
   exampleImages,
   onClose,
-  currentVisualStyle, // Destructure currentVisualStyle
+  currentVisualStyle,
 }) => {
   // State to manage the active tab within the modal
-  // 'basic' for original image, 'example' for example image, 'vocabulary' for basic vocabulary info
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
 
   // Reset activeTab to 'basic' whenever a new card is selected or modal opens
@@ -81,7 +128,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       setActiveTab('basic');
     }
   }, [showVocabDetail, selectedCard]);
-
 
   // If modal is not visible or no card is selected, return null
   if (!showVocabDetail || !selectedCard) {
@@ -105,20 +151,48 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     return url;
   };
 
+  // Tab configuration with icons and enhanced styling
+  const tabs = [
+    {
+      key: 'basic' as const,
+      label: 'Ảnh Gốc',
+      icon: '🖼️',
+      gradient: 'from-blue-500 to-purple-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      textColor: 'text-blue-700 dark:text-blue-300',
+      borderColor: 'border-blue-500',
+    },
+    {
+      key: 'example' as const,
+      label: 'Ví Dụ',
+      icon: '🌟',
+      gradient: 'from-green-500 to-teal-600',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      textColor: 'text-green-700 dark:text-green-300',
+      borderColor: 'border-green-500',
+    },
+    {
+      key: 'vocabulary' as const,
+      label: 'Cơ Bản',
+      icon: '📚',
+      gradient: 'from-purple-500 to-pink-600',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      textColor: 'text-purple-700 dark:text-purple-300',
+      borderColor: 'border-purple-500',
+    },
+  ];
+
   // Function to render modal content based on activeTab
   const renderModalContent = () => {
-    // Find the original index of the selected card in the flashcards array (assuming exampleImages index relates to card index)
     const exampleIndex = (selectedCard.id - 1) % exampleImages.length;
     const exampleImageUrl = exampleImages[exampleIndex];
 
     switch (activeTab) {
       case 'basic':
         return (
-          // Content for Basic Image (Original Image)
-          // Adjusted padding to bring image closer to the tab
-          <div className="flex justify-center items-start flex-grow px-4 pt-2 pb-4 overflow-hidden">
+          <div className="flex justify-center items-start flex-grow px-4 pt-2 pb-4 overflow-hidden tab-content-enter">
             <img
-              src={getImageUrlForStyle(selectedCard, currentVisualStyle)} // Use the styled image
+              src={getImageUrlForStyle(selectedCard, currentVisualStyle)}
               alt="Ảnh Gốc"
               className="max-h-full max-w-full object-contain rounded-lg shadow-md"
               onError={(e) => {
@@ -130,8 +204,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
-          // Content for Example Image
-          <div className="flex justify-center items-center flex-grow p-4 overflow-hidden">
+          <div className="flex justify-center items-center flex-grow p-4 overflow-hidden tab-content-enter">
             <img
               src={exampleImageUrl}
               alt="Hình Ảnh Ví Dụ"
@@ -145,9 +218,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'vocabulary':
         return (
-          // Content for Full Vocabulary Info (Cơ Bản)
-          <div className="p-5 overflow-y-auto flex-grow">
+          <div className="p-5 overflow-y-auto flex-grow tab-content-enter">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3>
+            
             {/* Nghĩa */}
             <div className="mb-5">
               <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
@@ -195,7 +268,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   {selectedCard.vocabulary.popularity}
                 </span>
 
-                {/* Hiển thị biểu đồ mức độ phổ biến */}
                 <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
@@ -210,7 +282,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
             {/* Synonyms & Antonyms */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Từ đồng nghĩa */}
               <div>
                 <div className="inline-block bg-indigo-50 rounded-full px-3 py-1 text-xs font-semibold text-indigo-600 mb-2">
                   Từ đồng nghĩa
@@ -224,7 +295,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Từ trái nghĩa */}
               <div>
                 <div className="inline-block bg-pink-50 rounded-full px-3 py-1 text-xs font-semibold text-pink-600 mb-2">
                   Từ trái nghĩa
@@ -245,10 +315,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     }
   };
 
-
   return (
     <>
-      {/* Inject CSS animations */}
       <style>{animations}</style>
 
       {/* Overlay */}
@@ -270,32 +338,57 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Tab Navigation - Enhanced Styling */}
-          <div className="flex bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-4 pt-2">
-            <button
-              className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 relative
-                ${activeTab === 'basic' ? 'text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'}
-              `}
-              onClick={() => setActiveTab('basic')}
-            >
-              Ảnh Gốc
-            </button>
-            <button
-              className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 relative
-                ${activeTab === 'example' ? 'text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'}
-              `}
-              onClick={() => setActiveTab('example')}
-            >
-              Ví Dụ
-            </button>
-            <button
-              className={`flex-1 py-2 text-sm font-medium text-center transition-colors duration-200 relative
-                ${activeTab === 'vocabulary' ? 'text-indigo-700 dark:text-indigo-300 font-semibold border-b-2 border-indigo-600' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300'}
-              `}
-              onClick={() => setActiveTab('vocabulary')}
-            >
-              Cơ Bản
-            </button>
+          {/* Enhanced Tab Navigation */}
+          <div className="relative bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-2 pt-3 pb-1">
+            <div className="flex space-x-1 relative">
+              {tabs.map((tab, index) => {
+                const isActive = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    className={`
+                      relative flex-1 py-3 px-4 text-sm font-medium text-center 
+                      transition-all duration-300 ease-out transform hover:scale-105
+                      rounded-t-xl tab-glow group overflow-hidden
+                      ${isActive 
+                        ? `${tab.textColor} ${tab.bgColor} shadow-lg border-b-3 ${tab.borderColor} font-bold` 
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                      }
+                    `}
+                    onClick={() => setActiveTab(tab.key)}
+                    style={{
+                      animation: `tabSlideIn 0.4s ease-out ${index * 0.1}s both`,
+                    }}
+                  >
+                    {/* Background gradient for active tab */}
+                    {isActive && (
+                      <div 
+                        className={`absolute inset-0 bg-gradient-to-r ${tab.gradient} opacity-10 tab-indicator`}
+                      />
+                    )}
+                    
+                    {/* Tab content */}
+                    <div className="relative flex items-center justify-center space-x-2">
+                      <span className="text-lg">{tab.icon}</span>
+                      <span className="font-semibold">{tab.label}</span>
+                    </div>
+
+                    {/* Active indicator line */}
+                    {isActive && (
+                      <div 
+                        className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tab.gradient} tab-indicator`}
+                      />
+                    )}
+
+                    {/* Hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Decorative border */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent" />
           </div>
 
           {/* Body - Render content based on renderModalContent function */}
@@ -303,7 +396,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
           {/* Use the new BackButton component */}
           <BackButton onClick={onClose} />
-
       </div>
     </>
   );
