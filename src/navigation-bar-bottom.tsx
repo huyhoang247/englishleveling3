@@ -19,7 +19,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   // Define the tabs data
   const tabs = [
     {
-      id: "home" as const, // Thêm as const để type inference tốt hơn
+      id: "home",
       label: "Trang chủ",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
@@ -40,7 +40,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
       gradient: "from-purple-500 to-blue-500"
     },
     {
-      id: "quiz" as const,
+      id: "quiz",
       label: "Trắc nghiệm",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
@@ -55,22 +55,13 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           strokeLinejoin="round"
         >
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-          {/* Cập nhật icon Quiz để dễ phân biệt hơn */}
-          <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0" />
-          <path d="M12 1v2" />
-          <path d="m4.93 4.93 1.41 1.41" />
-          <path d="M23 12h-2" />
-          <path d="m17.66 17.66-1.41-1.41" />
-          <path d="M12 23v-2" />
-          <path d="m6.34 17.66 1.41-1.41" />
-          <path d="M1 12h2" />
-          <path d="m6.34 6.34-1.41-1.41" />
+          <circle cx="12" cy="12" r="6" />
         </svg>
       ),
       gradient: "from-green-500 to-teal-400"
     },
     {
-      id: "story" as const,
+      id: "story",
       label: "Truyện",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
@@ -91,10 +82,10 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
       gradient: "from-amber-500 to-yellow-300"
     },
     {
-      id: "game" as const, // Tab mới: Game
-      label: "Trình Duyệt", // Đổi tên thành Trình Duyệt Học Tập hoặc tương tự
+      id: "game",
+      label: "Mini Game",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
-        <svg // Icon cho Game/Browser (ví dụ: icon quả địa cầu hoặc kính lúp)
+        <svg
           xmlns="http://www.w3.org/2000/svg"
           width={props.size}
           height={props.size}
@@ -105,15 +96,17 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="2" y1="12" x2="22" y2="12" />
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          <line x1="6" y1="12" x2="10" y2="12" />
+          <line x1="8" y1="10" x2="8" y2="14" />
+          <line x1="15" y1="13" x2="15" y2="13" />
+          <line x1="18" y1="11" x2="18" y2="11" />
+          <rect x="2" y="6" width="20" height="12" rx="2" />
         </svg>
       ),
-      gradient: "from-sky-500 to-cyan-400" // Gradient màu mới
+      gradient: "from-red-500 to-orange-400"
     },
     {
-      id: "profile" as const,
+      id: "profile",
       label: "Hồ sơ",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <svg
@@ -171,7 +164,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
             return (
               <div key={tab.id} className="flex-1 relative flex justify-center items-center">
                 <button
-                  className="w-full flex flex-col items-center relative group justify-center py-1" // Thêm py-1 để tăng chiều cao click
+                  className="w-full flex flex-col items-center relative group justify-center"
                   // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
                     onTabChange(tab.id); // Notify the parent component of the tab change
@@ -193,7 +186,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
                       ${isActive ? `bg-gradient-to-br ${tab.gradient} shadow-lg` : 'bg-transparent'}`} // Apply gradient and shadow if active
                   >
                     <Icon
-                      size={20} // Giảm kích thước icon một chút nếu cần
+                      size={20}
                       color={isActive ? "#ffffff" : "#9ca3af"} // White color for active icon, gray for inactive
                       strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
                     />
