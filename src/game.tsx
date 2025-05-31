@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import vocabulary list
 
 // Define the structure for a flashcard and its vocabulary
-// These interfaces are copied from flashcard.tsx to ensure consistency
 interface Vocabulary {
   word: string;
   meaning: string;
@@ -27,55 +26,53 @@ interface Flashcard {
 }
 
 // Define book content
-const bookContents = {
-  'Book 1': `
-    Chapter 1: A New Beginning
+const book1Content = `
+  Chương 1: Một Khởi Đầu Mới
 
-    In a world of constant change, where technology and humanity intertwine, a new era has begun. Everything seems to be evolving rapidly, from how we communicate to how we learn.
+  Trong một thế giới thay đổi không ngừng, nơi công nghệ và con người hòa quyện, một kỷ nguyên mới đã bắt đầu. Mọi thứ dường như đang phát triển nhanh chóng, từ cách chúng ta giao tiếp đến cách chúng ta học hỏi.
 
-    "It's hard to believe we've made such incredible progress," Sarah said, her eyes gazing out the window. "Everything is a continuous development."
+  "Thật khó tin chúng ta đã đạt được những tiến bộ đáng kinh ngạc như vậy," Sarah nói, mắt cô nhìn ra ngoài cửa sổ. "Mọi thứ là một sự phát triển liên tục."
 
-    Daily life has become more complex, yet full of promise. Concepts like "artificial intelligence" and "virtual reality" are no longer science fiction but have become an integral part of reality.
+  Cuộc sống hàng ngày đã trở nên phức tạp hơn, nhưng cũng đầy hứa hẹn. Các khái niệm như "trí tuệ nhân tạo" và "thực tế ảo" không còn là khoa học viễn tưởng mà đã trở thành một phần không thể thiếu của thực tại.
 
-    One of the biggest challenges is how to adapt to these changes. "We need to learn continuously," David, a renowned scientist, stated at a recent conference. "Knowledge is the key to survival in this era."
+  Một trong những thách thức lớn nhất là làm thế nào để thích nghi với những thay đổi này. "Chúng ta cần học hỏi liên tục," David, một nhà khoa học nổi tiếng, đã phát biểu tại một hội nghị gần đây. "Kiến thức là chìa khóa để tồn tại trong kỷ nguyên này."
 
-    He emphasized the importance of "critical thinking" and the ability to "solve problems." "Don't just accept what you hear," he advised. "Always seek 'reliable' information 'sources' and 'analyze' it carefully."
+  Ông nhấn mạnh tầm quan trọng của "tư duy phản biện" và khả năng "giải quyết vấn đề." "Đừng chỉ chấp nhận những gì bạn nghe," ông khuyên. "Luôn tìm kiếm 'nguồn' thông tin 'đáng tin cậy' và 'phân tích' nó cẩn thận."
 
-    Meanwhile, in another corner of the city, a group of young developers are working on a new "application." Their goal is to create a tool that helps people easily "access" information and "connect" with each other.
+  Trong khi đó, ở một góc khác của thành phố, một nhóm các nhà phát triển trẻ đang làm việc trên một "ứng dụng" mới. Mục tiêu của họ là tạo ra một công cụ giúp mọi người dễ dàng "truy cập" thông tin và "kết nối" với nhau.
 
-    "We believe that 'education' is everyone's right," a team member said. "And technology can be the 'bridge' to make that a reality."
+  "Chúng tôi tin rằng 'giáo dục' là quyền của mọi người," một thành viên trong nhóm nói. "Và công nghệ có thể là 'cầu nối' để biến điều đó thành hiện thực."
 
-    They are facing many "challenges," but their spirit remains undiminished. "Every 'problem' is an 'opportunity' to learn and grow," they often remind each other.
+  Họ đang đối mặt với nhiều "thách thức," nhưng tinh thần của họ vẫn không suy giảm. "Mỗi 'vấn đề' là một 'cơ hội' để học hỏi và phát triển," họ thường nhắc nhở nhau.
 
-    And so, against the backdrop of a world that is constantly "evolving," the story of learning and adaptation continues to be written.
-  `,
-  'Book 2': `
-    Chapter 2: The Digital Frontier
+  Và thế là, trong bối cảnh một thế giới không ngừng "tiến hóa," câu chuyện về học hỏi và thích nghi tiếp tục được viết.
+`;
 
-    As the new era unfolds, the digital frontier expands, offering both immense opportunities and unforeseen challenges. The lines between the physical and virtual worlds blur, creating a hybrid reality where innovation thrives.
+const book2Content = `
+  Chương 2: Cuộc Phiêu Lưu Bất Tận
 
-    "The possibilities are endless," remarked Alex, a visionary entrepreneur, during a recent podcast. "We are only just beginning to scratch the surface of what's achievable with advanced computing."
+  Cuộc hành trình khám phá không bao giờ kết thúc. Mỗi ngày là một cơ hội để học hỏi điều gì đó mới, để vượt qua giới hạn của bản thân và để vươn tới những chân trời mới.
 
-    The concept of "digital citizenship" has emerged, highlighting the responsibilities individuals have in this interconnected landscape. Protecting "personal data" and understanding "online ethics" are paramount.
+  "Thế giới này rộng lớn hơn chúng ta tưởng rất nhiều," Mark, một nhà thám hiểm dày dạn kinh nghiệm, chia sẻ. "Mỗi chuyến đi là một bài học."
 
-    Education systems are rapidly transforming to prepare future generations for a world dominated by technology. "Coding" and "data science" are becoming as fundamental as reading and writing.
+  Từ những khu rừng rậm nhiệt đới đến những đỉnh núi phủ tuyết, từ những thành phố cổ kính đến những đô thị hiện đại, mỗi nơi đều ẩn chứa những câu chuyện và kiến thức độc đáo.
 
-    "It's not just about learning new tools," a leading educator explained. "It's about fostering a mindset of continuous learning and adaptability."
+  "Điều quan trọng không phải là bạn đi được bao xa, mà là bạn đã học được gì trên đường đi," anh nói. "Sự tò mò là động lực lớn nhất."
 
-    New forms of "collaboration" are also emerging, transcending geographical boundaries. Teams from different continents can work together seamlessly on complex projects, thanks to "cloud computing" and "virtual meeting" platforms.
+  Những thử thách trên đường đi không làm nản lòng những người yêu thích phiêu lưu. Ngược lại, chúng tiếp thêm sức mạnh và quyết tâm cho họ.
 
-    However, this rapid advancement also brings concerns about "digital divide" and "information overload." Ensuring equitable access to technology and developing strategies to manage vast amounts of information are crucial.
+  "Hãy luôn mở lòng để đón nhận những điều mới mẻ," anh khuyên. "Đừng ngại bước ra khỏi vùng an toàn của mình."
 
-    "We must ensure that no one is left behind," urged a policy maker. "Technology should be an enabler for all, not just a select few."
+  Và cứ như thế, cuộc phiêu lưu của tri thức và khám phá tiếp tục, không có điểm dừng.
+`;
 
-    The journey into the digital frontier is ongoing, filled with both excitement and introspection, as humanity navigates its path through this brave new world.
-  `,
-};
+const EbookReader: React.FC = () => {
+  // State to manage the current view: 'bookList' or 'bookContent'
+  const [currentView, setCurrentView] = useState<'bookList' | 'bookContent'>('bookList');
+  // State to store the content of the currently selected book
+  const [currentBookContent, setCurrentBookContent] = useState<string>('');
 
-const App: React.FC = () => {
-  // State to hold the title of the currently selected book (null if no book is selected)
-  const [selectedBookTitle, setSelectedBookTitle] = useState<string | null>(null);
-  // State for vocabMap to trigger re-render
+  // Use state for vocabMap to trigger re-render
   const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
   const [isLoadingVocab, setIsLoadingVocab] = useState(true); // State to track vocabulary loading
 
@@ -85,7 +82,6 @@ const App: React.FC = () => {
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
   useEffect(() => {
-    // Initialize vocabMap from defaultVocabulary
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
       tempMap.set(word.toLowerCase(), {
@@ -98,12 +94,11 @@ const App: React.FC = () => {
         antonyms: [`Antonym for ${word} 1`, `Antonym for ${word} 2`],
       });
     });
-    setVocabMap(tempMap); // Update state, which will trigger re-render
+    setVocabMap(tempMap); // Update state, will trigger re-render
     setIsLoadingVocab(false); // Mark as loaded
     console.log("Vocab Map initialized with", tempMap.size, "words.");
   }, []); // Empty array ensures useEffect runs only once after component mounts
 
-  // Handler for clicking a word in the book content
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
     const foundVocab = vocabMap.get(normalizedWord); // Get from vocabMap state
@@ -125,45 +120,45 @@ const App: React.FC = () => {
     }
   };
 
-  // Handler to close the vocabulary detail modal
   const closeVocabDetail = () => {
     setShowVocabDetail(false);
     setSelectedVocabCard(null);
   };
 
-  // Handler for selecting a book from the list
-  const handleBookSelect = (title: string) => {
-    setSelectedBookTitle(title);
+  // Function to handle book selection
+  const handleBookSelect = (bookNumber: number) => {
+    if (bookNumber === 1) {
+      setCurrentBookContent(book1Content);
+    } else if (bookNumber === 2) {
+      setCurrentBookContent(book2Content);
+    }
+    setCurrentView('bookContent'); // Switch to book content view
   };
 
-  // Handler to go back to the book list
-  const handleBackToList = () => {
-    setSelectedBookTitle(null);
+  // Function to go back to the book list
+  const handleBackToBookList = () => {
+    setCurrentView('bookList');
+    setCurrentBookContent(''); // Clear current book content
   };
 
-  // Renders the book content with clickable vocabulary words
+  // Render book content with clickable words
   const renderBookContent = () => {
     if (isLoadingVocab) {
-      return <div className="text-center p-8">Loading vocabulary...</div>; // Or a spinner
+      return <div className="text-center p-8">Đang tải từ vựng...</div>; // Or a spinner
     }
 
-    const currentBookContent = selectedBookTitle ? bookContents[selectedBookTitle as keyof typeof bookContents] : null;
-
-    if (!currentBookContent) {
-      return <div className="text-center p-8 text-gray-600 dark:text-gray-400">Select a book to read.</div>;
-    }
-
-    const parts = currentBookContent.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g); // Add various quotation marks to regex
+    // Split content by words and punctuation, including various quotation marks
+    const parts = currentBookContent.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
 
     return (
       <div className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
         {parts.map((part, index) => {
-          if (!part || part.trim() === '') { // Skip empty strings or strings with only whitespace generated by split
+          if (!part || part.trim() === '') { // Skip empty or whitespace-only strings from split
             return <span key={index}>{part}</span>;
           }
           const isWord = /^\w+$/.test(part);
           const normalizedPart = part.toLowerCase();
-          const isVocabWord = isWord && vocabMap.has(normalizedPart); // Check on vocabMap state
+          const isVocabWord = isWord && vocabMap.has(normalizedPart); // Check against vocabMap state
 
           if (isVocabWord) {
             return (
@@ -185,52 +180,66 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
+      {/* Header */}
       <div className="flex items-center p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
       </div>
 
       {/* Main content area */}
-      <div className="flex-grow p-6 overflow-y-auto w-full"> {/* Changed from max-w-4xl mx-auto */}
-        {selectedBookTitle ? (
-          // Display book content and breadcrumbs
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            {/* Breadcrumbs */}
-            <nav className="text-sm mb-4">
-              <ol className="list-none p-0 inline-flex">
-                <li className="flex items-center">
-                  <button
-                    onClick={handleBackToList}
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                  >
-                    Sách
-                  </button>
-                  <span className="mx-2 text-gray-400">/</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="text-gray-700 dark:text-gray-300 font-semibold">{selectedBookTitle}</span>
-                </li>
-              </ol>
-            </nav>
-            {renderBookContent()}
+      <div className="flex-grow p-6 overflow-y-auto max-w-3xl mx-auto w-full">
+        {currentView === 'bookList' ? (
+          // Book list view
+          <div className="flex flex-col items-center justify-center h-full">
+            <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Chọn sách của bạn</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+              {/* Book 1 Card */}
+              <div
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 cursor-pointer transform hover:scale-105 transition-transform duration-300 flex flex-col items-center"
+                onClick={() => handleBookSelect(1)}
+              >
+                <img
+                  src="https://placehold.co/150x200/A78BFA/FFFFFF?text=Book+1"
+                  alt="Book 1 Cover"
+                  className="rounded-md mb-4 shadow-md"
+                />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Book 1: Khởi Đầu Mới</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-center">
+                  Khám phá những thay đổi trong thế giới công nghệ và con người.
+                </p>
+              </div>
+
+              {/* Book 2 Card */}
+              <div
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 cursor-pointer transform hover:scale-105 transition-transform duration-300 flex flex-col items-center"
+                onClick={() => handleBookSelect(2)}
+              >
+                <img
+                  src="https://placehold.co/150x200/60A5FA/FFFFFF?text=Book+2"
+                  alt="Book 2 Cover"
+                  className="rounded-md mb-4 shadow-md"
+                />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Book 2: Cuộc Phiêu Lưu</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-center">
+                  Hành trình bất tận của tri thức và khám phá.
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
-          // Display book list
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Danh sách sách</h2>
-            <ul className="space-y-3">
-              {Object.keys(bookContents).map((bookTitle) => (
-                <li key={bookTitle}>
-                  <button
-                    className="w-full text-left p-4 rounded-lg transition-colors duration-200
-                               bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md
-                               dark:bg-blue-700 dark:hover:bg-blue-800"
-                    onClick={() => handleBookSelect(bookTitle)}
-                  >
-                    {bookTitle}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          // Book content view
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md my-4 p-6 relative">
+            <button
+              onClick={handleBackToBookList}
+              className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-colors duration-200 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Quay lại
+            </button>
+            <div className="mt-12"> {/* Add margin top to prevent content from being hidden by the back button */}
+              {renderBookContent()}
+            </div>
           </div>
         )}
       </div>
@@ -239,7 +248,7 @@ const App: React.FC = () => {
       <FlashcardDetailModal
         selectedCard={selectedVocabCard}
         showVocabDetail={showVocabDetail}
-        exampleImages={[]} // You might want to pass actual example images here
+        exampleImages={[]} // Assuming exampleImages are not directly used here or passed from parent
         onClose={closeVocabDetail}
         currentVisualStyle="default"
       />
@@ -247,4 +256,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default EbookReader;
