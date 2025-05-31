@@ -3,6 +3,7 @@ import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDet
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import danh sách từ vựng
 
 // Define the structure for a flashcard and its vocabulary
+// These interfaces are copied from flashcard.tsx to ensure consistency
 interface Vocabulary {
   word: string;
   meaning: string;
@@ -25,44 +26,44 @@ interface Flashcard {
   vocabulary: Vocabulary;
 }
 
-const GameBrowser: React.FC = () => {
-  // Suggested URLs list
-  const suggestedUrls = [
-    { name: 'YouTube', url: 'https://www.youtube.com' },
-    { name: 'Facebook', url: 'https://www.facebook.com' },
-    { name: 'Wikipedia', url: 'https://www.wikipedia.org' },
-    { name: 'Twitch', url: 'https://www.twitch.tv' },
-    { name: 'Reddit', url: 'https://www.reddit.com' },
-    { name: 'Google', url: 'https://www.google.com' },
-    { name: 'Amazon', url: 'https://www.amazon.com' },
-    { name: 'Netflix', url: 'https://www.netflix.com' },
-    { name: 'X (Twitter)', url: 'https://twitter.com' },
-    { name: 'Instagram', url: 'https://www.instagram.com' },
-  ];
+const EbookReader: React.FC = () => {
+  // State to hold the book content
+  const [bookContent, setBookContent] = useState<string>(`
+    Chương 1: Khởi đầu mới
 
-  // State for current iframe/simulated content URL
-  const [url, setUrl] = useState('');
-  // State for input field
-  const [inputUrl, setInputUrl] = useState('');
-  // State to control suggestion display
-  const [showSuggestions, setShowSuggestions] = useState(true);
+    Trong một thế giới đầy biến động, nơi công nghệ và con người hòa quyện, một kỷ nguyên mới đã bắt đầu. Mọi thứ dường như đang thay đổi nhanh chóng, từ cách chúng ta giao tiếp đến cách chúng ta học tập.
+
+    "Thật khó để tin rằng chúng ta đã đạt được những tiến bộ đáng kinh ngạc như vậy," Sarah nói, ánh mắt cô nhìn ra cửa sổ. "Mọi thứ đều là một sự phát triển không ngừng."
+
+    Cuộc sống hàng ngày trở nên phức tạp hơn, nhưng cũng đầy hứa hẹn. Những khái niệm như "trí tuệ nhân tạo" và "thực tế ảo" không còn là khoa học viễn tưởng mà đã trở thành một phần không thể thiếu của hiện thực.
+
+    Một trong những thách thức lớn nhất là làm thế nào để thích nghi với những thay đổi này. "Chúng ta cần phải học hỏi liên tục," David, một nhà khoa học nổi tiếng, phát biểu trong một hội nghị gần đây. "Kiến thức là chìa khóa để tồn tại trong kỷ nguyên này."
+
+    Anh ấy nhấn mạnh tầm quan trọng của việc "tư duy phản biện" và khả năng "giải quyết vấn đề". "Đừng chỉ chấp nhận những gì bạn được nghe," anh ấy khuyên. "Hãy luôn tìm kiếm 'nguồn' thông tin đáng tin cậy và 'phân tích' nó một cách cẩn thận."
+
+    Trong khi đó, ở một góc khác của thành phố, một nhóm các nhà phát triển trẻ đang làm việc trên một "ứng dụng" mới. Mục tiêu của họ là tạo ra một công cụ giúp mọi người dễ dàng "tiếp cận" thông tin và "kết nối" với nhau.
+
+    "Chúng tôi tin rằng 'giáo dục' là quyền của mọi người," một thành viên trong nhóm nói. "Và công nghệ có thể là 'cầu nối' để biến điều đó thành hiện thực."
+
+    Họ đang đối mặt với nhiều "thử thách", nhưng tinh thần của họ không hề suy giảm. "Mỗi 'vấn đề' là một 'cơ hội' để học hỏi và phát triển," họ thường nhắc nhở nhau.
+
+    Và thế là, trong bối cảnh của một thế giới đang không ngừng "tiến hóa", câu chuyện về sự học hỏi và thích nghi tiếp tục được viết.
+  `);
+
+  // Vocabulary list converted to a Map for faster lookup
+  const vocabMap = useRef(new Map<string, Vocabulary>());
 
   // State to manage selected vocabulary for the popup
   const [selectedVocabCard, setSelectedVocabCard] = useState<Flashcard | null>(null);
   // State to control vocabulary popup visibility
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
-  // NEW: State for offline mode
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-
-  // Vocabulary list converted to a Map for faster lookup
-  const vocabMap = useRef(new Map<string, Vocabulary>());
-
   useEffect(() => {
     // Initialize vocabMap when component mounts
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
       // Create dummy data for other Vocabulary fields
+      // In a real application, you would fetch this detailed data from a backend
       tempMap.set(word.toLowerCase(), {
         word: word,
         meaning: `Nghĩa của từ "${word}" (ví dụ).`,
@@ -74,80 +75,30 @@ const GameBrowser: React.FC = () => {
       });
     });
     vocabMap.current = tempMap;
-    console.log("Vocab Map initialized:", vocabMap.current);
+    console.log("Vocab Map initialized with", vocabMap.current.size, "words.");
   }, []);
 
-  // Handle input field changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputUrl(e.target.value);
-    if (e.target.value.length > 0) {
-      setShowSuggestions(false);
-    } else {
-      setShowSuggestions(true);
-    }
-  };
-
-  // Handle "Go" button click or Enter key press
-  const handleGoClick = () => {
-    if (inputUrl.trim() === '') {
-      return;
-    }
-
-    let formattedUrl = inputUrl.trim();
-    if (!/^https?:\/\//i.test(formattedUrl)) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-    setUrl(formattedUrl);
-    setShowSuggestions(false);
-    setIsOfflineMode(false); // Go online when actively navigating
-  };
-
-  // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleGoClick();
-    }
-  };
-
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestedUrl: string) => {
-    setInputUrl(suggestedUrl);
-    setUrl(suggestedUrl);
-    setShowSuggestions(false);
-    setIsOfflineMode(false); // Go online when selecting a suggestion
-  };
-
-  // Update browser title dynamically
-  useEffect(() => {
-    if (url) {
-      document.title = `GameBrowser - ${new URL(url).hostname}`;
-    } else {
-      document.title = "GameBrowser - Trang chủ";
-    }
-  }, [url]);
-
-  // Check if search button should be disabled
-  const isSearchButtonDisabled = inputUrl.trim() === '';
-
-  // Handle word click in simulated content
+  // Handle word click in the book content
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
     const foundVocab = vocabMap.current.get(normalizedWord);
 
     if (foundVocab) {
       console.log("Found vocabulary:", foundVocab);
+      // Create a temporary Flashcard object to pass to the modal
       const tempFlashcard: Flashcard = {
-        id: 0, // Dummy ID
+        id: 0, // Dummy ID, not used for actual flashcard logic here
         imageUrl: {
           default: `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`,
         },
-        isFavorite: false,
+        isFavorite: false, // Default to false
         vocabulary: foundVocab,
       };
       setSelectedVocabCard(tempFlashcard);
       setShowVocabDetail(true);
     } else {
       console.log(`Word "${word}" not found in vocabulary list.`);
+      // Optionally, show a "Word not found" message
     }
   };
 
@@ -157,26 +108,16 @@ const GameBrowser: React.FC = () => {
     setSelectedVocabCard(null);
   };
 
-  // Function to render simulated content with clickable words
-  const renderSimulatedContent = () => {
-    const simulatedText = `
-      Đây là một ví dụ về nội dung trang web. Bạn có thể click vào các từ như "Source", "Insurance", "Argument", "Influence" để xem chi tiết từ vựng.
-      Chúng ta cũng có các từ khác như "Technology", "Computer", "Internet", "Software", "Hardware".
-      Hãy thử tìm từ "Happiness" hoặc "Freedom".
-      Một số từ không có trong danh sách từ vựng của bạn, ví dụ như "Lorem" hay "Ipsum".
-      Thử tìm kiếm từ "Water" và "Earth".
-      Các từ như "Apple", "Banana", "Orange" cũng có thể được tra cứu.
-      "Elephant" và "Tiger" là những từ khác trong danh sách.
-      "Music" và "Art" là những từ phổ biến.
-      "Science" và "History" cũng có mặt.
-    `;
-
-    // Split text into words and punctuation/spaces
-    const parts = simulatedText.split(/(\b\w+\b|[.,!?;:()"\s])/g);
+  // Function to render the book content with clickable words
+  const renderBookContent = () => {
+    // Split the text by word boundaries and also keep punctuation/spaces
+    // This regex matches either a sequence of word characters (\b\w+\b) or any non-word character including spaces
+    const parts = bookContent.split(/(\b\w+\b|[.,!?;:()"\s])/g);
 
     return (
-      <p className="p-4 text-lg leading-relaxed text-gray-800 dark:text-gray-200">
+      <div className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
         {parts.map((part, index) => {
+          // Check if the part is a word (contains only word characters)
           const isWord = /^\w+$/.test(part);
           const normalizedPart = part.toLowerCase();
           const isVocabWord = isWord && vocabMap.current.has(normalizedPart);
@@ -195,127 +136,27 @@ const GameBrowser: React.FC = () => {
             return <span key={index}>{part}</span>;
           }
         })}
-      </p>
+      </div>
     );
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
-      {/* Browser Bar */}
-      <div className="flex items-center p-3 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
-        <input
-          type="text"
-          value={inputUrl}
-          onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
-          placeholder="Nhập URL hoặc tìm kiếm..."
-          className="flex-grow p-2 mr-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                     transition-all duration-200 ease-in-out"
-          disabled={isOfflineMode} // Disable input when in offline mode
-        />
-        <button
-          onClick={handleGoClick}
-          disabled={isSearchButtonDisabled || isOfflineMode} // Disable button when in offline mode or input is empty
-          className={`px-4 py-2 rounded-lg shadow-md flex items-center justify-center
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                     transition-all duration-200 ease-in-out transform
-                     ${isSearchButtonDisabled || isOfflineMode
-                       ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                       : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95'
-                     }`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="feather feather-search"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-
-        {/* NEW: Toggle Offline Mode Button */}
-        <button
-          onClick={() => setIsOfflineMode(prevMode => !prevMode)}
-          className={`ml-2 px-4 py-2 rounded-lg shadow-md flex items-center justify-center
-                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                     transition-all duration-200 ease-in-out transform
-                     ${isOfflineMode
-                       ? 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg active:scale-95'
-                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-                     }`}
-        >
-          {isOfflineMode ? 'Trực tuyến' : 'Ngoại tuyến'}
-        </button>
+      {/* Header */}
+      <div className="flex items-center p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trang đọc sách</h1>
       </div>
 
-      {/* Display Suggestions, Simulated Content, or Iframe */}
-      <div className="flex-grow relative overflow-y-auto">
-        {showSuggestions && url === '' && !isOfflineMode ? ( // Show suggestions ONLY if not in offline mode and no URL
-          <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 overflow-y-auto h-full">
-            {suggestedUrls.map((site, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestionClick(site.url)}
-                className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md
-                           hover:shadow-xl hover:scale-[1.02] transform
-                           transition-all duration-200 ease-in-out cursor-pointer"
-              >
-                <div className="mb-2">
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${site.url}&sz=32`}
-                    alt={`${site.name} favicon`}
-                    className="w-8 h-8 rounded-full"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.style.display = 'none';
-                      const parentDiv = e.currentTarget.parentElement;
-                      if (parentDiv) {
-                        const fallbackSpan = document.createElement('span');
-                        fallbackSpan.className = 'text-4xl text-gray-500 dark:text-gray-400';
-                        fallbackSpan.textContent = site.name.charAt(0);
-                        parentDiv.appendChild(fallbackSpan);
-                      }
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-center">{site.name}</span>
-              </button>
-            ))}
-          </div>
-        ) : isOfflineMode ? ( // If in offline mode, always show simulated content
-          <div className="p-4 bg-white dark:bg-gray-800 h-full overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Nội dung mô phỏng (Chế độ Ngoại tuyến)</h2>
-            {renderSimulatedContent()}
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-              Bạn đang ở chế độ ngoại tuyến. Click vào các từ được tô sáng để tra cứu từ vựng.
-            </p>
-          </div>
-        ) : ( // Otherwise, if online and a URL is set, show iframe
-          <iframe
-            src={url}
-            title="Web Browser"
-            className="w-full h-full border-0"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups-to-escape-sandbox"
-          >
-            Trình duyệt của bạn không hỗ trợ iframe.
-          </iframe>
-        )}
+      {/* Book Content Area */}
+      <div className="flex-grow p-6 overflow-y-auto max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md my-4">
+        {renderBookContent()}
       </div>
 
       {/* Render FlashcardDetailModal */}
       <FlashcardDetailModal
         selectedCard={selectedVocabCard}
         showVocabDetail={showVocabDetail}
-        exampleImages={[]} // No example images needed for lookup
+        exampleImages={[]} // No example images needed for lookup context
         onClose={closeVocabDetail}
         currentVisualStyle="default" // Can be customized if desired
       />
@@ -323,4 +164,4 @@ const GameBrowser: React.FC = () => {
   );
 };
 
-export default GameBrowser;
+export default EbookReader;
