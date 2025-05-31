@@ -19,7 +19,8 @@ export const sampleBooks: Book[] = [
     author: 'AI Storyteller',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=A+New+Beginning',
-    audioUrl: 'https://github.com/huyhoang247/englishleveling3/blob/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3', // Ví dụ: "Inspiring Cinematic Ambient"
+    // Đã sửa URL audio để trỏ đến file raw trên GitHub
+    audioUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
     content: `
 Social Health: A Key to Well-being
 Maya's Story: A Missing Piece
