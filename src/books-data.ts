@@ -15,14 +15,13 @@ export interface Book {
 export const sampleBooks: Book[] = [
   {
     id: 'book1',
-    title: 'A New Beginning',
-    author: 'AI Storyteller',
+    title: 'Why Social Health Is Key to Happiness and Longevity',
+    author: 'Kasley Killam',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=A+New+Beginning',
     // Đã sửa URL audio để trỏ đến file raw trên GitHub
     audioUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
     content: `
-Social Health: The Missing Piece
 So a couple of years ago, a woman I know who I'll call Maya, went through a lot of big changes in a short amount of time. She got married. She and her husband moved for his job to a new city where she didn’t know anyone. She started a new role working from home, all while managing her dad's new diagnosis of dementia.
 And to manage the stress of all this change, Maya doubled down on her physical and mental health. She exercised almost every day, she ate healthy foods, she went to therapy once a week. And these actions really helped. Her body got stronger. Her mind got more resilient, but only up to a point. She was still struggling, often losing sleep in the middle of the night, feeling unfocused, unmotivated during the day.
 Maya was doing everything that doctors typically tell us to do to be physically and mentally healthy, and yet something was missing. What if I told you that what was missing for Maya is also missing for billions of people around the world, and that it might be missing for you? What if I told you that not having it undermines our other efforts to be healthy and can even shorten your lifespan?
