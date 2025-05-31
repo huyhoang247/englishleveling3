@@ -18,7 +18,7 @@ export const sampleBooks: Book[] = [
     title: 'Why Social Health Is Key to Happiness and Longevity',
     author: 'Kasley Killam',
     category: 'Technology & Future',
-    coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=A+New+Beginning',
+    coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/20250531_2319_Social%20Health%20Anime_simple_compose_01jwkj5nzxf9xtzk5dykvqsw6t.png',
     // Đã sửa URL audio để trỏ đến file raw trên GitHub
     audioUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
     content: `
