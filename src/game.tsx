@@ -9,7 +9,7 @@ interface Vocabulary {
   meaning: string;
   example: string;
   phrases: string[];
-  popularity: "Cao" | "Trung bình" | "Thấp"; // Still using Vietnamese for popularity levels as per original
+  popularity: "Cao" | "Trung bình" | "Thấp";
   synonyms: string[];
   antonyms: string[];
 }
@@ -122,6 +122,10 @@ const EbookReader: React.FC = () => {
           const normalizedPart = part.toLowerCase();
           // Check if the word exists in our vocabulary map
           const isVocabWord = isWord && vocabMap.current.has(normalizedPart);
+
+          // --- Debugging logs ---
+          console.log(`Part: "${part}", Is Word: ${isWord}, Normalized: "${normalizedPart}", Is Vocab Word: ${isVocabWord}`);
+          // --- End Debugging logs ---
 
           if (isVocabWord) {
             // If it's a vocabulary word, make it bold, blue, and clickable
