@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import vocabulary list
-// Import defaultImageUrls from image-url.ts, similar to VerticalFlashcardGallery
 import { defaultImageUrls as gameImageUrls } from './image-url.ts'; // Adjust path if necessary
-import { Book, sampleBooks } from './books-data.ts'; // Import Book interface and sampleBooks from the new file
+import { Book, sampleBooks } from './books-data.ts'; // Import Book interface and sampleBooks
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
@@ -36,7 +35,7 @@ interface EbookReaderProps {
 
 const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
   return books.reduce((acc, book) => {
-    const category = book.category || 'Uncategorized';
+    const category = book.category || 'Uncategorized'; // Sửa lỗi chính tả Uncategorised -> Uncategorized
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -45,9 +44,9 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
   }, {} as Record<string, Book[]>);
 };
 
-const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => { // Destructure props
-  const [booksData, setBooksData] = useState<Book[]>(sampleBooks); // Renamed from 'books' to avoid conflict
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null); // Start with no book selected
+const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => {
+  const [booksData, setBooksData] = useState<Book[]>(sampleBooks);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
 
   const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
   const [isLoadingVocab, setIsLoadingVocab] = useState(true);
@@ -55,20 +54,17 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [selectedVocabCard, setSelectedVocabCard] = useState<Flashcard | null>(null);
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
-  // State for reading mode
-  const [readingMode, setReadingMode] = useState(false);
-
   useEffect(() => {
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
       tempMap.set(word.toLowerCase(), {
         word: word,
-        meaning: `Meaning of "${word}" (example).`,
-        example: `This is an example sentence using "${word}".`,
-        phrases: [`Phrase with ${word} A`, `Phrase with ${word} B`],
+        meaning: `Nghĩa của từ "${word}" (ví dụ).`,
+        example: `Đây là một câu ví dụ sử dụng từ "${word}".`,
+        phrases: [`Cụm từ với ${word} A`, `Cụm từ với ${word} B`],
         popularity: (index % 3 === 0 ? "Cao" : (index % 2 === 0 ? "Trung bình" : "Thấp")),
-        synonyms: [`Synonym for ${word} 1`, `Synonym for ${word} 2`],
-        antonyms: [`Antonym for ${word} 1`, `Antonym for ${word} 2`],
+        synonyms: [`Từ đồng nghĩa với ${word} 1`, `Từ đồng nghĩa với ${word} 2`],
+        antonyms: [`Từ trái nghĩa với ${word} 1`, `Từ trái nghĩa với ${word} 2`],
       });
     });
     setVocabMap(tempMap);
@@ -76,12 +72,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     console.log("Vocab Map initialized with", tempMap.size, "words.");
   }, []);
 
-  // Effect to hide/show nav bar based on selectedBookId
   useEffect(() => {
     if (selectedBookId) {
-      hideNavBar(); // Hide nav bar when a book is selected
+      hideNavBar();
     } else {
-      showNavBar(); // Show nav bar when back to library
+      showNavBar();
     }
   }, [selectedBookId, hideNavBar, showNavBar]);
 
@@ -90,32 +85,23 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const foundVocab = vocabMap.get(normalizedWord);
 
     if (foundVocab) {
-      let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`; // Default placeholder
-
-      // Find the index of the word in the original defaultVocabulary array
-      // This index will be used to pick an image from gameImageUrls
+      let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`;
       const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord);
 
       if (vocabIndex !== -1 && vocabIndex < gameImageUrls.length) {
         cardImageUrl = gameImageUrls[vocabIndex];
-        console.log(`Using image from gameImageUrls for "${foundVocab.word}" at index ${vocabIndex}: ${cardImageUrl}`);
-      } else {
-        console.log(`Image for "${foundVocab.word}" (index ${vocabIndex}) not found in gameImageUrls or index out of bounds. Using placeholder.`);
       }
 
       const tempFlashcard: Flashcard = {
-        id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(), // Use vocabIndex for a more stable ID if found
-        imageUrl: {
-          default: cardImageUrl,
-          // anime, comic, realistic can be left undefined or also sourced if you have corresponding styled image arrays
-        },
-        isFavorite: false, // Or fetch from a persistent store if favorites are managed for these words
+        id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(),
+        imageUrl: { default: cardImageUrl },
+        isFavorite: false,
         vocabulary: foundVocab,
       };
       setSelectedVocabCard(tempFlashcard);
       setShowVocabDetail(true);
     } else {
-      console.log(`Word "${word}" not found in vocabulary list.`);
+      console.log(`Từ "${word}" không có trong danh sách từ vựng.`);
     }
   };
 
@@ -137,64 +123,85 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const renderBookContent = () => {
     if (isLoadingVocab) {
-      return <div className="text-center p-8">Loading vocabulary...</div>;
+      return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     }
     if (!currentBook) {
-      return <div className="text-center p-8 text-gray-500">No book selected.</div>;
+      return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
     }
 
-    // Split content into paragraphs
-    const paragraphs = currentBook.content.split('\n').filter(p => p.trim());
+    const contentLines = currentBook.content.trim().split(/\n+/); // Chia nội dung thành các dòng/đoạn dựa trên dấu xuống dòng
 
     return (
-      <div className={`space-y-6 ${readingMode ? 'reading-mode' : ''}`}>
-        {paragraphs.map((paragraph, paragraphIndex) => {
-          // Check if it's a title
-          const isTitle = paragraph.includes('Chapter') || paragraph.includes('Prologue') ||
-                         paragraph.includes('Introduction') || paragraph.match(/^[A-Z][^.!?]*:/) ||
-                         paragraph.includes('Story:');
+      // Container chính cho nội dung sách với font chữ Inter
+      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4">
+        {contentLines.map((line, index) => {
+          if (line.trim() === '') {
+            // Tạo một khoảng trống nhỏ cho các dòng trống cố ý, giúp duy trì cấu trúc
+            return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
+          }
 
-          if (isTitle) {
+          // Xử lý từng phần của dòng (từ, dấu câu, khoảng trắng) để làm nổi bật từ vựng
+          const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+          const renderableParts = parts.map((part, partIndex) => {
+            if (!part) return null; // Bỏ qua các phần rỗng
+            const isWord = /^\w+$/.test(part); // Kiểm tra xem có phải là một từ không
+            const normalizedPart = part.toLowerCase();
+            const isVocabWord = isWord && vocabMap.has(normalizedPart); // Kiểm tra từ có trong map từ vựng không
+
+            if (isVocabWord) {
+              return (
+                <span
+                  key={`${index}-${partIndex}`}
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
+                  onClick={() => handleWordClick(part)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }} // Cho phép tương tác bằng phím Enter hoặc Space
+                >
+                  {part}
+                </span>
+              );
+            } else {
+              return <span key={`${index}-${partIndex}`}>{part}</span>;
+            }
+          }).filter(Boolean); // Loại bỏ các phần tử null
+
+
+          // Heuristic để xác định và tạo kiểu cho tiêu đề/tiêu đề phụ
+          // Ví dụ: "Social Health: A Key to Well-being" hoặc "Maya's Story: A Missing Piece"
+          const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ( (line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70 );
+
+
+          if (isLikelyChapterTitle) {
+             return (
+              <h2
+                key={`line-${index}`}
+                className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center" // Tiêu đề chương chính
+              >
+                {renderableParts}
+              </h2>
+            );
+          }
+
+          if (isLikelySectionTitle) {
             return (
               <h3
-                key={paragraphIndex}
-                className="text-2xl font-bold text-gray-900 dark:text-white mb-4 mt-8 border-b-2 border-blue-200 dark:border-blue-800 pb-2"
+                key={`line-${index}`}
+                className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4" // Tiêu đề phụ
               >
-                {paragraph.trim()}
+                {renderableParts}
               </h3>
             );
           }
 
-          // Handle regular paragraphs
-          const parts = paragraph.split(/(\b\w+\b|[.,!?;:()'"\s`''""])/g);
-
+          // Kiểu mặc định cho đoạn văn
           return (
             <p
-              key={paragraphIndex}
-              className="text-lg leading-loose text-gray-800 dark:text-gray-200 mb-4 text-justify indent-8 first-letter:text-4xl first-letter:font-bold first-letter:text-blue-600 first-letter:mr-1 first-letter:float-left first-letter:leading-none"
+              key={`line-${index}`}
+              className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left" // Căn lề trái để dễ đọc
             >
-              {parts.map((part, index) => {
-                if (!part || part.trim() === '') {
-                  return <span key={index}>{part}</span>;
-                }
-                const isWord = /^\w+$/.test(part);
-                const normalizedPart = part.toLowerCase();
-                const isVocabWord = isWord && vocabMap.has(normalizedPart);
-
-                if (isVocabWord) {
-                  return (
-                    <span
-                      key={index}
-                      className="cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-all duration-200 hover:shadow-sm px-1 py-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 vocab-highlight"
-                      onClick={() => handleWordClick(part)}
-                    >
-                      {part}
-                    </span>
-                  );
-                } else {
-                  return <span key={index}>{part}</span>;
-                }
-              })}
+              {renderableParts}
             </p>
           );
         })}
@@ -209,15 +216,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
           <div className="flex justify-between items-center mb-3 md:mb-4">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{category}</h2>
             <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none">
-              See all →
+              Xem tất cả →
             </button>
           </div>
           <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
-            {/* The negative margins and padding are to allow box shadows on cards to not be clipped by overflow hidden on parent if it existed, and to extend scroll area to edge */}
             {booksInCategory.map(book => (
               <div
                 key={book.id}
-                className="flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer group transform hover:-translate-y-1 transition-transform duration-200"
+                className="flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer group transform hover:-translate-y-1.5 transition-transform duration-200"
                 onClick={() => handleSelectBook(book.id)}
                 role="button"
                 tabIndex={0}
@@ -247,77 +253,57 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
-      <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
-        <div className="flex items-center space-x-3">
-          {selectedBookId && (
-            <button
-              onClick={handleBackToLibrary}
-              className="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-2 transition-colors"
-            >
-              ← Back to Library
-            </button>
-          )}
-          {selectedBookId && ( // Only show reading mode toggle when a book is selected
-            <button
-              onClick={() => setReadingMode(!readingMode)}
-              className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:ring-offset-2 dark:focus:ring-offset-2 transition-colors"
-            >
-              {readingMode ? 'Normal Mode' : 'Reading Mode'}
-            </button>
-          )}
-        </div>
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      {/* Header được điều chỉnh để ít gây rối hơn khi đọc sách */}
+      <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 ${selectedBookId ? 'py-2 sm:py-3' : 'py-4'}`}>
+        <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 ${selectedBookId ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
+          {selectedBookId && currentBook ? currentBook.title : "Thư viện Sách"}
+        </h1>
+        {selectedBookId && (
+          <button
+            onClick={handleBackToLibrary}
+            className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+          >
+            ← Quay lại Thư viện
+          </button>
+        )}
       </header>
 
       {!selectedBookId ? (
-        <main className="flex-grow overflow-y-auto w-full bg-white dark:bg-gray-850"> {/* Slightly different bg for library */}
+        // Giao diện thư viện sách
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
           {renderLibrary()}
         </main>
       ) : (
-        <main className="flex-grow px-6 py-8 overflow-y-auto max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg my-6 w-full border border-gray-200 dark:border-gray-700">
-          {currentBook && (
-            <div className="mb-8 pb-6 border-b-2 border-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800">
-              <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-3 leading-tight">
-                {currentBook.title}
-              </h2>
-              {currentBook.author && (
-                <p className="text-lg text-center text-gray-600 dark:text-gray-400 italic font-medium">
-                  by {currentBook.author}
-                </p>
-              )}
-              <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
-            </div>
-          )}
-          {renderBookContent()}
+        // Giao diện đọc sách
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
+          {/* Panel chứa nội dung sách, được làm nổi bật hơn */}
+          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
+            {currentBook && (
+              <div className="mb-6 sm:mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
+                {/* Tiêu đề sách chính đã được hiển thị ở header, đây có thể là khu vực cho tên tác giả hoặc phụ đề */}
+                {currentBook.author && (
+                  <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">
+                    Tác giả: {currentBook.author}
+                  </p>
+                )}
+              </div>
+            )}
+            {renderBookContent()}
+          </div>
         </main>
       )}
 
+      {/* Modal chi tiết Flashcard (giữ nguyên) */}
       {selectedVocabCard && showVocabDetail && (
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleImages={[]} // exampleImages are not relevant for this specific vocabulary detail view from the ebook
+          exampleImages={[]}
           onClose={closeVocabDetail}
-          currentVisualStyle="default" // Ensure 'default' style is used to pick up selectedVocabCard.imageUrl.default
+          currentVisualStyle="default"
         />
       )}
-      {/* Custom CSS for reading mode and vocab highlight, if not already in global CSS */}
-      <style>
-        {`
-        .reading-mode {
-          font-family: 'Georgia', 'Times New Roman', serif;
-          line-height: 1.8;
-        }
-
-        .vocab-highlight {
-          background: linear-gradient(120deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-          background-repeat: no-repeat;
-          background-size: 100% 0.2em;
-          background-position: 0 88%;
-        }
-        `}
-      </style>
     </div>
   );
 };
