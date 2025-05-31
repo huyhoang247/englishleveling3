@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import danh sách từ vựng
 
-// Định nghĩa cấu trúc từ vựng (tương tự như trong flashcard.tsx)
+// Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
   word: string;
   meaning: string;
@@ -13,7 +13,6 @@ interface Vocabulary {
   antonyms: string[];
 }
 
-// Định nghĩa cấu trúc Flashcard (tương tự như trong flashcard.tsx)
 interface Flashcard {
   id: number;
   imageUrl: {
@@ -27,7 +26,7 @@ interface Flashcard {
 }
 
 const GameBrowser: React.FC = () => {
-  // Danh sách các URL gợi ý
+  // Suggested URLs list
   const suggestedUrls = [
     { name: 'YouTube', url: 'https://www.youtube.com' },
     { name: 'Facebook', url: 'https://www.facebook.com' },
@@ -41,28 +40,29 @@ const GameBrowser: React.FC = () => {
     { name: 'Instagram', url: 'https://www.instagram.com' },
   ];
 
-  // State cho URL hiện tại của iframe hoặc nội dung mô phỏng
+  // State for current iframe/simulated content URL
   const [url, setUrl] = useState('');
-  // State cho trường nhập liệu
+  // State for input field
   const [inputUrl, setInputUrl] = useState('');
-  // State để kiểm soát việc hiển thị các gợi ý
+  // State to control suggestion display
   const [showSuggestions, setShowSuggestions] = useState(true);
 
-  // State để quản lý từ vựng được chọn cho popup
+  // State to manage selected vocabulary for the popup
   const [selectedVocabCard, setSelectedVocabCard] = useState<Flashcard | null>(null);
-  // State để kiểm soát hiển thị popup từ vựng
+  // State to control vocabulary popup visibility
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
-  // Danh sách từ vựng đã chuyển đổi để dễ dàng tìm kiếm
-  // Chuyển đổi defaultVocabulary thành một Map để tra cứu nhanh hơn
+  // NEW: State for offline mode
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+
+  // Vocabulary list converted to a Map for faster lookup
   const vocabMap = useRef(new Map<string, Vocabulary>());
 
   useEffect(() => {
-    // Khởi tạo vocabMap khi component mount
+    // Initialize vocabMap when component mounts
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
-      // Tạo dữ liệu giả định cho các trường còn lại của Vocabulary
-      // Bạn có thể mở rộng logic này để tải dữ liệu chi tiết hơn từ một nguồn khác
+      // Create dummy data for other Vocabulary fields
       tempMap.set(word.toLowerCase(), {
         word: word,
         meaning: `Nghĩa của từ "${word}" (ví dụ).`,
@@ -77,7 +77,7 @@ const GameBrowser: React.FC = () => {
     console.log("Vocab Map initialized:", vocabMap.current);
   }, []);
 
-  // Xử lý thay đổi trong trường nhập liệu
+  // Handle input field changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputUrl(e.target.value);
     if (e.target.value.length > 0) {
@@ -87,7 +87,7 @@ const GameBrowser: React.FC = () => {
     }
   };
 
-  // Xử lý khi nhấp vào nút "Đi" hoặc nhấn Enter
+  // Handle "Go" button click or Enter key press
   const handleGoClick = () => {
     if (inputUrl.trim() === '') {
       return;
@@ -99,23 +99,25 @@ const GameBrowser: React.FC = () => {
     }
     setUrl(formattedUrl);
     setShowSuggestions(false);
+    setIsOfflineMode(false); // Go online when actively navigating
   };
 
-  // Xử lý khi nhấn phím Enter
+  // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleGoClick();
     }
   };
 
-  // Xử lý khi nhấp vào một gợi ý
+  // Handle suggestion click
   const handleSuggestionClick = (suggestedUrl: string) => {
     setInputUrl(suggestedUrl);
     setUrl(suggestedUrl);
     setShowSuggestions(false);
+    setIsOfflineMode(false); // Go online when selecting a suggestion
   };
 
-  // Cập nhật tiêu đề trình duyệt động
+  // Update browser title dynamically
   useEffect(() => {
     if (url) {
       document.title = `GameBrowser - ${new URL(url).hostname}`;
@@ -124,19 +126,18 @@ const GameBrowser: React.FC = () => {
     }
   }, [url]);
 
-  // Kiểm tra xem nút có nên bị vô hiệu hóa hay không
+  // Check if search button should be disabled
   const isSearchButtonDisabled = inputUrl.trim() === '';
 
-  // --- NEW: Xử lý click vào từ trong nội dung mô phỏng ---
+  // Handle word click in simulated content
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
     const foundVocab = vocabMap.current.get(normalizedWord);
 
     if (foundVocab) {
       console.log("Found vocabulary:", foundVocab);
-      // Tạo một đối tượng Flashcard tạm thời để truyền vào modal
       const tempFlashcard: Flashcard = {
-        id: 0, // ID tạm thời
+        id: 0, // Dummy ID
         imageUrl: {
           default: `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`,
         },
@@ -147,37 +148,35 @@ const GameBrowser: React.FC = () => {
       setShowVocabDetail(true);
     } else {
       console.log(`Word "${word}" not found in vocabulary list.`);
-      // Tùy chọn: Hiển thị thông báo "Không tìm thấy từ"
-      // alert(`Không tìm thấy từ "${word}" trong danh sách từ vựng.`);
     }
   };
 
-  // Đóng modal từ vựng
+  // Close vocabulary modal
   const closeVocabDetail = () => {
     setShowVocabDetail(false);
     setSelectedVocabCard(null);
   };
 
-  // --- NEW: Hàm để render nội dung mô phỏng với các từ có thể click ---
+  // Function to render simulated content with clickable words
   const renderSimulatedContent = () => {
-    // Đây là nội dung giả định của một trang web.
-    // Trong ứng dụng thực tế, bạn sẽ cần một cách để lấy nội dung này từ URL.
     const simulatedText = `
       Đây là một ví dụ về nội dung trang web. Bạn có thể click vào các từ như "Source", "Insurance", "Argument", "Influence" để xem chi tiết từ vựng.
       Chúng ta cũng có các từ khác như "Technology", "Computer", "Internet", "Software", "Hardware".
       Hãy thử tìm từ "Happiness" hoặc "Freedom".
       Một số từ không có trong danh sách từ vựng của bạn, ví dụ như "Lorem" hay "Ipsum".
       Thử tìm kiếm từ "Water" và "Earth".
+      Các từ như "Apple", "Banana", "Orange" cũng có thể được tra cứu.
+      "Elephant" và "Tiger" là những từ khác trong danh sách.
+      "Music" và "Art" là những từ phổ biến.
+      "Science" và "History" cũng có mặt.
     `;
 
-    // Tách văn bản thành các từ và dấu câu
-    // Regex này sẽ tách các từ và giữ lại dấu câu riêng biệt
+    // Split text into words and punctuation/spaces
     const parts = simulatedText.split(/(\b\w+\b|[.,!?;:()"\s])/g);
 
     return (
       <p className="p-4 text-lg leading-relaxed text-gray-800 dark:text-gray-200">
         {parts.map((part, index) => {
-          // Kiểm tra nếu phần tử là một từ (chỉ chứa chữ cái và số)
           const isWord = /^\w+$/.test(part);
           const normalizedPart = part.toLowerCase();
           const isVocabWord = isWord && vocabMap.current.has(normalizedPart);
@@ -200,10 +199,9 @@ const GameBrowser: React.FC = () => {
     );
   };
 
-
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
-      {/* Thanh trình duyệt */}
+      {/* Browser Bar */}
       <div className="flex items-center p-3 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
         <input
           type="text"
@@ -214,14 +212,15 @@ const GameBrowser: React.FC = () => {
           className="flex-grow p-2 mr-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white
                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                      transition-all duration-200 ease-in-out"
+          disabled={isOfflineMode} // Disable input when in offline mode
         />
         <button
           onClick={handleGoClick}
-          disabled={isSearchButtonDisabled}
+          disabled={isSearchButtonDisabled || isOfflineMode} // Disable button when in offline mode or input is empty
           className={`px-4 py-2 rounded-lg shadow-md flex items-center justify-center
                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
                      transition-all duration-200 ease-in-out transform
-                     ${isSearchButtonDisabled
+                     ${isSearchButtonDisabled || isOfflineMode
                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                        : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95'
                      }`}
@@ -242,11 +241,25 @@ const GameBrowser: React.FC = () => {
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
         </button>
+
+        {/* NEW: Toggle Offline Mode Button */}
+        <button
+          onClick={() => setIsOfflineMode(prevMode => !prevMode)}
+          className={`ml-2 px-4 py-2 rounded-lg shadow-md flex items-center justify-center
+                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
+                     transition-all duration-200 ease-in-out transform
+                     ${isOfflineMode
+                       ? 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-lg active:scale-95'
+                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                     }`}
+        >
+          {isOfflineMode ? 'Trực tuyến' : 'Ngoại tuyến'}
+        </button>
       </div>
 
-      {/* Hiển thị gợi ý hoặc nội dung mô phỏng/iframe */}
-      <div className="flex-grow relative overflow-y-auto"> {/* Thêm overflow-y-auto để nội dung có thể cuộn */}
-        {showSuggestions && url === '' ? (
+      {/* Display Suggestions, Simulated Content, or Iframe */}
+      <div className="flex-grow relative overflow-y-auto">
+        {showSuggestions && url === '' && !isOfflineMode ? ( // Show suggestions ONLY if not in offline mode and no URL
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 overflow-y-auto h-full">
             {suggestedUrls.map((site, index) => (
               <button
@@ -278,30 +291,23 @@ const GameBrowser: React.FC = () => {
               </button>
             ))}
           </div>
-        ) : (
-          // Hiển thị nội dung mô phỏng hoặc iframe
-          // Sử dụng iframe cho các URL thực tế, nhưng cảnh báo về hạn chế
-          // Đối với mục đích demo tra từ, chúng ta sẽ hiển thị nội dung mô phỏng
-          url.includes('googleusercontent.com') || url.includes('wikipedia.org') || url.includes('placehold.co') ? (
-            <iframe
-              src={url}
-              title="Web Browser"
-              className="w-full h-full border-0"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups-to-escape-sandbox"
-            >
-              Trình duyệt của bạn không hỗ trợ iframe.
-            </iframe>
-          ) : (
-            // Đây là nơi chúng ta hiển thị nội dung mô phỏng có thể tương tác
-            <div className="p-4 bg-white dark:bg-gray-800 h-full overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Nội dung mô phỏng từ {url || 'trang web'}</h2>
-              {renderSimulatedContent()}
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                Lưu ý: Để tương tác với nội dung của các trang web thực tế trong iframe, bạn cần một máy chủ proxy do các hạn chế bảo mật trình duyệt.
-                Nội dung trên chỉ là mô phỏng để minh họa chức năng tra từ.
-              </p>
-            </div>
-          )
+        ) : isOfflineMode ? ( // If in offline mode, always show simulated content
+          <div className="p-4 bg-white dark:bg-gray-800 h-full overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Nội dung mô phỏng (Chế độ Ngoại tuyến)</h2>
+            {renderSimulatedContent()}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+              Bạn đang ở chế độ ngoại tuyến. Click vào các từ được tô sáng để tra cứu từ vựng.
+            </p>
+          </div>
+        ) : ( // Otherwise, if online and a URL is set, show iframe
+          <iframe
+            src={url}
+            title="Web Browser"
+            className="w-full h-full border-0"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups-to-escape-sandbox"
+          >
+            Trình duyệt của bạn không hỗ trợ iframe.
+          </iframe>
         )}
       </div>
 
@@ -309,9 +315,9 @@ const GameBrowser: React.FC = () => {
       <FlashcardDetailModal
         selectedCard={selectedVocabCard}
         showVocabDetail={showVocabDetail}
-        exampleImages={[]} // Không cần ảnh ví dụ cho từ vựng tra cứu
+        exampleImages={[]} // No example images needed for lookup
         onClose={closeVocabDetail}
-        currentVisualStyle="default" // Có thể tùy chỉnh style nếu muốn
+        currentVisualStyle="default" // Can be customized if desired
       />
     </div>
   );
