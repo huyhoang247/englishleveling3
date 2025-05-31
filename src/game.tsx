@@ -73,8 +73,8 @@ const bookContents = {
 };
 
 const App: React.FC = () => {
-  // State to hold the content of the currently selected book
-  const [selectedBookContent, setSelectedBookContent] = useState<string | null>(null);
+  // State to hold the title of the currently selected book (null if no book is selected)
+  const [selectedBookTitle, setSelectedBookTitle] = useState<string | null>(null);
   // State for vocabMap to trigger re-render
   const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
   const [isLoadingVocab, setIsLoadingVocab] = useState(true); // State to track vocabulary loading
@@ -131,17 +131,29 @@ const App: React.FC = () => {
     setSelectedVocabCard(null);
   };
 
+  // Handler for selecting a book from the list
+  const handleBookSelect = (title: string) => {
+    setSelectedBookTitle(title);
+  };
+
+  // Handler to go back to the book list
+  const handleBackToList = () => {
+    setSelectedBookTitle(null);
+  };
+
   // Renders the book content with clickable vocabulary words
   const renderBookContent = () => {
     if (isLoadingVocab) {
       return <div className="text-center p-8">Loading vocabulary...</div>; // Or a spinner
     }
 
-    if (!selectedBookContent) {
+    const currentBookContent = selectedBookTitle ? bookContents[selectedBookTitle as keyof typeof bookContents] : null;
+
+    if (!currentBookContent) {
       return <div className="text-center p-8 text-gray-600 dark:text-gray-400">Select a book to read.</div>;
     }
 
-    const parts = selectedBookContent.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g); // Add various quotation marks to regex
+    const parts = currentBookContent.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g); // Add various quotation marks to regex
 
     return (
       <div className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
@@ -177,32 +189,50 @@ const App: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
       </div>
 
-      <div className="flex flex-col md:flex-row flex-grow">
-        {/* Book List Sidebar */}
-        <div className="w-full md:w-1/4 p-4 bg-gray-200 dark:bg-gray-700 shadow-md md:shadow-none flex-shrink-0">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Books</h2>
-          <ul className="space-y-2">
-            {Object.keys(bookContents).map((bookTitle) => (
-              <li key={bookTitle}>
-                <button
-                  className={`w-full text-left p-3 rounded-lg transition-colors duration-200
-                    ${selectedBookContent === bookContents[bookTitle as keyof typeof bookContents]
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
-                    }`}
-                  onClick={() => setSelectedBookContent(bookContents[bookTitle as keyof typeof bookContents])}
-                >
-                  {bookTitle}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Book Content Area */}
-        <div className="flex-grow p-6 overflow-y-auto max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md my-4 md:my-0 md:ml-4">
-          {renderBookContent()}
-        </div>
+      {/* Main content area */}
+      <div className="flex-grow p-6 overflow-y-auto max-w-4xl mx-auto w-full">
+        {selectedBookTitle ? (
+          // Display book content and breadcrumbs
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            {/* Breadcrumbs */}
+            <nav className="text-sm mb-4">
+              <ol className="list-none p-0 inline-flex">
+                <li className="flex items-center">
+                  <button
+                    onClick={handleBackToList}
+                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                  >
+                    Sách
+                  </button>
+                  <span className="mx-2 text-gray-400">/</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="text-gray-700 dark:text-gray-300 font-semibold">{selectedBookTitle}</span>
+                </li>
+              </ol>
+            </nav>
+            {renderBookContent()}
+          </div>
+        ) : (
+          // Display book list
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Danh sách sách</h2>
+            <ul className="space-y-3">
+              {Object.keys(bookContents).map((bookTitle) => (
+                <li key={bookTitle}>
+                  <button
+                    className="w-full text-left p-4 rounded-lg transition-colors duration-200
+                               bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md
+                               dark:bg-blue-700 dark:hover:bg-blue-800"
+                    onClick={() => handleBookSelect(bookTitle)}
+                  >
+                    {bookTitle}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Flashcard Detail Modal */}
