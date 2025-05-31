@@ -117,11 +117,11 @@ const App: React.FC = () => {
   // Hàm xử lý thay đổi tab
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Đảm bảo thanh điều hướng hiển thị khi chuyển tab, trừ khi đó là tab story hoặc home
-    if (tab !== 'story' && tab !== 'home') {
+    // Đảm bảo thanh điều hướng hiển thị khi chuyển tab, trừ khi đó là tab story hoặc game
+    if (tab !== 'story' && tab !== 'game') { // Added 'game' tab here
       setIsNavBarVisible(true);
     }
-    if (tab === 'story' || tab === 'home') {
+    if (tab === 'story' || tab === 'game') { // Added 'game' tab here
       setIsNavBarVisible(true);
     }
   };
@@ -166,7 +166,10 @@ const App: React.FC = () => {
         <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
       )}
       {activeTab === 'quiz' && <Quiz />}
-      {activeTab === 'game' && <GameBrowser />} {/* Render GameBrowser for 'game' tab */}
+      {activeTab === 'game' && (
+        // Truyền hideNavBar và showNavBar cho GameBrowser
+        <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />
+      )}
 
       {/* Hiển thị thanh điều hướng dưới cùng nếu isNavBarVisible là true */}
       {isNavBarVisible && (
