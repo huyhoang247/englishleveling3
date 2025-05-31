@@ -117,14 +117,16 @@ const EbookReader: React.FC = () => {
     return (
       <div className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
         {parts.map((part, index) => {
-          // Check if the part is a word (contains only word characters)
-          const isWord = /^\w+$/.test(part);
-          const normalizedPart = part.toLowerCase();
+          // Trim the part to remove any leading/trailing whitespace that might interfere
+          const trimmedPart = part.trim();
+          // Check if the trimmed part is a word (contains only word characters)
+          const isWord = /^\w+$/.test(trimmedPart);
+          const normalizedPart = trimmedPart.toLowerCase();
           // Check if the word exists in our vocabulary map
           const isVocabWord = isWord && vocabMap.current.has(normalizedPart);
 
           // --- Debugging logs ---
-          console.log(`Part: "${part}", Is Word: ${isWord}, Normalized: "${normalizedPart}", Is Vocab Word: ${isVocabWord}`);
+          console.log(`Original Part: "${part}", Trimmed Part: "${trimmedPart}", Is Word: ${isWord}, Normalized: "${normalizedPart}", Is Vocab Word: ${isVocabWord}`);
           // --- End Debugging logs ---
 
           if (isVocabWord) {
@@ -133,7 +135,7 @@ const EbookReader: React.FC = () => {
               <span
                 key={index}
                 className="cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-200"
-                onClick={() => handleWordClick(part)}
+                onClick={() => handleWordClick(part)} // Use original 'part' for display
               >
                 {part}
               </span>
