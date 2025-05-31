@@ -1,12 +1,10 @@
+
+
 import React, { useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
-
-// Import defaultImageUrls from the new file
-import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; // Adjust the path if necessary and rename import
-
-// Import defaultVocabulary
-import { defaultVocabulary as initialDefaultVocabulary } from './list-vocabulary.ts'; // Import defaultVocabulary - Adjust the path if necessary
-
+import { defaultVocabulary } from './list-vocabulary.ts'; // Import vocabulary list
+// Import defaultImageUrls from image-url.ts, similar to VerticalFlashcardGallery
+import { defaultImageUrls as gameImageUrls } from './image-url.ts'; // Adjust path if necessary
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
@@ -19,18 +17,14 @@ interface Vocabulary {
   antonyms: string[];
 }
 
-// Define the structure for image URLs by style
-interface StyledImageUrls {
-  default: string;
-  anime?: string; // Optional URL for anime style
-  comic?: string; // Optional URL for comic style
-  realistic?: string; // Optional URL for realistic style
-  // Add more styles as needed
-}
-
 interface Flashcard {
   id: number;
-  imageUrl: StyledImageUrls;
+  imageUrl: {
+    default: string;
+    anime?: string;
+    comic?: string;
+    realistic?: string;
+  };
   isFavorite: boolean;
   vocabulary: Vocabulary;
 }
@@ -50,118 +44,6 @@ interface EbookReaderProps {
   hideNavBar: () => void;
   showNavBar: () => void;
 }
-
-// --- Dữ liệu ảnh theo từng phong cách (Thêm dữ liệu mẫu để có hơn 50 ảnh) ---
-// Tạo mảng dữ liệu mẫu lớn hơn
-const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
-  const urls: string[] = [];
-  for (let i = 1; i <= count; i++) {
-    urls.push(`https://placehold.co/1024x1536/${color}/FFFFFF?text=${text}+${i}`);
-  }
-  return urls;
-};
-
-// Số lượng flashcard mẫu mong muốn (đảm bảo đủ lớn để chứa tất cả các ID có thể mở)
-// Dựa trên ảnh Firestore, có ID lên tới 197, nên đặt là 200 hoặc hơn.
-const numberOfSampleFlashcards = 200; // Tăng số lượng để có nhiều ảnh hơn
-
-
-// Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
-// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
-const defaultImageUrls: string[] = [
-  ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
-];
-
-
-// Danh sách URL ảnh cho phong cách Anime (Thêm dữ liệu mẫu)
-// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
-const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
-
-// Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
-// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
-const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
-
-// Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
-// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
-const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
-
-
-// --- Dữ liệu từ vựng (Thêm dữ liệu mẫu để có hơn 50 mục) ---
-const generatePlaceholderVocabulary = (count: number): Vocabulary => {
-  const data: Vocabulary[] = [];
-  for (let i = 1; i <= count; i++) {
-    data.push({
-      word: `Word ${i}`,
-      meaning: `Meaning of Word ${i}`,
-      example: `Example sentence for Word ${i}.`,
-      phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
-      popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
-      synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
-      antonyms: [`Antonym 1.${i}`, `Antonym 2.${i}`]
-    });
-  }
-  return data as any; // Cast to any to match Vocabulary type, as it expects a single object, not an array
-};
-
-// Dữ liệu từ vựng ban đầu (từ file cũ)
-const vocabularyData: Vocabulary[] = [
-  ...(initialDefaultVocabulary as Vocabulary[]), // Cast to Vocabulary[]
-  ...(generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialDefaultVocabulary.length)) as Vocabulary[])
-];
-
-
-// --- Tạo mảng ALL_POSSIBLE_FLASHCARDS từ dữ liệu trên ---
-// Tạo một mảng chứa TẤT CẢ các flashcard tiềm năng, không phụ thuộc vào việc đã mở hay chưa.
-const ALL_POSSIBLE_FLASHCARDS: Flashcard[] = [];
-// Sử dụng số lượng lớn nhất giữa các mảng dữ liệu để đảm bảo tạo đủ flashcard
-const totalPossibleFlashcards = Math.max(
-    defaultImageUrls.length,
-    animeImageUrls.length,
-    comicImageUrls.length,
-    realisticImageUrls.length,
-    vocabularyData.length
-);
-
-for (let i = 0; i < totalPossibleFlashcards; i++) {
-    // Lấy dữ liệu theo index, sử dụng dữ liệu mặc định hoặc placeholder nếu index vượt quá độ dài mảng ban đầu
-    const vocab = vocabularyData[i] || {
-        word: `Word ${i + 1}`,
-        meaning: `Meaning of Word ${i + 1}`,
-        example: `Example sentence for Word ${i + 1}.`,
-        phrases: [`Phrase A ${i + 1}`, `Phrase B ${i + 1}`],
-        popularity: (i + 1) % 3 === 0 ? "Cao" : (i + 1) % 2 === 0 ? "Trung bình" : "Thấp",
-        synonyms: [`Synonym 1.${i + 1}`, `Synonym 2.${i + 1}`],
-        antonyms: [`Antonym 1.${i + 1}`, `Antonym 2.${i + 1}`]
-    };
-
-     const imageUrls: StyledImageUrls = {
-        default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${i + 1}`,
-        anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${i + 1}`,
-        comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${i + 1}`,
-        realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
-     };
-
-
-    ALL_POSSIBLE_FLASHCARDS.push({
-        id: i + 1, // ID based on position (starting from 1)
-        imageUrl: imageUrls,
-        isFavorite: false, // Set default favorite status
-        vocabulary: vocab, // Assign vocabulary data by index
-    });
-}
-
-
-// Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
-const exampleImages = [
-  "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1", // Placeholder example images
-  "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
-  "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
-  "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
-  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
-  // Add more images if needed
-];
-
 
 // Sample book data - MODIFIED
 const sampleBooks: Book[] = [
@@ -209,269 +91,238 @@ const sampleBooks: Book[] = [
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Echoes+Future',
     content: `
       Prologue: The Whispers
-      The 'network' hummed with a quiet 'anticipation'. 'Algorithms' designed to predict future trends were working overtime, processing 'terabytes' of 'information' from across the 'globe'.
-      Dr. Aris Thorne, a leading 'futurist', reviewed the latest 'simulations'. "The 'projections' are clear," he announced to his team. "Humanity is at a 'crossroads'."
-      The simulations showed two primary 'paths': one leading to a 'utopian' future of 'abundance' and 'harmony', the other to a 'dystopian' reality of 'scarcity' and 'conflict'. The deciding 'factor' was 'choice'.
-      "Every 'decision' we make today echoes into tomorrow," Aris emphasized. "We must 'educate' the masses, foster 'critical thinking', and promote 'collaboration'."
-      A young 'analyst', Lena, pointed to a specific 'anomaly' in the data. "This 'pattern' suggests an 'unforeseen variable'," she noted. "A 'wildcard' that could alter all 'outcomes'."
-      Aris leaned closer. "What is it?"
-      "Individual 'consciousness'," Lena replied. "The 'power' of a single mind to 'innovate', to 'resist', to 'dream' beyond the 'programmed' possibilities."
-      The 'future' was not fixed. It was a canvas, waiting for the brushstrokes of human 'will' and 'imagination'. The echoes were not just predictions, but invitations.
+      The 'network' hummed with a quiet 'energy', a constant flow of 'information' painting a picture of a world on the brink of another 'transformation'. Old 'paradigms' were shattering, making way for new 'ideas'.
+      "The future is not a fixed 'destination'," a historian 'AI' once lectured. "It's a 'spectrum' of possibilities, shaped by our 'choices' today."
+      Young Elara, a 'student' of 'cybernetics', felt this more keenly than most. She believed that 'technology' held the 'key' to solving many of the world's pressing 'issues', from 'climate change' to 'social inequality'.
+      "We need 'innovative' solutions," she often told her peers. "And that requires us to 'think' differently, to challenge the 'status quo'."
+      Her current 'research' focused on 'decentralized' systems, aiming to create more 'resilient' and 'equitable' infrastructures. It was a daunting 'task', filled with 'technical' hurdles and 'ethical' dilemmas.
+      "Every 'line of code' we write, every 'system' we design, has an 'impact'," her mentor, Dr. Aris, reminded her. "We must be 'responsible' for our 'creations'."
+      Elara knew the path ahead was long and arduous, but the 'potential' for positive 'change' fueled her 'determination'. The echoes of the future were calling, and she was ready to answer.
     `,
   },
   {
     id: 'book4',
-    title: 'The Art of Connection',
-    author: 'Community Builder',
-    category: 'Self-Improvement',
-    coverImageUrl: 'https://placehold.co/200x300/C3A9E3/333333?text=Art+Connection',
-    content: `
-      Chapter 1: Bridging Divides
-      In an increasingly 'interconnected' world, the 'art' of 'connection' has become paramount. It's not just about 'communication', but about building genuine 'relationships' and fostering 'understanding'.
-      "To truly connect, you must first 'listen'," advised Maya, a renowned 'therapist' and 'community' organizer. "Active 'listening' is the 'foundation' of all meaningful 'interaction'."
-      She spoke of 'empathy' as the 'bridge' between individuals. "Try to 'understand' perspectives different from your own," she urged. "It expands your 'worldview' and builds 'trust'."
-      The biggest 'challenge' often lies in overcoming 'preconceptions' and 'biases'. "We all carry them," Maya admitted, "but awareness is the first step towards 'growth'."
-      Workshops on 'non-violent communication' became popular, teaching people how to express their 'needs' and 'feelings' without 'blame' or 'judgment'. "It's about finding common 'ground'," a participant shared.
-      'Digital' platforms, while offering 'convenience', sometimes create a sense of 'isolation'. "Real 'connection' happens face-to-face," Maya reminded. "Share a 'meal', take a 'walk', engage in 'shared activities'."
-      The goal was not to 'agree' on everything, but to 'respect' differences and find 'harmony' in diversity. The art of connection was a continuous 'practice', enriching lives one interaction at a time.
-    `,
+    title: 'Management Essentials',
+    author: 'Lead Right Inc.',
+    category: 'Management & Leadership',
+    coverImageUrl: 'https://placehold.co/200x300/F5B041/333333?text=Mgmt+Essentials',
+    content: `Chapter 1: Leading Teams. To lead a team effectively, one must understand motivation, communication, and conflict resolution. This book explores these 'concepts' in depth.`,
   },
   {
     id: 'book5',
-    title: 'Mindful Living in a Digital Age',
-    author: 'Zen Master AI',
-    category: 'Self-Improvement',
-    coverImageUrl: 'https://placehold.co/200x300/C3A9E3/333333?text=Mindful+Living',
-    content: `
-      Introduction: The Present Moment
-      In an age of constant 'notifications' and 'information' overload, finding 'mindfulness' is more crucial than ever. It's about cultivating 'awareness' of the present moment, without 'judgment'.
-      "Your 'attention' is your most 'valuable' resource," taught Master Jin, a digital 'philosopher'. "Where your 'attention' goes, your 'energy' flows."
-      He advocated for 'digital detoxes', periods away from screens to reconnect with oneself and nature. "Observe your 'thoughts' and 'feelings' without getting 'swept away' by them," he advised.
-      One simple 'practice' was the "one-minute 'breath'": focusing solely on the 'sensation' of breathing for sixty seconds. "It's a small 'anchor' in a stormy 'sea' of distractions," Jin explained.
-      'Technology' itself wasn't the 'enemy'; it was the 'unconscious' use of it. "Use 'tools' mindfully," he urged. "Let them serve you, not 'enslave' you."
-      He introduced the concept of "conscious 'consumption'": being aware of what 'information' you take in, what 'content' you engage with. "Is it 'nourishing' your mind, or 'depleting' it?"
-      Mindful living was not about escaping the digital world, but about navigating it with 'intention' and 'peace'. It was a journey of self-discovery, one 'present moment' at a time.
-    `,
+    title: 'Marketing Breakthroughs',
+    author: 'Market Wizards',
+    category: 'Marketing & Sales',
+    coverImageUrl: 'https://placehold.co/200x300/76D7C4/333333?text=Marketing+BT',
+    content: `Introduction: The new age of marketing is upon us. 'Digital' strategies and 'data analytics' are key. Learn how to 'innovate' and 'capture' your audience.`,
+  },
+  {
+    id: 'book6',
+    title: 'Advanced Leadership Tactics',
+    author: 'Strategy Gurus',
+    category: 'Management & Leadership',
+    coverImageUrl: 'https://placehold.co/200x300/F5B041/333333?text=Adv+Leadership',
+    content: `Chapter 1: Strategic Vision. Leaders must not only manage but also 'inspire'. This involves 'foresight' and the ability to 'articulate' a compelling future.`,
+  },
+  {
+    id: 'book7',
+    title: 'Sales Mastery',
+    author: 'Closer Co.',
+    category: 'Marketing & Sales',
+    coverImageUrl: 'https://placehold.co/200x300/76D7C4/333333?text=Sales+Mastery',
+    content: `Unlock the secrets to closing any deal. Understand customer 'psychology', master 'negotiation', and build lasting 'relationships'.`,
   },
 ];
 
-// Utility function to extract vocabulary from book content
-const extractVocabularyFromContent = (content: string): Vocabulary[] => {
-  const words = content.match(/'([^']+)'/g); // Matches words enclosed in single quotes
-  if (!words) return [];
-
-  const extractedVocab: Vocabulary[] = [];
-  words.forEach(quotedWord => {
-    const word = quotedWord.replace(/'/g, ''); // Remove quotes
-
-    // Find the corresponding vocabulary data from ALL_POSSIBLE_FLASHCARDS
-    const foundFlashcard = ALL_POSSIBLE_FLASHCARDS.find(
-      flashcard => flashcard.vocabulary.word.toLowerCase() === word.toLowerCase()
-    );
-
-    if (foundFlashcard) {
-      extractedVocab.push(foundFlashcard.vocabulary);
-    } else {
-      // If not found in ALL_POSSIBLE_FLASHCARDS, create a basic entry
-      extractedVocab.push({
-        word: word,
-        meaning: `Meaning of ${word}`, // Placeholder meaning
-        example: `Example for ${word}.`, // Placeholder example
-        phrases: [],
-        popularity: "Thấp",
-        synonyms: [],
-        antonyms: [],
-      });
+const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
+  return books.reduce((acc, book) => {
+    const category = book.category || 'Uncategorized';
+    if (!acc[category]) {
+      acc[category] = [];
     }
-  });
-  return extractedVocab;
+    acc[category].push(book);
+    return acc;
+  }, {} as Record<string, Book[]>);
 };
 
+const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => { // Destructure props
+  const [booksData, setBooksData] = useState<Book[]>(sampleBooks); // Renamed from 'books' to avoid conflict
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null); // Start with no book selected
 
-export default function EbookReader({ hideNavBar, showNavBar }: EbookReaderProps) {
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
-  const [bookVocabulary, setBookVocabulary] = useState<Vocabulary[]>([]);
+  const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
+  const [isLoadingVocab, setIsLoadingVocab] = useState(true);
 
-  // State to manage the selected vocabulary card for detail view
   const [selectedVocabCard, setSelectedVocabCard] = useState<Flashcard | null>(null);
-  // State to manage vocabulary modal visibility
   const [showVocabDetail, setShowVocabDetail] = useState(false);
 
-  // Effect to extract vocabulary when a book is selected or content changes
+  useEffect(() => {
+    const tempMap = new Map<string, Vocabulary>();
+    defaultVocabulary.forEach((word, index) => {
+      tempMap.set(word.toLowerCase(), {
+        word: word,
+        meaning: `Meaning of "${word}" (example).`,
+        example: `This is an example sentence using "${word}".`,
+        phrases: [`Phrase with ${word} A`, `Phrase with ${word} B`],
+        popularity: (index % 3 === 0 ? "Cao" : (index % 2 === 0 ? "Trung bình" : "Thấp")),
+        synonyms: [`Synonym for ${word} 1`, `Synonym for ${word} 2`],
+        antonyms: [`Antonym for ${word} 1`, `Antonym for ${word} 2`],
+      });
+    });
+    setVocabMap(tempMap);
+    setIsLoadingVocab(false);
+    console.log("Vocab Map initialized with", tempMap.size, "words.");
+  }, []);
+
+  // Effect to hide/show nav bar based on selectedBookId
   useEffect(() => {
     if (selectedBookId) {
-      const book = sampleBooks.find(b => b.id === selectedBookId);
-      if (book) {
-        const vocab = extractVocabularyFromContent(book.content);
-        setBookVocabulary(vocab);
-      }
+      hideNavBar(); // Hide nav bar when a book is selected
     } else {
-      setBookVocabulary([]); // Clear vocabulary when no book is selected
+      showNavBar(); // Show nav bar when back to library
     }
-  }, [selectedBookId]);
+  }, [selectedBookId, hideNavBar, showNavBar]);
 
-  const currentBook = selectedBookId ? sampleBooks.find(book => book.id === selectedBookId) : null;
+  const handleWordClick = (word: string) => {
+    const normalizedWord = word.toLowerCase();
+    const foundVocab = vocabMap.get(normalizedWord);
 
-  const handleBookSelect = (id: string) => {
-    setSelectedBookId(id);
-    setCurrentChapterIndex(0); // Reset to first chapter when a new book is selected
-    hideNavBar(); // Hide the nav bar when a book is opened
+    if (foundVocab) {
+      let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`; // Default placeholder
+
+      // Find the index of the word in the original defaultVocabulary array
+      // This index will be used to pick an image from gameImageUrls
+      const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord);
+
+      if (vocabIndex !== -1 && vocabIndex < gameImageUrls.length) {
+        cardImageUrl = gameImageUrls[vocabIndex];
+        console.log(`Using image from gameImageUrls for "${foundVocab.word}" at index ${vocabIndex}: ${cardImageUrl}`);
+      } else {
+        console.log(`Image for "${foundVocab.word}" (index ${vocabIndex}) not found in gameImageUrls or index out of bounds. Using placeholder.`);
+      }
+
+      const tempFlashcard: Flashcard = {
+        id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(), // Use vocabIndex for a more stable ID if found
+        imageUrl: {
+          default: cardImageUrl,
+          // anime, comic, realistic can be left undefined or also sourced if you have corresponding styled image arrays
+        },
+        isFavorite: false, // Or fetch from a persistent store if favorites are managed for these words
+        vocabulary: foundVocab,
+      };
+      setSelectedVocabCard(tempFlashcard);
+      setShowVocabDetail(true);
+    } else {
+      console.log(`Word "${word}" not found in vocabulary list.`);
+    }
+  };
+
+  const closeVocabDetail = () => {
+    setShowVocabDetail(false);
+    setSelectedVocabCard(null);
+  };
+
+  const handleSelectBook = (bookId: string) => {
+    setSelectedBookId(bookId);
   };
 
   const handleBackToLibrary = () => {
     setSelectedBookId(null);
-    setCurrentChapterIndex(0);
-    showNavBar(); // Show the nav bar when returning to library
   };
 
-  // Function to open vocabulary detail modal
-  const openVocabDetail = (vocabWord: string) => {
-    // Find the full Flashcard object from ALL_POSSIBLE_FLASHCARDS
-    const foundFlashcard = ALL_POSSIBLE_FLASHCARDS.find(
-      card => card.vocabulary.word.toLowerCase() === vocabWord.toLowerCase()
-    );
-
-    if (foundFlashcard) {
-      setSelectedVocabCard(foundFlashcard);
-      setShowVocabDetail(true);
-      hideNavBar(); // Hide the nav bar when modal opens
-    } else {
-      console.warn(`Flashcard for word "${vocabWord}" not found.`);
-      // Fallback: Create a basic flashcard if not found in ALL_POSSIBLE_FLASHCARDS
-      setSelectedVocabCard({
-        id: 0, // Placeholder ID
-        imageUrl: { default: `https://placehold.co/1024x1536/CCCCCC/333333?text=${vocabWord}` },
-        isFavorite: false,
-        vocabulary: {
-          word: vocabWord,
-          meaning: `Meaning of ${vocabWord}`,
-          example: `Example sentence for ${vocabWord}.`,
-          phrases: [],
-          popularity: "Thấp",
-          synonyms: [],
-          antonyms: [],
-        }
-      });
-      setShowVocabDetail(true);
-      hideNavBar();
-    }
-  };
-
-
-  // Function to close vocabulary detail modal
-  const closeVocabDetail = () => {
-    setShowVocabDetail(false);
-    setSelectedVocabCard(null); // Clear selected card when closing
-    showNavBar(); // Show the nav bar when modal closes
-  };
-
-  const renderLibrary = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-      {sampleBooks.map(book => (
-        <div
-          key={book.id}
-          className="bg-gray-100 dark:bg-gray-700 rounded-lg shadow-md overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 hover:shadow-xl flex flex-col"
-          onClick={() => handleBookSelect(book.id)}
-        >
-          <img
-            src={book.coverImageUrl}
-            alt={book.title}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              e.currentTarget.src = `https://placehold.co/200x300/A9CCE3/333333?text=${book.title.replace(/\s/g, '+')}`;
-            }}
-          />
-          <div className="p-4 flex-grow flex flex-col justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{book.title}</h3>
-              {book.author && <p className="text-sm text-gray-600 dark:text-gray-400">by {book.author}</p>}
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Category: {book.category}</p>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent opening the book when clicking the button
-                handleBookSelect(book.id);
-              }}
-              className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Read Book
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const currentBook = booksData.find(book => book.id === selectedBookId);
+  const groupedBooks = groupBooksByCategory(booksData);
 
   const renderBookContent = () => {
-    if (!currentBook) return null;
+    if (isLoadingVocab) {
+      return <div className="text-center p-8">Loading vocabulary...</div>;
+    }
+    if (!currentBook) {
+      // This case should ideally not be reached if renderBookContent is only called when a book is selected
+      return <div className="text-center p-8 text-gray-500">No book selected.</div>;
+    }
 
-    const contentParts = currentBook.content.split('\n').filter(part => part.trim() !== '');
+    const parts = currentBook.content.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
 
     return (
-      <div className="prose dark:prose-invert max-w-none">
-        {contentParts.map((part, index) => {
-          // Check if the part is a chapter title (e.g., starts with "Chapter" or "Prologue")
-          if (part.trim().startsWith('Chapter') || part.trim().startsWith('Prologue')) {
-            return (
-              <h3 key={index} className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-4">
-                {part.trim()}
-              </h3>
-            );
+      <div className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
+        {parts.map((part, index) => {
+          if (!part || part.trim() === '') {
+            return <span key={index}>{part}</span>;
           }
-          // Highlight vocabulary words
-          let displayedPart = part;
-          bookVocabulary.forEach(vocab => {
-            // Create a regex to find the word, case-insensitive, and ensure it's a whole word
-            const regex = new RegExp(`'(${vocab.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})'`, 'gi');
-            displayedPart = displayedPart.replace(regex, (match, p1) => {
-              return `<span 
-                        class="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline" 
-                        data-word="${p1}"
-                      >${match}</span>`;
-            });
-          });
+          const isWord = /^\w+$/.test(part);
+          const normalizedPart = part.toLowerCase();
+          const isVocabWord = isWord && vocabMap.has(normalizedPart);
 
-          return (
-            <p
-              key={index}
-              className="text-gray-800 dark:text-gray-200 leading-relaxed mb-4"
-              dangerouslySetInnerHTML={{ __html: displayedPart }}
-              onClick={(e) => {
-                const target = e.target as HTMLElement;
-                if (target.tagName === 'SPAN' && target.dataset.word) {
-                  openVocabDetail(target.dataset.word);
-                }
-              }}
-            />
-          );
+          if (isVocabWord) {
+            return (
+              <span
+                key={index}
+                className="cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-200"
+                onClick={() => handleWordClick(part)}
+              >
+                {part}
+              </span>
+            );
+          } else {
+            return <span key={index}>{part}</span>;
+          }
         })}
-
-        {/* Navigation for chapters (if applicable) or just end of book */}
-        <div className="flex justify-between mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-          {/* Add more navigation here if books have multiple chapters */}
-          <button
-            onClick={handleBackToLibrary}
-            className="px-6 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            ← Back to Library
-          </button>
-        </div>
       </div>
     );
   };
 
+  const renderLibrary = () => (
+    <div className="p-4 md:p-6 lg:p-8 space-y-8">
+      {Object.entries(groupedBooks).map(([category, booksInCategory]) => (
+        <section key={category}>
+          <div className="flex justify-between items-center mb-3 md:mb-4">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{category}</h2>
+            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none">
+              See all →
+            </button>
+          </div>
+          <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+            {/* The negative margins and padding are to allow box shadows on cards to not be clipped by overflow hidden on parent if it existed, and to extend scroll area to edge */}
+            {booksInCategory.map(book => (
+              <div
+                key={book.id}
+                className="flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer group transform hover:-translate-y-1 transition-transform duration-200"
+                onClick={() => handleSelectBook(book.id)}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => e.key === 'Enter' && handleSelectBook(book.id)}
+              >
+                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-shadow group-hover:shadow-xl">
+                  {book.coverImageUrl ? (
+                    <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">
+                      {book.title}
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                  {book.title}
+                </h3>
+                {book.author && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col">
-      <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-sm z-10">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {selectedBookId ? currentBook?.title : 'Ebook Library'}
-        </h1>
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
+      <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0 sticky top-0 z-10">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
         {selectedBookId && (
           <button
             onClick={handleBackToLibrary}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+            className="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
           >
             ← Back to Library
           </button>
@@ -504,11 +355,13 @@ export default function EbookReader({ hideNavBar, showNavBar }: EbookReaderProps
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleImages={exampleImages} // Pass the example images
+          exampleImages={[]} // exampleImages are not relevant for this specific vocabulary detail view from the ebook
           onClose={closeVocabDetail}
-          currentVisualStyle="default" // Ensure "Ảnh Gốc" tab uses the default image
+          currentVisualStyle="default" // Ensure 'default' style is used to pick up selectedVocabCard.imageUrl.default
         />
       )}
     </div>
   );
-}
+};
+
+export default EbookReader;
