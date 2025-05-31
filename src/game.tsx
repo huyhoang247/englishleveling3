@@ -111,6 +111,7 @@ const EbookReader: React.FC = () => {
   // Function to render the book content with clickable words
   const renderBookContent = () => {
     // Split the text by word boundaries and also keep punctuation/spaces
+    // This regex matches either a sequence of word characters (\b\w+\b) or any non-word character including spaces
     const parts = bookContent.split(/(\b\w+\b|[.,!?;:()"\s])/g);
 
     return (
@@ -119,9 +120,11 @@ const EbookReader: React.FC = () => {
           // Check if the part is a word (contains only word characters)
           const isWord = /^\w+$/.test(part);
           const normalizedPart = part.toLowerCase();
+          // Check if the word exists in our vocabulary map
           const isVocabWord = isWord && vocabMap.current.has(normalizedPart);
 
           if (isVocabWord) {
+            // If it's a vocabulary word, make it bold, blue, and clickable
             return (
               <span
                 key={index}
@@ -132,6 +135,7 @@ const EbookReader: React.FC = () => {
               </span>
             );
           } else {
+            // Otherwise, render it as normal text
             return <span key={index}>{part}</span>;
           }
         })}
