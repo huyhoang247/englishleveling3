@@ -46,7 +46,7 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
 };
 
 const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => { // Destructure props
-  const [booksData] = useState<Book[]>(sampleBooks); // Renamed from 'books' to avoid conflict
+  const [booksData, setBooksData] = useState<Book[]>(sampleBooks); // Renamed from 'books' to avoid conflict
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null); // Start with no book selected
 
   const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
@@ -54,6 +54,9 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const [selectedVocabCard, setSelectedVocabCard] = useState<Flashcard | null>(null);
   const [showVocabDetail, setShowVocabDetail] = useState(false);
+
+  // State for reading mode
+  const [readingMode, setReadingMode] = useState(false);
 
   useEffect(() => {
     const tempMap = new Map<string, Vocabulary>();
@@ -70,7 +73,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     });
     setVocabMap(tempMap);
     setIsLoadingVocab(false);
-    // console.log("Vocab Map initialized with", tempMap.size, "words.");
+    console.log("Vocab Map initialized with", tempMap.size, "words.");
   }, []);
 
   // Effect to hide/show nav bar based on selectedBookId
@@ -89,27 +92,30 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     if (foundVocab) {
       let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`; // Default placeholder
 
+      // Find the index of the word in the original defaultVocabulary array
+      // This index will be used to pick an image from gameImageUrls
       const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord);
 
       if (vocabIndex !== -1 && vocabIndex < gameImageUrls.length) {
         cardImageUrl = gameImageUrls[vocabIndex];
-        // console.log(`Using image from gameImageUrls for "${foundVocab.word}" at index ${vocabIndex}: ${cardImageUrl}`);
+        console.log(`Using image from gameImageUrls for "${foundVocab.word}" at index ${vocabIndex}: ${cardImageUrl}`);
       } else {
-        // console.log(`Image for "${foundVocab.word}" (index ${vocabIndex}) not found in gameImageUrls or index out of bounds. Using placeholder.`);
+        console.log(`Image for "${foundVocab.word}" (index ${vocabIndex}) not found in gameImageUrls or index out of bounds. Using placeholder.`);
       }
 
       const tempFlashcard: Flashcard = {
         id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(), // Use vocabIndex for a more stable ID if found
         imageUrl: {
           default: cardImageUrl,
+          // anime, comic, realistic can be left undefined or also sourced if you have corresponding styled image arrays
         },
-        isFavorite: false, 
+        isFavorite: false, // Or fetch from a persistent store if favorites are managed for these words
         vocabulary: foundVocab,
       };
       setSelectedVocabCard(tempFlashcard);
       setShowVocabDetail(true);
     } else {
-      // console.log(`Word "${word}" not found in vocabulary list.`);
+      console.log(`Word "${word}" not found in vocabulary list.`);
     }
   };
 
@@ -131,161 +137,70 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const renderBookContent = () => {
     if (isLoadingVocab) {
-      return <div className="text-center p-8 font-serif">Loading vocabulary...</div>;
+      return <div className="text-center p-8">Loading vocabulary...</div>;
     }
     if (!currentBook) {
-      return <div className="text-center p-8 font-serif text-gray-500">No book selected.</div>;
+      return <div className="text-center p-8 text-gray-500">No book selected.</div>;
     }
 
-    // Helper function to process a segment of text (a line or part of it) for vocabulary words
-    // It now returns an array of React nodes, including <br /> for newlines within a block.
-    const processTextSegment = (textSegment: string, baseKey: string) => {
-      const lines = textSegment.split('\n');
-      return lines.map((line, lineIndex) => (
-        <React.Fragment key={`${baseKey}-line-${lineIndex}`}>
-          {lineIndex > 0 && <br />}
-          {line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g).map((part, partIndex) => {
-            if (part === undefined || part === null || part === '') return null; // Skip empty parts from split
-
-            const isWord = /^\w+$/.test(part);
-            if (isWord) {
-              const normalizedPart = part.toLowerCase();
-              if (vocabMap.has(normalizedPart)) {
-                return (
-                  <span
-                    key={`${baseKey}-l${lineIndex}-v-${partIndex}`}
-                    className="cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                    onClick={() => handleWordClick(part)}
-                  >
-                    {part}
-                  </span>
-                );
-              }
-            }
-            // If not a vocab word, or if it's punctuation/whitespace, render as is
-            return <span key={`${baseKey}-l${lineIndex}-t-${partIndex}`}>{part}</span>;
-          })}
-        </React.Fragment>
-      ));
-    };
-
-    // Split content by one or more blank lines to get "blocks" (paragraphs, headings, list groups)
-    const contentBlocks = currentBook.content.trim().split(/\n\s*\n+/g);
-
-    // Known heading phrases and patterns for more robust detection
-    const knownHeadings = [
-      "Social Health: A Key to Well-being", "Maya's Story: A Missing Piece",
-      "The Overlooked Aspect of Health", "The Impact of Disconnection",
-      "What Does Social Health Look Like?", "The 5-3-1 Guideline for Social Health",
-      "My Own Journey and The Vision for the Future",
-    ];
-    const headingPatterns = [
-      /^Chapter \d+[:\.]?\s?.*/i, /^Prologue[:\.]?\s?.*/i,
-      /^Introduction[:\.]?\s?.*/i, /^Epilogue[:\.]?\s?.*/i,
-    ];
+    // Split content into paragraphs
+    const paragraphs = currentBook.content.split('\n').filter(p => p.trim());
 
     return (
-      // Apply base text styling here. `font-serif` for readability.
-      // `space-y-5` adds margin between direct children (h2, p, ol, ul, div for lists).
-      <div className="font-serif text-lg leading-relaxed text-gray-800 dark:text-gray-200 space-y-5">
-        {contentBlocks.map((block, index) => {
-          const trimmedBlock = block.trim();
-          if (!trimmedBlock) return null; // Skip empty blocks
-          
-          const blockKey = `block-${index}`; // Unique key for the block
+      <div className={`space-y-6 ${readingMode ? 'reading-mode' : ''}`}>
+        {paragraphs.map((paragraph, paragraphIndex) => {
+          // Check if it's a title
+          const isTitle = paragraph.includes('Chapter') || paragraph.includes('Prologue') ||
+                         paragraph.includes('Introduction') || paragraph.match(/^[A-Z][^.!?]*:/) ||
+                         paragraph.includes('Story:');
 
-          // Handle specific known non-content lines like (Applause)
-          if (trimmedBlock === "(Applause)") {
+          if (isTitle) {
             return (
-                <p key={blockKey} className="italic text-center text-gray-600 dark:text-gray-400 !mt-6">
-                    {processTextSegment(trimmedBlock, blockKey)}
-                </p>
+              <h3
+                key={paragraphIndex}
+                className="text-2xl font-bold text-gray-900 dark:text-white mb-4 mt-8 border-b-2 border-blue-200 dark:border-blue-800 pb-2"
+              >
+                {paragraph.trim()}
+              </h3>
             );
           }
 
-          // Heading detection
-          let isHeading = knownHeadings.some(h => trimmedBlock.startsWith(h) && trimmedBlock.length < h.length + 15); // Check it's not a long paragraph starting with a known phrase
-          if (!isHeading) {
-              isHeading = headingPatterns.some(pattern => pattern.test(trimmedBlock) && !trimmedBlock.includes('\n') && trimmedBlock.length < 100); // Pattern match, single line, not too long
-          }
-          
-          if (isHeading) {
-            return (
-              <h2 key={blockKey} className="text-2xl font-bold !mt-8 !mb-3 text-gray-900 dark:text-white">
-                {processTextSegment(trimmedBlock, blockKey)}
-              </h2>
-            );
-          }
+          // Handle regular paragraphs
+          const parts = paragraph.split(/(\b\w+\b|[.,!?;:()'"\s`''""])/g);
 
-          // Handle "Well, it’s about:" list structure
-          if (trimmedBlock.startsWith("Well, it’s about:")) {
-              const lines = trimmedBlock.split('\n');
-              const introLine = lines[0];
-              const listItems = lines.slice(1).filter(li => li.trim() !== "");
-              return (
-                  <div key={blockKey}> {/* Wrapper div for proper spacing by parent's space-y */}
-                      <p className="italic mb-1">{processTextSegment(introLine, `${blockKey}-intro`)}</p>
-                      <ul className="list-disc list-outside pl-8 mt-1 space-y-1">
-                          {listItems.map((item, itemIdx) => (
-                              <li key={`${blockKey}-li-${itemIdx}`} className="pl-1">
-                                  {processTextSegment(item.trim(), `${blockKey}-li-${itemIdx}-text`)}
-                              </li>
-                          ))}
-                      </ul>
-                  </div>
-              );
-          }
-          
-          // Handle "5-3-1 guideline from my book. It goes like this:" list structure
-          if (trimmedBlock.startsWith("So if you're not sure where to start, try the 5-3-1 guideline from my book. It goes like this:")) {
-               const lines = trimmedBlock.split('\n');
-               const introLine = lines[0];
-               const listItems = lines.slice(1).filter(li => li.trim() !== "");
-               return (
-                  <div key={blockKey}> {/* Wrapper div */}
-                      <p className="mb-1">{processTextSegment(introLine, `${blockKey}-intro`)}</p>
-                      <ul className="list-disc list-outside pl-8 mt-1 space-y-1">
-                          {listItems.map((item, itemIdx) => (
-                              <li key={`${blockKey}-li-${itemIdx}`} className="pl-1">
-                                  {processTextSegment(item.trim(), `${blockKey}-li-${itemIdx}-text`)}
-                              </li>
-                          ))}
-                      </ul>
-                  </div>
-               );
-          }
-
-          // Handle blocks that are entirely numbered lists (e.g., "1. Item one \n 2. Item two")
-          const linesOfBlock = trimmedBlock.split('\n').filter(l => l.trim() !== "");
-          const isEntireBlockNumberedList = linesOfBlock.length > 0 && linesOfBlock.every(line => /^\d+\.\s/.test(line.trim()));
-
-          if (isEntireBlockNumberedList) {
-              return (
-                  <ol key={blockKey} className="list-decimal list-outside pl-8 space-y-2">
-                      {linesOfBlock.map((line, lineIdx) => {
-                          // Extract text after "N. "
-                          const itemText = line.trim().substring(line.trim().search(/\s/) + 1);
-                          return (
-                              <li key={`${blockKey}-oli-${lineIdx}`} className="pl-1"> {/* pl-1 for alignment with list-outside */}
-                                  {processTextSegment(itemText, `${blockKey}-oli-${lineIdx}-text`)}
-                              </li>
-                          );
-                      })}
-                  </ol>
-              );
-          }
-
-          // Default: render as a paragraph
           return (
-            <p key={blockKey} className="text-left"> {/* text-left is often better for readability on screens than text-justify */}
-              {processTextSegment(trimmedBlock, blockKey)}
+            <p
+              key={paragraphIndex}
+              className="text-lg leading-loose text-gray-800 dark:text-gray-200 mb-4 text-justify indent-8 first-letter:text-4xl first-letter:font-bold first-letter:text-blue-600 first-letter:mr-1 first-letter:float-left first-letter:leading-none"
+            >
+              {parts.map((part, index) => {
+                if (!part || part.trim() === '') {
+                  return <span key={index}>{part}</span>;
+                }
+                const isWord = /^\w+$/.test(part);
+                const normalizedPart = part.toLowerCase();
+                const isVocabWord = isWord && vocabMap.has(normalizedPart);
+
+                if (isVocabWord) {
+                  return (
+                    <span
+                      key={index}
+                      className="cursor-pointer font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-all duration-200 hover:shadow-sm px-1 py-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 vocab-highlight"
+                      onClick={() => handleWordClick(part)}
+                    >
+                      {part}
+                    </span>
+                  );
+                } else {
+                  return <span key={index}>{part}</span>;
+                }
+              })}
             </p>
           );
         })}
       </div>
     );
   };
-
 
   const renderLibrary = () => (
     <div className="p-4 md:p-6 lg:p-8 space-y-8">
@@ -298,6 +213,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             </button>
           </div>
           <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+            {/* The negative margins and padding are to allow box shadows on cards to not be clipped by overflow hidden on parent if it existed, and to extend scroll area to edge */}
             {booksInCategory.map(book => (
               <div
                 key={book.id}
@@ -331,35 +247,46 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
       <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0 sticky top-0 z-10">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
-        {selectedBookId && (
-          <button
-            onClick={handleBackToLibrary}
-            className="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
-          >
-            ← Back to Library
-          </button>
-        )}
+        <div className="flex items-center space-x-3">
+          {selectedBookId && (
+            <button
+              onClick={handleBackToLibrary}
+              className="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-2 transition-colors"
+            >
+              ← Back to Library
+            </button>
+          )}
+          {selectedBookId && ( // Only show reading mode toggle when a book is selected
+            <button
+              onClick={() => setReadingMode(!readingMode)}
+              className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:ring-offset-2 dark:focus:ring-offset-2 transition-colors"
+            >
+              {readingMode ? 'Normal Mode' : 'Reading Mode'}
+            </button>
+          )}
+        </div>
       </header>
 
       {!selectedBookId ? (
-        <main className="flex-grow overflow-y-auto w-full bg-white dark:bg-gray-850 font-sans"> {/* Library specific: font-sans */}
+        <main className="flex-grow overflow-y-auto w-full bg-white dark:bg-gray-850"> {/* Slightly different bg for library */}
           {renderLibrary()}
         </main>
       ) : (
-        <main className="flex-grow p-6 md:p-8 overflow-y-auto max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-xl my-4 w-full"> {/* Book view main area styling */}
+        <main className="flex-grow px-6 py-8 overflow-y-auto max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg my-6 w-full border border-gray-200 dark:border-gray-700">
           {currentBook && (
-            <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700 font-serif"> {/* Book title/author also serif */}
-              <h1 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-2">
+            <div className="mb-8 pb-6 border-b-2 border-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800">
+              <h2 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-3 leading-tight">
                 {currentBook.title}
-              </h1>
+              </h2>
               {currentBook.author && (
-                <p className="text-md text-center text-gray-600 dark:text-gray-400">
+                <p className="text-lg text-center text-gray-600 dark:text-gray-400 italic font-medium">
                   by {currentBook.author}
                 </p>
               )}
+              <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-4 rounded-full"></div>
             </div>
           )}
           {renderBookContent()}
@@ -370,11 +297,27 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleImages={[]} 
+          exampleImages={[]} // exampleImages are not relevant for this specific vocabulary detail view from the ebook
           onClose={closeVocabDetail}
-          currentVisualStyle="default"
+          currentVisualStyle="default" // Ensure 'default' style is used to pick up selectedVocabCard.imageUrl.default
         />
       )}
+      {/* Custom CSS for reading mode and vocab highlight, if not already in global CSS */}
+      <style>
+        {`
+        .reading-mode {
+          font-family: 'Georgia', 'Times New Roman', serif;
+          line-height: 1.8;
+        }
+
+        .vocab-highlight {
+          background: linear-gradient(120deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+          background-repeat: no-repeat;
+          background-size: 100% 0.2em;
+          background-position: 0 88%;
+        }
+        `}
+      </style>
     </div>
   );
 };
