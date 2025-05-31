@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
 import { defaultVocabulary } from './list-vocabulary.ts'; // Import vocabulary list
@@ -165,9 +163,10 @@ const EbookReader: React.FC = () => {
     setSelectedVocabCard(null);
   };
 
-  const handleBookChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedBookId(event.target.value);
-  };
+  // No longer needed:
+  // const handleBookChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setSelectedBookId(event.target.value);
+  // };
 
   const currentBook = books.find(book => book.id === selectedBookId);
 
@@ -185,8 +184,10 @@ const EbookReader: React.FC = () => {
       <div className="text-lg leading-relaxed text-gray-800 dark:text-gray-200">
         {parts.map((part, index) => {
           if (!part || part.trim() === '') {
+            // Keep whitespace and empty strings for accurate rendering
             return <span key={index}>{part}</span>;
           }
+          // Regex to check if part is a word (alphanumeric)
           const isWord = /^\w+$/.test(part);
           const normalizedPart = part.toLowerCase();
           const isVocabWord = isWord && vocabMap.has(normalizedPart);
@@ -211,25 +212,26 @@ const EbookReader: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
-      <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
+      <header className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-0">Ebook Reader</h1>
         {books.length > 0 && (
-          <div className="flex items-center">
-            <label htmlFor="book-select" className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Choose a book:
-            </label>
-            <select
-              id="book-select"
-              value={selectedBookId || ''}
-              onChange={handleBookChange}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            >
-              {books.map((book) => (
-                <option key={book.id} value={book.id}>
-                  {book.title}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">
+              Books:
+            </span>
+            {books.map((book) => (
+              <button
+                key={book.id}
+                onClick={() => setSelectedBookId(book.id)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
+                            ${selectedBookId === book.id
+                              ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-blue-500'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:ring-gray-400'
+                            }`}
+              >
+                {book.title}
+              </button>
+            ))}
           </div>
         )}
       </header>
