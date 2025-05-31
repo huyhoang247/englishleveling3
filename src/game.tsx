@@ -35,6 +35,12 @@ interface Book {
   coverImageUrl?: string; // Added cover image URL
 }
 
+// Props interface for EbookReader to accept hideNavBar and showNavBar
+interface EbookReaderProps {
+  hideNavBar: () => void;
+  showNavBar: () => void;
+}
+
 // Sample book data - MODIFIED
 const sampleBooks: Book[] = [
   {
@@ -135,7 +141,7 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
   }, {} as Record<string, Book[]>);
 };
 
-const EbookReader: React.FC = () => {
+const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => { // Destructure props
   const [booksData, setBooksData] = useState<Book[]>(sampleBooks); // Renamed from 'books' to avoid conflict
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null); // Start with no book selected
 
@@ -162,6 +168,15 @@ const EbookReader: React.FC = () => {
     setIsLoadingVocab(false);
     console.log("Vocab Map initialized with", tempMap.size, "words.");
   }, []);
+
+  // Effect to hide/show nav bar based on selectedBookId
+  useEffect(() => {
+    if (selectedBookId) {
+      hideNavBar(); // Hide nav bar when a book is selected
+    } else {
+      showNavBar(); // Show nav bar when back to library
+    }
+  }, [selectedBookId, hideNavBar, showNavBar]);
 
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
