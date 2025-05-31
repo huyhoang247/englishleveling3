@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react'; // Import icon Search từ lucide-react
+// Không còn import Search từ lucide-react
 
 const GameBrowser: React.FC = () => {
   // Danh sách các URL gợi ý
@@ -105,7 +105,22 @@ const GameBrowser: React.FC = () => {
                        : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95' // Màu và hiệu ứng khi hoạt động
                      }`}
         >
-          <Search size={20} /> {/* Thay thế chữ "Đi" bằng icon Search */}
+          {/* SVG icon Search */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="feather feather-search"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
         </button>
       </div>
 
