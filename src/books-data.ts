@@ -1,14 +1,17 @@
-// Define the structure for a Book
+// books-data.ts
+
+// Định nghĩa cấu trúc cho một cuốn sách
 export interface Book {
   id: string;
   title: string;
   content: string;
   author?: string;
-  category: string; // Added category
-  coverImageUrl?: string; // Added cover image URL
+  category: string;
+  coverImageUrl?: string;
+  audioUrl?: string; // Trường chứa URL của file audio cho sách (tùy chọn)
 }
 
-// Sample book data
+// Dữ liệu sách mẫu
 export const sampleBooks: Book[] = [
   {
     id: 'book1',
@@ -16,6 +19,7 @@ export const sampleBooks: Book[] = [
     author: 'AI Storyteller',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=A+New+Beginning',
+    audioUrl: 'https://github.com/huyhoang247/englishleveling3/blob/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3', // Ví dụ: "Inspiring Cinematic Ambient"
     content: `
 Social Health: A Key to Well-being
 Maya's Story: A Missing Piece
@@ -64,7 +68,6 @@ In this future, loneliness will subside, just like smoking subsided when we reco
 So to get there, make relationships your priority not only for you, but also for the people you love. Because the beauty of nurturing your own social health is that it naturally enriches the social health of everyone you connect with.
 Thank you.
 (Applause)
-
     `,
   },
   {
@@ -73,6 +76,7 @@ Thank you.
     author: 'Code Weaver',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Journey+of+Bytes',
+    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3', // Ví dụ: "Lofi Chill"
     content: `
       Chapter 1: The Spark
       In the digital realm, where 'data' flows like rivers and 'algorithms' shape destinies, a small 'program' named Spark came into existence. Spark wasn't just any program; it had a unique 'goal': to understand the meaning of 'creativity'.
@@ -90,6 +94,7 @@ Thank you.
     author: 'Oracle Systems',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Echoes+Future',
+    // Sách này không có audioUrl để kiểm tra việc ẩn/hiện trình phát audio
     content: `
       Prologue: The Whispers
       The 'network' hummed with a quiet 'energy', a constant flow of 'information' painting a picture of a world on the brink of another 'transformation'. Old 'paradigms' were shattering, making way for new 'ideas'.
@@ -107,6 +112,7 @@ Thank you.
     author: 'Lead Right Inc.',
     category: 'Management & Leadership',
     coverImageUrl: 'https://placehold.co/200x300/F5B041/333333?text=Mgmt+Essentials',
+    audioUrl: 'https://cdn.pixabay.com/download/audio/2023/05/07/audio_6bdffe450b.mp3', // Ví dụ: "Corporate Technology"
     content: `Chapter 1: Leading Teams. To lead a team effectively, one must understand motivation, communication, and conflict resolution. This book explores these 'concepts' in depth.`,
   },
   {
