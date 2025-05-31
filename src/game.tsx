@@ -190,7 +190,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Main content area */}
-      <div className="flex-grow p-6 overflow-y-auto max-w-4xl mx-auto w-full">
+      <div className="flex-grow p-6 overflow-y-auto w-full"> {/* Changed from max-w-4xl mx-auto */}
         {selectedBookTitle ? (
           // Display book content and breadcrumbs
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
