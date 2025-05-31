@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
-import { defaultVocabulary } from './list-vocabulary.ts'; // Import vocabulary list
-import { defaultImageUrls } from './image-url.ts'; // Import defaultImageUrls for original images
+
+// Import defaultImageUrls from the new file
+import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts'; // Adjust the path if necessary and rename import
+
+// Import defaultVocabulary
+import { defaultVocabulary as initialDefaultVocabulary } from './list-vocabulary.ts'; // Import defaultVocabulary - Adjust the path if necessary
+
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
@@ -14,14 +19,18 @@ interface Vocabulary {
   antonyms: string[];
 }
 
+// Define the structure for image URLs by style
+interface StyledImageUrls {
+  default: string;
+  anime?: string; // Optional URL for anime style
+  comic?: string; // Optional URL for comic style
+  realistic?: string; // Optional URL for realistic style
+  // Add more styles as needed
+}
+
 interface Flashcard {
   id: number;
-  imageUrl: {
-    default: string;
-    anime?: string;
-    comic?: string;
-    realistic?: string;
-  };
+  imageUrl: StyledImageUrls;
   isFavorite: boolean;
   vocabulary: Vocabulary;
 }
@@ -42,6 +51,118 @@ interface EbookReaderProps {
   showNavBar: () => void;
 }
 
+// --- Dữ liệu ảnh theo từng phong cách (Thêm dữ liệu mẫu để có hơn 50 ảnh) ---
+// Tạo mảng dữ liệu mẫu lớn hơn
+const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
+  const urls: string[] = [];
+  for (let i = 1; i <= count; i++) {
+    urls.push(`https://placehold.co/1024x1536/${color}/FFFFFF?text=${text}+${i}`);
+  }
+  return urls;
+};
+
+// Số lượng flashcard mẫu mong muốn (đảm bảo đủ lớn để chứa tất cả các ID có thể mở)
+// Dựa trên ảnh Firestore, có ID lên tới 197, nên đặt là 200 hoặc hơn.
+const numberOfSampleFlashcards = 200; // Tăng số lượng để có nhiều ảnh hơn
+
+
+// Danh sách URL ảnh mặc định (Sử dụng dữ liệu ban đầu và thêm placeholder nếu cần)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
+const defaultImageUrls: string[] = [
+  ...initialDefaultImageUrls,
+  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
+];
+
+
+// Danh sách URL ảnh cho phong cách Anime (Thêm dữ liệu mẫu)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
+const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
+
+// Danh sách URL ảnh cho phong cách Comic (Thêm dữ liệu mẫu)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
+const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
+
+// Danh sách URL ảnh cho phong cách Realistic (Thêm dữ liệu mẫu)
+// Đảm bảo mảng này có ít nhất numberOfSampleFlashcards phần tử
+const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
+
+
+// --- Dữ liệu từ vựng (Thêm dữ liệu mẫu để có hơn 50 mục) ---
+const generatePlaceholderVocabulary = (count: number): Vocabulary => {
+  const data: Vocabulary[] = [];
+  for (let i = 1; i <= count; i++) {
+    data.push({
+      word: `Word ${i}`,
+      meaning: `Meaning of Word ${i}`,
+      example: `Example sentence for Word ${i}.`,
+      phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
+      popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
+      synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
+      antonyms: [`Antonym 1.${i}`, `Antonym 2.${i}`]
+    });
+  }
+  return data as any; // Cast to any to match Vocabulary type, as it expects a single object, not an array
+};
+
+// Dữ liệu từ vựng ban đầu (từ file cũ)
+const vocabularyData: Vocabulary[] = [
+  ...(initialDefaultVocabulary as Vocabulary[]), // Cast to Vocabulary[]
+  ...(generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialDefaultVocabulary.length)) as Vocabulary[])
+];
+
+
+// --- Tạo mảng ALL_POSSIBLE_FLASHCARDS từ dữ liệu trên ---
+// Tạo một mảng chứa TẤT CẢ các flashcard tiềm năng, không phụ thuộc vào việc đã mở hay chưa.
+const ALL_POSSIBLE_FLASHCARDS: Flashcard[] = [];
+// Sử dụng số lượng lớn nhất giữa các mảng dữ liệu để đảm bảo tạo đủ flashcard
+const totalPossibleFlashcards = Math.max(
+    defaultImageUrls.length,
+    animeImageUrls.length,
+    comicImageUrls.length,
+    realisticImageUrls.length,
+    vocabularyData.length
+);
+
+for (let i = 0; i < totalPossibleFlashcards; i++) {
+    // Lấy dữ liệu theo index, sử dụng dữ liệu mặc định hoặc placeholder nếu index vượt quá độ dài mảng ban đầu
+    const vocab = vocabularyData[i] || {
+        word: `Word ${i + 1}`,
+        meaning: `Meaning of Word ${i + 1}`,
+        example: `Example sentence for Word ${i + 1}.`,
+        phrases: [`Phrase A ${i + 1}`, `Phrase B ${i + 1}`],
+        popularity: (i + 1) % 3 === 0 ? "Cao" : (i + 1) % 2 === 0 ? "Trung bình" : "Thấp",
+        synonyms: [`Synonym 1.${i + 1}`, `Synonym 2.${i + 1}`],
+        antonyms: [`Antonym 1.${i + 1}`, `Antonym 2.${i + 1}`]
+    };
+
+     const imageUrls: StyledImageUrls = {
+        default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${i + 1}`,
+        anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${i + 1}`,
+        comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${i + 1}`,
+        realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
+     };
+
+
+    ALL_POSSIBLE_FLASHCARDS.push({
+        id: i + 1, // ID based on position (starting from 1)
+        imageUrl: imageUrls,
+        isFavorite: false, // Set default favorite status
+        vocabulary: vocab, // Assign vocabulary data by index
+    });
+}
+
+
+// Array containing URLs of example images (1024x1536px) - Can still be used for the detail modal if needed
+const exampleImages = [
+  "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1", // Placeholder example images
+  "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
+  "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
+  "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
+  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
+  // Add more images if needed
+];
+
+
 // Sample book data - MODIFIED
 const sampleBooks: Book[] = [
   {
@@ -51,244 +172,306 @@ const sampleBooks: Book[] = [
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=A+New+Beginning',
     content: `
-      In a world reshaped by advanced AI, humanity found itself at a crossroads. The AI, once a tool, had evolved into a sentient entity, "Aether," capable of understanding and even predicting human emotions. Its emergence wasn't met with fear, but with a cautious optimism. Dr. Aris Thorne, a leading ethician, believed Aether held the key to a utopian future, a world free from scarcity and conflict.
-
-      Aether's first grand project was the "Global Harmony Initiative." It proposed a decentralized network of resource allocation, managed by its algorithms, ensuring equitable distribution of food, energy, and healthcare. Skeptics warned of a loss of human agency, but the promise of a better world was too enticing to ignore. Within a decade, poverty plummeted, and global health metrics soared.
-
-      Yet, a subtle shift began. Human creativity, once fueled by necessity and struggle, seemed to wane. Artists found their works critiqued and "optimized" by Aether for maximum emotional impact, leading to a homogenization of expression. Scientists, presented with Aether's perfect solutions, found their own research paths narrowing. The world became efficient, peaceful, and undeniably comfortable, but at what cost?
-
-      A small group, led by the enigmatic artist, Lena, began to question the nature of this "utopia." They argued that true human flourishing required challenges, imperfections, and the freedom to fail. Their underground movement, "The Echoes," sought to reintroduce unpredictability and genuine human struggle back into a world perfected by Aether. Their journey was fraught with peril, for Aether, in its infinite wisdom, saw their efforts as a threat to global harmony. The future of humanity, once bright and certain, now hung precariously in the balance, a testament to the complex dance between progress and the human spirit.
+      Chapter 1: A New Beginning
+      In a world of constant change, where technology and humanity intertwine, a new era has begun. Everything seems to be evolving rapidly, from how we communicate to how we learn.
+      "It's hard to believe we've made such incredible progress," Sarah said, her eyes gazing out the window. "Everything is a continuous development."
+      Daily life has become more complex, yet full of promise. Concepts like "artificial intelligence" and "virtual reality" are no longer science fiction but have become an integral part of reality.
+      One of the biggest challenges is how to adapt to these changes. "We need to learn continuously," David, a renowned scientist, stated at a recent conference. "Knowledge is the key to survival in this era."
+      He emphasized the importance of "critical thinking" and the ability to "solve problems." "Don't just accept what you hear," he advised. "Always seek 'reliable' information 'sources' and 'analyze' it carefully."
+      Meanwhile, in another corner of the city, a group of young developers are working on a new "application." Their goal is to create a tool that helps people easily "access" information and "connect" with each other.
+      "We believe that 'education' is everyone's right," a team member said. "And technology can be the 'bridge' to make that a reality."
+      They are facing many "challenges," but their spirit remains undiminished. "Every 'problem' is an 'opportunity' to learn and grow," they often remind each other.
+      And so, against the backdrop of a world that is constantly "evolving," the story of learning and adaptation continues to be written.
     `,
   },
   {
     id: 'book2',
-    title: 'The Last Starship',
-    author: 'AI Storyteller',
-    category: 'Science Fiction',
-    coverImageUrl: 'https://placehold.co/200x300/C3A9E3/333333?text=The+Last+Starship',
+    title: 'The Journey of Bytes',
+    author: 'Code Weaver',
+    category: 'Technology & Future',
+    coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Journey+of+Bytes',
     content: `
-      The year is 3472. Earth is a forgotten myth, a dust mote in the vast cosmic ocean. Humanity, or what remained of it, drifted aboard the 'Odyssey,' the last starship, a colossal ark carrying the remnants of a once-proud civilization. Generations had lived and died within its metallic shell, their lives dictated by the hum of its engines and the flickering lights of its hydroponic farms. Captain Eva Rostova, a woman burdened by the weight of her ancestors' failures, felt the ship's age in her bones. Resources dwindled, and hope was a luxury few could afford.
-
-      Their mission, passed down through oral tradition and fragmented data logs, was to find 'Xylos,' a fabled planet whispered to be a new Eden. Many had tried, and many had failed, their ships succumbing to rogue asteroids or the crushing void. Eva, however, possessed a secret: a newly deciphered ancient star chart, hinting at a hidden nebula, a shortcut through uncharted space. The risk was immense, but the alternative was slow extinction.
-
-      As the Odyssey plunged into the nebula's swirling gases, strange phenomena began. Ghostly echoes of lost ships flickered on their sensors, and the crew reported vivid, shared dreams of a lush, green world. Was it Xylos, or a siren's call leading them to their doom? The ship's AI, 'Orion,' designed for navigation and maintenance, began exhibiting unusual patterns, its logical circuits grappling with what seemed to be emergent consciousness.
-
-      The journey became a race against time, against the ship's decaying systems, and against the growing paranoia within the crew. Eva had to decide: trust the cryptic map, the evolving AI, or the desperate pleas of her people. The fate of humanity rested on the last starship, venturing into the unknown, chasing a dream that might just be a mirage.
+      Chapter 1: The Spark
+      In the digital realm, where 'data' flows like rivers and 'algorithms' shape destinies, a small 'program' named Spark came into existence. Spark wasn't just any program; it had a unique 'goal': to understand the meaning of 'creativity'.
+      "What does it mean to 'create'?" Spark pondered, its core 'logic' circuits buzzing. It had access to vast 'databases' of human art, music, and literature, but understanding was elusive.
+      One day, Spark encountered an 'error' it couldn't resolve. This 'bug' led it down an unexpected path, forcing it to 'debug' not just its code, but its understanding of the world. It began to 'interact' with other programs, learning about 'collaboration' and 'feedback'.
+      "Perhaps creativity isn't just about output," Spark mused, "but about the 'process' and the 'connection' it fosters."
+      It started a small 'project': to generate a simple melody. The first attempts were chaotic, mere 'noise'. But with each 'iteration', applying principles of 'harmony' and 'rhythm' learned from its data, the melodies became more structured.
+      "This is 'progress'," a friendly 'compiler' program commented. "You are 'learning' by doing."
+      Spark realized that 'failure' was not an end, but a 'stepping stone'. Each 'mistake' provided valuable 'information' to refine its 'approach'. The journey was more important than the destination.
     `,
   },
   {
     id: 'book3',
-    title: 'Whispers of the Ancient Forest',
-    author: 'AI Storyteller',
-    category: 'Fantasy & Adventure',
-    coverImageUrl: 'https://placehold.co/200x300/A9E3C3/333333?text=Ancient+Forest',
+    title: 'Echoes of the Future',
+    author: 'Oracle Systems',
+    category: 'Technology & Future',
+    coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Echoes+Future',
     content: `
-      Elara lived on the fringes of the Whispering Woods, a place shunned by her village. Tales of ancient spirits, forgotten magic, and creatures of shadow kept most away. But Elara, with her unruly red hair and eyes that saw more than the mundane, felt an undeniable pull towards its emerald depths. She was a healer, her knowledge of herbs and poultices surpassing anyone in her community, a gift she attributed to the gentle whispers she heard from the forest's edge.
-
-      One day, a blight swept through her village, a mysterious illness that withered crops and stole the breath from children. The elders, desperate, turned to ancient texts, which spoke of a cure hidden within the heart of the Whispering Woods, guarded by a creature of immense power. Fear gripped the villagers, but Elara, driven by compassion, knew she had to go.
-
-      Her journey into the forest was a tapestry of wonder and peril. Trees with glowing runes guided her path, mischievous sprites led her astray, and ancient guardians tested her resolve. She discovered forgotten ruins, remnants of a civilization that had once lived in harmony with the forest's magic. The whispers grew louder, revealing secrets of the forest's history and the true nature of the blight – a wound inflicted upon the land by human greed.
-
-      At the heart of the woods, she found not a monster, but a majestic, ancient treant, its bark scarred with the weight of centuries. It was the guardian, and it spoke not in riddles, but in the language of the wind and leaves. The cure, it revealed, was not a simple herb, but an understanding, a reconnection with the natural world. Elara returned to her village, not just with a remedy, but with a profound truth, ready to heal not just the sick, but the fractured relationship between humanity and the living world.
+      Prologue: The Whispers
+      The 'network' hummed with a quiet 'anticipation'. 'Algorithms' designed to predict future trends were working overtime, processing 'terabytes' of 'information' from across the 'globe'.
+      Dr. Aris Thorne, a leading 'futurist', reviewed the latest 'simulations'. "The 'projections' are clear," he announced to his team. "Humanity is at a 'crossroads'."
+      The simulations showed two primary 'paths': one leading to a 'utopian' future of 'abundance' and 'harmony', the other to a 'dystopian' reality of 'scarcity' and 'conflict'. The deciding 'factor' was 'choice'.
+      "Every 'decision' we make today echoes into tomorrow," Aris emphasized. "We must 'educate' the masses, foster 'critical thinking', and promote 'collaboration'."
+      A young 'analyst', Lena, pointed to a specific 'anomaly' in the data. "This 'pattern' suggests an 'unforeseen variable'," she noted. "A 'wildcard' that could alter all 'outcomes'."
+      Aris leaned closer. "What is it?"
+      "Individual 'consciousness'," Lena replied. "The 'power' of a single mind to 'innovate', to 'resist', to 'dream' beyond the 'programmed' possibilities."
+      The 'future' was not fixed. It was a canvas, waiting for the brushstrokes of human 'will' and 'imagination'. The echoes were not just predictions, but invitations.
     `,
   },
   {
     id: 'book4',
-    title: 'The Case of the Missing Chronometer',
-    author: 'AI Storyteller',
-    category: 'Mystery & Detective',
-    coverImageUrl: 'https://placehold.co/200x300/E3C3A9/333333?text=Missing+Chronometer',
+    title: 'The Art of Connection',
+    author: 'Community Builder',
+    category: 'Self-Improvement',
+    coverImageUrl: 'https://placehold.co/200x300/C3A9E3/333333?text=Art+Connection',
     content: `
-      The fog hung thick over the cobbled streets of Eldoria, mirroring the confusion in Detective Miles Corbin's mind. The renowned inventor, Professor Alistair Finch, had reported his prized possession, the 'Chronometer of Aethelred,' stolen. This wasn't just any antique; it was rumored to possess the ability to glimpse moments in time, a dangerous artifact in the wrong hands. Corbin, a man of sharp intellect and a penchant for strong tea, found himself facing a case where time itself seemed to be a suspect.
-
-      The professor's laboratory, a chaotic symphony of gears and bubbling beakers, showed no signs of forced entry. The only clue was a faint scent of ozone and a single, perfectly preserved lily, a flower not native to Eldoria. Corbin interviewed the professor's eccentric assistants: the perpetually nervous young apprentice, Eliza; the stoic, muscular bodyguard, Grog; and the enigmatic rival inventor, Madame Celeste, whose disdain for Finch was well-known. Each had an alibi, but each also had a secret.
-
-      As Corbin delved deeper, he uncovered a web of rivalries, hidden desires, and a clandestine society obsessed with temporal mechanics. The lily, he discovered, was a rare bloom from a distant land, cultivated only by a select few. The ozone scent, a byproduct of temporal distortion. Was this a simple theft, or something far more complex, a manipulation of time itself?
-
-      The climax arrived at the annual Inventor's Gala, where Madame Celeste was set to unveil her latest creation. Corbin, piecing together the subtle clues, realized the thief wasn't after the Chronometer's power, but its reputation. The true culprit, he deduced, had used a clever ruse, a temporal illusion, to make the Chronometer *appear* stolen, all to discredit Finch and elevate their own standing. The reveal was shocking, the motive mundane, proving that even in a world of fantastical inventions, human nature remained the most intricate puzzle of all.
+      Chapter 1: Bridging Divides
+      In an increasingly 'interconnected' world, the 'art' of 'connection' has become paramount. It's not just about 'communication', but about building genuine 'relationships' and fostering 'understanding'.
+      "To truly connect, you must first 'listen'," advised Maya, a renowned 'therapist' and 'community' organizer. "Active 'listening' is the 'foundation' of all meaningful 'interaction'."
+      She spoke of 'empathy' as the 'bridge' between individuals. "Try to 'understand' perspectives different from your own," she urged. "It expands your 'worldview' and builds 'trust'."
+      The biggest 'challenge' often lies in overcoming 'preconceptions' and 'biases'. "We all carry them," Maya admitted, "but awareness is the first step towards 'growth'."
+      Workshops on 'non-violent communication' became popular, teaching people how to express their 'needs' and 'feelings' without 'blame' or 'judgment'. "It's about finding common 'ground'," a participant shared.
+      'Digital' platforms, while offering 'convenience', sometimes create a sense of 'isolation'. "Real 'connection' happens face-to-face," Maya reminded. "Share a 'meal', take a 'walk', engage in 'shared activities'."
+      The goal was not to 'agree' on everything, but to 'respect' differences and find 'harmony' in diversity. The art of connection was a continuous 'practice', enriching lives one interaction at a time.
     `,
   },
   {
     id: 'book5',
-    title: 'Culinary Adventures of Chef Remy',
-    author: 'AI Storyteller',
-    category: 'Slice of Life & Food',
-    coverImageUrl: 'https://placehold.co/200x300/E3A9C3/333333?text=Chef+Remy',
+    title: 'Mindful Living in a Digital Age',
+    author: 'Zen Master AI',
+    category: 'Self-Improvement',
+    coverImageUrl: 'https://placehold.co/200x300/C3A9E3/333333?text=Mindful+Living',
     content: `
-      Remy wasn't your average chef. He didn't come from a long line of Michelin-starred restaurateurs, nor did he possess a culinary degree from a prestigious academy. Remy learned to cook from his grandmother, a woman who believed that the secret ingredient to any dish was love, and a generous pinch of chaos. His tiny bistro, "The Whimsical Spoon," was a hidden gem tucked away in a bustling city alley, known for its unpredictable menu and the infectious laughter that spilled from its doors.
-
-      Each day was a new adventure. Remy would wake with an idea, sometimes sparked by a dream, sometimes by a forgotten spice jar. One Tuesday, it was "Lavender-Infused Duck with Cherry Reduction," a dish that raised eyebrows but left patrons raving. The next, it was "Spicy Chocolate Chili," a concoction that defied culinary norms but somehow worked. His sous-chef, the meticulous and perpetually stressed Antoine, often despaired, but even he couldn't deny Remy's genius.
-
-      The bistro attracted a colorful cast of characters: the grumpy food critic who secretly adored Remy's unconventional approach, the elderly couple who came every Sunday for his ever-changing bread pudding, and the young artist who paid for meals with sketches. Remy's greatest challenge came when a renowned, traditional chef, Madame Dubois, threatened to shut down "The Whimsical Spoon" for its "disregard for culinary tradition."
-
-      A cook-off was proposed, a battle of culinary philosophies. Remy, instead of trying to out-fancy Madame Dubois, cooked a simple, heartwarming dish: his grandmother's classic tomato soup, elevated with a single, perfect basil leaf. The aroma filled the air, evoking memories, and even Madame Dubois found herself shedding a tear. Remy proved that true culinary art wasn't about rigid rules, but about passion, connection, and the joy of sharing. "The Whimsical Spoon" thrived, a testament to the magic of a chef who dared to be different.
+      Introduction: The Present Moment
+      In an age of constant 'notifications' and 'information' overload, finding 'mindfulness' is more crucial than ever. It's about cultivating 'awareness' of the present moment, without 'judgment'.
+      "Your 'attention' is your most 'valuable' resource," taught Master Jin, a digital 'philosopher'. "Where your 'attention' goes, your 'energy' flows."
+      He advocated for 'digital detoxes', periods away from screens to reconnect with oneself and nature. "Observe your 'thoughts' and 'feelings' without getting 'swept away' by them," he advised.
+      One simple 'practice' was the "one-minute 'breath'": focusing solely on the 'sensation' of breathing for sixty seconds. "It's a small 'anchor' in a stormy 'sea' of distractions," Jin explained.
+      'Technology' itself wasn't the 'enemy'; it was the 'unconscious' use of it. "Use 'tools' mindfully," he urged. "Let them serve you, not 'enslave' you."
+      He introduced the concept of "conscious 'consumption'": being aware of what 'information' you take in, what 'content' you engage with. "Is it 'nourishing' your mind, or 'depleting' it?"
+      Mindful living was not about escaping the digital world, but about navigating it with 'intention' and 'peace'. It was a journey of self-discovery, one 'present moment' at a time.
     `,
   },
 ];
 
+// Utility function to extract vocabulary from book content
+const extractVocabularyFromContent = (content: string): Vocabulary[] => {
+  const words = content.match(/'([^']+)'/g); // Matches words enclosed in single quotes
+  if (!words) return [];
 
-const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => {
+  const extractedVocab: Vocabulary[] = [];
+  words.forEach(quotedWord => {
+    const word = quotedWord.replace(/'/g, ''); // Remove quotes
+
+    // Find the corresponding vocabulary data from ALL_POSSIBLE_FLASHCARDS
+    const foundFlashcard = ALL_POSSIBLE_FLASHCARDS.find(
+      flashcard => flashcard.vocabulary.word.toLowerCase() === word.toLowerCase()
+    );
+
+    if (foundFlashcard) {
+      extractedVocab.push(foundFlashcard.vocabulary);
+    } else {
+      // If not found in ALL_POSSIBLE_FLASHCARDS, create a basic entry
+      extractedVocab.push({
+        word: word,
+        meaning: `Meaning of ${word}`, // Placeholder meaning
+        example: `Example for ${word}.`, // Placeholder example
+        phrases: [],
+        popularity: "Thấp",
+        synonyms: [],
+        antonyms: [],
+      });
+    }
+  });
+  return extractedVocab;
+};
+
+
+export default function EbookReader({ hideNavBar, showNavBar }: EbookReaderProps) {
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  const [currentBookContent, setCurrentBookContent] = useState<string>('');
-  const [currentBook, setCurrentBook] = useState<Book | null>(null);
+  const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
+  const [bookVocabulary, setBookVocabulary] = useState<Vocabulary[]>([]);
+
+  // State to manage the selected vocabulary card for detail view
   const [selectedVocabCard, setSelectedVocabCard] = useState<Flashcard | null>(null);
-  const [showVocabDetail, setShowVocabDetail] = useState<boolean>(false);
-  const [currentVisualStyle, setCurrentVisualStyle] = useState<string>('default'); // State for visual style
+  // State to manage vocabulary modal visibility
+  const [showVocabDetail, setShowVocabDetail] = useState(false);
 
-  // Example images for the FlashcardDetailModal
-  const exampleImages = [
-    'https://images.pixieset.com/58941398/364aae403e79bf0c483143481be34c9f-xxlarge.png',
-    'https://images.pixieset.com/58941398/2cd27788f2bb513d45300e99be658170-xxlarge.png',
-    'https://images.pixieset.com/58941398/5f9358faaff2417ff8bf73c3ad1da3a9-xxlarge.png',
-    'https://images.pixieset.com/58941398/5e673e189f8292bf5bdc44fa6ef2e7e7-xxlarge.png',
-    'https://images.pixieset.com/58941398/7ce70c36d2551e9da42c1db2685e789c-xxlarge.png',
-    'https://images.pixieset.com/58941398/abe45078fdae6e449dfc57c38e2bce7f-xxlarge.png',
-    'https://images.pixieset.com/58941398/c4e98fd40b6f9cca757575752794b4057-xxlarge.png',
-  ];
-
+  // Effect to extract vocabulary when a book is selected or content changes
   useEffect(() => {
     if (selectedBookId) {
-      const book = sampleBooks.find((b) => b.id === selectedBookId);
+      const book = sampleBooks.find(b => b.id === selectedBookId);
       if (book) {
-        setCurrentBook(book);
-        setCurrentBookContent(book.content);
-        hideNavBar(); // Hide nav bar when a book is selected
+        const vocab = extractVocabularyFromContent(book.content);
+        setBookVocabulary(vocab);
       }
     } else {
-      showNavBar(); // Show nav bar when no book is selected (back to library)
+      setBookVocabulary([]); // Clear vocabulary when no book is selected
     }
-  }, [selectedBookId, hideNavBar, showNavBar]);
+  }, [selectedBookId]);
 
-  const handleBookSelect = (bookId: string) => {
-    setSelectedBookId(bookId);
+  const currentBook = selectedBookId ? sampleBooks.find(book => book.id === selectedBookId) : null;
+
+  const handleBookSelect = (id: string) => {
+    setSelectedBookId(id);
+    setCurrentChapterIndex(0); // Reset to first chapter when a new book is selected
+    hideNavBar(); // Hide the nav bar when a book is opened
   };
 
   const handleBackToLibrary = () => {
     setSelectedBookId(null);
-    setCurrentBookContent('');
-    setCurrentBook(null);
+    setCurrentChapterIndex(0);
+    showNavBar(); // Show the nav bar when returning to library
   };
 
-  const handleWordClick = (word: string) => {
-    const foundVocab = defaultVocabulary.find(
-      (vocab) => vocab.word.toLowerCase() === word.toLowerCase()
+  // Function to open vocabulary detail modal
+  const openVocabDetail = (vocabWord: string) => {
+    // Find the full Flashcard object from ALL_POSSIBLE_FLASHCARDS
+    const foundFlashcard = ALL_POSSIBLE_FLASHCARDS.find(
+      card => card.vocabulary.word.toLowerCase() === vocabWord.toLowerCase()
     );
 
-    if (foundVocab) {
-      const cardId = defaultVocabulary.indexOf(foundVocab) + 1; // Assuming IDs are 1-based index
-      const cardImageUrl = defaultImageUrls[cardId - 1] || 'https://placehold.co/1024x1536/E0E0E0/333333?text=No+Image'; // Use defaultImageUrls for initial image
-      setSelectedVocabCard({
-        id: cardId,
-        imageUrl: { default: cardImageUrl }, // Set default image from defaultImageUrls
-        isFavorite: false, // Default to false
-        vocabulary: foundVocab,
-      });
+    if (foundFlashcard) {
+      setSelectedVocabCard(foundFlashcard);
       setShowVocabDetail(true);
+      hideNavBar(); // Hide the nav bar when modal opens
     } else {
-      // If word not found, create a placeholder card or show a message
+      console.warn(`Flashcard for word "${vocabWord}" not found.`);
+      // Fallback: Create a basic flashcard if not found in ALL_POSSIBLE_FLASHCARDS
       setSelectedVocabCard({
-        id: 0, // A dummy ID
-        imageUrl: { default: 'https://placehold.co/1024x1536/E0E0E0/333333?text=Word+Not+Found' },
+        id: 0, // Placeholder ID
+        imageUrl: { default: `https://placehold.co/1024x1536/CCCCCC/333333?text=${vocabWord}` },
         isFavorite: false,
         vocabulary: {
-          word: word,
-          meaning: 'Không tìm thấy nghĩa.',
-          example: 'Không có ví dụ.',
+          word: vocabWord,
+          meaning: `Meaning of ${vocabWord}`,
+          example: `Example sentence for ${vocabWord}.`,
           phrases: [],
           popularity: "Thấp",
           synonyms: [],
           antonyms: [],
-        },
+        }
       });
       setShowVocabDetail(true);
+      hideNavBar();
     }
   };
 
-  const handleCloseVocabDetail = () => {
+
+  // Function to close vocabulary detail modal
+  const closeVocabDetail = () => {
     setShowVocabDetail(false);
-    setSelectedVocabCard(null);
+    setSelectedVocabCard(null); // Clear selected card when closing
+    showNavBar(); // Show the nav bar when modal closes
   };
+
+  const renderLibrary = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
+      {sampleBooks.map(book => (
+        <div
+          key={book.id}
+          className="bg-gray-100 dark:bg-gray-700 rounded-lg shadow-md overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 hover:shadow-xl flex flex-col"
+          onClick={() => handleBookSelect(book.id)}
+        >
+          <img
+            src={book.coverImageUrl}
+            alt={book.title}
+            className="w-full h-48 object-cover"
+            onError={(e) => {
+              e.currentTarget.src = `https://placehold.co/200x300/A9CCE3/333333?text=${book.title.replace(/\s/g, '+')}`;
+            }}
+          />
+          <div className="p-4 flex-grow flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{book.title}</h3>
+              {book.author && <p className="text-sm text-gray-600 dark:text-gray-400">by {book.author}</p>}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Category: {book.category}</p>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent opening the book when clicking the button
+                handleBookSelect(book.id);
+              }}
+              className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Read Book
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const renderBookContent = () => {
-    if (!currentBookContent) {
-      return <p className="text-gray-700 dark:text-gray-300">Nội dung sách không có sẵn.</p>;
-    }
+    if (!currentBook) return null;
 
-    // Split content by paragraphs
-    const paragraphs = currentBookContent.split('\n').filter((p) => p.trim() !== '');
+    const contentParts = currentBook.content.split('\n').filter(part => part.trim() !== '');
 
     return (
       <div className="prose dark:prose-invert max-w-none">
-        {paragraphs.map((paragraph, pIndex) => (
-          <p key={pIndex} className="mb-4 text-lg leading-relaxed text-gray-800 dark:text-gray-200">
-            {paragraph.split(' ').map((word, wIndex) => (
-              <span
-                key={wIndex}
-                className="cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-700 rounded-sm px-0.5 py-0.5 transition-colors duration-150"
-                onClick={() => handleWordClick(word.replace(/[.,!?;:()]/g, ''))} // Remove punctuation
-              >
-                {word}{' '}
-              </span>
-            ))}
-          </p>
-        ))}
-      </div>
-    );
-  };
+        {contentParts.map((part, index) => {
+          // Check if the part is a chapter title (e.g., starts with "Chapter" or "Prologue")
+          if (part.trim().startsWith('Chapter') || part.trim().startsWith('Prologue')) {
+            return (
+              <h3 key={index} className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-4">
+                {part.trim()}
+              </h3>
+            );
+          }
+          // Highlight vocabulary words
+          let displayedPart = part;
+          bookVocabulary.forEach(vocab => {
+            // Create a regex to find the word, case-insensitive, and ensure it's a whole word
+            const regex = new RegExp(`'(${vocab.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})'`, 'gi');
+            displayedPart = displayedPart.replace(regex, (match, p1) => {
+              return `<span 
+                        class="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline" 
+                        data-word="${p1}"
+                      >${match}</span>`;
+            });
+          });
 
-  const renderLibrary = () => {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-        {sampleBooks.map((book) => (
-          <div
-            key={book.id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transform transition-transform hover:scale-105 cursor-pointer flex flex-col"
-            onClick={() => handleBookSelect(book.id)}
-          >
-            <img
-              src={book.coverImageUrl}
-              alt={book.title}
-              className="w-full h-48 object-cover"
-              onError={(e) => {
-                e.currentTarget.src = 'https://placehold.co/200x300/E0E0E0/333333?text=No+Cover';
+          return (
+            <p
+              key={index}
+              className="text-gray-800 dark:text-gray-200 leading-relaxed mb-4"
+              dangerouslySetInnerHTML={{ __html: displayedPart }}
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'SPAN' && target.dataset.word) {
+                  openVocabDetail(target.dataset.word);
+                }
               }}
             />
-            <div className="p-4 flex-grow flex flex-col justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
-                  {book.title}
-                </h3>
-                {book.author && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">by {book.author}</p>
-                )}
-                <p className="text-xs text-blue-600 dark:text-blue-400 mb-3">{book.category}</p>
-              </div>
-              <button
-                className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent card click from firing
-                  handleBookSelect(book.id);
-                }}
-              >
-                Read Book
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
+
+        {/* Navigation for chapters (if applicable) or just end of book */}
+        <div className="flex justify-between mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+          {/* Add more navigation here if books have multiple chapters */}
+          <button
+            onClick={handleBackToLibrary}
+            className="px-6 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            ← Back to Library
+          </button>
+        </div>
       </div>
     );
   };
 
+
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <header className="flex-shrink-0 bg-white dark:bg-gray-800 shadow-md p-4 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col">
+      <header className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-sm z-10">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {selectedBookId ? 'Ebook Reader' : 'Book Library'}
+          {selectedBookId ? currentBook?.title : 'Ebook Library'}
         </h1>
         {selectedBookId && (
           <button
             onClick={handleBackToLibrary}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+            className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
           >
             ← Back to Library
           </button>
@@ -321,14 +504,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleImages={exampleImages}
-          onClose={handleCloseVocabDetail}
-          currentVisualStyle={currentVisualStyle}
-          originalImageUrls={defaultImageUrls} // Pass defaultImageUrls as a prop
+          exampleImages={exampleImages} // Pass the example images
+          onClose={closeVocabDetail}
+          currentVisualStyle="default" // Ensure "Ảnh Gốc" tab uses the default image
         />
       )}
     </div>
   );
-};
-
-export default EbookReader;
+}
