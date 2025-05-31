@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Import FlashcardDetailModal
-import { defaultVocabulary } from './list-vocabulary.ts'; // Import danh sách từ vựng
+import { defaultVocabulary } from './list-vocabulary.ts'; // Import vocabulary list
 
 // Define the structure for a flashcard and its vocabulary
 // These interfaces are copied from flashcard.tsx to ensure consistency
@@ -9,7 +9,7 @@ interface Vocabulary {
   meaning: string;
   example: string;
   phrases: string[];
-  popularity: "Cao" | "Trung bình" | "Thấp";
+  popularity: "Cao" | "Trung bình" | "Thấp"; // Still using Vietnamese for popularity levels as per original
   synonyms: string[];
   antonyms: string[];
 }
@@ -27,27 +27,27 @@ interface Flashcard {
 }
 
 const EbookReader: React.FC = () => {
-  // State to hold the book content
+  // State to hold the book content (now in English)
   const [bookContent, setBookContent] = useState<string>(`
-    Chương 1: Khởi đầu mới
+    Chapter 1: A New Beginning
 
-    Trong một thế giới đầy biến động, nơi công nghệ và con người hòa quyện, một kỷ nguyên mới đã bắt đầu. Mọi thứ dường như đang thay đổi nhanh chóng, từ cách chúng ta giao tiếp đến cách chúng ta học tập.
+    In a world of constant change, where technology and humanity intertwine, a new era has begun. Everything seems to be evolving rapidly, from how we communicate to how we learn.
 
-    "Thật khó để tin rằng chúng ta đã đạt được những tiến bộ đáng kinh ngạc như vậy," Sarah nói, ánh mắt cô nhìn ra cửa sổ. "Mọi thứ đều là một sự phát triển không ngừng."
+    "It's hard to believe we've made such incredible progress," Sarah said, her eyes gazing out the window. "Everything is a continuous development."
 
-    Cuộc sống hàng ngày trở nên phức tạp hơn, nhưng cũng đầy hứa hẹn. Những khái niệm như "trí tuệ nhân tạo" và "thực tế ảo" không còn là khoa học viễn tưởng mà đã trở thành một phần không thể thiếu của hiện thực.
+    Daily life has become more complex, yet full of promise. Concepts like "artificial intelligence" and "virtual reality" are no longer science fiction but have become an integral part of reality.
 
-    Một trong những thách thức lớn nhất là làm thế nào để thích nghi với những thay đổi này. "Chúng ta cần phải học hỏi liên tục," David, một nhà khoa học nổi tiếng, phát biểu trong một hội nghị gần đây. "Kiến thức là chìa khóa để tồn tại trong kỷ nguyên này."
+    One of the biggest challenges is how to adapt to these changes. "We need to learn continuously," David, a renowned scientist, stated at a recent conference. "Knowledge is the key to survival in this era."
 
-    Anh ấy nhấn mạnh tầm quan trọng của việc "tư duy phản biện" và khả năng "giải quyết vấn đề". "Đừng chỉ chấp nhận những gì bạn được nghe," anh ấy khuyên. "Hãy luôn tìm kiếm 'nguồn' thông tin đáng tin cậy và 'phân tích' nó một cách cẩn thận."
+    He emphasized the importance of "critical thinking" and the ability to "solve problems." "Don't just accept what you hear," he advised. "Always seek 'reliable' information 'sources' and 'analyze' it carefully."
 
-    Trong khi đó, ở một góc khác của thành phố, một nhóm các nhà phát triển trẻ đang làm việc trên một "ứng dụng" mới. Mục tiêu của họ là tạo ra một công cụ giúp mọi người dễ dàng "tiếp cận" thông tin và "kết nối" với nhau.
+    Meanwhile, in another corner of the city, a group of young developers are working on a new "application." Their goal is to create a tool that helps people easily "access" information and "connect" with each other.
 
-    "Chúng tôi tin rằng 'giáo dục' là quyền của mọi người," một thành viên trong nhóm nói. "Và công nghệ có thể là 'cầu nối' để biến điều đó thành hiện thực."
+    "We believe that 'education' is everyone's right," a team member said. "And technology can be the 'bridge' to make that a reality."
 
-    Họ đang đối mặt với nhiều "thử thách", nhưng tinh thần của họ không hề suy giảm. "Mỗi 'vấn đề' là một 'cơ hội' để học hỏi và phát triển," họ thường nhắc nhở nhau.
+    They are facing many "challenges," but their spirit remains undiminished. "Every 'problem' is an 'opportunity' to learn and grow," they often remind each other.
 
-    Và thế là, trong bối cảnh của một thế giới đang không ngừng "tiến hóa", câu chuyện về sự học hỏi và thích nghi tiếp tục được viết.
+    And so, against the backdrop of a world that is constantly "evolving," the story of learning and adaptation continues to be written.
   `);
 
   // Vocabulary list converted to a Map for faster lookup
@@ -62,16 +62,16 @@ const EbookReader: React.FC = () => {
     // Initialize vocabMap when component mounts
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
-      // Create dummy data for other Vocabulary fields
+      // Create dummy data for other Vocabulary fields with English descriptions
       // In a real application, you would fetch this detailed data from a backend
       tempMap.set(word.toLowerCase(), {
         word: word,
-        meaning: `Nghĩa của từ "${word}" (ví dụ).`,
-        example: `Đây là một câu ví dụ sử dụng từ "${word}".`,
-        phrases: [`Cụm từ với ${word} A`, `Cụm từ với ${word} B`],
-        popularity: (index % 3 === 0 ? "Cao" : (index % 2 === 0 ? "Trung bình" : "Thấp")),
-        synonyms: [`Đồng nghĩa ${word} 1`, `Đồng nghĩa ${word} 2`],
-        antonyms: [`Trái nghĩa ${word} 1`, `Trái nghĩa ${word} 2`],
+        meaning: `Meaning of "${word}" (example).`,
+        example: `This is an example sentence using "${word}".`,
+        phrases: [`Phrase with ${word} A`, `Phrase with ${word} B`],
+        popularity: (index % 3 === 0 ? "Cao" : (index % 2 === 0 ? "Trung bình" : "Thấp")), // Still using Vietnamese for popularity levels
+        synonyms: [`Synonym for ${word} 1`, `Synonym for ${word} 2`],
+        antonyms: [`Antonym for ${word} 1`, `Antonym for ${word} 2`],
       });
     });
     vocabMap.current = tempMap;
@@ -111,7 +111,6 @@ const EbookReader: React.FC = () => {
   // Function to render the book content with clickable words
   const renderBookContent = () => {
     // Split the text by word boundaries and also keep punctuation/spaces
-    // This regex matches either a sequence of word characters (\b\w+\b) or any non-word character including spaces
     const parts = bookContent.split(/(\b\w+\b|[.,!?;:()"\s])/g);
 
     return (
@@ -144,7 +143,7 @@ const EbookReader: React.FC = () => {
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
       {/* Header */}
       <div className="flex items-center p-4 bg-white dark:bg-gray-800 shadow-lg flex-shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trang đọc sách</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ebook Reader</h1>
       </div>
 
       {/* Book Content Area */}
