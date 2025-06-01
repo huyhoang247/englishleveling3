@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
@@ -388,55 +390,66 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
       {/* Giao diện Trình phát Audio (thanh cố định ở cuối) */}
       {selectedBookId && currentBook?.audioUrl && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30">
-          <div className="max-w-3xl mx-auto flex items-center space-x-3 sm:space-x-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700/50 shadow-2xl p-3 sm:p-4 z-30">
+          <div className="max-w-3xl mx-auto flex items-center space-x-2.5 sm:space-x-3"> {/* Giảm nhẹ space-x tổng */}
             {/* Nút Play/Pause */}
             <button
               onClick={togglePlayPause}
-              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-2 sm:p-2.5 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800"
               aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
             >
               {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
 
             {/* Hiển thị thời gian & Thanh trượt tiến độ */}
-            <div className="flex-grow flex items-center space-x-2">
-              <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioCurrentTime)}</span>
+            <div className="flex-grow flex items-center space-x-1.5 sm:space-x-2"> {/* Giảm nhẹ space-x nội bộ */}
+              <span className="text-xs text-gray-600 dark:text-gray-400 w-11 sm:w-12 text-center tabular-nums">{formatTime(audioCurrentTime)}</span>
               <input
                 type="range"
                 min="0"
                 max={audioDuration || 0}
                 value={audioCurrentTime}
                 onChange={handleSeek}
-                className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800"
+                className="w-full h-1.5 sm:h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800/80" // Cập nhật focus ring offset
                 aria-label="Tua audio"
               />
-              <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400 w-11 sm:w-12 text-center tabular-nums">{formatTime(audioDuration)}</span>
             </div>
             
             {/* Điều khiển Âm lượng */}
-            <div className="flex items-center space-x-1 sm:space-x-2 relative" 
+            <div className="relative flex items-center"  // Parent div cho button và slider pop-up
                  onMouseEnter={() => setShowVolumeSlider(true)} 
                  onMouseLeave={() => setShowVolumeSlider(false)}>
               <button 
                 onClick={toggleMute} 
-                className="p-1.5 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="p-1.5 sm:p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800"
                 aria-label={isAudioMuted ? "Bật tiếng" : "Tắt tiếng"}
               >
                 {isAudioMuted || audioVolume === 0 ? <VolumeOffIcon /> : <VolumeUpIcon />}
               </button>
               {/* Thanh trượt âm lượng (hiện khi hover) */}
               {showVolumeSlider && (
-                 <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={isAudioMuted ? 0 : audioVolume}
-                    onChange={handleVolumeChange}
-                    className="w-20 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 absolute right-full mr-2 bottom-full mb-2 p-2 bg-white dark:bg-gray-700 shadow-lg rounded-md transition-opacity duration-200 origin-bottom-right transform -rotate-90 translate-x-8 -translate-y-8" // CSS để xoay và định vị
-                    aria-label="Âm lượng"
-                />
+                <div
+                  className="absolute bottom-full left-1/2 mb-2.5 sm:mb-3 transform -translate-x-1/2 
+                             bg-white dark:bg-gray-700 p-2 rounded-lg shadow-xl
+                             transition-opacity duration-150 opacity-100" // Thêm opacity-100 để đảm bảo hiện
+                >
+                  <div className="h-24 flex justify-center items-center"> {/* Container để định chiều cao cho slider xoay */}
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={isAudioMuted ? 0 : audioVolume}
+                      onChange={handleVolumeChange}
+                      className="appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 
+                                 w-20 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg
+                                 transform -rotate-90" // Xoay thanh trượt
+                      style={{ transformOrigin: 'center center' }} // Đảm bảo xoay quanh tâm
+                      aria-label="Âm lượng"
+                    />
+                  </div>
+                </div>
               )}
             </div>
           </div>
