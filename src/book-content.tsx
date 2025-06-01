@@ -1,8 +1,7 @@
 import React from 'react';
-import { Book } from './books-data'; // Import Book interface
-import { Vocabulary } from './game'; // Import Vocabulary interface from game.tsx
+import { Book } from './books-data';
+import { Vocabulary } from './game';
 
-// Props interface for BookContentDisplay
 interface BookContentDisplayProps {
   currentBook: Book | null;
   vocabMap: Map<string, Vocabulary>;
@@ -16,123 +15,131 @@ const BookContentDisplay: React.FC<BookContentDisplayProps> = ({
   isLoadingVocab,
   handleWordClick,
 }) => {
-  // Loading state
   if (isLoadingVocab) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-6 sm:p-10 text-gray-600 dark:text-gray-400">
-        <svg className="animate-spin h-12 w-12 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p className="text-lg font-medium">Đang tải nội dung sách...</p>
-        <p className="text-sm text-gray-500 dark:text-gray-500">Vui lòng đợi trong giây lát.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="rounded-full bg-gray-200 dark:bg-gray-700 h-16 w-16 mb-4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+        </div>
+        <p className="mt-6 text-gray-500 dark:text-gray-400 text-center max-w-md">
+          Đang tải nội dung sách, vui lòng đợi trong giây lát...
+        </p>
       </div>
     );
   }
-
-  // Book not found state
+  
   if (!currentBook) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-6 sm:p-10 text-gray-500 dark:text-gray-400">
-        {/* Simple book icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-gray-400 dark:text-gray-600">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-        </svg>
-        <p className="text-xl font-semibold mb-1">Không tìm thấy nội dung sách</p>
-        <p className="text-sm text-gray-500 dark:text-gray-500">Vui lòng thử chọn một cuốn sách khác.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-4 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Không tìm thấy nội dung sách</h3>
+        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+          Vui lòng chọn một cuốn sách khác hoặc thử lại sau.
+        </p>
       </div>
     );
   }
 
-  // Split content into lines
   const contentLines = currentBook.content.trim().split(/\n+/);
 
   return (
-    // Main container with improved padding and font
-    <div className="font-serif bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-200 px-4 sm:px-6 md:px-8 lg:px-12 py-8 pb-28 max-w-4xl mx-auto">
-      {contentLines.map((line, index) => {
-        // Handle blank lines
-        if (line.trim() === '') return <div key={`blank-${index}`} className="h-4 sm:h-5"></div>;
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-24 font-serif">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8 mt-4 transition-all duration-300">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
+          <p className="text-gray-600 dark:text-gray-300 text-center">Tác giả: {currentBook.author}</p>
+        </div>
+        
+        <div className="p-6 sm:p-8">
+          {contentLines.map((line, index) => {
+            if (line.trim() === '') return <div key={`blank-${index}`} className="h-4 sm:h-5"></div>;
+            
+            const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+            const renderableParts = parts.map((part, partIndex) => {
+              if (!part) return null;
+              const isWord = /^\w+$/.test(part);
+              const normalizedPart = part.toLowerCase();
+              const isVocabWord = isWord && vocabMap.has(normalizedPart);
+              
+              if (isVocabWord) {
+                return (
+                  <span
+                    key={`${index}-${partIndex}`}
+                    className="relative font-medium text-blue-600 dark:text-blue-400 cursor-pointer transition-all duration-200 group"
+                    onClick={() => handleWordClick(part)}
+                    role="button" tabIndex={0}
+                    onKeyPress={(e) => { 
+                      if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); 
+                    }}
+                  >
+                    <span className="relative z-10">{part}</span>
+                    <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-100 dark:bg-blue-900/50 group-hover:h-full transition-all duration-300 ease-out z-0 opacity-30 group-hover:opacity-100"></span>
+                  </span>
+                );
+              }
+              return <span key={`${index}-${partIndex}`}>{part}</span>;
+            }).filter(Boolean);
 
-        // Split line into words and punctuation
-        const parts = line.split(/(\b\w+[\u00C0-\u017F\u1E00-\u1EFF]*\b|[.,!?;:()'"\s`‘’“”])/gu); // Added Unicode character ranges for Vietnamese
-        const renderableParts = parts.map((part, partIndex) => {
-          if (!part || part.trim() === '') return null; // Skip empty or whitespace-only parts
+            const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+            const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
 
-          const isWord = /^\w+[\u00C0-\u017F\u1E00-\u1EFF]*$/u.test(part); // Added Unicode character ranges
-          const normalizedPartForMap = part.toLowerCase(); // Normalize for map lookup
-          const isVocabWord = isWord && vocabMap.has(normalizedPartForMap);
-
-          if (isVocabWord) {
+            if (isLikelyChapterTitle) 
+              return (
+                <h2 
+                  key={`line-${index}`} 
+                  className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-8 mb-6 text-center relative pb-4 after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:w-1/2 after:h-0.5 after:bg-gradient-to-r after:from-transparent after:via-blue-400 after:to-transparent dark:after:via-blue-500"
+                >
+                  {renderableParts}
+                </h2>
+              );
+            
+            if (isLikelySectionTitle) 
+              return (
+                <h3 
+                  key={`line-${index}`} 
+                  className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-10 mb-6 pl-4 border-l-4 border-blue-400 dark:border-blue-500"
+                >
+                  {renderableParts}
+                </h3>
+              );
+            
             return (
-              <span
-                key={`${index}-${partIndex}-${part}`} // More unique key
-                className="font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-800/50 px-0.5 py-0.5 rounded-md cursor-pointer transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-75"
-                onClick={() => handleWordClick(part)}
-                role="button"
-                tabIndex={0}
-                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
-                aria-label={`Từ vựng: ${part}`} // Accessibility improvement
+              <p 
+                key={`line-${index}`} 
+                className="text-lg sm:text-xl leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-6 text-justify"
               >
-                {part}
-              </span>
+                {renderableParts}
+              </p>
             );
-          }
-          // Preserve original casing for display
-          return <span key={`${index}-${partIndex}-${part}`}>{part}</span>;
-        }).filter(Boolean);
-
-        // Heuristics for identifying chapter and section titles
-        // These can be refined based on the actual book content structure
-        const isLikelyChapterTitle = (
-            (index === 0 && line.length < 80 && !line.includes('.')) ||
-            (line.toLowerCase().startsWith('chapter') && line.length < 80) ||
-            (line.toLowerCase().startsWith('chương') && line.length < 80) ||
-            (line.toLowerCase().startsWith('prologue') && line.length < 80)
-        ) && line.split(' ').length < 10;
-
-
-        const isLikelySectionTitle = (
-            (line.length < 90 && (line.endsWith(':') || line.split(' ').length < 10) && !line.includes('.') && index > 0 && index < 10)
-        ) && !isLikelyChapterTitle;
-
-
-        // Render chapter titles
-        if (isLikelyChapterTitle) {
-          return (
-            <h2
-              key={`line-${index}`}
-              className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-8 mb-8 sm:mt-10 sm:mb-10 text-center tracking-tight leading-tight"
-            >
-              {renderableParts}
-            </h2>
-          );
-        }
-
-        // Render section titles
-        if (isLikelySectionTitle) {
-          return (
-            <h3
-              key={`line-${index}`}
-              className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100 mt-10 mb-5 sm:mt-12 sm:mb-6 tracking-normal"
-            >
-              {renderableParts}
-            </h3>
-          );
-        }
-
-        // Render paragraph text
-        return (
-          <p
-            key={`line-${index}`}
-            className="text-lg sm:text-xl leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-5 text-justify hyphens-auto"
-            style={{fontFamily: "'Georgia', 'Times New Roman', Times, serif"}} // Classic serif for readability
-          >
-            {renderableParts}
+          })}
+        </div>
+        
+        <div className="bg-gray-50 dark:bg-gray-700/30 p-6 border-t border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-gray-500 dark:text-gray-400 italic">
+            Cuốn sách được cung cấp bởi thư viện của chúng tôi
           </p>
-        );
-      })}
+          <div className="mt-3 flex justify-center space-x-3">
+            <span className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Độ dài: {contentLines.length} trang
+            </span>
+            <span className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Từ vựng: {vocabMap.size} từ
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
