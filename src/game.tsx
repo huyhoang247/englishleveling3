@@ -123,7 +123,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       // Thiết lập audio khi một cuốn sách được chọn
       if (audioPlayerRef.current && currentBook?.audioUrl) {
         audioPlayerRef.current.src = currentBook.audioUrl;
-        audioPlayerRef.current.playbackRate = playbackSpeed; // Áp dụng tốc độ phát lại
+        audioPlayerRef.current.playbackRate = playbackSpeed; // Áp dụng tốc độ phát lại ban đầu
         // Reset trạng thái cho audio mới
         setIsAudioPlaying(false);
         setAudioCurrentTime(0);
@@ -145,7 +145,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       }
       setIsAudioPlaying(false);
     }
-  }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]); // Thêm playbackSpeed vào dependencies
+  }, [selectedBookId, currentBook, hideNavBar, showNavBar]); // Đã loại bỏ playbackSpeed khỏi dependencies
 
   // Effect để áp dụng Dark Mode cho thẻ <html>
   useEffect(() => {
@@ -279,9 +279,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const currentIndex = speeds.indexOf(playbackSpeed);
     const nextIndex = (currentIndex + 1) % speeds.length;
     const newSpeed = speeds[nextIndex];
+    
+    setPlaybackSpeed(newSpeed); // Cập nhật state
     if (audioPlayerRef.current) {
-      audioPlayerRef.current.playbackRate = newSpeed;
-      setPlaybackSpeed(newSpeed);
+      audioPlayerRef.current.playbackRate = newSpeed; // Chỉ cập nhật thuộc tính playbackRate
     }
   };
   
@@ -422,7 +423,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             {/* Điều khiển tốc độ phát lại (nút duy nhất) */}
             <button
               onClick={togglePlaybackSpeed}
-              className="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-semibold rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105"
               aria-label={`Tốc độ ${playbackSpeed}x`}
             >
               {playbackSpeed}x
