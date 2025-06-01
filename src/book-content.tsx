@@ -1,6 +1,6 @@
 import React from 'react';
-import { Book } from './books-data'; // Import Book interface
-import { Vocabulary } from './game'; // Import Vocabulary interface từ game.tsx (hoặc định nghĩa lại ở đây nếu muốn độc lập hoàn toàn)
+import { Book } from './books-data.ts'; // Import Book interface
+import { Vocabulary } from './game.tsx'; // Import Vocabulary interface từ game.tsx (hoặc định nghĩa lại ở đây nếu muốn độc lập hoàn toàn)
 
 // Props interface cho BookContentDisplay
 interface BookContentDisplayProps {
