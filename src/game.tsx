@@ -4,8 +4,6 @@ import { defaultVocabulary } from './list-vocabulary.ts';
 import { defaultImageUrls as gameImageUrls } from './image-url.ts';
 // Import Book interface và sampleBooks từ file books-data.ts
 import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
-// Import component mới cho hiển thị nội dung sách
-import BookContentDisplay from './book-content.tsx';
 
 // --- Icons ---
 const PlayIcon = () => (
@@ -34,7 +32,7 @@ const VolumeOffIcon = () => (
 );
 
 // Định nghĩa cấu trúc cho một flashcard và từ vựng của nó
-export interface Vocabulary { // Export để BookContentDisplay có thể sử dụng
+interface Vocabulary {
   word: string;
   meaning: string;
   example: string;
@@ -193,6 +191,50 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   // Nhóm các cuốn sách theo thể loại để hiển thị trong thư viện
   const groupedBooks = groupBooksByCategory(booksData);
 
+  // Render nội dung sách
+  const renderBookContent = () => {
+    if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
+    if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
+
+    const contentLines = currentBook.content.trim().split(/\n+/);
+
+    return (
+      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24"> {/* Thêm padding-bottom cho không gian của audio player */}
+        {contentLines.map((line, index) => {
+          if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
+          const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+          const renderableParts = parts.map((part, partIndex) => {
+            if (!part) return null;
+            const isWord = /^\w+$/.test(part);
+            const normalizedPart = part.toLowerCase();
+            const isVocabWord = isWord && vocabMap.has(normalizedPart);
+            if (isVocabWord) {
+              return (
+                <span
+                  key={`${index}-${partIndex}`}
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
+                  onClick={() => handleWordClick(part)}
+                  role="button" tabIndex={0}
+                  onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
+                >
+                  {part}
+                </span>
+              );
+            }
+            return <span key={`${index}-${partIndex}`}>{part}</span>;
+          }).filter(Boolean);
+
+          const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+
+          if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
+          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
+          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+        })}
+      </div>
+    );
+  };
+
   // --- Logic cho Trình phát Audio ---
   const togglePlayPause = () => {
     if (!audioPlayerRef.current) return;
@@ -323,13 +365,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
               </div>
             )}
-            {/* Sử dụng BookContentDisplay component mới */}
-            <BookContentDisplay
-              currentBook={currentBook}
-              vocabMap={vocabMap}
-              isLoadingVocab={isLoadingVocab}
-              handleWordClick={handleWordClick}
-            />
+            {renderBookContent()}
           </div>
         </main>
       )}
