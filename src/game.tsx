@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
@@ -9,26 +7,26 @@ import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
 
 // --- Icons ---
 const PlayIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
     <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
   </svg>
 );
 
 const PauseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
     <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
   </svg>
 );
 
 const VolumeUpIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
     <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.348 2.595.341 1.24 1.518 1.905 2.66 1.905H6.44l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
     <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 6 6 0 0 1 0 8.486.75.75 0 0 1-1.06-1.061 4.5 4.5 0 0 0 0-6.364.75.75 0 0 1 0-1.06Z" />
   </svg>
 );
 
 const VolumeOffIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
     <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.348 2.595.341 1.24 1.518 1.905 2.66 1.905H6.44l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L19.5 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 0 0-1.06-1.06L19.5 10.94l-1.72-1.72Z" />
   </svg>
 );
@@ -390,39 +388,39 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
       {/* Giao diện Trình phát Audio (thanh cố định ở cuối) */}
       {selectedBookId && currentBook?.audioUrl && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700/50 shadow-2xl p-3 sm:p-4 z-30">
-          <div className="max-w-3xl mx-auto flex items-center space-x-2.5 sm:space-x-3"> {/* Giảm nhẹ space-x tổng */}
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200/80 dark:border-gray-700/60 shadow-lg p-2 z-30">
+          <div className="max-w-3xl mx-auto flex items-center space-x-2 sm:space-x-2.5">
             {/* Nút Play/Pause */}
             <button
               onClick={togglePlayPause}
-              className="p-2 sm:p-2.5 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800"
+              className="p-1.5 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800"
               aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
             >
               {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
 
             {/* Hiển thị thời gian & Thanh trượt tiến độ */}
-            <div className="flex-grow flex items-center space-x-1.5 sm:space-x-2"> {/* Giảm nhẹ space-x nội bộ */}
-              <span className="text-xs text-gray-600 dark:text-gray-400 w-11 sm:w-12 text-center tabular-nums">{formatTime(audioCurrentTime)}</span>
+            <div className="flex-grow flex items-center space-x-1 sm:space-x-1.5">
+              <span className="text-xs text-gray-500 dark:text-gray-400 w-9 sm:w-10 text-center tabular-nums">{formatTime(audioCurrentTime)}</span>
               <input
                 type="range"
                 min="0"
                 max={audioDuration || 0}
                 value={audioCurrentTime}
                 onChange={handleSeek}
-                className="w-full h-1.5 sm:h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800/80" // Cập nhật focus ring offset
+                className="w-full h-1 sm:h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800/80"
                 aria-label="Tua audio"
               />
-              <span className="text-xs text-gray-600 dark:text-gray-400 w-11 sm:w-12 text-center tabular-nums">{formatTime(audioDuration)}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 w-9 sm:w-10 text-center tabular-nums">{formatTime(audioDuration)}</span>
             </div>
             
             {/* Điều khiển Âm lượng */}
-            <div className="relative flex items-center"  // Parent div cho button và slider pop-up
+            <div className="relative flex items-center"
                  onMouseEnter={() => setShowVolumeSlider(true)} 
                  onMouseLeave={() => setShowVolumeSlider(false)}>
               <button 
                 onClick={toggleMute} 
-                className="p-1.5 sm:p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800"
+                className="p-1 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-800"
                 aria-label={isAudioMuted ? "Bật tiếng" : "Tắt tiếng"}
               >
                 {isAudioMuted || audioVolume === 0 ? <VolumeOffIcon /> : <VolumeUpIcon />}
@@ -430,11 +428,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               {/* Thanh trượt âm lượng (hiện khi hover) */}
               {showVolumeSlider && (
                 <div
-                  className="absolute bottom-full left-1/2 mb-2.5 sm:mb-3 transform -translate-x-1/2 
-                             bg-white dark:bg-gray-700 p-2 rounded-lg shadow-xl
-                             transition-opacity duration-150 opacity-100" // Thêm opacity-100 để đảm bảo hiện
+                  className="absolute bottom-full left-1/2 mb-2 transform -translate-x-1/2 
+                             bg-white/95 dark:bg-gray-700/95 backdrop-blur-sm p-1.5 rounded-md shadow-xl
+                             transition-opacity duration-150 opacity-100"
                 >
-                  <div className="h-24 flex justify-center items-center"> {/* Container để định chiều cao cho slider xoay */}
+                  <div className="h-16 sm:h-20 flex justify-center items-center"> 
                     <input
                       type="range"
                       min="0"
@@ -443,9 +441,9 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                       value={isAudioMuted ? 0 : audioVolume}
                       onChange={handleVolumeChange}
                       className="appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 
-                                 w-20 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg
-                                 transform -rotate-90" // Xoay thanh trượt
-                      style={{ transformOrigin: 'center center' }} // Đảm bảo xoay quanh tâm
+                                 w-14 sm:w-16 h-1 bg-gray-300 dark:bg-gray-600 rounded-full 
+                                 transform -rotate-90" 
+                      style={{ transformOrigin: 'center center' }}
                       aria-label="Âm lượng"
                     />
                   </div>
