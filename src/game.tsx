@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { defaultImageUrls as gameImageUrls } from './image-url.ts';
+// Import Book interface và sampleBooks từ file books-data.ts
 import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
 
 // --- Icons ---
@@ -27,18 +28,6 @@ const VolumeUpIcon = () => (
 const VolumeOffIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
     <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.348 2.595.341 1.24 1.518 1.905 2.66 1.905H6.44l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L19.5 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 0 0-1.06-1.06L19.5 10.94l-1.72-1.72Z" />
-  </svg>
-);
-
-const ChevronLeftIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5 15.75 12l-7.5 7.5" />
   </svg>
 );
 
@@ -105,17 +94,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Ref cho các carousel để điều khiển cuộn ngang
-  const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  // State cho Dark Mode
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Toggle Dark Mode
-  const toggleDarkMode = () => {
-    setIsDarkMode(prevMode => !prevMode);
-    document.documentElement.classList.toggle('dark');
-  };
 
   // Khởi tạo map từ vựng khi component được mount
   useEffect(() => {
@@ -212,19 +190,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   // Nhóm các cuốn sách theo thể loại để hiển thị trong thư viện
   const groupedBooks = groupBooksByCategory(booksData);
-
-  // Điều khiển cuộn carousel
-  const scrollCarousel = (categoryId: string, direction: 'left' | 'right') => {
-    const carousel = carouselRefs.current[categoryId];
-    if (carousel) {
-      const scrollAmount = carousel.offsetWidth * 0.8; // Cuộn 80% chiều rộng carousel
-      if (direction === 'left') {
-        carousel.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      } else {
-        carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      }
-    }
-  };
 
   // Render nội dung sách
   const renderBookContent = () => {
@@ -342,50 +307,27 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const renderLibrary = () => (
     <div className="p-4 md:p-6 lg:p-8 space-y-8">
       {Object.entries(groupedBooks).map(([category, booksInCategory]) => (
-        <section key={category} className="relative">
+        <section key={category}>
           <div className="flex justify-between items-center mb-3 md:mb-4">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{category}</h2>
-            {/* Nút Xem tất cả (tùy chọn, có thể thêm chức năng sau) */}
-            {/* <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none">Xem tất cả →</button> */}
+            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline focus:outline-none">Xem tất cả →</button>
           </div>
-          <div className="relative">
-            {/* Nút cuộn trái */}
-            <button
-              onClick={() => scrollCarousel(category, 'left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-lg z-10 hidden md:block text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              aria-label={`Cuộn trái danh mục ${category}`}
-            >
-              <ChevronLeftIcon />
-            </button>
-            {/* Carousel sách */}
-            <div
-              ref={el => carouselRefs.current[category] = el}
-              className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 snap-x snap-mandatory scroll-smooth"
-            >
-              {booksInCategory.map(book => (
-                <div
-                  key={book.id}
-                  className="flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer group transform hover:-translate-y-1.5 transition-transform duration-200 snap-center"
-                  onClick={() => handleSelectBook(book.id)}
-                  role="button" tabIndex={0}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSelectBook(book.id)}
-                >
-                  <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-shadow group-hover:shadow-xl">
-                    {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">{book.title}</div>}
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">{book.title}</h3>
-                  {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>}
+          <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+            {booksInCategory.map(book => (
+              <div
+                key={book.id}
+                className="flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer group transform hover:-translate-y-1.5 transition-transform duration-200"
+                onClick={() => handleSelectBook(book.id)}
+                role="button" tabIndex={0}
+                onKeyPress={(e) => e.key === 'Enter' && handleSelectBook(book.id)}
+              >
+                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-shadow group-hover:shadow-xl">
+                  {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">{book.title}</div>}
                 </div>
-              ))}
-            </div>
-            {/* Nút cuộn phải */}
-            <button
-              onClick={() => scrollCarousel(category, 'right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-700 p-2 rounded-full shadow-lg z-10 hidden md:block text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              aria-label={`Cuộn phải danh mục ${category}`}
-            >
-              <ChevronRightIcon />
-            </button>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">{book.title}</h3>
+                {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>}
+              </div>
+            ))}
           </div>
         </section>
       ))}
@@ -394,38 +336,20 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   // Render component chính
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-['Inter',_sans-serif]">
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
       {/* Header */}
       <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 ${selectedBookId ? 'py-2 sm:py-3' : 'py-4'}`}>
         <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 ${selectedBookId ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
           {selectedBookId && currentBook ? currentBook.title : "Thư viện Sách"}
         </h1>
-        <div className="flex items-center space-x-3">
-          {selectedBookId && (
-            <button
-              onClick={handleBackToLibrary}
-              className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
-            >
-              ← Quay lại Thư viện
-            </button>
-          )}
-          {/* Dark Mode Toggle */}
+        {selectedBookId && (
           <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label={isDarkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+            onClick={handleBackToLibrary}
+            className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
           >
-            {isDarkMode ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.003-1.591-1.591 1.591M3 12H5.25m-.386-6.364 1.591 1.591M12 12.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0 1 12 21.75c-5.567 0-10.128-4.561-10.128-10.128S6.433 1.5 12 1.5c.898 0 1.76.12 2.596.34l-2.596 2.596c-2.243 0-4.484 1.002-5.742 2.766a7.125 7.125 0 0 0 5.742 11.234 7.125 7.125 0 0 0 5.742-11.234c-1.258-1.764-3.5-2.766-5.742-2.766V1.5c.898 0 1.76.12 2.596.34l-2.596 2.596z" />
-              </svg>
-            )}
+            ← Quay lại Thư viện
           </button>
-        </div>
+        )}
       </header>
 
       {/* Main content: Thư viện hoặc màn hình đọc sách */}
