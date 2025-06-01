@@ -18,18 +18,18 @@ const PauseIcon = () => (
   </svg>
 );
 
-const VolumeUpIcon = () => (
+const SunIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-    <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.348 2.595.341 1.24 1.518 1.905 2.66 1.905H6.44l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-    <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 6 6 0 0 1 0 8.486.75.75 0 0 1-1.06-1.061 4.5 4.5 0 0 0 0-6.364.75.75 0 0 1 0-1.06Z" />
+    <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.106a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM12 18a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75ZM5.006 10.232a.75.75 0 0 0-1.06 1.06l1.59 1.591a.75.75 0 0 0 1.061-1.06l-1.591-1.59ZM18.894 17.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.591 1.59ZM3.205 5.006a.75.75 0 0 0-1.06 1.06l1.591 1.59a.75.75 0 1 0 1.06-1.061L3.205 5.006ZM6.002 18.894a.75.75 0 0 0 1.06 1.06l1.591-1.59a.75.75 0 0 0-1.06-1.061l-1.591 1.59Z" />
   </svg>
 );
 
-const VolumeOffIcon = () => (
+const MoonIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-    <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.348 2.595.341 1.24 1.518 1.905 2.66 1.905H6.44l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L19.5 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 0 0-1.06-1.06L19.5 10.94l-1.72-1.72Z" />
+    <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .758-.757l.002.001-.002-.001A3.349 3.349 0 0 1 12 2.25c.BD.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.106a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.591-1.59ZM12 18a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V18a.75.75 0 0 1 .75-.75ZM5.006 10.232a.75.75 0 0 0-1.06 1.06l1.59 1.591a.75.75 0 0 0 1.061-1.06l-1.591-1.59ZM18.894 17.894a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.591 1.59ZM3.205 5.006a.75.75 0 0 0-1.06 1.06l1.591 1.59a.75.75 0 1 0 1.06-1.061L3.205 5.006ZM6.002 18.894a.75.75 0 0 0 1.06 1.06l1.591-1.59a.75.75 0 0 0-1.06-1.061l-1.591 1.59Z" clipRule="evenodd" />
   </svg>
 );
+
 
 // Định nghĩa cấu trúc cho một flashcard và từ vựng của nó
 interface Vocabulary {
@@ -90,10 +90,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
-  const [audioVolume, setAudioVolume] = useState(0.75);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0); // Thêm state cho tốc độ phát lại
 
+  // State cho Dark Mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Khởi tạo map từ vựng khi component được mount
   useEffect(() => {
@@ -123,7 +123,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       // Thiết lập audio khi một cuốn sách được chọn
       if (audioPlayerRef.current && currentBook?.audioUrl) {
         audioPlayerRef.current.src = currentBook.audioUrl;
-        audioPlayerRef.current.volume = isAudioMuted ? 0 : audioVolume;
+        audioPlayerRef.current.playbackRate = playbackSpeed; // Áp dụng tốc độ phát lại
         // Reset trạng thái cho audio mới
         setIsAudioPlaying(false);
         setAudioCurrentTime(0);
@@ -145,8 +145,16 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       }
       setIsAudioPlaying(false);
     }
-  }, [selectedBookId, currentBook, hideNavBar, showNavBar, audioVolume, isAudioMuted]);
+  }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]); // Thêm playbackSpeed vào dependencies
 
+  // Effect để áp dụng Dark Mode cho thẻ <html>
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Xử lý khi một từ trong sách được nhấp vào
   const handleWordClick = (word: string) => {
@@ -266,28 +274,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   };
 
-  const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePlaybackSpeedChange = (speed: number) => {
     if (audioPlayerRef.current) {
-      const newVolume = Number(event.target.value);
-      audioPlayerRef.current.volume = newVolume;
-      setAudioVolume(newVolume);
-      setIsAudioMuted(newVolume === 0);
+      audioPlayerRef.current.playbackRate = speed;
+      setPlaybackSpeed(speed);
     }
-  };
-
-  const toggleMute = () => {
-    if (!audioPlayerRef.current) return;
-    const newMutedState = !isAudioMuted;
-    setIsAudioMuted(newMutedState);
-    audioPlayerRef.current.volume = newMutedState ? 0 : audioVolume > 0 ? audioVolume : 0.1;
-    if (newMutedState && audioVolume === 0) setAudioVolume(0.1);
-  };
-
-  const formatTime = (timeInSeconds: number) => {
-    if (isNaN(timeInSeconds) || timeInSeconds === Infinity) return "00:00";
-    const minutes = Math.floor(timeInSeconds / 60);
-    const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
   
   // Effect để dọn dẹp audio khi component unmount hoặc sách thay đổi
@@ -302,6 +293,12 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     };
   }, [selectedBookId]); // Chỉ chạy khi selectedBookId thay đổi để dọn dẹp audio của sách cũ
 
+  const formatTime = (timeInSeconds: number) => {
+    if (isNaN(timeInSeconds) || timeInSeconds === Infinity) return "00:00";
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   // Render giao diện thư viện sách
   const renderLibrary = () => (
@@ -336,7 +333,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   // Render component chính
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {/* Header */}
       <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 ${selectedBookId ? 'py-2 sm:py-3' : 'py-4'}`}>
         <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 ${selectedBookId ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
@@ -348,6 +345,16 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
           >
             ← Quay lại Thư viện
+          </button>
+        )}
+        {/* Nút chuyển đổi Dark Mode */}
+        {selectedBookId && (
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label={isDarkMode ? "Chế độ sáng" : "Chế độ tối"}
+          >
+            {isDarkMode ? <SunIcon /> : <MoonIcon />}
           </button>
         )}
       </header>
@@ -378,12 +385,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         onPlay={() => setIsAudioPlaying(true)}
         onPause={() => setIsAudioPlaying(false)}
         onEnded={() => { setIsAudioPlaying(false); setAudioCurrentTime(0);}}
-        onVolumeChange={() => {
-            if(audioPlayerRef.current) {
-                setAudioVolume(audioPlayerRef.current.volume);
-                setIsAudioMuted(audioPlayerRef.current.muted || audioPlayerRef.current.volume === 0);
-            }
-        }}
       />
 
       {/* Giao diện Trình phát Audio (thanh cố định ở cuối) */}
@@ -414,30 +415,22 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
             </div>
             
-            {/* Điều khiển Âm lượng */}
-            <div className="flex items-center space-x-1 sm:space-x-2 relative" 
-                 onMouseEnter={() => setShowVolumeSlider(true)} 
-                 onMouseLeave={() => setShowVolumeSlider(false)}>
-              <button 
-                onClick={toggleMute} 
-                className="p-1.5 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500"
-                aria-label={isAudioMuted ? "Bật tiếng" : "Tắt tiếng"}
-              >
-                {isAudioMuted || audioVolume === 0 ? <VolumeOffIcon /> : <VolumeUpIcon />}
-              </button>
-              {/* Thanh trượt âm lượng (hiện khi hover) */}
-              {showVolumeSlider && (
-                 <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={isAudioMuted ? 0 : audioVolume}
-                    onChange={handleVolumeChange}
-                    className="w-20 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 absolute right-full mr-2 bottom-full mb-2 p-2 bg-white dark:bg-gray-700 shadow-lg rounded-md transition-opacity duration-200 origin-bottom-right transform -rotate-90 translate-x-8 -translate-y-8" // CSS để xoay và định vị
-                    aria-label="Âm lượng"
-                />
-              )}
+            {/* Điều khiển tốc độ phát lại */}
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              {[1.0, 1.5, 2.0].map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => handlePlaybackSpeedChange(speed)}
+                  className={`px-2 py-1 text-xs sm:text-sm font-semibold rounded-md transition-colors ${
+                    playbackSpeed === speed
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  aria-label={`Tốc độ ${speed}x`}
+                >
+                  {speed}x
+                </button>
+              ))}
             </div>
           </div>
         </div>
