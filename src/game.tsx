@@ -5,7 +5,7 @@ import { defaultVocabulary } from './list-vocabulary.ts'; // Adjust path if nece
 import { defaultImageUrls as gameImageUrls } from './image-url.ts'; // Adjust path if necessary
 import { Book, sampleBooks as initialSampleBooks } from './books-data.ts'; // Adjust path if necessary
 
-// --- Icons (Optimized for clarity and consistency) ---
+// --- Icons ---
 const PlayIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
@@ -35,6 +35,19 @@ const ChevronLeftIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
     <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
   </svg>
+);
+
+const CogIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.096.573.394 1.086.786 1.414l.908.752c.498.412.732 1.023.628 1.621a4.158 4.158 0 01-.423 1.43l-.205.328c-.149.237-.234.509-.234.787v.608c0 .278.085.55.234.787l.205.328c.164.263.31.549.423 1.43.104.598-.13 1.209-.628 1.621l-.908.752c-.392.328-.69.841-.786 1.414l-.213 1.281c-.09.542-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.096-.573-.394-1.086-.786-1.414l-.908-.752c-.498-.412-.732-1.023-.628-1.621a4.158 4.158 0 01.423-1.43l.205-.328c.149-.237-.234.509-.234.787v-.608c0-.278.085-.55.234-.787l-.205-.328a4.158 4.158 0 01-.423-1.43c-.104-.598.13-1.209.628-1.621l.908-.752c.392.328.69.841.786 1.414l.213-1.281z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+);
+
+const ArrowRightIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4 ml-1.5" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+    </svg>
 );
 
 
@@ -69,7 +82,7 @@ interface EbookReaderProps {
 // Helper function
 const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
   return books.reduce((acc, book) => {
-    const category = book.category || 'Uncategorized'; // Sách không có thể loại sẽ được nhóm vào 'Uncategorized'
+    const category = book.category || 'Chưa phân loại'; // Sách không có thể loại sẽ được nhóm vào 'Chưa phân loại'
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -92,9 +105,8 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [audioDuration, setAudioDuration] = useState(0);
   const [audioVolume, setAudioVolume] = useState(0.75);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false); // State to toggle volume slider
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Initialize vocabulary map
   useEffect(() => {
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
@@ -114,14 +126,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const currentBook = booksData.find(book => book.id === selectedBookId);
 
-  // Manage navbar and audio player based on book selection
   useEffect(() => {
     if (selectedBookId) {
       hideNavBar();
       if (audioPlayerRef.current && currentBook?.audioUrl) {
         audioPlayerRef.current.src = currentBook.audioUrl;
         audioPlayerRef.current.volume = isAudioMuted ? 0 : audioVolume;
-        setIsAudioPlaying(false);
+        setIsAudioPlaying(false); // Reset play state for new book
         setAudioCurrentTime(0);
         setAudioDuration(0);
       } else if (audioPlayerRef.current) {
@@ -137,11 +148,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         audioPlayerRef.current.pause();
       }
       setIsAudioPlaying(false);
-      setShowVolumeSlider(false); // Hide volume slider when returning to library
+      setShowVolumeSlider(false);
     }
   }, [selectedBookId, currentBook, hideNavBar, showNavBar, audioVolume, isAudioMuted]);
 
-  // Handle word click in book content
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
     const foundVocab = vocabMap.get(normalizedWord);
@@ -157,7 +167,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       const tempFlashcard: Flashcard = {
         id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(),
         imageUrl: { default: cardImageUrl },
-        isFavorite: false,
+        isFavorite: false, // Default favorite state
         vocabulary: foundVocab,
       };
       setSelectedVocabCard(tempFlashcard);
@@ -170,27 +180,21 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     setSelectedVocabCard(null);
   };
 
-  const handleSelectBook = (bookId: string) => {
-    setSelectedBookId(bookId);
-  };
-
-  const handleBackToLibrary = () => {
-    setSelectedBookId(null);
-  };
+  const handleSelectBook = (bookId: string) => setSelectedBookId(bookId);
+  const handleBackToLibrary = () => setSelectedBookId(null);
 
   const groupedBooks = groupBooksByCategory(booksData);
 
-  // Render book content with improved styling for readability
   const renderBookContent = () => {
-    if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
-    if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
+    if (isLoadingVocab) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div><p className="ml-3 text-gray-500 dark:text-gray-400">Đang tải nội dung...</p></div>;
+    if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách. Vui lòng thử lại.</div>;
 
     const contentLines = currentBook.content.trim().split(/\n+/);
 
     return (
-      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-28"> {/* Increased pb for audio player */}
+      <article className="font-serif text-gray-800 dark:text-gray-200 px-1 sm:px-2 pb-32"> {/* Increased pb for audio player, font-serif for classic book feel */}
         {contentLines.map((line, index) => {
-          if (line.trim() === '') return <div key={`blank-${index}`} className="h-4 sm:h-5"></div>; // Slightly more space for blank lines
+          if (line.trim() === '') return <div key={`blank-${index}`} className="h-5 sm:h-6"></div>;
           const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
           const renderableParts = parts.map((part, partIndex) => {
             if (!part) return null;
@@ -201,7 +205,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               return (
                 <span
                   key={`${index}-${partIndex}`}
-                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-2 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-200 ease-in-out hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-0.5 py-0.5 rounded-sm" // Enhanced hover for vocab
+                  className="font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-700/50 underline underline-offset-2 decoration-sky-500/70 decoration-dotted cursor-pointer transition-all duration-150 ease-in-out px-1 py-0.5 rounded-md"
                   onClick={() => handleWordClick(part)}
                   role="button" tabIndex={0}
                   onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
@@ -213,27 +217,22 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             return <span key={`${index}-${partIndex}`}>{part}</span>;
           }).filter(Boolean);
 
-          // Improved logic for detecting titles
-          const isChapterOrPrologue = (line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70;
-          const isLikelyMainTitle = index === 0 && line.length < 60 && !line.includes('.') && !isChapterOrPrologue;
-          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index > 0 && index < 5) || isChapterOrPrologue;
+          const isChapterOrPrologue = (line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue') || line.toLowerCase().startsWith('chương')) && line.length < 80;
+          const isLikelyMainTitle = index === 0 && line.length < 70 && !line.includes('.') && !isChapterOrPrologue;
+          const isLikelySectionTitle = (line.length < 80 && (line.endsWith(':') || line.split(' ').length < 8) && !line.includes('.') && index > 0 && index < 7) || isChapterOrPrologue;
 
-          if (isLikelyMainTitle) return <h2 key={`line-${index}`} className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-2 mb-8 text-center">{renderableParts}</h2>;
-          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100 mt-10 mb-5">{renderableParts}</h3>;
-          return <p key={`line-${index}`} className="text-lg sm:text-xl leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-5 text-left indent-8 first-line:indent-0">{renderableParts}</p>; // Added indent for paragraphs
+          if (isLikelyMainTitle) return <h2 key={`line-${index}`} className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-3 mb-10 text-center font-sans tracking-tight">{renderableParts}</h2>;
+          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-100 mt-12 mb-6 font-sans tracking-tight">{renderableParts}</h3>;
+          return <p key={`line-${index}`} className="text-lg sm:text-xl leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-6 text-justify indent-8 first-line:indent-0">{renderableParts}</p>;
         })}
-      </div>
+      </article>
     );
   };
 
-  // --- Audio Player Logic ---
   const togglePlayPause = () => {
     if (!audioPlayerRef.current) return;
-    if (isAudioPlaying) {
-      audioPlayerRef.current.pause();
-    } else {
-      audioPlayerRef.current.play().catch(error => console.error("Lỗi khi phát audio:", error));
-    }
+    if (isAudioPlaying) audioPlayerRef.current.pause();
+    else audioPlayerRef.current.play().catch(error => console.error("Lỗi khi phát audio:", error));
     setIsAudioPlaying(!isAudioPlaying);
   };
 
@@ -261,12 +260,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     if (!audioPlayerRef.current) return;
     const newMutedState = !isAudioMuted;
     setIsAudioMuted(newMutedState);
-    audioPlayerRef.current.volume = newMutedState ? 0 : audioVolume > 0 ? audioVolume : 0.1; // Restore to previous or small volume
-    if (newMutedState && audioVolume === 0) setAudioVolume(0.1); // If unmuting and volume was 0, set to small volume
+    audioPlayerRef.current.volume = newMutedState ? 0 : audioVolume > 0 ? audioVolume : 0.1;
+    if (newMutedState && audioVolume === 0) setAudioVolume(0.1);
   };
   
   const toggleVolumeSlider = () => setShowVolumeSlider(prev => !prev);
-
 
   const formatTime = (timeInSeconds: number) => {
     if (isNaN(timeInSeconds) || timeInSeconds === Infinity) return "00:00";
@@ -286,34 +284,51 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     };
   }, [selectedBookId]);
 
-
-  // Render Library View with UI/UX enhancements
   const renderLibrary = () => (
-    <div className="p-4 md:p-6 lg:p-8 space-y-10"> {/* Increased space-y */}
+    <div className="p-5 md:p-8 lg:p-10 space-y-12">
       {Object.entries(groupedBooks).map(([category, booksInCategory]) => (
-        <section key={category}>
-          <div className="flex justify-between items-center mb-4 md:mb-5">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{category}</h2>
-            <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 rounded-md px-3 py-1 transition-all duration-200">
-              Xem tất cả <span aria-hidden="true">→</span>
+        <section key={category} className="space-y-5">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">{category}</h2>
+            <button className="flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded-lg px-3 py-1.5 transition-colors duration-200 group">
+              Xem tất cả
+              <ArrowRightIcon className="w-4 h-4 ml-1.5 transform transition-transform duration-200 group-hover:translate-x-1" />
             </button>
           </div>
-          <div className="flex overflow-x-auto space-x-4 sm:space-x-6 pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5 md:gap-6">
             {booksInCategory.map(book => (
               <div
                 key={book.id}
-                className="flex-shrink-0 w-40 sm:w-44 md:w-48 cursor-pointer group transform transition-all duration-300 ease-in-out hover:scale-105" // Enhanced hover
+                className="relative cursor-pointer group rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-1.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-gray-900"
                 onClick={() => handleSelectBook(book.id)}
                 role="button" tabIndex={0}
                 onKeyPress={(e) => e.key === 'Enter' && handleSelectBook(book.id)}
+                aria-label={`Đọc sách ${book.title}`}
               >
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg group-hover:shadow-xl mb-2.5 transition-shadow duration-300">
+                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700">
                   {book.coverImageUrl ? 
-                    <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = 'https://placehold.co/400x600/E0E0E0/333333?text=No+Image')}/> 
-                    : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center text-sm">{book.title}</div>}
+                    <img 
+                        src={book.coverImageUrl} 
+                        alt={`Bìa sách ${book.title}`} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                        onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.src = `https://placehold.co/400x600/D1D5DB/4B5563?text=${encodeURIComponent(book.title.substring(0,20))}`;
+                            target.alt = `Không có hình ảnh cho ${book.title}`;
+                        }}
+                    /> 
+                    : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-3 text-center text-sm font-medium">{book.title}</div>
+                  }
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">{book.title}</h3>
-                {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4">
+                  <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 leading-tight">{book.title}</h3>
+                  {book.author && <p className="text-xs md:text-sm text-gray-200 line-clamp-1 mt-0.5">{book.author}</p>}
+                </div>
+                 {/* Static info below image if no hover */}
+                <div className="p-3 bg-white dark:bg-gray-800 group-hover:opacity-0 transition-opacity duration-300">
+                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 line-clamp-2 leading-tight">{book.title}</h3>
+                    {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{book.author}</p>}
+                </div>
               </div>
             ))}
           </div>
@@ -323,50 +338,46 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-['Inter',_sans-serif]">
-      {/* Header */}
-      <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 ease-in-out ${selectedBookId ? 'py-2.5 sm:py-3' : 'py-3 sm:py-4'}`}>
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans selection:bg-blue-500 selection:text-white">
+      <header className={`flex items-center justify-between p-3.5 sm:p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-sm flex-shrink-0 sticky top-0 z-20 transition-all duration-300 ease-in-out border-b border-gray-200/80 dark:border-gray-700/80`}>
         <div className="flex items-center">
           {selectedBookId && (
             <button
               onClick={handleBackToLibrary}
-              className="mr-2 sm:mr-3 p-1.5 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800 transition-all duration-200"
+              className="mr-2 sm:mr-3 p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 transition-all duration-200"
               aria-label="Quay lại Thư viện"
             >
               <ChevronLeftIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           )}
-          <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 ease-in-out ${selectedBookId ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
+          <h1 className={`font-bold text-gray-800 dark:text-gray-100 transition-all duration-300 ease-in-out ${selectedBookId ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} tracking-tight`}>
             {selectedBookId && currentBook ? currentBook.title : "Thư viện Sách"}
           </h1>
         </div>
         {selectedBookId && currentBook?.author && (
-           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:block">
+           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden md:block truncate max-w-xs" title={currentBook.author}>
              Tác giả: {currentBook.author}
            </p>
         )}
          {!selectedBookId && (
-            <button className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors">
-                Tùy chọn
+            <button className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 transition-colors" aria-label="Tùy chọn">
+                <CogIcon className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
         )}
       </header>
 
-      {/* Main content area */}
       {!selectedBookId ? (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850"> {/* Slightly different bg for library */}
+        <main className="flex-grow overflow-y-auto w-full bg-gray-100 dark:bg-gray-850 scroll-smooth">
           {renderLibrary()}
         </main>
       ) : (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-100 dark:bg-gray-900 py-6 sm:py-8">
-          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 sm:p-8 md:p-10 relative">
-            {/* Author info moved to header for reader view, can be added back here if preferred */}
+        <main className="flex-grow overflow-y-auto w-full bg-gray-100 dark:bg-gray-900 py-6 sm:py-8 scroll-smooth">
+          <div className="max-w-3xl lg:max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
             {renderBookContent()}
           </div>
         </main>
       )}
 
-      {/* Audio element (hidden) */}
       <audio
         ref={audioPlayerRef}
         onTimeUpdate={handleTimeUpdate}
@@ -382,13 +393,12 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         }}
       />
 
-      {/* Audio Player UI (fixed at bottom) */}
       {selectedBookId && currentBook?.audioUrl && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/95 dark:bg-gray-800/95 backdrop-blur-lg shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)] p-3 z-30 border-t border-gray-200 dark:border-gray-700">
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-50/90 dark:bg-gray-850/90 backdrop-blur-md shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.2)] p-3.5 sm:p-4 z-30 border-t border-gray-200/70 dark:border-gray-700/70">
           <div className="max-w-3xl mx-auto flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={togglePlayPause}
-              className="p-2.5 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300/70 dark:hover:bg-gray-700/70 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800 transition-all duration-200"
+              className="p-2.5 sm:p-3 rounded-full text-gray-700 dark:text-gray-200 bg-gray-200/70 dark:bg-gray-700/70 hover:bg-gray-300/90 dark:hover:bg-gray-600/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 transition-all duration-200"
               aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
             >
               {isAudioPlaying ? <PauseIcon className="w-6 h-6 sm:w-7 sm:h-7" /> : <PlayIcon className="w-6 h-6 sm:w-7 sm:h-7" />}
@@ -402,7 +412,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 max={audioDuration || 0}
                 value={audioCurrentTime}
                 onChange={handleSeek}
-                className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800"
+                className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-gray-800"
                 aria-label="Tua audio"
               />
               <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 w-10 text-center tabular-nums">{formatTime(audioDuration)}</span>
@@ -410,14 +420,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             
             <div className="flex items-center space-x-1 sm:space-x-2">
               <button 
-                onClick={toggleVolumeSlider} // Click to toggle slider
-                className="p-1.5 sm:p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300/70 dark:hover:bg-gray-700/70 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200"
+                onClick={toggleVolumeSlider}
+                className="p-1.5 sm:p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700/70 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 transition-all duration-200"
                 aria-label={isAudioMuted ? "Bật tiếng" : "Tắt tiếng"}
               >
-                {isAudioMuted || audioVolume === 0 ? <VolumeOffIcon className="w-5 h-5 sm:w-5 sm:h-5" /> : <VolumeUpIcon className="w-5 h-5 sm:w-5 sm:h-5" />}
+                {isAudioMuted || audioVolume === 0 ? <VolumeOffIcon className="w-5 h-5" /> : <VolumeUpIcon className="w-5 h-5" />}
               </button>
-              {/* Horizontal Volume Slider - Toggles visibility */}
-              <div className={`transition-all duration-300 ease-in-out ${showVolumeSlider ? 'w-20 sm:w-24 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
+              <div className={`transition-all duration-300 ease-in-out flex items-center ${showVolumeSlider ? 'w-20 sm:w-24 opacity-100 ml-1' : 'w-0 opacity-0 overflow-hidden'}`}>
                  <input
                     type="range"
                     min="0"
@@ -425,7 +434,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     step="0.05"
                     value={isAudioMuted ? 0 : audioVolume}
                     onChange={handleVolumeChange}
-                    className="w-full h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full h-1.5 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                     aria-label="Âm lượng"
                 />
               </div>
@@ -434,14 +443,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         </div>
       )}
 
-      {/* Vocabulary Detail Modal */}
       {selectedVocabCard && showVocabDetail && (
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleImages={[]} // Provide actual images if available
+          exampleImages={[]} 
           onClose={closeVocabDetail}
-          currentVisualStyle="default" // Or manage this dynamically
+          currentVisualStyle="default"
         />
       )}
     </div>
