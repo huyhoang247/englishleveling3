@@ -274,10 +274,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   };
 
-  const handlePlaybackSpeedChange = (speed: number) => {
+  const togglePlaybackSpeed = () => {
+    const speeds = [1.0, 1.5, 2.0];
+    const currentIndex = speeds.indexOf(playbackSpeed);
+    const nextIndex = (currentIndex + 1) % speeds.length;
+    const newSpeed = speeds[nextIndex];
     if (audioPlayerRef.current) {
-      audioPlayerRef.current.playbackRate = speed;
-      setPlaybackSpeed(speed);
+      audioPlayerRef.current.playbackRate = newSpeed;
+      setPlaybackSpeed(newSpeed);
     }
   };
   
@@ -415,23 +419,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
             </div>
             
-            {/* Điều khiển tốc độ phát lại */}
-            <div className="flex items-center space-x-1 sm:space-x-2">
-              {[1.0, 1.5, 2.0].map((speed) => (
-                <button
-                  key={speed}
-                  onClick={() => handlePlaybackSpeedChange(speed)}
-                  className={`px-2 py-1 text-xs sm:text-sm font-semibold rounded-md transition-colors ${
-                    playbackSpeed === speed
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  aria-label={`Tốc độ ${speed}x`}
-                >
-                  {speed}x
-                </button>
-              ))}
-            </div>
+            {/* Điều khiển tốc độ phát lại (nút duy nhất) */}
+            <button
+              onClick={togglePlaybackSpeed}
+              className="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label={`Tốc độ ${playbackSpeed}x`}
+            >
+              {playbackSpeed}x
+            </button>
           </div>
         </div>
       )}
