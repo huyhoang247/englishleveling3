@@ -420,10 +420,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
             </div>
             
-            {/* Điều khiển tốc độ phát lại (nút duy nhất) */}
+            {/* Điều khiển tốc độ phát lại (nút duy nhất) - Thiết kế mới */}
             <button
               onClick={togglePlaybackSpeed}
-              className="px-4 py-2 text-sm font-semibold rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105"
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 shadow-sm hover:bg-blue-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105"
               aria-label={`Tốc độ ${playbackSpeed}x`}
             >
               {playbackSpeed}x
