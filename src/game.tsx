@@ -275,7 +275,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   };
 
   const togglePlaybackSpeed = () => {
-    const speeds = [1.0, 1.5, 2.0];
+    const speeds = [1.0, 1.25, 1.5]; // Cập nhật tốc độ phát lại
     const currentIndex = speeds.indexOf(playbackSpeed);
     const nextIndex = (currentIndex + 1) % speeds.length;
     const newSpeed = speeds[nextIndex];
@@ -351,16 +351,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             ← Quay lại Thư viện
           </button>
         )}
-        {/* Nút chuyển đổi Dark Mode */}
-        {selectedBookId && (
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label={isDarkMode ? "Chế độ sáng" : "Chế độ tối"}
-          >
-            {isDarkMode ? <SunIcon /> : <MoonIcon />}
-          </button>
-        )}
       </header>
 
       {/* Main content: Thư viện hoặc màn hình đọc sách */}
@@ -377,6 +367,16 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               </div>
             )}
             {renderBookContent()}
+            {/* Nút chuyển đổi Dark Mode, chỉ hiển thị khi đang đọc sách */}
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={isDarkMode ? "Chế độ sáng" : "Chế độ tối"}
+              >
+                {isDarkMode ? <SunIcon /> : <MoonIcon />}
+              </button>
+            </div>
           </div>
         </main>
       )}
