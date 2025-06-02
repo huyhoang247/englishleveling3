@@ -30,7 +30,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // 4 columns x 5 rows = 20 items per page
+  const itemsPerPage = 25; // 5 columns x 5 rows = 25 items per page
 
   // Calculate items for the current page
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -286,7 +286,7 @@ export default function App() {
         onClose={closeModal} 
       />
       
-      <div className="grid grid-cols-4 gap-3"> {/* Fixed 4 columns */}
+      <div className="grid grid-cols-5 gap-3"> {/* Changed to 5 columns */}
         {currentItems.map(item => {
           const isLegendary = item.rarity === 'legendary';
           
@@ -321,7 +321,7 @@ export default function App() {
                 </div>
               )}
               
-              <div className="text-3xl sm:text-4xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>
+              <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div> {/* Adjusted icon size */}
               
               <ItemTooltip item={item} />
             </div>
