@@ -1795,7 +1795,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   } else if (isInventoryOpen) { // NEW: Render Inventory when isInventoryOpen is true
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-              <Inventory onClose={toggleInventory} />
+              <Inventory onClose={toggleInventory} /> {/* Pass toggleInventory to Inventory's onClose */}
           </ErrorBoundary>
       );
   }
