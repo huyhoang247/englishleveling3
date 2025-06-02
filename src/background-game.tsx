@@ -2001,7 +2001,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
                         <div
-                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0"
+                            // MODIFIED: Removed background, padding, rounded-lg, and shadow classes
+                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0"
                             onClick={item.onClick} // Apply onClick if it exists
                         >
                             {item.icon}
