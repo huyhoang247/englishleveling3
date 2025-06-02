@@ -56,16 +56,6 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Prepare all slots for the current page (items + empty slots)
-  const allSlots = Array.from({ length: itemsPerPage }).map((_, index) => {
-    if (index < currentItems.length) {
-      return currentItems[index];
-    } else {
-      // Create a placeholder for empty slots with a unique key
-      return { id: `empty-${currentPage}-${index}`, isEmpty: true };
-    }
-  });
-
   // Calculate total pages
   const totalPages = Math.ceil(items.length / itemsPerPage);
 
@@ -233,24 +223,24 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           {isLegendary && (
             <>
               {/* Pulsing border effect */}
-              <div className="absolute inset-0 rounded-xl border-2 border-orange-300/30 animate-pulse [animation-duration:3s] opacity-50"></div>
+              <div className="absolute inset-0 rounded-xl border-2 border-orange-300/30 animate-pulse [animation-duration:3s] opacity-50"></div> {/* Reduced opacity */}
               {/* Subtle corner light effects */}
-              <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-orange-200/20 via-transparent to-transparent opacity-40 rounded-tl-xl"></div>
-              <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-orange-200/20 via-transparent to-transparent opacity-40 rounded-br-xl"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-orange-200/20 via-transparent to-transparent opacity-40 rounded-tl-xl"></div> {/* Reduced opacity */}
+              <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-orange-200/20 via-transparent to-transparent opacity-40 rounded-br-xl"></div> {/* Reduced opacity */}
               {/* Stronger, more diffused glow */}
-              <div className="absolute -inset-0.5 bg-orange-400/20 opacity-20 blur-lg rounded-xl -z-10 animate-pulse-stronger"></div>
+              <div className="absolute -inset-0.5 bg-orange-400/20 opacity-20 blur-lg rounded-xl -z-10 animate-pulse-stronger"></div> {/* Reduced opacity and blur */}
               {/* Radial light burst from center */}
               <div className="absolute inset-0 flex items-center justify-center -z-10">
-                <div className="w-3/4 h-3/4 rounded-full bg-orange-500/5 blur-2xl opacity-0 animate-fade-in-out"></div>
+                <div className="w-3/4 h-3/4 rounded-full bg-orange-500/5 blur-2xl opacity-0 animate-fade-in-out"></div> {/* Reduced opacity and blur */}
               </div>
             </>
           )}
           
           <div className="flex justify-between items-start mb-4 border-b border-gray-700/50 pb-4">
             <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)} ${isLegendary ? 'flex items-center gap-x-2' : ''}`}>
-              {isLegendary && <span className="text-orange-100 opacity-80 text-xl">✦</span>}
+              {isLegendary && <span className="text-orange-100 opacity-80 text-xl">✦</span>} {/* Changed to orange */}
               {item.name}
-              {isLegendary && <span className="text-orange-100 opacity-80 text-xl">✦</span>}
+              {isLegendary && <span className="text-orange-100 opacity-80 text-xl">✦</span>} {/* Changed to orange */}
             </h3>
             {/* Close Button - Ensure it's on top */}
             <button 
@@ -264,18 +254,18 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl 
                             ${isLegendary 
-                              ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900'
+                              ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
                               : 'bg-black/30'} 
                             rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}
             >
               {isLegendary && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 via-transparent to-transparent opacity-10"></div>
-                  <div className="absolute inset-1 bg-orange-500/10 opacity-5 animate-pulse [animation-duration:2s]"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 via-transparent to-transparent opacity-10"></div> {/* Reduced opacity */}
+                  <div className="absolute inset-1 bg-orange-500/10 opacity-5 animate-pulse [animation-duration:2s]"></div> {/* Reduced opacity */}
                   <div className="absolute -inset-full rotate-45 w-12 h-full bg-gradient-to-t from-transparent via-white/30 to-transparent opacity-20 transform translate-x-0"></div>
                   {/* Enhanced icon glow */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-full h-full rounded-full bg-orange-300/10 blur-md opacity-50 animate-ping-slow"></div>
+                    <div className="w-full h-full rounded-full bg-orange-300/10 blur-md opacity-50 animate-ping-slow"></div> {/* Reduced opacity and blur */}
                   </div>
                 </>
               )}
@@ -285,7 +275,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
             <div className="flex-1">
               <div className="flex items-center mb-2 gap-2 flex-wrap">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} 
-                                  ${isLegendary ? 'bg-gradient-to-r from-orange-900 to-gray-800 border border-orange-500/40 shadow-md shadow-orange-500/20' : 'bg-gray-800/70 border border-gray-700'} capitalize`}>
+                                  ${isLegendary ? 'bg-gradient-to-r from-orange-900 to-gray-800 border border-orange-500/40 shadow-md shadow-orange-500/20' : 'bg-gray-800/70 border border-gray-700'} capitalize`}> {/* Changed to orange */}
                   {isLegendary ? `✦ ${item.rarity.toUpperCase()} ✦` : item.rarity}
                 </span>
                 <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
@@ -300,15 +290,15 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           </div>
           
           {isLegendary ? (
-            <div className="mt-4 bg-gradient-to-r from-gray-950 via-orange-900/25 to-gray-950 p-3 rounded-lg border border-orange-700/40 shadow-lg">
-              <h4 className="text-orange-300 text-base font-semibold mb-2 flex items-center gap-1.5">
+            <div className="mt-4 bg-gradient-to-r from-gray-950 via-orange-900/25 to-gray-950 p-3 rounded-lg border border-orange-700/40 shadow-lg"> {/* Changed to orange */}
+              <h4 className="text-orange-300 text-base font-semibold mb-2 flex items-center gap-1.5"> {/* Changed to orange */}
                 <span className="opacity-80">💎</span> Thuộc tính đặc biệt
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
                 {Object.entries(item.stats || {}).map(([stat, value]) => (
-                  <div key={stat} className="flex justify-between items-center py-0.5 border-b border-orange-900/30 last:border-b-0">
+                  <div key={stat} className="flex justify-between items-center py-0.5 border-b border-orange-900/30 last:border-b-0"> {/* Changed to orange */}
                     <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
-                    <span className="font-semibold text-orange-200 text-base">
+                    <span className="font-semibold text-orange-200 text-base"> {/* Changed to orange */}
                       {stat.includes('Percent') || stat === 'magicBoost' ? `+${value}%` : value}
                     </span>
                   </div>
@@ -322,12 +312,12 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           {item.type !== 'currency' && (
             <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
               <button className={`flex-1 px-4 py-2.5 ${isLegendary 
-                ? 'bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-500 hover:to-orange-700 border border-orange-400/50 text-white'
+                ? 'bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-500 hover:to-orange-700 border border-orange-400/50 text-white' // Changed to orange
                 : 'bg-blue-600 hover:bg-blue-700 text-white'} rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm`}>
                 Sử dụng
               </button>
               <button className={`flex-1 px-4 py-2.5 ${isLegendary
-                ? 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border border-orange-600/30 text-orange-200'
+                ? 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border border-orange-600/30 text-orange-200' // Changed to orange
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-200'} rounded-lg font-semibold transition-all duration-200 text-sm`}>
                 Trang bị
               </button>
@@ -342,7 +332,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 relative"> {/* Removed min-h-screen */}
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative"> {/* Added relative positioning */}
       {/* Close button at top right */}
       <button 
         onClick={handleCloseInventory} // Call the new handler
@@ -370,38 +360,38 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         {`
         @keyframes pulse-stronger {
           0%, 100% {
-            opacity: 0.2;
+            opacity: 0.2; /* Reduced opacity */
             transform: scale(1);
           }
           50% {
-            opacity: 0.3;
-            transform: scale(1.02);
+            opacity: 0.3; /* Reduced opacity */
+            transform: scale(1.02); /* Reduced scale */
           }
         }
 
         @keyframes fade-in-out {
           0%, 100% {
             opacity: 0;
-            transform: scale(0.9);
+            transform: scale(0.9); /* Adjusted scale */
           }
           50% {
-            opacity: 0.1;
+            opacity: 0.1; /* Reduced opacity */
             transform: scale(1);
           }
         }
 
         @keyframes ping-slow {
           0% {
-            transform: scale(0.9);
-            opacity: 0.6;
+            transform: scale(0.9); /* Adjusted scale */
+            opacity: 0.6; /* Reduced opacity */
           }
           50% {
-            transform: scale(1.1);
-            opacity: 0.1;
+            transform: scale(1.1); /* Adjusted scale */
+            opacity: 0.1; /* Reduced opacity */
           }
           100% {
-            transform: scale(0.9);
-            opacity: 0.6;
+            transform: scale(0.9); /* Adjusted scale */
+            opacity: 0.6; /* Reduced opacity */
           }
         }
 
@@ -417,11 +407,11 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
 
         /* Additional glow for legendary items in grid */
         .legendary-item-glow {
-          box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2);
+          box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2); /* Reduced shadow intensity */
           transition: box-shadow 0.3s ease-in-out;
         }
         .legendary-item-glow:hover {
-          box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15);
+          box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
         }
         `}
       </style>
@@ -432,22 +422,8 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         onClose={closeModal} 
       />
       
-      <div className="grid grid-cols-5 gap-3">
-        {allSlots.map((slot: any) => {
-          // If it's an empty slot placeholder
-          if (slot.isEmpty) {
-            return (
-              <div 
-                key={slot.id} 
-                className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
-              >
-                <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
-              </div>
-            );
-          }
-
-          // Otherwise, it's an actual item
-          const item = slot;
+      <div className="grid grid-cols-5 gap-3"> {/* Changed to 5 columns */}
+        {currentItems.map((item: any) => {
           const isLegendary = item.rarity === 'legendary';
           
           return (
@@ -455,7 +431,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
               key={item.id}
               className={`group relative w-full aspect-square 
                           ${isLegendary 
-                            ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' 
+                            ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
                             : `bg-gradient-to-br ${getRarityGradient(item.rarity)}`} 
                           rounded-lg border-2 ${getRarityColor(item.rarity)} 
                           flex items-center justify-center cursor-pointer 
@@ -467,11 +443,11 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
               {isLegendary && (
                 <>
                   <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
-                  <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div>
-                  <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div>
-                  <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div>
-                  <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div>
-                  <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div>
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
+                  <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
+                  <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> {/* Reduced opacity */}
+                  <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
+                  <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
                 </>
               )}
               
@@ -487,6 +463,16 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
             </div>
           );
         })}
+        
+        {/* Empty slots for visual consistency */}
+        {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
+          <div 
+            key={`empty-${currentPage}-${i}`} 
+            className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
+          >
+            <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
+          </div>
+        ))}
       </div>
 
       {/* Pagination Controls */}
