@@ -254,9 +254,10 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
       )}
 
       {/* Sidebar container with fixed positioning */}
+      {/* Changed z-index to 50 to ensure it's above the game content */}
       <div
         className={`
-          fixed left-0 z-40 h-screen flex items-center
+          fixed left-0 z-50 h-screen flex items-center
           transform transition-all duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0 ${isSidebarVisible ? 'md:block' : 'md:hidden'}
@@ -382,10 +383,10 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
         </div>
       </div>
 
-      {/* Main content area - Added overflow-y-auto */}
+      {/* Main content area - Removed md:ml-72 */}
       <div className={`
         flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-y-auto
-        ${isSidebarVisible ? 'md:ml-72' : 'ml-0'} {/* Maintain spacing based on sidebar visibility */}
+        ml-0 {/* Always start from ml-0 */}
       `}>
         {children} {/* Render the content passed from the parent */}
       </div>
@@ -395,4 +396,3 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
 
 // Export the SidebarLayout component
 export { SidebarLayout };
-
