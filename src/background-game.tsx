@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Component } from 'react';
+import React, { useState, useEffect, useRef, Component, useMemo } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
@@ -87,6 +87,144 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return this.props.children;
   }
 }
+
+// --- NEW: DungeonBackground Component ---
+const DungeonBackground = ({ children }: { children: React.ReactNode }) => {
+  const [time, setTime] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(prev => prev + 0.016);
+    }, 16);
+    return () => clearInterval(interval);
+  }, []);
+
+  const particles = useMemo(() => {
+    return Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 3 + 1,
+      speed: Math.random() * 0.5 + 0.2,
+      opacity: Math.random() * 0.8 + 0.2
+    }));
+  }, []);
+
+  const cracks = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      width: Math.random() * 30 + 10,
+      height: Math.random() * 2 + 1,
+      rotation: Math.random() * 45
+    }));
+  }, []);
+
+  return (
+    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-gray-900 via-gray-800 to-black">
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 flex flex-col items-center justify-center"> {/* z-0 to be behind game content */}
+        <img
+          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png"
+          alt="Dungeon Icon"
+          className="w-48 h-48 opacity-20" // Further reduced opacity
+          onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src="https://placehold.co/192x192/000000/FFFFFF?text=Icon"; }}
+        />
+      </div>
+
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: `radial-gradient(circle at ${50 + Math.sin(time * 0.5) * 20}% ${50 + Math.cos(time * 0.3) * 15}%,
+            rgba(139, 69, 19, 0.4) 0%,
+            rgba(101, 67, 33, 0.3) 30%,
+            rgba(62, 39, 35, 0.2) 60%,
+            transparent 100%)`
+        }}
+      />
+
+      <div className="absolute inset-0 opacity-20">
+        <div className="w-full h-full bg-gradient-to-br from-transparent via-gray-700 to-transparent mix-blend-multiply" />
+      </div>
+
+      {cracks.map(crack => (
+        <div
+          key={crack.id}
+          className="absolute bg-black opacity-40"
+          style={{
+            left: `${crack.x}%`,
+            top: `${crack.y}%`,
+            width: `${crack.width}px`,
+            height: `${crack.height}px`,
+            transform: `rotate(${crack.rotation + Math.sin(time * 0.1) * 2}deg)`,
+            borderRadius: '1px',
+            transition: 'transform 0.1s ease-out'
+          }}
+        />
+      ))}
+
+      {particles.map(particle => (
+        <div
+          key={particle.id}
+          className="absolute rounded-full bg-yellow-200"
+          style={{
+            left: `${(particle.x + Math.sin(time * particle.speed + particle.id) * 10) % 100}%`,
+            top: `${(particle.y + Math.cos(time * particle.speed * 0.7 + particle.id) * 5) % 100}%`,
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            opacity: particle.opacity * (0.7 + Math.sin(time * 2 + particle.id) * 0.3),
+            boxShadow: '0 0 4px rgba(255, 255, 0, 0.3)',
+            transition: 'opacity 0.1s ease-out'
+          }}
+        />
+      ))}
+
+      <div className="absolute top-10 left-10">
+        <div
+          className="w-32 h-32 rounded-full"
+          style={{
+            background: `radial-gradient(circle,
+              rgba(255, 140, 0, ${0.4 + Math.sin(time * 3) * 0.1}) 0%,
+              rgba(255, 69, 0, ${0.3 + Math.sin(time * 2.5) * 0.08}) 30%,
+              rgba(139, 69, 19, ${0.2 + Math.sin(time * 2) * 0.05}) 60%,
+              transparent 100%)`,
+            filter: 'blur(2px)',
+            transform: `scale(${1 + Math.sin(time * 2.8) * 0.05})`
+          }}
+        />
+      </div>
+
+      <div className="absolute top-16 right-12">
+        <div
+          className="w-28 h-28 rounded-full"
+          style={{
+            background: `radial-gradient(circle,
+              rgba(255, 140, 0, ${0.35 + Math.sin(time * 2.3 + 1) * 0.08}) 0%,
+              rgba(255, 69, 0, ${0.25 + Math.sin(time * 2.8 + 1) * 0.06}) 30%,
+              rgba(139, 69, 19, ${0.15 + Math.sin(time * 2.2 + 1) * 0.04}) 60%,
+              transparent 100%)`,
+            filter: 'blur(2px)',
+            transform: `scale(${1 + Math.sin(time * 2.5 + 1) * 0.04})`
+          }}
+        />
+      </div>
+
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse at center,
+            rgba(101, 67, 33, ${0.1 + Math.sin(time * 0.5) * 0.05}) 0%,
+            transparent 70%)`,
+          mixBlendMode: 'overlay'
+        }}
+      />
+
+      <div className="relative z-10 w-full h-full"> {/* Game content will be rendered here */}
+        {children}
+      </div>
+    </div>
+  );
+};
 
 
 // Define interface for component props
@@ -211,8 +349,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // REMOVED: obstacleTypes array
 
   // --- NEW: Array of Cloud Image URLs ---
+  // Clouds might not fit the dungeon theme, consider removing or adapting their appearance
   const cloudImageUrls = [
-      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png",
+      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png", // Example: could be mist/fog patches
       "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/clouds.png",
       "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud.png"
   ];
@@ -437,7 +576,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Game elements setup
     // REMOVED: Obstacle initialization
     // REMOVED: setObstacles(initialObstacles);
-    generateInitialClouds(5);
+    generateInitialClouds(5); // Consider if clouds fit the dungeon theme
 
     if (particleTimerRef.current) clearInterval(particleTimerRef.current);
     // Only start particle timer if not paused
@@ -588,7 +727,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         xVelocity: -Math.random() * 1 - 0.5,
         yVelocity: Math.random() * 2 - 1,
         opacity: 1,
-        color: Math.random() > 0.5 ? 'bg-yellow-600' : 'bg-yellow-700'
+        color: Math.random() > 0.5 ? 'bg-yellow-600' : 'bg-yellow-700' // Game's dust particles
       });
     }
     setParticles(prev => [...prev, ...newParticles]);
@@ -676,31 +815,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             // REMOVED: Obstacle movement and collision detection
             // REMOVED: setObstacles(prevObstacles => { ... });
 
+            // Cloud movement (consider if clouds fit dungeon theme)
             setClouds(prevClouds => {
                 return prevClouds
                     .map(cloud => {
                         const newX = cloud.x - cloud.speed;
-
-                        // FIXED: Adjusted cloud repositioning when it moves off-screen to the left
-                        if (newX < -50) { // Keep the -50 threshold
+                        if (newX < -50) {
                             const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
                             return {
                                 ...cloud,
                                 id: Date.now() + Math.random(),
-                                // Reposition slightly off-screen to the right
-                                x: 100 + Math.random() * 30, // Changed from 120 + random to 100 + random (100 to 130)
+                                x: 100 + Math.random() * 30,
                                 y: Math.random() * 40 + 10,
                                 size: Math.random() * 40 + 30,
                                 speed: Math.random() * 0.3 + 0.15,
                                 imgSrc: randomImgSrc
                             };
                         }
-
-                        // Apply clipping logic to cloud position if needed (optional, but good practice)
-                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; // Keep clouds within -50% to 120%
+                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) };
                     });
             });
 
+            // Game's dust particle movement
             setParticles(prevParticles =>
                 prevParticles
                     .map(particle => ({
@@ -757,7 +893,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // REMOVED: if (!coinScheduleTimerRef.current) {
           // REMOVED:     scheduleNextCoin();
           // REMOVED: }
-           if (!particleTimerRef.current) {
+           if (!particleTimerRef.current) { // For game's running dust particles
                particleTimerRef.current = setInterval(generateParticles, 300);
            }
       }
@@ -868,32 +1004,32 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // REMOVED: renderObstacle function
 
-  // Render clouds
+  // Render clouds (consider if they fit the dungeon theme, or replace with mist/fog)
   const renderClouds = () => {
+    // To disable clouds for dungeon theme, uncomment the line below
+    // return null; 
     return clouds.map(cloud => (
       <img
         key={cloud.id}
         src={cloud.imgSrc}
-        alt="Cloud Icon"
-        className="absolute object-contain"
+        alt="Cloud Icon" // Or "Mist Patch"
+        className="absolute object-contain opacity-50" // Reduced opacity for dungeon
         style={{
           width: `${cloud.size}px`,
           height: `${cloud.size * 0.6}px`,
           top: `${cloud.y}%`,
-          // FIXED: Applied clipping logic to cloud rendering position
-          left: `${Math.min(120, Math.max(-50, cloud.x))}%`, // Ensure cloud is rendered within a reasonable range
-          opacity: 0.8
+          left: `${Math.min(120, Math.max(-50, cloud.x))}%`,
         }}
         onError={(e) => {
-          const target = e as any; // Cast to any to access target
+          const target = e.target as HTMLImageElement;
           target.onerror = null;
-          target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
+          target.src = "https://placehold.co/40x24/ffffff/000000?text=Mist";
         }}
       />
     ));
   };
 
-  // Render dust particles
+  // Render dust particles (from character running)
   const renderParticles = () => {
     return particles.map(particle => (
       <div
@@ -1064,335 +1200,281 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       );
   }
   else {
-      // Default game content
+      // Default game content - Now wrapped by DungeonBackground
       mainContent = (
-          <div
-            ref={gameRef}
-            // THAY ĐỔI BƯỚC 2 Ở ĐÂY: className từ h-screen thành h-full
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer`}
-            // Đã bỏ style={{ overflowX: 'hidden' }} vì overflow-hidden đã bao gồm
-            onClick={handleTap} // Handle tap for start/restart
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
+          <DungeonBackground>
+            <div
+              ref={gameRef}
+              className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden cursor-pointer`} // Removed shadow-2xl as DungeonBackground provides depth
+              onClick={handleTap}
+            >
+              {/* Old blue gradient background is removed, DungeonBackground provides the backdrop */}
+              
+              {/* Sun element might not fit dungeon theme, consider removing or adapting */}
+              {/* <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div> */}
 
-            <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
+              {renderClouds()} {/* Clouds rendered on top of DungeonBackground */}
 
-            {renderClouds()}
+              {/* Ground div - styled for dungeon theme */}
+              <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-800 via-stone-700 to-stone-600"> {/* Dungeon floor gradient */}
+                      <div className="w-full h-1 bg-stone-900/50 absolute top-0"></div> {/* Darker top edge for depth */}
+                      {/* Optional dungeon floor details (e.g., cracks, tiles) */}
+                      {Array.from({length: 10}).map((_,idx) => ( // Example: subtle floor lines
+                        <div key={idx} className="absolute bg-black/20 h-0.5" style={{
+                            width: `${Math.random() * 20 + 5}%`,
+                            left: `${Math.random() * 80}%`,
+                            bottom: `${Math.random() * 80 + 10}%`,
+                            transform: `rotate(${Math.random() * 5 - 2.5}deg)`
+                        }}></div>
+                      ))}
+                  </div>
+              </div>
 
-            <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
-                    <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
-                    <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
-                    <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
-                    <div className="w-6 h-3 bg-gray-900 rounded-full absolute top-8 right-10"></div>
-                    <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
+              {renderCharacter()}
+
+              {renderParticles()} {/* Game's running dust particles */}
+
+              {/* Main header container (UI Overlay) */}
+              <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
+                          rounded-b-lg shadow-2xl
+                          bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                          border-b border-l border-r border-slate-700/50">
+                  <HeaderBackground />
+                  <button
+                      onClick={() => sidebarToggleRef.current?.()}
+                      className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
+                      aria-label="Mở sidebar"
+                      title="Mở sidebar"
+                  >
+                       <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
+                          alt="Menu Icon"
+                          className="w-5 h-5 object-contain"
+                          onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu";
+                          }}
+                       />
+                  </button>
+                  <div className="flex items-center relative z-10">
+                    <div className="w-32 relative">
+                        <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                            <div className="h-full overflow-hidden">
+                                <div
+                                    className={`${getColor()} h-full transform origin-left`}
+                                    style={{
+                                        transform: `scaleX(${healthPct})`,
+                                        transition: 'transform 0.5s ease-out',
+                                    }}
+                                >
+                                    <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                                </div>
+                            </div>
+                            <div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
+                                style={{ animation: 'pulse 3s infinite' }}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                                    {Math.round(health)}/{MAX_HEALTH}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
+                            {showDamageNumber && (
+                                <div
+                                    className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
+                                    style={{ animation: 'floatUp 0.8s ease-out forwards' }}
+                                >
+                                    -{damageAmount}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
+                 {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && (
+                    <div className="flex items-center space-x-1 currency-display-container relative z-10">
+                        <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                            <div className="relative mr-0.5 flex items-center justify-center">
+                                <GemIcon size={16} color="#a78bfa" className="relative z-20" />
+                            </div>
+                            <div className="font-bold text-purple-200 text-xs tracking-wide">
+                                {gems.toLocaleString()}
+                            </div>
+                            <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                                <span className="text-white font-bold text-xs">+</span>
+                            </div>
+                            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                        </div>
+                        <CoinDisplay
+                          displayedCoins={displayedCoins}
+                          isStatsFullscreen={isStatsFullscreen}
+                        />
+                    </div>
+                 )}
+              </div>
 
-            {renderCharacter()}
+              {gameOver && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
+                  <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+                  <button
+                    className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
+                    onClick={startNewGame}
+                  >
+                    Chơi Lại
+                  </button>
+                </div>
+              )}
 
-            {/* REMOVED: {obstacles.map(obstacle => renderObstacle(obstacle))} */}
-
-            {/* REMOVED: {renderCoins()} */}
-
-            {renderParticles()}
-
-            {/* Main header container */}
-            {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                        rounded-b-lg shadow-2xl
-                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                        border-b border-l border-r border-slate-700/50">
-
-                {/* Use the HeaderBackground component */}
-                <HeaderBackground />
-
-                {/* NEW Menu Button - Placed before the HP bar container */}
-                <button
-                    onClick={() => sidebarToggleRef.current?.()} // Call the stored toggle function
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" // Added z-20 to ensure it's above background
-                    aria-label="Mở sidebar"
-                    title="Mở sidebar"
-                >
-                    {/* Use the provided image URL for the icon */}
-                     <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
-                        alt="Menu Icon"
-                        className="w-5 h-5 object-contain" // Adjust size as needed
-                        onError={(e) => {
-                            const target = e as any; // Cast to any to access target
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
-                        }}
-                     />
-                </button>
-
-
-                <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                  {/* REMOVED: StatsIcon is moved to the sidebar */}
-                  {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
-
-                  <div className="w-32 relative">
-                      <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                          <div className="h-full overflow-hidden">
-                              <div
-                                  className={`${getColor()} h-full transform origin-left`}
-                                  style={{
-                                      transform: `scaleX(${healthPct})`,
-                                      transition: 'transform 0.5s ease-out',
-                                  }}
-                              >
-                                  <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                              </div>
-                          </div>
-
+              {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && (
+                <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+                  {[
+                    {
+                      icon: (
+                        <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png"
+                          alt="Shop Icon"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
+                          }}
+                        />
+                      ),
+                      label: "", notification: true, special: true, centered: true
+                    },
+                    {
+                      icon: (
+                        <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png"
+                          alt="Inventory Icon"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv";
+                          }}
+                        />
+                      ),
+                      label: "", notification: true, special: true, centered: true, onClick: toggleInventory
+                    }
+                  ].map((item, index) => (
+                    <div key={index} className="group cursor-pointer">
+                      {item.special && item.centered ? (
                           <div
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                              style={{ animation: 'pulse 3s infinite' }}
-                          />
-
-                          <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                                  {Math.round(health)}/{MAX_HEALTH}
-                              </span>
+                              className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
+                              onClick={item.onClick}
+                          >
+                              {item.icon}
+                              {item.label && (
+                                  <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                              )}
                           </div>
-                      </div>
-
-                      <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
-                          {showDamageNumber && (
-                              <div
-                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }}
-                              >
-                                  -{damageAmount}
-                              </div>
-                          )}
-                      </div>
-                  </div>
-              </div>
-               {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
-               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && ( // Only show currency display when stats, rank, gold mine, and inventory are NOT fullscreen (added isGoldMineOpen and isInventoryOpen)
-                  <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
-                      {/* REMOVED: Display "OK" text */}
-                      {/*
-                      {showCoinUpdateSuccess && (
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
-                              OK
-                          </div>
+                      ) : (
+                        <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                          {item.icon}
+                          <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                        </div>
                       )}
-                      */}
-                      <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                          <div className="relative mr-0.5 flex items-center justify-center">
-                              {/* Sử dụng GemIcon từ file mới */}
-                              <GemIcon size={16} color="#a78bfa" className="relative z-20" />
-                          </div>
-                          <div className="font-bold text-purple-200 text-xs tracking-wide">
-                              {gems.toLocaleString()}
-                          </div>
-                          <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-                              <span className="text-white font-bold text-xs">+</span>
-                          </div>
-                          <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                          <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                      <CoinDisplay
-                        displayedCoins={displayedCoins}
-                        isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
-                      />
-                  </div>
-               )}
-            </div>
+               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && (
+                <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+                  {[
+                    {
+                      icon: (
+                        <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png"
+                          alt="Mission Icon"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
+                          }}
+                        />
+                      ),
+                      label: "", notification: true, special: true, centered: true
+                    },
+                    {
+                      icon: (
+                        <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png"
+                          alt="Blacksmith Icon"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
+                          }}
+                        />
+                      ),
+                      label: "", notification: true, special: true, centered: true
+                    },
+                  ].map((item, index) => (
+                    <div key={index} className="group cursor-pointer">
+                      {item.special && item.centered ? (
+                          <div
+                              className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
+                              onClick={item.onClick}
+                          >
+                              {item.icon}
+                              {item.label && (
+                                  <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                              )}
+                          </div>
+                      ) : (
+                        <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                          {item.icon}
+                          <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {gameOver && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
-                <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
-                <button
-                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                  onClick={startNewGame} // Call startNewGame on button click
-                >
-                  Chơi Lại
-                </button>
-              </div>
-            )}
-
-            {/* Keep these buttons, they are not part of the main header or sidebar */}
-            {/* Chỉ hiển thị các nút này khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
-            {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && ( // Added isRankOpen, isGoldMineOpen, and isInventoryOpen check
-              <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-                {[
-                  {
-                    icon: (
-                      // MODIFIED: Changed Shop icon to the new image URL
-                      <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png"
-                        alt="Shop Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e as any;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
-                        }}
-                      />
-                    ),
-                    label: "", // Set label to empty string to hide it
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                  {
-                    icon: (
-                      // MODIFIED: Changed Inventory icon to the new image URL
-                      <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png"
-                        alt="Inventory Icon"
-                        className="w-full h-full object-contain" // Ensure it fits the container
-                        onError={(e) => {
-                            const target = e as any; // Cast to any to access target
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; // Fallback image
-                        }}
-                      />
-                    ),
-                    // MODIFIED: Hidden the "Inventory" label
-                    label: "", // Set label to empty string to hide it
-                    notification: true,
-                    special: true,
-                    centered: true,
-                    onClick: toggleInventory // NEW: Add onClick handler
+              <TreasureChest
+                initialChests={3}
+                keyCount={keyCount}
+                onKeyCollect={(n) => {
+                  console.log(`Chest opened using ${n} key(s).`);
+                  if (auth.currentUser) {
+                    updateKeysInFirestore(auth.currentUser.uid, -n);
+                  } else {
+                    console.log("User not authenticated, skipping Firestore key update.");
                   }
-                ].map((item, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    {item.special && item.centered ? (
-                        <div
-                            // MODIFIED: Added background, padding, and rounded-lg classes
-                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick} // Apply onClick if it exists
-                        >
-                            {item.icon}
-                            {/* MODIFIED: Conditionally render label only if it's not empty */}
-                            {item.label && (
-                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                            )}
-                        </div>
-                    ) : (
-                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                        {item.icon}
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
-             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && ( // Added isRankOpen, isGoldMineOpen, and isInventoryOpen check
-              <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-
-                {[
-                  {
-                    icon: (
-                      // MODIFIED: Changed Mission icon to the new image URL
-                      <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png"
-                        alt="Mission Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e as any;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
-                        }}
-                      />
-                    ),
-                    label: "", // Set label to empty string to hide it
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                  {
-                    icon: (
-                      // MODIFIED: Changed Blacksmith icon to the new image URL
-                      <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png"
-                        alt="Blacksmith Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e as any;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
-                        }}
-                      />
-                    ),
-                    label: "", // Set label to empty string to hide it
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    {item.special && item.centered ? (
-                        <div
-                            // MODIFIED: Added background, padding, and rounded-lg classes
-                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick} // Apply onClick if it exists
-                        >
-                            {item.icon}
-                            {/* MODIFIED: Conditionally render label only if it's not empty */}
-                            {item.label && (
-                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                            )}
-                        </div>
-                    ) : (
-                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                        {item.icon}
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <TreasureChest
-              initialChests={3}
-              keyCount={keyCount} // Pass the keyCount state
-              onKeyCollect={(n) => {
-                console.log(`Chest opened using ${n} key(s).`);
-                if (auth.currentUser) {
-                  updateKeysInFirestore(auth.currentUser.uid, -n); // Subtract keys
-                } else {
-                  console.log("User not authenticated, skipping Firestore key update.");
-                }
-              }}
-              // Use startCoinCountAnimation to handle coin rewards from chests
-              onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward} // NEW: Pass the gem reward handler
-              // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở VÀ game đang tạm dừng do chạy nền)
-              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen} // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen
-              isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
-              currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
-            />
-
-          </div>
+                }}
+                onCoinReward={startCoinCountAnimation}
+                onGemReward={handleGemReward}
+                isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen}
+                isStatsFullscreen={isStatsFullscreen}
+                currentUserId={currentUser ? currentUser.uid : null}
+              />
+            </div>
+          </DungeonBackground>
       );
   }
 
 
   return (
-    // THAY ĐỔI BƯỚC 3 Ở ĐÂY: Bọc SidebarLayout trong div mới
-    // Outermost container that strictly controls viewport size and overflow
-    <div className="w-screen h-screen overflow-hidden bg-gray-950"> {/* Fallback background for the entire page */}
+    <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
-          onShowStats={toggleStatsFullscreen} // Pass the toggleFullscreen function here
-          onShowRank={toggleRank} // Pass the toggleRank function here
-          onShowHome={showHome} // Pass the new showHome function
-          onShowGoldMine={toggleGoldMine} // NEW: Pass the toggleGoldMine function here
-          // Add handlers for other menu items here if needed
+          onShowStats={toggleStatsFullscreen}
+          onShowRank={toggleRank}
+          onShowHome={showHome}
+          onShowGoldMine={toggleGoldMine}
       >
-        {mainContent} {/* Render the determined main content as children */}
+        {mainContent}
       </SidebarLayout>
     </div>
   );
