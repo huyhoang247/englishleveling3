@@ -13,7 +13,7 @@ interface SidebarLayoutProps {
   // Add handlers for other menu items that need parent interaction here
   onShowHome?: () => void;
   onShowTasks?: () => void;
-  onShowPerformance?: () => void;
+  // onShowPerformance?: () => void; // REMOVED: Handler for showing Performance
   onShowSettings?: () => void;
   onShowHelp?: () => void;
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
@@ -100,14 +100,14 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// Icon for Performance menu item
-const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <line x1="18" y1="20" x2="18" y2="10"></line>
-    <line x1="12" y1="20" x2="12" y2="4"></line>
-    <line x1="6" y1="20" x2="6" y2="14"></line>
-  </svg>
-);
+// Icon for Performance menu item - REMOVED as the item is removed
+// const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+//   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+//     <line x1="18" y1="20" x2="18" y2="10"></line>
+//     <line x1="12" y1="20" x2="12" y2="4"></line>
+//     <line x1="6" y1="20" x2="6" y2="14"></line>
+//   </svg>
+// );
 
 const FileTextIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -201,7 +201,7 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
 
 // SidebarLayout component including Sidebar and main content area
 // Accept new specific handlers for menu items
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowPerformance, onShowSettings, onShowHelp, onShowGoldMine }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowSettings, onShowHelp, onShowGoldMine }: SidebarLayoutProps) {
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // Removed activeItem and activeContent states
@@ -236,7 +236,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
-    { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance },
+    // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
   ];
