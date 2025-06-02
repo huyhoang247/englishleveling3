@@ -170,7 +170,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
       fireDamage: 'Sát thương lửa',
       strength: 'Sức mạnh',
       attackSpeed: 'Tốc độ tấn công',
-      manaRegen: 'Hồi mana',
+      manaRegen: 'Hồi mana', // Added for new item
       range: 'Tầm xa',
       poisonDamage: 'Sát thương độc',
       duration: 'Thời gian',
@@ -332,25 +332,24 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative"> {/* Added relative positioning */}
-      {/* Close button at top right */}
+    // Bao ngoài dùng flex-column, min-h-screen
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 relative">
+      {/* Nút Đóng */}
       <button 
-        onClick={handleCloseInventory} // Call the new handler
+        onClick={handleCloseInventory}
         className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10"
         aria-label="Đóng túi đồ"
       >
         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
       </button>
 
-      <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5">
+      {/* Header tiêu đề + số ô */}
+      <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5 z-0">
         <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
           <span className="mr-2.5 text-4xl">📦</span>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">
-            Túi Đồ
-          </span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">Túi Đồ</span>
         </h1>
         <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80">
-          {/* Display current occupied slots and total inventory slots */}
           <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
         </div>
       </div>
@@ -422,60 +421,63 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         onClose={closeModal} 
       />
       
-      <div className="grid grid-cols-5 gap-3"> {/* Changed to 5 columns */}
-        {currentItems.map((item: any) => {
-          const isLegendary = item.rarity === 'legendary';
+      {/* Phần Grid (cho phép scroll nếu quá cao) */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-5 gap-3 min-h-[400px]"> {/* Thêm min-h để đảm bảo chiều cao cố định cho 5 hàng */}
+          {currentItems.map((item: any) => {
+            const isLegendary = item.rarity === 'legendary';
+            
+            return (
+              <div 
+                key={item.id}
+                className={`group relative w-full aspect-square 
+                            ${isLegendary 
+                              ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
+                              : `bg-gradient-to-br ${getRarityGradient(item.rarity)}`} 
+                            rounded-lg border-2 ${getRarityColor(item.rarity)} 
+                            flex items-center justify-center cursor-pointer 
+                            hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 
+                            shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden`}
+                onClick={() => setSelectedItem(item)}
+              >
+                {/* Animated shine effect for legendary items on hover */}
+                {isLegendary && (
+                  <>
+                    <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
+                    <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
+                    <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
+                    <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> {/* Reduced opacity */}
+                    <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
+                    <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
+                  </>
+                )}
+                
+                {item.quantity > 1 && item.type !== 'currency' && (
+                  <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
+                    x{item.quantity}
+                  </div>
+                )}
+                
+                <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div> {/* Adjusted icon size */}
+                
+                <ItemTooltip item={item} />
+              </div>
+            );
+          })}
           
-          return (
+          {/* Phần placeholder cho đủ 25 ô */}
+          {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
             <div 
-              key={item.id}
-              className={`group relative w-full aspect-square 
-                          ${isLegendary 
-                            ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
-                            : `bg-gradient-to-br ${getRarityGradient(item.rarity)}`} 
-                          rounded-lg border-2 ${getRarityColor(item.rarity)} 
-                          flex items-center justify-center cursor-pointer 
-                          hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 
-                          shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden`}
-              onClick={() => setSelectedItem(item)}
+              key={`empty-${currentPage}-${i}`} {/* Key duy nhất cho mỗi placeholder */}
+              className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
             >
-              {/* Animated shine effect for legendary items on hover */}
-              {isLegendary && (
-                <>
-                  <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
-                  <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
-                  <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
-                  <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> {/* Reduced opacity */}
-                  <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
-                  <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
-                </>
-              )}
-              
-              {item.quantity > 1 && item.type !== 'currency' && (
-                <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
-                  x{item.quantity}
-                </div>
-              )}
-              
-              <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div> {/* Adjusted icon size */}
-              
-              <ItemTooltip item={item} />
+              <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
             </div>
-          );
-        })}
-        
-        {/* Empty slots for visual consistency */}
-        {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
-          <div 
-            key={`empty-${currentPage}-${i}`} 
-            className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
-          >
-            <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Nút phân trang (Pagination) nằm ở cuối */}
       <div className="mt-8 flex justify-center items-center gap-2">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
           <button
