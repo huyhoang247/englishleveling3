@@ -18,7 +18,7 @@ import GoldMine from './gold-miner.tsx'; // NEW: Import GoldMine component
 import Inventory from './inventory.tsx'; // NEW: Import Inventory component
 
 // NEW: Import DungeonBackground from its new file
-import DungeonBackground from './dungeon-background.tsx';
+import DungeonBackground from './background-dungeon.tsx';
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
