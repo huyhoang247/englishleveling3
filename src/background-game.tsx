@@ -2004,8 +2004,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
                         <div
-                            // MODIFIED: Removed background, padding, rounded-lg, and shadow classes
-                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0"
+                            // MODIFIED: Added background, padding, and rounded-lg classes
+                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                             onClick={item.onClick} // Apply onClick if it exists
                         >
                             {item.icon}
@@ -2102,8 +2102,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 ].map((item, index) => (
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
-                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0">
+                        <div
+                            // MODIFIED: Added background, padding, and rounded-lg classes
+                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
+                            onClick={item.onClick} // Apply onClick if it exists
+                        >
                             {item.icon}
+                            {/* MODIFIED: Conditionally render label only if it's not empty */}
                             {item.label && (
                                 <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
                             )}
