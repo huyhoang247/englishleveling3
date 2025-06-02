@@ -51,6 +51,16 @@ const DungeonBackground = () => {
         // It's absolutely positioned to cover its parent, with overflow hidden.
         // Uses a dark gradient for the base dungeon color.
         <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-gray-900 via-gray-800 to-black">
+            {/* Icon, positioned at the top and slightly down, larger size. */}
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center">
+                <img
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png"
+                    alt="Dungeon Icon"
+                    className="w-48 h-48" // Increased size
+                    onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/192x192/000000/FFFFFF?text=Icon"; }} // Fallback for image loading errors
+                />
+            </div>
+
             {/* Animated radial gradient overlay for a subtle light source effect.
                 The center of the gradient subtly moves based on 'time' to create a dynamic light. */}
             <div
