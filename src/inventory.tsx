@@ -63,6 +63,12 @@ export default function App() {
     }, 200); // Corresponds to modal transition duration
   };
 
+  // Handle closing the main inventory (placeholder for now)
+  const handleCloseInventory = () => {
+    console.log("Đóng túi đồ");
+    // In a real application, you might navigate away or hide this component.
+  };
+
   // Determine color based on rarity
   const getRarityColor = (rarity) => {
     switch(rarity) {
@@ -186,7 +192,7 @@ export default function App() {
               onClick={onClose}
               className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"
             >
-              ✕
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
             </button>
           </div>
           
@@ -267,7 +273,16 @@ export default function App() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen">
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative"> {/* Added relative positioning */}
+      {/* Close button at top right */}
+      <button 
+        onClick={handleCloseInventory}
+        className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10"
+        aria-label="Đóng túi đồ"
+      >
+        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
+      </button>
+
       <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5">
         <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
           <span className="mr-2.5 text-4xl">📦</span>
