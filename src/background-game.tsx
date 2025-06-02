@@ -4,7 +4,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from 'firebase/auth'; // Corrected import for auth
+import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
@@ -97,6 +97,9 @@ interface ObstacleRunnerGameProps {
   currentUser: User | null; // Added currentUser prop
 }
 
+// REMOVED: GameObstacle interface
+// REMOVED: GameCoin interface
+
 // --- NEW: Define interface for Cloud with image source ---
 interface GameCloud {
   id: number;
@@ -112,12 +115,16 @@ interface GameCloud {
 interface GameSessionData {
     health: number;
     characterPos: number;
-    // REMOVED: isShieldActive: boolean;
-    // REMOVED: shieldHealth: number;
-    // REMOVED: isShieldOnCooldown: boolean;
-    // REMOVED: remainingCooldown: number;
-    // REMOVED: shieldCooldownStartTime: number | null;
-    // REMOVED: pausedShieldCooldownRemaining: number | null;
+    // REMOVED: obstacles: GameObstacle[];
+    // REMOVED: activeCoins: GameCoin[];
+    isShieldActive: boolean;
+    shieldHealth: number;
+    isShieldOnCooldown: boolean;
+    remainingCooldown: number;
+    shieldCooldownStartTime: number | null;
+    pausedShieldCooldownRemaining: number | null;
+    // Removed nextKeyIn from session data interface
+    // Add other temporary game state you want to save
 }
 
 
@@ -145,10 +152,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const MAX_HEALTH = 3000; // Define max health
   const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH); // Use hook for health
   const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0); // Use hook for char position
-  // REMOVED: const [isShieldActive, setIsShieldActive] = useSessionStorage<boolean>('gameIsShieldActive', false);
-  // REMOVED: const [shieldHealth, setShieldHealth] = useSessionStorage<number>('gameShieldHealth', 2000);
-  // REMOVED: const [isShieldOnCooldown, setIsShieldOnCooldown] = useSessionStorage<boolean>('gameIsShieldOnCooldown', false);
-  // REMOVED: const [remainingCooldown, setRemainingCooldown] = useSessionStorage<number>('gameRemainingCooldown', 0);
+  // REMOVED: const [obstacles, setObstacles] = useSessionStorage<GameObstacle[]>('gameObstacles', []); // Use hook for obstacles
+  // REMOVED: const [activeCoins, setActiveCoins] = useSessionStorage<GameCoin[]>('gameActiveCoins', []); // Use hook for active coins
+  const [isShieldActive, setIsShieldActive] = useSessionStorage<boolean>('gameIsShieldActive', false); // Use hook for shield active
+  const [shieldHealth, setShieldHealth] = useSessionStorage<number>('gameShieldHealth', 2000); // Use hook for shield health
+  const [isShieldOnCooldown, setIsShieldOnCooldown] = useSessionStorage<boolean>('gameIsShieldOnCooldown', false); // Use hook for shield cooldown
+  const [remainingCooldown, setRemainingCooldown] = useSessionStorage<number>('gameRemainingCooldown', 0); // Use hook for remaining cooldown
 
   // States that do NOT need session storage persistence (reset on refresh)
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
@@ -167,24 +176,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
   const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
-  // REMOVED: Shield Timers (Refs are better for timers as they don't trigger re-renders)
-  // REMOVED: const SHIELD_MAX_HEALTH = 2000;
-  // REMOVED: const SHIELD_COOLDOWN_TIME = 200000;
-  // REMOVED: const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
-  // REMOVED: const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Shield Timers (Refs are better for timers as they don't trigger re-renders)
+  const SHIELD_MAX_HEALTH = 2000; // Base health for the shield
+  const SHIELD_COOLDOWN_TIME = 200000; // Shield cooldown time in ms (200 seconds)
+  const shieldCooldownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for shield cooldown (200s) - Specify type
+  const cooldownCountdownTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for cooldown countdown display - Specify type
 
-  // REMOVED: CORRECTED: Use state directly from useSessionStorage, not a ref structure
-  // REMOVED: const [shieldCooldownStartTime, setShieldCooldownStartTime] = useSessionStorage<number | null>('gameShieldCooldownStartTime', null);
-  // REMOVED: const [pausedShieldCooldownRemaining, setPausedShieldCooldownRemaining] = useSessionStorage<number | null>('gamePausedShieldCooldownRemaining', null);
+  // CORRECTED: Use state directly from useSessionStorage, not a ref structure
+  const [shieldCooldownStartTime, setShieldCooldownStartTime] = useSessionStorage<number | null>('gameShieldCooldownStartTime', null);
+  const [pausedShieldCooldownRemaining, setPausedShieldCooldownRemaining] = useSessionStorage<number | null>('gamePausedShieldCooldownRemaining', null);
 
 
   // --- Coin and Gem States (Persisted in Firestore) ---
   const [coins, setCoins] = useState(0); // Initialize with 0, will load from Firestore
   const [displayedCoins, setDisplayedCoins] = useState(0); // Coins displayed with animation
+  // REMOVED: coinScheduleTimerRef
+  // REMOVED: coinCountAnimationTimerRef
 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
+  // Removed nextKeyIn from state and its hook
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -203,6 +215,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Refs for timers that do NOT need session storage persistence
   const gameRef = useRef<HTMLDivElement | null>(null); // Ref for the main game container div - Specify type
+  // REMOVED: obstacleTimerRef
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null); // Timer for character run animation - Specify type
   const particleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for generating particles - Specify type
 
@@ -214,6 +227,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Firestore instance
   const db = getFirestore();
+
+  // REMOVED: obstacleTypes array
 
   // --- NEW: Array of Cloud Image URLs ---
   const cloudImageUrls = [
@@ -302,6 +317,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       });
       console.log("Firestore transaction for coins successful."); // Debug Log 6
+      // REMOVED: Set state to show "OK" text after successful transaction
+      // setShowCoinUpdateSuccess(true);
+      // console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
+
     } catch (error) {
       console.error("Firestore Transaction failed for coins: ", error); // Debug Log 8
       // Handle the error, maybe retry or inform the user
@@ -317,11 +336,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       let step = Math.ceil(reward / 30);
       let current = oldCoins;
 
+      // Clear any existing coin count animation interval
+      // REMOVED: if (coinCountAnimationTimerRef.current) {
+      // REMOVED:     clearInterval(coinCountAnimationTimerRef.current);
+      // REMOVED: }
+
       const countInterval = setInterval(() => {
           current += step;
           if (current >= newCoins) {
               setDisplayedCoins(newCoins);
+              // setCoins(newCoins); // REMOVED: Local state update is handled by Firestore transaction callback
               clearInterval(countInterval);
+              // REMOVED: coinCountAnimationTimerRef.current = null; // Clear the ref after animation
               console.log("Coin count animation finished."); // Debug Log 3
 
               // NEW: Trigger Firestore update AFTER the animation finishes
@@ -335,6 +361,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               setDisplayedCoins(current);
           }
       }, 50);
+
+      // REMOVED: coinCountAnimationTimerRef.current = countInterval;
   };
 
   // --- NEW: Function to update user's key count in Firestore using a transaction ---
@@ -407,12 +435,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Reset session storage states to initial values
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
-    // REMOVED: setIsShieldActive(false);
-    // REMOVED: setShieldHealth(SHIELD_MAX_HEALTH);
-    // REMOVED: setIsShieldOnCooldown(false);
-    // REMOVED: setRemainingCooldown(0);
-    // REMOVED: setShieldCooldownStartTime(null);
-    // REMOVED: setPausedShieldCooldownRemaining(null);
+    // REMOVED: setObstacles([]);
+    // REMOVED: setActiveCoins([]);
+    setIsShieldActive(false);
+    setShieldHealth(SHIELD_MAX_HEALTH);
+    setIsShieldOnCooldown(false);
+    setRemainingCooldown(0);
+    setShieldCooldownStartTime(null); // Use the setter from the hook
+    setPausedShieldCooldownRemaining(null); // Use the setter from the hook
+    // Removed reset for nextKeyIn
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -423,17 +454,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShowDamageNumber(false);
     setIsBackgroundPaused(false); // Ensure background pause state is false on new game
     // Keep isStatsFullscreen and isRankOpen as is, they are not reset by starting a new game
+    // setIsStatsFullscreen(false); // Removed this line
+    // setIsRankOpen(false); // Removed this line
     setIsGoldMineOpen(false); // NEW: Ensure Gold Mine is closed on new game
     setIsInventoryOpen(false); // NEW: Ensure Inventory is closed on new game
 
 
     // Game elements setup
+    // REMOVED: Obstacle initialization
+    // REMOVED: setObstacles(initialObstacles);
     generateInitialClouds(5);
 
     if (particleTimerRef.current) clearInterval(particleTimerRef.current);
     // Only start particle timer if not paused
     if (!isBackgroundPaused) {
       particleTimerRef.current = setInterval(generateParticles, 300);
+    }
+
+
+    // Only schedule obstacles and coins if not paused
+    if (!isBackgroundPaused) {
+        // REMOVED: scheduleNextObstacle();
+        // REMOVED: scheduleNextCoin();
     }
   };
 
@@ -454,12 +496,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGameOver(false);
         setHealth(MAX_HEALTH); // Reset session storage state
         setCharacterPos(0); // Reset session storage state
-        // REMOVED: setIsShieldActive(false);
-        // REMOVED: setShieldHealth(SHIELD_MAX_HEALTH);
-        // REMOVED: setIsShieldOnCooldown(false);
-        // REMOVED: setRemainingCooldown(0);
-        // REMOVED: setShieldCooldownStartTime(null);
-        // REMOVED: setPausedShieldCooldownRemaining(null);
+        // REMOVED: setObstacles([]); // Reset session storage state
+        // REMOVED: setActiveCoins([]); // Reset session storage state
+        setIsShieldActive(false); // Reset session storage state
+        setShieldHealth(SHIELD_MAX_HEALTH); // Reset session storage state
+        setIsShieldOnCooldown(false); // Reset session storage state
+        setRemainingCooldown(0); // Reset session storage state
+        setShieldCooldownStartTime(null); // Reset session storage state
+        setPausedShieldCooldownRemaining(null); // Reset session storage state
+        // Removed reset for nextKeyIn
+
 
         setIsRunning(false);
         setShowHealthDamageEffect(false);
@@ -479,18 +525,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         // Clear all session storage related to the game on logout
         sessionStorage.removeItem('gameHealth');
         sessionStorage.removeItem('gameCharacterPos');
-        // REMOVED: sessionStorage.removeItem('gameIsShieldActive');
-        // REMOVED: sessionStorage.removeItem('gameShieldHealth');
-        // REMOVED: sessionStorage.removeItem('gameIsShieldOnCooldown');
-        // REMOVED: sessionStorage.removeItem('gameRemainingCooldown');
-        // REMOVED: sessionStorage.removeItem('gameShieldCooldownStartTime');
-        // REMOVED: sessionStorage.removeItem('gamePausedShieldCooldownRemaining');
+        // REMOVED: sessionStorage.removeItem('gameObstacles');
+        // REMOVED: sessionStorage.removeItem('gameActiveCoins');
+        sessionStorage.removeItem('gameIsShieldActive');
+        sessionStorage.removeItem('gameShieldHealth');
+        sessionStorage.removeItem('gameIsShieldOnCooldown');
+        sessionStorage.removeItem('gameRemainingCooldown');
+        sessionStorage.removeItem('gameShieldCooldownStartTime');
+        sessionStorage.removeItem('gamePausedShieldCooldownRemaining');
+        // Removed session storage key for nextKeyIn
 
         // Clear timers and intervals
+        // REMOVED: clearTimeout(obstacleTimerRef.current);
         clearInterval(runAnimationRef.current);
         clearInterval(particleTimerRef.current);
-        // REMOVED: if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
-        // REMOVED: if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+        if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
+        if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+        // REMOVED: clearInterval(coinScheduleTimerRef.current);
+        // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
@@ -508,10 +560,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (health <= 0 && gameStarted) {
       setGameOver(true);
       setIsRunning(false);
+      // REMOVED: clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
-      // REMOVED: if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
-      // REMOVED: if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+      if (shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
+      if (cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+      // No need to reset session storage states here, the hook handles saving the current state (including null)
+
+      // REMOVED: clearInterval(coinScheduleTimerRef.current);
+      // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
@@ -579,6 +636,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setParticles(prev => [...prev, ...newParticles]);
   };
 
+  // REMOVED: scheduleNextObstacle function
+  // REMOVED: scheduleNextCoin function
+
+
   // Handle character jump action
   const jump = () => {
     // Chỉ cho phép nhảy khi game bắt đầu, chưa kết thúc, bảng thống kê/xếp hạng/rank không mở VÀ game KHÔNG tạm dừng do chạy nền
@@ -631,8 +692,45 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 800);
   };
 
-  // REMOVED: Function to activate Shield skill
-  // REMOVED: const activateShield = () => { ... }
+  // --- NEW: Function to activate Shield skill ---
+  const activateShield = () => {
+    // Chỉ cho phép kích hoạt khiên khi game bắt đầu, chưa kết thúc, khiên chưa active, chưa hồi chiêu, bảng thống kê/xếp hạng/rank không mở, không đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
+    if (!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen) { // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen checks
+      console.log("Cannot activate Shield:", { gameStarted, gameOver, isShieldActive, isShieldOnCooldown, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen });
+      return;
+    }
+
+    console.log("Activating Shield!");
+
+    setIsShieldActive(true);
+    setShieldHealth(SHIELD_MAX_HEALTH);
+
+    setIsShieldOnCooldown(true);
+    // Calculate initial remaining cooldown in seconds and set the state
+    setRemainingCooldown(Math.ceil(SHIELD_COOLDOWN_TIME / 1000));
+
+    const now = Date.now();
+    setShieldCooldownStartTime(now); // Use the setter from the hook
+
+    // Log the value immediately after setting it
+    console.log(`Shield activated at: ${now}. shieldCooldownStartTime state set to: ${now}`);
+
+
+    setPausedShieldCooldownRemaining(null); // Use the setter from the hook
+
+    // Set the main shield cooldown timer
+    if (shieldCooldownTimerRef.current) {
+        clearTimeout(shieldCooldownTimerRef.current);
+    }
+    shieldCooldownTimerRef.current = setTimeout(() => {
+        console.log("Shield cooldown ended.");
+        setIsShieldOnCooldown(false);
+        setRemainingCooldown(0);
+        setShieldCooldownStartTime(null); // Use the setter from the hook
+        setPausedShieldCooldownRemaining(null); // Use the setter from the hook
+    }, SHIELD_COOLDOWN_TIME);
+
+  };
 
 
   // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
@@ -655,7 +753,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Bắt đầu vòng lặp game nếu chưa chạy VÀ game KHÔNG tạm dừng do chạy nền
     if (!gameLoopIntervalRef.current && !isBackgroundPaused) {
         gameLoopIntervalRef.current = setInterval(() => {
-            // const speed = 0.5; // No longer needed for obstacle/coin movement
+            const speed = 0.5;
+
+            // REMOVED: Obstacle movement and collision detection
+            // REMOVED: setObstacles(prevObstacles => { ... });
 
             setClouds(prevClouds => {
                 return prevClouds
@@ -693,6 +794,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     }))
                     .filter(particle => particle.opacity > 0 && particle.size > 0)
             );
+
+            // REMOVED: Coin movement and collision detection
+            // REMOVED: setActiveCoins(prevCoins => { ... });
+
+
         }, 30); // Tốc độ cập nhật vòng lặp game (khoảng 30ms)
     }
 
@@ -707,18 +813,32 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             particleTimerRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed shield related states
+  }, [gameStarted, gameOver, jumping, characterPos, isShieldActive, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed obstacles and activeCoins
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
   useEffect(() => {
       // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
       if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen) { // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
+          // REMOVED: if (obstacleTimerRef.current) {
+          // REMOVED:     clearTimeout(obstacleTimerRef.current);
+          // REMOVED:     obstacleTimerRef.current = null;
+          // REMOVED: }
+          // REMOVED: if (coinScheduleTimerRef.current) {
+          // REMOVED:     clearTimeout(coinScheduleTimerRef.current);
+          // REMOVED:     coinScheduleTimerRef.current = null;
+          // REMOVED: }
            // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
            if (particleTimerRef.current) {
                clearInterval(particleTimerRef.current);
                particleTimerRef.current = null;
            }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check)
+          // REMOVED: if (!obstacleTimerRef.current) {
+          // REMOVED:     scheduleNextObstacle();
+          // REMOVED: }
+          // REMOVED: if (!coinScheduleTimerRef.current) {
+          // REMOVED:     scheduleNextCoin();
+          // REMOVED: }
            if (!particleTimerRef.current) {
                particleTimerRef.current = setInterval(generateParticles, 300);
            }
@@ -726,25 +846,186 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
       // Hàm cleanup: Xóa hẹn giờ khi effect re-run hoặc component unmount
       return () => {
+          // REMOVED: if (obstacleTimerRef.current) {
+          // REMOVED:     clearTimeout(obstacleTimerRef.current);
+          // REMOVED:     obstacleTimerRef.current = null;
+          // REMOVED: }
+          // REMOVED: if (coinScheduleTimerRef.current) {
+          // REMOVED:     clearTimeout(coinScheduleTimerRef.current);
+          // REMOVED:     coinScheduleTimerRef.current = null;
+          // REMOVED: }
            if (particleTimerRef.current) {
                clearInterval(particleTimerRef.current);
                particleTimerRef.current = null;
            }
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed obstacle and coin related states
 
-  // REMOVED: Effect for shield cooldown countdown display AND main cooldown timer pause/resume
-  // REMOVED: useEffect(() => { ... }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]);
+  // *** MODIFIED Effect: Manage shield cooldown countdown display AND main cooldown timer pause/resume ***
+  useEffect(() => {
+      let countdownInterval: NodeJS.Timeout | null = null;
+
+      // CORRECTED: Use state variables directly
+      console.log("Shield Cooldown Effect running:", {
+          isShieldOnCooldown,
+          gameOver,
+          isStatsFullscreen, // Kiểm tra trạng thái bảng thống kê/xếp hạng
+          isLoadingUserData,
+          gameStarted,
+          shieldCooldownStartTime, // Use the state variable
+          pausedShieldCooldownRemaining, // Use the state variable
+          currentCooldownTimer: !!shieldCooldownTimerRef.current,
+          currentCountdownTimer: !!cooldownCountdownTimerRef.current,
+          isRankOpen, // Added isRankOpen to log
+          isBackgroundPaused, // Added isBackgroundPaused to log
+          isGoldMineOpen, // NEW: Added isGoldMineOpen to log
+          isInventoryOpen // NEW: Added isInventoryOpen to log
+      });
+
+
+      // Dừng/Tạm dừng bộ đếm thời gian khi game không hoạt động, kết thúc, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
+      if (isStatsFullscreen || isLoadingUserData || gameOver || !gameStarted || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen) { // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
+          console.log("Game inactive or paused. Clearing shield timers.");
+          // Tạm dừng bộ đếm thời gian hồi chiêu chính nếu đang chạy
+          if (shieldCooldownTimerRef.current && shieldCooldownStartTime !== null) { // Check for null before calculating remaining time
+              const elapsedTime = Date.now() - shieldCooldownStartTime;
+              const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+              setPausedShieldCooldownRemaining(remainingTimeMs); // Use the setter from the hook
+              clearTimeout(shieldCooldownTimerRef.current);
+              shieldCooldownTimerRef.current = null;
+              console.log(`Main shield cooldown PAUSED with ${remainingTimeMs}ms remaining.`);
+          }
+
+          // Tạm dừng bộ đếm thời gian hiển thị hồi chiêu nếu đang chạy
+          if (cooldownCountdownTimerRef.current) {
+              clearInterval(cooldownCountdownTimerRef.current);
+              cooldownCountdownTimerRef.current = null;
+              console.log("Shield display countdown PAUSED.");
+          }
+      } else if (isShieldOnCooldown) { // Bắt đầu/Tiếp tục đếm ngược nếu khiên đang hồi chiêu và game hoạt động
+           console.log("Shield is on cooldown and game is active.");
+           // Tiếp tục bộ đếm thời gian hồi chiêu chính nếu đã tạm dừng
+           if (pausedShieldCooldownRemaining !== null && pausedShieldCooldownRemaining > 0) {
+               const remainingTimeToResume = pausedShieldCooldownRemaining;
+               console.log(`Resuming main shield cooldown with ${remainingTimeToResume}ms.`);
+               shieldCooldownTimerRef.current = setTimeout(() => {
+                   console.log("Shield cooldown ended (after pause).");
+                   setIsShieldOnCooldown(false);
+                   setRemainingCooldown(0);
+                   setShieldCooldownStartTime(null); // Use the setter from the hook
+                   setPausedShieldCooldownRemaining(null); // Use the setter from the hook
+               }, remainingTimeToResume);
+
+               // Adjust the start time to reflect the resumed state
+               setShieldCooldownStartTime(Date.now() - (SHIELD_COOLDOWN_TIME - remainingTimeToResume)); // Use the setter from the hook
+               setPausedShieldCooldownRemaining(null); // Clear the paused remaining time
+
+               // Start countdown display immediately upon resuming
+               const initialRemainingSeconds = Math.ceil(remainingTimeToResume / 1000);
+               setRemainingCooldown(initialRemainingSeconds);
+               if (cooldownCountdownTimerRef.current === null) {
+                   console.log(`Starting shield display countdown upon resume with ${initialRemainingSeconds}s.`);
+                   countdownInterval = setInterval(() => {
+                       setRemainingCooldown(prev => {
+                           const newRemaining = Math.max(0, prev - 1);
+                           if (newRemaining === 0) {
+                               clearInterval(countdownInterval!);
+                               cooldownCountdownTimerRef.current = null;
+                               console.log("Shield display countdown finished.");
+                           }
+                           return newRemaining;
+                       });
+                   }, 1000); // Update every 1 second
+                   cooldownCountdownTimerRef.current = countdownInterval;
+               }
+
+
+           } else if (shieldCooldownStartTime !== null) { // If not paused, ensure main timer is running (should be set in activateShield)
+               // This block is primarily for ensuring the countdown display starts if it wasn't already
+               if (cooldownCountdownTimerRef.current === null) { // Only start countdown display if not already running
+                    const now = Date.now();
+                    const elapsedTime = now - shieldCooldownStartTime;
+                    const remainingTimeMs = Math.max(0, SHIELD_COOLDOWN_TIME - elapsedTime);
+                    const initialRemainingSeconds = Math.ceil(remainingTimeMs / 1000);
+
+                    console.log(`Calculating remaining cooldown: now=${now}, startTime=${shieldCooldownStartTime}, elapsedTime=${elapsedTime}, remainingMs=${remainingTimeMs}, initialSeconds=${initialRemainingSeconds}`);
+
+
+                    if (initialRemainingSeconds > 0) {
+                        console.log(`Starting shield display countdown from start time with ${initialRemainingSeconds}s.`);
+                         setRemainingCooldown(initialRemainingSeconds);
+                         countdownInterval = setInterval(() => {
+                             setRemainingCooldown(prev => {
+                                 const newRemaining = Math.max(0, prev - 1);
+                                 if (newRemaining === 0) {
+                                     clearInterval(countdownInterval!);
+                                     cooldownCountdownTimerRef.current = null;
+                                     console.log("Shield display countdown finished.");
+                                 }
+                                 return newRemaining;
+                             });
+                         }, 1000); // Update every 1 second
+                         cooldownCountdownTimerRef.current = countdownInterval;
+                    } else {
+                         // If remaining time is 0 or less, cooldown should end
+                         setIsShieldOnCooldown(false);
+                         setRemainingCooldown(0);
+                         setShieldCooldownStartTime(null);
+                         setPausedShieldCooldownRemaining(null);
+                         console.log("Shield cooldown already ended based on start time.");
+                    }
+
+               } else {
+                   // Explicitly handle the case where shieldCooldownStartTime is null/undefined
+                   console.warn("Shield is on cooldown but shieldCooldownStartTime is null/undefined. This should not happen if activateShield ran correctly.");
+                   // Potentially reset cooldown state here if this state is invalid
+                   setIsShieldOnCooldown(false);
+                   setRemainingCooldown(0);
+                   setShieldCooldownStartTime(null);
+                   setPausedShieldCooldownRemaining(null);
+               }
+           }
+      } else {
+          // Nếu khiên KHÔNG hồi chiêu, đảm bảo bộ đếm ngược hiển thị đã dừng và reset
+          if (cooldownCountdownTimerRef.current) {
+              clearInterval(cooldownCountdownTimerRef.current);
+              cooldownCountdownTimerRef.current = null;
+              console.log("Shield not on cooldown. Stopping display countdown.");
+          }
+          if (remainingCooldown !== 0) {
+              setRemainingCooldown(0);
+          }
+      }
+
+
+      // Cleanup function to clear intervals when the effect re-runs or component unmounts
+      return () => {
+          console.log("Shield Cooldown Effect cleanup.");
+          if (countdownInterval) {
+              clearInterval(countdownInterval);
+              console.log("Cleanup: Cleared countdownInterval.");
+          }
+          // Note: The main shieldCooldownTimerRef is managed within the effect's logic,
+          // clearing it here in the cleanup might interfere with the pause/resume logic.
+          // We rely on the effect's internal logic to clear shieldCooldownTimerRef.
+      };
+
+  }, [isShieldOnCooldown, gameOver, isStatsFullscreen, isLoadingUserData, shieldCooldownStartTime, pausedShieldCooldownRemaining, gameStarted, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen
 
 
   // Effect to clean up all timers when the component unmounts
   useEffect(() => {
     return () => {
       console.log("Component unmounting. Clearing all timers.");
+      // REMOVED: clearTimeout(obstacleTimerRef.current);
       clearInterval(runAnimationRef.current);
       clearInterval(particleTimerRef.current);
-      // REMOVED: if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
-      // REMOVED: if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+      if(shieldCooldownTimerRef.current) clearTimeout(shieldCooldownTimerRef.current);
+      if(cooldownCountdownTimerRef.current) clearInterval(cooldownCountdownTimerRef.current);
+      // No need to clear session storage states here, the hook handles saving the current state
+
+      // REMOVED: clearInterval(coinScheduleTimerRef.current);
+      // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
@@ -797,8 +1078,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return 'bg-red-500';
   };
 
-  // REMOVED: Calculate shield health percentage
-  // REMOVED: const shieldHealthPct = isShieldActive ? shieldHealth / SHIELD_MAX_HEALTH : 0;
+  // NEW: Calculate shield health percentage
+  const shieldHealthPct = isShieldActive ? shieldHealth / SHIELD_MAX_HEALTH : 0;
 
 
   // Render the character with animation and damage effect
@@ -822,6 +1103,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       </div>
     );
   };
+
+  // REMOVED: renderObstacle function
 
   // Render clouds
   const renderClouds = () => {
@@ -865,8 +1148,47 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     ));
   };
 
-  // REMOVED: Render Shield function
-  // REMOVED: const renderShield = () => { ... }
+  // --- NEW: Render Shield ---
+  const renderShield = () => {
+    if (!isShieldActive) return null;
+
+    const shieldSizePx = 80;
+
+    return (
+      <div
+        key="character-shield"
+        className="absolute w-20 h-20 flex flex-col items-center justify-center pointer-events-none z-20"
+         style={{
+          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px + 96px)`,
+          left: '13%',
+          transform: 'translate(-50%, -50%)',
+          transition: 'bottom 0.3s ease-out, left 0.3s ease-out',
+          width: `${shieldSizePx}px`,
+          height: `${shieldSizePx}px`,
+        }}
+      >
+        {shieldHealth > 0 && (
+            <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-600 shadow-sm mb-1">
+                <div
+                    className={`h-full ${shieldHealthPct > 0.6 ? 'bg-green-500' : shieldHealthPct > 0.3 ? 'bg-yellow-500' : 'bg-red-500'} transform origin-left transition-transform duration-200 ease-linear`}
+                    style={{ width: `${shieldHealthPct * 100}%` }}
+                ></div>
+            </div>
+        )}
+
+        <DotLottieReact
+          src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
+          loop
+          // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
+          autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen} // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen
+          className="w-full h-full"
+        />
+      </div>
+    );
+  };
+
+
+  // REMOVED: renderCoins function
 
 
   // NEW: Function to toggle full-screen stats
@@ -1046,7 +1368,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             {renderCharacter()}
 
-            {/* REMOVED: renderShield() */}
+            {renderShield()}
+
+            {/* REMOVED: {obstacles.map(obstacle => renderObstacle(obstacle))} */}
+
+            {/* REMOVED: {renderCoins()} */}
 
             {renderParticles()}
 
@@ -1082,6 +1408,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
+                  {/* REMOVED: StatsIcon is moved to the sidebar */}
+                  {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
+
                   <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
                           <div className="h-full overflow-hidden">
@@ -1123,6 +1452,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
                {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && ( // Only show currency display when stats, rank, gold mine, and inventory are NOT fullscreen (added isGoldMineOpen and isInventoryOpen)
                   <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
+                      {/* REMOVED: Display "OK" text */}
+                      {/*
+                      {showCoinUpdateSuccess && (
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
+                              OK
+                          </div>
+                      )}
+                      */}
                       <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                           <div className="relative mr-0.5 flex items-center justify-center">
@@ -1229,16 +1566,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
-             {/* REMOVED: Shield button and its logic */}
-             {/*
-             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && (
+             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && ( // Added isRankOpen, isGoldMineOpen, and isInventoryOpen check
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
                  <div
-                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`}
+                  className={`w-14 h-14 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg shadow-lg border-2 border-blue-600 flex flex-col items-center justify-center transition-transform duration-200 relative ${!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 cursor-pointer'}`} // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen checks
                   onClick={activateShield}
                   title={
-                    !gameStarted || gameOver || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen ? "Không khả dụng" :
+                    !gameStarted || gameOver || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen ? "Không khả dụng" : // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen checks
                     isShieldActive ? `Khiên: ${Math.round(shieldHealth)}/${SHIELD_MAX_HEALTH}` :
                     isShieldOnCooldown ? `Hồi chiêu: ${remainingCooldown}s` :
                     isStatsFullscreen ? "Không khả dụng" :
@@ -1246,16 +1582,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   }
                   aria-label="Sử dụng Khiên chắn"
                   role="button"
-                  tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen ? -1 : 0}
+                  tabIndex={!gameStarted || gameOver || isShieldActive || isShieldOnCooldown || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen ? -1 : 0} // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen checks
                 >
                   <div className="w-10 h-10">
                      <DotLottieReact
                         src="https://lottie.host/fde22a3b-be7f-497e-be8c-47ac1632593d/jx7sBGvENC.lottie"
                         loop
-                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen}
+                        // Tự động chạy animation khi khiên active, bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
+                        autoplay={isShieldActive && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen} // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen
                         className="w-full h-full"
                      />
                   </div>
+                  {/* MODIFIED: Conditional rendering for cooldown text */}
                   {isShieldOnCooldown && remainingCooldown > 0 && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-lg text-white text-sm font-bold">
                       {remainingCooldown}s
@@ -1266,6 +1604,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {[
                   {
                     icon: (
+                      // MODIFIED: Changed Mission icon to the new image URL
                       <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png"
                         alt="Mission Icon"
@@ -1277,13 +1616,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }}
                       />
                     ),
-                    label: "",
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
                   },
                   {
                     icon: (
+                      // MODIFIED: Changed Blacksmith icon to the new image URL
                       <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png"
                         alt="Blacksmith Icon"
@@ -1295,7 +1635,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }}
                       />
                     ),
-                    label: "",
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
@@ -1304,10 +1644,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
                         <div
+                            // MODIFIED: Added background, padding, and rounded-lg classes
                             className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick}
+                            onClick={item.onClick} // Apply onClick if it exists
                         >
                             {item.icon}
+                            {/* MODIFIED: Conditionally render label only if it's not empty */}
                             {item.label && (
                                 <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
                             )}
@@ -1322,7 +1664,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 ))}
               </div>
             )}
-            */}
 
             <TreasureChest
               initialChests={3}
