@@ -1962,14 +1962,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {[
                   {
                     icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg shadow-md shadow-indigo-500/30 relative overflow-hidden border border-indigo-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute top-1/2 transform -translate-x-1/2 w-2.5 h-0.5 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-t border-indigo-300"></div>
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-100/30 rounded-full animate-pulse-subtle"></div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
+                      // MODIFIED: Changed Shop icon to the new image URL
+                      <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png"
+                        alt="Shop Icon"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                            const target = e as any;
+                            target.onerror = null;
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
+                        }}
+                      />
                     ),
                     label: "Shop",
                     notification: true,
@@ -2060,17 +2063,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {[
                   {
                     icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg shadow-md shadow-emerald-500/30 relative overflow-hidden border border-emerald-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute inset-0.5 bg-emerald-500/30 rounded-sm flex items-center justify-center">
-                            <div className="w-3 h-2 border-t border-l border-emerald-300/70 absolute top-1 left-1"></div>
-                            <div className="w-3 h-2 border-b border-r border-emerald-300/70 absolute bottom-1 right-1"></div>
-                            <div className="absolute right-1 bottom-1 w-1 h-1 bg-red-400 rounded-full animate-pulse-subtle"></div>
-                          </div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
+                      // MODIFIED: Changed Mission icon to the new image URL
+                      <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png"
+                        alt="Mission Icon"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                            const target = e as any;
+                            target.onerror = null;
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
+                        }}
+                      />
                     ),
                     label: "Mission",
                     notification: true,
@@ -2079,20 +2082,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   },
                   {
                     icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-md shadow-orange-500/30 relative overflow-hidden border border-orange-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute inset-0.5 bg-orange-500/30 rounded-sm flex items-center justify-center">
-                            <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-2.5 h-1 bg-gray-700 rounded-sm"></div>
-                            <div className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-gray-800 rounded-sm"></div>
-                            <div className="absolute top-0.5 right-1 w-1.5 h-2 bg-gray-700 rotate-45 rounded-sm"></div>
-                            <div className="absolute top-1 left-1 w-0.5 h-2 bg-amber-700 rotate-45 rounded-full"></div>
-                            <div className="absolute bottom-1 right-1 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-subtle"></div>
-                            <div className="absolute bottom-1.5 right-1.5 w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse-subtle"></div>
-                          </div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-red-400 to-red-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
+                      // MODIFIED: Changed Blacksmith icon to the new image URL
+                      <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000526061f98f61c63872598cd5.png"
+                        alt="Blacksmith Icon"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                            const target = e as any;
+                            target.onerror = null;
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
+                        }}
+                      />
                     ),
                     label: "Blacksmith",
                     notification: true,
