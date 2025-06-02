@@ -332,18 +332,16 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
   };
 
   return (
-    // MODIFIED: Added flex flex-col to the main container
-    <div className="flex flex-col bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative">
-      {/* Close button at top right - position relative to the main div */}
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative"> {/* Added relative positioning */}
+      {/* Close button at top right */}
       <button 
-        onClick={handleCloseInventory}
+        onClick={handleCloseInventory} // Call the new handler
         className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10"
         aria-label="Đóng túi đồ"
       >
         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
       </button>
 
-      {/* Header Section */}
       <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5">
         <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
           <span className="mr-2.5 text-4xl">📦</span>
@@ -352,133 +350,131 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           </span>
         </h1>
         <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80">
+          {/* Display current occupied slots and total inventory slots */}
           <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
         </div>
       </div>
       
-      {/* MODIFIED: Added flex-1 overflow-y-auto wrapper for scrollable content area */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Custom CSS for animations */}
-        <style>
-          {`
-          @keyframes pulse-stronger {
-            0%, 100% {
-              opacity: 0.2; /* Reduced opacity */
-              transform: scale(1);
-            }
-            50% {
-              opacity: 0.3; /* Reduced opacity */
-              transform: scale(1.02); /* Reduced scale */
-            }
+      {/* Custom CSS for animations */}
+      <style>
+        {`
+        @keyframes pulse-stronger {
+          0%, 100% {
+            opacity: 0.2; /* Reduced opacity */
+            transform: scale(1);
           }
+          50% {
+            opacity: 0.3; /* Reduced opacity */
+            transform: scale(1.02); /* Reduced scale */
+          }
+        }
 
-          @keyframes fade-in-out {
-            0%, 100% {
-              opacity: 0;
-              transform: scale(0.9); /* Adjusted scale */
-            }
-            50% {
-              opacity: 0.1; /* Reduced opacity */
-              transform: scale(1);
-            }
+        @keyframes fade-in-out {
+          0%, 100% {
+            opacity: 0;
+            transform: scale(0.9); /* Adjusted scale */
           }
+          50% {
+            opacity: 0.1; /* Reduced opacity */
+            transform: scale(1);
+          }
+        }
 
-          @keyframes ping-slow {
-            0% {
-              transform: scale(0.9); /* Adjusted scale */
-              opacity: 0.6; /* Reduced opacity */
-            }
-            50% {
-              transform: scale(1.1); /* Adjusted scale */
-              opacity: 0.1; /* Reduced opacity */
-            }
-            100% {
-              transform: scale(0.9); /* Adjusted scale */
-              opacity: 0.6; /* Reduced opacity */
-            }
+        @keyframes ping-slow {
+          0% {
+            transform: scale(0.9); /* Adjusted scale */
+            opacity: 0.6; /* Reduced opacity */
           }
+          50% {
+            transform: scale(1.1); /* Adjusted scale */
+            opacity: 0.1; /* Reduced opacity */
+          }
+          100% {
+            transform: scale(0.9); /* Adjusted scale */
+            opacity: 0.6; /* Reduced opacity */
+          }
+        }
 
-          .animate-pulse-stronger {
-            animation: pulse-stronger 4s infinite ease-in-out;
-          }
-          .animate-fade-in-out {
-            animation: fade-in-out 5s infinite ease-in-out;
-          }
-          .animate-ping-slow {
-            animation: ping-slow 3s infinite ease-in-out;
-          }
+        .animate-pulse-stronger {
+          animation: pulse-stronger 4s infinite ease-in-out;
+        }
+        .animate-fade-in-out {
+          animation: fade-in-out 5s infinite ease-in-out;
+        }
+        .animate-ping-slow {
+          animation: ping-slow 3s infinite ease-in-out;
+        }
 
-          /* Additional glow for legendary items in grid */
-          .legendary-item-glow {
-            box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2); /* Reduced shadow intensity */
-            transition: box-shadow 0.3s ease-in-out;
-          }
-          .legendary-item-glow:hover {
-            box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
-          }
-          `}
-        </style>
-        
-        <ItemModal 
-          item={selectedItem} 
-          isOpen={isModalOpen} 
-          onClose={closeModal} 
-        />
-        
-        {/* MODIFIED: Added min-h-[450px] (adjust as needed) to the grid */}
-        <div className="grid grid-cols-5 gap-3 min-h-[450px]"> {/* Changed to 5 columns and added min-height */}
-          {currentItems.map((item: any) => {
-            const isLegendary = item.rarity === 'legendary';
-            
-            return (
-              <div 
-                key={item.id}
-                className={`group relative w-full aspect-square 
-                            ${isLegendary 
-                              ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
-                              : `bg-gradient-to-br ${getRarityGradient(item.rarity)}`} 
-                            rounded-lg border-2 ${getRarityColor(item.rarity)} 
-                            flex items-center justify-center cursor-pointer 
-                            hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 
-                            shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden`}
-                onClick={() => setSelectedItem(item)}
-              >
-                {/* Animated shine effect for legendary items on hover */}
-                {isLegendary && (
-                  <>
-                    <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
-                    <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
-                    <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
-                    <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> {/* Reduced opacity */}
-                    <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
-                    <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
-                  </>
-                )}
-                
-                {item.quantity > 1 && item.type !== 'currency' && (
-                  <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
-                    x{item.quantity}
-                  </div>
-                )}
-                
-                <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div> {/* Adjusted icon size */}
-                
-                <ItemTooltip item={item} />
-              </div>
-            );
-          })}
+        /* Additional glow for legendary items in grid */
+        .legendary-item-glow {
+          box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2); /* Reduced shadow intensity */
+          transition: box-shadow 0.3s ease-in-out;
+        }
+        .legendary-item-glow:hover {
+          box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
+        }
+        `}
+      </style>
+      
+      <ItemModal 
+        item={selectedItem} 
+        isOpen={isModalOpen} 
+        onClose={closeModal} 
+      />
+      
+      {/* Item Grid */}
+      <div className="grid grid-cols-5 gap-3"> {/* Changed to 5 columns */}
+        {currentItems.map((item: any) => {
+          const isLegendary = item.rarity === 'legendary';
           
-          {/* Empty slots for visual consistency */}
-          {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
+          return (
             <div 
-              key={`empty-${currentPage}-${i}`} 
-              className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
+              key={item.id}
+              className={`group relative w-full aspect-square 
+                          ${isLegendary 
+                            ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
+                            : `bg-gradient-to-br ${getRarityGradient(item.rarity)}`} 
+                          rounded-lg border-2 ${getRarityColor(item.rarity)} 
+                          flex items-center justify-center cursor-pointer 
+                          hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 
+                          shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden`}
+              onClick={() => setSelectedItem(item)}
             >
-              <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
+              {/* Animated shine effect for legendary items on hover */}
+              {isLegendary && (
+                <>
+                  <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
+                  <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
+                  <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> {/* Reduced opacity */}
+                  <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
+                  <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> {/* Reduced opacity */}
+                </>
+              )}
+              
+              {item.quantity > 1 && item.type !== 'currency' && (
+                <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
+                  x{item.quantity}
+                </div>
+              )}
+              
+              <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div> {/* Adjusted icon size */}
+              
+              <ItemTooltip item={item} />
             </div>
-          ))}
-        </div>
-      </div> {/* End of flex-1 overflow-y-auto wrapper */}
+          );
+        })}
+        
+        {/* Empty slots for visual consistency */}
+        {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
+          <div 
+            key={`empty-${currentPage}-${i}`} 
+            className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
+          >
+            <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
+          </div>
+        ))}
+      </div>
 
       {/* Pagination Controls */}
       <div className="mt-8 flex justify-center items-center gap-2">
@@ -494,6 +490,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         ))}
       </div>
       
+      {/* Removed the currency and shop section */}
     </div>
   );
 }
