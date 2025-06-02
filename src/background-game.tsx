@@ -197,7 +197,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Key state and ref for key drop interval
   // Removed nextKeyIn from state and its hook
-  // REMOVED: const [keyCount, setKeyCount] = useState(0); // Player's key count
+  const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
   // UI States
@@ -256,7 +256,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0); // Use fetched coins or default to 0
         setDisplayedCoins(userData.coins || 0); // Update displayed coins immediately
         setGems(userData.gems || 0); // Fetch gems as well if stored
-        // REMOVED: setKeyCount(userData.keys || 0); // Fetch keys if stored
+        setKeyCount(userData.keys || 0); // Fetch keys if stored
         // You can fetch other user-specific data here
       } else {
         // If user document doesn't exist, create it with default values
@@ -264,13 +264,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
-          // REMOVED: keys: 0,
+          keys: 0,
           createdAt: new Date(), // Optional: add a creation timestamp
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        // REMOVED: setKeyCount(0);
+        setKeyCount(0);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -302,7 +302,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           transaction.set(userDocRef, {
             coins: coins, // Use current local coins state for new doc
             gems: gems, // Use current local gems state for new doc
-            // REMOVED: keys: keyCount, // Use current local keys state for new doc
+            keys: keyCount, // Use current local keys state for new doc
             createdAt: new Date()
           });
         } else {
@@ -365,8 +365,47 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       // REMOVED: coinCountAnimationTimerRef.current = countInterval;
   };
 
-  // --- REMOVED: Function to update user's key count in Firestore using a transaction ---
-  // REMOVED: const updateKeysInFirestore = async (userId: string, amount: number) => { ... }
+  // --- NEW: Function to update user's key count in Firestore using a transaction ---
+  const updateKeysInFirestore = async (userId: string, amount: number) => {
+    console.log("updateKeysInFirestore called with amount:", amount);
+    if (!userId) {
+      console.error("Cannot update keys: User not authenticated.");
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', userId);
+
+    try {
+      console.log("Attempting Firestore transaction for keys...");
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          console.error("User document does not exist for key transaction.");
+           // Optionally create the document here if it's missing, though fetchUserData should handle this
+          // Ensure all necessary fields are set if creating
+          transaction.set(userDocRef, {
+            coins: coins, // Use current local coins state for new doc
+            gems: gems, // Use current local gems state for new doc
+            keys: keyCount, // Use current local keys state for new doc
+            createdAt: new Date()
+          });
+        } else {
+          const currentKeys = userDoc.data().keys || 0;
+          const newKeys = currentKeys + amount;
+          // Ensure keys don't go below zero if deducting
+          const finalKeys = Math.max(0, newKeys);
+          transaction.update(userDocRef, { keys: finalKeys });
+          console.log(`Keys updated in Firestore for user ${userId}: ${currentKeys} -> ${finalKeys}`);
+          // Update local state after successful Firestore update
+          setKeyCount(finalKeys);
+        }
+      });
+      console.log("Firestore transaction for keys successful.");
+    } catch (error) {
+      console.error("Firestore Transaction failed for keys: ", error);
+      // Handle the error, maybe retry or inform the user
+    }
+  };
 
 
   // NEW: Function to handle gem rewards received from TreasureChest
@@ -376,8 +415,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       // TODO: Implement Firestore update for gems
   };
 
-  // REMOVED: Function to handle key collection (called when obstacle with key is defeated)
-  // REMOVED: const handleKeyCollect = (amount: number) => { ... }
+  // NEW: Function to handle key collection (called when obstacle with key is defeated)
+  // This function now only handles key consumption from TreasureChest.
+  const handleKeyCollect = (amount: number) => {
+      console.log(`Collected ${amount} key(s).`);
+      // Update local state first (deduct keys)
+      setKeyCount(prev => Math.max(0, prev + amount)); // Use +amount because TreasureChest passes negative amount
+      // Then update Firestore
+      if (auth.currentUser) {
+        updateKeysInFirestore(auth.currentUser.uid, amount);
+      } else {
+        console.log("User not authenticated, skipping Firestore key update.");
+      }
+  };
 
 
   // Function to start a NEW game (resets session storage states)
@@ -469,7 +519,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0); // Reset local state
         setDisplayedCoins(0); // Reset local state
         setGems(0); // Reset local state
-        // REMOVED: setKeyCount(0); // Reset local state
+        setKeyCount(0); // Reset local state
         setIsLoadingUserData(false); // Stop loading if user logs out
 
         // Clear all session storage related to the game on logout
@@ -594,8 +644,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const jump = () => {
     // Chỉ cho phép nhảy khi game bắt đầu, chưa kết thúc, bảng thống kê/xếp hạng/rank không mở VÀ game KHÔNG tạm dừng do chạy nền
     if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen) { // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
-      setJumping(true);
       setCharacterPos(80);
+      setJumping(true); // Set jumping to true immediately
       setTimeout(() => {
         if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen) { // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
           setCharacterPos(0);
@@ -1617,12 +1667,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             <TreasureChest
               initialChests={3}
-              keyCount={0} // keyCount is no longer managed by obstacles, setting to 0 or remove if not needed
+              keyCount={keyCount} // Pass the keyCount state
               onKeyCollect={(n) => {
                 console.log(`Chest opened using ${n} key(s).`);
-                // Keys are no longer collected from obstacles.
-                // If TreasureChest still consumes keys, this logic would need to be handled elsewhere.
-                // For now, it will just log.
+                if (auth.currentUser) {
+                  updateKeysInFirestore(auth.currentUser.uid, -n); // Subtract keys
+                } else {
+                  console.log("User not authenticated, skipping Firestore key update.");
+                }
               }}
               // Use startCoinCountAnimation to handle coin rewards from chests
               onCoinReward={startCoinCountAnimation}
