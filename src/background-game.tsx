@@ -1974,7 +1974,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }}
                       />
                     ),
-                    label: "Shop",
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
@@ -2075,7 +2075,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }}
                       />
                     ),
-                    label: "Mission",
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
@@ -2094,7 +2094,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }}
                       />
                     ),
-                    label: "Blacksmith",
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
@@ -2102,7 +2102,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 ].map((item, index) => (
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
-                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center bg-black bg-opacity-60 p-1 px-3 rounded-lg w-14 h-14 flex-shrink-0">
+                        <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0">
                             {item.icon}
                             {item.label && (
                                 <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
