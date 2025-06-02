@@ -155,7 +155,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
-  const [particles, setParticles] = useState([]); // Array of active particles (dust)
+  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, xVelocity: number, yVelocity: number, opacity: number, color: string, size?: number}>>([]); // Array of active particles (dust) - Added size
   const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   // NEW: State to track if the game is paused due to being in the background
@@ -499,8 +499,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         // Clear timers and intervals
         // REMOVED: clearTimeout(obstacleTimerRef.current);
-        clearInterval(runAnimationRef.current);
-        clearInterval(particleTimerRef.current);
+        if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+        if(particleTimerRef.current) clearInterval(particleTimerRef.current);
         // REMOVED: clearInterval(coinScheduleTimerRef.current);
         // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
@@ -513,7 +513,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     // Cleanup subscription on component unmount
     return () => unsubscribe();
-  }, [auth]); // Depend on auth object
+  }, [auth, db]); // Depend on auth and db object
 
   // Effect to handle game over state when health reaches zero
   useEffect(() => {
@@ -521,8 +521,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setGameOver(true);
       setIsRunning(false);
       // REMOVED: clearTimeout(obstacleTimerRef.current);
-      clearInterval(runAnimationRef.current);
-      clearInterval(particleTimerRef.current);
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       // No need to reset session storage states here, the hook handles saving the current state (including null)
 
       // REMOVED: clearInterval(coinScheduleTimerRef.current);
@@ -579,19 +579,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
     if (!gameStarted || gameOver || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen) return; // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
 
-    const newParticles = [];
+    const newParticlesData = [];
     for (let i = 0; i < 2; i++) {
-      newParticles.push({
+      newParticlesData.push({
         id: Date.now() + i,
         x: 5 + Math.random() * 5,
         y: 0,
         xVelocity: -Math.random() * 1 - 0.5,
         yVelocity: Math.random() * 2 - 1,
         opacity: 1,
-        color: Math.random() > 0.5 ? 'bg-yellow-600' : 'bg-yellow-700'
+        color: Math.random() > 0.5 ? 'bg-yellow-600' : 'bg-yellow-700',
+        size: Math.random() * 3 + 2 // Added size for particles
       });
     }
-    setParticles(prev => [...prev, ...newParticles]);
+    setParticles(prev => [...prev, ...newParticlesData]);
   };
 
   // REMOVED: scheduleNextObstacle function
@@ -671,7 +672,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Bắt đầu vòng lặp game nếu chưa chạy VÀ game KHÔNG tạm dừng do chạy nền
     if (!gameLoopIntervalRef.current && !isBackgroundPaused) {
         gameLoopIntervalRef.current = setInterval(() => {
-            const speed = 0.5;
+            // const speed = 0.5; // Speed variable not used after removing obstacles
 
             // REMOVED: Obstacle movement and collision detection
             // REMOVED: setObstacles(prevObstacles => { ... });
@@ -708,9 +709,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         x: particle.x + particle.xVelocity,
                         y: particle.y + particle.yVelocity,
                         opacity: particle.opacity - 0.03,
-                        size: particle.size - 0.1
+                        size: (particle.size || 2) - 0.1 // Ensure size exists and decreases
                     }))
-                    .filter(particle => particle.opacity > 0 && particle.size > 0)
+                    .filter(particle => particle.opacity > 0 && (particle.size || 0) > 0) // Ensure size exists for filter
             );
 
             // REMOVED: Coin movement and collision detection
@@ -785,8 +786,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return () => {
       console.log("Component unmounting. Clearing all timers.");
       // REMOVED: clearTimeout(obstacleTimerRef.current);
-      clearInterval(runAnimationRef.current);
-      clearInterval(particleTimerRef.current);
+      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       // No need to clear session storage states here, the hook handles saving the current state
 
       // REMOVED: clearInterval(coinScheduleTimerRef.current);
@@ -885,7 +886,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           opacity: 0.8
         }}
         onError={(e) => {
-          const target = e as any; // Cast to any to access target
+          const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
           target.onerror = null;
           target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
         }}
@@ -1069,16 +1070,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           <div
             ref={gameRef}
             // THAY ĐỔI BƯỚC 2 Ở ĐÂY: className từ h-screen thành h-full
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer`}
+            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`} // Added a fallback background
             // Đã bỏ style={{ overflowX: 'hidden' }} vì overflow-hidden đã bao gồm
             onClick={handleTap} // Handle tap for start/restart
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div>
+            {/* === BẦU TRỜI MÀU XANH ĐÃ BỊ XÓA === */}
+            {/* <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div> */}
 
-            <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div>
+            {/* === MẶT TRỜI/MẶT TRĂNG VÀNG ĐÃ BỊ XÓA (TÙY CHỌN) === */}
+            {/* <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div> */}
 
-            {renderClouds()}
+            {renderClouds()} {/* Mây vẫn được giữ lại */}
 
+            {/* === ĐƯỜNG MÀU XÁM, GẠCH NGĂN CÁCH VÀ CÁC CHẤM ĐEN ĐÃ BỊ XÓA === */}
+            {/*
             <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
                     <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
@@ -1088,6 +1093,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
                 </div>
             </div>
+            */}
 
             {renderCharacter()}
 
@@ -1120,7 +1126,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         alt="Menu Icon"
                         className="w-5 h-5 object-contain" // Adjust size as needed
                         onError={(e) => {
-                            const target = e as any; // Cast to any to access target
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
                         }}
@@ -1230,7 +1236,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         alt="Shop Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e as any;
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
                         }}
@@ -1249,7 +1255,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         alt="Inventory Icon"
                         className="w-full h-full object-contain" // Ensure it fits the container
                         onError={(e) => {
-                            const target = e as any; // Cast to any to access target
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; // Fallback image
                         }}
@@ -1300,7 +1306,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         alt="Mission Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e as any;
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
                         }}
@@ -1319,7 +1325,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         alt="Blacksmith Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e as any;
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
                         }}
