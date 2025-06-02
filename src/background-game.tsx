@@ -8,16 +8,11 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-// Import the new GemIcon component. Removed MenuIcon and StatsIcon import.
 import { GemIcon } from './library/icon.tsx';
-
-// NEW: Import SidebarLayout and EnhancedLeaderboard
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-import GoldMine from './gold-miner.tsx'; // NEW: Import GoldMine component
-import Inventory from './inventory.tsx'; // NEW: Import Inventory component
-
-// NEW: Import DungeonBackground from its new file
+import GoldMine from './gold-miner.tsx'; 
+import Inventory from './inventory.tsx'; 
 import DungeonBackground from './background-dungeon.tsx';
 
 
