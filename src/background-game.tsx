@@ -155,7 +155,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
-  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, xVelocity: number, yVelocity: number, opacity: number, color: string, size?: number}>>([]); // Array of active particles (dust) - Added size
+  // REMOVED: [particles, setParticles] state
   const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   // NEW: State to track if the game is paused due to being in the background
@@ -197,7 +197,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const gameRef = useRef<HTMLDivElement | null>(null); // Ref for the main game container div - Specify type
   // REMOVED: obstacleTimerRef
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null); // Timer for character run animation - Specify type
-  const particleTimerRef = useRef<NodeJS.Timeout | null>(null); // Timer for generating particles - Specify type
+  // REMOVED: particleTimerRef
 
   // NEW: Ref for the main game loop interval
   const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null); // Specify type
@@ -439,11 +439,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // REMOVED: setObstacles(initialObstacles);
     generateInitialClouds(5);
 
-    if (particleTimerRef.current) clearInterval(particleTimerRef.current);
-    // Only start particle timer if not paused
-    if (!isBackgroundPaused) {
-      particleTimerRef.current = setInterval(generateParticles, 300);
-    }
+    // REMOVED: particleTimerRef and generateParticles call
+    // if (particleTimerRef.current) clearInterval(particleTimerRef.current);
+    // // Only start particle timer if not paused
+    // if (!isBackgroundPaused) {
+    //   particleTimerRef.current = setInterval(generateParticles, 300);
+    // }
 
 
     // Only schedule obstacles and coins if not paused
@@ -500,7 +501,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         // Clear timers and intervals
         // REMOVED: clearTimeout(obstacleTimerRef.current);
         if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-        if(particleTimerRef.current) clearInterval(particleTimerRef.current);
+        // REMOVED: if(particleTimerRef.current) clearInterval(particleTimerRef.current);
         // REMOVED: clearInterval(coinScheduleTimerRef.current);
         // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
@@ -522,7 +523,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setIsRunning(false);
       // REMOVED: clearTimeout(obstacleTimerRef.current);
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
+      // REMOVED: if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       // No need to reset session storage states here, the hook handles saving the current state (including null)
 
       // REMOVED: clearInterval(coinScheduleTimerRef.current);
@@ -574,26 +575,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setClouds(newClouds);
   };
 
-  // Generate dust particles for visual effect
-  const generateParticles = () => {
-    // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
-    if (!gameStarted || gameOver || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen) return; // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
-
-    const newParticlesData = [];
-    for (let i = 0; i < 2; i++) {
-      newParticlesData.push({
-        id: Date.now() + i,
-        x: 5 + Math.random() * 5,
-        y: 0,
-        xVelocity: -Math.random() * 1 - 0.5,
-        yVelocity: Math.random() * 2 - 1,
-        opacity: 1,
-        color: Math.random() > 0.5 ? 'bg-yellow-600' : 'bg-yellow-700',
-        size: Math.random() * 3 + 2 // Added size for particles
-      });
-    }
-    setParticles(prev => [...prev, ...newParticlesData]);
-  };
+  // REMOVED: generateParticles function
 
   // REMOVED: scheduleNextObstacle function
   // REMOVED: scheduleNextCoin function
@@ -661,11 +643,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-         // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
-        if (particleTimerRef.current) {
-            clearInterval(particleTimerRef.current);
-            particleTimerRef.current = null;
-        }
+         // REMOVED: particleTimerRef clearInterval
+        // if (particleTimerRef.current) {
+        //     clearInterval(particleTimerRef.current);
+        //     particleTimerRef.current = null;
+        // }
         return;
     }
 
@@ -702,17 +684,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     });
             });
 
-            setParticles(prevParticles =>
-                prevParticles
-                    .map(particle => ({
-                        ...particle,
-                        x: particle.x + particle.xVelocity,
-                        y: particle.y + particle.yVelocity,
-                        opacity: particle.opacity - 0.03,
-                        size: (particle.size || 2) - 0.1 // Ensure size exists and decreases
-                    }))
-                    .filter(particle => particle.opacity > 0 && (particle.size || 0) > 0) // Ensure size exists for filter
-            );
+            // REMOVED: setParticles update logic
+            // setParticles(prevParticles =>
+            //     prevParticles
+            //         .map(particle => ({
+            //             ...particle,
+            //             x: particle.x + particle.xVelocity,
+            //             y: particle.y + particle.yVelocity,
+            //             opacity: particle.opacity - 0.03,
+            //             size: (particle.size || 2) - 0.1 // Ensure size exists and decreases
+            //         }))
+            //         .filter(particle => particle.opacity > 0 && (particle.size || 0) > 0) // Ensure size exists for filter
+            // );
 
             // REMOVED: Coin movement and collision detection
             // REMOVED: setActiveCoins(prevCoins => { ... });
@@ -727,10 +710,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-         if (particleTimerRef.current) {
-            clearInterval(particleTimerRef.current);
-            particleTimerRef.current = null;
-        }
+        // REMOVED: particleTimerRef clearInterval
+        // if (particleTimerRef.current) {
+        //     clearInterval(particleTimerRef.current);
+        //     particleTimerRef.current = null;
+        // }
     };
   }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed obstacles and activeCoins
 
@@ -746,11 +730,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // REMOVED:     clearTimeout(coinScheduleTimerRef.current);
           // REMOVED:     coinScheduleTimerRef.current = null;
           // REMOVED: }
-           // Dừng tạo hạt khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
-           if (particleTimerRef.current) {
-               clearInterval(particleTimerRef.current);
-               particleTimerRef.current = null;
-           }
+           // REMOVED: particleTimerRef clearInterval
+           // if (particleTimerRef.current) {
+           //     clearInterval(particleTimerRef.current);
+           //     particleTimerRef.current = null;
+           // }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check)
           // REMOVED: if (!obstacleTimerRef.current) {
           // REMOVED:     scheduleNextObstacle();
@@ -758,9 +742,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // REMOVED: if (!coinScheduleTimerRef.current) {
           // REMOVED:     scheduleNextCoin();
           // REMOVED: }
-           if (!particleTimerRef.current) {
-               particleTimerRef.current = setInterval(generateParticles, 300);
-           }
+           // REMOVED: particleTimerRef setInterval
+           // if (!particleTimerRef.current) {
+           //     particleTimerRef.current = setInterval(generateParticles, 300);
+           // }
       }
 
       // Hàm cleanup: Xóa hẹn giờ khi effect re-run hoặc component unmount
@@ -773,10 +758,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           // REMOVED:     clearTimeout(coinScheduleTimerRef.current);
           // REMOVED:     coinScheduleTimerRef.current = null;
           // REMOVED: }
-           if (particleTimerRef.current) {
-               clearInterval(particleTimerRef.current);
-               particleTimerRef.current = null;
-           }
+           // REMOVED: particleTimerRef clearInterval
+           // if (particleTimerRef.current) {
+           //     clearInterval(particleTimerRef.current);
+           //     particleTimerRef.current = null;
+           // }
       };
   }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed obstacle and coin related states
 
@@ -787,7 +773,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.log("Component unmounting. Clearing all timers.");
       // REMOVED: clearTimeout(obstacleTimerRef.current);
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      if(particleTimerRef.current) clearInterval(particleTimerRef.current);
+      // REMOVED: if(particleTimerRef.current) clearInterval(particleTimerRef.current);
       // No need to clear session storage states here, the hook handles saving the current state
 
       // REMOVED: clearInterval(coinScheduleTimerRef.current);
@@ -894,22 +880,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     ));
   };
 
-  // Render dust particles
-  const renderParticles = () => {
-    return particles.map(particle => (
-      <div
-        key={particle.id}
-        className={`absolute rounded-full ${particle.color}`}
-        style={{
-          width: `${particle.size}px`,
-          height: `${particle.size}px`,
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`,
-          left: `calc(5% + ${particle.x}px)`,
-          opacity: particle.opacity
-        }}
-      ></div>
-    ));
-  };
+  // REMOVED: renderParticles function
+  // const renderParticles = () => {
+  //   return particles.map(particle => (
+  //     <div
+  //       key={particle.id}
+  //       className={`absolute rounded-full ${particle.color}`}
+  //       style={{
+  //         width: `${particle.size}px`,
+  //         height: `${particle.size}px`,
+  //         bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`,
+  //         left: `calc(5% + ${particle.x}px)`,
+  //         opacity: particle.opacity
+  //       }}
+  //     ></div>
+  //   ));
+  // };
 
 
   // REMOVED: renderCoins function
@@ -1101,7 +1087,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             {/* REMOVED: {renderCoins()} */}
 
-            {renderParticles()}
+            {/* REMOVED: {renderParticles()} */}
 
             {/* Main header container */}
             {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
