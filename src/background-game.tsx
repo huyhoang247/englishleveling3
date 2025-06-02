@@ -2084,7 +2084,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     icon: (
                       // MODIFIED: Changed Blacksmith icon to the new image URL
                       <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000526061f98f61c63872598cd5.png"
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png"
                         alt="Blacksmith Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
