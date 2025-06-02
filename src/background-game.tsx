@@ -1978,17 +1978,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   },
                   {
                     icon: (
-                      <div className="relative">
-                        <div className="w-5 h-5 bg-gradient-to-br from-amber-300 to-amber-500 rounded-lg shadow-md shadow-amber-500/30 relative overflow-hidden border border-amber-600">
-                          <div className="absolute top-0 left-0 w-1.5 h-0.5 bg-white/50 rounded-sm"></div>
-                          <div className="absolute inset-0.5 bg-amber-500/30 rounded-sm flex items-center justify-center">
-                            <div className="absolute top-1 right-1 w-1 h-1 bg-emerald-400 rounded-sm shadow-sm shadow-emerald-300/50 animate-pulse-subtle"></div>
-                          </div>
-                        </div>
-                        <div className="absolute -top-1 -right-1 bg-gradient-to-br from-green-400 to-green-600 rounded-full w-2 h-2 flex items-center justify-center shadow-md"></div>
-                      </div>
+                      // MODIFIED: Changed Inventory icon to the new image URL
+                      <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png"
+                        alt="Inventory Icon"
+                        className="w-full h-full object-contain" // Ensure it fits the container
+                        onError={(e) => {
+                            const target = e as any; // Cast to any to access target
+                            target.onerror = null;
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; // Fallback image
+                        }}
+                      />
                     ),
-                    label: "Inventory",
+                    // MODIFIED: Hidden the "Inventory" label
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true,
@@ -2002,6 +2005,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             onClick={item.onClick} // Apply onClick if it exists
                         >
                             {item.icon}
+                            {/* MODIFIED: Conditionally render label only if it's not empty */}
                             {item.label && (
                                 <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
                             )}
