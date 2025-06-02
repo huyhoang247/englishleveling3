@@ -254,10 +254,10 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
       )}
 
       {/* Sidebar container with fixed positioning */}
-      {/* Changed z-index to 50 to ensure it's above the game content */}
+      {/* MODIFIED: Changed positioning to fixed and added z-index */}
       <div
         className={`
-          fixed left-0 z-50 h-screen flex items-center
+          fixed left-0 top-0 z-50 h-screen flex items-center
           transform transition-all duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0 ${isSidebarVisible ? 'md:block' : 'md:hidden'}
@@ -384,9 +384,10 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
       </div>
 
       {/* Main content area - Removed md:ml-72 */}
+      {/* MODIFIED: Removed ml-0 and md:ml-72 as the sidebar will now overlay */}
       <div className={`
         flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-y-auto
-        ml-0 {/* Always start from ml-0 */}
+        w-full
       `}>
         {children} {/* Render the content passed from the parent */}
       </div>
