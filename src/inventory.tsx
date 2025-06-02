@@ -219,7 +219,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                       shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto 
                       transition-all duration-300 ${getRarityGlow(item.rarity)}
                       ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 
-                      scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}
+                      custom-scrollbar`} {/* Changed scrollbar-thin to custom-scrollbar */}
         >
           {/* Legendary specific visual enhancements */}
           {isLegendary && (
@@ -357,7 +357,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         </div>
       </div>
       
-      {/* Custom CSS for animations */}
+      {/* Custom CSS for animations and scrollbar hiding */}
       <style>
         {`
         @keyframes pulse-stronger {
@@ -415,6 +415,17 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         .legendary-item-glow:hover {
           box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
         }
+
+        /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+        .custom-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .custom-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
         `}
       </style>
       
@@ -425,7 +436,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
       />
       
       {/* Inventory Grid - now with scrolling */}
-      <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"> {/* Added max-height and overflow-y-auto for scrolling */}
+      <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"> {/* Applied custom-scrollbar class */}
         {items.map((item: any) => { // Render all items
           const isLegendary = item.rarity === 'legendary';
           
