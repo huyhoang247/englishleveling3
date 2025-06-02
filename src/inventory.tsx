@@ -23,7 +23,7 @@ const items = [
   { id: 19, name: 'Chìa khóa vàng', type: 'key', rarity: 'epic', description: 'Chìa khóa mở rương kho báu hiếm.', quantity: 1, icon: '🔑' },
   { id: 20, name: 'Sách cổ', type: 'misc', rarity: 'common', description: 'Một cuốn sách cũ chứa đựng kiến thức cổ xưa.', quantity: 1, icon: '📚' },
   { id: 21, name: 'Thức ăn', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 8, icon: '🍖' },
-  // Adding more items to demonstrate pagination
+  // Adding more items to demonstrate scrolling
   { id: 22, name: 'Ngọc trai', type: 'material', rarity: 'uncommon', description: 'Nguyên liệu quý hiếm.', quantity: 3, icon: '⚪' },
   { id: 23, name: 'Hạt giống phép thuật', type: 'misc', rarity: 'rare', description: 'Hạt giống có thể mọc ra cây phép thuật.', quantity: 1, icon: '🌱' },
   { id: 24, name: 'Bình mana lớn', type: 'potion', rarity: 'common', description: 'Hồi phục 100 điểm mana.', stats: { manaRestore: 100 }, quantity: 2, icon: '💧' },
@@ -33,6 +33,16 @@ const items = [
   { id: 28, name: 'Mảnh vỡ cổ', type: 'misc', rarity: 'common', description: 'Mảnh vỡ từ một di tích cổ.', quantity: 10, icon: '🏺' },
   { id: 29, name: 'Nước thánh', type: 'potion', rarity: 'rare', description: 'Thanh tẩy các hiệu ứng tiêu cực.', stats: { cleanse: true }, quantity: 1, icon: '✨' },
   { id: 30, name: 'Giày tốc độ', type: 'armor', rarity: 'uncommon', description: 'Tăng tốc độ di chuyển.', stats: { speed: 10 }, quantity: 1, icon: '👟' },
+  { id: 31, name: 'Bánh mì', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 5, icon: '🍞' },
+  { id: 32, name: 'Cà rốt', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 7, icon: '🥕' },
+  { id: 33, name: 'Đèn lồng', type: 'misc', rarity: 'common', description: 'Chiếu sáng đường đi.', quantity: 1, icon: '🏮' },
+  { id: 34, name: 'Dây thừng', type: 'misc', rarity: 'common', description: 'Dụng cụ hữu ích.', quantity: 2, icon: '🔗' },
+  { id: 35, name: 'Hộp nhạc', type: 'misc', rarity: 'rare', description: 'Phát ra giai điệu êm dịu.', quantity: 1, icon: '🎶' },
+  { id: 36, name: 'Kính lúp', type: 'misc', rarity: 'uncommon', description: 'Giúp nhìn rõ hơn.', quantity: 1, icon: '🔎' },
+  { id: 37, name: 'Bản đồ kho báu', type: 'quest', rarity: 'epic', description: 'Dẫn đến kho báu lớn.', quantity: 1, icon: '🧭' },
+  { id: 38, name: 'Nước tăng lực', type: 'potion', rarity: 'uncommon', description: 'Tăng sức mạnh tạm thời.', stats: { strengthBoost: 10, duration: 30 }, quantity: 3, icon: '⚡' },
+  { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
+  { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
 ];
 
 // Define props interface for Inventory component
@@ -44,20 +54,10 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 25; // 5 columns x 5 rows = 25 items per page
   const totalInventorySlots = 50; // Total slots available in the inventory (changed to 50)
 
   // Calculate occupied slots (number of unique item types)
   const occupiedSlots = items.length;
-
-  // Calculate items for the current page
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
-
-  // Calculate total pages
-  const totalPages = Math.ceil(items.length / itemsPerPage);
 
   // When selecting a new item, show modal
   useEffect(() => {
@@ -178,6 +178,8 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
       manaRestore: 'Hồi mana', // Added for new item
       speed: 'Tốc độ', // Added for new item
       cleanse: 'Thanh tẩy', // Added for new item
+      strengthBoost: 'Tăng sức mạnh', // Added for new item
+      luck: 'May mắn', // Added for new item
     };
     
     // Return translated name if available, otherwise format original stat name
@@ -217,7 +219,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                       shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto 
                       transition-all duration-300 ${getRarityGlow(item.rarity)}
                       ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 
-                      scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}
+                      custom-scrollbar`} {/* Changed to custom-scrollbar */}
         >
           {/* Legendary specific visual enhancements */}
           {isLegendary && (
@@ -318,7 +320,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
               </button>
               <button className={`flex-1 px-4 py-2.5 ${isLegendary
                 ? 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 border border-orange-600/30 text-orange-200' // Changed to orange
-                : 'bg-gray-700 hover:bg-gray-600 text-gray-200'} rounded-lg font-semibold transition-all duration-200 text-sm`}>
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-200'} rounded-lg font-semibold transition-colors duration-200 text-sm`}>
                 Trang bị
               </button>
               <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">
@@ -355,7 +357,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         </div>
       </div>
       
-      {/* Custom CSS for animations */}
+      {/* Custom CSS for animations and scrollbar */}
       <style>
         {`
         @keyframes pulse-stronger {
@@ -413,6 +415,17 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         .legendary-item-glow:hover {
           box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
         }
+
+        /* Custom scrollbar styles to hide it */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 0px; /* For vertical scrollbar */
+          height: 0px; /* For horizontal scrollbar */
+        }
+
+        /* For Firefox */
+        .custom-scrollbar {
+          scrollbar-width: none; /* Hide scrollbar in Firefox */
+        }
         `}
       </style>
       
@@ -422,9 +435,9 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         onClose={closeModal} 
       />
       
-      {/* Item Grid */}
-      <div className="grid grid-cols-5 gap-3"> {/* Changed to 5 columns */}
-        {currentItems.map((item: any) => {
+      {/* Inventory Grid - now with hidden scrollbar */}
+      <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar"> {/* Added custom-scrollbar class */}
+        {items.map((item: any) => { // Render all items
           const isLegendary = item.rarity === 'legendary';
           
           return (
@@ -465,10 +478,10 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           );
         })}
         
-        {/* Empty slots for visual consistency */}
-        {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
+        {/* Empty slots for visual consistency - now based on totalInventorySlots */}
+        {Array.from({ length: totalInventorySlots - items.length }).map((_, i) => (
           <div 
-            key={`empty-${currentPage}-${i}`} 
+            key={`empty-${i}`} 
             className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
           >
             <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
@@ -476,19 +489,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         ))}
       </div>
 
-      {/* Pagination Controls */}
-      <div className="mt-8 flex justify-center items-center gap-2">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-          <button
-            key={page}
-            onClick={() => setCurrentPage(page)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors
-              ${currentPage === page ? 'bg-yellow-500 text-gray-900' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}
-          >
-            {page}
-          </button>
-        ))}
-      </div>
+      {/* Removed the pagination controls */}
       
       {/* Removed the currency and shop section */}
     </div>
