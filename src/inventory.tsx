@@ -25,7 +25,12 @@ const items = [
   { id: 21, name: 'Thức ăn', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 8, icon: '🍖' },
 ];
 
-export default function App() {
+// Define props interface for Inventory component
+interface InventoryProps {
+  onClose: () => void; // Function to call when the inventory is closed
+}
+
+export default function Inventory({ onClose }: InventoryProps) { // Destructure onClose from props
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
@@ -63,14 +68,14 @@ export default function App() {
     }, 200); // Corresponds to modal transition duration
   };
 
-  // Handle closing the main inventory (placeholder for now)
+  // Handle closing the main inventory
   const handleCloseInventory = () => {
     console.log("Đóng túi đồ");
-    // In a real application, you might navigate away or hide this component.
+    onClose(); // Call the onClose prop when the close button is pressed
   };
 
   // Determine color based on rarity
-  const getRarityColor = (rarity) => {
+  const getRarityColor = (rarity: string) => {
     switch(rarity) {
       case 'common': return 'border-gray-500'; // Slightly darker common border
       case 'uncommon': return 'border-green-500';
@@ -82,7 +87,7 @@ export default function App() {
   };
 
   // Background gradient based on rarity
-  const getRarityGradient = (rarity) => {
+  const getRarityGradient = (rarity: string) => {
     switch(rarity) {
       case 'common': return 'from-gray-700/70 to-gray-800/70'; // More subtle common
       case 'uncommon': return 'from-green-800/80 to-gray-800/70'; // Adjusted uncommon
@@ -94,7 +99,7 @@ export default function App() {
   };
 
   // Text color based on rarity
-  const getRarityTextColor = (rarity) => {
+  const getRarityTextColor = (rarity: string) => {
     switch(rarity) {
       case 'common': return 'text-gray-300';
       case 'uncommon': return 'text-green-400';
@@ -106,7 +111,7 @@ export default function App() {
   };
 
   // Glow effect based on rarity
-  const getRarityGlow = (rarity) => {
+  const getRarityGlow = (rarity: string) => {
     switch(rarity) {
       case 'common': return '';
       case 'uncommon': return 'shadow-sm shadow-green-500/40';
@@ -118,7 +123,7 @@ export default function App() {
   };
   
   // Format stats based on item type
-  const renderItemStats = (item) => {
+  const renderItemStats = (item: any) => {
     if (!item.stats) return null;
     
     return (
@@ -136,14 +141,14 @@ export default function App() {
   };
 
   // Format stat name
-  const formatStatName = (stat) => {
+  const formatStatName = (stat: string) => {
     return stat
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, str => str.toUpperCase());
   };
 
   // Component to display tooltip on hover
-  const ItemTooltip = ({ item }) => (
+  const ItemTooltip = ({ item }: { item: any }) => (
     <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 
                    bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs 
                    opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
@@ -154,7 +159,7 @@ export default function App() {
   );
 
   // Modal for item details
-  const ItemModal = ({ item, isOpen, onClose }) => {
+  const ItemModal = ({ item, isOpen, onClose }: { item: any, isOpen: boolean, onClose: () => void }) => {
     if (!isOpen || !item) return null;
 
     const isLegendary = item.rarity === 'legendary';
@@ -276,7 +281,7 @@ export default function App() {
     <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative"> {/* Added relative positioning */}
       {/* Close button at top right */}
       <button 
-        onClick={handleCloseInventory}
+        onClick={handleCloseInventory} // Call the new handler
         className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10"
         aria-label="Đóng túi đồ"
       >
@@ -302,7 +307,7 @@ export default function App() {
       />
       
       <div className="grid grid-cols-5 gap-3"> {/* Changed to 5 columns */}
-        {currentItems.map(item => {
+        {currentItems.map((item: any) => {
           const isLegendary = item.rarity === 'legendary';
           
           return (
