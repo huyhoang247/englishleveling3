@@ -170,7 +170,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
       fireDamage: 'Sát thương lửa',
       strength: 'Sức mạnh',
       attackSpeed: 'Tốc độ tấn công',
-      manaRegen: 'Hồi mana', // Added for new item
+      manaRegen: 'Hồi mana',
       range: 'Tầm xa',
       poisonDamage: 'Sát thương độc',
       duration: 'Thời gian',
@@ -332,9 +332,9 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
   };
 
   return (
-    // Bao ngoài dùng flex-column, min-h-screen
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 relative">
-      {/* Nút Đóng */}
+    // MODIFIED: Added flex flex-col to the main container
+    <div className="flex flex-col bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative">
+      {/* Close button at top right - position relative to the main div */}
       <button 
         onClick={handleCloseInventory}
         className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10"
@@ -343,87 +343,90 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
       </button>
 
-      {/* Header tiêu đề + số ô */}
-      <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5 z-0">
+      {/* Header Section */}
+      <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5">
         <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
           <span className="mr-2.5 text-4xl">📦</span>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">Túi Đồ</span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">
+            Túi Đồ
+          </span>
         </h1>
         <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80">
           <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
         </div>
       </div>
       
-      {/* Custom CSS for animations */}
-      <style>
-        {`
-        @keyframes pulse-stronger {
-          0%, 100% {
-            opacity: 0.2; /* Reduced opacity */
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.3; /* Reduced opacity */
-            transform: scale(1.02); /* Reduced scale */
-          }
-        }
-
-        @keyframes fade-in-out {
-          0%, 100% {
-            opacity: 0;
-            transform: scale(0.9); /* Adjusted scale */
-          }
-          50% {
-            opacity: 0.1; /* Reduced opacity */
-            transform: scale(1);
-          }
-        }
-
-        @keyframes ping-slow {
-          0% {
-            transform: scale(0.9); /* Adjusted scale */
-            opacity: 0.6; /* Reduced opacity */
-          }
-          50% {
-            transform: scale(1.1); /* Adjusted scale */
-            opacity: 0.1; /* Reduced opacity */
-          }
-          100% {
-            transform: scale(0.9); /* Adjusted scale */
-            opacity: 0.6; /* Reduced opacity */
-          }
-        }
-
-        .animate-pulse-stronger {
-          animation: pulse-stronger 4s infinite ease-in-out;
-        }
-        .animate-fade-in-out {
-          animation: fade-in-out 5s infinite ease-in-out;
-        }
-        .animate-ping-slow {
-          animation: ping-slow 3s infinite ease-in-out;
-        }
-
-        /* Additional glow for legendary items in grid */
-        .legendary-item-glow {
-          box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2); /* Reduced shadow intensity */
-          transition: box-shadow 0.3s ease-in-out;
-        }
-        .legendary-item-glow:hover {
-          box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
-        }
-        `}
-      </style>
-      
-      <ItemModal 
-        item={selectedItem} 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
-      />
-      
-      {/* Phần Grid (cho phép scroll nếu quá cao) */}
+      {/* MODIFIED: Added flex-1 overflow-y-auto wrapper for scrollable content area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-5 gap-3 min-h-[400px]"> {/* Thêm min-h để đảm bảo chiều cao cố định cho 5 hàng */}
+        {/* Custom CSS for animations */}
+        <style>
+          {`
+          @keyframes pulse-stronger {
+            0%, 100% {
+              opacity: 0.2; /* Reduced opacity */
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.3; /* Reduced opacity */
+              transform: scale(1.02); /* Reduced scale */
+            }
+          }
+
+          @keyframes fade-in-out {
+            0%, 100% {
+              opacity: 0;
+              transform: scale(0.9); /* Adjusted scale */
+            }
+            50% {
+              opacity: 0.1; /* Reduced opacity */
+              transform: scale(1);
+            }
+          }
+
+          @keyframes ping-slow {
+            0% {
+              transform: scale(0.9); /* Adjusted scale */
+              opacity: 0.6; /* Reduced opacity */
+            }
+            50% {
+              transform: scale(1.1); /* Adjusted scale */
+              opacity: 0.1; /* Reduced opacity */
+            }
+            100% {
+              transform: scale(0.9); /* Adjusted scale */
+              opacity: 0.6; /* Reduced opacity */
+            }
+          }
+
+          .animate-pulse-stronger {
+            animation: pulse-stronger 4s infinite ease-in-out;
+          }
+          .animate-fade-in-out {
+            animation: fade-in-out 5s infinite ease-in-out;
+          }
+          .animate-ping-slow {
+            animation: ping-slow 3s infinite ease-in-out;
+          }
+
+          /* Additional glow for legendary items in grid */
+          .legendary-item-glow {
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2); /* Reduced shadow intensity */
+            transition: box-shadow 0.3s ease-in-out;
+          }
+          .legendary-item-glow:hover {
+            box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
+          }
+          `}
+        </style>
+        
+        <ItemModal 
+          item={selectedItem} 
+          isOpen={isModalOpen} 
+          onClose={closeModal} 
+        />
+        
+        {/* MODIFIED: Added min-h-[450px] (adjust as needed) to the grid */}
+        <div className="grid grid-cols-5 gap-3 min-h-[450px]"> {/* Changed to 5 columns and added min-height */}
           {currentItems.map((item: any) => {
             const isLegendary = item.rarity === 'legendary';
             
@@ -465,19 +468,19 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
             );
           })}
           
-          {/* Phần placeholder cho đủ 25 ô */}
+          {/* Empty slots for visual consistency */}
           {Array.from({ length: itemsPerPage - currentItems.length }).map((_, i) => (
             <div 
-              key={`empty-${currentPage}-${i}`} {/* Key duy nhất cho mỗi placeholder */}
+              key={`empty-${currentPage}-${i}`} 
               className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
             >
               <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
             </div>
           ))}
         </div>
-      </div>
+      </div> {/* End of flex-1 overflow-y-auto wrapper */}
 
-      {/* Nút phân trang (Pagination) nằm ở cuối */}
+      {/* Pagination Controls */}
       <div className="mt-8 flex justify-center items-center gap-2">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
           <button
@@ -491,7 +494,6 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
         ))}
       </div>
       
-      {/* Removed the currency and shop section */}
     </div>
   );
 }
