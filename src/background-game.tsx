@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Component } from 'react';
+import React, { useState, useEffect, useRef, Component, useMemo } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
@@ -97,9 +97,6 @@ interface ObstacleRunnerGameProps {
   currentUser: User | null; // Added currentUser prop
 }
 
-// REMOVED: GameObstacle interface
-// REMOVED: GameCoin interface
-
 // --- NEW: Define interface for Cloud with image source ---
 interface GameCloud {
   id: number;
@@ -115,11 +112,155 @@ interface GameCloud {
 interface GameSessionData {
     health: number;
     characterPos: number;
-    // REMOVED: obstacles: GameObstacle[];
-    // REMOVED: activeCoins: GameCoin[];
-    // Removed nextKeyIn from session data interface
     // Add other temporary game state you want to save
 }
+
+// NEW: DungeonBackground Component
+const DungeonBackground = () => {
+    const [time, setTime] = useState(0);
+
+    useEffect(() => {
+        // Set up an interval to update the 'time' state, creating a smooth animation loop.
+        // Updates approximately 60 times per second (16ms per frame).
+        const interval = setInterval(() => {
+            setTime(prev => prev + 0.016);
+        }, 16);
+        // Clean up the interval when the component unmounts to prevent memory leaks.
+        return () => clearInterval(interval);
+    }, []); // Empty dependency array ensures this effect runs only once on mount.
+
+    // Memoize the particles array to ensure it's created only once.
+    // This prevents unnecessary re-renders of particle positions.
+    const particles = useMemo(() => {
+        return Array.from({ length: 50 }, (_, i) => ({
+            id: i, // Unique ID for React's key prop
+            x: Math.random() * 100, // Initial X position (percentage)
+            y: Math.random() * 100, // Initial Y position (percentage)
+            size: Math.random() * 3 + 1, // Size of the particle
+            speed: Math.random() * 0.5 + 0.2, // Speed for animation
+            opacity: Math.random() * 0.8 + 0.2 // Initial opacity
+        }));
+    }, []); // Empty dependency array means this memoization happens once.
+
+    // Memoize the cracks array for wall textures, similar to particles.
+    const cracks = useMemo(() => {
+        return Array.from({ length: 8 }, (_, i) => ({
+            id: i, // Unique ID for React's key prop
+            x: Math.random() * 100, // Initial X position (percentage)
+            y: Math.random() * 100, // Initial Y position (percentage)
+            width: Math.random() * 30 + 10, // Width of the crack
+            height: Math.random() * 2 + 1, // Height of the crack
+            rotation: Math.random() * 45 // Initial rotation angle
+        }));
+    }, []); // Empty dependency array means this memoization happens once.
+
+    return (
+        // Main container for the dungeon background.
+        // Uses a dark gradient, full screen size, and hides overflow.
+        // Changed to absolute inset-0 to act as a background layer
+        <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-gray-900 via-gray-800 to-black">
+            {/* Animated radial gradient overlay for a subtle light source effect. */}
+            <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                    background: `radial-gradient(circle at ${50 + Math.sin(time * 0.5) * 20}% ${50 + Math.cos(time * 0.3) * 15}%,
+                    rgba(139, 69, 19, 0.4) 0%,
+                    rgba(101, 67, 33, 0.3) 30%,
+                    rgba(62, 39, 35, 0.2) 60%,
+                    transparent 100%)`
+                }}
+            />
+
+            {/* Stone texture overlay using a subtle gradient and mix-blend-multiply for texture. */}
+            <div className="absolute inset-0 opacity-20">
+                <div className="w-full h-full bg-gradient-to-br from-transparent via-gray-700 to-transparent mix-blend-multiply" />
+            </div>
+
+            {/* Render animated cracks on the wall. */}
+            {cracks.map(crack => (
+                <div
+                    key={crack.id}
+                    className="absolute bg-black opacity-40"
+                    style={{
+                        left: `${crack.x}%`,
+                        top: `${crack.y}%`,
+                        width: `${crack.width}px`,
+                        height: `${crack.height}px`,
+                        // Apply a slight rotation animation based on 'time'.
+                        transform: `rotate(${crack.rotation + Math.sin(time * 0.1) * 2}deg)`,
+                        borderRadius: '1px',
+                        transition: 'transform 0.1s ease-out' // Smooth transition for rotation.
+                    }}
+                />
+            ))}
+
+            {/* Render floating dust particles. */}
+            {particles.map(particle => (
+                <div
+                    key={particle.id}
+                    className="absolute rounded-full bg-yellow-200"
+                    style={{
+                        // Animate particle position using sine and cosine waves for a floating effect.
+                        left: `${(particle.x + Math.sin(time * particle.speed + particle.id) * 10) % 100}%`,
+                        top: `${(particle.y + Math.cos(time * particle.speed * 0.7 + particle.id) * 5) % 100}%`,
+                        width: `${particle.size}px`,
+                        height: `${particle.size}px`,
+                        // Animate particle opacity for a flickering effect.
+                        opacity: particle.opacity * (0.7 + Math.sin(time * 2 + particle.id) * 0.3),
+                        boxShadow: '0 0 4px rgba(255, 255, 0, 0.3)', // Subtle glow effect.
+                        transition: 'opacity 0.1s ease-out' // Smooth transition for opacity.
+                    }}
+                />
+            ))}
+
+            {/* Animated torch light effect (left side). */}
+            <div className="absolute top-10 left-10">
+                <div
+                    className="w-32 h-32 rounded-full"
+                    style={{
+                        // Radial gradient for the light, with flickering opacity and scale.
+                        background: `radial-gradient(circle,
+                        rgba(255, 140, 0, ${0.4 + Math.sin(time * 3) * 0.1}) 0%,
+                        rgba(255, 69, 0, ${0.3 + Math.sin(time * 2.5) * 0.08}) 30%,
+                        rgba(139, 69, 19, ${0.2 + Math.sin(time * 2) * 0.05}) 60%,
+                        transparent 100%)`,
+                        filter: 'blur(2px)', // Blurs the light for a softer effect.
+                        transform: `scale(${1 + Math.sin(time * 2.8) * 0.05})` // Pulsing scale effect.
+                    }}
+                />
+            </div>
+
+            {/* Another torch light effect (right side). */}
+            <div className="absolute top-16 right-12">
+                <div
+                    className="w-28 h-28 rounded-full"
+                    style={{
+                        // Similar radial gradient and flickering effects as the left torch.
+                        background: `radial-gradient(circle,
+                        rgba(255, 140, 0, ${0.35 + Math.sin(time * 2.3 + 1) * 0.08}) 0%,\n
+                        rgba(255, 69, 0, ${0.25 + Math.sin(time * 2.8 + 1) * 0.06}) 30%,\n
+                        rgba(139, 69, 19, ${0.15 + Math.sin(time * 2.2 + 1) * 0.04}) 60%,\n
+                        transparent 100%)`,
+                        filter: 'blur(2px)',
+                        transform: `scale(${1 + Math.sin(time * 2.5 + 1) * 0.04})`
+                    }}
+                />
+            </div>
+
+            {/* Ambient pulsing glow effect. */}
+            <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    // Radial gradient for a soft, pulsing ambient light.
+                    background: `radial-gradient(ellipse at center,
+                    rgba(101, 67, 33, ${0.1 + Math.sin(time * 0.5) * 0.05}) 0%,
+                    transparent 70%)`,
+                    mixBlendMode: 'overlay' // Blends with the background for a subtle effect.
+                }}
+            />
+        </div>
+    );
+};
 
 
 // Update component signature to accept className, hideNavBar, showNavBar, and currentUser props
@@ -146,8 +287,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const MAX_HEALTH = 3000; // Define max health
   const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH); // Use hook for health
   const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0); // Use hook for char position
-  // REMOVED: const [obstacles, setObstacles] = useSessionStorage<GameObstacle[]>('gameObstacles', []); // Use hook for obstacles
-  // REMOVED: const [activeCoins, setActiveCoins] = useSessionStorage<GameCoin[]>('gameActiveCoins', []); // Use hook for active coins
 
   // States that do NOT need session storage persistence (reset on refresh)
   const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
@@ -155,7 +294,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
   const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
   const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
-  // REMOVED: [particles, setParticles] state
   const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   // NEW: State to track if the game is paused due to being in the background
@@ -170,13 +308,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // --- Coin and Gem States (Persisted in Firestore) ---
   const [coins, setCoins] = useState(0); // Initialize with 0, will load from Firestore
   const [displayedCoins, setDisplayedCoins] = useState(0); // Coins displayed with animation
-  // REMOVED: coinScheduleTimerRef
-  // REMOVED: coinCountAnimationTimerRef
 
   const [gems, setGems] = useState(42); // Player's gem count, initialized
 
   // NEW: Key state and ref for key drop interval
-  // Removed nextKeyIn from state and its hook
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
 
@@ -195,9 +330,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Refs for timers that do NOT need session storage persistence
   const gameRef = useRef<HTMLDivElement | null>(null); // Ref for the main game container div - Specify type
-  // REMOVED: obstacleTimerRef
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null); // Timer for character run animation - Specify type
-  // REMOVED: particleTimerRef
 
   // NEW: Ref for the main game loop interval
   const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null); // Specify type
@@ -207,8 +340,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // NEW: Firestore instance
   const db = getFirestore();
-
-  // REMOVED: obstacleTypes array
 
   // --- NEW: Array of Cloud Image URLs ---
   const cloudImageUrls = [
@@ -297,9 +428,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       });
       console.log("Firestore transaction for coins successful."); // Debug Log 6
-      // REMOVED: Set state to show "OK" text after successful transaction
-      // setShowCoinUpdateSuccess(true);
-      // console.log("setShowCoinUpdateSuccess(true) called."); // Debug Log 7
 
     } catch (error) {
       console.error("Firestore Transaction failed for coins: ", error); // Debug Log 8
@@ -316,18 +444,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       let step = Math.ceil(reward / 30);
       let current = oldCoins;
 
-      // Clear any existing coin count animation interval
-      // REMOVED: if (coinCountAnimationTimerRef.current) {
-      // REMOVED:     clearInterval(coinCountAnimationTimerRef.current);
-      // REMOVED: }
-
       const countInterval = setInterval(() => {
           current += step;
           if (current >= newCoins) {
               setDisplayedCoins(newCoins);
-              // setCoins(newCoins); // REMOVED: Local state update is handled by Firestore transaction callback
               clearInterval(countInterval);
-              // REMOVED: coinCountAnimationTimerRef.current = null; // Clear the ref after animation
               console.log("Coin count animation finished."); // Debug Log 3
 
               // NEW: Trigger Firestore update AFTER the animation finishes
@@ -341,8 +462,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               setDisplayedCoins(current);
           }
       }, 50);
-
-      // REMOVED: coinCountAnimationTimerRef.current = countInterval;
   };
 
   // --- NEW: Function to update user's key count in Firestore using a transaction ---
@@ -415,9 +534,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // Reset session storage states to initial values
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
-    // REMOVED: setObstacles([]);
-    // REMOVED: setActiveCoins([]);
-    // Removed reset for nextKeyIn
 
     // Reset states that don't use session storage
     setGameStarted(true);
@@ -428,29 +544,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShowDamageNumber(false);
     setIsBackgroundPaused(false); // Ensure background pause state is false on new game
     // Keep isStatsFullscreen and isRankOpen as is, they are not reset by starting a new game
-    // setIsStatsFullscreen(false); // Removed this line
-    // setIsRankOpen(false); // Removed this line
     setIsGoldMineOpen(false); // NEW: Ensure Gold Mine is closed on new game
     setIsInventoryOpen(false); // NEW: Ensure Inventory is closed on new game
 
 
     // Game elements setup
-    // REMOVED: Obstacle initialization
-    // REMOVED: setObstacles(initialObstacles);
     generateInitialClouds(5);
-
-    // REMOVED: particleTimerRef and generateParticles call
-    // if (particleTimerRef.current) clearInterval(particleTimerRef.current);
-    // // Only start particle timer if not paused
-    // if (!isBackgroundPaused) {
-    //   particleTimerRef.current = setInterval(generateParticles, 300);
-    // }
-
 
     // Only schedule obstacles and coins if not paused
     if (!isBackgroundPaused) {
-        // REMOVED: scheduleNextObstacle();
-        // REMOVED: scheduleNextCoin();
     }
   };
 
@@ -471,10 +573,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGameOver(false);
         setHealth(MAX_HEALTH); // Reset session storage state
         setCharacterPos(0); // Reset session storage state
-        // REMOVED: setObstacles([]); // Reset session storage state
-        // REMOVED: setActiveCoins([]); // Reset session storage state
-        // Removed reset for nextKeyIn
-
 
         setIsRunning(false);
         setShowHealthDamageEffect(false);
@@ -494,16 +592,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         // Clear all session storage related to the game on logout
         sessionStorage.removeItem('gameHealth');
         sessionStorage.removeItem('gameCharacterPos');
-        // REMOVED: sessionStorage.removeItem('gameObstacles');
-        // REMOVED: sessionStorage.removeItem('gameActiveCoins');
-        // Removed session storage key for nextKeyIn
 
         // Clear timers and intervals
-        // REMOVED: clearTimeout(obstacleTimerRef.current);
         if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-        // REMOVED: if(particleTimerRef.current) clearInterval(particleTimerRef.current);
-        // REMOVED: clearInterval(coinScheduleTimerRef.current);
-        // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
@@ -521,13 +612,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (health <= 0 && gameStarted) {
       setGameOver(true);
       setIsRunning(false);
-      // REMOVED: clearTimeout(obstacleTimerRef.current);
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      // REMOVED: if(particleTimerRef.current) clearInterval(particleTimerRef.current);
-      // No need to reset session storage states here, the hook handles saving the current state (including null)
-
-      // REMOVED: clearInterval(coinScheduleTimerRef.current);
-      // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
@@ -574,11 +659,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
     setClouds(newClouds);
   };
-
-  // REMOVED: generateParticles function
-
-  // REMOVED: scheduleNextObstacle function
-  // REMOVED: scheduleNextCoin function
 
 
   // Handle character jump action
@@ -643,22 +723,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-         // REMOVED: particleTimerRef clearInterval
-        // if (particleTimerRef.current) {
-        //     clearInterval(particleTimerRef.current);
-        //     particleTimerRef.current = null;
-        // }
         return;
     }
 
     // Bắt đầu vòng lặp game nếu chưa chạy VÀ game KHÔNG tạm dừng do chạy nền
     if (!gameLoopIntervalRef.current && !isBackgroundPaused) {
         gameLoopIntervalRef.current = setInterval(() => {
-            // const speed = 0.5; // Speed variable not used after removing obstacles
-
-            // REMOVED: Obstacle movement and collision detection
-            // REMOVED: setObstacles(prevObstacles => { ... });
-
             setClouds(prevClouds => {
                 return prevClouds
                     .map(cloud => {
@@ -684,23 +754,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     });
             });
 
-            // REMOVED: setParticles update logic
-            // setParticles(prevParticles =>
-            //     prevParticles
-            //         .map(particle => ({
-            //             ...particle,
-            //             x: particle.x + particle.xVelocity,
-            //             y: particle.y + particle.yVelocity,
-            //             opacity: particle.opacity - 0.03,
-            //             size: (particle.size || 2) - 0.1 // Ensure size exists and decreases
-            //         }))
-            //         .filter(particle => particle.opacity > 0 && (particle.size || 0) > 0) // Ensure size exists for filter
-            // );
-
-            // REMOVED: Coin movement and collision detection
-            // REMOVED: setActiveCoins(prevCoins => { ... });
-
-
         }, 30); // Tốc độ cập nhật vòng lặp game (khoảng 30ms)
     }
 
@@ -710,11 +763,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
         }
-        // REMOVED: particleTimerRef clearInterval
-        // if (particleTimerRef.current) {
-        //     clearInterval(particleTimerRef.current);
-        //     particleTimerRef.current = null;
-        // }
     };
   }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed obstacles and activeCoins
 
@@ -722,47 +770,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
       // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
       if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen) { // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check
-          // REMOVED: if (obstacleTimerRef.current) {
-          // REMOVED:     clearTimeout(obstacleTimerRef.current);
-          // REMOVED:     obstacleTimerRef.current = null;
-          // REMOVED: }
-          // REMOVED: if (coinScheduleTimerRef.current) {
-          // REMOVED:     clearTimeout(coinScheduleTimerRef.current);
-          // REMOVED:     coinScheduleTimerRef.current = null;
-          // REMOVED: }
-           // REMOVED: particleTimerRef clearInterval
-           // if (particleTimerRef.current) {
-           //     clearInterval(particleTimerRef.current);
-           //     particleTimerRef.current = null;
-           // }
       } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added isRankOpen, isBackgroundPaused, isGoldMineOpen, and isInventoryOpen check)
-          // REMOVED: if (!obstacleTimerRef.current) {
-          // REMOVED:     scheduleNextObstacle();
-          // REMOVED: }
-          // REMOVED: if (!coinScheduleTimerRef.current) {
-          // REMOVED:     scheduleNextCoin();
-          // REMOVED: }
-           // REMOVED: particleTimerRef setInterval
-           // if (!particleTimerRef.current) {
-           //     particleTimerRef.current = setInterval(generateParticles, 300);
-           // }
       }
 
       // Hàm cleanup: Xóa hẹn giờ khi effect re-run hoặc component unmount
       return () => {
-          // REMOVED: if (obstacleTimerRef.current) {
-          // REMOVED:     clearTimeout(obstacleTimerRef.current);
-          // REMOVED:     obstacleTimerRef.current = null;
-          // REMOVED: }
-          // REMOVED: if (coinScheduleTimerRef.current) {
-          // REMOVED:     clearTimeout(coinScheduleTimerRef.current);
-          // REMOVED:     coinScheduleTimerRef.current = null;
-          // REMOVED: }
-           // REMOVED: particleTimerRef clearInterval
-           // if (particleTimerRef.current) {
-           //     clearInterval(particleTimerRef.current);
-           //     particleTimerRef.current = null;
-           // }
       };
   }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen]); // Dependencies updated, removed obstacle and coin related states
 
@@ -771,13 +783,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
     return () => {
       console.log("Component unmounting. Clearing all timers.");
-      // REMOVED: clearTimeout(obstacleTimerRef.current);
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      // REMOVED: if(particleTimerRef.current) clearInterval(particleTimerRef.current);
-      // No need to clear session storage states here, the hook handles saving the current state
-
-      // REMOVED: clearInterval(coinScheduleTimerRef.current);
-      // REMOVED: clearInterval(coinCountAnimationTimerRef.current);
 
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
@@ -853,8 +859,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  // REMOVED: renderObstacle function
-
   // Render clouds
   const renderClouds = () => {
     return clouds.map(cloud => (
@@ -879,26 +883,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       />
     ));
   };
-
-  // REMOVED: renderParticles function
-  // const renderParticles = () => {
-  //   return particles.map(particle => (
-  //     <div
-  //       key={particle.id}
-  //       className={`absolute rounded-full ${particle.color}`}
-  //       style={{
-  //         width: `${particle.size}px`,
-  //         height: `${particle.size}px`,
-  //         bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${particle.y}px)`,
-  //         left: `calc(5% + ${particle.x}px)`,
-  //         opacity: particle.opacity
-  //       }}
-  //     ></div>
-  //   ));
-  // };
-
-
-  // REMOVED: renderCoins function
 
 
   // NEW: Function to toggle full-screen stats
@@ -1060,34 +1044,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             // Đã bỏ style={{ overflowX: 'hidden' }} vì overflow-hidden đã bao gồm
             onClick={handleTap} // Handle tap for start/restart
           >
-            {/* === BẦU TRỜI MÀU XANH ĐÃ BỊ XÓA === */}
-            {/* <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-blue-600"></div> */}
-
-            {/* === MẶT TRỜI/MẶT TRĂNG VÀNG ĐÃ BỊ XÓA (TÙY CHỌN) === */}
-            {/* <div className="absolute w-16 h-16 rounded-full bg-gradient-to-b from-yellow-200 to-yellow-500 -top-4 right-10"></div> */}
+            {/* NEW: DungeonBackground as the first child */}
+            <DungeonBackground />
 
             {renderClouds()} {/* Mây vẫn được giữ lại */}
 
-            {/* === ĐƯỜNG MÀU XÁM, GẠCH NGĂN CÁCH VÀ CÁC CHẤM ĐEN ĐÃ BỊ XÓA === */}
-            {/*
-            <div className="absolute bottom-0 w-full" style={{ height: `${GROUND_LEVEL_PERCENT}%` }}>
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-800 to-gray-600">
-                    <div className="w-full h-1 bg-gray-900 absolute top-0"></div>
-                    <div className="w-3 h-3 bg-gray-900 rounded-full absolute top-6 left-20"></div>
-                    <div className="w-4 h-2 bg-gray-900 rounded-full absolute top-10 left-40"></div>
-                    <div className="w-6 h-3 bg-gray-900 rounded-full absolute top-8 right-10"></div>
-                    <div className="w-3 h-1 bg-gray-900 rounded-full absolute top-12 right-32"></div>
-                </div>
-            </div>
-            */}
-
             {renderCharacter()}
-
-            {/* REMOVED: {obstacles.map(obstacle => renderObstacle(obstacle))} */}
-
-            {/* REMOVED: {renderCoins()} */}
-
-            {/* REMOVED: {renderParticles()} */}
 
             {/* Main header container */}
             {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
@@ -1121,9 +1083,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
                 <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
-                  {/* REMOVED: StatsIcon is moved to the sidebar */}
-                  {/* <StatsIcon onClick={toggleStatsFullscreen} /> */}
-
                   <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
                           <div className="h-full overflow-hidden">
@@ -1165,14 +1124,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
                {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen) && ( // Only show currency display when stats, rank, gold mine, and inventory are NOT fullscreen (added isGoldMineOpen and isInventoryOpen)
                   <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
-                      {/* REMOVED: Display "OK" text */}
-                      {/*
-                      {showCoinUpdateSuccess && (
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-green-400 font-bold text-lg animate-fadeInOut pointer-events-none z-50">
-                              OK
-                          </div>
-                      )}
-                      */}
                       <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                           <div className="relative mr-0.5 flex items-center justify-center">
