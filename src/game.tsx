@@ -347,13 +347,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         {selectedBookId && (
           <button
             onClick={handleBackToLibrary}
-            className="flex items-center h-10 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
+            className="flex items-center h-8 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
             aria-label="Quay lại Thư viện"
           >
-            <span className="bg-gray-400 dark:bg-gray-500 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"> {/* Circular icon background */}
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back to Library" className="w-6 h-6" /> {/* Icon size */}
+            <span className="bg-gray-400 dark:bg-gray-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0"> {/* Circular icon background */}
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back to Library" className="w-5 h-5" /> {/* Icon size */}
             </span>
-            <span className="ml-2 mr-4 font-semibold text-base sm:text-md">BACK</span> {/* Text and padding-right */}
+            <span className="ml-1.5 mr-2.5 font-semibold text-sm">BACK</span> {/* Text and padding-right */}
           </button>
         )}
       </header>
