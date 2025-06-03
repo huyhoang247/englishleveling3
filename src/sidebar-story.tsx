@@ -15,7 +15,6 @@ interface SidebarLayoutProps {
 }
 
 // --- SVG Icon Components (Đã được bọc trong React.memo) ---
-// React.memo giúp ngăn chặn việc render lại không cần thiết nếu props không thay đổi.
 const XIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -49,14 +48,15 @@ const SettingsIcon = React.memo(({ size = 24, color = 'currentColor', className 
   </svg>
 ));
 
-const UsersIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-    <circle cx="9" cy="7" r="4"></circle>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-  </svg>
-));
+// UsersIcon không được sử dụng trong menuItems, nhưng vẫn giữ lại nếu cần
+// const UsersIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
+//   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+//     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+//     <circle cx="9" cy="7" r="4"></circle>
+//     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+//     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+//   </svg>
+// ));
 
 const HelpCircleIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -66,11 +66,12 @@ const HelpCircleIcon = React.memo(({ size = 24, color = 'currentColor', classNam
   </svg>
 ));
 
-const ChevronDownIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <polyline points="6 9 12 15 18 9"></polyline>
-  </svg>
-));
+// ChevronDownIcon không được sử dụng trong menuItems, nhưng vẫn giữ lại nếu cần
+// const ChevronDownIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
+//   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+//     <polyline points="6 9 12 15 18 9"></polyline>
+//   </svg>
+// ));
 
 const ActivityIcon = React.memo(({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -85,8 +86,6 @@ const ClipboardIcon = React.memo(({ size = 24, color = 'currentColor', className
   </svg>
 ));
 
-// Đối với các icon dạng <img>, React.memo cũng có thể áp dụng nếu chúng được định nghĩa như functional components.
-// Tuy nhiên, với cấu trúc hiện tại, chúng là các hàm trả về JSX trực tiếp, nên việc memo hóa component cha (SidebarLayout) là quan trọng hơn.
 const AwardIcon = React.memo(({ size = 24, className = '', ...props }) => (
   <img
     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
@@ -95,7 +94,7 @@ const AwardIcon = React.memo(({ size = 24, className = '', ...props }) => (
     height={size}
     className={className}
     {...props}
-    loading="lazy" // Thêm lazy loading cho hình ảnh từ network
+    loading="lazy"
   />
 ));
 
@@ -107,7 +106,7 @@ const FrameIcon = React.memo(({ size = 24, className = '', ...props }) => (
     height={size}
     className={className}
     {...props}
-    loading="lazy" // Thêm lazy loading cho hình ảnh từ network
+    loading="lazy"
   />
 ));
 
@@ -133,11 +132,9 @@ const PickaxeIcon = React.memo(({ size = 24, color = 'currentColor', className =
 ));
 // --- Hết SVG Icon Components ---
 
-const SIDEBAR_WIDTH_CLASS = 'w-72';
+const SIDEBAR_WIDTH_CLASS = 'w-72'; // Giữ nguyên chiều rộng sidebar
 
 // Bọc SidebarLayout trong React.memo
-// Điều này sẽ ngăn SidebarLayout render lại nếu các props của nó (children, activeScreen, các hàm onShow...) không thay đổi.
-// Quan trọng: Các hàm onShow... truyền từ component cha (VerticalFlashcardGallery) cũng cần được memoized bằng useCallback.
 const SidebarLayout = React.memo(({
   children,
   setToggleSidebar,
@@ -153,22 +150,19 @@ const SidebarLayout = React.memo(({
 }: SidebarLayoutProps) => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  // useCallback để memoize hàm toggleSidebar, tránh tạo lại hàm mới mỗi lần render
-  // nếu setToggleSidebar (prop) không thay đổi.
   const toggleSidebar = useCallback(() => {
     setIsSidebarVisible(prev => !prev);
   }, []);
 
   useEffect(() => {
     if (setToggleSidebar) {
-      // Truyền hàm toggleSidebar đã được memoized lên component cha.
       setToggleSidebar(() => toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]);
 
-  // Dữ liệu menu items có thể được định nghĩa bên ngoài component nếu không phụ thuộc vào props hoặc state
-  // hoặc dùng useMemo nếu nó được tính toán dựa trên props/state.
-  // Trong trường hợp này, nó là tĩnh, nên không cần useMemo.
+  // Sử dụng useMemo cho menuItems nếu các hàm onClick có thể thay đổi,
+  // nhưng vì chúng là props, React.memo của SidebarLayout sẽ xử lý.
+  // Để đơn giản, định nghĩa trực tiếp nếu không có sự phụ thuộc phức tạp.
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
@@ -181,48 +175,62 @@ const SidebarLayout = React.memo(({
   ];
 
   return (
-    <div className="relative h-screen flex bg-gray-100 text-gray-800 font-sans overflow-hidden">
+    <div className="relative h-screen flex bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans overflow-hidden">
+      {/* Main content area */}
       <main className="flex-1 flex flex-col overflow-y-auto w-full h-full">
         {children}
       </main>
 
+      {/* Overlay làm mờ nội dung chính */}
       {isSidebarVisible && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300"
           onClick={toggleSidebar}
           aria-hidden="true"
         />
       )}
 
+      {/* Sidebar Container */}
       <aside
         className={`
           fixed left-0 z-40 ${SIDEBAR_WIDTH_CLASS}
-          top-1/2 -translate-y-1/2
-          max-h-[95vh] overflow-y-auto rounded-r-2xl 
-          bg-gray-900 shadow-xl 
+          top-0 bottom-0 my-auto 
+          max-h-[96vh]  /* Chiều cao tối đa, cách top/bottom một chút */
+          overflow-y-auto rounded-r-2xl /* Bo tròn góc phải */
+          bg-slate-800/80 backdrop-blur-lg /* Nền mờ hiện đại */
+          border-r border-slate-700/50 /* Đường viền phải tinh tế */
+          shadow-2xl /* Đổ bóng rõ hơn */
           flex flex-col
-          transform transition-transform duration-300 ease-in-out
+          transform transition-transform duration-300 ease-out /* Thay đổi ease-in-out thành ease-out */
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
         `}
-        style={{ willChange: 'transform' }} // Gợi ý cho trình duyệt tối ưu hóa transform
+        style={{ willChange: 'transform' }}
         role="navigation"
         aria-label="Main sidebar"
       >
-        <nav className="py-4 overflow-y-auto">
-          <ul className="space-y-0 px-2">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon; // Icon component đã được memoized
+        {/* Optional: Sidebar Header (Logo, Title) */}
+        <div className="p-6 mb-2 text-center">
+          <h2 className="text-xl font-semibold text-white">MENU</h2>
+          {/* Bạn có thể thay thế bằng logo: <img src="/logo.svg" alt="Logo" className="h-8 mx-auto" /> */}
+        </div>
+
+        {/* Inner Sidebar Content Wrapper */}
+        <nav className="flex-grow px-3 pb-4 overflow-y-auto"> {/* Thêm flex-grow và padding */}
+          <ul className="space-y-1.5"> {/* Giảm space-y một chút */}
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeScreen === item.id;
               return (
-                <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
+                <li key={item.id}>
                   <a
                     href="#"
                     className={`
-                      flex items-center px-4 py-3 text-sm font-medium
-                      transition-all duration-150 ease-in-out group relative
-                      mx-1 my-1 rounded-xl
-                      ${activeScreen === item.id
-                        ? 'bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-md'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                      flex items-center px-3 py-2.5 text-sm font-medium
+                      rounded-lg group relative
+                      transition-all duration-200 ease-in-out
+                      ${isActive
+                        ? 'bg-sky-600 text-white shadow-md scale-[1.02]' // Nền và chữ cho mục active, hơi phóng to
+                        : 'text-slate-300 hover:bg-slate-700/60 hover:text-white' // Chữ và nền khi hover
                       }
                     `}
                     onClick={(e) => {
@@ -231,19 +239,25 @@ const SidebarLayout = React.memo(({
                       toggleSidebar(); 
                     }}
                   >
+                    {/* Visual indicator for active item (optional) */}
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-3/5 w-1 bg-sky-400 rounded-r-full"></span>
+                    )}
                     <div className={`
-                      w-8 h-8 flex items-center justify-center rounded-lg mr-3
-                      transition-colors duration-200
-                      ${activeScreen === item.id
-                        ? 'bg-blue-600 bg-opacity-80 text-white shadow-inner'
-                        : 'bg-gray-800 text-gray-400 group-hover:text-gray-200'
+                      w-9 h-9 flex items-center justify-center rounded-md mr-3
+                      transition-all duration-200
+                      ${isActive
+                        ? 'bg-sky-500/80 text-white' // Nền icon cho mục active
+                        : 'bg-slate-700/70 text-slate-400 group-hover:bg-slate-600/80 group-hover:text-slate-200' // Nền icon mặc định và khi hover
                       }
                     `}>
                       <Icon size={18} />
                     </div>
-                    <span>{item.label}</span>
+                    <span className="flex-grow">{item.label}</span>
                     {item.badge && (
-                      <span className="ml-auto bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                      <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full
+                        ${isActive ? 'bg-white/20 text-white' : 'bg-sky-500/80 text-white'}
+                      `}>
                         {item.badge}
                       </span>
                     )}
@@ -253,24 +267,31 @@ const SidebarLayout = React.memo(({
             })}
           </ul>
         </nav>
+
+        {/* Optional: Sidebar Footer (User Profile, Logout) */}
+        {/* <div className="mt-auto p-4 border-t border-slate-700/50">
+            <div className="flex items-center">
+                <img src="https://placehold.co/40x40/E2E8F0/slate-700?text=User" alt="User Avatar" className="w-10 h-10 rounded-full mr-3" />
+                <div>
+                    <p className="text-sm font-medium text-white">Tên Người Dùng</p>
+                    <a href="#" className="text-xs text-slate-400 hover:text-sky-400">Xem hồ sơ</a>
+                </div>
+            </div>
+        </div> */}
       </aside>
     </div>
   );
 });
 
-// Đặt tên hiển thị cho component đã memoized để dễ debug
 SidebarLayout.displayName = 'SidebarLayout';
 XIcon.displayName = 'XIcon';
 HomeIcon.displayName = 'HomeIcon';
 SettingsIcon.displayName = 'SettingsIcon';
-UsersIcon.displayName = 'UsersIcon';
 HelpCircleIcon.displayName = 'HelpCircleIcon';
-ChevronDownIcon.displayName = 'ChevronDownIcon';
 ActivityIcon.displayName = 'ActivityIcon';
 ClipboardIcon.displayName = 'ClipboardIcon';
 AwardIcon.displayName = 'AwardIcon';
 FrameIcon.displayName = 'FrameIcon';
 PickaxeIcon.displayName = 'PickaxeIcon';
-
 
 export { SidebarLayout };
