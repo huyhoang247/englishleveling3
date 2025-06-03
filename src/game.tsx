@@ -347,11 +347,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         {selectedBookId && (
           <button
             onClick={handleBackToLibrary}
-            className="flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+            className="flex items-center h-10 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
             aria-label="Quay lại Thư viện"
           >
-            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back to Library" className="w-6 h-6 mr-2" /> {/* Adjusted size and added margin-right */}
-            <span className="text-sm font-medium">Back</span>
+            <span className="bg-gray-400 dark:bg-gray-500 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"> {/* Circular icon background */}
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back to Library" className="w-6 h-6" /> {/* Icon size */}
+            </span>
+            <span className="ml-2 mr-4 font-semibold text-base sm:text-md">BACK</span> {/* Text and padding-right */}
           </button>
         )}
       </header>
