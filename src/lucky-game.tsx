@@ -140,8 +140,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [hasSpun, setHasSpun] = useState(false);
   const [coins, setCoins] = useState(1000);
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
-  // Reverted initial jackpot pool to 200
-  const [jackpotPool, setJackpotPool] = useState(200);
+  // Decreased initial jackpot pool from 50 to 10
+  const [jackpotPool, setJackpotPool] = useState(10);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
@@ -198,8 +198,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
     setCoins(prev => prev - 100);
 
-    // Reverted jackpot contribution to be between 10 and 100
-    const jackpotContribution = Math.floor(Math.random() * 91) + 10;
+    // Adjusted jackpot contribution to be between 1 and 10
+    const jackpotContribution = Math.floor(Math.random() * 10) + 1;
     setJackpotPool(prev => prev + jackpotContribution);
 
     setIsSpinning(true);
@@ -281,7 +281,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             setJackpotWon(true);
             setJackpotAnimation(true);
             setCoins(prev => prev + jackpotPool);
-            setJackpotPool(200); // Reset jackpot pool to its default value
+            setJackpotPool(10); // Reset jackpot pool to the new smaller initial value
             
             setTimeout(() => {
               setJackpotAnimation(false);
@@ -374,7 +374,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   )}
                   {itemRarity !== 'jackpot' && (
                     <span className="text-xs text-gray-600 relative z-10">
-                      {item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" />
+                      {cell.item.value}💰
                     </span>
                   )}
                 </div>
@@ -434,19 +434,19 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         <div className="text-center mb-6">
           {/* Conditional rendering for Jackpot Pool */}
           {activeTab === 'spin' && (
-            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${
+            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ /* Adjusted padding */
               jackpotAnimation
                 ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'
                 : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
             }`}>
-              <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider">
+              <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider"> {/* Adjusted text size */}
                 JACKPOT POOL
               </div>
-              <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${
+              <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${ /* Adjusted text size and gap */
                 jackpotAnimation ? 'animate-bounce' : ''
               }`}>
                 {jackpotPool.toLocaleString()}
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" /> {/* Adjusted icon size */}
               </div>
               <div className="text-yellow-200 text-xs mt-2 opacity-90">
                 Tỉ lệ quay trúng ô JACKPOT: 1%!
@@ -459,10 +459,10 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
           {/* Conditional rendering for Coins */}
           {activeTab === 'spin' && (
-            <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2">
-              <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center">
+            <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2"> {/* Adjusted gap and added mt-2 */}
+              <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center"> {/* Adjusted padding and added flex items-center */}
                 {coins.toLocaleString()}
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1" />
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1" /> {/* Adjusted icon size and margin */}
                 Xu
               </div>
             </div>
