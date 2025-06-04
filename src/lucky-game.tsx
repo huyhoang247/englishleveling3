@@ -1,5 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, Gem, Star, Zap, Shield, Coins, Trophy, Heart } from 'lucide-react';
+
+// Định nghĩa các biểu tượng SVG nội tuyến
+const CoinsIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0zm2-8a6 6 0 110 12 6 6 0 010-12z" clipRule="evenodd" fillRule="evenodd"></path>
+  </svg>
+);
+
+const GemIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10 16.5l-6.5-6.5L10 3.5l6.5 6.5L10 16.5zM10 0.5L0.5 10l9.5 9.5 9.5-9.5L10 0.5z"></path>
+  </svg>
+);
+
+const StarIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.927 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path>
+  </svg>
+);
+
+const ZapIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"></path>
+  </svg>
+);
+
+const ShieldIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10 2a8 8 0 00-8 8c0 4.418 3.582 8 8 8s8-3.582 8-8a8 8 0 00-8-8zm0 14.5c-3.59 0-6.5-2.91-6.5-6.5V5.5c0-.828.672-1.5 1.5-1.5h10c.828 0 1.5.672 1.5 1.5v4.5c0 3.59-2.91 6.5-6.5 6.5z"></path>
+  </svg>
+);
+
+const TrophyIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path>
+  </svg>
+);
+
+const HeartIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path>
+  </svg>
+);
+
+const GiftIcon = ({ className }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+    <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path>
+  </svg>
+);
+
 
 const LuckyChestGame = () => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -9,24 +58,25 @@ const LuckyChestGame = () => {
   const [coins, setCoins] = useState(1000);
   const [inventory, setInventory] = useState([]);
 
+  // Danh sách các vật phẩm với các biểu tượng SVG nội tuyến hoặc biểu tượng cảm xúc
   const items = [
-    { icon: Coins, name: 'Vàng', value: 100, rarity: 'common', color: 'text-yellow-500' },
-    { icon: Gem, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
-    { icon: Star, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
-    { icon: Zap, name: 'Tia chớp', value: 200, rarity: 'uncommon', color: 'text-cyan-500' },
-    { icon: Shield, name: 'Khiên bảo vệ', value: 400, rarity: 'rare', color: 'text-green-500' },
-    { icon: Trophy, name: 'Cúp vàng', value: 800, rarity: 'legendary', color: 'text-orange-500' },
-    { icon: Heart, name: 'Trái tim', value: 250, rarity: 'uncommon', color: 'text-red-500' },
-    { icon: Gift, name: 'Quà bí ẩn', value: 600, rarity: 'epic', color: 'text-pink-500' },
-    { icon: Coins, name: 'Vàng+', value: 150, rarity: 'common', color: 'text-yellow-500' },
-    { icon: Gem, name: 'Ngọc xanh', value: 350, rarity: 'rare', color: 'text-emerald-500' },
-    { icon: Star, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
-    { icon: Zap, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
+    { icon: CoinsIcon, name: 'Vàng', value: 100, rarity: 'common', color: 'text-yellow-500' },
+    { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
+    { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
+    { icon: ZapIcon, name: 'Tia chớp', value: 200, rarity: 'uncommon', color: 'text-cyan-500' },
+    { icon: ShieldIcon, name: 'Khiên bảo vệ', value: 400, rarity: 'rare', color: 'text-green-500' },
+    { icon: TrophyIcon, name: 'Cúp vàng', value: 800, rarity: 'legendary', color: 'text-orange-500' },
+    { icon: HeartIcon, name: 'Trái tim', value: 250, rarity: 'uncommon', color: 'text-red-500' },
+    { icon: GiftIcon, name: 'Quà bí ẩn', value: 600, rarity: 'epic', color: 'text-pink-500' },
+    { icon: CoinsIcon, name: 'Vàng+', value: 150, rarity: 'common', color: 'text-yellow-500' },
+    { icon: GemIcon, name: 'Ngọc xanh', value: 350, rarity: 'rare', color: 'text-emerald-500' },
+    { icon: StarIcon, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
+    { icon: ZapIcon, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
     // Các item này (12-15) không nằm trên vòng quay nếu chỉ dùng 12 ô
-    { icon: Shield, name: 'Khiên ma thuật', value: 700, rarity: 'epic', color: 'text-indigo-500' },
-    { icon: Trophy, name: 'Cúp bạc', value: 400, rarity: 'rare', color: 'text-gray-500' },
-    { icon: Heart, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
-    { icon: Gift, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
+    { icon: ShieldIcon, name: 'Khiên ma thuật', value: 700, rarity: 'epic', color: 'text-indigo-500' },
+    { icon: TrophyIcon, name: 'Cúp bạc', value: 400, rarity: 'rare', color: 'text-gray-500' },
+    { icon: HeartIcon, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
+    { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
   ];
 
   const itemPositionsOnWheel = [
@@ -37,6 +87,7 @@ const LuckyChestGame = () => {
   ];
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
+  // Hàm trả về màu nền dựa trên độ hiếm
   const getRarityBg = (rarity) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300';
@@ -48,15 +99,16 @@ const LuckyChestGame = () => {
     }
   };
 
+  // Hàm xử lý khi quay rương
   const spinChest = () => {
     if (isSpinning || coins < 100) return;
     
-    setCoins(prev => prev - 100);
-    setIsSpinning(true);
-    setSelectedIndex(-1); 
-    setHasSpun(false);
+    setCoins(prev => prev - 100); // Trừ xu khi quay
+    setIsSpinning(true); // Bắt đầu quay
+    setSelectedIndex(-1); // Đặt lại index được chọn
+    setHasSpun(false); // Đặt lại trạng thái đã quay
 
-    const landedItemIdx = Math.floor(Math.random() * NUM_WHEEL_SLOTS);
+    const landedItemIdx = Math.floor(Math.random() * NUM_WHEEL_SLOTS); // Chọn ngẫu nhiên vật phẩm trúng thưởng
     setFinalLandedItemIndex(landedItemIdx); // Lưu lại index trúng thưởng
 
     const numFullRotations = 2; // Số vòng quay đầy đủ trước khi bắt đầu chậm lại
@@ -66,6 +118,7 @@ const LuckyChestGame = () => {
     let currentSpeed = 50; // Tốc độ ban đầu
     const finalPauseDuration = 700; // Thời gian dừng ở ô trúng thưởng cuối cùng
 
+    // Hàm thực hiện animation quay
     const spinAnimation = () => {
       // Index được highlight trên vòng quay
       const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
@@ -105,22 +158,23 @@ const LuckyChestGame = () => {
         // Đã dừng ở ô trúng thưởng (selectedIndex lúc này === landedItemIdx)
         // Chờ một chút để người dùng thấy rõ ô trúng thưởng rồi mới kết thúc hẳn
         setTimeout(() => {
-          setIsSpinning(false);
-          setHasSpun(true);
+          setIsSpinning(false); // Dừng quay
+          setHasSpun(true); // Đặt trạng thái đã quay
           
           // Đảm bảo selectedIndex là ô trúng thưởng cuối cùng
           setSelectedIndex(landedItemIdx); 
 
           const wonItem = items[landedItemIdx];
-          setInventory(prev => [wonItem, ...prev]); 
-          setCoins(prev => prev + wonItem.value);
+          setInventory(prev => [wonItem, ...prev]); // Thêm vật phẩm vào kho đồ
+          setCoins(prev => prev + wonItem.value); // Cộng xu cho vật phẩm trúng thưởng
         }, finalPauseDuration); 
       }
     };
 
-    spinAnimation();
+    spinAnimation(); // Bắt đầu animation
   };
 
+  // Hàm render lưới vật phẩm
   const renderGrid = () => {
     const grid = Array(4).fill(null).map(() => Array(4).fill(null));
     
@@ -147,7 +201,7 @@ const LuckyChestGame = () => {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent"></div>
                   <div className={`text-6xl transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`}>
-                    📦
+                    📦 {/* Biểu tượng rương */}
                   </div>
                   <div className="absolute bottom-2 text-white font-bold text-sm bg-black/30 px-2 py-1 rounded">
                     RƯƠNG
