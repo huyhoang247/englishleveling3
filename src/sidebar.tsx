@@ -12,11 +12,12 @@ interface SidebarLayoutProps {
   onShowRank?: () => void;   // Handler for showing Rank
   // Add handlers for other menu items that need parent interaction here
   onShowHome?: () => void;
-  onShowTasks?: () => void;
+  // onShowTasks?: () => void; // REMOVED: Handler for showing Tasks
   // onShowPerformance?: () => void; // REMOVED: Handler for showing Performance
   onShowSettings?: () => void;
   onShowHelp?: () => void;
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
+  onShowJackpot?: () => void; // NEW: Handler for showing Jackpot
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -100,38 +101,6 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
   </svg>
 );
 
-// Icon for Performance menu item - REMOVED as the item is removed
-// const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-//   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-//     <line x1="18" y1="20" x2="18" y2="10"></line>
-//     <line x1="12" y1="20" x2="12" y2="4"></line>
-//     <line x1="6" y1="20" x2="6" y2="14"></line>
-//   </svg>
-// );
-
-const FileTextIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-    <polyline points="14 2 14 8 20 8"></polyline>
-    <line x1="16" y1="13" x2="8" y2="13"></line>
-    <line x1="16" y1="17" x2="8" y2="17"></line>
-    <line x1="10" y1="9" x2="8" y2="9"></line>
-  </svg>
-);
-
-const ClipboardIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-  </svg>
-);
-
-const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-  </svg>
-);
-
 // Icon for the original Stats menu item
 const AwardIcon = ({ size = 24, className = '', ...props }) => (
   <img
@@ -198,10 +167,19 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
   </svg>
 );
 
+// NEW: Inline SVG for a ticket icon (for Jackpot) - Reusing from jackpot.tsx
+const TicketIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M2 10V8a2 2 0 0 1 2-2h3.93a2 2 0 0 0 1.66.88L14 10l-4 4 4 4 4.07-2.88a2 2 0 0 0 1.66.88H20a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-3.93a2 2 0 0 0-1.66.88L10 22l-4-4-4-4-4.07 2.88a2 2 0 0 0-1.66.88H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2z" />
+    <path d="M9 12h6" />
+    <path d="M12 9v6" />
+  </svg>
+);
+
 
 // SidebarLayout component including Sidebar and main content area
 // Accept new specific handlers for menu items
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowSettings, onShowHelp, onShowGoldMine }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowSettings, onShowHelp, onShowGoldMine, onShowJackpot }: SidebarLayoutProps) {
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // Removed activeItem and activeContent states
@@ -235,7 +213,8 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
-    { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
+    { id: 'jackpot', label: 'Jackpot', icon: TicketIcon, onClick: onShowJackpot }, // NEW: Jackpot menu item
+    // { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks }, // REMOVED: Tasks menu item
     // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
