@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
 
 // SVG Icons
-const CoinsIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-    <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0zm2-8a6 6 0 110 12 6 6 0 010-12z" clipRule="evenodd" fillRule="evenodd"></path>
-  </svg>
-);
+// Modified CoinsIcon to accept a src prop for image URL
+const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt="Coin Icon"
+        className={className}
+        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }} // Fallback
+      />
+    );
+  }
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+      <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0zm2-8a6 6 0 110 12 6 6 0 010-12z" clipRule="evenodd" fillRule="evenodd"></path>
+    </svg>
+  );
+};
 
 const GemIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -87,19 +100,6 @@ const RewardPopup = ({ item, jackpotWon, jackpotAmount, onClose }: RewardPopupPr
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className={`relative p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-pop-in ${getRarityBgClass(item.rarity)}`}>
-        {/* Close button removed as per user request */}
-        {/* <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 transition-colors duration-200"
-        >
-          <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
-            alt="Close icon"
-            className="w-6 h-6 text-indigo-300"
-            onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }}
-          />
-        </button> */}
-
         {jackpotWon ? (
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
@@ -140,6 +140,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [hasSpun, setHasSpun] = useState(false);
   const [coins, setCoins] = useState(1000);
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
+  // Reverted initial jackpot pool to 200
   const [jackpotPool, setJackpotPool] = useState(200);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
@@ -194,12 +195,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   // Function to handle the spinning mechanism
   const spinChest = () => {
     if (isSpinning || coins < 100) return;
-    
+
     setCoins(prev => prev - 100);
-    
-    const jackpotContribution = Math.floor(Math.random() * 91) + 10; // Random contribution between 10 and 100
+
+    // Reverted jackpot contribution to be between 10 and 100
+    const jackpotContribution = Math.floor(Math.random() * 91) + 10;
     setJackpotPool(prev => prev + jackpotContribution);
-    
+
     setIsSpinning(true);
     setSelectedIndex(-1);
     setFinalLandedItemIndex(-1);
@@ -234,13 +236,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             }
         }
     }
-    
+
     setFinalLandedItemIndex(targetLandedItemIndex);
 
     const numFullRotations = 2;
     const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
-    
-    let currentVisualStepIndex = 0;  
+
+    let currentVisualStepIndex = 0;
     let currentSpeed = 50;
     const finalPauseDuration = 700;
 
@@ -252,7 +254,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
         const fastSpeed = 50;
         const moderateSpeed = 120;
-        const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];  
+        const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
 
         if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
           currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
@@ -261,7 +263,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         } else {
           currentSpeed = fastSpeed;
         }
-        
+
         currentVisualStepIndex++;
         setTimeout(spinAnimation, currentSpeed);
       } else {
@@ -274,12 +276,12 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Add timestamp
           setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Add to history, keep max 10 items
           setWonRewardDetails(wonItem); // Set details for popup
-          
+
           if (wonItem.rarity === 'jackpot') {
             setJackpotWon(true);
             setJackpotAnimation(true);
             setCoins(prev => prev + jackpotPool);
-            setJackpotPool(200); // Reset jackpot pool
+            setJackpotPool(200); // Reset jackpot pool to its default value
             
             setTimeout(() => {
               setJackpotAnimation(false);
@@ -288,7 +290,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             setCoins(prev => prev + wonItem.value);
           }
           setShowRewardPopup(true); // Show popup after winning
-        }, finalPauseDuration);  
+        }, finalPauseDuration);
       }
     };
     spinAnimation();
@@ -297,24 +299,24 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   // Renders the wheel grid
   const renderGrid = () => {
     const grid: ({ item: Item; isWheelItem: boolean; isSelected: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
-    
+
     itemPositionsOnWheel.forEach((pos, indexOnWheel) => {
-      if (indexOnWheel < items.length && items[indexOnWheel]) {  
+      if (indexOnWheel < items.length && items[indexOnWheel]) {
         grid[pos.row][pos.col] = {
           item: items[indexOnWheel],
-          isWheelItem: true,  
-          isSelected: selectedIndex === indexOnWheel  
+          isWheelItem: true,
+          isSelected: selectedIndex === indexOnWheel
         };
       }
     });
 
     return (
       <div className="grid grid-cols-4 gap-2 p-4 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-2xl border-4 border-amber-300">
-        {grid.map((row, rowIndex) =>  
+        {grid.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
-            if (rowIndex === 1 && colIndex === 1) {  
+            if (rowIndex === 1 && colIndex === 1) {
               return (
-                <div  
+                <div
                   key={`chest-${rowIndex}-${colIndex}`}
                   className="col-span-2 row-span-2 flex items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg border-4 border-yellow-300 relative overflow-hidden"
                 >
@@ -328,12 +330,12 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 </div>
               );
             }
-            if ((rowIndex === 1 && colIndex === 2) ||  
-                (rowIndex === 2 && colIndex === 1) ||  
+            if ((rowIndex === 1 && colIndex === 2) ||
+                (rowIndex === 2 && colIndex === 1) ||
                 (rowIndex === 2 && colIndex === 2)) {
-              return null;  
+              return null;
             }
-            
+
             if (cell && cell.isWheelItem) {
               const itemRarity = cell.item.rarity;
               const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
@@ -341,14 +343,14 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
               const displaySelected = cell.isSelected || isTrulySelected;
 
               return (
-                <div  
+                <div
                   key={`item-${rowIndex}-${colIndex}`}
                   className={`
                     aspect-square flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 relative overflow-hidden
                     ${getRarityBg(itemRarity)}
                     ${displaySelected && itemRarity !== 'jackpot' ? 'shadow-[inset_0_0_0_3px_theme(\'colors.yellow.400\')] scale-110 bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : ''}
                     ${displaySelected && itemRarity === 'jackpot' ? 'shadow-[inset_0_0_0_4px_theme(\'colors.amber.500\')] scale-110 z-20 animate-pulse' : ''}
-                    ${isSpinning && cell.isSelected ? (itemRarity === 'jackpot' ? 'animate-none' : 'animate-pulse') : ''}  
+                    ${isSpinning && cell.isSelected ? (itemRarity === 'jackpot' ? 'animate-none' : 'animate-pulse') : ''}
                     ${isTrulySelected && itemRarity !== 'jackpot' ? 'animate-none shadow-[inset_0_0_0_3px_theme(\'colors.green.500\')] bg-green-200' : ''}
                     ${isTrulySelected && itemRarity === 'jackpot' ? 'animate-none shadow-[inset_0_0_0_4px_theme(\'colors.red.600\')] z-20' : ''}
                     hover:scale-105
@@ -372,13 +374,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   )}
                   {itemRarity !== 'jackpot' && (
                     <span className="text-xs text-gray-600 relative z-10">
-                      {cell.item.value}💰
+                      {item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" />
                     </span>
                   )}
                 </div>
               );
             }
-            
+
             return <div key={`empty-outer-${rowIndex}-${colIndex}`} className="aspect-square bg-transparent"></div>;
           })
         )}
@@ -389,7 +391,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center font-sans">
       {/* Header containing Close button and Tabs */}
-      <div className="w-full max-w-md flex justify-between items-center mb-4"> {/* Changed mb-6 to mb-4 */}
+      <div className="w-full max-w-md flex justify-between items-center mb-4">
         {/* Tab Navigation */}
         <div className="flex">
           <button
@@ -413,17 +415,17 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             Lịch sử
           </button>
         </div>
-        
+
         {/* Close Button */}
         <button
-          onClick={onClose} // This will call the toggleLuckyGame from background-game.tsx
-          className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110" // Removed background classes
+          onClick={onClose}
+          className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110"
         >
           <img
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
             alt="Close icon"
-            className="w-5 h-5 text-indigo-300" // Adjusted size to w-5 h-5
-            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }} // Fallback for image load error
+            className="w-5 h-5 text-indigo-300"
+            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }}
           />
         </button>
       </div>
@@ -432,18 +434,19 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         <div className="text-center mb-6">
           {/* Conditional rendering for Jackpot Pool */}
           {activeTab === 'spin' && (
-            <div className={`mt-2 p-4 rounded-xl border-4 transition-all duration-500 relative ${ /* Changed my-4 to mt-2 */
-              jackpotAnimation  
-                ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'  
+            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${
+              jackpotAnimation
+                ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'
                 : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
             }`}>
-              <div className="text-yellow-200 text-sm font-semibold mb-1 tracking-wider">
-                💎 JACKPOT POOL 💎
+              <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider">
+                JACKPOT POOL
               </div>
-              <div className={`text-4xl font-black text-white drop-shadow-lg ${
+              <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${
                 jackpotAnimation ? 'animate-bounce' : ''
               }`}>
-                🏆 {jackpotPool.toLocaleString()} 💰
+                {jackpotPool.toLocaleString()}
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
               </div>
               <div className="text-yellow-200 text-xs mt-2 opacity-90">
                 Tỉ lệ quay trúng ô JACKPOT: 1%!
@@ -453,12 +456,14 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
               )}
             </div>
           )}
-          
+
           {/* Conditional rendering for Coins */}
           {activeTab === 'spin' && (
-            <div className="flex justify-center items-center gap-4 text-white text-sm sm:text-base">
-              <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1 sm:px-4 sm:py-2 rounded-lg font-bold shadow-md">
-                💰 {coins.toLocaleString()} Xu
+            <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2">
+              <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center">
+                {coins.toLocaleString()}
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1" />
+                Xu
               </div>
             </div>
           )}
@@ -477,8 +482,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 disabled={isSpinning || coins < 100}
                 className={`
                   px-6 py-3 sm:px-8 sm:py-4 text-lg sm:text-xl font-bold rounded-xl transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-50
-                  ${isSpinning || coins < 100  
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner'  
+                  ${isSpinning || coins < 100
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg focus:ring-green-400'
                   }
                 `}
@@ -499,11 +504,11 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
               {rewardHistory.map((item, index) => {
                 const itemRarity = item.rarity;
                 return (
-                  <div  
+                  <div
                     key={`${item.name}-${item.timestamp}-${index}`} // More unique key
                     className={`
-                      flex-shrink-0 w-28 h-32 ${getRarityBg(itemRarity)}  
-                      p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md  
+                      flex-shrink-0 w-28 h-32 ${getRarityBg(itemRarity)}
+                      p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md
                       hover:shadow-xl transition-all duration-200 transform hover:scale-105
                     `}
                   >
@@ -515,7 +520,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
                       {item.name}
                     </div>
-                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}💰</div>}
+                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
                     {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
                   </div>
                 );
@@ -555,7 +560,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
         }
         .animate-celebrate { animation: celebrate 0.8s ease-in-out forwards; }
-        
+
         @keyframes shine {
           0% { transform: translateX(-100%) skewX(-20deg); }
           100% { transform: translateX(100%) skewX(-20deg); }
@@ -622,25 +627,12 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;  
+          -webkit-box-orient: vertical;
           overflow: hidden;
         }
       `}</style>
     </div>
   );
 };
-
-// This App component is for standalone testing if needed.
-// In a real app, you'd import LuckyChestGame and use it.
-// You can comment this out or remove it if not needed.
-/*
-const App = () => {
-  const [showGame, setShowGame] = useState(true);
-  if (!showGame) {
-    return <button onClick={() => setShowGame(true)} className="p-4 bg-blue-500 text-white">Mở Rương May Mắn</button>;
-  }
-  return <LuckyChestGame onClose={() => setShowGame(false)} />;
-}
-*/
 
 export default LuckyChestGame;
