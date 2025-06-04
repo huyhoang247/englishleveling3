@@ -339,7 +339,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={onClose} // Đảm bảo gọi onClose ở đây
           className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110" // Removed background classes
         >
           <img
