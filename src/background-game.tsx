@@ -796,7 +796,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         showNavBar();
       }
       return newState;
-    );
+    });
   };
 
   // NEW: Function to toggle Inventory visibility
@@ -838,14 +838,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   // NEW: Function to show Home content (close any fullscreen overlays)
-  const showHome = () => {
-      setIsStatsFullscreen(false);
-      setIsRankOpen(false);
-      setIsGoldMineOpen(false); // NEW: Close Gold Mine when showing Home
-      setIsInventoryOpen(false); // NEW: Close Inventory when showing Home
-      setIsLuckyGameOpen(false); // NEW: Close Lucky Game when showing Home
-      showNavBar(); // Ensure navbar is visible
-  };
+  // const showHome = () => { // REMOVED
+  //     setIsStatsFullscreen(false);
+  //     setIsRankOpen(false);
+  //     setIsGoldMineOpen(false); // NEW: Close Gold Mine when showing Home
+  //     setIsInventoryOpen(false); // NEW: Close Inventory when showing Home
+  //     setIsLuckyGameOpen(false); // NEW: Close Lucky Game when showing Home
+  //     showNavBar(); // Ensure navbar is visible
+  // };
 
 
   // Handler to receive the sidebar toggle function from SidebarLayout
@@ -1216,7 +1216,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setToggleSidebar={handleSetToggleSidebar}
           onShowStats={toggleStatsFullscreen} // Pass the toggleFullscreen function here
           onShowRank={toggleRank} // Pass the toggleRank function here
-          // REMOVED: onShowHome={showHome} // Pass the new showHome function
+          // onShowHome={showHome} // REMOVED: Pass the new showHome function
           onShowGoldMine={toggleGoldMine} // NEW: Pass the toggleGoldMine function here
           onShowLuckyGame={toggleLuckyGame} // NEW: Pass the toggleLuckyGame function here
           // Add handlers for other menu items here if needed
