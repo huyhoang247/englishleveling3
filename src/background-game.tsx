@@ -519,11 +519,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Handle character jump action
   const jump = () => {
     // Chỉ cho phép nhảy khi game bắt đầu, chưa kết thúc, bảng thống kê/xếp hạng/rank không mở VÀ game KHÔNG tạm dừng do chạy nền
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { // Added isLuckyGameOpen check
+    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check
       setCharacterPos(80);
       setJumping(true); // Set jumping to true immediately
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { // Added isLuckyGameOpen check
+        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check
           setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
@@ -539,7 +539,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Handle tap/click on the game area to start or jump
   const handleTap = () => {
     // Bỏ qua thao tác chạm/click nếu đang tải dữ liệu, bảng thống kê/xếp hạng/rank đang mở HOẶC game đang tạm dừng do chạy nền
-    if (isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) return; // Added isLuckyGameOpen check
+    if (isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) return; // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check
 
     if (!gameStarted) {
       startNewGame(); // Start a new game on first tap if not started
@@ -573,7 +573,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // This useEffect is the main game loop for movement and collision detection
   useEffect(() => {
     // Dừng vòng lặp game khi game chưa bắt đầu, kết thúc, bảng thống kê/xếp hạng/rank đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
-    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) { // Added isLuckyGameOpen check
+    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) { // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen checks
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
@@ -619,19 +619,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             gameLoopIntervalRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]); // Added isLuckyGameOpen
+  }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]); // Dependencies updated, removed obstacles and activeCoins
 
   // Effect to manage obstacle and coin scheduling timers based on game state and fullscreen state
   useEffect(() => {
       // Dừng hẹn giờ tạo vật cản và xu khi game kết thúc, bảng thống kê/xếp hạng/rank đang mở, đang tải dữ liệu HOẶC game đang tạm dừng do chạy nền
-      if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) { // Added isLuckyGameOpen check
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { // Added isLuckyGameOpen check
+      if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) { // Added isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check
+      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { // Tiếp tục/Bắt đầu hẹn giờ khi game hoạt động bình thường (added isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check)
       }
 
       // Hàm cleanup: Xóa hẹn giờ khi effect re-run hoặc component unmount
       return () => {
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]); // Added isLuckyGameOpen
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]); // Dependencies updated, removed obstacle and coin related states
 
 
   // Effect to clean up all timers when the component unmounts
@@ -707,7 +707,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
           loop
           // Tự động chạy animation khi bảng thống kê/xếp hạng/rank KHÔNG mở, KHÔNG đang tải dữ liệu VÀ game KHÔNG tạm dừng do chạy nền
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen} // Added isLuckyGameOpen
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen} // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen
           className="w-full h-full"
         />
       </div>
@@ -884,8 +884,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                <EnhancedLeaderboard onClose={toggleRank} /> {/* Render Rank component and pass toggleRank as onClose */}
            </ErrorBoundary>
        );
-  } else if (isGoldMineOpen) { 
-      const isGoldMineGamePaused = gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isInventoryOpen || isLuckyGameOpen; // Added isLuckyGameOpen
+  } else if (isGoldMineOpen) { // NEW: Render GoldMine when isGoldMineOpen is true
+      // MODIFIED: isGamePaused prop for GoldMine component
+      // We explicitly remove isGoldMineOpen from this calculation
+      // so that GoldMine can run its real-time mining even when its own screen is open.
+      const isGoldMineGamePaused = gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isInventoryOpen || isLuckyGameOpen;
 
       console.log("Rendering GoldMine. Current isGamePaused prop (for GoldMine):", isGoldMineGamePaused);
       console.log("GoldMine paused factors (for GoldMine): gameOver:", gameOver, "gameStarted:", gameStarted, "isLoadingUserData:", isLoadingUserData, "isStatsFullscreen:", isStatsFullscreen, "isRankOpen:", isRankOpen, "isBackgroundPaused:", isBackgroundPaused, "isInventoryOpen:", isInventoryOpen, "isLuckyGameOpen:", isLuckyGameOpen);
@@ -896,67 +899,75 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       onClose={toggleGoldMine}
                       currentCoins={coins}
                       onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} 
+                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} // NEW: Pass the setter for displayedCoins
                       currentUserId={auth.currentUser!.uid}
-                      isGamePaused={isGoldMineGamePaused} 
+                      isGamePaused={isGoldMineGamePaused} // Use the new calculation here
                   />
               )}
           </ErrorBoundary>
       );
-  } else if (isInventoryOpen) { 
+  } else if (isInventoryOpen) { // NEW: Render Inventory when isInventoryOpen is true
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-              <Inventory onClose={toggleInventory} /> 
+              <Inventory onClose={toggleInventory} /> {/* Pass toggleInventory to Inventory's onClose */}
           </ErrorBoundary>
       );
-  } else if (isLuckyGameOpen) { // NEW: Render LuckyChestGame
-        mainContent = (
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
-                <LuckyChestGame />
-            </ErrorBoundary>
-        );
+  } else if (isLuckyGameOpen) { // NEW: Render LuckyChestGame when isLuckyGameOpen is true
+      mainContent = (
+          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
+              <LuckyChestGame onClose={toggleLuckyGame} /> {/* Pass toggleLuckyGame to LuckyChestGame's onClose */}
+          </ErrorBoundary>
+      );
   }
   else {
       // Default game content
       mainContent = (
           <div
             ref={gameRef}
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`} 
-            onClick={handleTap} 
+            // THAY ĐỔI BƯỚC 2 Ở ĐÂY: className từ h-screen thành h-full
+            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`} // Added a fallback background
+            // Đã bỏ style={{ overflowX: 'hidden' }} vì overflow-hidden đã bao gồm
+            onClick={handleTap} // Handle tap for start/restart
           >
+            {/* NEW: DungeonBackground as the first child */}
             <DungeonBackground />
 
-            {renderClouds()}
+            {renderClouds()} {/* Mây vẫn được giữ lại */}
 
             {renderCharacter()}
 
+            {/* Main header container */}
+            {/* MODIFIED: Added HeaderBackground component here and the new Menu Button */}
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
                         rounded-b-lg shadow-2xl
                         bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                         border-b border-l border-r border-slate-700/50">
 
+                {/* Use the HeaderBackground component */}
                 <HeaderBackground />
 
+                {/* NEW Menu Button - Placed before the HP bar container */}
                 <button
-                    onClick={() => sidebarToggleRef.current?.()} 
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" 
+                    onClick={() => sidebarToggleRef.current?.()} // Call the stored toggle function
+                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" // Added z-20 to ensure it's above background
                     aria-label="Mở sidebar"
                     title="Mở sidebar"
                 >
+                    {/* Use the provided image URL for the icon */}
                      <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
                         alt="Menu Icon"
-                        className="w-5 h-5 object-contain" 
+                        className="w-5 h-5 object-contain" // Adjust size as needed
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; 
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; // Fallback image
                         }}
                      />
                 </button>
 
 
-                <div className="flex items-center relative z-10"> 
+                <div className="flex items-center relative z-10"> {/* Added relative and z-10 to bring content above background layers */}
                   <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
                           <div className="h-full overflow-hidden">
@@ -995,11 +1006,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       </div>
                   </div>
               </div>
-               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( // Added !isLuckyGameOpen
-                  <div className="flex items-center space-x-1 currency-display-container relative z-10"> 
+               {/* Chỉ hiển thị thông tin tiền tệ khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( // Only show currency display when stats, rank, gold mine, inventory, and lucky game are NOT fullscreen (added isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen)
+                  <div className="flex items-center space-x-1 currency-display-container relative z-10"> {/* Added relative and z-10 */}
                       <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                           <div className="relative mr-0.5 flex items-center justify-center">
+                              {/* Sử dụng GemIcon từ file mới */}
                               <GemIcon size={16} color="#a78bfa" className="relative z-20" />
                           </div>
                           <div className="font-bold text-purple-200 text-xs tracking-wide">
@@ -1014,7 +1027,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                       <CoinDisplay
                         displayedCoins={displayedCoins}
-                        isStatsFullscreen={isStatsFullscreen} 
+                        isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
                       />
                   </div>
                )}
@@ -1025,61 +1038,68 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
                 <button
                   className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                  onClick={startNewGame} 
+                  onClick={startNewGame} // Call startNewGame on button click
                 >
                   Chơi Lại
                 </button>
               </div>
             )}
 
-            {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( // Added !isLuckyGameOpen
+            {/* Keep these buttons, they are not part of the main header or sidebar */}
+            {/* Chỉ hiển thị các nút này khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+            {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( // Added isRankOpen, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check
               <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
                 {[
                   {
                     icon: (
+                      // MODIFIED: Changed Shop icon to the new image URL
                       <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png"
                         alt="Shop Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
                   },
                   {
                     icon: (
+                      // MODIFIED: Changed Inventory icon to the new image URL
                       <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png"
                         alt="Inventory Icon"
-                        className="w-full h-full object-contain" 
+                        className="w-full h-full object-contain" // Ensure it fits the container
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; 
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; // Fallback image
                         }}
                       />
                     ),
-                    label: "", 
+                    // MODIFIED: Hidden the "Inventory" label
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true,
-                    onClick: toggleInventory 
+                    onClick: toggleInventory // NEW: Add onClick handler
                   }
                 ].map((item, index) => (
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
                         <div
+                            // MODIFIED: Added background, padding, and rounded-lg classes
                             className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick} 
+                            onClick={item.onClick} // Apply onClick if it exists
                         >
                             {item.icon}
+                            {/* MODIFIED: Conditionally render label only if it's not empty */}
                             {item.label && (
                                 <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
                             )}
@@ -1095,42 +1115,45 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
-             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( // Added !isLuckyGameOpen
+             {/* Chỉ hiển thị nút khiên khi bảng thống kê/xếp hạng và rank KHÔNG mở */}
+             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( // Added isRankOpen, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen check
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
                 {[
                   {
                     icon: (
+                      // MODIFIED: Changed Mission icon to the new image URL
                       <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png"
                         alt="Mission Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
                   },
                   {
                     icon: (
+                      // MODIFIED: Changed Blacksmith icon to the new image URL
                       <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png"
                         alt="Blacksmith Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement; // Cast to HTMLImageElement
                             target.onerror = null;
                             target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "", // Set label to empty string to hide it
                     notification: true,
                     special: true,
                     centered: true
@@ -1139,10 +1162,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
                         <div
+                            // MODIFIED: Added background, padding, and rounded-lg classes
                             className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick} 
+                            onClick={item.onClick} // Apply onClick if it exists
                         >
                             {item.icon}
+                            {/* MODIFIED: Conditionally render label only if it's not empty */}
                             {item.label && (
                                 <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
                             )}
@@ -1160,20 +1185,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             <TreasureChest
               initialChests={3}
-              keyCount={keyCount} 
+              keyCount={keyCount} // Pass the keyCount state
               onKeyCollect={(n) => {
                 console.log(`Chest opened using ${n} key(s).`);
                 if (auth.currentUser) {
-                  updateKeysInFirestore(auth.currentUser.uid, -n); 
+                  updateKeysInFirestore(auth.currentUser!.uid, -n); // Subtract keys
                 } else {
                   console.log("User not authenticated, skipping Firestore key update.");
                 }
               }}
+              // Use startCoinCountAnimation to handle coin rewards from chests
               onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward} 
-              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen} // Added isLuckyGameOpen
-              isStatsFullscreen={isStatsFullscreen} 
-              currentUserId={currentUser ? currentUser.uid : null} 
+              onGemReward={handleGemReward} // NEW: Pass the gem reward handler
+              // Truyền trạng thái tạm dừng game (bao gồm cả khi bảng thống kê/xếp hạng/rank mở VÀ game đang tạm dừng do chạy nền)
+              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen} // Added isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, and isLuckyGameOpen
+              isStatsFullscreen={isStatsFullscreen} // Truyền trạng thái isStatsFullscreen
+              currentUserId={currentUser ? currentUser.uid : null} // Pass currentUserId here
             />
 
           </div>
@@ -1182,17 +1209,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
 
   return (
-    <div className="w-screen h-screen overflow-hidden bg-gray-950"> 
+    // THAY ĐỔI BƯỚC 3 Ở ĐÂY: Bọc SidebarLayout trong div mới
+    // Outermost container that strictly controls viewport size and overflow
+    <div className="w-screen h-screen overflow-hidden bg-gray-950"> {/* Fallback background for the entire page */}
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
-          onShowStats={toggleStatsFullscreen} 
-          onShowRank={toggleRank} 
-          onShowHome={showHome} 
-          onShowGoldMine={toggleGoldMine} 
-          onShowLuckyGame={toggleLuckyGame} // NEW: Pass toggleLuckyGame
+          onShowStats={toggleStatsFullscreen} // Pass the toggleFullscreen function here
+          onShowRank={toggleRank} // Pass the toggleRank function here
+          onShowHome={showHome} // Pass the new showHome function
+          onShowGoldMine={toggleGoldMine} // NEW: Pass the toggleGoldMine function here
+          onShowLuckyGame={toggleLuckyGame} // NEW: Pass the toggleLuckyGame function here
+          // Add handlers for other menu items here if needed
       >
-        {mainContent} 
+        {mainContent} {/* Render the determined main content as children */}
       </SidebarLayout>
     </div>
   );
 }
+
