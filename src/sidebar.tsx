@@ -202,7 +202,7 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
 // NEW: Icon for Lucky Game (using a custom image URL)
 const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/lucky-game.png"
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/fortune-wheel.png" // Updated image URL
     alt="Lucky Game Icon"
     width={size}
     height={size}
