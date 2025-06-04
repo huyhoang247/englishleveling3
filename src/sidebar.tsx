@@ -49,7 +49,7 @@ const HomeIcon = ({ size = 24, color = 'currentColor', className = '', ...props 
 );
 
 const SettingsIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3"></circle>
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
   </svg>
@@ -100,6 +100,15 @@ const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ..
     <polyline points="6 9 12 15 18 9"></polyline>
   </svg>
 );
+
+// Icon for Performance menu item - REMOVED as the item is removed
+// const BarChart2Icon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+//   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+//     <line x1="18" y1="20" x2="18" y2="10"></line>
+//     <line x1="12" y1="20" x2="12" y2="4"></line>
+//     <line x1="6" y1="20" x2="6" y2="14"></line>
+//   </svg>
+// );
 
 const FileTextIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -190,27 +199,16 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
   </svg>
 );
 
-// NEW: Inline SVG for Dice icon (for Lucky Game)
-const DiceIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
+// NEW: Icon for Lucky Game (using a custom image URL)
+const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
+  <img
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/lucky-game.png"
+    alt="Lucky Game Icon"
     width={size}
     height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
     className={className}
     {...props}
-  >
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" fill={color} stroke="none" />
-    <circle cx="15.5" cy="8.5" r="1.5" fill={color} stroke="none" />
-    <circle cx="8.5" cy="15.5" r="1.5" fill={color} stroke="none" />
-    <circle cx="15.5" cy="15.5" r="1.5" fill={color} stroke="none" />
-  </svg>
+  />
 );
 
 
@@ -249,8 +247,8 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
-    { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine },
-    { id: 'luckyGame', label: 'Lucky Game', icon: DiceIcon, onClick: onShowLuckyGame }, // NEW: Lucky Game menu item
+    { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
+    { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame }, // NEW: Lucky Game menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
     // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
@@ -413,3 +411,4 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
 
 // Export the SidebarLayout component
 export { SidebarLayout };
+
