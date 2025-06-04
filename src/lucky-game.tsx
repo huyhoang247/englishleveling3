@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// SVG Icons (remain the same)
+// SVG Icons
 const CoinsIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 20 20">
     <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0zm2-8a6 6 0 110 12 6 6 0 010-12z" clipRule="evenodd" fillRule="evenodd"></path>
@@ -49,12 +49,14 @@ const GiftIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Interface for item properties
 interface Item {
   icon: React.FC<{ className?: string }> | string; // icon can be a component or a string (URL)
   name: string;
   value: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
+  timestamp?: number; // Optional: to store when the item was won
 }
 
 interface LuckyChestGameProps {
@@ -67,13 +69,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Actual item index won
   const [hasSpun, setHasSpun] = useState(false);
   const [coins, setCoins] = useState(1000);
-  const [inventory, setInventory] = useState<Item[]>([]);
-  const [jackpotPool, setJackpotPool] = useState(200); // Default jackpot pool to 200
+  const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
+  const [jackpotPool, setJackpotPool] = useState(200);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
+  const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
 
-  // Danh sách các vật phẩm
-  // Item at index 9 is replaced with Jackpot
+  // List of available items
   const items: Item[] = [
     { icon: CoinsIcon, name: 'Vàng', value: 100, rarity: 'common', color: 'text-yellow-500' },
     { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
@@ -84,25 +86,25 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     { icon: HeartIcon, name: 'Trái tim', value: 250, rarity: 'uncommon', color: 'text-red-500' },
     { icon: GiftIcon, name: 'Quà bí ẩn', value: 600, rarity: 'epic', color: 'text-pink-500' },
     { icon: CoinsIcon, name: 'Vàng+', value: 150, rarity: 'common', color: 'text-yellow-500' },
-    // Index 9: Replaced "Ngọc xanh" with "JACKPOT!"
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' },
     { icon: StarIcon, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
     { icon: ZapIcon, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
-    // Items below index 11 are not on the wheel by default if NUM_WHEEL_SLOTS is 12
     { icon: ShieldIcon, name: 'Khiên ma thuật', value: 700, rarity: 'epic', color: 'text-indigo-500' },
     { icon: TrophyIcon, name: 'Cúp bạc', value: 400, rarity: 'rare', color: 'text-gray-500' },
     { icon: HeartIcon, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
     { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
   ];
 
+  // Positions of items on the visual wheel
   const itemPositionsOnWheel = [
     { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
     { row: 1, col: 3 }, { row: 2, col: 3 },
-    { row: 3, col: 3 }, { row: 3, col: 2 }, { row: 3, col: 1 }, { row: 3, col: 0 }, // items[9] (Jackpot) is here
+    { row: 3, col: 3 }, { row: 3, col: 2 }, { row: 3, col: 1 }, { row: 3, col: 0 },
     { row: 2, col: 0 }, { row: 1, col: 0 }
   ];
-  const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length; // Should be 12
+  const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
+  // Get background color based on item rarity
   const getRarityBg = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300';
@@ -115,24 +117,25 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     }
   };
 
+  // Function to handle the spinning mechanism
   const spinChest = () => {
     if (isSpinning || coins < 100) return;
     
     setCoins(prev => prev - 100);
     
-    const jackpotContribution = Math.floor(Math.random() * 91) + 10;
+    const jackpotContribution = Math.floor(Math.random() * 91) + 10; // Random contribution between 10 and 100
     setJackpotPool(prev => prev + jackpotContribution);
     
     setIsSpinning(true);
-    setSelectedIndex(-1); // Clear previous visual selection
-    setFinalLandedItemIndex(-1); // Clear previous actual landed item
+    setSelectedIndex(-1);
+    setFinalLandedItemIndex(-1);
     setHasSpun(false);
     setJackpotWon(false);
 
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
 
-    // Determine the landing index: 1% chance for Jackpot slot, 99% for others
+    // Determine landing index (1% chance for Jackpot)
     if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
@@ -146,11 +149,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         if (otherItemIndicesOnWheel.length > 0) {
             targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
         } else if (NUM_WHEEL_SLOTS === 1 && jackpotItemArrayIndex === 0) {
-            // Edge case: Only jackpot item is on the wheel
             targetLandedItemIndex = jackpotItemArrayIndex;
         } else {
-            // Fallback: if jackpot item isn't on wheel or no other items (should not happen in normal setup)
-            // Pick any random item from the wheel.
             const allWheelIndices = Array.from(Array(NUM_WHEEL_SLOTS).keys());
              if (allWheelIndices.length > 0) {
                 targetLandedItemIndex = allWheelIndices[Math.floor(Math.random() * allWheelIndices.length)];
@@ -160,7 +160,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         }
     }
     
-    setFinalLandedItemIndex(targetLandedItemIndex); // Set the actual item that will be won
+    setFinalLandedItemIndex(targetLandedItemIndex);
 
     const numFullRotations = 2;
     const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
@@ -171,11 +171,10 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
     const spinAnimation = () => {
       const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
-      setSelectedIndex(currentHighlightIndex); // Update visual highlight during spin
+      setSelectedIndex(currentHighlightIndex);
 
       if (currentVisualStepIndex < totalVisualSteps) {
         const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
-
         const fastSpeed = 50;
         const moderateSpeed = 120;
         const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];  
@@ -195,49 +194,46 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         setTimeout(() => {
           setIsSpinning(false);
           setHasSpun(true);
-          setSelectedIndex(targetLandedItemIndex); // Ensure final selected visual matches landed item
+          setSelectedIndex(targetLandedItemIndex);
 
-          const wonItem = items[targetLandedItemIndex];
-          setInventory(prev => [wonItem, ...prev]);
+          const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Add timestamp
+          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Add to history, keep max 10 items
           
-          // Handle winnings
           if (wonItem.rarity === 'jackpot') {
             setJackpotWon(true);
             setJackpotAnimation(true);
-            setCoins(prev => prev + jackpotPool); // Add entire pool
-            setJackpotPool(200); // Reset jackpot pool to 200
+            setCoins(prev => prev + jackpotPool);
+            setJackpotPool(200); // Reset jackpot pool
             
             setTimeout(() => {
               setJackpotAnimation(false);
             }, 3000);
           } else {
-            setCoins(prev => prev + wonItem.value); // Add item's specific value
+            setCoins(prev => prev + wonItem.value);
           }
         }, finalPauseDuration);  
       }
     };
-
     spinAnimation();
   };
 
+  // Renders the wheel grid
   const renderGrid = () => {
     const grid: ({ item: Item; isWheelItem: boolean; isSelected: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
     
     itemPositionsOnWheel.forEach((pos, indexOnWheel) => {
-      // Ensure we only try to access items that exist for the wheel
       if (indexOnWheel < items.length && items[indexOnWheel]) {  
         grid[pos.row][pos.col] = {
-          item: items[indexOnWheel], // items[0] to items[NUM_WHEEL_SLOTS-1] are on the wheel
+          item: items[indexOnWheel],
           isWheelItem: true,  
-          // isSelected uses `selectedIndex` for spinning animation, `finalLandedItemIndex` for final result
-          isSelected: selectedIndex === indexOnWheel 
+          isSelected: selectedIndex === indexOnWheel  
         };
       }
     });
 
     return (
       <div className="grid grid-cols-4 gap-2 p-4 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-2xl border-4 border-amber-300">
-        {grid.map((row, rowIndex) => 
+        {grid.map((row, rowIndex) =>  
           row.map((cell, colIndex) => {
             if (rowIndex === 1 && colIndex === 1) {  
               return (
@@ -255,19 +251,16 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 </div>
               );
             }
-            if ((rowIndex === 1 && colIndex === 2) || 
-                (rowIndex === 2 && colIndex === 1) || 
+            if ((rowIndex === 1 && colIndex === 2) ||  
+                (rowIndex === 2 && colIndex === 1) ||  
                 (rowIndex === 2 && colIndex === 2)) {
               return null;  
             }
             
             if (cell && cell.isWheelItem) {
               const itemRarity = cell.item.rarity;
-              // Determine if this specific cell is the final landed item
               const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
               const isTrulySelected = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
-              
-              // displaySelected is true if it's being highlighted during spin OR it's the final landed item
               const displaySelected = cell.isSelected || isTrulySelected;
 
               return (
@@ -278,7 +271,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     ${getRarityBg(itemRarity)}
                     ${displaySelected && itemRarity !== 'jackpot' ? 'shadow-[inset_0_0_0_3px_theme(\'colors.yellow.400\')] scale-110 bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : ''}
                     ${displaySelected && itemRarity === 'jackpot' ? 'shadow-[inset_0_0_0_4px_theme(\'colors.amber.500\')] scale-110 z-20 animate-pulse' : ''}
-                    ${isSpinning && cell.isSelected ? (itemRarity === 'jackpot' ? 'animate-none' : 'animate-pulse') : ''} 
+                    ${isSpinning && cell.isSelected ? (itemRarity === 'jackpot' ? 'animate-none' : 'animate-pulse') : ''}  
                     ${isTrulySelected && itemRarity !== 'jackpot' ? 'animate-none shadow-[inset_0_0_0_3px_theme(\'colors.green.500\')] bg-green-200' : ''}
                     ${isTrulySelected && itemRarity === 'jackpot' ? 'animate-none shadow-[inset_0_0_0_4px_theme(\'colors.red.600\')] z-20' : ''}
                     hover:scale-105
@@ -287,15 +280,14 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity !== 'jackpot' && (
                     <div className={`absolute inset-0 ${isTrulySelected ? 'bg-green-400/30' : 'bg-yellow-300/50'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
                   )}
-                   {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && (
+                    {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && (
                     <div className={`absolute inset-0 ${isTrulySelected ? 'bg-red-500/50' : 'bg-amber-400/60'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
                   )}
                   {typeof cell.item.icon === 'string' ? (
-                    <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Error'; }} />
+                    <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
                   ) : (
                     <cell.item.icon className={`w-6 h-6 ${cell.item.color} relative z-10`} />
                   )}
-                  {/* Hide text for Jackpot item completely */}
                   {itemRarity !== 'jackpot' && (
                     <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center mt-1 relative z-10`}>
                       {cell.item.name}
@@ -328,13 +320,9 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-            🎰 RƯƠNG MAY MẮN 🎰
-          </h1>
-          
           <div className={`my-4 p-4 rounded-xl border-4 transition-all duration-500 relative ${
-            jackpotAnimation 
-              ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' 
+            jackpotAnimation  
+              ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'  
               : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
           }`}>
             <div className="text-yellow-200 text-sm font-semibold mb-1 tracking-wider">
@@ -357,79 +345,120 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1 sm:px-4 sm:py-2 rounded-lg font-bold shadow-md">
               💰 {coins.toLocaleString()} Xu
             </div>
-            <div className="bg-purple-600/80 backdrop-blur-sm px-3 py-1 sm:px-4 sm:py-2 rounded-lg font-bold shadow-md">
-              🎒 {inventory.length} Items
-            </div>
           </div>
         </div>
 
+        {/* Tab Navigation */}
         <div className="flex justify-center mb-6">
-          {renderGrid()}
-        </div>
-
-        <div className="text-center mb-6">
           <button
-            onClick={spinChest}
-            disabled={isSpinning || coins < 100}
-            className={`
-              px-6 py-3 sm:px-8 sm:py-4 text-lg sm:text-xl font-bold rounded-xl transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-50
-              ${isSpinning || coins < 100 
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner' 
-                : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg focus:ring-green-400'
-              }
-            `}
+            onClick={() => setActiveTab('spin')}
+            className={`px-6 py-3 rounded-l-xl text-lg font-bold transition-all duration-300 ${
+              activeTab === 'spin'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
           >
-            {isSpinning ? '🔄 Đang quay...' : `🎯 QUAY (${coins < 100 && !isSpinning ? 'Hết xu' : '100💰'})`}
+            Quay
           </button>
-          {coins < 100 && !isSpinning && (
-            <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
-          )}
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-6 py-3 rounded-r-xl text-lg font-bold transition-all duration-300 ${
+              activeTab === 'history'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Lịch sử
+          </button>
         </div>
 
-        {hasSpun && finalLandedItemIndex >= 0 && items[finalLandedItemIndex] && (
-          <div className="space-y-4 mb-6">
-            {!jackpotWon && ( // Only show normal win if jackpot was NOT won
-                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 sm:p-5 rounded-xl text-center text-white font-bold text-base sm:text-lg shadow-xl animate-fade-in-up">
-                    🎉 Chúc mừng! Bạn nhận được {items[finalLandedItemIndex].name}
-                    {items[finalLandedItemIndex].value > 0 && ` (+${items[finalLandedItemIndex].value.toLocaleString()} xu)`} 🎉
-                 </div>
-            )}
-            
-            {jackpotWon && (
-              <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 p-5 sm:p-6 rounded-xl text-center text-white shadow-2xl border-4 border-yellow-200 relative overflow-hidden animate-celebrate">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shine"></div>
-                <div className="relative z-10">
-                  <div className="text-5xl mb-2">🎊💰🎊</div>
-                  <div className="text-3xl font-black mb-2 uppercase tracking-wider">JACKPOT!</div>
-                  <div className="text-xl font-semibold">Bạn đã trúng {jackpotPool.toLocaleString()} xu từ Pool!</div>
-                  <div className="text-sm mt-3 opacity-90">🌟 Chúc mừng người chơi siêu may mắn! 🌟</div>
-                </div>
+        {/* Conditional Tab Content */}
+        {activeTab === 'spin' && (
+          <>
+            <div className="flex justify-center mb-6">
+              {renderGrid()}
+            </div>
+
+            <div className="text-center mb-6">
+              <button
+                onClick={spinChest}
+                disabled={isSpinning || coins < 100}
+                className={`
+                  px-6 py-3 sm:px-8 sm:py-4 text-lg sm:text-xl font-bold rounded-xl transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-50
+                  ${isSpinning || coins < 100  
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner'  
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg focus:ring-green-400'
+                  }
+                `}
+              >
+                {isSpinning ? '🔄 Đang quay...' : `🎯 QUAY (${coins < 100 && !isSpinning ? 'Hết xu' : '100💰'})`}
+              </button>
+              {coins < 100 && !isSpinning && (
+                <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
+              )}
+            </div>
+
+            {hasSpun && finalLandedItemIndex >= 0 && items[finalLandedItemIndex] && (
+              <div className="space-y-4 mb-6">
+                {!jackpotWon && (
+                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 sm:p-5 rounded-xl text-center text-white font-bold text-base sm:text-lg shadow-xl animate-fade-in-up">
+                          🎉 Chúc mừng! Bạn nhận được {items[finalLandedItemIndex].name}
+                          {items[finalLandedItemIndex].value > 0 && ` (+${items[finalLandedItemIndex].value.toLocaleString()} xu)`} 🎉
+                        </div>
+                )}
+                
+                {jackpotWon && (
+                  <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 p-5 sm:p-6 rounded-xl text-center text-white shadow-2xl border-4 border-yellow-200 relative overflow-hidden animate-celebrate">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shine"></div>
+                    <div className="relative z-10">
+                      <div className="text-5xl mb-2">🎊💰🎊</div>
+                      <div className="text-3xl font-black mb-2 uppercase tracking-wider">JACKPOT!</div>
+                      <div className="text-xl font-semibold">Bạn đã trúng {jackpotPool.toLocaleString()} xu từ Pool!</div>
+                      <div className="text-sm mt-3 opacity-90">🌟 Chúc mừng người chơi siêu may mắn! 🌟</div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
         )}
 
-        {inventory.length > 0 && (
-          <div className="mt-6 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg">
-            <h3 className="text-white font-bold mb-3 text-center sm:text-left text-lg">📦 Kho đồ (Mới nhất):</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {inventory.slice(0, 8).map((item, index) => {
+        {activeTab === 'history' && rewardHistory.length > 0 && (
+          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg">
+            <h3 className="text-white font-bold mb-4 text-lg text-center">📜 Lịch sử nhận thưởng 📜</h3>
+            <div className="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-purple-800/50">
+              {rewardHistory.map((item, index) => {
                 const itemRarity = item.rarity;
                 return (
-                  <div key={index} className={`${getRarityBg(itemRarity)} p-2.5 rounded-lg text-center flex flex-col items-center justify-between aspect-square shadow-md hover:shadow-lg transition-shadow`}>
+                  <div  
+                    key={`${item.name}-${item.timestamp}-${index}`} // More unique key
+                    className={`
+                      flex-shrink-0 w-28 h-32 ${getRarityBg(itemRarity)}  
+                      p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md  
+                      hover:shadow-xl transition-all duration-200 transform hover:scale-105
+                    `}
+                  >
                     {typeof item.icon === 'string' ? (
-                      <img src={item.icon} alt={item.name} className="w-6 h-6 sm:w-7 sm:h-7 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/28x28/cccccc/000000?text=Error'; }} />
+                      <img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
                     ) : (
-                      <item.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${item.color} mx-auto mb-1`} />
+                      <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
                     )}
-                    <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'}`}>{item.name}</div>
-                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700">{item.value.toLocaleString()}💰</div>}
-                    {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600">POOL WIN!</div>}
+                    <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
+                      {item.name}
+                    </div>
+                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}💰</div>}
+                    {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
                   </div>
                 );
               })}
             </div>
-            {inventory.length > 8 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 8 item mới nhất.</p>}
+            {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
+          </div>
+        )}
+        {activeTab === 'history' && rewardHistory.length === 0 && (
+          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg text-center text-white">
+            <p className="text-lg">Chưa có phần thưởng nào trong lịch sử.</p>
+            <p className="text-sm opacity-80 mt-2">Hãy quay để bắt đầu nhận thưởng!</p>
           </div>
         )}
       </div>
@@ -456,6 +485,30 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         body {
           font-family: 'Inter', sans-serif; /* Example font */
         }
+
+        /* Custom scrollbar for reward history */
+        .scrollbar-thin {
+          scrollbar-width: thin;
+          scrollbar-color: #a855f7 /* thumb */ #3b0764 /* track, semi-transparent purple-800 */;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+          height: 8px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: rgba(59, 7, 100, 0.5); /* purple-800 with opacity */
+          border-radius: 10px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background-color: #a855f7; /* purple-400 */
+          border-radius: 10px;
+          border: 2px solid rgba(59, 7, 100, 0.5); /* track color for border */
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;  
+          overflow: hidden;
+        }
       `}</style>
     </div>
   );
@@ -466,10 +519,9 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 const App = () => {
   const [showGame, setShowGame] = useState(true);
   if (!showGame) {
-    return <button onClick={() => setShowGame(true)} className="p-4 bg-blue-500 text-white">Open Lucky Chest Game</button>;
+    return <button onClick={() => setShowGame(true)} className="p-4 bg-blue-500 text-white">Mở Rương May Mắn</button>;
   }
   return <LuckyChestGame onClose={() => setShowGame(false)} />;
 }
 
-export default App; // Exporting App for testing, or LuckyChestGame directly if preferred
-// export default LuckyChestGame;
+export default App;
