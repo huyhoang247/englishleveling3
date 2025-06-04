@@ -152,7 +152,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
   // List of available items
   const items: Item[] = [
-    { icon: CoinsIcon, name: 'Vàng', value: 100, rarity: 'common', color: 'text-yellow-500' },
+    // Updated item: "100 Vàng" changed to "100 Xu" with a new icon
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
     { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
     { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
     { icon: ZapIcon, name: 'Tia chớp', value: 200, rarity: 'uncommon', color: 'text-cyan-500' },
@@ -326,12 +327,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   className="col-span-2 row-span-2 flex items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg border-4 border-yellow-300 relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent"></div>
-                  <div className={`text-6xl transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`}>
-                    📦
-                  </div>
-                  <div className="absolute bottom-2 text-white font-bold text-sm bg-black/30 px-2 py-1 rounded">
-                    RƯƠNG
-                  </div>
+                  {/* Replaced emoji with image and removed "RƯƠNG" text, adjusted size */}
+                  <img
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png"
+                    alt="Treasure Chest"
+                    className={`w-16 h-16 transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`} // Reduced size to w-16 h-16
+                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/64x64/cccccc/000000?text=Lỗi'; }}
+                  />
                 </div>
               );
             }
@@ -367,20 +369,38 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && (
                     <div className={`absolute inset-0 ${isTrulySelected ? 'bg-red-500/50' : 'bg-amber-400/60'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
                   )}
-                  {typeof cell.item.icon === 'string' ? (
-                    <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
-                  ) : (
-                    <cell.item.icon className={`w-6 h-6 ${cell.item.color} relative z-10`} />
+                  {/* Main icon display - only render if not the '100 Xu' item */}
+                  {!(typeof cell.item.icon === 'string' && cell.item.name === '100 Xu') && (
+                    typeof cell.item.icon === 'string' ? (
+                      <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                    ) : (
+                      <cell.item.icon className={`w-6 h-6 ${cell.item.color} relative z-10`} />
+                    )
                   )}
+                  
+                  {/* Conditional display for value and name */}
                   {itemRarity !== 'jackpot' && (
-                    <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center mt-1 relative z-10`}>
-                      {cell.item.name}
-                    </span>
-                  )}
-                  {itemRarity !== 'jackpot' && (
-                    <span className="text-xs text-gray-600 relative z-10">
-                      {cell.item.value}💰
-                    </span>
+                    <div className="flex flex-col items-center mt-1 relative z-10">
+                      {/* If the icon is a string (like the dollar image) and it has a value, display value + icon */}
+                      {typeof cell.item.icon === 'string' && cell.item.value > 0 && cell.item.name === '100 Xu' ? (
+                        <div className="flex items-center text-xs font-semibold text-gray-700">
+                          <span>{cell.item.value}</span>
+                          <img src={cell.item.icon} alt={cell.item.name} className="w-3 h-3 ml-0.5" onError={(e) => { e.currentTarget.src = 'https://placehold.co/12x12/cccccc/000000?text=X'; }} />
+                        </div>
+                      ) : (
+                        // Otherwise, display name and then value + coin emoji
+                        <>
+                          <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center`}>
+                            {cell.item.name}
+                          </span>
+                          {cell.item.value > 0 && (
+                            <span className="text-xs text-gray-600">
+                              {cell.item.value}💰
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -466,9 +486,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           {activeTab === 'spin' && (
             <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2"> {/* Adjusted gap and added mt-2 */}
               <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center"> {/* Adjusted padding and added flex items-center */}
-                {coins.toLocaleString()}
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1" /> {/* Adjusted icon size and margin */}
-                Xu
+                {coins.toLocaleString()} Xu
               </div>
             </div>
           )}
@@ -486,10 +504,10 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 onClick={spinChest}
                 disabled={isSpinning || coins < 100}
                 className={`
-                  px-6 py-3 sm:px-8 sm:py-4 text-lg sm:text-xl font-bold rounded-xl transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-50
+                  px-8 py-4 text-xl font-extrabold uppercase tracking-wider rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
                   ${isSpinning || coins < 100
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner'
-                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg focus:ring-green-400'
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner opacity-70'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl focus:ring-green-400'
                   }
                 `}
               >
