@@ -796,7 +796,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         showNavBar();
       }
       return newState;
-    });
+    );
   };
 
   // NEW: Function to toggle Inventory visibility
@@ -1216,7 +1216,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setToggleSidebar={handleSetToggleSidebar}
           onShowStats={toggleStatsFullscreen} // Pass the toggleFullscreen function here
           onShowRank={toggleRank} // Pass the toggleRank function here
-          onShowHome={showHome} // Pass the new showHome function
+          // REMOVED: onShowHome={showHome} // Pass the new showHome function
           onShowGoldMine={toggleGoldMine} // NEW: Pass the toggleGoldMine function here
           onShowLuckyGame={toggleLuckyGame} // NEW: Pass the toggleLuckyGame function here
           // Add handlers for other menu items here if needed
@@ -1226,4 +1226,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-
