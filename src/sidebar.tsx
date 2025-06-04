@@ -11,8 +11,8 @@ interface SidebarLayoutProps {
   onShowStats?: () => void; // Handler for showing Stats
   onShowRank?: () => void;   // Handler for showing Rank
   // Add handlers for other menu items that need parent interaction here
-  onShowHome?: () => void;
-  onShowTasks?: () => void;
+  // REMOVED: onShowHome?: () => void;
+  // REMOVED: onShowTasks?: () => void;
   // onShowPerformance?: () => void; // REMOVED: Handler for showing Performance
   onShowSettings?: () => void;
   onShowHelp?: () => void;
@@ -83,7 +83,7 @@ const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...
 
 const BellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+    <path d="M18 8A6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
   </svg>
 );
@@ -214,7 +214,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 // SidebarLayout component including Sidebar and main content area
 // Accept new specific handlers for menu items
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame }: SidebarLayoutProps) {
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // Removed activeItem and activeContent states
@@ -244,12 +244,12 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
   // List of sidebar menu items - Using new inline SVG components and the new FrameIcon
   const menuItems = [
     // Added onClick handlers calling the specific props
-    { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
+    // REMOVED: { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame }, // NEW: Lucky Game menu item
-    { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
+    // REMOVED: { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
     // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
@@ -411,4 +411,3 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
 
 // Export the SidebarLayout component
 export { SidebarLayout };
-
