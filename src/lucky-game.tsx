@@ -311,48 +311,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center font-sans">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 z-50 w-10 h-10 bg-red-500 hover:bg-red-700 rounded-full flex items-center justify-center text-white font-bold text-xl transition-all duration-200 hover:scale-110 shadow-md"
-      >
-        ✕
-      </button>
-
-      <div className="max-w-md w-full">
-        <div className="text-center mb-6">
-          <div className={`my-4 p-4 rounded-xl border-4 transition-all duration-500 relative ${
-            jackpotAnimation  
-              ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'  
-              : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
-          }`}>
-            <div className="text-yellow-200 text-sm font-semibold mb-1 tracking-wider">
-              💎 JACKPOT POOL 💎
-            </div>
-            <div className={`text-4xl font-black text-white drop-shadow-lg ${
-              jackpotAnimation ? 'animate-bounce' : ''
-            }`}>
-              🏆 {jackpotPool.toLocaleString()} 💰
-            </div>
-            <div className="text-yellow-200 text-xs mt-2 opacity-90">
-              Tỉ lệ quay trúng ô JACKPOT: 1%!
-            </div>
-            {jackpotAnimation && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div>
-            )}
-          </div>
-          
-          <div className="flex justify-center items-center gap-4 text-white text-sm sm:text-base">
-            <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1 sm:px-4 sm:py-2 rounded-lg font-bold shadow-md">
-              💰 {coins.toLocaleString()} Xu
-            </div>
-          </div>
-        </div>
-
+      {/* Header containing Close button and Tabs */}
+      <div className="w-full max-w-md flex justify-between items-center mb-6">
         {/* Tab Navigation */}
-        <div className="flex justify-center mb-6">
+        <div className="flex">
           <button
             onClick={() => setActiveTab('spin')}
-            className={`px-6 py-3 rounded-l-xl text-lg font-bold transition-all duration-300 ${
+            className={`px-4 py-2 rounded-l-xl text-md font-bold transition-all duration-300 ${
               activeTab === 'spin'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -362,7 +327,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-6 py-3 rounded-r-xl text-lg font-bold transition-all duration-300 ${
+            className={`px-4 py-2 rounded-r-xl text-md font-bold transition-all duration-300 ${
               activeTab === 'history'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -370,6 +335,56 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           >
             Lịch sử
           </button>
+        </div>
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110" // Removed background classes
+        >
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
+            alt="Close icon"
+            className="w-5 h-5 text-indigo-300" // Adjusted size to w-5 h-5
+            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }} // Fallback for image load error
+          />
+        </button>
+      </div>
+
+      <div className="max-w-md w-full">
+        <div className="text-center mb-6">
+          {/* Conditional rendering for Jackpot Pool */}
+          {activeTab === 'spin' && (
+            <div className={`my-4 p-4 rounded-xl border-4 transition-all duration-500 relative ${
+              jackpotAnimation  
+                ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'  
+                : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
+            }`}>
+              <div className="text-yellow-200 text-sm font-semibold mb-1 tracking-wider">
+                💎 JACKPOT POOL 💎
+              </div>
+              <div className={`text-4xl font-black text-white drop-shadow-lg ${
+                jackpotAnimation ? 'animate-bounce' : ''
+              }`}>
+                🏆 {jackpotPool.toLocaleString()} 💰
+              </div>
+              <div className="text-yellow-200 text-xs mt-2 opacity-90">
+                Tỉ lệ quay trúng ô JACKPOT: 1%!
+              </div>
+              {jackpotAnimation && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div>
+              )}
+            </div>
+          )}
+          
+          {/* Conditional rendering for Coins */}
+          {activeTab === 'spin' && (
+            <div className="flex justify-center items-center gap-4 text-white text-sm sm:text-base">
+              <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1 sm:px-4 sm:py-2 rounded-lg font-bold shadow-md">
+                💰 {coins.toLocaleString()} Xu
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Conditional Tab Content */}
