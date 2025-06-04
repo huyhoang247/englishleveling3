@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 
 // SVG Icons
@@ -65,6 +63,76 @@ interface LuckyChestGameProps {
   onClose: () => void;
 }
 
+// Reward Popup Component
+interface RewardPopupProps {
+  item: Item;
+  jackpotWon: boolean;
+  jackpotAmount: number;
+  onClose: () => void;
+}
+
+const RewardPopup = ({ item, jackpotWon, jackpotAmount, onClose }: RewardPopupProps) => {
+  const getRarityBgClass = (rarity: Item['rarity']) => {
+    switch(rarity) {
+      case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
+      case 'uncommon': return 'bg-green-100 border-green-300 text-green-800';
+      case 'rare': return 'bg-blue-100 border-blue-300 text-blue-800';
+      case 'epic': return 'bg-purple-100 border-purple-300 text-purple-800';
+      case 'legendary': return 'bg-orange-100 border-orange-300 text-orange-800';
+      case 'jackpot': return 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-400 border-4 border-yellow-200 shadow-lg shadow-yellow-500/50 text-white';
+      default: return 'bg-gray-100 border-gray-300 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className={`relative p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-pop-in ${getRarityBgClass(item.rarity)}`}>
+        {/* Close button removed as per user request */}
+        {/* <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+        >
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
+            alt="Close icon"
+            className="w-6 h-6 text-indigo-300"
+            onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }}
+          />
+        </button> */}
+
+        {jackpotWon ? (
+          <>
+            <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
+            <h2 className="text-3xl font-black mb-2 uppercase tracking-wider text-white drop-shadow">JACKPOT!</h2>
+            <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {jackpotAmount.toLocaleString()} xu từ Pool!</p>
+            <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn! 🌟</p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-3xl font-bold mb-4">🎉 Chúc mừng! 🎉</h2>
+            {typeof item.icon === 'string' ? (
+              <img src={item.icon} alt={item.name} className="w-24 h-24 mx-auto mb-4 animate-float" onError={(e) => { e.currentTarget.src = 'https://placehold.co/96x96/cccccc/000000?text=Lỗi'; }} />
+            ) : (
+              <item.icon className={`w-24 h-24 ${item.color} mx-auto mb-4 animate-float`} />
+            )}
+            <p className="text-2xl font-semibold mb-2">Bạn nhận được <span className="font-bold">{item.name}</span></p>
+            {item.value > 0 && (
+              <p className="text-xl font-bold text-green-600">+{item.value.toLocaleString()} xu</p>
+            )}
+          </>
+        )}
+        <button
+          onClick={onClose}
+          className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-lg shadow-md hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
+        >
+          Tiếp tục
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
 const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1); // For visual highlighting during spin
@@ -76,6 +144,10 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
+
+  // New states for popup
+  const [showRewardPopup, setShowRewardPopup] = useState(false);
+  const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
   // List of available items
   const items: Item[] = [
@@ -133,6 +205,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     setFinalLandedItemIndex(-1);
     setHasSpun(false);
     setJackpotWon(false);
+    setShowRewardPopup(false); // Hide popup before new spin
 
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
@@ -200,6 +273,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Add timestamp
           setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Add to history, keep max 10 items
+          setWonRewardDetails(wonItem); // Set details for popup
           
           if (wonItem.rarity === 'jackpot') {
             setJackpotWon(true);
@@ -213,6 +287,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           } else {
             setCoins(prev => prev + wonItem.value);
           }
+          setShowRewardPopup(true); // Show popup after winning
         }, finalPauseDuration);  
       }
     };
@@ -314,7 +389,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center font-sans">
       {/* Header containing Close button and Tabs */}
-      <div className="w-full max-w-md flex justify-between items-center mb-6">
+      <div className="w-full max-w-md flex justify-between items-center mb-4"> {/* Changed mb-6 to mb-4 */}
         {/* Tab Navigation */}
         <div className="flex">
           <button
@@ -357,7 +432,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         <div className="text-center mb-6">
           {/* Conditional rendering for Jackpot Pool */}
           {activeTab === 'spin' && (
-            <div className={`my-4 p-4 rounded-xl border-4 transition-all duration-500 relative ${
+            <div className={`mt-2 p-4 rounded-xl border-4 transition-all duration-500 relative ${ /* Changed my-4 to mt-2 */
               jackpotAnimation  
                 ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'  
                 : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
@@ -414,29 +489,6 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
               )}
             </div>
-
-            {hasSpun && finalLandedItemIndex >= 0 && items[finalLandedItemIndex] && (
-              <div className="space-y-4 mb-6">
-                {!jackpotWon && (
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 sm:p-5 rounded-xl text-center text-white font-bold text-base sm:text-lg shadow-xl animate-fade-in-up">
-                          🎉 Chúc mừng! Bạn nhận được {items[finalLandedItemIndex].name}
-                          {items[finalLandedItemIndex].value > 0 && ` (+${items[finalLandedItemIndex].value.toLocaleString()} xu)`} 🎉
-                        </div>
-                )}
-                
-                {jackpotWon && (
-                  <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 p-5 sm:p-6 rounded-xl text-center text-white shadow-2xl border-4 border-yellow-200 relative overflow-hidden animate-celebrate">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-shine"></div>
-                    <div className="relative z-10">
-                      <div className="text-5xl mb-2">🎊💰🎊</div>
-                      <div className="text-3xl font-black mb-2 uppercase tracking-wider">JACKPOT!</div>
-                      <div className="text-xl font-semibold">Bạn đã trúng {jackpotPool.toLocaleString()} xu từ Pool!</div>
-                      <div className="text-sm mt-3 opacity-90">🌟 Chúc mừng người chơi siêu may mắn! 🌟</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </>
         )}
 
@@ -479,6 +531,17 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           </div>
         )}
       </div>
+
+      {/* Reward Popup */}
+      {showRewardPopup && wonRewardDetails && (
+        <RewardPopup
+          item={wonRewardDetails}
+          jackpotWon={jackpotWon}
+          jackpotAmount={jackpotPool} // Pass current jackpot pool amount
+          onClose={() => setShowRewardPopup(false)}
+        />
+      )}
+
       <style jsx global>{`
         @keyframes fade-in-up {
           0% { opacity: 0; transform: translateY(20px); }
@@ -498,6 +561,42 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           100% { transform: translateX(100%) skewX(-20deg); }
         }
         .animate-shine { animation: shine 1.5s linear infinite; }
+
+        /* Popup specific animations */
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+
+        @keyframes pop-in {
+          0% { transform: scale(0.8); opacity: 0; }
+          70% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); }
+        }
+        .animate-pop-in {
+          animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .animate-float {
+          animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce-once {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-15px); }
+          60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-once {
+          animation: bounce-once 0.8s ease-in-out;
+        }
 
         body {
           font-family: 'Inter', sans-serif; /* Example font */
@@ -544,4 +643,4 @@ const App = () => {
 }
 */
 
-export default LuckyChestGame; 
+export default LuckyChestGame;
