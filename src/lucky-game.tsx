@@ -78,13 +78,12 @@ interface LuckyChestGameProps {
 
 // Reward Popup Component
 interface RewardPopupProps {
-  item: Item;
+  item: Item; // This item will now have the correct 'value' for jackpot wins
   jackpotWon: boolean;
-  jackpotAmount: number;
   onClose: () => void;
 }
 
-const RewardPopup = ({ item, jackpotWon, jackpotAmount, onClose }: RewardPopupProps) => {
+const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
   const getRarityBgClass = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
@@ -104,7 +103,8 @@ const RewardPopup = ({ item, jackpotWon, jackpotAmount, onClose }: RewardPopupPr
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
             <h2 className="text-3xl font-black mb-2 uppercase tracking-wider text-white drop-shadow">JACKPOT!</h2>
-            <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {jackpotAmount.toLocaleString()} xu từ Pool!</p>
+            {/* Display item.value which now holds the actual jackpot amount won */}
+            <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {item.value.toLocaleString()} xu từ Pool!</p>
             <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn! 🌟</p>
           </>
         ) : (
@@ -140,8 +140,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [hasSpun, setHasSpun] = useState(false);
   const [coins, setCoins] = useState(1000);
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
-  // Decreased initial jackpot pool from 50 to 10
-  const [jackpotPool, setJackpotPool] = useState(10);
+  // Set initial jackpot pool to 200
+  const [jackpotPool, setJackpotPool] = useState(200);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
@@ -198,9 +198,9 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
     setCoins(prev => prev - 100);
 
-    // Adjusted jackpot contribution to be between 1 and 10
-    const jackpotContribution = Math.floor(Math.random() * 10) + 1;
-    setJackpotPool(prev => prev + jackpotContribution);
+    // Add random 10-100 coins to the jackpot pool when spinning
+    const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
+    setJackpotPool(prev => prev + randomCoinsToAdd);
 
     setIsSpinning(true);
     setSelectedIndex(-1);
@@ -275,13 +275,15 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Add timestamp
           setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Add to history, keep max 10 items
-          setWonRewardDetails(wonItem); // Set details for popup
+          
+          let actualWonAmount = wonItem.value; // Default to item's value
 
           if (wonItem.rarity === 'jackpot') {
+            actualWonAmount = jackpotPool; // Capture the current pool value for the win
             setJackpotWon(true);
             setJackpotAnimation(true);
-            setCoins(prev => prev + jackpotPool);
-            setJackpotPool(10); // Reset jackpot pool to the new smaller initial value
+            setCoins(prev => prev + actualWonAmount); // Add the actual captured amount
+            setJackpotPool(200); // Reset after using
             
             setTimeout(() => {
               setJackpotAnimation(false);
@@ -289,6 +291,9 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           } else {
             setCoins(prev => prev + wonItem.value);
           }
+
+          // Set details for popup, ensuring jackpot amount is correctly passed if it was a jackpot
+          setWonRewardDetails({ ...wonItem, value: actualWonAmount }); // Update the value in wonRewardDetails
           setShowRewardPopup(true); // Show popup after winning
         }, finalPauseDuration);
       }
@@ -540,9 +545,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
       {/* Reward Popup */}
       {showRewardPopup && wonRewardDetails && (
         <RewardPopup
-          item={wonRewardDetails}
+          item={wonRewardDetails} // wonRewardDetails now contains the actual jackpot amount if won
           jackpotWon={jackpotWon}
-          jackpotAmount={jackpotPool} // Pass current jackpot pool amount
           onClose={() => setShowRewardPopup(false)}
         />
       )}
