@@ -50,10 +50,10 @@ const GiftIcon = ({ className }) => (
 );
 
 interface LuckyChestGameProps {
-  onClose: () => void; // NEW: Add onClose prop
+  onClose: () => void; // Thêm prop onClose
 }
 
-const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => { // NEW: Destructure onClose
+const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => { // Destructure onClose
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1); // Index đang được highlight trên vòng quay
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Index thực tế của item trúng thưởng
@@ -230,9 +230,9 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => { // NEW: Destructu
                   className={`
                     aspect-square flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 relative overflow-hidden
                     ${getRarityBg(cell.item.rarity)}
-                    ${displaySelected ? 'ring-4 ring-yellow-400 ring-offset-2 scale-110 shadow-2xl bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : 'hover:scale-105'}
+                    ${displaySelected ? 'shadow-[inset_0_0_0_2px_theme(\'colors.yellow.400\')] scale-110 shadow-2xl bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : 'hover:scale-105'}
                     ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}
-                    ${isTrulySelected ? 'animate-none ring-green-500' : ''} 
+                    ${isTrulySelected ? 'animate-none shadow-[inset_0_0_0_2px_theme(\'colors.green.500\')]' : ''} 
                   `}
                 >
                   {(displaySelected || (isSpinning && cell.isSelected)) && (
@@ -258,12 +258,17 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => { // NEW: Destructu
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center">
-      {/* Close button */}
+      {/* Nút đóng */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform transform hover:scale-105 z-50"
+        className="absolute top-4 right-4 z-50" // Xóa các lớp background và padding
       >
-        Đóng
+        <img 
+          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" 
+          alt="Close" 
+          className="w-8 h-8 transition-transform transform hover:scale-110" // Điều chỉnh kích thước và thêm hiệu ứng hover
+          onError={(e) => { e.currentTarget.src = 'https://placehold.co/32x32/FF0000/FFFFFF?text=X'; }} // Fallback nếu ảnh lỗi
+        />
       </button>
 
       <div className="max-w-md w-full">
@@ -334,4 +339,3 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => { // NEW: Destructu
 };
 
 export default LuckyChestGame;
-
