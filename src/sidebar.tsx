@@ -17,6 +17,7 @@ interface SidebarLayoutProps {
   onShowSettings?: () => void;
   onShowHelp?: () => void;
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
+  onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -198,10 +199,32 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
   </svg>
 );
 
+// NEW: Inline SVG for a dice icon (for Lucky Game)
+const DiceIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+    <path d="M16 8h.01"></path>
+    <path d="M8 16h.01"></path>
+    <path d="M12 12h.01"></path>
+  </svg>
+);
+
 
 // SidebarLayout component including Sidebar and main content area
 // Accept new specific handlers for menu items
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowSettings, onShowHelp, onShowGoldMine }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowHome, onShowTasks, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame }: SidebarLayoutProps) {
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // Removed activeItem and activeContent states
@@ -235,6 +258,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
+    { id: 'luckyGame', label: 'Lucky Game', icon: DiceIcon, onClick: onShowLuckyGame }, // NEW: Lucky Game menu item
     { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
     // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
