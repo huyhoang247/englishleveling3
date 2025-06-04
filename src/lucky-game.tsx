@@ -49,8 +49,11 @@ const GiftIcon = ({ className }) => (
   </svg>
 );
 
+interface LuckyChestGameProps {
+  onClose: () => void; // NEW: Add onClose prop
+}
 
-const LuckyChestGame = () => {
+const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => { // NEW: Destructure onClose
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1); // Index đang được highlight trên vòng quay
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Index thực tế của item trúng thưởng
@@ -255,6 +258,14 @@ const LuckyChestGame = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-transform transform hover:scale-105 z-50"
+      >
+        Đóng
+      </button>
+
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
@@ -323,3 +334,4 @@ const LuckyChestGame = () => {
 };
 
 export default LuckyChestGame;
+
