@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 
 // SVG Icons
@@ -339,7 +341,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         
         {/* Close Button */}
         <button
-          onClick={onClose} // Đảm bảo gọi onClose ở đây
+          onClick={onClose} // This will call the toggleLuckyGame from background-game.tsx
           className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110" // Removed background classes
         >
           <img
@@ -531,6 +533,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
 // This App component is for standalone testing if needed.
 // In a real app, you'd import LuckyChestGame and use it.
+// You can comment this out or remove it if not needed.
+/*
 const App = () => {
   const [showGame, setShowGame] = useState(true);
   if (!showGame) {
@@ -538,5 +542,6 @@ const App = () => {
   }
   return <LuckyChestGame onClose={() => setShowGame(false)} />;
 }
+*/
 
-export default App;
+export default LuckyChestGame; 
