@@ -50,7 +50,7 @@ const GiftIcon = ({ className }: { className?: string }) => (
 );
 
 interface Item {
-  icon: React.FC<{ className?: string }>;
+  icon: React.FC<{ className?: string }> | string; // icon can be a component or a string (URL)
   name: string;
   value: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
@@ -68,7 +68,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [hasSpun, setHasSpun] = useState(false);
   const [coins, setCoins] = useState(1000);
   const [inventory, setInventory] = useState<Item[]>([]);
-  const [jackpotPool, setJackpotPool] = useState(5000);
+  const [jackpotPool, setJackpotPool] = useState(200); // Default jackpot pool to 200
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
 
@@ -85,7 +85,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     { icon: GiftIcon, name: 'Quà bí ẩn', value: 600, rarity: 'epic', color: 'text-pink-500' },
     { icon: CoinsIcon, name: 'Vàng+', value: 150, rarity: 'common', color: 'text-yellow-500' },
     // Index 9: Replaced "Ngọc xanh" with "JACKPOT!"
-    { icon: TrophyIcon, name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' },
     { icon: StarIcon, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
     { icon: ZapIcon, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
     // Items below index 11 are not on the wheel by default if NUM_WHEEL_SLOTS is 12
@@ -205,7 +205,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             setJackpotWon(true);
             setJackpotAnimation(true);
             setCoins(prev => prev + jackpotPool); // Add entire pool
-            setJackpotPool(1000); // Reset jackpot pool
+            setJackpotPool(200); // Reset jackpot pool to 200
             
             setTimeout(() => {
               setJackpotAnimation(false);
@@ -262,14 +262,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             }
             
             if (cell && cell.isWheelItem) {
-              const IconComponent = cell.item.icon;
+              const itemRarity = cell.item.rarity;
               // Determine if this specific cell is the final landed item
               const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
               const isTrulySelected = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
               
               // displaySelected is true if it's being highlighted during spin OR it's the final landed item
               const displaySelected = cell.isSelected || isTrulySelected;
-              const itemRarity = cell.item.rarity;
 
               return (
                 <div  
@@ -291,18 +290,20 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                    {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && (
                     <div className={`absolute inset-0 ${isTrulySelected ? 'bg-red-500/50' : 'bg-amber-400/60'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
                   )}
-                  <IconComponent className={`w-6 h-6 ${cell.item.color} relative z-10`} />
-                  <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center mt-1 relative z-10`}>
-                    {cell.item.name}
-                  </span>
+                  {typeof cell.item.icon === 'string' ? (
+                    <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Error'; }} />
+                  ) : (
+                    <cell.item.icon className={`w-6 h-6 ${cell.item.color} relative z-10`} />
+                  )}
+                  {/* Hide text for Jackpot item completely */}
+                  {itemRarity !== 'jackpot' && (
+                    <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center mt-1 relative z-10`}>
+                      {cell.item.name}
+                    </span>
+                  )}
                   {itemRarity !== 'jackpot' && (
                     <span className="text-xs text-gray-600 relative z-10">
                       {cell.item.value}💰
-                    </span>
-                  )}
-                   {itemRarity === 'jackpot' && (
-                    <span className="text-xs font-bold text-red-600 relative z-10">
-                      POOL!
                     </span>
                   )}
                 </div>
@@ -413,11 +414,14 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             <h3 className="text-white font-bold mb-3 text-center sm:text-left text-lg">📦 Kho đồ (Mới nhất):</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {inventory.slice(0, 8).map((item, index) => {
-                const IconComponent = item.icon;
                 const itemRarity = item.rarity;
                 return (
                   <div key={index} className={`${getRarityBg(itemRarity)} p-2.5 rounded-lg text-center flex flex-col items-center justify-between aspect-square shadow-md hover:shadow-lg transition-shadow`}>
-                    <IconComponent className={`w-6 h-6 sm:w-7 sm:h-7 ${item.color} mx-auto mb-1`} />
+                    {typeof item.icon === 'string' ? (
+                      <img src={item.icon} alt={item.name} className="w-6 h-6 sm:w-7 sm:h-7 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/28x28/cccccc/000000?text=Error'; }} />
+                    ) : (
+                      <item.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${item.color} mx-auto mb-1`} />
+                    )}
                     <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'}`}>{item.name}</div>
                     {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700">{item.value.toLocaleString()}💰</div>}
                     {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600">POOL WIN!</div>}
