@@ -11,8 +11,8 @@ interface SidebarLayoutProps {
   onShowStats?: () => void; // Handler for showing Stats
   onShowRank?: () => void;   // Handler for showing Rank
   // Add handlers for other menu items that need parent interaction here
-  // REMOVED: onShowHome?: () => void;
-  // REMOVED: onShowTasks?: () => void;
+  // onShowHome?: () => void; // REMOVED: Handler for showing Home
+  // onShowTasks?: () => void; // REMOVED: Handler for showing Tasks
   // onShowPerformance?: () => void; // REMOVED: Handler for showing Performance
   onShowSettings?: () => void;
   onShowHelp?: () => void;
@@ -83,7 +83,7 @@ const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...
 
 const BellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-    <path d="M18 8A6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
   </svg>
 );
@@ -244,12 +244,12 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
   // List of sidebar menu items - Using new inline SVG components and the new FrameIcon
   const menuItems = [
     // Added onClick handlers calling the specific props
-    // REMOVED: { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome },
+    // { id: 'home', label: 'Trang chủ', icon: HomeIcon, onClick: onShowHome }, // REMOVED
     { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame }, // NEW: Lucky Game menu item
-    // REMOVED: { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks },
+    // { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks }, // REMOVED
     // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
