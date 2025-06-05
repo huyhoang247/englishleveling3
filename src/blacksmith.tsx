@@ -354,7 +354,7 @@ const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverrid
 };
 
 // Main App Component
-const App = () => {
+const Blacksmith = ({ onClose }) => { // Accept onClose prop
   const [activeTab, setActiveTab] = useState('upgrade');
   const [inventory, setInventory] = useState([
     { id: 'w1', name: 'Kiếm Sắt', type: 'weapon', icon: '⚔️', rarity: 'common', level: 0, quantity: 1 },
@@ -781,9 +781,19 @@ const App = () => {
   const canLearnSkillButtonBeEnabled = skillWeaponSlot !== null && skillBookSlot !== null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-center mb-8 gap-4">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans z-40"> {/* Fixed to fullscreen */}
+      <div className="max-w-7xl mx-auto h-full flex flex-col"> {/* Added flex-col and h-full */}
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg z-50 transition-transform transform hover:scale-110"
+          aria-label="Đóng lò rèn"
+          title="Đóng lò rèn"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+
+        <div className="flex justify-center mb-8 gap-4 mt-8"> {/* Added mt-8 for spacing from close button */}
           <button
             className={`px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
               activeTab === 'upgrade'
@@ -828,7 +838,7 @@ const App = () => {
           </button>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
           {activeTab === 'upgrade' && (
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-6">
@@ -1252,4 +1262,5 @@ const App = () => {
   );
 };
 
-export default App;
+export default Blacksmith;
+
