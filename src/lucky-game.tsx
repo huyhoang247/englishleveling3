@@ -500,7 +500,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             </div>
 
             <div className="text-center mb-6">
-              {/* START: Redesigned Spin Button (More Compact) */}
+              {/* START: Redesigned Spin Button (More Compact & Centered Group) */}
               <button
                 onClick={spinChest}
                 disabled={isSpinning || coins < 100}
@@ -508,7 +508,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   px-4 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
                   w-auto min-w-[160px] flex items-center justify-center relative group
                   ${isSpinning || coins < 100
-                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' // Adjusted disabled state
+                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
                   }
                 `}
@@ -522,12 +522,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     Đang quay...
                   </span>
                 ) : (
-                  <div className="flex items-center justify-between w-full">
+                  // This div now centers its content
+                  <div className="flex items-center justify-center w-full"> 
                     <span className="font-semibold tracking-wide">
                       QUAY
                     </span>
                     <span className={`
-                      h-4 w-px mx-2 transition-colors duration-200
+                      h-4 w-px mx-1.5 transition-colors duration-200 // Reduced mx to 1.5
                       ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
                     `}></span>
                     <span className="flex items-center">
