@@ -500,19 +500,45 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             </div>
 
             <div className="text-center mb-6">
+              {/* START: Redesigned Spin Button */}
               <button
                 onClick={spinChest}
                 disabled={isSpinning || coins < 100}
                 className={`
-                  px-8 py-4 text-xl font-extrabold uppercase tracking-wider rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
+                  px-5 py-2.5 text-lg font-bold rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
+                  min-w-[200px] flex items-center justify-center
                   ${isSpinning || coins < 100
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner opacity-70'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl focus:ring-green-400'
                   }
                 `}
               >
-                {isSpinning ? '🔄 Đang quay...' : `🎯 QUAY (${coins < 100 && !isSpinning ? 'Hết xu' : '100💰'})`}
+                {isSpinning ? (
+                  <span className="flex items-center justify-center">🔄 Đang quay...</span>
+                ) : (
+                  <div className="flex items-center justify-center w-full">
+                    <span className="flex items-center">
+                      <span className="mr-1.5 text-xl">🎯</span>
+                      QUAY
+                    </span>
+                    <span className="h-5 w-px bg-current opacity-40 mx-2.5"></span> {/* Separator */}
+                    <span className={`flex items-center ${coins < 100 ? 'opacity-80' : ''}`}>
+                      {coins < 100 ? (
+                        'Hết xu'
+                      ) : (
+                        <>
+                          <span>100</span>
+                          <CoinsIcon
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+                            className="w-5 h-5 inline-block ml-1.5"
+                          />
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
               </button>
+              {/* END: Redesigned Spin Button */}
               {coins < 100 && !isSpinning && (
                 <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
               )}
