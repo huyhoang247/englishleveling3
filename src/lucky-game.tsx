@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { getFirestore, doc, onSnapshot, updateDoc, increment, setDoc, getDoc, runTransaction } from 'firebase/firestore'; // Added Firestore imports
 
-// SVG Icons
+// SVG Icons (assuming these are fine as they are)
+// Modified CoinsIcon to accept a src prop for image URL
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -8,7 +10,7 @@ const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => 
         src={src}
         alt="Coin Icon"
         className={className}
-        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }}
+        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }} // Fallback
       />
     );
   }
@@ -61,27 +63,26 @@ const GiftIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Interface for item properties
 interface Item {
-  icon: React.FC<{ className?: string }> | string;
+  icon: React.FC<{ className?: string }> | string; // icon can be a component or a string (URL)
   name: string;
   value: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
-  timestamp?: number;
+  timestamp?: number; // Optional: to store when the item was won
 }
 
 interface LuckyChestGameProps {
   onClose: () => void;
-  currentUserId: string | null;
-  initialCoins: number;
-  initialJackpotPool: number;
-  onUpdateMainCoinsAndFirestore: (userId: string, amount: number) => Promise<void>;
-  onDisplayCoinsUpdate: (newDisplayedCoins: number) => void;
-  onUpdateJackpotPool: (amountToAddOrNewValue: number, isAbsoluteValue?: boolean) => Promise<void>;
+  currentCoins: number; // Received from background-game
+  onUpdateCoins: (amount: number) => void; // Callback to update coins in background-game
+  currentUserId: string | null; // User ID for Firestore operations
 }
 
+// Reward Popup Component
 interface RewardPopupProps {
-  item: Item;
+  item: Item; // This item will now have the correct 'value' for jackpot wins
   jackpotWon: boolean;
   onClose: () => void;
 }
@@ -106,6 +107,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
             <h2 className="text-3xl font-black mb-2 uppercase tracking-wider text-white drop-shadow">JACKPOT!</h2>
+            {/* Display item.value which now holds the actual jackpot amount won */}
             <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {item.value.toLocaleString()} xu từ Pool!</p>
             <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn! 🌟</p>
           </>
@@ -135,37 +137,66 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-const LuckyChestGame = ({
-  onClose,
-  currentUserId,
-  initialCoins,
-  initialJackpotPool,
-  onUpdateMainCoinsAndFirestore,
-  onDisplayCoinsUpdate,
-  onUpdateJackpotPool
-}: LuckyChestGameProps) => {
+const LuckyChestGame = ({ onClose, currentCoins, onUpdateCoins, currentUserId }: LuckyChestGameProps) => {
+  const db = getFirestore();
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1);
   const [hasSpun, setHasSpun] = useState(false);
-  const [coins, setCoins] = useState(initialCoins);
-  const [jackpotPool, setJackpotPool] = useState(initialJackpotPool);
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]);
+  
+  const [jackpotPoolValue, setJackpotPoolValue] = useState(200); // Local state for jackpot pool, synced with Firestore
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin');
+
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
-  const INITIAL_JACKPOT_POOL_RESET_VALUE = 200;
+  const SPIN_COST = 100;
+  const INITIAL_JACKPOT_POOL = 200;
+  const JACKPOT_DOC_PATH = 'gameGlobalState/luckyChestGame'; // Path for the global jackpot document
 
-  useEffect(() => {
-    setCoins(initialCoins);
-  }, [initialCoins]);
 
+  // Effect to listen for real-time updates to the jackpot pool from Firestore
   useEffect(() => {
-    setJackpotPool(initialJackpotPool);
-  }, [initialJackpotPool]);
+    // currentUserId is not strictly needed for a global jackpot pool, but good for user-specific features if any
+    const jackpotDocRef = doc(db, JACKPOT_DOC_PATH);
+
+    const ensureDocExists = async () => {
+      const docSnap = await getDoc(jackpotDocRef);
+      if (!docSnap.exists()) {
+        try {
+          await setDoc(jackpotDocRef, { jackpotPool: INITIAL_JACKPOT_POOL });
+          console.log("LuckyGame: Initialized jackpot pool in Firestore.");
+          setJackpotPoolValue(INITIAL_JACKPOT_POOL); // Set local state after ensuring doc
+        } catch (error) {
+          console.error("LuckyGame: Error initializing jackpot pool:", error);
+          setJackpotPoolValue(INITIAL_JACKPOT_POOL); // Fallback to default if init fails
+        }
+      }
+    };
+
+    ensureDocExists(); // Ensure document exists before subscribing
+
+    const unsubscribe = onSnapshot(jackpotDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setJackpotPoolValue(docSnap.data().jackpotPool);
+      } else {
+        console.warn("LuckyGame: Jackpot document does not exist after initial check. Attempting to re-initialize.");
+        // This scenario should ideally be rare if ensureDocExists works.
+        // Re-initialize or set a local default.
+        ensureDocExists().catch(err => console.error("Failed to re-initialize jackpot doc", err));
+        setJackpotPoolValue(INITIAL_JACKPOT_POOL); // Fallback
+      }
+    }, (error) => {
+      console.error("LuckyGame: Error listening to jackpot pool:", error);
+      setJackpotPoolValue(INITIAL_JACKPOT_POOL); // Fallback on error
+    });
+
+    return () => unsubscribe(); // Cleanup listener on component unmount
+  }, [db, currentUserId]); // currentUserId added in case future logic needs it, db for stability
+
 
   const items: Item[] = [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
@@ -177,7 +208,7 @@ const LuckyChestGame = ({
     { icon: HeartIcon, name: 'Trái tim', value: 250, rarity: 'uncommon', color: 'text-red-500' },
     { icon: GiftIcon, name: 'Quà bí ẩn', value: 600, rarity: 'epic', color: 'text-pink-500' },
     { icon: CoinsIcon, name: 'Vàng+', value: 150, rarity: 'common', color: 'text-yellow-500' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' }, // Value 0, actual win is jackpotPoolValue
     { icon: StarIcon, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
     { icon: ZapIcon, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
     { icon: ShieldIcon, name: 'Khiên ma thuật', value: 700, rarity: 'epic', color: 'text-indigo-500' },
@@ -207,33 +238,21 @@ const LuckyChestGame = ({
   };
 
   const spinChest = async () => {
-    if (isSpinning || coins < 100 || !currentUserId) {
-      console.log("Spin conditions not met:", { isSpinning, coins, currentUserId });
-      return;
+    if (isSpinning || currentCoins < SPIN_COST || !currentUserId) {
+        if (!currentUserId) console.error("LuckyGame: User not identified, cannot spin.");
+        return;
     }
 
-    const spinCost = 100;
-    const newCoinsAfterCost = coins - spinCost;
-    setCoins(newCoinsAfterCost);
-    onDisplayCoinsUpdate(newCoinsAfterCost);
-
-    try {
-      await onUpdateMainCoinsAndFirestore(currentUserId, -spinCost);
-    } catch (error) {
-      console.error("Error updating coins for spin cost:", error);
-      setCoins(coins); 
-      onDisplayCoinsUpdate(coins);
-      return;
-    }
+    onUpdateCoins(-SPIN_COST); // Deduct coins via callback
 
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
-    const newJackpotPoolAfterContribution = jackpotPool + randomCoinsToAdd;
-    setJackpotPool(newJackpotPoolAfterContribution);
+    const jackpotDocRef = doc(db, JACKPOT_DOC_PATH);
     try {
-      await onUpdateJackpotPool(randomCoinsToAdd, false);
+      await updateDoc(jackpotDocRef, { jackpotPool: increment(randomCoinsToAdd) });
+      // The onSnapshot listener will update jackpotPoolValue automatically
     } catch (error) {
-      console.error("Error updating jackpot pool contribution:", error);
-      setJackpotPool(jackpotPool);
+      console.error("LuckyGame: Error incrementing jackpot pool:", error);
+      // Decide if spin should continue or be voided. For now, continue.
     }
 
     setIsSpinning(true);
@@ -246,27 +265,44 @@ const LuckyChestGame = ({
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
 
-    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
+    // Determine landing index (1% chance for Jackpot)
+    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) { // 1% Jackpot chance
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
         const otherItemIndicesOnWheel: number[] = [];
         for (let i = 0; i < NUM_WHEEL_SLOTS; i++) {
-            if (i !== jackpotItemArrayIndex) {
+            if (i !== jackpotItemArrayIndex || items[i]?.rarity !== 'jackpot') { // Ensure it's not jackpot if we didn't hit the 1%
                 otherItemIndicesOnWheel.push(i);
             }
         }
+
         if (otherItemIndicesOnWheel.length > 0) {
             targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
-        } else { 
-             targetLandedItemIndex = Math.floor(Math.random() * NUM_WHEEL_SLOTS);
-             if (NUM_WHEEL_SLOTS === 0) targetLandedItemIndex = 0;
+        } else { // Fallback if only jackpot is on the wheel or some other edge case
+            const allWheelIndices = Array.from(Array(NUM_WHEEL_SLOTS).keys());
+             if (allWheelIndices.length > 0) {
+                targetLandedItemIndex = allWheelIndices[Math.floor(Math.random() * allWheelIndices.length)];
+            } else {
+                targetLandedItemIndex = 0; // Absolute fallback
+            }
         }
     }
+     // Ensure we don't land on Jackpot if the 1% roll failed and there are other items
+    if (items[targetLandedItemIndex]?.rarity === 'jackpot' && !(jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && targetLandedItemIndex === jackpotItemArrayIndex && Math.random() < 0.01) ) {
+         const nonJackpotIndices = items.map((item, idx) => item.rarity !== 'jackpot' ? idx : -1).filter(idx => idx !== -1 && idx < NUM_WHEEL_SLOTS);
+         if (nonJackpotIndices.length > 0) {
+            targetLandedItemIndex = nonJackpotIndices[Math.floor(Math.random() * nonJackpotIndices.length)];
+         } else {
+            targetLandedItemIndex = 0; // Should not happen if items are configured
+         }
+    }
+
 
     setFinalLandedItemIndex(targetLandedItemIndex);
 
     const numFullRotations = 2;
     const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
+
     let currentVisualStepIndex = 0;
     let currentSpeed = 50;
     const finalPauseDuration = 700;
@@ -277,65 +313,56 @@ const LuckyChestGame = ({
 
       if (currentVisualStepIndex < totalVisualSteps) {
         const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
-        const fastSpeed = 50; const moderateSpeed = 120;
+        const fastSpeed = 50;
+        const moderateSpeed = 120;
         const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
-        if (remainingVisualSteps <= finalSlowdownSpeeds.length) currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
-        else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) currentSpeed = moderateSpeed;
-        else currentSpeed = fastSpeed;
+
+        if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
+          currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
+        } else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) {
+          currentSpeed = moderateSpeed;
+        } else {
+          currentSpeed = fastSpeed;
+        }
+
         currentVisualStepIndex++;
         setTimeout(spinAnimation, currentSpeed);
       } else {
-        setTimeout(async () => {
+        // Animation finished
+        setTimeout(async () => { // Make async for Firestore operations
           setIsSpinning(false);
           setHasSpun(true);
           setSelectedIndex(targetLandedItemIndex);
 
-          const wonItemConfig = items[targetLandedItemIndex];
-          const wonItem = { ...wonItemConfig, timestamp: Date.now() };
-          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10));
-          
-          let actualWonAmount = wonItem.value;
-          let currentLocalCoins = newCoinsAfterCost; 
+          const wonItemDefinition = items[targetLandedItemIndex];
+          let actualWonAmount = wonItemDefinition.value; // Default to item's value
+          let finalWonItem = { ...wonItemDefinition, timestamp: Date.now() };
 
-          if (wonItem.rarity === 'jackpot') {
-            actualWonAmount = newJackpotPoolAfterContribution;
+
+          if (wonItemDefinition.rarity === 'jackpot') {
+            actualWonAmount = jackpotPoolValue; // Current pool value from listener
             setJackpotWon(true);
             setJackpotAnimation(true);
-            
-            const newCoinsAfterJackpot = currentLocalCoins + actualWonAmount;
-            setCoins(newCoinsAfterJackpot);
-            onDisplayCoinsUpdate(newCoinsAfterJackpot);
-            try {
-              await onUpdateMainCoinsAndFirestore(currentUserId!, actualWonAmount);
-            } catch (error) {
-              console.error("Error updating coins for jackpot win:", error);
-              setCoins(currentLocalCoins); 
-              onDisplayCoinsUpdate(currentLocalCoins);
-            }
+            onUpdateCoins(actualWonAmount); // Award jackpot coins
 
-            setJackpotPool(INITIAL_JACKPOT_POOL_RESET_VALUE);
             try {
-              await onUpdateJackpotPool(INITIAL_JACKPOT_POOL_RESET_VALUE, true);
+              await updateDoc(jackpotDocRef, { jackpotPool: INITIAL_JACKPOT_POOL }); // Reset pool
+              // Listener will update jackpotPoolValue state
             } catch (error) {
-              console.error("Error resetting jackpot pool:", error);
+              console.error("LuckyGame: Error resetting jackpot pool:", error);
+              // Pool might not be reset, but player got coins. Log this discrepancy.
             }
             
-            setTimeout(() => setJackpotAnimation(false), 3000);
+            setTimeout(() => {
+              setJackpotAnimation(false);
+            }, 3000);
           } else {
-            if (wonItem.value > 0) {
-              const newCoinsAfterWin = currentLocalCoins + wonItem.value;
-              setCoins(newCoinsAfterWin);
-              onDisplayCoinsUpdate(newCoinsAfterWin);
-              try {
-                await onUpdateMainCoinsAndFirestore(currentUserId!, wonItem.value);
-              } catch (error) {
-                console.error("Error updating coins for regular win:", error);
-                setCoins(currentLocalCoins);
-                onDisplayCoinsUpdate(currentLocalCoins);
-              }
-            }
+            onUpdateCoins(wonItemDefinition.value); // Award item's coin value
           }
-          setWonRewardDetails({ ...wonItem, value: actualWonAmount });
+          
+          finalWonItem.value = actualWonAmount; // Ensure the popup shows the correct amount for jackpot
+          setRewardHistory(prev => [finalWonItem, ...prev].slice(0, 10));
+          setWonRewardDetails(finalWonItem);
           setShowRewardPopup(true);
         }, finalPauseDuration);
       }
@@ -437,9 +464,15 @@ const LuckyChestGame = ({
                       )}
                     </div>
                   )}
+                   {itemRarity === 'jackpot' && (
+                     <span className={`text-xs font-bold ${displaySelected ? 'text-white' : 'text-red-700'} text-center relative z-10`}>
+                        JACKPOT!
+                      </span>
+                   )}
                 </div>
               );
             }
+
             return <div key={`empty-outer-${rowIndex}-${colIndex}`} className="aspect-square bg-transparent"></div>;
           })
         )}
@@ -480,7 +513,7 @@ const LuckyChestGame = ({
           <img
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
             alt="Close icon"
-            className="w-5 h-5 text-indigo-300"
+            className="w-5 h-5 text-indigo-300" // Fallback color if image fails early
             onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }}
           />
         </button>
@@ -500,7 +533,7 @@ const LuckyChestGame = ({
               <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${
                 jackpotAnimation ? 'animate-bounce' : ''
               }`}>
-                {jackpotPool.toLocaleString()}
+                {jackpotPoolValue.toLocaleString()}
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
               </div>
               <div className="text-yellow-200 text-xs mt-2 opacity-90">
@@ -515,7 +548,7 @@ const LuckyChestGame = ({
           {activeTab === 'spin' && (
             <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2">
               <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center">
-                {coins.toLocaleString()} Xu
+                {currentCoins.toLocaleString()} Xu {/* Use currentCoins prop */}
               </div>
             </div>
           )}
@@ -526,14 +559,15 @@ const LuckyChestGame = ({
             <div className="flex justify-center mb-6">
               {renderGrid()}
             </div>
+
             <div className="flex justify-center mb-6">
               <button
                 onClick={spinChest}
-                disabled={isSpinning || coins < 100 || !currentUserId}
+                disabled={isSpinning || currentCoins < SPIN_COST || !currentUserId}
                 className={`
                   px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
                   inline-flex items-center justify-center relative group
-                  ${isSpinning || coins < 100 || !currentUserId
+                  ${isSpinning || currentCoins < SPIN_COST || !currentUserId
                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
                   }
@@ -554,14 +588,14 @@ const LuckyChestGame = ({
                     </span>
                     <span className={`
                       h-4 w-px mx-1.5 transition-colors duration-200 
-                      ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
+                      ${currentCoins < SPIN_COST ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
                     `}></span>
                     <span className="flex items-center">
-                      {coins < 100 ? (
+                      {currentCoins < SPIN_COST ? (
                         <span className="font-medium">Hết xu</span>
                       ) : (
                         <>
-                          <span className="font-medium">100</span>
+                          <span className="font-medium">{SPIN_COST}</span>
                           <CoinsIcon
                             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
                             className="w-4 h-4 inline-block ml-1"
@@ -572,10 +606,8 @@ const LuckyChestGame = ({
                   </div>
                 )}
               </button>
-              {(coins < 100 || !currentUserId) && !isSpinning && (
-                <p className="text-red-400 text-sm mt-2 font-semibold">
-                  {!currentUserId ? "Vui lòng đăng nhập để chơi." : "Bạn không đủ xu để quay!"}
-                </p>
+              {currentCoins < SPIN_COST && !isSpinning && (
+                <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
               )}
             </div>
           </>
@@ -604,8 +636,9 @@ const LuckyChestGame = ({
                     <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
                       {item.name}
                     </div>
+                    {/* For jackpot items in history, show the actual amount won which is stored in item.value */}
+                    {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
                     {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
-                    {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
                   </div>
                 );
               })}
@@ -649,6 +682,7 @@ const LuckyChestGame = ({
         }
         .animate-shine { animation: shine 1.5s linear infinite; }
 
+        /* Popup specific animations */
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -685,24 +719,25 @@ const LuckyChestGame = ({
         }
 
         body {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Inter', sans-serif; /* Example font */
         }
 
+        /* Custom scrollbar for reward history */
         .scrollbar-thin {
           scrollbar-width: thin;
-          scrollbar-color: #a855f7 #3b0764;
+          scrollbar-color: #a855f7 /* thumb */ #3b0764 /* track, semi-transparent purple-800 */;
         }
         .scrollbar-thin::-webkit-scrollbar {
           height: 8px;
         }
         .scrollbar-thin::-webkit-scrollbar-track {
-          background: rgba(59, 7, 100, 0.5);
+          background: rgba(59, 7, 100, 0.5); /* purple-800 with opacity */
           border-radius: 10px;
         }
         .scrollbar-thin::-webkit-scrollbar-thumb {
-          background-color: #a855f7;
+          background-color: #a855f7; /* purple-400 */
           border-radius: 10px;
-          border: 2px solid rgba(59, 7, 100, 0.5);
+          border: 2px solid rgba(59, 7, 100, 0.5); /* track color for border */
         }
         .line-clamp-2 {
           display: -webkit-box;
