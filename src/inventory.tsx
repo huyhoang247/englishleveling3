@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // Sample data for inventory items - INCREASED TO DEMONSTRATE PAGINATION
 const items = [
-  { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 1, icon: '🗡️' },
+  { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png' },
   { id: 2, name: 'Thuốc hồi máu', type: 'potion', rarity: 'common', description: 'Hồi phục 50 điểm máu khi sử dụng.', stats: { healing: 50 }, quantity: 5, icon: '🧪' },
   { id: 3, name: 'Áo giáp da', type: 'armor', rarity: 'common', description: 'Áo giáp cơ bản, cung cấp một chút bảo vệ.', stats: { defense: 10 }, quantity: 1, icon: '🥋' },
   { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: '⚔️' },
@@ -271,7 +271,12 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                   </div>
                 </>
               )}
-              {item.icon}
+              {/* Conditional rendering for image icon */}
+              {item.icon.startsWith('http') ? (
+                <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2" />
+              ) : (
+                <div className="text-2xl sm:text-3xl relative z-0">{item.icon}</div>
+              )}
             </div>
             
             <div className="flex-1">
@@ -468,7 +473,12 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                 </div>
               )}
               
-              <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div> {/* Adjusted icon size */}
+              {/* Conditional rendering for image icon or emoji */}
+              {item.icon.startsWith('http') ? (
+                <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />
+              ) : (
+                <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>
+              )}
               
               <ItemTooltip item={item} />
             </div>
