@@ -75,8 +75,9 @@ interface Item {
 
 interface LuckyChestGameProps {
   onClose: () => void;
-  // Added isStatsFullscreen prop to LuckyChestGame as CoinDisplay needs it
-  isStatsFullscreen: boolean; 
+  isStatsFullscreen: boolean;
+  currentCoins: number; // Thêm prop để nhận số xu hiện tại
+  onUpdateCoins: (amount: number) => void; // Thêm prop để cập nhật số xu
 }
 
 // Reward Popup Component
@@ -136,12 +137,13 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => { // Added isStatsFullscreen here
+const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1); // For visual highlighting during spin
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Actual item index won
   const [hasSpun, setHasSpun] = useState(false);
-  const [coins, setCoins] = useState(1000);
+  // Loại bỏ state coins cục bộ, giờ nó nhận từ props
+  // const [coins, setCoins] = useState(1000); 
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
   // Set initial jackpot pool to 200
   const [jackpotPool, setJackpotPool] = useState(200);
@@ -198,9 +200,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
 
   // Function to handle the spinning mechanism
   const spinChest = () => {
-    if (isSpinning || coins < 100) return;
+    if (isSpinning || currentCoins < 100) return; // Sử dụng currentCoins từ props
 
-    setCoins(prev => prev - 100);
+    onUpdateCoins(-100); // Trừ 100 xu khi quay
 
     // Add random 10-100 coins to the jackpot pool when spinning
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
@@ -286,14 +288,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
             actualWonAmount = jackpotPool; // Capture the current pool value for the win
             setJackpotWon(true);
             setJackpotAnimation(true);
-            setCoins(prev => prev + actualWonAmount); // Add the actual captured amount
+            onUpdateCoins(actualWonAmount); // Cập nhật xu khi trúng jackpot
             setJackpotPool(200); // Reset after using
             
             setTimeout(() => {
               setJackpotAnimation(false);
             }, 3000);
           } else {
-            setCoins(prev => prev + wonItem.value);
+            onUpdateCoins(wonItem.value); // Cập nhật xu khi trúng vật phẩm thường
           }
 
           // Set details for popup, ensuring jackpot amount is correctly passed if it was a jackpot
@@ -489,7 +491,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
           {activeTab === 'spin' && (
             <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2">
               <CoinDisplay 
-                displayedCoins={coins} 
+                displayedCoins={currentCoins} // Sử dụng currentCoins từ props
                 isStatsFullscreen={isStatsFullscreen} // Pass the prop
               />
             </div>
@@ -507,11 +509,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
             <div className="flex justify-center mb-6">
               <button
                 onClick={spinChest}
-                disabled={isSpinning || coins < 100}
+                disabled={isSpinning || currentCoins < 100} // Sử dụng currentCoins từ props
                 className={`
                   px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
                   inline-flex items-center justify-center relative group /* Đổi thành inline-flex để vừa với nội dung */
-                  ${isSpinning || coins < 100
+                  ${isSpinning || currentCoins < 100 // Sử dụng currentCoins từ props
                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
                   }
@@ -532,10 +534,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
                     </span>
                     <span className={`
                       h-4 w-px mx-1.5 transition-colors duration-200 
-                      ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
+                      ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'} // Sử dụng currentCoins từ props
                     `}></span>
                     <span className="flex items-center">
-                      {coins < 100 ? (
+                      {currentCoins < 100 ? ( // Sử dụng currentCoins từ props
                         <span className="font-medium">Hết xu</span>
                       ) : (
                         <>
@@ -550,7 +552,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
                   </div>
                 )}
               </button>
-              {coins < 100 && !isSpinning && (
+              {currentCoins < 100 && !isSpinning && ( // Sử dụng currentCoins từ props
                 <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
               )}
             </div>
@@ -622,7 +624,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => 
 
         @keyframes shine {
           0% { transform: translateX(-100%) skewX(-20deg); }
-          100% { transform: translateX(100%) skewX(-20deg); }
+          100% { transform: translateX(100%) skewX(100%) skewX(-20deg); }
         }
         .animate-shine { animation: shine 1.5s linear infinite; }
 
