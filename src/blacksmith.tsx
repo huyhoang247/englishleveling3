@@ -36,7 +36,8 @@ const S_RANK_WEAPONS = [
 
 // Define all crafting recipes
 const CRAFTING_RECIPES_DEFINITION = [
-  // Material-based recipes (no shard required)
+  // Material-based recipes (no shard required) - These are still defined but not directly usable with the new shard-only UI flow for crafting tab.
+  // They could be used for other game mechanics or a different UI in the future.
   {
     type: 'material_based',
     rank: 'E',
@@ -97,7 +98,7 @@ const CRAFTING_RECIPES_DEFINITION = [
       { name: 'Sắt E', quantity: 5 }
     ],
     outputPool: E_RANK_WEAPONS,
-    description: 'Rèn vũ khí E-rank từ mảnh và nguyên liệu phụ trợ.'
+    description: 'Rèn vũ khí E-rank từ mảnh và nguyên liệu phụ trợ lấy từ túi đồ.'
   },
   {
     type: 'shard_based',
@@ -107,19 +108,19 @@ const CRAFTING_RECIPES_DEFINITION = [
       { name: 'Đá D', quantity: 4 },
       { name: 'Da Dày', quantity: 4 }
     ],
-    outputPool: D_RANK_WEAPONS,
-    description: 'Rèn vũ khí D-rank từ mảnh và nguyên liệu phụ trợ.'
+    outputPool: D_RANK_WEAPONS.filter(w => w.type === 'weapon'), // Example: Mảnh Vũ khí D only yields weapons
+    description: 'Rèn vũ khí D-rank từ mảnh và nguyên liệu phụ trợ lấy từ túi đồ.'
   },
   {
     type: 'shard_based',
     rank: 'D',
     shardRequired: { name: 'Mảnh Giáp D', quantity: 1 },
     materialsRequired: [
-      { name: 'Đá D', quantity: 4 },
+      { name: 'Đá D', quantity: 4 }, // Assuming same materials for D-rank armor shard
       { name: 'Da Dày', quantity: 4 }
     ],
     outputPool: [{ name: 'Giáp Da Cứng D', type: 'armor', icon: '🛡️', rarity: 'uncommon', level: 0 }], // Specific armor for this shard
-    description: 'Rèn giáp D-rank từ mảnh và nguyên liệu phụ trợ.'
+    description: 'Rèn giáp D-rank từ mảnh và nguyên liệu phụ trợ lấy từ túi đồ.'
   },
   {
     type: 'shard_based',
@@ -130,29 +131,29 @@ const CRAFTING_RECIPES_DEFINITION = [
       { name: 'Hợp Kim Huyền Bí', quantity: 3 }
     ],
     outputPool: B_RANK_WEAPONS,
-    description: 'Rèn vũ khí B-rank từ mảnh và nguyên liệu phụ trợ.'
+    description: 'Rèn vũ khí B-rank từ mảnh và nguyên liệu phụ trợ lấy từ túi đồ.'
   },
   {
     type: 'shard_based',
     rank: 'A',
     shardRequired: { name: 'Mảnh Vũ khí A', quantity: 1 },
     materialsRequired: [
-      { name: 'Ngọc Rồng', quantity: 2 },
+      { name: 'Ngọc Rồng', quantity: 2 }, // Using existing A-rank materials
       { name: 'Lõi Pha Lê', quantity: 2 }
     ],
     outputPool: A_RANK_WEAPONS,
-    description: 'Rèn vũ khí A-rank từ mảnh và nguyên liệu phụ trợ.'
+    description: 'Rèn vũ khí A-rank từ mảnh và nguyên liệu phụ trợ lấy từ túi đồ.'
   },
   {
     type: 'shard_based',
     rank: 'S',
     shardRequired: { name: 'Mảnh Vũ khí S', quantity: 1 },
     materialsRequired: [
-      { name: 'Trái Tim Ánh Sáng', quantity: 1 },
+      { name: 'Trái Tim Ánh Sáng', quantity: 1 }, // Using existing S-rank materials
       { name: 'Linh Hồn Hắc Ám', quantity: 1 }
     ],
     outputPool: S_RANK_WEAPONS,
-    description: 'Rèn vũ khí S-rank từ mảnh và nguyên liệu phụ trợ.'
+    description: 'Rèn vũ khí S-rank từ mảnh và nguyên liệu phụ trợ lấy từ túi đồ.'
   },
 ];
 
@@ -168,6 +169,55 @@ const getNextRarity = (currentRarity) => {
   }
   return currentRarity; // Stays legendary if already legendary
 };
+
+// --- New Skill and Skill Book Definitions ---
+
+const E_RANK_SKILLS = [
+  { name: 'Đấm Thường', icon: '🤜', rarity: 'common', description: 'Gây sát thương vật lý cơ bản.' },
+  { name: 'Tăng Tốc Nhỏ', icon: '💨', rarity: 'common', description: 'Tăng tốc độ di chuyển trong thời gian ngắn.' },
+  { name: 'Chữa Trị Nhẹ', icon: '🩹', rarity: 'common', description: 'Hồi một lượng nhỏ HP.' },
+];
+
+const D_RANK_SKILLS = [
+  { name: 'Cú Đấm Mạnh', icon: '💥', rarity: 'uncommon', description: 'Gây sát thương vật lý đáng kể.' },
+  { name: 'Khiên Bảo Vệ', icon: '🛡️', rarity: 'uncommon', description: 'Tạo một lá chắn hấp thụ sát thương.' },
+  { name: 'Tia Sáng', icon: '☀️', rarity: 'uncommon', description: 'Bắn ra tia sáng gây sát thương phép.' },
+];
+
+const B_RANK_SKILLS = [
+  { name: 'Chém Xoáy', icon: '🌪️', rarity: 'rare', description: 'Xoay tròn chém kẻ địch xung quanh.' },
+  { name: 'Tường Lửa', icon: '🔥', rarity: 'rare', description: 'Triệu hồi tường lửa gây sát thương liên tục.' },
+  { name: 'Băng Giá', icon: '❄️', rarity: 'rare', description: 'Đóng băng kẻ địch, giảm tốc độ di chuyển.' },
+];
+
+const A_RANK_SKILLS = [
+  { name: 'Sấm Sét', icon: '⚡', rarity: 'epic', description: 'Triệu hồi sấm sét tấn công một mục tiêu.' },
+  { name: 'Hấp Huyết', icon: '🩸', rarity: 'epic', description: 'Hút máu kẻ địch, hồi HP cho bản thân.' },
+  { name: 'Vũ Điệu Kiếm', icon: '🗡️✨', rarity: 'epic', description: 'Thực hiện chuỗi tấn công kiếm nhanh.' },
+];
+
+const S_RANK_SKILLS = [
+  { name: 'Phán Quyết Thần Thánh', icon: '🌟', rarity: 'legendary', description: 'Gây sát thương lớn lên kẻ địch và hồi HP.' },
+  { name: 'Thiên Thạch Giáng', icon: '☄️', rarity: 'legendary', description: 'Triệu hồi thiên thạch hủy diệt xuống khu vực.' },
+  { name: 'Nguyên Tố Tối Thượng', icon: '🌀', rarity: 'legendary', description: 'Giải phóng sức mạnh nguyên tố tổng hợp.' },
+];
+
+// Map rarity to skill pools for easy lookup
+const SKILL_POOLS_BY_RARITY = {
+  common: E_RANK_SKILLS,
+  uncommon: D_RANK_SKILLS,
+  rare: B_RANK_SKILLS,
+  epic: A_RANK_SKILLS,
+  legendary: S_RANK_SKILLS,
+};
+
+const SKILL_BOOKS = [
+  { name: 'Sách Kỹ Năng E', type: 'skill_book', icon: '📖', rarity: 'common' },
+  { name: 'Sách Kỹ Năng D', type: 'skill_book', icon: '📘', rarity: 'uncommon' },
+  { name: 'Sách Kỹ Năng B', type: 'skill_book', icon: '📗', rarity: 'rare' },
+  { name: 'Sách Kỹ Năng A', type: 'skill_book', icon: '📙', rarity: 'epic' },
+  { name: 'Sách Kỹ Năng S', type: 'skill_book', icon: '📕', rarity: 'legendary' },
+];
 
 // Custom alert component
 const CustomAlert = ({ isVisible, message, onClose, type = 'info' }) => {
@@ -218,8 +268,8 @@ const ForgingAnimation = ({ isProcessing }) => {
   );
 };
 
-// Forging Slot Component for Upgrade Tab
-const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverride, showQuantity = false, requiredForRecipe = 0 }) => {
+// Forging Slot Component
+const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverride, showQuantity = false }) => {
   const slotStyles = {
     weapon: {
       border: 'border-red-500/50',
@@ -237,13 +287,21 @@ const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverrid
       icon: '🪨',
       label: 'Nguyên Liệu'
     },
-    shard: { // New style for shard slot
+    shard: {
       border: 'border-purple-500/50',
       bg: item ? 'bg-gradient-to-br from-purple-900/40 to-purple-800/40' : 'bg-gradient-to-br from-purple-900/20 to-purple-800/20',
       hoverBg: 'hover:bg-purple-700/30',
       hoverBorder: 'hover:border-purple-400',
       icon: '🧩',
       label: 'Mảnh Trang Bị'
+    },
+    skill_book: { // New style for skill books
+      border: 'border-cyan-500/50',
+      bg: item ? 'bg-gradient-to-br from-cyan-900/40 to-cyan-800/40' : 'bg-gradient-to-br from-cyan-900/20 to-cyan-800/20',
+      hoverBg: 'hover:bg-cyan-700/30',
+      hoverBorder: 'hover:border-cyan-400',
+      icon: '📖',
+      label: 'Sách Kỹ Năng'
     }
   };
 
@@ -269,8 +327,8 @@ const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverrid
             {item.name} {item.level > 0 ? `+${item.level}` : ''}
           </span>
           {showQuantity && item.quantity > 0 && (
-            <span className={`absolute bottom-1 right-1 px-2 py-1 ${item.quantity >= requiredForRecipe ? 'bg-blue-500' : 'bg-red-500'} text-white text-xs font-bold rounded-full`}>
-              {requiredForRecipe > 0 ? `${item.quantity}/${requiredForRecipe}` : `x${item.quantity}`}
+            <span className={`absolute bottom-1 right-1 px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full`}>
+              {`x${item.quantity}`}
             </span>
           )}
           <div className={`absolute top-2 left-2 text-xs px-2 py-1 rounded-full font-medium ${
@@ -297,10 +355,7 @@ const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverrid
 
 // Main App Component
 const App = () => {
-  // State for current active tab
-  const [activeTab, setActiveTab] = useState('upgrade'); // 'upgrade' or 'craft'
-
-  // State for inventory items, now with quantity
+  const [activeTab, setActiveTab] = useState('upgrade');
   const [inventory, setInventory] = useState([
     { id: 'w1', name: 'Kiếm Sắt', type: 'weapon', icon: '⚔️', rarity: 'common', level: 0, quantity: 1 },
     { id: 'w1_b', name: 'Kiếm Sắt', type: 'weapon', icon: '⚔️', rarity: 'common', level: 0, quantity: 1 },
@@ -309,46 +364,48 @@ const App = () => {
     { id: 'm2', name: 'Đá Lửa', type: 'material', icon: '🔥', rarity: 'uncommon', quantity: 1 },
     { id: 'w3', name: 'Dao Găm', type: 'weapon', icon: '🔪', rarity: 'common', level: 0, quantity: 1 },
     { id: 'm3', name: 'Gỗ Sồi', type: 'material', icon: '🌳', rarity: 'common', quantity: 1 },
-    { id: 'm4', name: 'Đá Cường Hoá', type: 'material', icon: '💎', rarity: 'rare', quantity: 5 }, // Combined into one stack
-    { id: 'm5', name: 'Gỗ E', type: 'material', icon: '🌲', rarity: 'common', quantity: 30 }, // E-rank wood
-    { id: 'm6', name: 'Sắt E', type: 'material', icon: '🔩', rarity: 'common', quantity: 30 }, // E-rank iron
-    { id: 'm7', name: 'Đá D', type: 'material', icon: '🪨', rarity: 'uncommon', quantity: 25 }, // D-rank stone
-    { id: 'm8', name: 'Da Dày', type: 'material', icon: '🛡️', rarity: 'uncommon', quantity: 25 }, // D-rank leather
+    { id: 'm4', name: 'Đá Cường Hoá', type: 'material', icon: '💎', rarity: 'rare', quantity: 5 },
+    { id: 'm5', name: 'Gỗ E', type: 'material', icon: '🌲', rarity: 'common', quantity: 30 },
+    { id: 'm6', name: 'Sắt E', type: 'material', icon: '🔩', rarity: 'common', quantity: 30 },
+    { id: 'm7', name: 'Đá D', type: 'material', icon: '🪨', rarity: 'uncommon', quantity: 25 },
+    { id: 'm8', name: 'Da Dày', type: 'material', icon: '🛡️', rarity: 'uncommon', quantity: 25 },
     { id: 'm9', name: 'Tinh Thể Năng Lượng', type: 'material', icon: '✨', rarity: 'rare', quantity: 20 },
     { id: 'm10', name: 'Hợp Kim Huyền Bí', type: 'material', icon: '🔗', rarity: 'rare', quantity: 20 },
     { id: 'm11', name: 'Ngọc Rồng', type: 'material', icon: '🐉', rarity: 'epic', quantity: 10 },
     { id: 'm12', name: 'Lõi Pha Lê', type: 'material', icon: '🔮', rarity: 'epic', quantity: 10 },
     { id: 'm13', name: 'Trái Tim Ánh Sáng', type: 'material', icon: '❤️', rarity: 'legendary', quantity: 2 },
     { id: 'm14', name: 'Linh Hồn Hắc Ám', type: 'material', icon: '🖤', rarity: 'legendary', quantity: 2 },
-    // New Shard Items
     { id: 's1', name: 'Mảnh Vũ khí E', type: 'shard', icon: '🧩', rarity: 'common', quantity: 3 },
     { id: 's2', name: 'Mảnh Vũ khí D', type: 'shard', icon: '💎', rarity: 'uncommon', quantity: 2 },
     { id: 's3', name: 'Mảnh Giáp D', type: 'shard', icon: '🛡️', rarity: 'uncommon', quantity: 2 },
     { id: 's4', name: 'Mảnh Vũ khí B', type: 'shard', icon: '✨', rarity: 'rare', quantity: 1 },
     { id: 's5', name: 'Mảnh Vũ khí A', type: 'shard', icon: '🌟', rarity: 'epic', quantity: 1 },
     { id: 's6', name: 'Mảnh Vũ khí S', type: 'shard', icon: '🌠', rarity: 'legendary', quantity: 1 },
+    // New skill books for testing
+    { id: 'sb_e', name: 'Sách Kỹ Năng E', type: 'skill_book', icon: '📖', rarity: 'common', quantity: 1 },
+    { id: 'sb_d', name: 'Sách Kỹ Năng D', type: 'skill_book', icon: '📘', rarity: 'uncommon', quantity: 1 },
+    { id: 'sb_b', name: 'Sách Kỹ Năng B', type: 'skill_book', icon: '📗', rarity: 'rare', quantity: 1 },
+    { id: 'sb_a', name: 'Sách Kỹ Năng A', type: 'skill_book', icon: '📙', rarity: 'epic', quantity: 1 },
+    { id: 'sb_s', name: 'Sách Kỹ Năng S', type: 'skill_book', icon: '📕', rarity: 'legendary', quantity: 1 },
   ]);
 
-  // State for upgrade slots
-  const [upgradeWeaponSlots, setUpgradeWeaponSlots] = useState([null, null]); // Slot 0: Main item, Slot 1: Sacrificial item
-  const [upgradeMaterialSlots, setUpgradeMaterialSlots] = useState([null, null, null]); // Up to 3 reinforcement stones
+  const [upgradeWeaponSlots, setUpgradeWeaponSlots] = useState([null, null]);
+  const [upgradeMaterialSlots, setUpgradeMaterialSlots] = useState([null, null, null]);
+  
+  const [craftShardSlot, setCraftShardSlot] = useState(null);
 
-  // State for universal craft slots
-  const [craftShardSlot, setCraftShardSlot] = useState(null); // New slot for equipment shards
-  const [craftMaterialSlots, setCraftMaterialSlots] = useState([null, null, null, null]); // Up to 4 material types for crafting
+  // New states for Skill tab
+  const [skillWeaponSlot, setSkillWeaponSlot] = useState(null);
+  const [skillBookSlot, setSkillBookSlot] = useState(null);
+  const [learnedSkills, setLearnedSkills] = useState([]);
 
-  // State for global alert and processing animation
   const [alert, setAlert] = useState({ isVisible: false, message: '', type: 'info' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [upgradeChance, setUpgradeChance] = useState(0);
   const [detectedCraftRecipe, setDetectedCraftRecipe] = useState(null);
 
-  // Helper function to update inventory (add/remove/update quantity)
   const updateInventory = useCallback((item, quantityChange) => {
     setInventory(prevInventory => {
-      // Find item in inventory based on its unique properties (name, type, rarity, level)
-      // For materials and shards, only name, type, rarity are considered for stacking.
-      // For weapons, name, type, rarity, and level are considered.
       const existingItemIndex = prevInventory.findIndex(i =>
         i.name === item.name &&
         i.type === item.type &&
@@ -362,20 +419,16 @@ const App = () => {
           ...newInventory[existingItemIndex],
           quantity: newInventory[existingItemIndex].quantity + quantityChange
         };
-        // Remove item if quantity drops to 0 or below
         return newInventory.filter(i => i.quantity > 0).sort((a, b) => a.name.localeCompare(b.name));
       } else if (quantityChange > 0) {
-        // Add new item if not found and quantityChange is positive
-        const newItem = { ...item, id: `${item.name}_${Date.now()}_${item.type}`, quantity: quantityChange }; // Ensure unique ID
+        const newItem = { ...item, id: `${item.name}_${Date.now()}_${item.type}`, quantity: quantityChange };
         const newInventory = [...prevInventory, newItem];
-        // Sort inventory for consistent display
         return newInventory.sort((a, b) => a.name.localeCompare(b.name));
       }
-      return prevInventory; // No change if item not found and not adding
+      return prevInventory;
     });
   }, []);
 
-  // Calculate upgrade chance when upgrade slots change
   useEffect(() => {
     const mainWeapon = upgradeWeaponSlots[0];
     const sacrificialWeapon = upgradeWeaponSlots[1];
@@ -387,154 +440,54 @@ const App = () => {
       if (stoneCount === 1) chance = 30;
       else if (stoneCount === 2) chance = 50;
       else if (stoneCount === 3) chance = 70;
-      
       setUpgradeChance(chance);
     } else {
       setUpgradeChance(0);
     }
   }, [upgradeWeaponSlots, upgradeMaterialSlots]);
 
-  // Detect crafting recipe - now a standalone function
-  const detectCraftRecipe = useCallback((currentShardSlot, currentMaterialSlots) => {
-    const currentCraftMaterials = currentMaterialSlots.filter(Boolean);
-    
-    const currentMaterialMap = currentCraftMaterials.reduce((acc, item) => {
-      acc[item.name] = (acc[item.name] || 0) + item.quantity;
-      return acc;
-    }, {});
-
-    let foundRecipe = null;
-    let recipesToSearch = [];
-
-    // Prioritize shard-based recipes if a shard is present
-    if (currentShardSlot && currentShardSlot.type === 'shard') {
-      recipesToSearch = CRAFTING_RECIPES_DEFINITION.filter(r => r.type === 'shard_based' && r.shardRequired.name === currentShardSlot.name);
-    } else {
-      recipesToSearch = CRAFTING_RECIPES_DEFINITION.filter(r => r.type === 'material_based');
+  // Detect crafting recipe based only on the shard in the slot
+  const detectCraftRecipeLogic = useCallback((currentShardSlot) => {
+    if (!currentShardSlot || currentShardSlot.type !== 'shard') {
+      return null;
     }
-
-    const rankOrderMap = { 'S': 5, 'A': 4, 'B': 3, 'D': 2, 'E': 1 };
-    recipesToSearch.sort((a, b) => rankOrderMap[b.rank] - rankOrderMap[a.rank]);
-
-    for (const recipe of recipesToSearch) {
-      let matches = true;
-
-      // Check shard requirement if it's a shard-based recipe
-      if (recipe.type === 'shard_based') {
-        if (!currentShardSlot || currentShardSlot.name !== recipe.shardRequired.name || currentShardSlot.quantity < recipe.shardRequired.quantity) {
-          matches = false;
-        }
-      } else { // For material_based recipes, ensure no shard is present
-        if (currentShardSlot) { // A material-based recipe cannot match if a shard is present
-          matches = false;
-        }
-      }
-      
-      if (!matches) continue; // If shard requirement not met, skip this recipe
-
-      // Check material requirements
-      let totalRequiredQuantity = 0;
-      let totalProvidedQuantityInSlots = 0; // Sum of quantities of materials in slots that are required for this recipe
-
-      // Calculate total required quantity from the recipe
-      for (const requiredMaterial of recipe.materialsRequired) {
-        totalRequiredQuantity += requiredMaterial.quantity;
-      }
-
-      // Check if all required materials for this recipe are present in the slots with sufficient quantity
-      for (const requiredMaterial of recipe.materialsRequired) {
-        if (!currentMaterialMap[requiredMaterial.name] || currentMaterialMap[requiredMaterial.name] < requiredMaterial.quantity) {
-          matches = false;
-          break;
-        }
-        totalProvidedQuantityInSlots += currentMaterialMap[requiredMaterial.name];
-      }
-
-      if (!matches) continue; // If material requirements not met, skip
-
-      // Check if there are no extra materials in the slots that are not part of this specific recipe
-      for (const materialName in currentMaterialMap) {
-        const isRequired = recipe.materialsRequired.some(m => m.name === materialName);
-        if (!isRequired) {
-          matches = false;
-          break;
-        }
-      }
-
-      // Ensure that the total quantity of provided materials in the craft slots exactly matches the total required quantity for this recipe
-      if (matches && totalProvidedQuantityInSlots === totalRequiredQuantity) {
-          foundRecipe = recipe;
-          break; // Found the highest rank and exact match
-      }
-    }
-    return foundRecipe;
+    const foundRecipe = CRAFTING_RECIPES_DEFINITION.find(recipe =>
+      recipe.type === 'shard_based' &&
+      recipe.shardRequired &&
+      recipe.shardRequired.name === currentShardSlot.name
+    );
+    return foundRecipe || null;
   }, []);
 
-  // New auto-fill function
-  const autoFillCraftSlots = useCallback((currentShard, currentMaterials, currentInventory) => {
-    let tempCraftMaterials = [...currentMaterials];
-    let tempInventory = [...currentInventory]; // Work with copies
+  useEffect(() => {
+    if (activeTab === 'craft') {
+      const currentRecipe = detectCraftRecipeLogic(craftShardSlot);
+      setDetectedCraftRecipe(currentRecipe);
+    } else {
+      setDetectedCraftRecipe(null); // Clear recipe if not on craft tab
+    }
+  }, [craftShardSlot, activeTab, detectCraftRecipeLogic]);
 
-    const detected = detectCraftRecipe(currentShard, tempCraftMaterials); // Detect based on current (potentially incomplete) state
+  // Helper function to check if crafting is possible
+  const checkCanCraft = useCallback((recipe, shardInSlot, currentInventory) => {
+    if (!recipe || !shardInSlot) return false;
 
-    if (!detected) return { newCraftMaterials: currentMaterials, newInventory: currentInventory, changesMade: false };
+    // Check shard quantity
+    if (shardInSlot.quantity < recipe.shardRequired.quantity) {
+      return false;
+    }
 
-    const materialsInCurrentSlotsMap = tempCraftMaterials.filter(Boolean).reduce((acc, item) => {
-      acc[item.name] = (acc[item.name] || 0) + item.quantity;
-      return acc;
-    }, {});
-
-    let changesMade = false;
-
-    for (const requiredMat of detected.materialsRequired) {
-      const currentQuantityInSlot = materialsInCurrentSlotsMap[requiredMat.name] || 0;
-      const missingQuantity = requiredMat.quantity - currentQuantityInSlot;
-
-      if (missingQuantity > 0) {
-        const itemInInventoryIndex = tempInventory.findIndex(invItem =>
-          invItem.name === requiredMat.name && invItem.type === 'material'
-        );
-
-        if (itemInInventoryIndex !== -1) {
-          const itemInInventory = { ...tempInventory[itemInInventoryIndex] };
-          const amountToPull = Math.min(missingQuantity, itemInInventory.quantity);
-
-          // Update working inventory
-          itemInInventory.quantity -= amountToPull;
-          if (itemInInventory.quantity <= 0) {
-            tempInventory.splice(itemInInventoryIndex, 1);
-          } else {
-            tempInventory[itemInInventoryIndex] = itemInInventory;
-          }
-          tempInventory.sort((a, b) => a.name.localeCompare(b.name));
-
-
-          // Update craftMaterialSlots (temp copy)
-          const existingSlotIndex = tempCraftMaterials.findIndex(slot => slot && slot.name === requiredMat.name);
-          if (existingSlotIndex !== -1) {
-            tempCraftMaterials[existingSlotIndex] = {
-              ...tempCraftMaterials[existingSlotIndex],
-              quantity: (tempCraftMaterials[existingSlotIndex].quantity || 0) + amountToPull
-            };
-          } else {
-            const emptySlotIndex = tempCraftMaterials.findIndex(slot => slot === null);
-            if (emptySlotIndex !== -1) {
-              tempCraftMaterials[emptySlotIndex] = { ...itemInInventory, quantity: amountToPull, id: `${itemInInventory.name}_${Date.now()}_Auto` };
-            }
-          }
-          changesMade = true;
-        }
+    // Check material quantities from inventory
+    for (const requiredMaterial of recipe.materialsRequired) {
+      const inventoryItem = currentInventory.find(
+        (item) => item.name === requiredMaterial.name && item.type === 'material'
+      );
+      if (!inventoryItem || inventoryItem.quantity < requiredMaterial.quantity) {
+        return false;
       }
     }
-    return { newCraftMaterials: tempCraftMaterials, newInventory: tempInventory, changesMade };
-  }, [detectCraftRecipe, isProcessing]);
-
-
-  // Effect to re-detect recipe whenever craft slots or shard changes
-  useEffect(() => {
-    const currentRecipe = detectCraftRecipe(craftShardSlot, craftMaterialSlots);
-    setDetectedCraftRecipe(currentRecipe);
-  }, [craftShardSlot, craftMaterialSlots, detectCraftRecipe]);
+    return true;
+  }, []);
 
 
   const showAlert = (message, type = 'info') => {
@@ -545,18 +498,17 @@ const App = () => {
     setAlert({ isVisible: false, message: '', type: 'info' });
   };
 
-  // Handles clicking an item in the inventory to place it into slots
   const handleItemClick = (itemToMove) => {
-    if (isProcessing) return; // Prevent interaction during processing
+    if (isProcessing) return;
 
     if (activeTab === 'upgrade') {
       if (itemToMove.type === 'weapon') {
         if (upgradeWeaponSlots[0] === null) {
           setUpgradeWeaponSlots([itemToMove, upgradeWeaponSlots[1]]);
-          updateInventory(itemToMove, -1); // Consume 1 quantity
+          updateInventory(itemToMove, -1);
         } else if (upgradeWeaponSlots[1] === null && upgradeWeaponSlots[0].name === itemToMove.name) {
           setUpgradeWeaponSlots([upgradeWeaponSlots[0], itemToMove]);
-          updateInventory(itemToMove, -1); // Consume 1 quantity
+          updateInventory(itemToMove, -1);
         } else {
           showAlert('Chỉ có thể đặt 2 trang bị giống nhau vào các ô này!', 'warning');
         }
@@ -564,9 +516,9 @@ const App = () => {
         const emptySlotIndex = upgradeMaterialSlots.findIndex(slot => slot === null);
         if (emptySlotIndex !== -1) {
           const newMaterialSlots = [...upgradeMaterialSlots];
-          newMaterialSlots[emptySlotIndex] = { ...itemToMove, quantity: 1 }; // Place a copy of the item with quantity 1
+          newMaterialSlots[emptySlotIndex] = { ...itemToMove, quantity: 1 };
           setUpgradeMaterialSlots(newMaterialSlots);
-          updateInventory(itemToMove, -1); // Consume 1 quantity from the original stack
+          updateInventory(itemToMove, -1);
         } else {
           showAlert('Không còn ô nguyên liệu trống! Tối đa 3 Đá Cường Hoá.', 'warning');
         }
@@ -574,117 +526,92 @@ const App = () => {
         showAlert('Loại vật phẩm này không thể đặt vào lò nâng cấp.', 'warning');
       }
     } else if (activeTab === 'craft') {
-      // Logic for placing items into universal crafting slots (entire stack)
-      if (itemToMove.type === 'weapon') {
-        showAlert('Không thể đặt vũ khí vào các ô rèn vật phẩm. Vui lòng sử dụng vật liệu hoặc mảnh.', 'warning');
+      if (itemToMove.type === 'weapon' || itemToMove.type === 'material') {
+        showAlert('Chỉ có thể đặt Mảnh Trang Bị vào lò rèn. Nguyên liệu cần thiết sẽ được lấy từ túi đồ.', 'warning');
         return;
       }
-
-      let newCraftShard = craftShardSlot;
-      let newCraftMaterials = [...craftMaterialSlots];
-      
-      let itemPlaced = false;
 
       if (itemToMove.type === 'shard') {
-        if (newCraftShard === null) {
-          newCraftShard = { ...itemToMove }; // Place the entire shard stack
+        if (craftShardSlot === null) {
+          setCraftShardSlot({ ...itemToMove }); // Place the entire shard stack
           updateInventory(itemToMove, -itemToMove.quantity); // Remove entire stack from inventory
-          itemPlaced = true;
-        } else if (newCraftShard.name === itemToMove.name) {
-            showAlert('Mảnh trang bị này đã có trong lò rèn. Vui lòng lấy ra trước nếu muốn thay đổi.', 'warning');
-            return;
-        }
-        else {
-          showAlert('Chỉ có thể đặt một loại mảnh trang bị vào ô này!', 'warning');
-          return;
-        }
-      } else if (itemToMove.type === 'material') {
-        const existingSlotIndex = newCraftMaterials.findIndex(slot => slot && slot.name === itemToMove.name);
-
-        if (existingSlotIndex !== -1) {
-          showAlert('Vật phẩm này đã có trong lò rèn. Vui lòng lấy ra trước nếu muốn thay đổi.', 'warning');
-          return;
+        } else if (craftShardSlot.name === itemToMove.name) {
+          showAlert('Mảnh trang bị này đã có trong lò rèn. Vui lòng lấy ra trước nếu muốn thay đổi.', 'warning');
         } else {
-          const emptySlotIndex = newCraftMaterials.findIndex(slot => slot === null);
-          if (emptySlotIndex !== -1) {
-            newCraftMaterials[emptySlotIndex] = { ...itemToMove }; // Place the entire item (with its current quantity)
-            updateInventory(itemToMove, -itemToMove.quantity); // Remove entire stack from inventory
-            itemPlaced = true;
-          } else {
-            showAlert('Không còn ô nguyên liệu trống trong lò rèn!', 'warning');
-            return;
-          }
+           showAlert('Đã có một loại mảnh khác trong lò rèn. Vui lòng lấy ra trước.', 'warning');
         }
       } else {
-        showAlert('Loại vật phẩm này không thể đặt vào lò. Hãy chắc chắn bạn đang ở tab đúng.', 'warning');
-        return;
+        showAlert('Vật phẩm này không thể đặt vào lò rèn.', 'warning');
       }
-
-      // Update states after the initial placement.
-      setCraftShardSlot(newCraftShard);
-      setCraftMaterialSlots(newCraftMaterials);
-
-      // Immediately attempt to auto-fill
-      // We pass the *current state values* that were just updated (newCraftShard, newCraftMaterials, inventory)
-      // because autoFillCraftSlots needs the most up-to-date values to make decisions.
-      // The `inventory` state will be updated by `updateInventory` and will reflect in the next render.
-      const { newCraftMaterials: autoFilledMaterials, newInventory: updatedInventoryAfterAutoFill, changesMade: autoFillChangesMade } = autoFillCraftSlots(
-        newCraftShard, newCraftMaterials, inventory
-      );
-      
-      // Only update states if auto-fill actually made changes
-      if (autoFillChangesMade) {
-        setCraftMaterialSlots(autoFilledMaterials);
-        setInventory(updatedInventoryAfterAutoFill);
-      }
+    } else if (activeTab === 'skills') { // New logic for Skills tab
+        if (itemToMove.type === 'weapon' || itemToMove.type === 'armor') {
+            if (skillWeaponSlot === null) {
+                setSkillWeaponSlot(itemToMove);
+                updateInventory(itemToMove, -1);
+            } else {
+                showAlert('Đã có trang bị trong ô. Vui lòng lấy ra trước nếu muốn thay đổi.', 'warning');
+            }
+        } else if (itemToMove.type === 'skill_book') {
+            if (skillBookSlot === null) {
+                setSkillBookSlot(itemToMove);
+                updateInventory(itemToMove, -1);
+            } else {
+                showAlert('Đã có sách kỹ năng trong ô. Vui lòng lấy ra trước nếu muốn thay đổi.', 'warning');
+            }
+        } else {
+            showAlert('Vật phẩm này không thể đặt vào lò học kỹ năng.', 'warning');
+        }
     }
   };
 
-  // Handles clicking an item in upgrade weapon slot to return to inventory
   const handleUpgradeWeaponSlotClick = (slotIndex) => {
     if (isProcessing) return;
     const itemInSlot = upgradeWeaponSlots[slotIndex];
     if (itemInSlot) {
-      updateInventory(itemInSlot, 1); // Return item to inventory
+      updateInventory(itemInSlot, 1);
       const newWeaponSlots = [...upgradeWeaponSlots];
       newWeaponSlots[slotIndex] = null;
       setUpgradeWeaponSlots(newWeaponSlots);
     }
   };
 
-  // Handles clicking an item in upgrade material slot to return to inventory
   const handleUpgradeMaterialSlotClick = (slotIndex) => {
     if (isProcessing) return;
     const itemInSlot = upgradeMaterialSlots[slotIndex];
     if (itemInSlot) {
-      updateInventory(itemInSlot, 1); // Return item to inventory
+      updateInventory(itemInSlot, 1);
       const newMaterialSlots = [...upgradeMaterialSlots];
       newMaterialSlots[slotIndex] = null;
       setUpgradeMaterialSlots(newMaterialSlots);
     }
   };
 
-  // Handles clicking an item in craft shard slot to return to inventory (entire stack)
   const handleCraftShardSlotClick = () => {
     if (isProcessing) return;
     if (craftShardSlot) {
-      updateInventory(craftShardSlot, craftShardSlot.quantity); // Return entire stack to inventory
+      updateInventory(craftShardSlot, craftShardSlot.quantity);
       setCraftShardSlot(null);
+      setDetectedCraftRecipe(null); // Also clear recipe when shard is removed
     }
   };
 
-  // Handles clicking an item in craft material slot to return to inventory (entire stack)
-  const handleCraftMaterialSlotClick = (clickedItem, slotIndex) => {
+  // New slot click handlers for Skills tab
+  const handleSkillWeaponSlotClick = () => {
     if (isProcessing) return;
-    if (clickedItem) {
-      const newCraftSlots = [...craftMaterialSlots];
-      updateInventory(clickedItem, clickedItem.quantity); // Return entire stack to inventory
-      newCraftSlots[slotIndex] = null;
-      setCraftMaterialSlots(newCraftSlots);
+    if (skillWeaponSlot) {
+      updateInventory(skillWeaponSlot, 1);
+      setSkillWeaponSlot(null);
     }
   };
 
-  // Handle upgrade process
+  const handleSkillBookSlotClick = () => {
+    if (isProcessing) return;
+    if (skillBookSlot) {
+      updateInventory(skillBookSlot, 1);
+      setSkillBookSlot(null);
+    }
+  };
+
   const handleUpgrade = async () => {
     const mainWeapon = upgradeWeaponSlots[0];
     const sacrificialWeapon = upgradeWeaponSlots[1];
@@ -700,8 +627,7 @@ const App = () => {
       return;
     }
 
-    setIsProcessing(true); // Start animation
-
+    setIsProcessing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     let success = false;
@@ -711,7 +637,6 @@ const App = () => {
     else if (stoneCount === 2 && randomChance <= 50) success = true;
     else if (stoneCount === 3 && randomChance <= 70) success = true;
 
-    // Clear all used items from slots (they were consumed from inventory upon placement)
     setUpgradeWeaponSlots([null, null]);
     setUpgradeMaterialSlots([null, null, null]);
 
@@ -720,102 +645,96 @@ const App = () => {
       const newRarity = getNextRarity(mainWeapon.rarity);
       const upgradedItem = {
         ...mainWeapon,
-        id: `${mainWeapon.name}_L${newLevel}_${Date.now()}`, // New unique ID with level
+        id: `${mainWeapon.name}_L${newLevel}_${Date.now()}`,
         level: newLevel,
         rarity: newRarity,
-        quantity: 1, // Upgraded item is always quantity 1
+        quantity: 1,
       };
-      updateInventory(upgradedItem, 1); // Add the upgraded item to inventory
+      updateInventory(upgradedItem, 1);
       showAlert(`Nâng cấp thành công! Bạn đã tạo ra ${upgradedItem.name} +${upgradedItem.level}!`, 'success');
     } else {
-      // Items are lost on failure (they were consumed from inventory upon placement)
       showAlert('Nâng cấp thất bại! Trang bị và nguyên liệu đã bị mất.', 'error');
     }
-
-    setIsProcessing(false); // End animation
+    setIsProcessing(false);
   };
 
-  // Handle universal crafting process
   const handleCraft = async () => {
-    if (!detectedCraftRecipe) {
-      showAlert('Không có công thức rèn được nhận diện hoặc không đủ nguyên liệu!', 'error');
+    if (!detectedCraftRecipe || !craftShardSlot) {
+      showAlert('Không có công thức rèn hợp lệ hoặc không có mảnh nào được đặt!', 'error');
       return;
     }
 
-    // Verify quantities in slots match recipe requirements
-    const currentMaterialMapInSlots = craftMaterialSlots.filter(Boolean).reduce((acc, item) => {
-      acc[item.name] = (acc[item.name] || 0) + item.quantity;
-      return acc;
-    }, {});
-    const currentShardInSlot = craftShardSlot;
-
-    // Check shard requirement if applicable
-    if (detectedCraftRecipe.type === 'shard_based') {
-      if (!currentShardInSlot || currentShardInSlot.name !== detectedCraftRecipe.shardRequired.name || currentShardInSlot.quantity < detectedCraftRecipe.shardRequired.quantity) {
-        showAlert(`Không đủ ${detectedCraftRecipe.shardRequired.name}! Cần ${detectedCraftRecipe.shardRequired.quantity}.`, 'error');
+    if (!checkCanCraft(detectedCraftRecipe, craftShardSlot, inventory)) {
+        showAlert('Không đủ mảnh hoặc nguyên liệu trong túi đồ để rèn!', 'error');
         return;
+    }
+    
+    setIsProcessing(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Consume shard from craftShardSlot
+    const newShardSlotState = { ...craftShardSlot };
+    newShardSlotState.quantity -= detectedCraftRecipe.shardRequired.quantity;
+    if (newShardSlotState.quantity <= 0) {
+      setCraftShardSlot(null);
+    } else {
+      setCraftShardSlot(newShardSlotState);
+    }
+
+    // Consume materials from inventory
+    for (const requiredMaterial of detectedCraftRecipe.materialsRequired) {
+      const materialToConsume = inventory.find(item => item.name === requiredMaterial.name && item.type === 'material');
+      if (materialToConsume) { // Should always be true due to canCraft check
+        updateInventory(
+          { ...materialToConsume }, // Pass a copy of the item definition
+          -requiredMaterial.quantity
+        );
       }
     }
 
-    // Check material requirements
-    for (const requiredMaterial of detectedCraftRecipe.materialsRequired) {
-      if (!currentMaterialMapInSlots[requiredMaterial.name] || currentMaterialMapInSlots[requiredMaterial.name] < requiredMaterial.quantity) {
-        showAlert(`Không đủ nguyên liệu ${requiredMaterial.name}! Cần ${requiredMaterial.quantity}.`, 'error');
-        return;
-      }
+    const randomItem = detectedCraftRecipe.outputPool[Math.floor(Math.random() * detectedCraftRecipe.outputPool.length)];
+    const newItem = { ...randomItem, id: `${randomItem.name}_${Date.now()}_Crafted`, quantity: 1 };
+
+    updateInventory(newItem, 1);
+    showAlert(`Rèn thành công! Bạn đã tạo ra ${newItem.name}!`, 'success');
+    setIsProcessing(false);
+  };
+
+  const handleLearnSkill = async () => {
+    if (!skillWeaponSlot) {
+      showAlert('Cần đặt một trang bị vào ô "Trang Bị Cần Thiết" để học kỹ năng!', 'error');
+      return;
+    }
+    if (!skillBookSlot) {
+      showAlert('Cần đặt một sách kỹ năng vào ô "Sách Kỹ Năng" để học kỹ năng!', 'error');
+      return;
+    }
+
+    const bookRarity = skillBookSlot.rarity;
+    const skillPool = SKILL_POOLS_BY_RARITY[bookRarity];
+
+    if (!skillPool || skillPool.length === 0) {
+      showAlert(`Không tìm thấy kỹ năng nào cho độ hiếm ${bookRarity} của sách.`, 'error');
+      return;
     }
 
     setIsProcessing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Consume shard if applicable
-    if (detectedCraftRecipe.type === 'shard_based' && currentShardInSlot) {
-      currentShardInSlot.quantity -= detectedCraftRecipe.shardRequired.quantity;
-      if (currentShardInSlot.quantity <= 0) {
-        setCraftShardSlot(null);
-      } else {
-        setCraftShardSlot({ ...currentShardInSlot }); // Update quantity in slot
-      }
-    }
+    // Consume the weapon and skill book
+    updateInventory(skillWeaponSlot, -1);
+    updateInventory(skillBookSlot, -1);
+    setSkillWeaponSlot(null);
+    setSkillBookSlot(null);
 
-    // Consume materials from craft slots based on detected recipe
-    const materialsToConsume = detectedCraftRecipe.materialsRequired;
-    const newCraftMaterialSlots = [...craftMaterialSlots];
-
-    materialsToConsume.forEach(requiredMaterial => {
-      const slotIndex = newCraftMaterialSlots.findIndex(slot => slot && slot.name === requiredMaterial.name);
-      if (slotIndex !== -1) {
-        newCraftMaterialSlots[slotIndex].quantity -= requiredMaterial.quantity;
-        // If quantity drops to 0, remove the item from the slot
-        if (newCraftMaterialSlots[slotIndex].quantity <= 0) {
-          newCraftMaterialSlots[slotIndex] = null;
-        }
-      }
-    });
-    setCraftMaterialSlots(newCraftMaterialSlots); // Update slots after consumption
-
-    // Randomly select a weapon from the output pool
-    const randomItem = detectedCraftRecipe.outputPool[Math.floor(Math.random() * detectedCraftRecipe.outputPool.length)];
-    const newItem = { ...randomItem, id: `${randomItem.name}_${Date.now()}_Crafted`, quantity: 1 };
-
-    updateInventory(newItem, 1); // Add new item to inventory
-    showAlert(`Rèn thành công! Bạn đã tạo ra ${newItem.name}!`, 'success');
+    // Learn a random skill from the pool
+    const learnedSkill = skillPool[Math.floor(Math.random() * skillPool.length)];
+    setLearnedSkills(prevSkills => [...prevSkills, { ...learnedSkill, id: `${learnedSkill.name}_${Date.now()}` }]);
+    showAlert(`Bạn đã học được kỹ năng: ${learnedSkill.name} (${learnedSkill.rarity})!`, 'success');
 
     setIsProcessing(false);
   };
-
-  // Clear all slots based on active tab
-  const handleClearSlots = () => {
-    if (isProcessing) return;
-
-    if (activeTab === 'upgrade') {
-      handleClearUpgradeSlots();
-    } else if (activeTab === 'craft') {
-      handleClearCraftSlots();
-    }
-  };
-
-  // Clear all upgrade slots
+  
   const handleClearUpgradeSlots = useCallback(() => {
     upgradeWeaponSlots.forEach(item => {
       if (item) updateInventory(item, 1);
@@ -828,24 +747,42 @@ const App = () => {
     setUpgradeMaterialSlots([null, null, null]);
   }, [upgradeWeaponSlots, upgradeMaterialSlots, updateInventory]);
 
-  // Clear all craft slots
   const handleClearCraftSlots = useCallback(() => {
     if (craftShardSlot) {
       updateInventory(craftShardSlot, craftShardSlot.quantity);
       setCraftShardSlot(null);
     }
-    craftMaterialSlots.forEach(item => {
-      if (item) updateInventory(item, item.quantity); // Return full stack to inventory
-    });
-    setCraftMaterialSlots([null, null, null, null]);
-    setDetectedCraftRecipe(null); // Clear detected recipe
-  }, [craftShardSlot, craftMaterialSlots, updateInventory]);
+    setDetectedCraftRecipe(null);
+  }, [craftShardSlot, updateInventory]);
 
+  const handleClearSkillSlots = useCallback(() => {
+    if (skillWeaponSlot) {
+      updateInventory(skillWeaponSlot, 1);
+      setSkillWeaponSlot(null);
+    }
+    if (skillBookSlot) {
+      updateInventory(skillBookSlot, 1);
+      setSkillBookSlot(null);
+    }
+  }, [skillWeaponSlot, skillBookSlot, updateInventory]);
+
+  const handleClearSlots = () => {
+    if (isProcessing) return;
+    if (activeTab === 'upgrade') {
+      handleClearUpgradeSlots();
+    } else if (activeTab === 'craft') {
+      handleClearCraftSlots();
+    } else if (activeTab === 'skills') {
+      handleClearSkillSlots();
+    }
+  };
+
+  const canCraftButtonBeEnabled = checkCanCraft(detectedCraftRecipe, craftShardSlot, inventory);
+  const canLearnSkillButtonBeEnabled = skillWeaponSlot !== null && skillBookSlot !== null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans">
       <div className="max-w-7xl mx-auto">
-        {/* Tab Navigation */}
         <div className="flex justify-center mb-8 gap-4">
           <button
             className={`px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
@@ -855,7 +792,8 @@ const App = () => {
             }`}
             onClick={() => {
               setActiveTab('upgrade');
-              handleClearCraftSlots(); // Clear craft slots when switching to upgrade
+              handleClearCraftSlots(); 
+              handleClearSkillSlots();
             }}
           >
             🔥 Nâng Cấp
@@ -868,15 +806,29 @@ const App = () => {
             }`}
             onClick={() => {
               setActiveTab('craft');
-              handleClearUpgradeSlots(); // Clear upgrade slots when switching to craft
+              handleClearUpgradeSlots();
+              handleClearSkillSlots();
             }}
           >
             ✨ Rèn Vật Phẩm
           </button>
+          <button
+            className={`px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+              activeTab === 'skills'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+            onClick={() => {
+              setActiveTab('skills');
+              handleClearUpgradeSlots();
+              handleClearCraftSlots();
+            }}
+          >
+            📚 Kỹ Năng
+          </button>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Main Processing Area (Conditional Rendering based on activeTab) */}
           {activeTab === 'upgrade' && (
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-6">
@@ -891,8 +843,6 @@ const App = () => {
                   Xóa tất cả
                 </button>
               </div>
-
-              {/* Weapon Slots for Upgrade */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center gap-2">
                   <span>⚔️</span> Trang bị để nâng cấp (Cần 2 trang bị giống nhau)
@@ -916,8 +866,6 @@ const App = () => {
                   />
                 </div>
               </div>
-
-              {/* Material Slots for Reinforcement Stones */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-green-300 mb-4 flex items-center gap-2">
                   <span>💎</span> Đá Cường Hoá (Tối đa 3 viên)
@@ -936,8 +884,6 @@ const App = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Upgrade Chance Preview */}
               <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
                   <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
                       <span>📈</span> Tỷ lệ thành công
@@ -951,7 +897,6 @@ const App = () => {
                       : 'Chúc may mắn!'}
                   </p>
               </div>
-
               <button
                 className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform ${
                   upgradeChance > 0
@@ -975,125 +920,217 @@ const App = () => {
                 <button
                   onClick={handleClearSlots}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
-                  disabled={isProcessing || (craftShardSlot === null && craftMaterialSlots.every(slot => slot === null))}
+                  disabled={isProcessing || craftShardSlot === null}
                 >
                   Xóa tất cả
                 </button>
               </div>
 
-              {/* Shard Slot */}
-              <div className="mb-4">
+              <div className="mb-6">
                 <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
-                  <span>🧩</span> Mảnh Trang Bị (Chỉ 1 loại mảnh)
+                  <span>🧩</span> Mảnh Trang Bị (Đặt 1 loại mảnh vào đây)
                 </h3>
                 <ForgingSlot
                   item={craftShardSlot}
                   slotType="shard"
-                  slotIndex={0}
+                  slotIndex={0} // Only one shard slot
                   onClick={handleCraftShardSlotClick}
                   isEmpty={craftShardSlot === null}
-                  labelOverride="Đặt mảnh trang bị vào đây"
+                  labelOverride="Đặt mảnh vào đây"
                   showQuantity={true}
                 />
               </div>
+              
+              {/* Removed craftMaterialSlots UI here */}
 
-              {/* Universal Crafting Material Slots */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
-                  <span>📥</span> Ô Nguyên Liệu Rèn
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  {craftMaterialSlots.map((slot, index) => {
-                    let requiredQuantity = 0;
-                    if (detectedCraftRecipe) {
-                        const reqMat = detectedCraftRecipe.materialsRequired.find(m => m.name === slot?.name);
-                        if (reqMat) {
-                            requiredQuantity = reqMat.quantity;
-                        }
-                    }
-                    return (
-                      <ForgingSlot
-                        key={`craft-material-${index}`}
-                        item={slot}
-                        slotType="material"
-                        slotIndex={index}
-                        onClick={() => handleCraftMaterialSlotClick(slot, index)}
-                        isEmpty={slot === null}
-                        labelOverride="Đặt nguyên liệu vào đây"
-                        showQuantity={true}
-                        requiredForRecipe={requiredQuantity} // Pass the required quantity
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Detected Crafting Recipe Info */}
-              {detectedCraftRecipe && (
+              {/* Display Required Materials & Recipe Info */}
+              {detectedCraftRecipe && craftShardSlot && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-teal-900/40 rounded-xl border border-blue-500/50 shadow-lg">
                   <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
-                    <span>💡</span> Công thức được nhận diện: <span className="text-yellow-300">{detectedCraftRecipe.rank}-Rank</span>
+                    <span>💡</span> Công thức nhận diện: <span className="text-yellow-300">{detectedCraftRecipe.rank}-Rank</span>
                   </h3>
                   <div className="text-sm text-gray-300 mb-2">
-                    {detectedCraftRecipe.type === 'shard_based' && (
-                      <p className="mb-1">Cần mảnh: <span className="font-bold">{detectedCraftRecipe.shardRequired.name}</span></p>
-                    )}
-                    Yêu cầu nguyên liệu:
-                    <ul className="list-disc list-inside ml-2">
-                      {detectedCraftRecipe.materialsRequired.map((mat, idx) => (
-                        <li key={idx} className="text-gray-200">
-                          {mat.name}: {mat.quantity}
+                     <h4 className="font-semibold text-purple-200 mb-1">Yêu cầu từ Lò Rèn & Túi Đồ:</h4>
+                     <ul className="space-y-1 list-disc list-inside ml-2">
+                        {/* Shard requirement display */}
+                        <li className="flex justify-between items-center">
+                          <span>
+                            {craftShardSlot.icon} {detectedCraftRecipe.shardRequired.name}:
+                          </span>
+                          <span className={`font-bold ${
+                            craftShardSlot.quantity >= detectedCraftRecipe.shardRequired.quantity
+                              ? 'text-green-300'
+                              : 'text-red-300'
+                          }`}>
+                            {craftShardSlot.quantity} / {detectedCraftRecipe.shardRequired.quantity} (Trong lò)
+                          </span>
                         </li>
+                        {/* Material requirements display */}
+                        {detectedCraftRecipe.materialsRequired.map((mat, idx) => {
+                          const invItem = inventory.find(i => i.name === mat.name && i.type === 'material');
+                          const currentAmount = invItem ? invItem.quantity : 0;
+                          const hasEnough = currentAmount >= mat.quantity;
+                          const materialIcon = inventory.find(i => i.name === mat.name)?.icon || '🧱';
+                          return (
+                            <li key={idx} className="flex justify-between items-center">
+                              <span>
+                                {materialIcon} {mat.name}:
+                              </span>
+                              <span className={`font-bold ${hasEnough ? 'text-green-300' : 'text-red-300'}`}>
+                                {currentAmount} / {mat.quantity} (Trong túi)
+                              </span>
+                            </li>
+                          );
+                        })}
+                     </ul>
+                  </div>
+                  <div className="text-sm text-gray-300 mt-3">
+                    <span className="font-semibold text-green-200">Kết quả có thể nhận:</span>
+                    <ul className="list-disc list-inside ml-2 mt-1 text-xs text-gray-400">
+                      {detectedCraftRecipe.outputPool.map((item, index) => (
+                        <li key={index}>{item.icon} {item.name} ({item.rarity})</li>
                       ))}
                     </ul>
                   </div>
-                  <div className="text-sm text-gray-300 mt-2">
-                    Kết quả: <span className="font-bold text-green-300">1 {detectedCraftRecipe.rank}-rank ngẫu nhiên</span>
-                  </div>
-                  <ul className="text-xs text-gray-400 list-disc list-inside mt-2">
-                    Vật phẩm có thể nhận:
-                    {detectedCraftRecipe.outputPool.map((item, index) => (
-                      <li key={index}>{item.icon} {item.name} ({item.rarity})</li>
-                    ))}
-                  </ul>
-                  <p className="text-sm text-gray-300 mt-3">{detectedCraftRecipe.description}</p>
+                  <p className="text-sm text-gray-400 mt-3">{detectedCraftRecipe.description}</p>
                 </div>
               )}
+              {!detectedCraftRecipe && craftShardSlot && (
+                 <p className="text-center text-yellow-400 italic my-4">Không tìm thấy công thức cho mảnh này.</p>
+              )}
+               {!craftShardSlot && (
+                 <p className="text-center text-gray-400 italic my-4">Hãy đặt một mảnh trang bị vào lò để xem công thức.</p>
+              )}
+
 
               <button
                 className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform ${
-                  detectedCraftRecipe && !isProcessing && canCraft(detectedCraftRecipe, craftShardSlot, craftMaterialSlots) // Check if actually craftable
+                  canCraftButtonBeEnabled && !isProcessing
                     ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-400 hover:to-teal-400 hover:scale-105 shadow-green-500/25'
                     : 'bg-gray-600 text-gray-300 cursor-not-allowed'
                 }`}
                 onClick={handleCraft}
-                disabled={isProcessing || !detectedCraftRecipe || !canCraft(detectedCraftRecipe, craftShardSlot, craftMaterialSlots)}
+                disabled={isProcessing || !canCraftButtonBeEnabled}
               >
-                {detectedCraftRecipe && canCraft(detectedCraftRecipe, craftShardSlot, craftMaterialSlots) ? `✨ Rèn Vật phẩm ${detectedCraftRecipe.rank}-rank` : '⚠️ Đặt nguyên liệu để nhận diện công thức'}
+                {canCraftButtonBeEnabled ? `✨ Rèn Vật phẩm ${detectedCraftRecipe?.rank}-rank` : '⚠️ Cần đủ mảnh & nguyên liệu'}
               </button>
             </div>
           )}
 
-          {/* Inventory Area */}
+          {activeTab === 'skills' && ( // New Skills tab content
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-cyan-500/30 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-cyan-300 flex items-center gap-2">
+                  <span>📚</span> Lò Học Kỹ Năng
+                </h2>
+                <button
+                  onClick={handleClearSlots}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
+                  disabled={isProcessing || (skillWeaponSlot === null && skillBookSlot === null)}
+                >
+                  Xóa tất cả
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center gap-2">
+                  <span>⚔️</span> Trang Bị Cần Thiết (Để học kỹ năng)
+                </h3>
+                <ForgingSlot
+                  item={skillWeaponSlot}
+                  slotType="weapon"
+                  slotIndex={0}
+                  onClick={handleSkillWeaponSlotClick}
+                  isEmpty={skillWeaponSlot === null}
+                  labelOverride="Đặt trang bị vào đây"
+                />
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+                  <span>📖</span> Sách Kỹ Năng
+                </h3>
+                <ForgingSlot
+                  item={skillBookSlot}
+                  slotType="skill_book"
+                  slotIndex={0}
+                  onClick={handleSkillBookSlotClick}
+                  isEmpty={skillBookSlot === null}
+                  labelOverride="Đặt sách kỹ năng vào đây"
+                />
+              </div>
+
+              {skillBookSlot && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl border border-blue-500/50 shadow-lg">
+                  <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
+                    <span>💡</span> Thông tin Sách Kỹ Năng:
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-2">
+                    Sách kỹ năng: <span className="font-semibold text-white">{skillBookSlot.name}</span>
+                  </p>
+                  <p className="text-sm text-gray-300 mb-2">
+                    Độ hiếm: <span className={`font-bold ${
+                      skillBookSlot.rarity === 'legendary' ? 'text-yellow-400' :
+                      skillBookSlot.rarity === 'epic' ? 'text-purple-400' :
+                      skillBookSlot.rarity === 'rare' ? 'text-blue-400' :
+                      skillBookSlot.rarity === 'uncommon' ? 'text-green-400' :
+                      'text-gray-400'
+                    }`}>
+                      {skillBookSlot.rarity.charAt(0).toUpperCase() + skillBookSlot.rarity.slice(1)}
+                    </span>
+                  </p>
+                  <div className="text-sm text-gray-300 mt-3">
+                    <span className="font-semibold text-green-200">Kỹ năng có thể học:</span>
+                    <ul className="list-disc list-inside ml-2 mt-1 text-xs text-gray-400">
+                      {(SKILL_POOLS_BY_RARITY[skillBookSlot.rarity] || []).map((skill, index) => (
+                        <li key={index}>{skill.icon} {skill.name} ({skill.rarity})</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+              {!skillBookSlot && skillWeaponSlot && (
+                <p className="text-center text-gray-400 italic my-4">Hãy đặt một sách kỹ năng vào lò để xem các kỹ năng có thể học.</p>
+              )}
+              {!skillBookSlot && !skillWeaponSlot && (
+                <p className="text-center text-gray-400 italic my-4">Hãy đặt trang bị và sách kỹ năng vào lò để học kỹ năng.</p>
+              )}
+
+              <button
+                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform ${
+                  canLearnSkillButtonBeEnabled && !isProcessing
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 hover:scale-105 shadow-blue-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleLearnSkill}
+                disabled={isProcessing || !canLearnSkillButtonBeEnabled}
+              >
+                {canLearnSkillButtonBeEnabled ? '✨ Học Kỹ Năng' : '⚠️ Cần đủ vật phẩm để học'}
+              </button>
+            </div>
+          )}
+
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-blue-500/30">
             <h2 className="text-2xl font-bold mb-6 text-blue-300 flex items-center gap-2">
               <span>🎒</span> Túi Đồ ({inventory.reduce((acc, item) => acc + item.quantity, 0)} vật phẩm)
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto custom-scrollbar">
               {inventory.length > 0 ? (
                 inventory.map(item => (
                   <div
-                    key={item.id} // Use unique ID for key
+                    key={item.id}
                     className={`
                       relative flex flex-col items-center p-4 rounded-xl cursor-pointer
                       shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl
-                      ${item.type === 'weapon'
+                      ${item.type === 'weapon' || item.type === 'armor'
                         ? 'bg-gradient-to-br from-red-800/40 to-red-900/40 border border-red-500/40 hover:border-red-400'
                         : item.type === 'material'
                             ? 'bg-gradient-to-br from-green-800/40 to-green-900/40 border border-green-500/40 hover:border-green-400'
-                            : 'bg-gradient-to-br from-purple-800/40 to-purple-900/40 border border-purple-500/40 hover:border-purple-400' // Shard style
+                            : item.type === 'shard'
+                                ? 'bg-gradient-to-br from-purple-800/40 to-purple-900/40 border border-purple-500/40 hover:border-purple-400'
+                                : 'bg-gradient-to-br from-cyan-800/40 to-cyan-900/40 border border-cyan-500/40 hover:border-cyan-400' // For skill_book
                       }
-                      ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''} {/* Dim during processing */}
+                      ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
                     onClick={() => handleItemClick(item)}
                   >
@@ -1101,17 +1138,19 @@ const App = () => {
                     <span className="text-sm font-medium text-gray-100 text-center leading-tight">
                         {item.name} {item.level > 0 ? `+${item.level}` : ''}
                     </span>
-                    {item.quantity > 0 && ( // Display quantity if > 0
+                    {item.quantity > 0 && (
                       <span className="absolute top-0 right-0 px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-bl-lg rounded-tr-lg">
                         x{item.quantity}
                       </span>
                     )}
                     <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full font-medium ${
                       item.type === 'weapon' ? 'bg-red-600 text-red-100' :
+                      item.type === 'armor' ? 'bg-red-600 text-red-100' : // Add armor handling
                       item.type === 'material' ? 'bg-green-600 text-green-100' :
-                      'bg-purple-600 text-purple-100' // Shard type label
+                      item.type === 'shard' ? 'bg-purple-600 text-purple-100' :
+                      'bg-cyan-600 text-cyan-100' // For skill_book
                     }`}>
-                      {item.type === 'weapon' ? 'VK' : item.type === 'material' ? 'NL' : 'Mảnh'}
+                      {item.type === 'weapon' || item.type === 'armor' ? 'TB' : item.type === 'material' ? 'NL' : item.type === 'shard' ? 'Mảnh' : 'Sách'}
                     </span>
                     <div className={`absolute bottom-1 left-1 w-3 h-3 rounded-full border-2 border-white ${
                       item.rarity === 'legendary' ? 'bg-yellow-400' :
@@ -1129,11 +1168,48 @@ const App = () => {
                 </div>
               )}
             </div>
+
+            {/* New Learned Skills Section */}
+            <div className="mt-8 pt-6 border-t border-gray-700">
+              <h2 className="text-2xl font-bold mb-6 text-yellow-300 flex items-center gap-2">
+                <span>✨</span> Kỹ Năng Đã Học ({learnedSkills.length})
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-48 overflow-y-auto custom-scrollbar">
+                {learnedSkills.length > 0 ? (
+                  learnedSkills.map(skill => (
+                    <div
+                      key={skill.id}
+                      className={`
+                        relative flex flex-col items-center p-4 rounded-xl
+                        shadow-md bg-gradient-to-br from-indigo-800/40 to-indigo-900/40 border border-indigo-500/40
+                      `}
+                    >
+                      <div className="text-4xl mb-2">{skill.icon}</div>
+                      <span className="text-sm font-medium text-gray-100 text-center leading-tight">
+                          {skill.name}
+                      </span>
+                      <p className="text-xs text-gray-400 text-center mt-1">{skill.description}</p>
+                      <div className={`absolute bottom-1 left-1 w-3 h-3 rounded-full border-2 border-white ${
+                        skill.rarity === 'legendary' ? 'bg-yellow-400' :
+                        skill.rarity === 'epic' ? 'bg-purple-400' :
+                        skill.rarity === 'rare' ? 'bg-blue-400' :
+                        skill.rarity === 'uncommon' ? 'bg-green-400' :
+                        'bg-gray-400'
+                      }`} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center text-gray-400 italic py-8">
+                    <div className="text-6xl mb-4">📜</div>
+                    <p>Chưa có kỹ năng nào được học</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Custom Components */}
       <CustomAlert
         isVisible={alert.isVisible}
         message={alert.message}
@@ -1156,6 +1232,20 @@ const App = () => {
         }
         .animate-scale-up {
           animation: scale-up 0.3s ease-out;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #333;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #555;
         }
       `}</style>
     </div>
