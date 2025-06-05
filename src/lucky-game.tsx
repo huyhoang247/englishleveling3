@@ -385,7 +385,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                       {typeof cell.item.icon === 'string' && cell.item.value > 0 && cell.item.name === '100 Xu' ? (
                         <div className="flex items-center text-xs font-semibold text-gray-700">
                           <span>{cell.item.value}</span>
-                          <img src={cell.item.icon} alt={cell.item.name} className="w-3 h-3 ml-0.5" onError={(e) => { e.currentTarget.src = 'https://placehold.co/12x12/cccccc/000000?text=X'; }} />
+                          <CoinsIcon src={cell.item.icon} className="w-3 h-3 ml-0.5" />
                         </div>
                       ) : (
                         // Otherwise, display name and then value + coin emoji
@@ -499,14 +499,14 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
               {renderGrid()}
             </div>
 
-            {/* Div cha của nút Quay đã có text-center, nút sẽ được căn giữa */}
-            <div className="text-center mb-6"> 
+            {/* Div cha của nút Quay đã có flex justify-center, nút sẽ được căn giữa */}
+            <div className="flex justify-center mb-6">
               <button
                 onClick={spinChest}
                 disabled={isSpinning || coins < 100}
                 className={`
                   px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
-                  w-auto /* Bỏ min-w, px-3 để ôm sát hơn */ flex items-center justify-center relative group 
+                  inline-flex items-center justify-center relative group /* Đổi thành inline-flex để vừa với nội dung */
                   ${isSpinning || coins < 100
                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
@@ -522,7 +522,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     Đang quay...
                   </span>
                 ) : (
-                  <div className="flex items-center justify-center w-full"> 
+                  <div className="flex items-center justify-center"> {/* Removed w-full here */}
                     <span className="font-semibold tracking-wide">
                       QUAY
                     </span>
