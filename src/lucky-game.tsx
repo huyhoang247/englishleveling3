@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app'; // Thêm getApps, getApp
 import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 
@@ -176,7 +176,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             <h2 className="text-3xl font-black mb-2 uppercase tracking-wider text-white drop-shadow">JACKPOT!</h2>
             {/* Hiển thị item.value hiện đang giữ số tiền độc đắc thực tế đã thắng */}
             <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {item.value.toLocaleString()} xu từ Pool!</p>
-            <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn! 🌟</p>
+            <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn!🌟</p>
           </>
         ) : (
           <>
@@ -226,15 +226,20 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   const [db, setDb] = useState<any>(null);
   const [authInstance, setAuthInstance] = useState<any>(null);
   const [currentAuthenticatedUserId, setCurrentAuthenticatedUserId] = useState<string | null>(null);
-  const [isLoadingFirestoreData, setIsLoadingFirestoreData] = useState(true);
+  const [isAuthReady, setIsAuthReady] = useState(false); // Trạng thái sẵn sàng của Auth
 
   // Khởi tạo Firebase
   useEffect(() => {
     const initFirebase = async () => {
         try {
-            // Đảm bảo __firebase_config và __initial_auth_token được cung cấp bởi môi trường Canvas
             const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            const app = initializeApp(firebaseConfig);
+            let app;
+            if (!getApps().length) { // Kiểm tra xem ứng dụng Firebase mặc định đã tồn tại chưa
+                app = initializeApp(firebaseConfig);
+            } else {
+                app = getApp(); // Lấy ứng dụng Firebase mặc định hiện có
+            }
+            
             const firestoreDb = getFirestore(app);
             const firebaseAuth = getAuth(app);
 
@@ -255,24 +260,24 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 } else {
                     setCurrentAuthenticatedUserId(null);
                 }
-                setIsLoadingFirestoreData(false); // Trạng thái xác thực đã được xác định
+                setIsAuthReady(true); // Trạng thái xác thực đã được xác định
             });
 
             return () => unsubscribe(); // Hủy đăng ký khi component unmount
         } catch (error) {
-            console.error("Lỗi khi khởi tạo Firebase:", error);
-            setIsLoadingFirestoreData(false);
+            console.error("Lỗi khi khởi tạo Firebase hoặc xác thực:", error);
+            setIsAuthReady(true); // Đảm bảo trạng thái sẵn sàng được đặt ngay cả khi có lỗi
         }
     };
 
     initFirebase();
   }, []); // Chạy một lần khi component mount
 
-  // Lấy dữ liệu người dùng (xu) khi ID người dùng được xác thực có sẵn
+
+  // Lấy dữ liệu người dùng (xu) khi ID người dùng được xác thực có sẵn và Auth đã sẵn sàng
   useEffect(() => {
-    if (db && currentAuthenticatedUserId) {
+    if (db && currentAuthenticatedUserId && isAuthReady) {
         const fetchCoins = async () => {
-            setIsLoadingFirestoreData(true);
             try {
                 const userDocRef = doc(db, 'users', currentAuthenticatedUserId);
                 const userDocSnap = await getDoc(userDocRef);
@@ -288,17 +293,14 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 }
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu xu:", error);
-            } finally {
-                setIsLoadingFirestoreData(false);
             }
         };
         fetchCoins();
-    } else if (!currentAuthenticatedUserId && db) { // Đảm bảo db được khởi tạo trước khi dừng tải
+    } else if (!currentAuthenticatedUserId && isAuthReady) { // Đảm bảo db được khởi tạo trước khi dừng tải
         setCoins(0);
         setDisplayedCoins(0);
-        setIsLoadingFirestoreData(false);
     }
-  }, [db, currentAuthenticatedUserId]); // Phụ thuộc vào db và currentAuthenticatedUserId
+  }, [db, currentAuthenticatedUserId, isAuthReady]); // Phụ thuộc vào db, currentAuthenticatedUserId và isAuthReady
 
   // Hàm để cập nhật số xu trong Firestore bằng giao dịch (transaction)
   const updateCoinsInFirestore = useCallback(async (userId: string, amount: number) => {
@@ -634,8 +636,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   }, [displayedCoins, coins]); // Phụ thuộc vào cả displayedCoins và coins state
 
 
-  // Hiển thị chỉ báo tải nếu dữ liệu Firestore đang được tìm nạp
-  if (isLoadingFirestoreData) {
+  // Hiển thị chỉ báo tải nếu dữ liệu Auth chưa sẵn sàng
+  if (!isAuthReady) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 text-white text-lg">
         Đang tải dữ liệu...
