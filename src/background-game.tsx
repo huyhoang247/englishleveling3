@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
-import CharacterCard from './stats/stats-main.tsx';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import TreasureChest from './treasure.tsx';
-import CoinDisplay from './coin-display.tsx';
+import CharacterCard from './stats/stats-main.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import { DotLottieReact } from '@lottiefiles/dotlottie-react'; // Thư viện ngoài, cần cài đặt nếu dùng môi trường Node.js/bundler
+import TreasureChest from './treasure.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import CoinDisplay from './coin-display.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-import { auth } from './firebase.js';
+import { auth } from './firebase.js'; // Đảm bảo file này tồn tại tại đường dẫn này
 import { User } from 'firebase/auth';
-import useSessionStorage from './bo-nho-tam.tsx';
-import HeaderBackground from './header-background.tsx';
-import { GemIcon } from './library/icon.tsx';
-import { SidebarLayout } from './sidebar.tsx';
-import EnhancedLeaderboard from './rank.tsx';
-import GoldMine from './gold-miner.tsx';
-import Inventory from './inventory.tsx';
-import DungeonBackground from './background-dungeon.tsx';
-import LuckyChestGame from './lucky-game.tsx'; // NEW: Import LuckyChestGame
+import useSessionStorage from './bo-nho-tam.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import HeaderBackground from './header-background.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import { GemIcon } from './library/icon.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import { SidebarLayout } from './sidebar.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import EnhancedLeaderboard from './rank.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import GoldMine from './gold-miner.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import Inventory from './inventory.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import DungeonBackground from './background-dungeon.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
+import LuckyChestGame from './lucky-game.tsx'; // Đảm bảo file này tồn tại tại đường dẫn này
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -166,6 +166,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // NEW: Key state and ref for key drop interval
   const [keyCount, setKeyCount] = useState(0); // Player's key count
 
+  // NEW: Jackpot pool state (persisted in Firestore)
+  const [jackpotPool, setJackpotPool] = useState(200); // Initialize with 200, will load from Firestore
+
 
   // UI States
   // Keep isStatsFullscreen here, it controls the CharacterCard visibility
@@ -221,6 +224,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDisplayedCoins(userData.coins || 0); // Update displayed coins immediately
         setGems(userData.gems || 0); // Fetch gems as well if stored
         setKeyCount(userData.keys || 0); // Fetch keys if stored
+        setJackpotPool(userData.jackpotPool || 200); // Fetch jackpotPool or default to 200
         // You can fetch other user-specific data here
       } else {
         // If user document doesn't exist, create it with default values
@@ -229,12 +233,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           coins: 0,
           gems: 0,
           keys: 0,
+          jackpotPool: 200, // Set default jackpotPool
           createdAt: new Date(), // Optional: add a creation timestamp
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
         setKeyCount(0);
+        setJackpotPool(200);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -267,6 +273,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             coins: coins, // Use current local coins state for new doc
             gems: gems, // Use current local gems state for new doc
             keys: keyCount, // Use current local keys state for new doc
+            jackpotPool: jackpotPool, // Include jackpotPool for new doc
             createdAt: new Date()
           });
         } else {
@@ -339,6 +346,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             coins: coins, // Use current local coins state for new doc
             gems: gems, // Use current local gems state for new doc
             keys: keyCount, // Use current local keys state for new doc
+            jackpotPool: jackpotPool, // Include jackpotPool for new doc
             createdAt: new Date()
           });
         } else {
@@ -357,6 +365,48 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.error("Firestore Transaction failed for keys: ", error);
       // Handle the error, maybe retry or inform the user
     }
+  };
+
+  // --- NEW: Function to update the jackpot pool in Firestore using a transaction ---
+  const updateJackpotPoolInFirestore = async (userId: string, amount: number, resetToDefault: boolean = false) => {
+      console.log("updateJackpotPoolInFirestore called with amount:", amount, "resetToDefault:", resetToDefault);
+      if (!userId) {
+          console.error("Cannot update jackpot pool: User not authenticated.");
+          return;
+      }
+
+      const userDocRef = doc(db, 'users', userId);
+
+      try {
+          console.log("Attempting Firestore transaction for jackpot pool...");
+          await runTransaction(db, async (transaction) => {
+              const userDoc = await transaction.get(userDocRef);
+              if (!userDoc.exists()) {
+                  console.error("User document does not exist for jackpot pool transaction.");
+                  transaction.set(userDocRef, {
+                      coins: coins,
+                      gems: gems,
+                      keys: keyCount,
+                      jackpotPool: resetToDefault ? 200 : jackpotPool + amount, // Set to default or update
+                      createdAt: new Date()
+                  });
+              } else {
+                  let newJackpotPool;
+                  if (resetToDefault) {
+                      newJackpotPool = 200; // Reset to default
+                  } else {
+                      const currentPool = userDoc.data().jackpotPool || 200;
+                      newJackpotPool = currentPool + amount;
+                  }
+                  transaction.update(userDocRef, { jackpotPool: newJackpotPool });
+                  console.log(`Jackpot Pool updated in Firestore for user ${userId}: -> ${newJackpotPool}`);
+                  setJackpotPool(newJackpotPool); // Update local state
+              }
+          });
+          console.log("Firestore transaction for jackpot pool successful.");
+      } catch (error) {
+          console.error("Firestore Transaction failed for jackpot pool: ", error);
+      }
   };
 
 
@@ -442,6 +492,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDisplayedCoins(0); // Reset local state
         setGems(0); // Reset local state
         setKeyCount(0); // Reset local state
+        setJackpotPool(200); // Reset local jackpot pool
         setIsLoadingUserData(false); // Stop loading if user logs out
 
         // Clear all session storage related to the game on logout
@@ -921,6 +972,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       onClose={toggleLuckyGame} // Pass toggleLuckyGame to LuckyChestGame's onClose
                       currentCoins={coins} // Truyền số xu hiện tại
                       onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Truyền hàm cập nhật xu
+                      currentJackpotPool={jackpotPool} // Truyền giá trị jackpotPool hiện tại
+                      onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(auth.currentUser!.uid, amount, reset)} // Truyền hàm cập nhật jackpotPool
                       isStatsFullscreen={isStatsFullscreen} // Pass the prop
                   />
               )}
