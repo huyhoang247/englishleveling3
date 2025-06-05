@@ -402,7 +402,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                           </span>
                           {cell.item.value > 0 && (
                             <span className="text-xs text-gray-600">
-                              {item.value.toLocaleString()}💰
+                              {cell.item.value.toLocaleString()}💰 {/* CHANGED: cell.item.value */}
                             </span>
                           )}
                         </>
