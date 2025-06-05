@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, Component } from 'react';
+import React, { useState, useEffect, useRef, Component, useCallback } from 'react'; // Added useCallback
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import TreasureChest from './treasure.tsx';
-import CoinDisplay from './coin-display.tsx'; // Unchanged, as requested
-import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore'; // `increment` is not used here directly, but in lucky-game
+import CoinDisplay from './coin-display.tsx';
+import { getFirestore, doc, getDoc, setDoc, runTransaction, onSnapshot } from 'firebase/firestore'; // Added onSnapshot
 import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
@@ -11,17 +11,15 @@ import HeaderBackground from './header-background.tsx';
 import { GemIcon } from './library/icon.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-import GoldMine from './gold-miner.tsx'; 
-import Inventory from './inventory.tsx'; 
+import GoldMine from './gold-miner.tsx';
+import Inventory from './inventory.tsx';
 import DungeonBackground from './background-dungeon.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 
-
 // --- SVG Icon Components (Replacement for lucide-react) ---
-// Keeping these here for now, but ideally should be in library/icon.tsx
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
-    xmlns="http://www.w3.org/2000/svg"
+    xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -40,12 +38,11 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 
 const KeyIcon = () => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+    src="[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png)"
     alt="Key Icon"
     className="w-4 h-4 object-contain"
   />
 );
-
 
 // --- NEW: Error Boundary Component ---
 interface ErrorBoundaryProps {
@@ -87,32 +84,35 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-
 // Define interface for component props
 interface ObstacleRunnerGameProps {
   className?: string;
   hideNavBar: () => void;
   showNavBar: () => void;
-  currentUser: User | null; 
+  currentUser: User | null; // Added currentUser prop
 }
 
+// --- NEW: Define interface for Cloud with image source ---
 interface GameCloud {
   id: number;
-  x: number; 
-  y: number; 
-  size: number; 
-  speed: number; 
-  imgSrc: string; 
+  x: number; // Horizontal position in %
+  y: number; // Vertical position in %
+  size: number; // Size of the cloud (in pixels)
+  speed: number; // Speed of the cloud
+  imgSrc: string; // Source URL for the cloud image
 }
 
+// Define interface for session storage data (used by the hook internally now)
 interface GameSessionData {
     health: number;
     characterPos: number;
+    // Add other temporary game state you want to save
 }
 
-
+// Update component signature to accept className, hideNavBar, showNavBar, and currentUser props
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
 
+  // --- Global Overflow Control ---
   useEffect(() => {
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
@@ -120,106 +120,94 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
 
+    // Cleanup function to restore original overflow styles
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
     };
-  }, []); 
+  }, []);
 
+  // Game states - Now using useSessionStorage for states that should persist in session
+  const MAX_HEALTH = 3000; // Define max health
+  const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH); // Use hook for health
+  const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0); // Use hook for char position
 
-  const MAX_HEALTH = 3000; 
-  const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH); 
-  const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0); 
-
-  const [gameStarted, setGameStarted] = useState(false); 
-  const [gameOver, setGameOver] = useState(false); 
-  const [jumping, setJumping] = useState(false); 
-  const [isRunning, setIsRunning] = useState(false); 
-  const [runFrame, setRunFrame] = useState(0); 
-  const [clouds, setClouds] = useState<GameCloud[]>([]); 
-  const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); 
+  // States that do NOT need session storage persistence (reset on refresh)
+  const [gameStarted, setGameStarted] = useState(false); // Tracks if the game has started
+  const [gameOver, setGameOver] = useState(false); // Tracks if the game is over
+  const [jumping, setJumping] = useState(false); // Tracks if the character is jumping
+  const [isRunning, setIsRunning] = useState(false); // Tracks if the character is running animation
+  const [runFrame, setRunFrame] = useState(0); // Current frame for run animation
+  const [clouds, setClouds] = useState<GameCloud[]>([]); // Array of active clouds with image source
+  const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false); // State to trigger health bar damage effect
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
+  // State for Health Bar visual display
+  const [damageAmount, setDamageAmount] = useState(0); // State to store the amount of damage taken for display
+  const [showDamageNumber, setShowDamageNumber] = useState(false); // State to control visibility of the damage number
 
-  const [damageAmount, setDamageAmount] = useState(0); 
-  const [showDamageNumber, setShowDamageNumber] = useState(false); 
+  // --- Coin and Gem States (Persisted in Firestore) ---
+  const [coins, setCoins] = useState(0); // Initialize with 0, will load from Firestore
+  const [displayedCoins, setDisplayedCoins] = useState(0); // Coins displayed with animation
 
+  const [gems, setGems] = useState(42); // Player's gem count, initialized
 
-  const [coins, setCoins] = useState(0); 
-  const [displayedCoins, setDisplayedCoins] = useState(0); 
+  // NEW: Key state and ref for key drop interval
+  const [keyCount, setKeyCount] = useState(0); // Player's key count
 
-  const [gems, setGems] = useState(42); 
+  // NEW: Jackpot pool state
+  const [jackpotPool, setJackpotPool] = useState(200);
 
-  const [keyCount, setKeyCount] = useState(0); 
-
-
-  const [isStatsFullscreen, setIsStatsFullscreen] = useState(false); 
-  const [isLoadingUserData, setIsLoadingUserData] = useState(true); 
+  // UI States
+  const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
   const [isRankOpen, setIsRankOpen] = useState(false);
-  const [isGoldMineOpen, setIsGoldMineOpen] = useState(false); 
-  const [isInventoryOpen, setIsInventoryOpen] = useState(false); 
-  const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false); 
-
+  const [isGoldMineOpen, setIsGoldMineOpen] = useState(false);
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
 
   const GROUND_LEVEL_PERCENT = 45;
 
-  const gameRef = useRef<HTMLDivElement | null>(null); 
-  const runAnimationRef = useRef<NodeJS.Timeout | null>(null); 
+  // Refs for timers that do NOT need session storage persistence
+  const gameRef = useRef<HTMLDivElement | null>(null);
+  const runAnimationRef = useRef<NodeJS.Timeout | null>(null);
 
-  const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null); 
+  const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
 
+  // Firestore instance
   const db = getFirestore();
 
+  // Ref for debounce timer to optimize Firestore writes
+  const coinsUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const jackpotUpdateTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // --- NEW: Array of Cloud Image URLs ---
   const cloudImageUrls = [
-      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png",
-      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/clouds.png",
-      "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud.png"
+      "[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png)",
+      "[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/clouds.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/clouds.png)",
+      "[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud.png)"
   ];
 
+  // Helper function to generate random number between min and max (inclusive)
   function randomBetween(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  const fetchUserData = async (userId: string) => {
-    setIsLoadingUserData(true); 
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        console.log("User data fetched:", userData);
-        setCoins(userData.coins || 0); 
-        setDisplayedCoins(userData.coins || 0); 
-        setGems(userData.gems || 0); 
-        setKeyCount(userData.keys || 0); 
-      } else {
-        console.log("No user document found, creating default.");
-        await setDoc(userDocRef, {
-          coins: 0,
-          gems: 0,
-          keys: 0,
-          createdAt: new Date(), 
-        });
-        setCoins(0);
-        setDisplayedCoins(0);
-        setGems(0);
-        setKeyCount(0);
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setIsLoadingUserData(false); 
-    }
+  // --- Debounce function for Firestore updates ---
+  const debounce = (func: Function, delay: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), delay);
+    };
   };
 
-  // Central function for ALL coin updates, including those from LuckyChestGame
-  const updateCoinsInFirestore = async (userId: string, amount: number) => {
-    console.log("BG_GAME: updateCoinsInFirestore called with userId:", userId, "amount:", amount);
+  // --- NEW: Function to update user's coin count in Firestore using a transaction (debounced) ---
+  const updateCoinsInFirestore = useCallback(async (userId: string, newCoinAmount: number) => {
     if (!userId) {
-      console.error("BG_GAME: Cannot update coins: User not authenticated.");
+      console.error("Cannot update coins: User not authenticated.");
       return;
     }
 
@@ -228,78 +216,94 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
-        let currentCoins = 0;
         if (!userDoc.exists()) {
-          console.warn("BG_GAME: User document does not exist for coin transaction. Creating with defaults.");
-          // Create the document with the new coin amount directly if it's an addition,
-          // or 0 if it's a deduction that would result in negative on a new doc.
-           const initialCoinsForNewDoc = Math.max(0, amount);
-           transaction.set(userDocRef, {
-            coins: initialCoinsForNewDoc, 
-            gems: gems, // Use current local gems state for new doc
-            keys: keyCount, // Use current local keys state for new doc
+          console.error("User document does not exist for coin transaction.");
+          transaction.set(userDocRef, {
+            coins: newCoinAmount,
+            gems: gems,
+            keys: keyCount,
             createdAt: new Date()
           });
-          currentCoins = 0; // Set currentCoins to 0 for calculation below
         } else {
-          currentCoins = userDoc.data().coins || 0;
+          transaction.update(userDocRef, { coins: newCoinAmount });
         }
-        
-        const newCoins = currentCoins + amount;
-        const finalCoins = Math.max(0, newCoins); // Ensure coins don't go below zero
-        transaction.update(userDocRef, { coins: finalCoins });
-        
-        // Update local state AFTER successful Firestore update
-        // This will also reflect in LuckyChestGame as currentCoins prop updates
-        setCoins(finalCoins); 
-        // Let displayedCoins catch up via its own useEffect or startCoinCountAnimation if it's a reward
       });
-      console.log(`BG_GAME: Coins updated in Firestore for user ${userId}. New balance: ${coins + amount}`); // Log based on old coins state before setCoins finishes
+      console.log(`Coins updated in Firestore for user ${userId}: ${newCoinAmount}`);
     } catch (error) {
-      console.error("BG_GAME: Firestore Transaction failed for coins: ", error);
+      console.error("Firestore Transaction failed for coins: ", error);
     }
-  };
+  }, [db, gems, keyCount]); // Depend on db, gems, and keyCount
 
+  const debouncedUpdateCoins = useCallback(
+    debounce((userId: string, newCoinAmount: number) => updateCoinsInFirestore(userId, newCoinAmount), 500),
+    [updateCoinsInFirestore]
+  );
 
-   // Coin count animation function (for rewards within background-game itself, e.g. TreasureChest)
-  const startCoinCountAnimation = (reward: number) => {
-      console.log("BG_GAME: startCoinCountAnimation called with reward:", reward); 
-      if (!auth.currentUser) {
-          console.log("BG_GAME: User not authenticated, skipping coin animation and Firestore update.");
-          return;
-      }
-      // The actual Firestore update for the reward amount will be handled by updateCoinsInFirestore
-      // This function is now primarily for the visual animation for rewards originating here.
-      
-      const oldCoins = coins; // Current coins state before adding reward
-      const targetCoinsAfterReward = oldCoins + reward; // What the coin total will be
+  // --- NEW: Function to update Jackpot Pool in Firestore (debounced) ---
+  const updateJackpotPoolInFirestore = useCallback(async (newPoolAmount: number) => {
+    const jackpotDocRef = doc(db, 'game', 'jackpot'); // A single document for the jackpot pool
 
-      // Optimistically update Firestore first
-      updateCoinsInFirestore(auth.currentUser.uid, reward).then(() => {
-        // After Firestore is (hopefully) updated, animate displayedCoins
-        // from the old value to the new value (which is now set in 'coins' state by updateCoinsInFirestore)
-        let step = Math.ceil(reward / 30);
-        if (reward <= 0) step = Math.floor(reward / 30); // Handle negative rewards if ever needed for animation
-        let currentDisplay = oldCoins; // Start animation from pre-reward amount
-
-        const countInterval = setInterval(() => {
-            currentDisplay += step;
-            if ((step > 0 && currentDisplay >= targetCoinsAfterReward) || (step < 0 && currentDisplay <= targetCoinsAfterReward) || step === 0) {
-                setDisplayedCoins(targetCoinsAfterReward); // Ensure it lands exactly on target
-                clearInterval(countInterval);
-                console.log("BG_GAME: Coin count animation finished.");
-            } else {
-                setDisplayedCoins(currentDisplay);
-            }
-        }, 50);
-      }).catch(error => {
-          console.error("BG_GAME: Failed to update coins in Firestore during startCoinCountAnimation:", error);
-          // Handle error: maybe don't animate or show an error message.
+    try {
+      await runTransaction(db, async (transaction) => {
+        const jackpotDoc = await transaction.get(jackpotDocRef);
+        if (!jackpotDoc.exists()) {
+          transaction.set(jackpotDocRef, { pool: newPoolAmount });
+        } else {
+          transaction.update(jackpotDocRef, { pool: newPoolAmount });
+        }
       });
+      console.log(`Jackpot pool updated in Firestore: ${newPoolAmount}`);
+    } catch (error) {
+      console.error("Firestore Transaction failed for jackpot pool: ", error);
+    }
+  }, [db]);
+
+  const debouncedUpdateJackpotPool = useCallback(
+    debounce((newPoolAmount: number) => updateJackpotPoolInFirestore(newPoolAmount), 500),
+    [updateJackpotPoolInFirestore]
+  );
+
+  // Function to update local coins state and trigger debounced Firestore update
+  const handleCoinUpdate = (amount: number) => {
+    setCoins(prev => {
+      const newAmount = prev + amount;
+      if (auth.currentUser) {
+        debouncedUpdateCoins(auth.currentUser.uid, newAmount);
+      }
+      return newAmount;
+    });
   };
 
-  const updateKeysInFirestore = async (userId: string, amount: number) => {
-    console.log("updateKeysInFirestore called with amount:", amount);
+  // Function to update local jackpot pool state and trigger debounced Firestore update
+  const handleJackpotPoolUpdate = (amount: number) => {
+    setJackpotPool(prev => {
+      const newPool = prev + amount;
+      debouncedUpdateJackpotPool(newPool);
+      return newPool;
+    });
+  };
+
+  // Coin count animation function
+  const startCoinCountAnimation = (reward: number) => {
+      const oldCoins = coins;
+      const newCoins = oldCoins + reward;
+      let step = Math.ceil(reward / 30);
+      let current = oldCoins;
+
+      const countInterval = setInterval(() => {
+          current += step;
+          if (current >= newCoins) {
+              setDisplayedCoins(newCoins);
+              clearInterval(countInterval);
+              handleCoinUpdate(reward); // Update coins via main handler
+          } else {
+              setDisplayedCoins(current);
+          }
+      }, 50);
+  };
+
+  // --- NEW: Function to update user's key count in Firestore using a transaction ---
+  const updateKeysInFirestore = useCallback(async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update keys: User not authenticated.");
       return;
@@ -313,9 +317,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         if (!userDoc.exists()) {
           console.error("User document does not exist for key transaction.");
           transaction.set(userDocRef, {
-            coins: coins, 
-            gems: gems, 
-            keys: Math.max(0, amount), // Ensure keys is non-negative if new doc
+            coins: coins,
+            gems: gems,
+            keys: keyCount,
             createdAt: new Date()
           });
         } else {
@@ -323,46 +327,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const newKeys = currentKeys + amount;
           const finalKeys = Math.max(0, newKeys);
           transaction.update(userDocRef, { keys: finalKeys });
-          setKeyCount(finalKeys); // Update local state
         }
       });
-      console.log("Firestore transaction for keys successful.");
-    } catch (error)
- {
+      console.log(`Keys updated in Firestore for user ${userId} by ${amount}`);
+      setKeyCount(prev => Math.max(0, prev + amount)); // Update local state after successful Firestore update
+    } catch (error) {
       console.error("Firestore Transaction failed for keys: ", error);
     }
-  };
+  }, [db, coins, gems, keyCount]); // Dependencies include states used in set operation
 
-
+  // Function to handle gem rewards received from TreasureChest
   const handleGemReward = (amount: number) => {
       setGems(prev => prev + amount);
       console.log(`Received ${amount} gems from chest.`);
-      // TODO: Implement Firestore update for gems if they need to be persistent
-      if (auth.currentUser) {
-        const userDocRef = doc(db, 'users', auth.currentUser.uid);
-        runTransaction(db, async (transaction) => {
-            const userDoc = await transaction.get(userDocRef);
-            if (!userDoc.exists()) {
-                transaction.set(userDocRef, { gems: Math.max(0, gems + amount) }); // gems is pre-update here
-            } else {
-                const currentGems = userDoc.data().gems || 0;
-                transaction.update(userDocRef, { gems: currentGems + amount });
-            }
-        }).catch(err => console.error("Error updating gems in Firestore:", err));
-      }
+      // TODO: Implement Firestore update for gems
   };
 
+  // Function to handle key collection (called when obstacle with key is defeated)
   const handleKeyCollect = (amount: number) => {
-      console.log(`Collected ${amount} key(s).`);
-      // This amount is typically negative from TreasureChest when a key is used.
-      if (auth.currentUser) {
-        updateKeysInFirestore(auth.currentUser.uid, amount); // Amount can be negative
-      } else {
-        console.log("User not authenticated, skipping Firestore key update.");
-      }
+      updateKeysInFirestore(auth.currentUser!.uid, amount);
   };
 
-
+  // Function to start a NEW game (resets session storage states)
   const startNewGame = () => {
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
@@ -373,54 +359,102 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setShowHealthDamageEffect(false);
     setDamageAmount(0);
     setShowDamageNumber(false);
-    setIsBackgroundPaused(false); 
-    setIsGoldMineOpen(false); 
-    setIsInventoryOpen(false); 
-    setIsLuckyGameOpen(false); 
-
+    setIsBackgroundPaused(false);
+    setIsGoldMineOpen(false);
+    setIsInventoryOpen(false);
+    setIsLuckyGameOpen(false);
 
     generateInitialClouds(5);
-
-    if (!isBackgroundPaused) {
-    }
   };
 
-
+  // Effect to fetch user data and listen to real-time updates for coins and jackpot pool
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribeAuth = auth.onAuthStateChanged(user => {
       if (user) {
         console.log("User authenticated:", user.uid);
-        fetchUserData(user.uid); 
-        setGameStarted(true); 
-        setIsRunning(true); 
+        setIsLoadingUserData(true);
+        const userDocRef = doc(db, 'users', user.uid);
+        const jackpotDocRef = doc(db, 'game', 'jackpot');
+
+        // Listen for user data changes (coins, gems, keys)
+        const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setCoins(userData.coins || 0);
+            setDisplayedCoins(userData.coins || 0);
+            setGems(userData.gems || 0);
+            setKeyCount(userData.keys || 0);
+            console.log("User data updated from Firestore:", userData);
+          } else {
+            console.log("User document not found, creating default.");
+            setDoc(userDocRef, {
+              coins: 0,
+              gems: 0,
+              keys: 0,
+              createdAt: new Date(),
+            });
+            setCoins(0);
+            setDisplayedCoins(0);
+            setGems(0);
+            setKeyCount(0);
+          }
+          setIsLoadingUserData(false);
+        }, (error) => {
+          console.error("Error listening to user data:", error);
+          setIsLoadingUserData(false);
+        });
+
+        // Listen for jackpot pool changes
+        const unsubscribeJackpot = onSnapshot(jackpotDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const jackpotData = docSnap.data();
+            setJackpotPool(jackpotData.pool || 200);
+            console.log("Jackpot pool updated from Firestore:", jackpotData.pool);
+          } else {
+            console.log("Jackpot document not found, creating default.");
+            setDoc(jackpotDocRef, { pool: 200 });
+            setJackpotPool(200);
+          }
+        }, (error) => {
+          console.error("Error listening to jackpot pool:", error);
+        });
+
+        setGameStarted(true);
+        setIsRunning(true);
+
+        return () => {
+          unsubscribeUser();
+          unsubscribeJackpot();
+        };
+
       } else {
         console.log("User logged out.");
+        // Reset all game states on logout
         setGameStarted(false);
         setGameOver(false);
-        setHealth(MAX_HEALTH); 
-        setCharacterPos(0); 
-
+        setHealth(MAX_HEALTH);
+        setCharacterPos(0);
         setIsRunning(false);
         setShowHealthDamageEffect(false);
         setDamageAmount(0);
         setShowDamageNumber(false);
-        setIsStatsFullscreen(false); 
-        setIsRankOpen(false); 
-        setIsGoldMineOpen(false); 
-        setIsInventoryOpen(false); 
-        setIsLuckyGameOpen(false); 
-        setIsBackgroundPaused(false); 
-        setCoins(0); 
-        setDisplayedCoins(0); 
-        setGems(0); 
-        setKeyCount(0); 
-        setIsLoadingUserData(false); 
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBackgroundPaused(false);
+        setCoins(0);
+        setDisplayedCoins(0);
+        setGems(0);
+        setKeyCount(0);
+        setJackpotPool(200); // Reset jackpot pool on logout
+        setIsLoadingUserData(false);
 
         sessionStorage.removeItem('gameHealth');
         sessionStorage.removeItem('gameCharacterPos');
 
         if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
@@ -428,9 +462,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
     });
 
-    return () => unsubscribe();
-  }, [db]); // auth removed as it's stable, db is stable. fetchUserData has db in its deps.
+    return () => {
+      unsubscribeAuth();
+      if (coinsUpdateTimerRef.current) clearTimeout(coinsUpdateTimerRef.current);
+      if (jackpotUpdateTimerRef.current) clearTimeout(jackpotUpdateTimerRef.current);
+    };
+  }, [db, updateCoinsInFirestore, updateJackpotPoolInFirestore]);
 
+  // Effect to handle game over state when health reaches zero
   useEffect(() => {
     if (health <= 0 && gameStarted) {
       setGameOver(true);
@@ -444,6 +483,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, [health, gameStarted]);
 
+  // Effect to handle tab visibility changes (pause/resume game)
   useEffect(() => {
       const handleVisibilityChange = () => {
           if (document.hidden) {
@@ -460,16 +500,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => {
           document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
-  }, []); 
+  }, []);
 
-
+  // Generate initial cloud elements
   const generateInitialClouds = (count: number) => {
     const newClouds: GameCloud[] = [];
     for (let i = 0; i < count; i++) {
       const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
       newClouds.push({
         id: Date.now() + i,
-        x: Math.random() * 50 + 100, 
+        x: Math.random() * 50 + 100,
         y: Math.random() * 40 + 10,
         size: Math.random() * 40 + 30,
         speed: Math.random() * 0.3 + 0.15,
@@ -479,13 +519,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setClouds(newClouds);
   };
 
-
+  // Handle character jump action
   const jump = () => {
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { 
+    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) {
       setCharacterPos(80);
-      setJumping(true); 
+      setJumping(true);
       setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { 
+        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) {
           setCharacterPos(0);
           setTimeout(() => {
             setJumping(false);
@@ -498,17 +538,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
+  // Handle tap/click on the game area to start or jump
   const handleTap = () => {
-    if (isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) return; 
+    if (isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) return;
 
     if (!gameStarted) {
-      startNewGame(); 
+      startNewGame();
     } else if (gameOver) {
-      startNewGame(); 
+      startNewGame();
     }
   };
 
-
+  // Trigger health bar damage effect
   const triggerHealthDamageEffect = () => {
       setShowHealthDamageEffect(true);
       setTimeout(() => {
@@ -516,6 +557,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 300);
   };
 
+  // Trigger character damage effect and floating number
   const triggerCharacterDamageEffect = (amount: number) => {
       setDamageAmount(amount);
       setShowDamageNumber(true);
@@ -525,9 +567,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 800);
   };
 
-
+  // Move obstacles, clouds, particles, and NEW: Coins, and detect collisions
   useEffect(() => {
-    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) { 
+    if (!gameStarted || gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) {
         if (gameLoopIntervalRef.current) {
             clearInterval(gameLoopIntervalRef.current);
             gameLoopIntervalRef.current = null;
@@ -542,12 +584,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     .map(cloud => {
                         const newX = cloud.x - cloud.speed;
 
-                        if (newX < -50) { 
+                        if (newX < -50) {
                             const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
                             return {
                                 ...cloud,
                                 id: Date.now() + Math.random(),
-                                x: 100 + Math.random() * 30, 
+                                x: 100 + Math.random() * 30,
                                 y: Math.random() * 40 + 10,
                                 size: Math.random() * 40 + 30,
                                 speed: Math.random() * 0.3 + 0.15,
@@ -555,11 +597,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                             };
                         }
 
-                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) }; 
+                        return { ...cloud, x: Math.min(120, Math.max(-50, newX)) };
                     });
             });
 
-        }, 30); 
+        }, 30);
     }
 
     return () => {
@@ -568,89 +610,70 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             gameLoopIntervalRef.current = null;
         }
     };
-  }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]); 
+  }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoadingUserData, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]);
 
   useEffect(() => {
-      if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) { 
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) { 
+      if (gameOver || isStatsFullscreen || isLoadingUserData || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen) {
+      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) {
       }
 
       return () => {
       };
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]); 
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoadingUserData, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen]);
 
-
+  // Effect to clean up all timers when the component unmounts
   useEffect(() => {
     return () => {
       console.log("Component unmounting. Clearing all timers.");
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-
       if (gameLoopIntervalRef.current) {
           clearInterval(gameLoopIntervalRef.current);
       }
+      if (coinsUpdateTimerRef.current) clearTimeout(coinsUpdateTimerRef.current);
+      if (jackpotUpdateTimerRef.current) clearTimeout(jackpotUpdateTimerRef.current);
       console.log("All timers cleared on unmount.");
     };
   }, []);
 
-  // Effect for coin counter animation OR direct update if change is large
+  // Effect for coin counter animation
   useEffect(() => {
-    // If displayedCoins already matches coins, or if coins is 0 (e.g. initial load or reset)
-    if (displayedCoins === coins) {
-      // If coins is 0 and displayedCoins is not, set displayedCoins to 0 directly
-      if (coins === 0 && displayedCoins !== 0) {
-        setDisplayedCoins(0);
-      }
-      return;
-    }
+    if (displayedCoins === coins) return;
 
-    // If the change is large or not from a reward (e.g., direct update from GoldMine or LuckyGame cost/non-animated win)
-    // just set displayedCoins directly to match coins.
-    // The startCoinCountAnimation handles animation for explicit rewards within background-game.
-    // LuckyGame handles its own coin updates through onUpdateCoins, which updates `coins` state.
-    // This useEffect ensures `displayedCoins` eventually matches `coins`.
-    // A simple way to distinguish: if it's not a small increment from a chest in this component, update directly.
-    // The threshold helps decide. For very small changes, an animation might still be okay.
-    const difference = coins - displayedCoins;
-
-    // Threshold to decide if we animate or jump.
-    // If GoldMine or LuckyGame causes a large jump, or a deduction, update directly.
-    // Positive small differences might be animated by startCoinCountAnimation if they originate here.
-    // For changes coming from `onUpdateCoins` (like from LuckyGame), `coins` updates, then this runs.
-    if (Math.abs(difference) > 50 || difference < 0) { // If large jump or any deduction
+    if (Math.abs(coins - displayedCoins) > 10) {
         setDisplayedCoins(coins);
         return;
     }
 
-    // For small positive increases that weren't handled by startCoinCountAnimation
-    // (e.g. if startCoinCountAnimation was bypassed or for other small coin gains)
-    // we can still do a quick animation here.
-    let current = displayedCoins;
-    const step = Math.max(1, Math.ceil(difference / 15)); // Animate over ~15 frames
+    const coinElement = document.querySelector('.coin-counter');
+    if (coinElement) {
+      coinElement.classList.add('number-changing');
+      const animationEndHandler = () => {
+        coinElement.classList.remove('number-changing');
+        coinElement.removeEventListener('animationend', animationEndHandler);
+      };
+      coinElement.addEventListener('animationend', animationEndHandler);
 
-    const quickSyncInterval = setInterval(() => {
-        current += step;
-        if (current >= coins) {
-            setDisplayedCoins(coins);
-            clearInterval(quickSyncInterval);
-        } else {
-            setDisplayedCoins(current);
+      return () => {
+        if (coinElement) {
+            coinElement.removeEventListener('animationend', animationEndHandler);
+             coinElement.classList.remove('number-changing');
         }
-    }, 30); // Faster interval for quick sync
+      };
+    }
+     return () => {};
+  }, [displayedCoins, coins]);
 
-    return () => clearInterval(quickSyncInterval);
-
-  }, [coins, displayedCoins]); // Depend on coins and displayedCoins
-
-
+  // Calculate health percentage for the bar
   const healthPct = health / MAX_HEALTH;
 
+  // Determine health bar color based on health percentage
   const getColor = () => {
     if (healthPct > 0.6) return 'bg-green-500';
     if (healthPct > 0.3) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
-
+  // Render the character with animation and damage effect
   const renderCharacter = () => {
     return (
       <div
@@ -662,15 +685,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }}
       >
         <DotLottieReact
-          src="https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie"
+          src="[https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie](https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie)"
           loop
-          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen} 
+          autoplay={!isStatsFullscreen && !isLoadingUserData && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen}
           className="w-full h-full"
         />
       </div>
     );
   };
 
+  // Render clouds
   const renderClouds = () => {
     return clouds.map(cloud => (
       <img
@@ -682,55 +706,57 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           width: `${cloud.size}px`,
           height: `${cloud.size * 0.6}px`,
           top: `${cloud.y}%`,
-          left: `${Math.min(120, Math.max(-50, cloud.x))}%`, 
+          left: `${Math.min(120, Math.max(-50, cloud.x))}%`,
           opacity: 0.8
         }}
         onError={(e) => {
-          const target = e.target as HTMLImageElement; 
+          const target = e.target as HTMLImageElement;
           target.onerror = null;
-          target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
+          target.src = "[https://placehold.co/40x24/ffffff/000000?text=Cloud](https://placehold.co/40x24/ffffff/000000?text=Cloud)";
         }}
       />
     ));
   };
 
-
+  // NEW: Function to toggle full-screen stats
   const toggleStatsFullscreen = () => {
-    if (gameOver || isLoadingUserData) return; 
+    if (gameOver || isLoadingUserData) return;
 
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
-            hideNavBar(); 
-            setIsRankOpen(false); 
-            setIsGoldMineOpen(false); 
-            setIsInventoryOpen(false); 
-            setIsLuckyGameOpen(false); 
+            hideNavBar();
+            setIsRankOpen(false);
+            setIsGoldMineOpen(false);
+            setIsInventoryOpen(false);
+            setIsLuckyGameOpen(false);
         } else {
-            showNavBar(); 
+            showNavBar();
         }
         return newState;
     });
   };
 
+  // NEW: Function to toggle Rank visibility
   const toggleRank = () => {
-     if (gameOver || isLoadingUserData) return; 
+     if (gameOver || isLoadingUserData) return;
 
      setIsRankOpen(prev => {
          const newState = !prev;
          if (newState) {
-             hideNavBar(); 
-             setIsStatsFullscreen(false); 
-             setIsGoldMineOpen(false); 
-             setIsInventoryOpen(false); 
-             setIsLuckyGameOpen(false); 
+             hideNavBar();
+             setIsStatsFullscreen(false);
+             setIsGoldMineOpen(false);
+             setIsInventoryOpen(false);
+             setIsLuckyGameOpen(false);
          } else {
-             showNavBar(); 
+             showNavBar();
          }
          return newState;
          });
   };
 
+  // NEW: Function to toggle Gold Mine visibility
   const toggleGoldMine = () => {
     if (gameOver || isLoadingUserData) return;
 
@@ -740,8 +766,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         hideNavBar();
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
-        setIsInventoryOpen(false); 
-        setIsLuckyGameOpen(false); 
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
       } else {
         showNavBar();
       }
@@ -749,6 +775,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
+  // NEW: Function to toggle Inventory visibility
   const toggleInventory = () => {
     if (gameOver || isLoadingUserData) return;
 
@@ -758,8 +785,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         hideNavBar();
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
-        setIsGoldMineOpen(false); 
-        setIsLuckyGameOpen(false); 
+        setIsGoldMineOpen(false);
+        setIsLuckyGameOpen(false);
       } else {
         showNavBar();
       }
@@ -767,6 +794,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
+  // NEW: Function to toggle Lucky Game visibility
   const toggleLuckyGame = () => {
     if (gameOver || isLoadingUserData) return;
 
@@ -785,13 +813,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
-
+  // Handler to receive the sidebar toggle function from SidebarLayout
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
   };
 
-
-  if (isLoadingUserData && !auth.currentUser) { // Show loading only if no user yet, allow game if user data still loading but auth exists
+  // Show loading indicator if user data is being fetched
+  if (isLoadingUserData) {
     return (
       <div className="flex items-center justify-center w-full h-screen bg-gray-900 text-white">
         Đang tải dữ liệu người dùng...
@@ -799,15 +827,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
+  // Determine which content to render inside SidebarLayout based on state
   let mainContent;
   if (isStatsFullscreen) {
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
               {auth.currentUser && (
                   <CharacterCard
-                      onClose={toggleStatsFullscreen} 
-                      coins={coins} 
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} 
+                      onClose={toggleStatsFullscreen}
+                      coins={coins}
+                      onUpdateCoins={(amount) => handleCoinUpdate(amount)} // Updated to use handleCoinUpdate
                   />
               )}
           </ErrorBoundary>
@@ -815,82 +844,84 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   } else if (isRankOpen) {
        mainContent = (
            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-               <EnhancedLeaderboard onClose={toggleRank} /> 
+               <EnhancedLeaderboard onClose={toggleRank} />
            </ErrorBoundary>
        );
-  } else if (isGoldMineOpen) { 
+  } else if (isGoldMineOpen) {
       const isGoldMineGamePaused = gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isInventoryOpen || isLuckyGameOpen;
+
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
               {auth.currentUser && (
                   <GoldMine
                       onClose={toggleGoldMine}
                       currentCoins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                      onUpdateDisplayedCoins={setDisplayedCoins} 
+                      onUpdateCoins={(amount) => handleCoinUpdate(amount)} // Updated to use handleCoinUpdate
+                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
                       currentUserId={auth.currentUser!.uid}
-                      isGamePaused={isGoldMineGamePaused} 
+                      isGamePaused={isGoldMineGamePaused}
                   />
               )}
           </ErrorBoundary>
       );
-  } else if (isInventoryOpen) { 
+  } else if (isInventoryOpen) {
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-              <Inventory onClose={toggleInventory} /> 
+              <Inventory onClose={toggleInventory} />
           </ErrorBoundary>
       );
-  } else if (isLuckyGameOpen) { 
+  } else if (isLuckyGameOpen) {
       mainContent = (
           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
-              {auth.currentUser && (
-                <LuckyChestGame 
-                    onClose={toggleLuckyGame} 
-                    currentCoins={coins} // Pass current coins state
-                    onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} // Pass centralized coin update function
-                    currentUserId={auth.currentUser.uid} // Pass user ID
-                />
-              )}
-              {!auth.currentUser && <div className="text-center p-4 text-white">Vui lòng đăng nhập để chơi Lucky Game.</div>}
+              {/* Pass coins and jackpotPool from background-game to LuckyChestGame */}
+              <LuckyChestGame
+                  onClose={toggleLuckyGame}
+                  currentCoins={coins}
+                  onUpdateCoins={handleCoinUpdate}
+                  currentJackpotPool={jackpotPool}
+                  onUpdateJackpotPool={handleJackpotPoolUpdate}
+              />
           </ErrorBoundary>
       );
-  }
-  else {
+  } else {
       mainContent = (
           <div
             ref={gameRef}
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`} 
-            onClick={handleTap} 
+            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
+            onClick={handleTap}
           >
             <DungeonBackground />
+
             {renderClouds()}
+
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
                         rounded-b-lg shadow-2xl
                         bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                         border-b border-l border-r border-slate-700/50">
+
                 <HeaderBackground />
+
                 <button
-                    onClick={() => sidebarToggleRef.current?.()} 
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" 
+                    onClick={() => sidebarToggleRef.current?.()}
+                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
                     aria-label="Mở sidebar"
                     title="Mở sidebar"
                 >
                      <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png"
+                        src="[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png)"
                         alt="Menu Icon"
-                        className="w-5 h-5 object-contain" 
+                        className="w-5 h-5 object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu"; 
+                            target.src = "[https://placehold.co/20x20/ffffff/000000?text=Menu](https://placehold.co/20x20/ffffff/000000?text=Menu)";
                         }}
                      />
                 </button>
 
-
-                <div className="flex items-center relative z-10"> 
+                <div className="flex items-center relative z-10">
                   <div className="w-32 relative">
                       <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
                           <div className="h-full overflow-hidden">
@@ -929,8 +960,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       </div>
                   </div>
               </div>
-               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( 
-                  <div className="flex items-center space-x-1 currency-display-container relative z-10"> 
+               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && (
+                  <div className="flex items-center space-x-1 currency-display-container relative z-10">
                       <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                           <div className="relative mr-0.5 flex items-center justify-center">
@@ -948,7 +979,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
                       <CoinDisplay
                         displayedCoins={displayedCoins}
-                        isStatsFullscreen={isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen} // Hide if any overlay is open
+                        isStatsFullscreen={isStatsFullscreen}
                       />
                   </div>
                )}
@@ -959,30 +990,30 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
                 <button
                   className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                  onClick={startNewGame} 
+                  onClick={startNewGame}
                 >
                   Chơi Lại
                 </button>
               </div>
             )}
 
-            {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( 
+             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && (
               <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
                 {[
                   {
                     icon: (
                       <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png"
+                        src="[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png)"
                         alt="Shop Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
+                            target.src = "[https://placehold.co/20x20/ffffff/000000?text=Shop](https://placehold.co/20x20/ffffff/000000?text=Shop)";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "",
                     notification: true,
                     special: true,
                     centered: true
@@ -990,28 +1021,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   {
                     icon: (
                       <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png"
+                        src="[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png)"
                         alt="Inventory Icon"
-                        className="w-full h-full object-contain" 
+                        className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; 
+                            target.src = "[https://placehold.co/20x20/ffffff/000000?text=Inv](https://placehold.co/20x20/ffffff/000000?text=Inv)";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "",
                     notification: true,
                     special: true,
                     centered: true,
-                    onClick: toggleInventory 
+                    onClick: toggleInventory
                   }
                 ].map((item, index) => (
                   <div key={index} className="group cursor-pointer">
                     {item.special && item.centered ? (
                         <div
                             className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick} 
+                            onClick={item.onClick}
                         >
                             {item.icon}
                             {item.label && (
@@ -1029,24 +1060,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               </div>
             )}
 
-             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && ( 
+             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen) && (
               <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
 
                 {[
                   {
                     icon: (
                       <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png"
+                        src="[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png)"
                         alt="Mission Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
+                            target.src = "[https://placehold.co/20x20/ffffff/000000?text=Mission](https://placehold.co/20x20/ffffff/000000?text=Mission)";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "",
                     notification: true,
                     special: true,
                     centered: true
@@ -1054,17 +1085,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   {
                     icon: (
                       <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png"
+                        src="[https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png](https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png)"
                         alt="Blacksmith Icon"
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                            const target = e.target as HTMLImageElement; 
+                            const target = e.target as HTMLImageElement;
                             target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
+                            target.src = "[https://placehold.co/20x20/ffffff/000000?text=Blacksmith](https://placehold.co/20x20/ffffff/000000?text=Blacksmith)";
                         }}
                       />
                     ),
-                    label: "", 
+                    label: "",
                     notification: true,
                     special: true,
                     centered: true
@@ -1074,7 +1105,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     {item.special && item.centered ? (
                         <div
                             className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick} 
+                            onClick={item.onClick}
                         >
                             {item.icon}
                             {item.label && (
@@ -1094,30 +1125,35 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             <TreasureChest
               initialChests={3}
-              keyCount={keyCount} 
-              onKeyCollect={handleKeyCollect} // Use handleKeyCollect which calls updateKeysInFirestore
-              onCoinReward={startCoinCountAnimation} // This will use the updated startCoinCountAnimation
-              onGemReward={handleGemReward} 
-              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen} 
-              isStatsFullscreen={isStatsFullscreen} 
-              currentUserId={currentUser ? currentUser.uid : null} 
+              keyCount={keyCount}
+              onKeyCollect={(n) => {
+                if (auth.currentUser) {
+                  updateKeysInFirestore(auth.currentUser!.uid, -n);
+                } else {
+                  console.log("User not authenticated, skipping Firestore key update.");
+                }
+              }}
+              onCoinReward={handleCoinUpdate} // Updated to use handleCoinUpdate
+              onGemReward={handleGemReward}
+              isGamePaused={gameOver || !gameStarted || isLoadingUserData || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen}
+              isStatsFullscreen={isStatsFullscreen}
+              currentUserId={currentUser ? currentUser.uid : null}
             />
 
           </div>
       );
   }
 
-
   return (
-    <div className="w-screen h-screen overflow-hidden bg-gray-950"> 
+    <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
-          onShowStats={toggleStatsFullscreen} 
-          onShowRank={toggleRank} 
-          onShowGoldMine={toggleGoldMine} 
-          onShowLuckyGame={toggleLuckyGame} 
+          onShowStats={toggleStatsFullscreen}
+          onShowRank={toggleRank}
+          onShowGoldMine={toggleGoldMine}
+          onShowLuckyGame={toggleLuckyGame}
       >
-        {mainContent} 
+        {mainContent}
       </SidebarLayout>
     </div>
   );
