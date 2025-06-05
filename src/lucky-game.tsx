@@ -1,78 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { initializeApp, getApps, getApp } from 'firebase/app'; // Thêm getApps, getApp
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
-
-
-// --- CoinDisplay Component (Moved here for self-containment) ---
-// Component hiển thị số xu của người chơi
-interface CoinDisplayProps {
-  displayedCoins: number; // Số xu cần hiển thị
-  isStatsFullscreen: boolean; // Cờ để ẩn/hiện màn hình khi bảng thống kê ở chế độ toàn màn hình
-}
-
-// URL icon xu và placeholder
-const coinIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png";
-const coinIconPlaceholderUrl = "https://placehold.co/16x16/ffd700/000000?text=$"; // Placeholder khi lỗi hình ảnh
-
-const CoinDisplay: React.FC<CoinDisplayProps> = ({ displayedCoins, isStatsFullscreen }) => {
-  // Không hiển thị nếu bảng thống kê đang ở chế độ toàn màn hình
-  if (isStatsFullscreen) {
-    return null;
-  }
-
-  return (
-    // Container cho xu
-    <div className="bg-gradient-to-br from-yellow-500 to-amber-700 rounded-lg p-0.5 flex items-center shadow-lg border border-amber-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-      {/* Các kiểu dáng cần thiết cho hoạt ảnh */}
-      <style jsx>{`
-        @keyframes number-change {
-          0% { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); transform: scale(1.1); }
-          100% { color: #fff; text-shadow: none; transform: scale(1); }
-        }
-        .number-changing {
-          animation: number-change 0.3s ease-out;
-        }
-         @keyframes pulse-fast {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .animate-pulse-fast {
-            animation: pulse-fast 1s infinite;
-        }
-      `}</style>
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-      {/* Container cho icon xu */}
-      <div className="relative mr-0.5 flex items-center justify-center">
-        <img
-          src={coinIconUrl}
-          alt="Dollar Coin Icon" // Văn bản thay thế cho hình ảnh
-          className="w-4 h-4" // Điều chỉnh kích thước
-           // Xử lý lỗi khi tải hình ảnh
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null; // Ngăn chặn vòng lặp vô hạn
-            target.src = coinIconPlaceholderUrl; // Hiển thị hình ảnh placeholder
-          }}
-        />
-      </div>
-      <div className="font-bold text-amber-100 text-xs tracking-wide coin-counter"> {/* Kích thước văn bản vẫn là xs */}
-        {displayedCoins.toLocaleString()}
-      </div>
-      {/* Nút Cộng xu - Chức năng có thể thêm sau */}
-      <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center cursor-pointer border border-amber-300 shadow-inner hover:shadow-amber-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-        <span className="text-white font-bold text-xs">+</span> {/* Kích thước văn bản vẫn là xs */}
-      </div>
-      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
-    </div>
-  );
-};
-// --- End CoinDisplay Component ---
-
+import React, { useState, useEffect } from 'react';
+import CoinDisplay from './coin-display.tsx'; // Import CoinDisplay
 
 // SVG Icons
-// Icon xu đã chỉnh sửa để chấp nhận prop src cho URL hình ảnh
+// Modified CoinsIcon to accept a src prop for image URL
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -133,23 +63,25 @@ const GiftIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Giao diện cho thuộc tính vật phẩm
+// Interface for item properties
 interface Item {
-  icon: React.FC<{ className?: string }> | string; // icon có thể là component hoặc URL hình ảnh
+  icon: React.FC<{ className?: string }> | string; // icon can be a component or a string (URL)
   name: string;
   value: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
-  timestamp?: number; // Tùy chọn: để lưu thời điểm nhận được vật phẩm
+  timestamp?: number; // Optional: to store when the item was won
 }
 
 interface LuckyChestGameProps {
   onClose: () => void;
+  // Added isStatsFullscreen prop to LuckyChestGame as CoinDisplay needs it
+  isStatsFullscreen: boolean; 
 }
 
-// Component Popup Phần thưởng
+// Reward Popup Component
 interface RewardPopupProps {
-  item: Item; // Vật phẩm này giờ sẽ có giá trị 'value' chính xác cho các lần trúng độc đắc
+  item: Item; // This item will now have the correct 'value' for jackpot wins
   jackpotWon: boolean;
   onClose: () => void;
 }
@@ -174,9 +106,9 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
             <h2 className="text-3xl font-black mb-2 uppercase tracking-wider text-white drop-shadow">JACKPOT!</h2>
-            {/* Hiển thị item.value hiện đang giữ số tiền độc đắc thực tế đã thắng */}
+            {/* Display item.value which now holds the actual jackpot amount won */}
             <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {item.value.toLocaleString()} xu từ Pool!</p>
-            <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn!🌟</p>
+            <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn! 🌟</p>
           </>
         ) : (
           <>
@@ -204,138 +136,26 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
+const LuckyChestGame = ({ onClose, isStatsFullscreen }: LuckyChestGameProps) => { // Added isStatsFullscreen here
   const [isSpinning, setIsSpinning] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1); // Để làm nổi bật trực quan trong quá trình quay
-  const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Chỉ số vật phẩm thực tế đã thắng
+  const [selectedIndex, setSelectedIndex] = useState(-1); // For visual highlighting during spin
+  const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Actual item index won
   const [hasSpun, setHasSpun] = useState(false);
-  const [coins, setCoins] = useState(0); // Khởi tạo với 0, sẽ tải từ Firestore
-  const [displayedCoins, setDisplayedCoins] = useState(0); // Số xu hiển thị với hiệu ứng động
-  const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Đã thay đổi từ inventory
-  // Đặt pool jackpot ban đầu thành 200
+  const [coins, setCoins] = useState(1000);
+  const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
+  // Set initial jackpot pool to 200
   const [jackpotPool, setJackpotPool] = useState(200);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // Trạng thái mới cho các tab
+  const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
 
-  // Các trạng thái mới cho popup
+  // New states for popup
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
-  // Trạng thái Firebase
-  const [db, setDb] = useState<any>(null);
-  const [authInstance, setAuthInstance] = useState<any>(null);
-  const [currentAuthenticatedUserId, setCurrentAuthenticatedUserId] = useState<string | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false); // Trạng thái sẵn sàng của Auth
-
-  // Khởi tạo Firebase
-  useEffect(() => {
-    const initFirebase = async () => {
-        try {
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            let app;
-            if (!getApps().length) { // Kiểm tra xem ứng dụng Firebase mặc định đã tồn tại chưa
-                app = initializeApp(firebaseConfig);
-            } else {
-                app = getApp(); // Lấy ứng dụng Firebase mặc định hiện có
-            }
-            
-            const firestoreDb = getFirestore(app);
-            const firebaseAuth = getAuth(app);
-
-            setDb(firestoreDb);
-            setAuthInstance(firebaseAuth);
-
-            // Đăng nhập bằng token tùy chỉnh được cung cấp hoặc ẩn danh
-            if (typeof __initial_auth_token !== 'undefined') {
-                await signInWithCustomToken(firebaseAuth, __initial_auth_token);
-            } else {
-                await signInAnonymously(firebaseAuth);
-            }
-
-            // Lắng nghe thay đổi trạng thái xác thực
-            const unsubscribe = onAuthStateChanged(firebaseAuth, user => {
-                if (user) {
-                    setCurrentAuthenticatedUserId(user.uid);
-                } else {
-                    setCurrentAuthenticatedUserId(null);
-                }
-                setIsAuthReady(true); // Trạng thái xác thực đã được xác định
-            });
-
-            return () => unsubscribe(); // Hủy đăng ký khi component unmount
-        } catch (error) {
-            console.error("Lỗi khi khởi tạo Firebase hoặc xác thực:", error);
-            setIsAuthReady(true); // Đảm bảo trạng thái sẵn sàng được đặt ngay cả khi có lỗi
-        }
-    };
-
-    initFirebase();
-  }, []); // Chạy một lần khi component mount
-
-
-  // Lấy dữ liệu người dùng (xu) khi ID người dùng được xác thực có sẵn và Auth đã sẵn sàng
-  useEffect(() => {
-    if (db && currentAuthenticatedUserId && isAuthReady) {
-        const fetchCoins = async () => {
-            try {
-                const userDocRef = doc(db, 'users', currentAuthenticatedUserId);
-                const userDocSnap = await getDoc(userDocRef);
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    setCoins(userData.coins || 0);
-                    setDisplayedCoins(userData.coins || 0); // Khởi tạo xu hiển thị
-                } else {
-                    // Nếu tài liệu người dùng không tồn tại, tạo nó với giá trị mặc định
-                    await setDoc(userDocRef, { coins: 0, gems: 0, keys: 0, createdAt: new Date() });
-                    setCoins(0);
-                    setDisplayedCoins(0);
-                }
-            } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu xu:", error);
-            }
-        };
-        fetchCoins();
-    } else if (!currentAuthenticatedUserId && isAuthReady) { // Đảm bảo db được khởi tạo trước khi dừng tải
-        setCoins(0);
-        setDisplayedCoins(0);
-    }
-  }, [db, currentAuthenticatedUserId, isAuthReady]); // Phụ thuộc vào db, currentAuthenticatedUserId và isAuthReady
-
-  // Hàm để cập nhật số xu trong Firestore bằng giao dịch (transaction)
-  const updateCoinsInFirestore = useCallback(async (userId: string, amount: number) => {
-    if (!db || !userId) {
-        console.error("Firestore DB không được khởi tạo hoặc Người dùng chưa được xác thực.");
-        return;
-    }
-
-    const userDocRef = doc(db, 'users', userId);
-
-    try {
-        await runTransaction(db, async (transaction) => {
-            const userDoc = await transaction.get(userDocRef);
-            if (!userDoc.exists()) {
-                console.error("Tài liệu người dùng không tồn tại cho giao dịch xu.");
-                // Tạo tài liệu nếu nó bị thiếu (mặc dù fetch thường xử lý điều này)
-                transaction.set(userDocRef, { coins: amount, gems: 0, keys: 0, createdAt: new Date() });
-            } else {
-                const currentCoins = userDoc.data().coins || 0;
-                const newCoins = currentCoins + amount;
-                const finalCoins = Math.max(0, newCoins); // Đảm bảo số xu không xuống dưới 0
-                transaction.update(userDocRef, { coins: finalCoins });
-            }
-        });
-        // Cập nhật trạng thái cục bộ SAU khi giao dịch thành công
-        setCoins(prev => prev + amount); // Điều này sẽ kích hoạt hiệu ứng động
-    } catch (error) {
-        console.error("Giao dịch Firestore thất bại cho xu: ", error);
-    }
-  }, [db]); // Tạo lại nếu db thay đổi
-
-
-  // Danh sách các vật phẩm có sẵn
+  // List of available items
   const items: Item[] = [
-    // Vật phẩm đã cập nhật: "100 Vàng" đã đổi thành "100 Xu" với icon mới
+    // Updated item: "100 Vàng" changed to "100 Xu" with a new icon
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
     { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
     { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
@@ -354,7 +174,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
   ];
 
-  // Vị trí các vật phẩm trên vòng quay
+  // Positions of items on the visual wheel
   const itemPositionsOnWheel = [
     { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
     { row: 1, col: 3 }, { row: 2, col: 3 },
@@ -363,7 +183,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   ];
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
-  // Lấy màu nền dựa trên độ hiếm của vật phẩm
+  // Get background color based on item rarity
   const getRarityBg = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300';
@@ -376,21 +196,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     }
   };
 
-  // Hàm xử lý cơ chế quay
-  const spinChest = async () => { // Đã biến thành async để chờ cập nhật Firestore
+  // Function to handle the spinning mechanism
+  const spinChest = () => {
     if (isSpinning || coins < 100) return;
 
-    // Trừ xu cục bộ để có phản hồi tức thì
     setCoins(prev => prev - 100);
-    // Trừ xu từ Firestore ngay lập tức
-    if (currentAuthenticatedUserId) {
-      await updateCoinsInFirestore(currentAuthenticatedUserId, -100);
-    } else {
-      console.warn("Người dùng chưa được xác thực. Không thể trừ xu từ Firestore.");
-    }
 
-
-    // Thêm ngẫu nhiên 10-100 xu vào pool jackpot khi quay
+    // Add random 10-100 coins to the jackpot pool when spinning
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     setJackpotPool(prev => prev + randomCoinsToAdd);
 
@@ -399,12 +211,12 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     setFinalLandedItemIndex(-1);
     setHasSpun(false);
     setJackpotWon(false);
-    setShowRewardPopup(false); // Ẩn popup trước khi quay mới
+    setShowRewardPopup(false); // Hide popup before new spin
 
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
 
-    // Xác định chỉ số hạ cánh (1% cơ hội trúng Jackpot)
+    // Determine landing index (1% chance for Jackpot)
     if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
@@ -424,7 +236,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
              if (allWheelIndices.length > 0) {
                 targetLandedItemIndex = allWheelIndices[Math.floor(Math.random() * allWheelIndices.length)];
             } else {
-                targetLandedItemIndex = 0; // Dự phòng tuyệt đối
+                targetLandedItemIndex = 0; // Absolute fallback
             }
         }
     }
@@ -459,48 +271,41 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         currentVisualStepIndex++;
         setTimeout(spinAnimation, currentSpeed);
       } else {
-        // Hoạt ảnh đã kết thúc
+        // Animation finished
         setTimeout(() => {
           setIsSpinning(false);
           setHasSpun(true);
           setSelectedIndex(targetLandedItemIndex);
 
-          const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Thêm timestamp
-          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Thêm vào lịch sử, giữ tối đa 10 vật phẩm
+          const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Add timestamp
+          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Add to history, keep max 10 items
           
-          let actualWonAmount = wonItem.value; // Mặc định là giá trị của vật phẩm
+          let actualWonAmount = wonItem.value; // Default to item's value
 
           if (wonItem.rarity === 'jackpot') {
-            actualWonAmount = jackpotPool; // Chụp giá trị pool hiện tại để giành chiến thắng
+            actualWonAmount = jackpotPool; // Capture the current pool value for the win
             setJackpotWon(true);
             setJackpotAnimation(true);
-            // Không setCoins cục bộ ở đây, nó được xử lý bởi updateCoinsInFirestore
-            setJackpotPool(200); // Đặt lại sau khi sử dụng
+            setCoins(prev => prev + actualWonAmount); // Add the actual captured amount
+            setJackpotPool(200); // Reset after using
             
             setTimeout(() => {
               setJackpotAnimation(false);
             }, 3000);
           } else {
-            // Không setCoins cục bộ ở đây, nó được xử lý bởi updateCoinsInFirestore
-          }
-          
-          // Gọi cập nhật Firestore cho số tiền đã thắng
-          if (currentAuthenticatedUserId) {
-            updateCoinsInFirestore(currentAuthenticatedUserId, actualWonAmount);
-          } else {
-            console.warn("Người dùng chưa được xác thực. Không thể cập nhật xu đã trúng.");
+            setCoins(prev => prev + wonItem.value);
           }
 
-          // Đặt chi tiết cho popup, đảm bảo số tiền độc đắc được chuyển chính xác nếu đó là độc đắc
-          setWonRewardDetails({ ...wonItem, value: actualWonAmount }); // Cập nhật giá trị trong wonRewardDetails
-          setShowRewardPopup(true); // Hiển thị popup sau khi thắng
+          // Set details for popup, ensuring jackpot amount is correctly passed if it was a jackpot
+          setWonRewardDetails({ ...wonItem, value: actualWonAmount }); // Update the value in wonRewardDetails
+          setShowRewardPopup(true); // Show popup after winning
         }, finalPauseDuration);
       }
     };
     spinAnimation();
   };
 
-  // Hiển thị lưới vòng quay
+  // Renders the wheel grid
   const renderGrid = () => {
     const grid: ({ item: Item; isWheelItem: boolean; isSelected: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
 
@@ -525,11 +330,11 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   className="col-span-2 row-span-2 flex items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg border-4 border-yellow-300 relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent"></div>
-                  {/* Đã thay thế emoji bằng hình ảnh và loại bỏ văn bản "RƯƠNG", điều chỉnh kích thước */}
+                  {/* Replaced emoji with image and removed "RƯƠNG" text, adjusted size */}
                   <img
                     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png"
                     alt="Treasure Chest"
-                    className={`w-16 h-16 transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`} // Giảm kích thước xuống w-16 h-16
+                    className={`w-16 h-16 transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`} // Reduced size to w-16 h-16
                     onError={(e) => { e.currentTarget.src = 'https://placehold.co/64x64/cccccc/000000?text=Lỗi'; }}
                   />
                 </div>
@@ -567,7 +372,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && (
                     <div className={`absolute inset-0 ${isTrulySelected ? 'bg-red-500/50' : 'bg-amber-400/60'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
                   )}
-                  {/* Hiển thị icon chính - chỉ hiển thị nếu không phải vật phẩm '100 Xu' */}
+                  {/* Main icon display - only render if not the '100 Xu' item */}
                   {!(typeof cell.item.icon === 'string' && cell.item.name === '100 Xu') && (
                     typeof cell.item.icon === 'string' ? (
                       <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
@@ -576,17 +381,17 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     )
                   )}
                   
-                  {/* Hiển thị có điều kiện cho giá trị và tên */}
+                  {/* Conditional display for value and name */}
                   {itemRarity !== 'jackpot' && (
                     <div className="flex flex-col items-center mt-1 relative z-10">
-                      {/* Nếu icon là một chuỗi (như hình ảnh đô la) và nó có giá trị, hiển thị giá trị + icon */}
+                      {/* If the icon is a string (like the dollar image) and it has a value, display value + icon */}
                       {typeof cell.item.icon === 'string' && cell.item.value > 0 && cell.item.name === '100 Xu' ? (
                         <div className="flex items-center text-xs font-semibold text-gray-700">
                           <span>{cell.item.value}</span>
                           <CoinsIcon src={cell.item.icon} className="w-3 h-3 ml-0.5" />
                         </div>
                       ) : (
-                        // Ngược lại, hiển thị tên và sau đó là giá trị + emoji tiền xu
+                        // Otherwise, display name and then value + coin emoji
                         <>
                           <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center`}>
                             {cell.item.name}
@@ -611,45 +416,11 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     );
   };
 
-  // Hàm hiệu ứng động bộ đếm xu
-  useEffect(() => {
-    // Chỉ kích hoạt hiệu ứng động nếu số xu hiển thị cần theo kịp trạng thái xu thực tế
-    if (displayedCoins === coins) return;
-
-    const coinElement = document.querySelector('.coin-counter');
-    if (coinElement) {
-      coinElement.classList.add('number-changing');
-      const animationEndHandler = () => {
-        coinElement.classList.remove('number-changing');
-        coinElement.removeEventListener('animationend', animationEndHandler);
-      };
-      coinElement.addEventListener('animationend', animationEndHandler);
-
-      return () => {
-        if (coinElement) {
-            coinElement.removeEventListener('animationend', animationEndHandler);
-             coinElement.classList.remove('number-changing');
-        }
-      };
-    }
-     return () => {};
-  }, [displayedCoins, coins]); // Phụ thuộc vào cả displayedCoins và coins state
-
-
-  // Hiển thị chỉ báo tải nếu dữ liệu Auth chưa sẵn sàng
-  if (!isAuthReady) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 text-white text-lg">
-        Đang tải dữ liệu...
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center font-sans">
-      {/* Header chứa nút Đóng và các Tab */}
+      {/* Header containing Close button and Tabs */}
       <div className="w-full max-w-md flex justify-between items-center mb-4">
-        {/* Điều hướng Tab */}
+        {/* Tab Navigation */}
         <div className="flex">
           <button
             onClick={() => setActiveTab('spin')}
@@ -673,7 +444,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           </button>
         </div>
 
-        {/* Nút Đóng */}
+        {/* Close Button */}
         <button
           onClick={onClose}
           className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110"
@@ -689,21 +460,21 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
 
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
-          {/* Hiển thị có điều kiện cho Jackpot Pool */}
+          {/* Conditional rendering for Jackpot Pool */}
           {activeTab === 'spin' && (
-            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ /* Đã điều chỉnh padding */
+            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ /* Adjusted padding */
               jackpotAnimation
                 ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'
                 : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
             }`}>
-              <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider"> {/* Đã điều chỉnh kích thước văn bản */}
+              <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider"> {/* Adjusted text size */}
                 JACKPOT POOL
               </div>
-              <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${ /* Đã điều chỉnh kích thước văn bản và khoảng cách */
+              <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${ /* Adjusted text size and gap */
                 jackpotAnimation ? 'animate-bounce' : ''
               }`}>
                 {jackpotPool.toLocaleString()}
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" /> {/* Đã điều chỉnh kích thước icon */}
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" /> {/* Adjusted icon size */}
               </div>
               <div className="text-yellow-200 text-xs mt-2 opacity-90">
                 Tỉ lệ quay trúng ô JACKPOT: 1%!
@@ -714,15 +485,18 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             </div>
           )}
 
-          {/* Hiển thị có điều kiện cho Coins */}
+          {/* Conditional rendering for Coins - REPLACED WITH CoinDisplay COMPONENT */}
           {activeTab === 'spin' && (
-            <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2"> {/* Đã điều chỉnh khoảng cách và thêm mt-2 */}
-              <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+            <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2">
+              <CoinDisplay 
+                displayedCoins={coins} 
+                isStatsFullscreen={isStatsFullscreen} // Pass the prop
+              />
             </div>
           )}
         </div>
 
-        {/* Nội dung Tab có điều kiện */}
+        {/* Conditional Tab Content */}
         {activeTab === 'spin' && (
           <>
             <div className="flex justify-center mb-6">
@@ -752,7 +526,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     Đang quay...
                   </span>
                 ) : (
-                  <div className="flex items-center justify-center"> {/* Đã loại bỏ w-full ở đây */}
+                  <div className="flex items-center justify-center"> {/* Removed w-full here */}
                     <span className="font-semibold tracking-wide">
                       QUAY
                     </span>
@@ -791,7 +565,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 const itemRarity = item.rarity;
                 return (
                   <div
-                    key={`${item.name}-${item.timestamp}-${index}`} // Key duy nhất hơn
+                    key={`${item.name}-${item.timestamp}-${index}`} // More unique key
                     className={`
                       flex-shrink-0 w-28 h-32 ${getRarityBg(itemRarity)}
                       p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md
@@ -823,10 +597,10 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         )}
       </div>
 
-      {/* Popup Phần thưởng */}
+      {/* Reward Popup */}
       {showRewardPopup && wonRewardDetails && (
         <RewardPopup
-          item={wonRewardDetails} // wonRewardDetails giờ chứa số tiền độc đắc thực tế nếu thắng
+          item={wonRewardDetails} // wonRewardDetails now contains the actual jackpot amount if won
           jackpotWon={jackpotWon}
           onClose={() => setShowRewardPopup(false)}
         />
@@ -852,7 +626,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         }
         .animate-shine { animation: shine 1.5s linear infinite; }
 
-        /* Các hiệu ứng động dành riêng cho Popup */
+        /* Popup specific animations */
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -889,10 +663,10 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         }
 
         body {
-          font-family: 'Inter', sans-serif; /* Ví dụ phông chữ */
+          font-family: 'Inter', sans-serif; /* Example font */
         }
 
-        /* Thanh cuộn tùy chỉnh cho lịch sử phần thưởng */
+        /* Custom scrollbar for reward history */
         .scrollbar-thin {
           scrollbar-width: thin;
           scrollbar-color: #a855f7 /* thumb */ #3b0764 /* track, semi-transparent purple-800 */;
@@ -901,13 +675,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           height: 8px;
         }
         .scrollbar-thin::-webkit-scrollbar-track {
-          background: rgba(59, 7, 100, 0.5); /* purple-800 với độ trong suốt */
+          background: rgba(59, 7, 100, 0.5); /* purple-800 with opacity */
           border-radius: 10px;
         }
         .scrollbar-thin::-webkit-scrollbar-thumb {
           background-color: #a855f7; /* purple-400 */
           border-radius: 10px;
-          border: 2px solid rgba(59, 7, 100, 0.5); /* màu track cho viền */
+          border: 2px solid rgba(59, 7, 100, 0.5); /* track color for border */
         }
         .line-clamp-2 {
           display: -webkit-box;
