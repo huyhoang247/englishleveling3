@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, addDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, runTransaction } from 'firebase/firestore';
+import { auth } from './firebase.js'; // Ensure firebase.js is correctly configured for auth and db
 
-// Global variables for Firebase config (provided by Canvas environment)
-declare const __app_id: string;
-declare const __firebase_config: string;
-declare const __initial_auth_token: string;
-
-// Coin Icon Image URL - Reusing from coin-display.tsx (for consistency)
-const coinIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png";
-
-// SVG Icons
+// SVG Icons (kept as is)
 // Modified CoinsIcon to accept a src prop for image URL
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
@@ -85,6 +76,9 @@ interface Item {
 
 interface LuckyChestGameProps {
   onClose: () => void;
+  currentCoins: number; // Current coins passed from parent
+  onUpdateCoins: (amount: number) => Promise<void>; // Function to update coins in Firestore
+  currentUserId: string | null; // Current user ID
 }
 
 // Reward Popup Component
@@ -143,147 +137,57 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
   );
 };
 
-const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
-  // Firebase state
-  const [db, setDb] = useState<any>(null);
-  const [auth, setAuth] = useState<any>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
 
-  // Game state
+const LuckyChestGame = ({ onClose, currentCoins, onUpdateCoins, currentUserId }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1); // For visual highlighting during spin
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Actual item index won
   const [hasSpun, setHasSpun] = useState(false);
-  const [coins, setCoins] = useState(0); // Initial coins from Firestore
+  // Removed local coins state, now using currentCoins prop
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
-  const [jackpotPool, setJackpotPool] = useState(0); // Initial jackpot pool from Firestore
+  const [jackpotPool, setJackpotPool] = useState(0); // Initialize with 0, will load from Firestore
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
+  const db = getFirestore();
 
   // New states for popup
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
-  // Initialize Firebase and set up auth listener
+  // Cost to spin the wheel
+  const SPIN_COST = 100;
+  const INITIAL_JACKPOT_POOL = 200; // Define initial value for jackpot pool
+
+  // Effect to load jackpot pool from Firestore on component mount
   useEffect(() => {
-    try {
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-
-      if (!Object.keys(firebaseConfig).length) {
-        console.error("Firebase config is missing or empty.");
-        return;
-      }
-
-      const app = initializeApp(firebaseConfig);
-      const firestore = getFirestore(app);
-      const authentication = getAuth(app);
-
-      setDb(firestore);
-      setAuth(authentication);
-
-      const unsubscribe = onAuthStateChanged(authentication, async (user) => {
-        if (user) {
-          setUserId(user.uid);
+    const fetchJackpotPool = async () => {
+      if (!currentUserId) return;
+      try {
+        // Use __app_id for the public collection path
+        const docRef = doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'luckyGame'); // Using public data for jackpot
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setJackpotPool(docSnap.data().jackpotPool || INITIAL_JACKPOT_POOL);
         } else {
-          // Sign in anonymously if no token is provided
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await signInWithCustomToken(authentication, __initial_auth_token);
-          } else {
-            const anonymousUser = await signInAnonymously(authentication);
-            setUserId(anonymousUser.user.uid);
-          }
+          // If document doesn't exist, create it with initial value
+          await runTransaction(db, async (transaction) => {
+            transaction.set(docRef, { jackpotPool: INITIAL_JACKPOT_POOL });
+            setJackpotPool(INITIAL_JACKPOT_POOL);
+          });
         }
-        setIsAuthReady(true);
-      });
-
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Error initializing Firebase:", error);
-    }
-  }, []);
-
-  // Fetch and sync user data and jackpot pool from Firestore
-  useEffect(() => {
-    if (!db || !isAuthReady || !userId) {
-      return;
-    }
-
-    const userDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/gameData`, 'luckyGame');
-    const jackpotDocRef = doc(db, `artifacts/${__app_id}/public/data`, 'jackpotPool');
-
-    // Subscribe to user's coins
-    const unsubscribeCoins = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setCoins(data.coins || 0);
-        setRewardHistory(data.rewardHistory ? JSON.parse(data.rewardHistory) : []); // Parse history
-      } else {
-        // Initialize user data if not exists
-        setDoc(userDocRef, { coins: 1000, rewardHistory: JSON.stringify([]) });
-        setCoins(1000);
+      } catch (error) {
+        console.error("Error fetching jackpot pool:", error);
       }
-    }, (error) => {
-      console.error("Error listening to user coins:", error);
-    });
-
-    // Subscribe to jackpot pool
-    const unsubscribeJackpot = onSnapshot(jackpotDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setJackpotPool(docSnap.data().poolAmount || 200);
-      } else {
-        // Initialize jackpot pool if not exists
-        setDoc(jackpotDocRef, { poolAmount: 200 });
-        setJackpotPool(200);
-      }
-    }, (error) => {
-      console.error("Error listening to jackpot pool:", error);
-    });
-
-    return () => {
-      unsubscribeCoins();
-      unsubscribeJackpot();
     };
-  }, [db, isAuthReady, userId]);
-
-  // Function to update user coins in Firestore
-  const updateUserCoins = async (newCoins: number, newRewardHistory: Item[]) => {
-    if (!db || !userId) {
-      console.error("Firestore not initialized or user not authenticated.");
-      return;
-    }
-    const userDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/gameData`, 'luckyGame');
-    try {
-      await setDoc(userDocRef, { 
-        coins: newCoins,
-        rewardHistory: JSON.stringify(newRewardHistory) // Stringify history before saving
-      }, { merge: true });
-    } catch (e) {
-      console.error("Error updating document: ", e);
-    }
-  };
-
-  // Function to update jackpot pool in Firestore
-  const updateJackpotPool = async (newPoolAmount: number) => {
-    if (!db) {
-      console.error("Firestore not initialized.");
-      return;
-    }
-    const jackpotDocRef = doc(db, `artifacts/${__app_id}/public/data`, 'jackpotPool');
-    try {
-      await setDoc(jackpotDocRef, { poolAmount: newPoolAmount }, { merge: true });
-    } catch (e) {
-      console.error("Error updating jackpot pool: ", e);
-    }
-  };
+    fetchJackpotPool();
+  }, [currentUserId, db]);
 
 
-  // List of available items
+  // List of available items (kept as is)
   const items: Item[] = [
     // Updated item: "100 Vàng" changed to "100 Xu" with a new icon
-    { icon: coinIconUrl, name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
     { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
     { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
     { icon: ZapIcon, name: 'Tia chớp', value: 200, rarity: 'uncommon', color: 'text-cyan-500' },
@@ -301,7 +205,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
   ];
 
-  // Positions of items on the visual wheel
+  // Positions of items on the visual wheel (kept as is)
   const itemPositionsOnWheel = [
     { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
     { row: 1, col: 3 }, { row: 2, col: 3 },
@@ -310,7 +214,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
   ];
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
-  // Get background color based on item rarity
+  // Get background color based on item rarity (kept as is)
   const getRarityBg = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300';
@@ -323,18 +227,35 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     }
   };
 
+  // Function to update jackpot pool in Firestore
+  const updateJackpotPoolInFirestore = async (amount: number) => {
+    if (!currentUserId) {
+      console.error("Cannot update jackpot pool: User not authenticated.");
+      return;
+    }
+    const docRef = doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'luckyGame'); // Using public data for jackpot
+    try {
+      await runTransaction(db, async (transaction) => {
+        const docSnap = await transaction.get(docRef);
+        let currentPool = INITIAL_JACKPOT_POOL;
+        if (docSnap.exists()) {
+          currentPool = docSnap.data().jackpotPool || INITIAL_JACKPOT_POOL;
+        } else {
+            // Create the document if it doesn't exist
+             transaction.set(docRef, { jackpotPool: INITIAL_JACKPOT_POOL });
+        }
+        const newPool = Math.max(INITIAL_JACKPOT_POOL, currentPool + amount); // Ensure it doesn't go below initial
+        transaction.update(docRef, { jackpotPool: newPool });
+        setJackpotPool(newPool); // Update local state
+      });
+    } catch (error) {
+      console.error("Firestore Transaction failed for jackpot pool: ", error);
+    }
+  };
+
   // Function to handle the spinning mechanism
   const spinChest = async () => {
-    if (isSpinning || coins < 100 || !db || !userId) return;
-
-    const currentCoins = coins - 100;
-    // Add random 10-100 coins to the jackpot pool when spinning
-    const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
-    const newJackpotPool = jackpotPool + randomCoinsToAdd;
-
-    // Update coins and jackpot pool in Firestore immediately
-    await updateUserCoins(currentCoins, rewardHistory);
-    await updateJackpotPool(newJackpotPool);
+    if (isSpinning || currentCoins < SPIN_COST) return; // Use currentCoins prop
 
     setIsSpinning(true);
     setSelectedIndex(-1);
@@ -342,6 +263,13 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     setHasSpun(false);
     setJackpotWon(false);
     setShowRewardPopup(false); // Hide popup before new spin
+
+    // Deduct spin cost from user's coins
+    await onUpdateCoins(-SPIN_COST);
+
+    // Add random 10-100 coins to the jackpot pool when spinning
+    const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
+    await updateJackpotPoolInFirestore(randomCoinsToAdd); // Update Firestore
 
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
@@ -402,35 +330,29 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
         setTimeout(spinAnimation, currentSpeed);
       } else {
         // Animation finished
-        setTimeout(async () => { // Make this async
+        setTimeout(async () => { // Make this async to await Firestore updates
           setIsSpinning(false);
           setHasSpun(true);
           setSelectedIndex(targetLandedItemIndex);
 
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() }; // Add timestamp
-          const newRewardHistory = [wonItem, ...rewardHistory].slice(0, 10); // Add to history, keep max 10 items
+          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); // Add to history, keep max 10 items
           
           let actualWonAmount = wonItem.value; // Default to item's value
-          let finalCoins = currentCoins;
-          let finalJackpotPool = newJackpotPool;
 
           if (wonItem.rarity === 'jackpot') {
             actualWonAmount = jackpotPool; // Capture the current pool value for the win
             setJackpotWon(true);
             setJackpotAnimation(true);
-            finalCoins += actualWonAmount; // Add the actual captured amount
-            finalJackpotPool = 200; // Reset after using
+            await onUpdateCoins(actualWonAmount); // Add the actual captured amount to user's coins
+            await updateJackpotPoolInFirestore(-jackpotPool + INITIAL_JACKPOT_POOL); // Reset jackpot pool
             
             setTimeout(() => {
               setJackpotAnimation(false);
             }, 3000);
           } else {
-            finalCoins += wonItem.value;
+            await onUpdateCoins(wonItem.value); // Add item's value to user's coins
           }
-
-          // Update Firestore after determining actual won amount
-          await updateUserCoins(finalCoins, newRewardHistory);
-          await updateJackpotPool(finalJackpotPool);
 
           // Set details for popup, ensuring jackpot amount is correctly passed if it was a jackpot
           setWonRewardDetails({ ...wonItem, value: actualWonAmount }); // Update the value in wonRewardDetails
@@ -441,7 +363,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
     spinAnimation();
   };
 
-  // Renders the wheel grid
+  // Renders the wheel grid (kept as is)
   const renderGrid = () => {
     const grid: ({ item: Item; isWheelItem: boolean; isSelected: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
 
@@ -595,13 +517,6 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
       </div>
 
       <div className="max-w-md w-full">
-        {/* Display userId */}
-        {userId && (
-          <div className="text-center text-sm text-gray-300 mb-2">
-            User ID: <span className="font-mono text-xs bg-gray-700 px-2 py-1 rounded-md">{userId}</span>
-          </div>
-        )}
-
         <div className="text-center mb-6">
           {/* Conditional rendering for Jackpot Pool */}
           {activeTab === 'spin' && (
@@ -617,7 +532,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                 jackpotAnimation ? 'animate-bounce' : ''
               }`}>
                 {jackpotPool.toLocaleString()}
-                <CoinsIcon src={coinIconUrl} className="w-8 h-8" /> {/* Adjusted icon size */}
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" /> {/* Adjusted icon size */}
               </div>
               <div className="text-yellow-200 text-xs mt-2 opacity-90">
                 Tỉ lệ quay trúng ô JACKPOT: 1%!
@@ -632,7 +547,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
           {activeTab === 'spin' && (
             <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2"> {/* Adjusted gap and added mt-2 */}
               <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center"> {/* Adjusted padding and added flex items-center */}
-                {coins.toLocaleString()} Xu
+                {currentCoins.toLocaleString()} Xu
               </div>
             </div>
           )}
@@ -649,11 +564,11 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             <div className="flex justify-center mb-6">
               <button
                 onClick={spinChest}
-                disabled={isSpinning || coins < 100 || !isAuthReady}
+                disabled={isSpinning || currentCoins < SPIN_COST} // Use currentCoins prop
                 className={`
                   px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
                   inline-flex items-center justify-center relative group /* Đổi thành inline-flex để vừa với nội dung */
-                  ${isSpinning || coins < 100 || !isAuthReady
+                  ${isSpinning || currentCoins < SPIN_COST
                     ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80'
                     : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
                   }
@@ -674,16 +589,16 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     </span>
                     <span className={`
                       h-4 w-px mx-1.5 transition-colors duration-200 
-                      ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
+                      ${currentCoins < SPIN_COST ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
                     `}></span>
                     <span className="flex items-center">
-                      {coins < 100 ? (
+                      {currentCoins < SPIN_COST ? (
                         <span className="font-medium">Hết xu</span>
                       ) : (
                         <>
-                          <span className="font-medium">100</span>
+                          <span className="font-medium">{SPIN_COST}</span>
                           <CoinsIcon
-                            src={coinIconUrl}
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
                             className="w-4 h-4 inline-block ml-1"
                           />
                         </>
@@ -692,11 +607,8 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                   </div>
                 )}
               </button>
-              {(coins < 100 && !isSpinning) && (
+              {currentCoins < SPIN_COST && !isSpinning && (
                 <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
-              )}
-               {!isAuthReady && (
-                <p className="text-blue-400 text-sm mt-2 font-semibold">Đang tải dữ liệu người dùng...</p>
               )}
             </div>
           </>
@@ -725,7 +637,7 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
                     <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
                       {item.name}
                     </div>
-                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src={coinIconUrl} className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
+                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
                     {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
                   </div>
                 );
