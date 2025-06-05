@@ -500,37 +500,45 @@ const LuckyChestGame = ({ onClose }: LuckyChestGameProps) => {
             </div>
 
             <div className="text-center mb-6">
-              {/* START: Redesigned Spin Button */}
+              {/* START: Redesigned Spin Button (More Compact) */}
               <button
                 onClick={spinChest}
                 disabled={isSpinning || coins < 100}
                 className={`
-                  px-5 py-2.5 text-lg font-bold rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
-                  min-w-[200px] flex items-center justify-center
+                  px-4 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
+                  w-auto min-w-[160px] flex items-center justify-center relative group
                   ${isSpinning || coins < 100
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner opacity-70'
-                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl focus:ring-green-400'
+                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' // Adjusted disabled state
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
                   }
                 `}
               >
                 {isSpinning ? (
-                  <span className="flex items-center justify-center">🔄 Đang quay...</span>
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Đang quay...
+                  </span>
                 ) : (
-                  <div className="flex items-center justify-center w-full">
-                    <span className="flex items-center">
-                      <span className="mr-1.5 text-xl">🎯</span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-semibold tracking-wide">
                       QUAY
                     </span>
-                    <span className="h-5 w-px bg-current opacity-40 mx-2.5"></span> {/* Separator */}
-                    <span className={`flex items-center ${coins < 100 ? 'opacity-80' : ''}`}>
+                    <span className={`
+                      h-4 w-px mx-2 transition-colors duration-200
+                      ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
+                    `}></span>
+                    <span className="flex items-center">
                       {coins < 100 ? (
-                        'Hết xu'
+                        <span className="font-medium">Hết xu</span>
                       ) : (
                         <>
-                          <span>100</span>
+                          <span className="font-medium">100</span>
                           <CoinsIcon
                             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
-                            className="w-5 h-5 inline-block ml-1.5"
+                            className="w-4 h-4 inline-block ml-1"
                           />
                         </>
                       )}
