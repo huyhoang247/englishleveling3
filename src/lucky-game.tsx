@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// ... (SVG Icons and other interfaces remain the same)
-// Modified CoinsIcon to accept a src prop for image URL
+// SVG Icons
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -9,7 +8,7 @@ const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => 
         src={src}
         alt="Coin Icon"
         className={className}
-        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }} // Fallback
+        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }}
       />
     );
   }
@@ -76,13 +75,18 @@ interface LuckyChestGameProps {
   currentUserId: string | null;
   initialCoins: number;
   initialJackpotPool: number;
-  onUpdateMainCoinsAndFirestore: (userId: string, amount: number) => Promise<void>; // Renamed
-  onDisplayCoinsUpdate: (newDisplayedCoins: number) => void; // New prop
+  onUpdateMainCoinsAndFirestore: (userId: string, amount: number) => Promise<void>;
+  onDisplayCoinsUpdate: (newDisplayedCoins: number) => void;
   onUpdateJackpotPool: (amountToAddOrNewValue: number, isAbsoluteValue?: boolean) => Promise<void>;
 }
 
-interface RewardPopupProps { /* ... */ item: Item; jackpotWon: boolean; onClose: () => void; }
-const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => { /* ... */ 
+interface RewardPopupProps {
+  item: Item;
+  jackpotWon: boolean;
+  onClose: () => void;
+}
+
+const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
   const getRarityBgClass = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
@@ -136,17 +140,16 @@ const LuckyChestGame = ({
   currentUserId,
   initialCoins,
   initialJackpotPool,
-  onUpdateMainCoinsAndFirestore, // Renamed
-  onDisplayCoinsUpdate,          // New
+  onUpdateMainCoinsAndFirestore,
+  onDisplayCoinsUpdate,
   onUpdateJackpotPool
 }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1);
   const [hasSpun, setHasSpun] = useState(false);
-  const [coins, setCoins] = useState(initialCoins); // Local coins for LuckyGame UI
+  const [coins, setCoins] = useState(initialCoins);
   const [jackpotPool, setJackpotPool] = useState(initialJackpotPool);
-  // ... (other states remain the same)
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
@@ -158,14 +161,13 @@ const LuckyChestGame = ({
 
   useEffect(() => {
     setCoins(initialCoins);
-    // No need to call onDisplayCoinsUpdate here, as initialCoins should already be reflected in displayedCoins from parent
   }, [initialCoins]);
 
   useEffect(() => {
     setJackpotPool(initialJackpotPool);
   }, [initialJackpotPool]);
 
-  const items: Item[] = [ /* ... item definitions ... */ 
+  const items: Item[] = [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
     { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
     { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
@@ -183,14 +185,16 @@ const LuckyChestGame = ({
     { icon: HeartIcon, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
     { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
   ];
-  const itemPositionsOnWheel = [ /* ... positions ... */ 
+
+  const itemPositionsOnWheel = [
     { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
     { row: 1, col: 3 }, { row: 2, col: 3 },
     { row: 3, col: 3 }, { row: 3, col: 2 }, { row: 3, col: 1 }, { row: 3, col: 0 },
     { row: 2, col: 0 }, { row: 1, col: 0 }
   ];
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
-  const getRarityBg = (rarity: Item['rarity']) => { /* ... */ 
+
+  const getRarityBg = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300';
       case 'uncommon': return 'bg-green-100 border-green-300';
@@ -203,18 +207,20 @@ const LuckyChestGame = ({
   };
 
   const spinChest = async () => {
-    if (isSpinning || coins < 100 || !currentUserId) return;
+    if (isSpinning || coins < 100 || !currentUserId) {
+      console.log("Spin conditions not met:", { isSpinning, coins, currentUserId });
+      return;
+    }
 
     const spinCost = 100;
     const newCoinsAfterCost = coins - spinCost;
     setCoins(newCoinsAfterCost);
-    onDisplayCoinsUpdate(newCoinsAfterCost); // Update display immediately
+    onDisplayCoinsUpdate(newCoinsAfterCost);
 
     try {
       await onUpdateMainCoinsAndFirestore(currentUserId, -spinCost);
     } catch (error) {
       console.error("Error updating coins for spin cost:", error);
-      // Revert local and display if Firestore update fails
       setCoins(coins); 
       onDisplayCoinsUpdate(coins);
       return;
@@ -227,11 +233,10 @@ const LuckyChestGame = ({
       await onUpdateJackpotPool(randomCoinsToAdd, false);
     } catch (error) {
       console.error("Error updating jackpot pool contribution:", error);
-      setJackpotPool(jackpotPool); // Revert
+      setJackpotPool(jackpotPool);
     }
 
     setIsSpinning(true);
-    // ... (rest of the spin setup: selectedIndex, finalLandedItemIndex, etc.)
     setSelectedIndex(-1);
     setFinalLandedItemIndex(-1);
     setHasSpun(false);
@@ -239,25 +244,37 @@ const LuckyChestGame = ({
     setShowRewardPopup(false);
 
     let targetLandedItemIndex: number;
-    // ... (logic to determine targetLandedItemIndex)
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
-    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) { 
+
+    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
         const otherItemIndicesOnWheel: number[] = [];
-        for (let i = 0; i < NUM_WHEEL_SLOTS; i++) { if (i !== jackpotItemArrayIndex) otherItemIndicesOnWheel.push(i); }
-        if (otherItemIndicesOnWheel.length > 0) targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
-        else { targetLandedItemIndex = Math.floor(Math.random() * NUM_WHEEL_SLOTS); if (NUM_WHEEL_SLOTS === 0) targetLandedItemIndex = 0;}
+        for (let i = 0; i < NUM_WHEEL_SLOTS; i++) {
+            if (i !== jackpotItemArrayIndex) {
+                otherItemIndicesOnWheel.push(i);
+            }
+        }
+        if (otherItemIndicesOnWheel.length > 0) {
+            targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
+        } else { 
+             targetLandedItemIndex = Math.floor(Math.random() * NUM_WHEEL_SLOTS);
+             if (NUM_WHEEL_SLOTS === 0) targetLandedItemIndex = 0;
+        }
     }
+
     setFinalLandedItemIndex(targetLandedItemIndex);
 
-    // ... (Spin animation logic)
     const numFullRotations = 2;
     const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
-    let currentVisualStepIndex = 0; let currentSpeed = 50; const finalPauseDuration = 700;
+    let currentVisualStepIndex = 0;
+    let currentSpeed = 50;
+    const finalPauseDuration = 700;
+
     const spinAnimation = () => {
       const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
       setSelectedIndex(currentHighlightIndex);
+
       if (currentVisualStepIndex < totalVisualSteps) {
         const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
         const fastSpeed = 50; const moderateSpeed = 120;
@@ -269,25 +286,39 @@ const LuckyChestGame = ({
         setTimeout(spinAnimation, currentSpeed);
       } else {
         setTimeout(async () => {
-          setIsSpinning(false); setHasSpun(true); setSelectedIndex(targetLandedItemIndex);
+          setIsSpinning(false);
+          setHasSpun(true);
+          setSelectedIndex(targetLandedItemIndex);
+
           const wonItemConfig = items[targetLandedItemIndex];
           const wonItem = { ...wonItemConfig, timestamp: Date.now() };
           setRewardHistory(prev => [wonItem, ...prev].slice(0, 10));
+          
           let actualWonAmount = wonItem.value;
-          let currentLocalCoins = newCoinsAfterCost; // Start from coins after spin cost
+          let currentLocalCoins = newCoinsAfterCost; 
 
           if (wonItem.rarity === 'jackpot') {
             actualWonAmount = newJackpotPoolAfterContribution;
-            setJackpotWon(true); setJackpotAnimation(true);
+            setJackpotWon(true);
+            setJackpotAnimation(true);
             
             const newCoinsAfterJackpot = currentLocalCoins + actualWonAmount;
             setCoins(newCoinsAfterJackpot);
             onDisplayCoinsUpdate(newCoinsAfterJackpot);
-            try { await onUpdateMainCoinsAndFirestore(currentUserId!, actualWonAmount); } 
-            catch (e) { console.error(e); setCoins(currentLocalCoins); onDisplayCoinsUpdate(currentLocalCoins); /* Revert if error */ }
+            try {
+              await onUpdateMainCoinsAndFirestore(currentUserId!, actualWonAmount);
+            } catch (error) {
+              console.error("Error updating coins for jackpot win:", error);
+              setCoins(currentLocalCoins); 
+              onDisplayCoinsUpdate(currentLocalCoins);
+            }
 
             setJackpotPool(INITIAL_JACKPOT_POOL_RESET_VALUE);
-            try { await onUpdateJackpotPool(INITIAL_JACKPOT_POOL_RESET_VALUE, true); } catch(e) { console.error(e); /* Revert jackpot pool not strictly needed for display */ }
+            try {
+              await onUpdateJackpotPool(INITIAL_JACKPOT_POOL_RESET_VALUE, true);
+            } catch (error) {
+              console.error("Error resetting jackpot pool:", error);
+            }
             
             setTimeout(() => setJackpotAnimation(false), 3000);
           } else {
@@ -295,8 +326,13 @@ const LuckyChestGame = ({
               const newCoinsAfterWin = currentLocalCoins + wonItem.value;
               setCoins(newCoinsAfterWin);
               onDisplayCoinsUpdate(newCoinsAfterWin);
-              try { await onUpdateMainCoinsAndFirestore(currentUserId!, wonItem.value); }
-              catch(e) { console.error(e); setCoins(currentLocalCoins); onDisplayCoinsUpdate(currentLocalCoins); /* Revert if error */ }
+              try {
+                await onUpdateMainCoinsAndFirestore(currentUserId!, wonItem.value);
+              } catch (error) {
+                console.error("Error updating coins for regular win:", error);
+                setCoins(currentLocalCoins);
+                onDisplayCoinsUpdate(currentLocalCoins);
+              }
             }
           }
           setWonRewardDetails({ ...wonItem, value: actualWonAmount });
@@ -307,27 +343,102 @@ const LuckyChestGame = ({
     spinAnimation();
   };
 
-  const renderGrid = () => { /* ... */ 
+  const renderGrid = () => {
     const grid: ({ item: Item; isWheelItem: boolean; isSelected: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
+
     itemPositionsOnWheel.forEach((pos, indexOnWheel) => {
       if (indexOnWheel < items.length && items[indexOnWheel]) {
-        grid[pos.row][pos.col] = { item: items[indexOnWheel], isWheelItem: true, isSelected: selectedIndex === indexOnWheel };
+        grid[pos.row][pos.col] = {
+          item: items[indexOnWheel],
+          isWheelItem: true,
+          isSelected: selectedIndex === indexOnWheel
+        };
       }
     });
+
     return (
       <div className="grid grid-cols-4 gap-2 p-4 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-2xl border-4 border-amber-300">
         {grid.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
             if (rowIndex === 1 && colIndex === 1) {
-              return ( <div key={`chest-${rowIndex}-${colIndex}`} className="col-span-2 row-span-2 flex items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg border-4 border-yellow-300 relative overflow-hidden"> <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent"></div> <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" alt="Treasure Chest" className={`w-16 h-16 transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`} onError={(e) => { e.currentTarget.src = 'https://placehold.co/64x64/cccccc/000000?text=Lỗi'; }} /> </div> );
+              return (
+                <div
+                  key={`chest-${rowIndex}-${colIndex}`}
+                  className="col-span-2 row-span-2 flex items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg border-4 border-yellow-300 relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent"></div>
+                  <img
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png"
+                    alt="Treasure Chest"
+                    className={`w-16 h-16 transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`}
+                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/64x64/cccccc/000000?text=Lỗi'; }}
+                  />
+                </div>
+              );
             }
-            if ((rowIndex === 1 && colIndex === 2) || (rowIndex === 2 && colIndex === 1) || (rowIndex === 2 && colIndex === 2)) { return null; }
+            if ((rowIndex === 1 && colIndex === 2) ||
+                (rowIndex === 2 && colIndex === 1) ||
+                (rowIndex === 2 && colIndex === 2)) {
+              return null;
+            }
+
             if (cell && cell.isWheelItem) {
               const itemRarity = cell.item.rarity;
               const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
               const isTrulySelected = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
               const displaySelected = cell.isSelected || isTrulySelected;
-              return ( <div key={`item-${rowIndex}-${colIndex}`} className={` aspect-square flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 relative overflow-hidden ${getRarityBg(itemRarity)} ${displaySelected && itemRarity !== 'jackpot' ? 'shadow-[inset_0_0_0_3px_theme(\'colors.yellow.400\')] scale-110 bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : ''} ${displaySelected && itemRarity === 'jackpot' ? 'shadow-[inset_0_0_0_4px_theme(\'colors.amber.500\')] scale-110 z-20 animate-pulse' : ''} ${isSpinning && cell.isSelected ? (itemRarity === 'jackpot' ? 'animate-none' : 'animate-pulse') : ''} ${isTrulySelected && itemRarity !== 'jackpot' ? 'animate-none shadow-[inset_0_0_0_3px_theme(\'colors.green.500\')] bg-green-200' : ''} ${isTrulySelected && itemRarity === 'jackpot' ? 'animate-none shadow-[inset_0_0_0_4px_theme(\'colors.red.600\')] z-20' : ''} hover:scale-105 `}> {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity !== 'jackpot' && ( <div className={`absolute inset-0 ${isTrulySelected ? 'bg-green-400/30' : 'bg-yellow-300/50'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div> )} {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && ( <div className={`absolute inset-0 ${isTrulySelected ? 'bg-red-500/50' : 'bg-amber-400/60'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div> )} {!(typeof cell.item.icon === 'string' && cell.item.name === '100 Xu') && ( typeof cell.item.icon === 'string' ? ( <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} /> ) : ( <cell.item.icon className={`w-6 h-6 ${cell.item.color} relative z-10`} /> ) )} {itemRarity !== 'jackpot' && ( <div className="flex flex-col items-center mt-1 relative z-10"> {typeof cell.item.icon === 'string' && cell.item.value > 0 && cell.item.name === '100 Xu' ? ( <div className="flex items-center text-xs font-semibold text-gray-700"> <span>{cell.item.value}</span> <CoinsIcon src={cell.item.icon} className="w-3 h-3 ml-0.5" /> </div> ) : ( <> <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center`}> {cell.item.name} </span> {cell.item.value > 0 && ( <span className="text-xs text-gray-600"> {cell.item.value}💰 </span> )} </> )} </div> )} </div> );
+
+              return (
+                <div
+                  key={`item-${rowIndex}-${colIndex}`}
+                  className={`
+                    aspect-square flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 relative overflow-hidden
+                    ${getRarityBg(itemRarity)}
+                    ${displaySelected && itemRarity !== 'jackpot' ? 'shadow-[inset_0_0_0_3px_theme(\'colors.yellow.400\')] scale-110 bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : ''}
+                    ${displaySelected && itemRarity === 'jackpot' ? 'shadow-[inset_0_0_0_4px_theme(\'colors.amber.500\')] scale-110 z-20 animate-pulse' : ''}
+                    ${isSpinning && cell.isSelected ? (itemRarity === 'jackpot' ? 'animate-none' : 'animate-pulse') : ''}
+                    ${isTrulySelected && itemRarity !== 'jackpot' ? 'animate-none shadow-[inset_0_0_0_3px_theme(\'colors.green.500\')] bg-green-200' : ''}
+                    ${isTrulySelected && itemRarity === 'jackpot' ? 'animate-none shadow-[inset_0_0_0_4px_theme(\'colors.red.600\')] z-20' : ''}
+                    hover:scale-105
+                  `}
+                >
+                  {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity !== 'jackpot' && (
+                    <div className={`absolute inset-0 ${isTrulySelected ? 'bg-green-400/30' : 'bg-yellow-300/50'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
+                  )}
+                    {(displaySelected || (isSpinning && cell.isSelected)) && itemRarity === 'jackpot' && (
+                    <div className={`absolute inset-0 ${isTrulySelected ? 'bg-red-500/50' : 'bg-amber-400/60'} ${isSpinning && cell.isSelected ? 'animate-pulse' : ''}`}></div>
+                  )}
+                  {!(typeof cell.item.icon === 'string' && cell.item.name === '100 Xu') && (
+                    typeof cell.item.icon === 'string' ? (
+                      <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                    ) : (
+                      <cell.item.icon className={`w-6 h-6 ${cell.item.color} relative z-10`} />
+                    )
+                  )}
+                  
+                  {itemRarity !== 'jackpot' && (
+                    <div className="flex flex-col items-center mt-1 relative z-10">
+                      {typeof cell.item.icon === 'string' && cell.item.value > 0 && cell.item.name === '100 Xu' ? (
+                        <div className="flex items-center text-xs font-semibold text-gray-700">
+                          <span>{cell.item.value}</span>
+                          <CoinsIcon src={cell.item.icon} className="w-3 h-3 ml-0.5" />
+                        </div>
+                      ) : (
+                        <>
+                          <span className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center`}>
+                            {cell.item.name}
+                          </span>
+                          {cell.item.value > 0 && (
+                            <span className="text-xs text-gray-600">
+                              {cell.item.value}💰
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
             }
             return <div key={`empty-outer-${rowIndex}-${colIndex}`} className="aspect-square bg-transparent"></div>;
           })
@@ -338,30 +449,267 @@ const LuckyChestGame = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center font-sans">
-      {/* ... (Header, Tabs, Jackpot Pool display, Coins display within LuckyChestGame UI remain the same) ... */}
       <div className="w-full max-w-md flex justify-between items-center mb-4">
         <div className="flex">
-          <button onClick={() => setActiveTab('spin')} className={`px-4 py-2 rounded-l-xl text-md font-bold transition-all duration-300 ${activeTab === 'spin' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>Quay</button>
-          <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-r-xl text-md font-bold transition-all duration-300 ${activeTab === 'history' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>Lịch sử</button>
+          <button
+            onClick={() => setActiveTab('spin')}
+            className={`px-4 py-2 rounded-l-xl text-md font-bold transition-all duration-300 ${
+              activeTab === 'spin'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Quay
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-r-xl text-md font-bold transition-all duration-300 ${
+              activeTab === 'history'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            Lịch sử
+          </button>
         </div>
-        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110"> <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close icon" className="w-5 h-5 text-indigo-300" onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }} /> </button>
+
+        <button
+          onClick={onClose}
+          className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110"
+        >
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
+            alt="Close icon"
+            className="w-5 h-5 text-indigo-300"
+            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }}
+          />
+        </button>
       </div>
+
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
-          {activeTab === 'spin' && ( <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'}`}> <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider">JACKPOT POOL</div> <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${jackpotAnimation ? 'animate-bounce' : ''}`}> {jackpotPool.toLocaleString()} <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" /> </div> <div className="text-yellow-200 text-xs mt-2 opacity-90">Tỉ lệ quay trúng ô JACKPOT: 1%!</div> {jackpotAnimation && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div>} </div> )}
-          {activeTab === 'spin' && ( <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2"> <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center">{coins.toLocaleString()} Xu</div> </div> )}
+          {activeTab === 'spin' && (
+            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${
+              jackpotAnimation
+                ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl'
+                : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'
+            }`}>
+              <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider">
+                JACKPOT POOL
+              </div>
+              <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${
+                jackpotAnimation ? 'animate-bounce' : ''
+              }`}>
+                {jackpotPool.toLocaleString()}
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
+              </div>
+              <div className="text-yellow-200 text-xs mt-2 opacity-90">
+                Tỉ lệ quay trúng ô JACKPOT: 1%!
+              </div>
+              {jackpotAnimation && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'spin' && (
+            <div className="flex justify-center items-center gap-2 text-white text-sm sm:text-base mt-2">
+              <div className="bg-yellow-600/80 backdrop-blur-sm px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center">
+                {coins.toLocaleString()} Xu
+              </div>
+            </div>
+          )}
         </div>
-        {activeTab === 'spin' && ( <> <div className="flex justify-center mb-6">{renderGrid()}</div> <div className="flex justify-center mb-6"> <button onClick={spinChest} disabled={isSpinning || coins < 100 || !currentUserId} className={`px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75 inline-flex items-center justify-center relative group ${isSpinning || coins < 100 || !currentUserId ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'}`}> {isSpinning ? ( <span className="flex items-center"> <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Đang quay... </span> ) : ( <div className="flex items-center justify-center"> <span className="font-semibold tracking-wide">QUAY</span> <span className={`h-4 w-px mx-1.5 transition-colors duration-200 ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}`}></span> <span className="flex items-center"> {coins < 100 ? (<span className="font-medium">Hết xu</span>) : (<><span className="font-medium">100</span><CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 inline-block ml-1" /></>)} </span> </div> )} </button> {(coins < 100 || !currentUserId) && !isSpinning && ( <p className="text-red-400 text-sm mt-2 font-semibold"> {!currentUserId ? "Vui lòng đăng nhập để chơi." : "Bạn không đủ xu để quay!"} </p> )} </div> </> )}
-        {activeTab === 'history' && rewardHistory.length > 0 && ( <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg"> <h3 className="text-white font-bold mb-4 text-lg text-center">📜 Lịch sử nhận thưởng 📜</h3> <div className="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-purple-800/50"> {rewardHistory.map((item, index) => { const itemRarity = item.rarity; return ( <div key={`${item.name}-${item.timestamp}-${index}`} className={`flex-shrink-0 w-28 h-32 ${getRarityBg(itemRarity)} p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105`}> {typeof item.icon === 'string' ? (<img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />) : (<item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />)} <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>{item.name}</div> {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>} {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>} </div> ); })} </div> {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>} </div> )}
-        {activeTab === 'history' && rewardHistory.length === 0 && ( <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg text-center text-white"> <p className="text-lg">Chưa có phần thưởng nào trong lịch sử.</p> <p className="text-sm opacity-80 mt-2">Hãy quay để bắt đầu nhận thưởng!</p> </div> )}
+
+        {activeTab === 'spin' && (
+          <>
+            <div className="flex justify-center mb-6">
+              {renderGrid()}
+            </div>
+            <div className="flex justify-center mb-6">
+              <button
+                onClick={spinChest}
+                disabled={isSpinning || coins < 100 || !currentUserId}
+                className={`
+                  px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75
+                  inline-flex items-center justify-center relative group
+                  ${isSpinning || coins < 100 || !currentUserId
+                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400'
+                  }
+                `}
+              >
+                {isSpinning ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Đang quay...
+                  </span>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <span className="font-semibold tracking-wide">
+                      QUAY
+                    </span>
+                    <span className={`
+                      h-4 w-px mx-1.5 transition-colors duration-200 
+                      ${coins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
+                    `}></span>
+                    <span className="flex items-center">
+                      {coins < 100 ? (
+                        <span className="font-medium">Hết xu</span>
+                      ) : (
+                        <>
+                          <span className="font-medium">100</span>
+                          <CoinsIcon
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+                            className="w-4 h-4 inline-block ml-1"
+                          />
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
+              </button>
+              {(coins < 100 || !currentUserId) && !isSpinning && (
+                <p className="text-red-400 text-sm mt-2 font-semibold">
+                  {!currentUserId ? "Vui lòng đăng nhập để chơi." : "Bạn không đủ xu để quay!"}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'history' && rewardHistory.length > 0 && (
+          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg">
+            <h3 className="text-white font-bold mb-4 text-lg text-center">📜 Lịch sử nhận thưởng 📜</h3>
+            <div className="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-purple-800/50">
+              {rewardHistory.map((item, index) => {
+                const itemRarity = item.rarity;
+                return (
+                  <div
+                    key={`${item.name}-${item.timestamp}-${index}`}
+                    className={`
+                      flex-shrink-0 w-28 h-32 ${getRarityBg(itemRarity)}
+                      p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md
+                      hover:shadow-xl transition-all duration-200 transform hover:scale-105
+                    `}
+                  >
+                    {typeof item.icon === 'string' ? (
+                      <img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                    ) : (
+                      <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
+                    )}
+                    <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
+                      {item.name}
+                    </div>
+                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
+                    {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
+                  </div>
+                );
+              })}
+            </div>
+            {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
+          </div>
+        )}
+        {activeTab === 'history' && rewardHistory.length === 0 && (
+          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg text-center text-white">
+            <p className="text-lg">Chưa có phần thưởng nào trong lịch sử.</p>
+            <p className="text-sm opacity-80 mt-2">Hãy quay để bắt đầu nhận thưởng!</p>
+          </div>
+        )}
       </div>
 
       {showRewardPopup && wonRewardDetails && (
-        <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} />
+        <RewardPopup
+          item={wonRewardDetails}
+          jackpotWon={jackpotWon}
+          onClose={() => setShowRewardPopup(false)}
+        />
       )}
+
       <style jsx global>{`
-        /* ... (Global styles remain the same) ... */
-        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; } @keyframes celebrate { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); } } .animate-celebrate { animation: celebrate 0.8s ease-in-out forwards; } @keyframes shine { 0% { transform: translateX(-100%) skewX(-20deg); } 100% { transform: translateX(100%) skewX(-20deg); } } .animate-shine { animation: shine 1.5s linear infinite; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } @keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 70% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } } .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } } .animate-float { animation: float 2s ease-in-out infinite; } @keyframes bounce-once { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } } .animate-bounce-once { animation: bounce-once 0.8s ease-in-out; } body { font-family: 'Inter', sans-serif; } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #a855f7 #3b0764; } .scrollbar-thin::-webkit-scrollbar { height: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: rgba(59, 7, 100, 0.5); border-radius: 10px; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #a855f7; border-radius: 10px; border: 2px solid rgba(59, 7, 100, 0.5); } .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @keyframes fade-in-up {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+
+        @keyframes celebrate {
+          0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
+          50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
+        }
+        .animate-celebrate { animation: celebrate 0.8s ease-in-out forwards; }
+
+        @keyframes shine {
+          0% { transform: translateX(-100%) skewX(-20deg); }
+          100% { transform: translateX(100%) skewX(-20deg); }
+        }
+        .animate-shine { animation: shine 1.5s linear infinite; }
+
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+
+        @keyframes pop-in {
+          0% { transform: scale(0.8); opacity: 0; }
+          70% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); }
+        }
+        .animate-pop-in {
+          animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .animate-float {
+          animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce-once {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-15px); }
+          60% { transform: translateY(-7px); }
+        }
+        .animate-bounce-once {
+          animation: bounce-once 0.8s ease-in-out;
+        }
+
+        body {
+          font-family: 'Inter', sans-serif;
+        }
+
+        .scrollbar-thin {
+          scrollbar-width: thin;
+          scrollbar-color: #a855f7 #3b0764;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+          height: 8px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: rgba(59, 7, 100, 0.5);
+          border-radius: 10px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background-color: #a855f7;
+          border-radius: 10px;
+          border: 2px solid rgba(59, 7, 100, 0.5);
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       `}</style>
     </div>
   );
