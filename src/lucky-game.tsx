@@ -78,6 +78,8 @@ interface LuckyChestGameProps {
   isStatsFullscreen: boolean;
   currentCoins: number; // Thêm prop để nhận số xu hiện tại
   onUpdateCoins: (amount: number) => void; // Thêm prop để cập nhật số xu
+  currentJackpotPool: number; // NEW: Prop for global jackpot pool
+  onUpdateJackpotPool: (amount: number, resetToDefault?: boolean) => void; // NEW: Prop to update global jackpot pool
 }
 
 // Reward Popup Component
@@ -137,7 +139,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins }: LuckyChestGameProps) => {
+const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1); // For visual highlighting during spin
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Actual item index won
@@ -145,8 +147,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   // Loại bỏ state coins cục bộ, giờ nó nhận từ props
   // const [coins, setCoins] = useState(1000); 
   const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
-  // Set initial jackpot pool to 200
-  const [jackpotPool, setJackpotPool] = useState(200);
+  // REMOVED local jackpotPool state, now using currentJackpotPool prop
+  // const [jackpotPool, setJackpotPool] = useState(200);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // New state for tabs
@@ -206,7 +208,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
     // Add random 10-100 coins to the jackpot pool when spinning
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
-    setJackpotPool(prev => prev + randomCoinsToAdd);
+    onUpdateJackpotPool(randomCoinsToAdd); // Update global jackpot pool
 
     setIsSpinning(true);
     setSelectedIndex(-1);
@@ -285,11 +287,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           let actualWonAmount = wonItem.value; // Default to item's value
 
           if (wonItem.rarity === 'jackpot') {
-            actualWonAmount = jackpotPool; // Capture the current pool value for the win
+            actualWonAmount = currentJackpotPool; // Capture the current pool value for the win from prop
             setJackpotWon(true);
             setJackpotAnimation(true);
             onUpdateCoins(actualWonAmount); // Cập nhật xu khi trúng jackpot
-            setJackpotPool(200); // Reset after using
+            onUpdateJackpotPool(0, true); // Reset global jackpot pool after win
             
             setTimeout(() => {
               setJackpotAnimation(false);
@@ -400,7 +402,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                           </span>
                           {cell.item.value > 0 && (
                             <span className="text-xs text-gray-600">
-                              {cell.item.value}💰
+                              {item.value.toLocaleString()}💰
                             </span>
                           )}
                         </>
@@ -475,7 +477,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${ /* Adjusted text size and gap */
                 jackpotAnimation ? 'animate-bounce' : ''
               }`}>
-                {jackpotPool.toLocaleString()}
+                {currentJackpotPool.toLocaleString()} {/* Use currentJackpotPool prop */}
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" /> {/* Adjusted icon size */}
               </div>
               <div className="text-yellow-200 text-xs mt-2 opacity-90">
