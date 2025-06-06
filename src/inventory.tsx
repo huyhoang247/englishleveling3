@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { inventoryImageAssets, gameImageAssets } from './assets'; // Sửa đổi: Import từ file assets
 
 // Sample data for inventory items
 const sampleItems = [
-    { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
-    { id: 42, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ đã được nâng cấp.', stats: { damage: 7, durability: 25 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 2, maxLevel: 10, currentExp: 10, requiredExp: 200 },
+    // Sửa đổi: Sử dụng biến từ file assets
+    { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: inventoryImageAssets.kiemGo, level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
+    { id: 42, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ đã được nâng cấp.', stats: { damage: 7, durability: 25 }, quantity: 1, icon: inventoryImageAssets.kiemGo, level: 2, maxLevel: 10, currentExp: 10, requiredExp: 200 },
     { id: 2, name: 'Thuốc hồi máu', type: 'potion', rarity: 'common', description: 'Hồi phục 50 điểm máu khi sử dụng.', stats: { healing: 50 }, quantity: 5, icon: '🧪' },
     { id: 3, name: 'Áo giáp da', type: 'armor', rarity: 'common', description: 'Áo giáp cơ bản, cung cấp một chút bảo vệ.', stats: { defense: 10 }, quantity: 1, icon: '🥋' },
-    { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png', level: 5, maxLevel: 20, currentExp: 300, requiredExp: 500 },
+    { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: inventoryImageAssets.kiemSat, level: 5, maxLevel: 20, currentExp: 300, requiredExp: 500 },
     { id: 5, name: 'Thuốc hồi năng lượng', type: 'potion', rarity: 'uncommon', description: 'Hồi phục 75 điểm năng lượng khi sử dụng.', stats: { energyRestore: 75 }, quantity: 3, icon: '⚡' },
     { id: 6, name: 'Nhẫn ma thuật', type: 'accessory', rarity: 'rare', description: 'Tăng 15% sức mạnh phép thuật cho người sử dụng.', stats: { magicBoost: 15, intelligence: 5 }, quantity: 1, icon: '💍' },
     { id: 7, name: 'Bùa hộ mệnh', type: 'accessory', rarity: 'rare', description: 'Tự động hồi sinh một lần khi HP về 0.', stats: { resurrection: 1 }, quantity: 1, icon: '🔮' },
@@ -43,7 +45,7 @@ const sampleItems = [
     { id: 38, name: 'Nước tăng lực', type: 'potion', rarity: 'uncommon', description: 'Tăng sức mạnh tạm thời.', stats: { strengthBoost: 10, duration: 30 }, quantity: 3, icon: '⚡' },
     { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
     { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
-    { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png', level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
+    { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: inventoryImageAssets.songKiem, level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
 ];
 
 const groupInventoryItems = (items) => {
@@ -67,8 +69,6 @@ interface InventoryProps {
 }
 
 export default function Inventory({ onClose }: InventoryProps) {
-  // THE FIX: Initialize state with a function to prevent the flash.
-  // This calculates the initial state ONCE before the first render.
   const [inventory, setInventory] = useState(() => groupInventoryItems(sampleItems));
   
   const [selectedItemGroup, setSelectedItemGroup] = useState(null);
@@ -78,8 +78,6 @@ export default function Inventory({ onClose }: InventoryProps) {
   const [animation, setAnimation] = useState(false);
   const totalInventorySlots = 50;
   
-  // No longer need the useEffect to set initial inventory.
-
   const occupiedSlots = inventory.length;
 
   useEffect(() => {
@@ -221,7 +219,7 @@ export default function Inventory({ onClose }: InventoryProps) {
           )}
           <div className="flex justify-between items-start mb-4 border-b border-gray-700/50 pb-4">
             <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)} ${isLegendary ? 'flex items-center gap-x-2' : ''}`}>{isLegendary && <span className="text-orange-100 opacity-80 text-xl">✦</span>}{item.name}{isLegendary && <span className="text-orange-100 opacity-80 text-xl">✦</span>}</h3>
-            <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" /></button>
+            <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src={gameImageAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl ${isLegendary ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' : 'bg-black/30'} rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}>
@@ -253,7 +251,7 @@ export default function Inventory({ onClose }: InventoryProps) {
         <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm p-5">
           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
              <h3 className="text-xl font-bold text-yellow-400">Chọn biến thể: {itemGroup.name}</h3>
-             <button onClick={onClose} className="text-gray-500 hover:text-white"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" /></button>
+             <button onClick={onClose} className="text-gray-500 hover:text-white"><img src={gameImageAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
           </div>
           <ul className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
             {itemGroup.variants.map((variant, index) => (
@@ -277,7 +275,7 @@ export default function Inventory({ onClose }: InventoryProps) {
   return (
     <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative">
       <button onClick={handleCloseInventory} className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10" aria-label="Đóng túi đồ">
-        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
+        <img src={gameImageAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
       </button>
       <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5">
         <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0"><span className="mr-2.5 text-4xl">📦</span><span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">Túi Đồ</span></h1>
