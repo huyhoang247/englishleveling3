@@ -164,6 +164,34 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     }));
 
 
+  const FooterContent = () => (
+    <div className="mt-3 flex justify-between items-center text-xs flex-shrink-0">
+      <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span className="text-indigo-300">Online: </span>
+        <span className="text-white font-medium ml-1">...</span> {/* Placeholder for online count */}
+      </div>
+
+      <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span className="text-indigo-300">Cập nhật: </span>
+        <span className="text-white font-medium ml-1">
+          {timeFilter === 'day' && '1 giờ trước'}
+          {timeFilter === 'week' && '12:00 hôm nay'}
+          {timeFilter === 'month' && '01/05/2025'}
+          {timeFilter === 'all' && '00:00 hôm nay'}
+        </span>
+      </div>
+    </div>
+  );
+
+
   return (
     <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden h-full flex flex-col">
       {/* Sparkling stars effect */}
@@ -301,13 +329,13 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         <div className={`bg-indigo-900/20 backdrop-blur-sm rounded-xl p-3 border border-indigo-700/30 shadow-lg ${animation ? 'animate-fadeIn' : ''} flex-grow flex flex-col overflow-hidden`}>
 
           {loading && (
-            <div className="flex items-center justify-center py-6 text-indigo-300">
+            <div className="flex items-center justify-center flex-grow text-indigo-300">
               Đang tải dữ liệu...
             </div>
           )}
 
           {error && (
-            <div className="flex flex-col items-center justify-center py-6 text-red-400">
+            <div className="flex flex-col items-center justify-center flex-grow text-red-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -329,7 +357,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 </div>
               </div>
 
-              {/* Wealth List - Scrollable -->> FIXED: Added flex-grow */}
+              {/* Wealth List - Scrollable */}
               <div className="overflow-y-auto custom-scrollbar-hidden flex-grow">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
@@ -357,17 +385,12 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                         </div>
                         <div className="truncate">
                           <span className="font-medium text-sm">{player.username}</span>
-                          {/* You might want to add user-specific details on hover if available in Firestore */}
-                          {/* {isHovering === index && (
-                            <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: ...</div>
-                          )} */}
                         </div>
                       </div>
                       <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end">
                         <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
                           {formatNumber(player.coins)}
                         </div>
-                        {/* Add logic for daily/weekly/monthly change if you have the data */}
                       </div>
                     </div>
                   ))
@@ -382,6 +405,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                   </div>
                 )}
               </div>
+              <FooterContent />
             </>
           )}
 
@@ -396,7 +420,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 </div>
               </div>
 
-              {/* Collection List - Scrollable -->> FIXED: Added flex-grow */}
+              {/* Collection List - Scrollable */}
               <div className="overflow-y-auto custom-scrollbar-hidden flex-grow">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
@@ -424,16 +448,11 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                         </div>
                         <div className="truncate">
                           <span className="font-medium text-sm">{player.username}</span>
-                           {/* Add collection-specific details on hover if available */}
-                           {/* {isHovering === index + 100 && (
-                            <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: ...</div>
-                          )} */}
                         </div>
                       </div>
                       <div className="col-span-3 text-center">
-                        {/* Display Floor and Vocabulary Count */}
                          <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1">
-                          {/* {player.floor || 'N/A'} */} N/A {/* Placeholder for Floor */}
+                          N/A {/* Placeholder for Floor */}
                         </span>
                         <span className="opacity-30">|</span>
                         <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1">
@@ -453,36 +472,9 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                   </div>
                 )}
               </div>
+              <FooterContent />
             </>
           )}
-
-          {/* --- FIXED: Footer moved inside this container --- */}
-          <div className="mt-auto pt-3 flex justify-between items-center text-xs flex-shrink-0">
-            <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              <span className="text-indigo-300">Online: </span>
-              <span className="text-white font-medium ml-1">...</span> {/* Placeholder for online count */}
-            </div>
-
-            <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <span className="text-indigo-300">Cập nhật: </span>
-              <span className="text-white font-medium ml-1">
-                {/* You might want to display the actual last updated time from Firestore */}
-                {timeFilter === 'day' && '1 giờ trước'}
-                {timeFilter === 'week' && '12:00 hôm nay'}
-                {timeFilter === 'month' && '01/05/2025'}
-                {timeFilter === 'all' && '00:00 hôm nay'}
-              </span>
-            </div>
-          </div>
-          
         </div>
 
       </div>
