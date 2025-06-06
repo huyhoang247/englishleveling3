@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
 import { db } from './firebase.js'; // Import the db instance from your firebase config file
@@ -180,8 +178,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       <div className="absolute -top-10 -left-10 w-20 h-20 bg-indigo-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
       <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-purple-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
 
-      {/* Changed h-full to flex-grow here for proper layout */}
-      <div className="relative flex flex-col flex-grow">
+      <div className="relative flex flex-col h-full"> {/* Added flex-col and h-full to enable flex layout */}
         {/* Header */}
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
           <div className="flex-grow text-center">
@@ -333,7 +330,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               </div>
 
               {/* Wealth List - Scrollable */}
-              <div className="overflow-y-auto custom-scrollbar-hidden">
+              {/* ===== FIX APPLIED HERE: Added flex-1 ===== */}
+              <div className="overflow-y-auto custom-scrollbar-hidden flex-1">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
                     <div
@@ -400,7 +398,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               </div>
 
               {/* Collection List - Scrollable */}
-              <div className="overflow-y-auto custom-scrollbar-hidden">
+              {/* ===== FIX APPLIED HERE: Added flex-1 ===== */}
+              <div className="overflow-y-auto custom-scrollbar-hidden flex-1">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
                     <div
