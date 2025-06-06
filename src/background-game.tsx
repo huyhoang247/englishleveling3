@@ -720,7 +720,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  // >>> START OF THE NEW RENDERING STRUCTURE <<<
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
@@ -731,15 +730,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowLuckyGame={toggleLuckyGame}
       >
         <div className="relative w-full h-full">
-            {/* LAYER 1: THE MAIN GAME (always rendered, but blurred/disabled when a modal is open) */}
+            {/* LAYER 1: THE MAIN GAME (Background) */}
             <div 
-              className={`w-full h-full transition-all duration-300 ${isAnyModalOpen ? 'filter blur-sm pointer-events-none' : ''}`}
+              className={`w-full h-full transition-all duration-300 ${isAnyModalOpen ? 'filter blur-sm' : ''}`}
             >
                 <div
                     ref={gameRef}
                     className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
                     onClick={handleTap}
                 >
+                    {/* Invisible overlay to block clicks on the game when a modal is open */}
+                    {isAnyModalOpen && <div className="absolute inset-0 z-40"></div>}
+                    
                     <DungeonBackground />
                     {renderCharacter()}
 
@@ -834,7 +836,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     )}
 
                     <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-                        {/* Left Side Buttons */}
                         {[
                           { icon: (<img src={imageAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop"; }}/>), label: "", notification: true, special: true, centered: true },
                           { icon: (<img src={imageAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; }}/>), label: "", notification: true, special: true, centered: true, onClick: toggleInventory }
@@ -848,7 +849,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     </div>
 
                     <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-                         {/* Right Side Buttons */}
                         {[
                           { icon: (<img src={imageAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission"; }}/>), label: "", notification: true, special: true, centered: true },
                           { icon: (<img src={imageAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith"; }}/>), label: "", notification: true, special: true, centered: true, onClick: toggleBlacksmith }
@@ -878,45 +878,59 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {/* LAYER 2: THE MODALS / OVERLAYS (conditionally rendered on top) */}
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị màn hình!</div>}>
-              {isStatsFullscreen && auth.currentUser && (
-                  <CharacterCard
-                      onClose={toggleStatsFullscreen}
-                      coins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                  />
-              )}
-              {isRankOpen && (
-                  <EnhancedLeaderboard onClose={toggleRank} />
-              )}
-              {isGoldMineOpen && auth.currentUser && (
-                  <GoldMine
-                      onClose={toggleGoldMine}
-                      currentCoins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
-                      currentUserId={auth.currentUser!.uid}
-                      isGamePaused={gameOver || !gameStarted || isLoading || isAnyModalOpen || isBackgroundPaused}
-                  />
-              )}
-              {isInventoryOpen && (
-                  <Inventory onClose={toggleInventory} />
-              )}
-              {isLuckyGameOpen && auth.currentUser && (
-                  <LuckyChestGame
-                      onClose={toggleLuckyGame}
-                      currentCoins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                      currentJackpotPool={jackpotPool}
-                      onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
-                      isStatsFullscreen={isStatsFullscreen}
-                  />
-              )}
-              {isBlacksmithOpen && (
-                  <Blacksmith onClose={toggleBlacksmith} />
-              )}
-            </ErrorBoundary>
+            {/* LAYER 2: THE MODALS / OVERLAYS (on top) */}
+            <div className="absolute inset-0 z-50 pointer-events-none">
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg pointer-events-auto">Lỗi hiển thị màn hình!</div>}>
+                {isStatsFullscreen && auth.currentUser && (
+                    <div className="pointer-events-auto">
+                        <CharacterCard
+                            onClose={toggleStatsFullscreen}
+                            coins={coins}
+                            onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                        />
+                    </div>
+                )}
+                {isRankOpen && (
+                    <div className="pointer-events-auto">
+                        <EnhancedLeaderboard onClose={toggleRank} />
+                    </div>
+                )}
+                {isGoldMineOpen && auth.currentUser && (
+                    <div className="pointer-events-auto">
+                        <GoldMine
+                            onClose={toggleGoldMine}
+                            currentCoins={coins}
+                            onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                            onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
+                            currentUserId={auth.currentUser!.uid}
+                            isGamePaused={gameOver || !gameStarted || isLoading || isAnyModalOpen || isBackgroundPaused}
+                        />
+                    </div>
+                )}
+                {isInventoryOpen && (
+                    <div className="pointer-events-auto">
+                        <Inventory onClose={toggleInventory} />
+                    </div>
+                )}
+                {isLuckyGameOpen && auth.currentUser && (
+                    <div className="pointer-events-auto">
+                        <LuckyChestGame
+                            onClose={toggleLuckyGame}
+                            currentCoins={coins}
+                            onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                            currentJackpotPool={jackpotPool}
+                            onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
+                            isStatsFullscreen={isStatsFullscreen}
+                        />
+                    </div>
+                )}
+                {isBlacksmithOpen && (
+                    <div className="pointer-events-auto">
+                        <Blacksmith onClose={toggleBlacksmith} />
+                    </div>
+                )}
+              </ErrorBoundary>
+            </div>
         </div>
       </SidebarLayout>
     </div>
