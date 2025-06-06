@@ -362,7 +362,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     { id: 'm1', name: 'Quặng Đồng', type: 'material', icon: '🪨', rarity: 'common', quantity: 1 },
     { id: 'w2', name: 'Cung Gỗ', type: 'weapon', icon: '🏹', rarity: 'common', level: 0, quantity: 1 },
     { id: 'm2', name: 'Đá Lửa', type: 'material', icon: '🔥', rarity: 'uncommon', quantity: 1 },
-    { id: 'w3', name: 'Dao Găm', type: 'weapon', icon: '🔪', rarity: 'common', level: 0, quantity: 1 },
+    { id: 'w3', name: 'Dao Găm', type: 'weapon', icon: '🔪', rarity: 'common', quantity: 1 },
     { id: 'm3', name: 'Gỗ Sồi', type: 'material', icon: '🌳', rarity: 'common', quantity: 1 },
     { id: 'm4', name: 'Đá Cường Hoá', type: 'material', icon: '💎', rarity: 'rare', quantity: 5 },
     { id: 'm5', name: 'Gỗ E', type: 'material', icon: '🌲', rarity: 'common', quantity: 30 },
@@ -526,7 +526,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         showAlert('Loại vật phẩm này không thể đặt vào lò nâng cấp.', 'warning');
       }
     } else if (activeTab === 'craft') {
-      if (itemToMove.type === 'weapon' || itemToMove.type === 'material') {
+      if (itemToMove.type === 'weapon' || itemToMove.type === 'armor' || itemToMove.type === 'material') {
         showAlert('Chỉ có thể đặt Mảnh Trang Bị vào lò rèn. Nguyên liệu cần thiết sẽ được lấy từ túi đồ.', 'warning');
         return;
       }
@@ -786,19 +786,21 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg z-50 transition-transform transform hover:scale-110"
+          // Removed bg-red-600, hover:bg-red-700, p-2, rounded-full
+          className="absolute top-4 right-4 text-white shadow-lg z-50 transition-transform transform hover:scale-110"
           aria-label="Đóng lò rèn"
           title="Đóng lò rèn"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" className="w-6 h-6" onError={(e) => e.target.src = 'https://placehold.co/24x24/FF0000/FFFFFF?text=X'} />
         </button>
 
-        <div className="flex justify-center mb-8 gap-4 mt-8"> {/* Added mt-8 for spacing from close button */}
+        {/* Updated Tab Navigation (more compact, text only) */}
+        <div className="flex justify-center mb-8 gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 mt-8 max-w-fit mx-auto">
           <button
-            className={`px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+            className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
               activeTab === 'upgrade'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
             }`}
             onClick={() => {
               setActiveTab('upgrade');
@@ -806,13 +808,13 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               handleClearSkillSlots();
             }}
           >
-            🔥 Nâng Cấp
+            Nâng Cấp
           </button>
           <button
-            className={`px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+            className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
               activeTab === 'craft'
-                ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-md'
+                : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
             }`}
             onClick={() => {
               setActiveTab('craft');
@@ -820,13 +822,13 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               handleClearSkillSlots();
             }}
           >
-            ✨ Rèn Vật Phẩm
+            Rèn
           </button>
           <button
-            className={`px-8 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+            className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
               activeTab === 'skills'
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md'
+                : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
             }`}
             onClick={() => {
               setActiveTab('skills');
@@ -834,7 +836,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               handleClearCraftSlots();
             }}
           >
-            📚 Kỹ Năng
+            Kỹ Năng
           </button>
         </div>
 
@@ -1073,7 +1075,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               {skillBookSlot && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl border border-blue-500/50 shadow-lg">
                   <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
-                    <span>💡</span> Thông tin Sách Kỹ Năng:
+                    <span>🌟</span> Thông tin Sách Kỹ Năng:
                   </h3>
                   <p className="text-sm text-gray-300 mb-2">
                     Sách kỹ năng: <span className="font-semibold text-white">{skillBookSlot.name}</span>
@@ -1138,7 +1140,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             ? 'bg-gradient-to-br from-green-800/40 to-green-900/40 border border-green-500/40 hover:border-green-400'
                             : item.type === 'shard'
                                 ? 'bg-gradient-to-br from-purple-800/40 to-purple-900/40 border border-purple-500/40 hover:border-purple-400'
-                                : 'bg-gradient-to-br from-cyan-800/40 to-cyan-900/40 border border-cyan-500/40 hover:border-cyan-400' // For skill_book
+                                : 'bg-cyan-800/40 to-cyan-900/40 border border-cyan-500/40 hover:border-cyan-400' // For skill_book
                       }
                       ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
@@ -1182,7 +1184,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
             {/* New Learned Skills Section */}
             <div className="mt-8 pt-6 border-t border-gray-700">
               <h2 className="text-2xl font-bold mb-6 text-yellow-300 flex items-center gap-2">
-                <span>✨</span> Kỹ Năng Đã Học ({learnedSkills.length})
+                <span>📚</span> Kỹ Năng Đã Học ({learnedSkills.length})
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-48 overflow-y-auto custom-scrollbar">
                 {learnedSkills.length > 0 ? (
@@ -1263,4 +1265,3 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
 };
 
 export default Blacksmith;
-
