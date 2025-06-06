@@ -1,7 +1,7 @@
 // --- START OF FILE inventory.tsx ---
 
 import { useState, useEffect } from 'react';
-import { itemAssets, uiAssets } from './game-assets'; // Import tài nguyên tập trung
+import { itemAssets, uiAssets } from './game-assets.ts'; // Import tài nguyên tập trung
 
 // Sample data for inventory items
 const sampleItems = [
