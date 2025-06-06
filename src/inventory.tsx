@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
 
-// MODIFIED: Renamed to sampleItems and added a second "Kiếm gỗ" to test the logic.
+// Sample data for inventory items
 const sampleItems = [
-    // Scenario: 5 level 1 swords and 1 level 2 sword. They will now be grouped.
     { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
     { id: 42, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ đã được nâng cấp.', stats: { damage: 7, durability: 25 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 2, maxLevel: 10, currentExp: 10, requiredExp: 200 },
-    
-    // The rest of your items
     { id: 2, name: 'Thuốc hồi máu', type: 'potion', rarity: 'common', description: 'Hồi phục 50 điểm máu khi sử dụng.', stats: { healing: 50 }, quantity: 5, icon: '🧪' },
     { id: 3, name: 'Áo giáp da', type: 'armor', rarity: 'common', description: 'Áo giáp cơ bản, cung cấp một chút bảo vệ.', stats: { defense: 10 }, quantity: 1, icon: '🥋' },
     { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png', level: 5, maxLevel: 20, currentExp: 300, requiredExp: 500 },
@@ -49,7 +46,6 @@ const sampleItems = [
     { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png', level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
 ];
 
-// NEW: Function to group items by name
 const groupInventoryItems = (items) => {
     const grouped = new Map();
     items.forEach(item => {
@@ -71,27 +67,21 @@ interface InventoryProps {
 }
 
 export default function Inventory({ onClose }: InventoryProps) {
-  // NEW: All the new state management for grouping
-  const [inventory, setInventory] = useState([]);
+  // THE FIX: Initialize state with a function to prevent the flash.
+  // This calculates the initial state ONCE before the first render.
+  const [inventory, setInventory] = useState(() => groupInventoryItems(sampleItems));
+  
   const [selectedItemGroup, setSelectedItemGroup] = useState(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
-  
-  // MODIFIED: Renamed states for clarity
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
   const [animation, setAnimation] = useState(false);
   const totalInventorySlots = 50;
+  
+  // No longer need the useEffect to set initial inventory.
 
-  // NEW: Process raw data into grouped inventory on mount
-  useEffect(() => {
-    setInventory(groupInventoryItems(sampleItems));
-  }, []);
-
-  // MODIFIED: Now calculates occupied slots based on grouped inventory
   const occupiedSlots = inventory.length;
 
-  // MODIFIED: This effect now opens the DETAIL modal
   useEffect(() => {
     if (selectedDetailItem) {
       setIsDetailModalOpen(true);
@@ -101,7 +91,6 @@ export default function Inventory({ onClose }: InventoryProps) {
     }
   }, [selectedDetailItem]);
 
-  // MODIFIED: This function now closes the DETAIL modal
   const closeDetailModal = () => {
     setAnimation(true);
     setTimeout(() => {
@@ -111,7 +100,6 @@ export default function Inventory({ onClose }: InventoryProps) {
     }, 200);
   };
   
-  // NEW: Functions to handle the new modal flow
   const closeVariantModal = () => {
       setIsVariantModalOpen(false);
       setSelectedItemGroup(null);
@@ -135,13 +123,10 @@ export default function Inventory({ onClose }: InventoryProps) {
     closeVariantModal();
   };
 
-
   const handleCloseInventory = () => {
-    console.log("Đóng túi đồ");
     onClose();
   };
 
-  // ALL YOUR HELPER FUNCTIONS AND STYLING ARE PRESERVED
   const getRarityColor = (rarity: string) => {
     switch(rarity) {
       case 'common': return 'border-gray-500';
@@ -205,7 +190,6 @@ export default function Inventory({ onClose }: InventoryProps) {
     return translations[stat] || stat.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
-  // MODIFIED: ItemTooltip now handles grouped items
   const ItemTooltip = ({ item }: { item: any }) => (
     <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
       <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
@@ -218,7 +202,6 @@ export default function Inventory({ onClose }: InventoryProps) {
     </div>
   );
 
-  // YOUR ORIGINAL ItemModal component - NO CHANGES NEEDED
   const ItemModal = ({ item, isOpen, onClose }: { item: any, isOpen: boolean, onClose: () => void }) => {
     if (!isOpen || !item) return null;
     const isLegendary = item.rarity === 'legendary';
@@ -262,7 +245,6 @@ export default function Inventory({ onClose }: InventoryProps) {
     );
   };
 
-  // NEW: Variant Selection Modal component
   const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) => {
     if (!isOpen || !itemGroup) return null;
     return (
@@ -292,7 +274,6 @@ export default function Inventory({ onClose }: InventoryProps) {
     );
   };
 
-
   return (
     <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative">
       <button onClick={handleCloseInventory} className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10" aria-label="Đóng túi đồ">
@@ -305,44 +286,23 @@ export default function Inventory({ onClose }: InventoryProps) {
       
       <style>{`@keyframes pulse-stronger{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:.3;transform:scale(1.02)}}@keyframes fade-in-out{0%,100%{opacity:0;transform:scale(.9)}50%{opacity:.1;transform:scale(1)}}@keyframes ping-slow{0%{transform:scale(.9);opacity:.6}50%{transform:scale(1.1);opacity:.1}100%{transform:scale(.9);opacity:.6}}.animate-pulse-stronger{animation:pulse-stronger 4s infinite ease-in-out}.animate-fade-in-out{animation:fade-in-out 5s infinite ease-in-out}.animate-ping-slow{animation:ping-slow 3s infinite ease-in-out}.legendary-item-glow{box-shadow:0 0 10px rgba(255,165,0,.4),0 0 20px rgba(255,69,0,.2);transition:box-shadow .3s ease-in-out}.legendary-item-glow:hover{box-shadow:0 0 15px rgba(255,165,0,.6),0 0 30px rgba(255,69,0,.4),0 0 45px rgba(255,69,0,.15)}.inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}.inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}`}</style>
       
-      {/* MODIFIED: Pointing to new state and close function for the Detail Modal */}
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} />
-      {/* NEW: Rendering the Variant Selection Modal */}
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
-      {/* === CORE LOGIC CHANGE IS HERE === */}
       <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden">
-        {/* MODIFIED: Looping over the new `inventory` (grouped) state */}
         {inventory.map((itemGroup: any) => {
           const isLegendary = itemGroup.rarity === 'legendary';
-          // NEW: Calculate total quantity from all variants in the group
           const totalQuantity = itemGroup.variants.reduce((sum, v) => sum + v.quantity, 0);
-          
           return (
-            // YOUR ORIGINAL ITEM STYLING IS PRESERVED
-            <div 
-              key={itemGroup.name} // Use group name as key
-              className={`group relative w-full aspect-square ${isLegendary ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' : `bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)}`} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(itemGroup.rarity)} overflow-hidden`}
-              onClick={() => handleItemClick(itemGroup)} // MODIFIED: Use the new click handler
-            >
-              {isLegendary && ( /* Your legendary effects */ <> <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div> <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> </>)}
-              
-              {/* MODIFIED: Using totalQuantity */}
-              {totalQuantity > 1 && itemGroup.type !== 'currency' && (
-                <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
-                  x{totalQuantity}
-                </div>
-              )}
-              
-              {/* Using itemGroup properties for display */}
+            <div key={itemGroup.name} className={`group relative w-full aspect-square ${isLegendary ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' : `bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)}`} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(itemGroup.rarity)} overflow-hidden`} onClick={() => handleItemClick(itemGroup)}>
+              {isLegendary && ( <> <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div> <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute inset-0 bg-gradient-radial from-orange-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> <div className="absolute bottom-1 left-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div> </>)}
+              {totalQuantity > 1 && itemGroup.type !== 'currency' && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{totalQuantity}</div>)}
               {itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" /> : <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{itemGroup.icon}</div>}
-              
               <ItemTooltip item={itemGroup} />
             </div>
           );
         })}
         
-        {/* YOUR ORIGINAL EMPTY SLOT STYLING IS PRESERVED */}
         {Array.from({ length: totalInventorySlots - inventory.length }).map((_, i) => (
           <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
             <span className="opacity-40">＋</span>
