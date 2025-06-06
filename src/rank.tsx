@@ -329,8 +329,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 </div>
               </div>
 
-              {/* Wealth List - Scrollable */}
-              <div className="overflow-y-auto custom-scrollbar-hidden">
+              {/* Wealth List - Scrollable -->> FIXED: Added flex-grow */}
+              <div className="overflow-y-auto custom-scrollbar-hidden flex-grow">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
                     <div
@@ -396,8 +396,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 </div>
               </div>
 
-              {/* Collection List - Scrollable */}
-              <div className="overflow-y-auto custom-scrollbar-hidden">
+              {/* Collection List - Scrollable -->> FIXED: Added flex-grow */}
+              <div className="overflow-y-auto custom-scrollbar-hidden flex-grow">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
                     <div
@@ -455,34 +455,36 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               </div>
             </>
           )}
+
+          {/* --- FIXED: Footer moved inside this container --- */}
+          <div className="mt-auto pt-3 flex justify-between items-center text-xs flex-shrink-0">
+            <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span className="text-indigo-300">Online: </span>
+              <span className="text-white font-medium ml-1">...</span> {/* Placeholder for online count */}
+            </div>
+
+            <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span className="text-indigo-300">Cập nhật: </span>
+              <span className="text-white font-medium ml-1">
+                {/* You might want to display the actual last updated time from Firestore */}
+                {timeFilter === 'day' && '1 giờ trước'}
+                {timeFilter === 'week' && '12:00 hôm nay'}
+                {timeFilter === 'month' && '01/05/2025'}
+                {timeFilter === 'all' && '00:00 hôm nay'}
+              </span>
+            </div>
+          </div>
+          
         </div>
 
-        {/* Footer */}
-        <div className="mt-3 mb-4 flex justify-between items-center text-xs flex-shrink-0">
-          <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <span className="text-indigo-300">Online: </span>
-            <span className="text-white font-medium ml-1">...</span> {/* Placeholder for online count */}
-          </div>
-
-          <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <span className="text-indigo-300">Cập nhật: </span>
-            <span className="text-white font-medium ml-1">
-              {/* You might want to display the actual last updated time from Firestore */}
-              {timeFilter === 'day' && '1 giờ trước'}
-              {timeFilter === 'week' && '12:00 hôm nay'}
-              {timeFilter === 'month' && '01/05/2025'}
-              {timeFilter === 'all' && '00:00 hôm nay'}
-            </span>
-          </div>
-        </div>
       </div>
 
       <style jsx>{`
