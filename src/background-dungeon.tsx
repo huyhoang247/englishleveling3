@@ -1,169 +1,221 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-/**
- * DungeonBackground component provides a dynamic and atmospheric dungeon-themed background.
- * It features animated particles, cracks, and flickering torch-like light effects
- * to create an immersive visual experience.
- */
+// === PHẦN CSS ĐƯỢC GỘP VÀO ===
+// Chúng ta sẽ inject chuỗi CSS này vào một thẻ <style>
+const dungeonStyles = `
+/* =============================================== */
+/* === CSS TỐI ƯU CHO DUNGEON BACKGROUND === */
+/* =============================================== */
+
+.dungeon-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #1a202c, #0a0e13, #000000);
+  /* Tắt tương tác chuột để không cản trở game */
+  pointer-events: none; 
+}
+
+/* --- Icon --- */
+.dungeon-icon-container {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1; /* Nằm dưới các lớp hiệu ứng chính */
+  opacity: 0.5;
+}
+
+.dungeon-icon-image {
+  width: 192px; /* 12rem */
+  height: 192px; /* 12rem */
+  filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.7));
+}
+
+/* --- Các lớp nền và hiệu ứng --- */
+.dungeon-light-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(139, 69, 19, 0.2) 0%, transparent 80%);
+  opacity: 0.5;
+}
+
+.dungeon-texture-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, transparent, rgba(100, 100, 100, 0.1), transparent);
+  opacity: 0.2;
+}
+
+/* --- Vết nứt (Cracks) --- */
+.dungeon-crack {
+  position: absolute;
+  background-color: #000;
+  border-radius: 1px;
+}
+
+/* --- Hạt bụi (Particles) --- */
+.dungeon-particle {
+  position: absolute;
+  background-color: rgba(253, 230, 138, 0.7); /* Màu vàng nhạt, bán trong suốt */
+  border-radius: 50%;
+  width: var(--size);
+  height: var(--size);
+  top: var(--y-start);
+  left: var(--x-start);
+  opacity: 0; /* Bắt đầu với opacity 0, animation sẽ làm nó hiện ra */
+  box-shadow: 0 0 4px rgba(255, 255, 0, 0.2);
+  /* Animation chính, sử dụng các biến được truyền từ JS */
+  animation: float var(--duration) var(--delay) linear infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(15px, -20px);
+    opacity: var(--opacity);
+  }
+  50% {
+    transform: translate(-10px, 10px);
+    opacity: 0;
+  }
+  75% {
+    transform: translate(20px, 25px);
+    opacity: calc(var(--opacity) * 0.7);
+  }
+}
+
+/* --- Ánh sáng đèn đuốc --- */
+.dungeon-torch-light {
+  position: absolute;
+  border-radius: 50%;
+  /* Bỏ filter: blur() đắt đỏ, thay bằng gradient mượt */
+  background: radial-gradient(circle, rgba(255, 140, 0, 0.3) 0%, transparent 70%);
+  /* Animation nhấp nháy */
+  animation: flicker 7s infinite alternate;
+}
+
+.torch-left {
+  top: 40px;
+  left: 40px;
+  width: 200px;
+  height: 200px;
+  animation-duration: 6s;
+}
+
+.torch-right {
+  top: 64px;
+  right: 48px;
+  width: 160px;
+  height: 160px;
+  animation-duration: 8s;
+  animation-delay: -2s;
+}
+
+.dungeon-ambient-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(101, 67, 33, 0.1) 0%, transparent 70%);
+  animation: flicker 12s infinite alternate;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+}
+`;
+
+// === PHẦN COMPONENT REACT ===
 const DungeonBackground = () => {
-    // State to track time, used for smooth animation loops.
-    const [time, setTime] = useState(0);
-
-    // Effect to update the 'time' state at a fixed interval (approx. 60 FPS).
-    // This drives the animations of particles, cracks, and light effects.
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTime(prev => prev + 0.016); // Increment time by 0.016 seconds (1000ms / 60 frames = approx 16ms)
-        }, 16); // Update every 16 milliseconds
-
-        // Cleanup function to clear the interval when the component unmounts.
-        return () => clearInterval(interval);
-    }, []); // Empty dependency array ensures this effect runs only once on mount.
-
-    // Memoize the particles array to prevent unnecessary re-creation on re-renders.
-    // This optimizes performance by keeping particle data stable.
+    // Memoize các particles để chúng chỉ được tạo một lần duy nhất.
     const particles = useMemo(() => {
-        return Array.from({ length: 50 }, (_, i) => ({
-            id: i, // Unique ID for React's key prop, crucial for list rendering performance
-            x: Math.random() * 100, // Initial X position (percentage of container width)
-            y: Math.random() * 100, // Initial Y position (percentage of container height)
-            size: Math.random() * 3 + 1, // Size of the particle (1 to 4 pixels)
-            speed: Math.random() * 0.5 + 0.2, // Speed for animation (0.2 to 0.7)
-            opacity: Math.random() * 0.8 + 0.2 // Initial opacity (0.2 to 1.0)
+        return Array.from({ length: 30 }, (_, i) => ({
+            id: i,
+            style: {
+                '--size': `${Math.random() * 2.5 + 1}px`,
+                '--x-start': `${Math.random() * 100}%`,
+                '--y-start': `${Math.random() * 100}%`,
+                '--duration': `${Math.random() * 15 + 10}s`,
+                '--delay': `-${Math.random() * 25}s`,
+                '--opacity': `${Math.random() * 0.6 + 0.2}`,
+            } as React.CSSProperties
         }));
-    }, []); // Empty dependency array means this array is created only once.
+    }, []);
 
-    // Memoize the cracks array for wall textures, similar to particles.
-    // This also optimizes performance by maintaining stable crack data.
     const cracks = useMemo(() => {
         return Array.from({ length: 8 }, (_, i) => ({
-            id: i, // Unique ID for React's key prop
-            x: Math.random() * 100, // Initial X position (percentage)
-            y: Math.random() * 100, // Initial Y position (percentage)
-            width: Math.random() * 30 + 10, // Width of the crack (10 to 40 pixels)
-            height: Math.random() * 2 + 1, // Height of the crack (1 to 3 pixels)
-            rotation: Math.random() * 45 // Initial rotation angle (0 to 45 degrees)
+            id: i,
+            style: {
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${Math.random() * 30 + 10}px`,
+                height: `${Math.random() * 2 + 1}px`,
+                transform: `rotate(${Math.random() * 45}deg)`,
+                opacity: `${Math.random() * 0.2 + 0.2}`,
+            } as React.CSSProperties
         }));
-    }, []); // Empty dependency array means this array is created only once.
+    }, []);
 
     return (
-        // Main container for the dungeon background.
-        // It's absolutely positioned to cover its parent, with overflow hidden.
-        // Uses a dark gradient for the base dungeon color.
-        <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-gray-900 via-gray-800 to-black">
-            {/* Icon, positioned at the top and slightly down, larger size. */}
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center">
-                <img
-                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png"
-                    alt="Dungeon Icon"
-                    className="w-48 h-48" // Increased size
-                    onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/192x192/000000/FFFFFF?text=Icon"; }} // Fallback for image loading errors
-                />
+        <>
+            {/* Inject CSS vào DOM. Thẻ style này chỉ được render một lần. */}
+            <style>{dungeonStyles}</style>
+
+            <div className="dungeon-background">
+                {/* Icon chính giữa */}
+                <div className="dungeon-icon-container">
+                    <img
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png"
+                        alt="Dungeon Icon"
+                        className="dungeon-icon-image"
+                        onError={(e) => { (e.target as HTMLImageElement).src="https://placehold.co/192x192/000000/FFFFFF?text=Icon"; }}
+                    />
+                </div>
+
+                {/* Các lớp nền và hiệu ứng ánh sáng */}
+                <div className="dungeon-light-overlay" />
+                <div className="dungeon-texture-overlay" />
+
+                {/* Render các vết nứt tĩnh */}
+                {cracks.map(crack => (
+                    <div
+                        key={crack.id}
+                        className="dungeon-crack"
+                        style={crack.style}
+                    />
+                ))}
+
+                {/* Render các hạt bụi */}
+                {particles.map(particle => (
+                    <div
+                        key={particle.id}
+                        className="dungeon-particle"
+                        style={particle.style}
+                    />
+                ))}
+
+                {/* Ánh sáng đèn đuốc */}
+                <div className="dungeon-torch-light torch-left" />
+                <div className="dungeon-torch-light torch-right" />
+                <div className="dungeon-ambient-glow" />
             </div>
-
-            {/* Animated radial gradient overlay for a subtle light source effect.
-                The center of the gradient subtly moves based on 'time' to create a dynamic light. */}
-            <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                    background: `radial-gradient(circle at ${50 + Math.sin(time * 0.5) * 20}% ${50 + Math.cos(time * 0.3) * 15}%,
-                    rgba(139, 69, 19, 0.4) 0%, /* Dark orange/brown, more opaque */
-                    rgba(101, 67, 33, 0.3) 30%, /* Lighter brown, less opaque */
-                    rgba(62, 39, 35, 0.2) 60%, /* Even lighter brown, even less opaque */
-                    transparent 100%)` // Fades to transparent
-                }}
-            />
-
-            {/* Stone texture overlay using a subtle gradient and mix-blend-multiply for texture.
-                This adds a rough, rocky feel to the background. */}
-            <div className="absolute inset-0 opacity-20">
-                <div className="w-full h-full bg-gradient-to-br from-transparent via-gray-700 to-transparent mix-blend-multiply" />
-            </div>
-
-            {/* Render animated cracks on the wall.
-                Each crack has a slight rotation animation based on 'time'. */}
-            {cracks.map(crack => (
-                <div
-                    key={crack.id} // Unique key for React list rendering
-                    className="absolute bg-black opacity-40" // Dark, semi-transparent cracks
-                    style={{
-                        left: `${crack.x}%`,
-                        top: `${crack.y}%`,
-                        width: `${crack.width}px`,
-                        height: `${crack.height}px`,
-                        // Apply a slight rotation animation based on 'time'.
-                        transform: `rotate(${crack.rotation + Math.sin(time * 0.1) * 2}deg)`,
-                        borderRadius: '1px', // Slightly rounded edges for cracks
-                        transition: 'transform 0.1s ease-out' // Smooth transition for rotation.
-                    }}
-                />
-            ))}
-
-            {/* Render floating dust particles.
-                Particles move in sine/cosine waves and their opacity flickers. */}
-            {particles.map(particle => (
-                <div
-                    key={particle.id} // Unique key for React list rendering
-                    className="absolute rounded-full bg-yellow-200" // Yellowish color for dust
-                    style={{
-                        // Animate particle position using sine and cosine waves for a floating effect.
-                        left: `${(particle.x + Math.sin(time * particle.speed + particle.id) * 10) % 100}%`,
-                        top: `${(particle.y + Math.cos(time * particle.speed * 0.7 + particle.id) * 5) % 100}%`,
-                        width: `${particle.size}px`,
-                        height: `${particle.size}px`,
-                        // Animate particle opacity for a flickering effect.
-                        opacity: particle.opacity * (0.7 + Math.sin(time * 2 + particle.id) * 0.3),
-                        boxShadow: '0 0 4px rgba(255, 255, 0, 0.3)', // Subtle glow effect.
-                        transition: 'opacity 0.1s ease-out' // Smooth transition for opacity.
-                    }}
-                />
-            ))}
-
-            {/* Animated torch light effect (left side).
-                Uses a radial gradient with flickering opacity and scale to simulate fire. */}
-            <div className="absolute top-10 left-10">
-                <div
-                    className="w-32 h-32 rounded-full"
-                    style={{
-                        background: `radial-gradient(circle,
-                        rgba(255, 140, 0, ${0.4 + Math.sin(time * 3) * 0.1}) 0%, /* Orange, flickering opacity */
-                        rgba(255, 69, 0, ${0.3 + Math.sin(time * 2.5) * 0.08}) 30%, /* Red-orange, flickering opacity */
-                        rgba(139, 69, 19, ${0.2 + Math.sin(time * 2) * 0.05}) 60%, /* Brown, flickering opacity */
-                        transparent 100%)`, // Fades to transparent
-                        filter: 'blur(2px)', // Blurs the light for a softer effect.
-                        transform: `scale(${1 + Math.sin(time * 2.8) * 0.05})` // Pulsing scale effect.
-                    }}
-                />
-            </div>
-
-            {/* Another torch light effect (right side), similar to the left one but slightly different parameters. */}
-            <div className="absolute top-16 right-12">
-                <div
-                    className="w-28 h-28 rounded-full"
-                    style={{
-                        background: `radial-gradient(circle,
-                        rgba(255, 140, 0, ${0.35 + Math.sin(time * 2.3 + 1) * 0.08}) 0%,\n
-                        rgba(255, 69, 0, ${0.25 + Math.sin(time * 2.8 + 1) * 0.06}) 30%,\n
-                        rgba(139, 69, 19, ${0.15 + Math.sin(time * 2.2 + 1) * 0.04}) 60%,\n
-                        transparent 100%)`,
-                        filter: 'blur(2px)',
-                        transform: `scale(${1 + Math.sin(time * 2.5 + 1) * 0.04})`
-                    }}
-                />
-            </div>
-
-            {/* Ambient pulsing glow effect that blends with the background. */}
-            <div
-                className="absolute inset-0 pointer-events-none" // Ignores mouse events
-                style={{
-                    background: `radial-gradient(ellipse at center,
-                    rgba(101, 67, 33, ${0.1 + Math.sin(time * 0.5) * 0.05}) 0%, /* Soft brown, pulsing opacity */
-                    transparent 70%)`, // Fades to transparent
-                    mixBlendMode: 'overlay' // Blends with the background for a subtle effect.
-                }}
-            />
-        </div>
+        </>
     );
 };
 
-export default DungeonBackground;
+// **CỰC KỲ QUAN TRỌNG:**
+// Bọc component bằng React.memo để ngăn nó render lại một cách không cần thiết.
+export default React.memo(DungeonBackground);
