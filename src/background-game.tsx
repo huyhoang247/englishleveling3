@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (19).txt ---
+// --- START OF FILE background-game.tsx (22).txt ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -134,7 +134,6 @@ interface ObstacleRunnerGameProps {
   currentUser: User | null; // Added currentUser prop
 }
 
-// Đã xoá interface GameCloud
 
 // Define interface for session storage data (used by the hook internally now)
 // We define it here as well for clarity on what's being saved/loaded
@@ -194,7 +193,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jumping, setJumping] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [runFrame, setRunFrame] = useState(0);
-  // Đã xoá state [clouds, setClouds]
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false);
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
@@ -227,13 +225,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Refs for timers that do NOT need session storage persistence
   const gameRef = useRef<HTMLDivElement | null>(null);
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null);
-  // Đã xoá gameLoopIntervalRef
   const sidebarToggleRef = useRef<(() => void) | null>(null);
 
   // NEW: Firestore instance
   const db = getFirestore();
-
-  // Đã xoá mảng cloudImageUrls
 
   // NEW: Helper function to generate random number between min and max (inclusive)
   function randomBetween(min: number, max: number): number {
@@ -416,7 +411,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsInventoryOpen(false);
     setIsLuckyGameOpen(false);
     setIsBlacksmithOpen(false);
-    // Đã xoá lời gọi generateInitialClouds
   };
 
   // Effect to fetch user data and global jackpot pool
@@ -479,7 +473,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Đã xoá hàm generateInitialClouds
 
   // Handle character jump action
   const jump = () => {
@@ -502,10 +495,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // GIẢI PHÁP TẢI TRƯỚC: BƯỚC 4 - TẠO TRẠNG THÁI LOADING TỔNG HỢP
   // ==================================================================
   const isLoading = isLoadingUserData || !imagesLoaded;
+  const isAnyModalOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+
 
   // Handle tap/click on the game area
   const handleTap = () => {
-    if (isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) return;
+    if (isAnyModalOpen || isLoading) return;
     if (!gameStarted || gameOver) {
       startNewGame();
     }
@@ -524,15 +519,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setTimeout(() => setShowDamageNumber(false), 800);
   };
 
-  // Đã xoá useEffect của vòng lặp game (game loop for movement)
-
   // Effect to manage scheduling timers
   useEffect(() => {
-      if (gameOver || isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) {
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoading && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) {
+      if (gameOver || isAnyModalOpen || isLoading || isBackgroundPaused) {
+        // Game logic is paused, do nothing or clean up
+      } else if (gameStarted) {
+        // Game logic can run
       }
       return () => {};
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoading, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen, isBlacksmithOpen]);
+  }, [gameStarted, gameOver, isAnyModalOpen, isLoading, isBackgroundPaused]);
 
 
   // Effect to clean up all timers on unmount
@@ -588,14 +583,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact
           src={lottieAssets.characterRun} // THAY THẾ URL
           loop
-          autoplay={!isStatsFullscreen && !isLoading && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen}
+          autoplay={!isAnyModalOpen && !isLoading && !isBackgroundPaused}
           className="w-full h-full"
         />
       </div>
     );
   };
-
-  // Đã xoá hàm renderClouds
 
   const toggleStatsFullscreen = () => {
     if (gameOver || isLoading) return;
@@ -727,318 +720,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  // Determine which content to render
-  let mainContent;
-  if (isStatsFullscreen) {
-      mainContent = (
-          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-              {auth.currentUser && (
-                  <CharacterCard
-                      onClose={toggleStatsFullscreen}
-                      coins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                  />
-              )}
-          </ErrorBoundary>
-      );
-  } else if (isRankOpen) {
-       mainContent = (
-           <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-               <EnhancedLeaderboard onClose={toggleRank} />
-           </ErrorBoundary>
-       );
-  } else if (isGoldMineOpen) {
-      const isGoldMineGamePaused = gameOver || !gameStarted || isLoading || isStatsFullscreen || isRankOpen || isBackgroundPaused || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
-      mainContent = (
-          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
-              {auth.currentUser && (
-                  <GoldMine
-                      onClose={toggleGoldMine}
-                      currentCoins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
-                      currentUserId={auth.currentUser!.uid}
-                      isGamePaused={isGoldMineGamePaused}
-                  />
-              )}
-          </ErrorBoundary>
-      );
-  } else if (isInventoryOpen) {
-      mainContent = (
-          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-              <Inventory onClose={toggleInventory} />
-          </ErrorBoundary>
-      );
-  } else if (isLuckyGameOpen) {
-      mainContent = (
-          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
-              {auth.currentUser && (
-                  <LuckyChestGame
-                      onClose={toggleLuckyGame}
-                      currentCoins={coins}
-                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                      currentJackpotPool={jackpotPool}
-                      onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
-                      isStatsFullscreen={isStatsFullscreen}
-                  />
-              )}
-          </ErrorBoundary>
-      );
-  } else if (isBlacksmithOpen) {
-      mainContent = (
-          <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
-              <Blacksmith onClose={toggleBlacksmith} />
-          </ErrorBoundary>
-      );
-  }
-  else {
-      // Default game content
-      mainContent = (
-          <div
-            ref={gameRef}
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
-            onClick={handleTap}
-          >
-            <DungeonBackground />
-            {/* Đã xoá lời gọi renderClouds() */}
-            {renderCharacter()}
-
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                        rounded-b-lg shadow-2xl
-                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                        border-b border-l border-r border-slate-700/50">
-
-                <HeaderBackground />
-
-                <button
-                    onClick={() => sidebarToggleRef.current?.()}
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
-                    aria-label="Mở sidebar"
-                    title="Mở sidebar"
-                >
-                     <img
-                        src={imageAssets.menuIcon} // THAY THẾ URL
-                        alt="Menu Icon"
-                        className="w-5 h-5 object-contain"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu";
-                        }}
-                     />
-                </button>
-
-
-                <div className="flex items-center relative z-10">
-                  <div className="w-32 relative">
-                      <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                          <div className="h-full overflow-hidden">
-                              <div
-                                  className={`${getColor()} h-full transform origin-left`}
-                                  style={{ transform: `scaleX(${healthPct})`, transition: 'transform 0.5s ease-out' }}
-                              >
-                                  <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                              </div>
-                          </div>
-                          <div
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                              style={{ animation: 'pulse 3s infinite' }}
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                                  {Math.round(health)}/{MAX_HEALTH}
-                              </span>
-                          </div>
-                      </div>
-                      <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
-                          {showDamageNumber && (
-                              <div
-                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }}
-                              >
-                                  -{damageAmount}
-                              </div>
-                          )}
-                      </div>
-                  </div>
-              </div>
-               {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) && (
-                  <div className="flex items-center space-x-1 currency-display-container relative z-10">
-                      <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                          <div className="relative mr-0.5 flex items-center justify-center">
-                              <GemIcon size={16} color="#a78bfa" className="relative z-20" />
-                          </div>
-                          <div className="font-bold text-purple-200 text-xs tracking-wide">
-                              {gems.toLocaleString()}
-                          </div>
-                          <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-                              <span className="text-white font-bold text-xs">+</span>
-                          </div>
-                          <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                          <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                      </div>
-                      <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
-                  </div>
-               )}
-            </div>
-
-            {gameOver && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
-                <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
-                <button
-                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                  onClick={startNewGame}
-                >
-                  Chơi Lại
-                </button>
-              </div>
-            )}
-
-            {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) && (
-              <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-                {[
-                  {
-                    icon: (
-                      <img
-                        src={imageAssets.shopIcon} // THAY THẾ URL
-                        alt="Shop Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
-                        }}
-                      />
-                    ),
-                    label: "",
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                  {
-                    icon: (
-                      <img
-                        src={imageAssets.inventoryIcon} // THAY THẾ URL
-                        alt="Inventory Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv";
-                        }}
-                      />
-                    ),
-                    label: "",
-                    notification: true,
-                    special: true,
-                    centered: true,
-                    onClick: toggleInventory
-                  }
-                ].map((item, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    {item.special && item.centered ? (
-                        <div
-                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick}
-                        >
-                            {item.icon}
-                            {item.label && (
-                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                            )}
-                        </div>
-                    ) : (
-                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                        {item.icon}
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-             {(!isStatsFullscreen && !isRankOpen && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) && (
-              <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-                {[
-                  {
-                    icon: (
-                      <img
-                        src={imageAssets.missionIcon} // THAY THẾ URL
-                        alt="Mission Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
-                        }}
-                      />
-                    ),
-                    label: "",
-                    notification: true,
-                    special: true,
-                    centered: true
-                  },
-                  {
-                    icon: (
-                      <img
-                        src={imageAssets.blacksmithIcon} // THAY THẾ URL
-                        alt="Blacksmith Icon"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
-                        }}
-                      />
-                    ),
-                    label: "",
-                    notification: true,
-                    special: true,
-                    centered: true,
-                    onClick: toggleBlacksmith
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="group cursor-pointer">
-                    {item.special && item.centered ? (
-                        <div
-                            className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                            onClick={item.onClick}
-                        >
-                            {item.icon}
-                            {item.label && (
-                                <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                            )}
-                        </div>
-                    ) : (
-                      <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                        {item.icon}
-                        <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <TreasureChest
-              initialChests={3}
-              keyCount={keyCount}
-              onKeyCollect={(n) => {
-                if (auth.currentUser) {
-                  updateKeysInFirestore(auth.currentUser!.uid, -n);
-                }
-              }}
-              onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward}
-              isGamePaused={gameOver || !gameStarted || isLoading || isStatsFullscreen || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen}
-              isStatsFullscreen={isStatsFullscreen}
-              currentUserId={currentUser ? currentUser.uid : null}
-            />
-          </div>
-      );
-  }
-
+  // >>> START OF THE NEW RENDERING STRUCTURE <<<
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
@@ -1048,7 +730,194 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
       >
-        {mainContent}
+        <div className="relative w-full h-full">
+            {/* LAYER 1: THE MAIN GAME (always rendered, but blurred/disabled when a modal is open) */}
+            <div 
+              className={`w-full h-full transition-all duration-300 ${isAnyModalOpen ? 'filter blur-sm pointer-events-none' : ''}`}
+            >
+                <div
+                    ref={gameRef}
+                    className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
+                    onClick={handleTap}
+                >
+                    <DungeonBackground />
+                    {renderCharacter()}
+
+                    <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
+                                rounded-b-lg shadow-2xl
+                                bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                                border-b border-l border-r border-slate-700/50">
+
+                        <HeaderBackground />
+
+                        <button
+                            onClick={() => sidebarToggleRef.current?.()}
+                            className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
+                            aria-label="Mở sidebar"
+                            title="Mở sidebar"
+                        >
+                            <img
+                                src={imageAssets.menuIcon}
+                                alt="Menu Icon"
+                                className="w-5 h-5 object-contain"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu";
+                                }}
+                            />
+                        </button>
+
+                        <div className="flex items-center relative z-10">
+                            <div className="w-32 relative">
+                                <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                                    <div className="h-full overflow-hidden">
+                                        <div
+                                            className={`${getColor()} h-full transform origin-left`}
+                                            style={{ transform: `scaleX(${healthPct})`, transition: 'transform 0.5s ease-out' }}
+                                        >
+                                            <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                                        </div>
+                                    </div>
+                                    <div
+                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
+                                        style={{ animation: 'pulse 3s infinite' }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                                            {Math.round(health)}/{MAX_HEALTH}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
+                                    {showDamageNumber && (
+                                        <div
+                                            className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
+                                            style={{ animation: 'floatUp 0.8s ease-out forwards' }}
+                                        >
+                                            -{damageAmount}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-1 currency-display-container relative z-10">
+                            <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                                <div className="relative mr-0.5 flex items-center justify-center">
+                                    <GemIcon size={16} color="#a78bfa" className="relative z-20" />
+                                </div>
+                                <div className="font-bold text-purple-200 text-xs tracking-wide">
+                                    {gems.toLocaleString()}
+                                </div>
+                                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                                    <span className="text-white font-bold text-xs">+</span>
+                                </div>
+                                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                            </div>
+                            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
+                        </div>
+                    </div>
+
+                    {gameOver && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
+                            <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+                            <button
+                                className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
+                                onClick={startNewGame}
+                            >
+                                Chơi Lại
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+                        {/* Left Side Buttons */}
+                        {[
+                          { icon: (<img src={imageAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop"; }}/>), label: "", notification: true, special: true, centered: true },
+                          { icon: (<img src={imageAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; }}/>), label: "", notification: true, special: true, centered: true, onClick: toggleInventory }
+                        ].map((item, index) => (
+                            <div key={index} className="group cursor-pointer">
+                                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
+                                    {item.icon}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+                         {/* Right Side Buttons */}
+                        {[
+                          { icon: (<img src={imageAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission"; }}/>), label: "", notification: true, special: true, centered: true },
+                          { icon: (<img src={imageAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith"; }}/>), label: "", notification: true, special: true, centered: true, onClick: toggleBlacksmith }
+                        ].map((item, index) => (
+                          <div key={index} className="group cursor-pointer">
+                                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
+                                    {item.icon}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <TreasureChest
+                        initialChests={3}
+                        keyCount={keyCount}
+                        onKeyCollect={(n) => {
+                            if (auth.currentUser) {
+                                updateKeysInFirestore(auth.currentUser!.uid, -n);
+                            }
+                        }}
+                        onCoinReward={startCoinCountAnimation}
+                        onGemReward={handleGemReward}
+                        isGamePaused={gameOver || !gameStarted || isLoading || isAnyModalOpen || isBackgroundPaused}
+                        isStatsFullscreen={isStatsFullscreen}
+                        currentUserId={currentUser ? currentUser.uid : null}
+                    />
+                </div>
+            </div>
+
+            {/* LAYER 2: THE MODALS / OVERLAYS (conditionally rendered on top) */}
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị màn hình!</div>}>
+              {isStatsFullscreen && auth.currentUser && (
+                  <CharacterCard
+                      onClose={toggleStatsFullscreen}
+                      coins={coins}
+                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                  />
+              )}
+              {isRankOpen && (
+                  <EnhancedLeaderboard onClose={toggleRank} />
+              )}
+              {isGoldMineOpen && auth.currentUser && (
+                  <GoldMine
+                      onClose={toggleGoldMine}
+                      currentCoins={coins}
+                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                      onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
+                      currentUserId={auth.currentUser!.uid}
+                      isGamePaused={gameOver || !gameStarted || isLoading || isAnyModalOpen || isBackgroundPaused}
+                  />
+              )}
+              {isInventoryOpen && (
+                  <Inventory onClose={toggleInventory} />
+              )}
+              {isLuckyGameOpen && auth.currentUser && (
+                  <LuckyChestGame
+                      onClose={toggleLuckyGame}
+                      currentCoins={coins}
+                      onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                      currentJackpotPool={jackpotPool}
+                      onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
+                      isStatsFullscreen={isStatsFullscreen}
+                  />
+              )}
+              {isBlacksmithOpen && (
+                  <Blacksmith onClose={toggleBlacksmith} />
+              )}
+            </ErrorBoundary>
+        </div>
       </SidebarLayout>
     </div>
   );
