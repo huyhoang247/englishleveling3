@@ -279,14 +279,15 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
     setChestShake(true);
     setTimeout(() => {
       setChestShake(false);
-      setIsChestOpen(true);
-      setShowShine(true);
+      setIsChestOpen(true); // This will start the opening animation
+      setShowShine(true); // This layers the particle effects on top
       // Removed Decrease chests remaining logic
       // setChestsRemaining(prev => prev - 1);
       if (onKeyCollect) {
           onKeyCollect(1); // Signal that 1 key was used (e.g., to decrease key count in parent)
       }
 
+      // Wait for the opening animation to play out before showing the reward
       setTimeout(() => {
         // --- Image Selection Logic ---
         // Select a random index (0-based) from the available indices
@@ -328,7 +329,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
         }, 800); // Effect duration
         // --- END Trigger Coin Collection Effect near Chest ---
 
-      }, 1500); // Delay before showing the revealed item (image)
+      }, 2000); // Delay before showing the revealed item (image). Let Lottie play.
     }, 600); // Duration of shake animation
   };
 
@@ -419,7 +420,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
 
         {/* Treasure chest button */}
         <button // Changed from div to button for accessibility and disabled state
-          className={`cursor-pointer transition-all duration-300 relative ${isChestOpen ? 'scale-110' : ''} ${chestShake ? 'animate-chest-shake' : ''} ${!currentUserId || isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions, Removed chestsRemaining <= 0
+          className={`cursor-pointer transition-all duration-300 relative ${!currentUserId || isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions, Removed chestsRemaining <= 0
           disabled={
             isGamePaused
             || isChestOpen
@@ -435,82 +436,51 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
           // Updated tabIndex condition
           tabIndex={!isGamePaused && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1}
         >
-          <div className="flex flex-col items-center justify-center relative"> {/* Added relative positioning here for the coin effect */}
-            {/* Chest main body */}
-            <div className="flex flex-col items-center">
-              {/* Chest top part */}
-              <div className="bg-gradient-to-b from-amber-700 to-amber-900 w-32 h-24 rounded-t-xl relative shadow-2xl shadow-amber-950/70 overflow-hidden z-10 border-2 border-amber-600">
-                {/* Decorations */}
-                <div className="absolute inset-x-0 top-0 h-full">
-                  <div className="absolute left-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
-                  <div className="absolute right-3 top-0 bottom-0 w-1.5 bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
-                  <div className="absolute top-1/4 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
-                  <div className="absolute top-2/3 left-0 right-0 h-1.5 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500"></div>
-                </div>
-                <div className="absolute top-1 left-1 w-4 h-4 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-br border-b border-r border-yellow-600"></div>
-                <div className="absolute top-1 right-1 w-4 h-4 bg-gradient-to-bl from-yellow-300 to-yellow-500 rounded-bl border-b border-l border-yellow-600"></div>
-                <div className="absolute bottom-1 left-1 w-4 h-4 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-tr border-t border-r border-yellow-600"></div>
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-gradient-to-tl from-yellow-400 to-yellow-600 rounded-tl border-t border-l border-yellow-600"></div>
+          <div className="relative w-40 h-40 flex items-center justify-center">
+            {/* Static chest image - visible when closed, fades out on open */}
+            <img
+                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest%20(1).png"
+                alt="Treasure Chest"
+                className={`w-32 h-32 object-contain transition-all duration-300 transform-gpu
+                    ${chestShake ? 'animate-chest-shake' : ''}
+                    ${isChestOpen ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}
+            />
 
-                {/* Chest closed view */}
-                <div className={`absolute inset-0 transition-all duration-1000 ${isChestOpen ? 'opacity-0' : 'opacity-100'}`}>
-                  <div className="bg-gradient-to-b from-amber-600 to-amber-800 h-7 w-full absolute top-0 rounded-t-xl flex justify-center items-center overflow-hidden border-b-2 border-amber-500/80">
-                    <div className="relative">
-                      <div className="bg-gradient-to-b from-yellow-500 to-yellow-700 w-12 h-3 rounded-md shadow-md"></div>
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-5 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full border-2 border-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-400/50">
-                        <div className="w-2 h-2 bg-yellow-100 rounded-full animate-pulse-subtle"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center items-center h-full pt-7 pb-4">
-                    <div className="bg-gradient-to-b from-amber-600 to-amber-800 w-16 h-14 rounded-lg flex justify-center items-center border-2 border-amber-500/80 relative shadow-inner shadow-amber-950/50">
-                      <div className="absolute inset-0 rounded-lg overflow-hidden">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1.5 h-full bg-gradient-to-b from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1.5 w-full bg-gradient-to-r from-yellow-300/40 via-transparent to-yellow-300/40"></div>
-                      </div>
-                      <div className="bg-gradient-to-br from-yellow-200 to-yellow-400 w-7 h-7 rounded-md shadow-inner shadow-yellow-100/50 relative overflow-hidden transform rotate-45">
-                        <div className="absolute -top-3 -left-3 w-6 h-6 bg-white/50 rounded-full"></div>
-                        <div className="absolute bottom-0 right-0 bg-yellow-600/40 w-full h-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
+            {/* Lottie animation for opening - only renders and plays when opening */}
+            {isChestOpen && (
+                <div className="absolute inset-0 pointer-events-none">
+                    <DotLottieReact
+                        src="https://lottie.host/1f7c7b86-a416-494a-a63e-10878a87319c/x7MAb2mDgC.lottie"
+                        loop={false}
+                        autoplay
+                        className="w-full h-full"
+                    />
                 </div>
-                {showShine && (
-                  <div className="absolute inset-0 top-0 flex justify-center items-center overflow-hidden">
+            )}
+
+            {/* The existing shine effect is layered on top during the animation */}
+            {showShine && (
+                <div className="absolute inset-0 flex justify-center items-center overflow-hidden pointer-events-none">
                     <div className="w-40 h-40 bg-gradient-to-b from-yellow-100 to-transparent rounded-full animate-pulse-fast opacity-60"></div>
                     {[...Array(16)].map((_, i) => (
-                      <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
+                        <div key={`ray-${i}`} className="absolute w-1.5 h-32 bg-gradient-to-t from-yellow-100/0 via-yellow-100/80 to-yellow-100/0 opacity-80 animate-ray-rotate" style={{ transform: `rotate(${i * 22.5}deg)`, transformOrigin: 'center' }}></div>
                     ))}
                     {[...Array(20)].map((_, i) => (
-                      <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
+                        <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
                     ))}
-                  </div>
-                )}
-                {/* Placeholder or animation when chest is open but image not revealed */}
-                {isChestOpen && !revealedImage && (
-                   <div className="flex justify-center items-center h-full">
-                       <div className="animate-bounce w-10 h-10 bg-gradient-to-b from-yellow-200 to-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 relative z-10">
-                         <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-transparent rounded-full"></div>
-                       </div>
-                   </div>
-                )}
                 </div>
-              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-b from-amber-500 to-amber-700 border-t-2 border-amber-600/80 flex items-center justify-center">
-                <div className="w-16 h-1.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-              </div>
-            </div>
-            {/* Chest base */}
-            <div className="flex flex-col items-center relative -mt-1 z-0"></div>
-          </div>
+            )}
+        </div>
+
 
           {/* --- Coin Collection Effect Lottie near Chest --- */}
-          {/* Position this absolutely relative to the chest container */}
+          {/* Position this absolutely relative to the chest button */}
           {isChestCoinEffectActive && (
               <div
                   className="absolute w-16 h-16 pointer-events-none z-50" // Adjust size and z-index as needed
                   style={{
                       // Position relative to the center-top of the chest container
-                      top: '-20px', // Adjust vertical position above the chest
+                      top: '20%', // Adjust vertical position
                       left: '50%', // Center horizontally
                       transform: 'translate(-50%, -50%)', // Ensure perfect centering
                   }}
@@ -552,4 +522,3 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
     </>
   );
 }
-
