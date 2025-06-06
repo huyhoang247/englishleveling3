@@ -112,7 +112,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/first.png"
             alt="Rank 1 Icon"
             className="w-5 h-5 object-contain" // Adjust size as needed
-            onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+            onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} // Hide if image fails to load
           />
         );
       case 2:
@@ -121,7 +121,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/number-2.png"
             alt="Rank 2 Icon"
             className="w-5 h-5 object-contain" // Adjust size as needed
-            onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+            onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} // Hide if image fails to load
           />
         );
       case 3:
@@ -130,7 +130,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/number-3.png"
             alt="Rank 3 Icon"
             className="w-5 h-5 object-contain" // Adjust size as needed
-            onError={(e) => e.target.style.display = 'none'} // Hide if image fails to load
+            onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} // Hide if image fails to load
           />
         );
       default:
@@ -197,7 +197,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
               alt="Close icon"
               className="w-5 h-5 text-indigo-300"
-              onError={(e) => e.target.style.display = 'none'}
+              onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
             />
           </button>
         </div>
@@ -325,7 +325,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 <div className="col-span-7">Người chơi</div>
                 <div className="col-span-3 text-right flex items-center justify-end">
                   <span>Tài sản</span>
-                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className="w-3 h-3 ml-1 inline-block align-middle" onError={(e) => e.target.style.display = 'none'} />
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className="w-3 h-3 ml-1 inline-block align-middle" onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
                 </div>
               </div>
 
@@ -458,7 +458,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
         </div>
 
         {/* Footer */}
-        <div className="mt-3 mb-12 flex justify-between items-center text-xs flex-shrink-0">
+        <div className="mt-3 mb-4 flex justify-between items-center text-xs flex-shrink-0">
           <div className="flex items-center bg-indigo-900/30 rounded-full px-3 py-1 border border-indigo-700/30">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 mr-1 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
