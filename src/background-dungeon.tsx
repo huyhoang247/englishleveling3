@@ -1,7 +1,8 @@
+// --- START OF FILE background-dungeon.tsx ---
+
 import React, { useMemo } from 'react';
 
 // === PHẦN CSS ĐƯỢC GỘP VÀO ===
-// Chúng ta sẽ inject chuỗi CSS này vào một thẻ <style>
 const dungeonStyles = `
 /* =============================================== */
 /* === CSS TỐI ƯU CHO DUNGEON BACKGROUND === */
@@ -12,7 +13,6 @@ const dungeonStyles = `
   inset: 0;
   overflow: hidden;
   background: linear-gradient(to bottom, #1a202c, #0a0e13, #000000);
-  /* Tắt tương tác chuột để không cản trở game */
   pointer-events: none; 
 }
 
@@ -22,13 +22,13 @@ const dungeonStyles = `
   top: 25%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1; /* Nằm dưới các lớp hiệu ứng chính */
+  z-index: 1;
   opacity: 0.5;
 }
 
 .dungeon-icon-image {
-  width: 192px; /* 12rem */
-  height: 192px; /* 12rem */
+  width: 192px;
+  height: 192px;
   filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.7));
 }
 
@@ -57,15 +57,14 @@ const dungeonStyles = `
 /* --- Hạt bụi (Particles) --- */
 .dungeon-particle {
   position: absolute;
-  background-color: rgba(253, 230, 138, 0.7); /* Màu vàng nhạt, bán trong suốt */
+  background-color: rgba(253, 230, 138, 0.7);
   border-radius: 50%;
   width: var(--size);
   height: var(--size);
   top: var(--y-start);
   left: var(--x-start);
-  opacity: 0; /* Bắt đầu với opacity 0, animation sẽ làm nó hiện ra */
+  opacity: 0;
   box-shadow: 0 0 4px rgba(255, 255, 0, 0.2);
-  /* Animation chính, sử dụng các biến được truyền từ JS */
   animation: float var(--duration) var(--delay) linear infinite;
 }
 
@@ -92,9 +91,7 @@ const dungeonStyles = `
 .dungeon-torch-light {
   position: absolute;
   border-radius: 50%;
-  /* Bỏ filter: blur() đắt đỏ, thay bằng gradient mượt */
   background: radial-gradient(circle, rgba(255, 140, 0, 0.3) 0%, transparent 70%);
-  /* Animation nhấp nháy */
   animation: flicker 7s infinite alternate;
 }
 
@@ -136,10 +133,21 @@ const dungeonStyles = `
     opacity: 0.7;
   }
 }
+
+/* === THAY ĐỔI: Thêm quy tắc để dừng animation === */
+.dungeon-background.paused * {
+  animation-play-state: paused !important;
+}
 `;
 
 // === PHẦN COMPONENT REACT ===
-const DungeonBackground = () => {
+
+// THAY ĐỔI: Thêm interface cho props
+interface DungeonBackgroundProps {
+  isPaused: boolean;
+}
+
+const DungeonBackground: React.FC<DungeonBackgroundProps> = ({ isPaused }) => {
     // Memoize các particles để chúng chỉ được tạo một lần duy nhất.
     const particles = useMemo(() => {
         return Array.from({ length: 30 }, (_, i) => ({
@@ -171,11 +179,10 @@ const DungeonBackground = () => {
 
     return (
         <>
-            {/* Inject CSS vào DOM. Thẻ style này chỉ được render một lần. */}
             <style>{dungeonStyles}</style>
 
-            <div className="dungeon-background">
-                {/* Icon chính giữa */}
+            {/* THAY ĐỔI: Thêm class 'paused' một cách có điều kiện */}
+            <div className={`dungeon-background ${isPaused ? 'paused' : ''}`}>
                 <div className="dungeon-icon-container">
                     <img
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png"
@@ -184,12 +191,8 @@ const DungeonBackground = () => {
                         onError={(e) => { (e.target as HTMLImageElement).src="https://placehold.co/192x192/000000/FFFFFF?text=Icon"; }}
                     />
                 </div>
-
-                {/* Các lớp nền và hiệu ứng ánh sáng */}
                 <div className="dungeon-light-overlay" />
                 <div className="dungeon-texture-overlay" />
-
-                {/* Render các vết nứt tĩnh */}
                 {cracks.map(crack => (
                     <div
                         key={crack.id}
@@ -197,8 +200,6 @@ const DungeonBackground = () => {
                         style={crack.style}
                     />
                 ))}
-
-                {/* Render các hạt bụi */}
                 {particles.map(particle => (
                     <div
                         key={particle.id}
@@ -206,8 +207,6 @@ const DungeonBackground = () => {
                         style={particle.style}
                     />
                 ))}
-
-                {/* Ánh sáng đèn đuốc */}
                 <div className="dungeon-torch-light torch-left" />
                 <div className="dungeon-torch-light torch-right" />
                 <div className="dungeon-ambient-glow" />
@@ -216,6 +215,4 @@ const DungeonBackground = () => {
     );
 };
 
-// **CỰC KỲ QUAN TRỌNG:**
-// Bọc component bằng React.memo để ngăn nó render lại một cách không cần thiết.
 export default React.memo(DungeonBackground);
