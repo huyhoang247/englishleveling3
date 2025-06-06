@@ -133,7 +133,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     let isCancelled = false;
     async function preloadAssets() {
       console.log("Preloading ALL game assets...");
-      // Giờ đây `allImageUrls` bao gồm cả tài nguyên UI và vật phẩm
       await Promise.all(allImageUrls.map(preloadImage));
       if (!isCancelled) {
         console.log("All game assets preloaded and cached.");
@@ -652,6 +651,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }
 
   const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+  // THAY ĐỔI: Tạo biến isGamePaused để tái sử dụng
+  const isGamePaused = isAnyOverlayOpen || gameOver || !gameStarted || isLoading || isBackgroundPaused;
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
@@ -672,7 +673,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
             onClick={handleTap}
           >
-            <DungeonBackground />
+            {/* THAY ĐỔI: Truyền prop 'isPaused' vào DungeonBackground */}
+            <DungeonBackground isPaused={isGamePaused} />
+
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
@@ -896,7 +899,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               }}
               onCoinReward={startCoinCountAnimation}
               onGemReward={handleGemReward}
-              isGamePaused={isAnyOverlayOpen || gameOver || !gameStarted || isLoading || isBackgroundPaused}
+              isGamePaused={isGamePaused}
               isStatsFullscreen={isStatsFullscreen}
               currentUserId={currentUser ? currentUser.uid : null}
             />
@@ -963,4 +966,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-// --- END OF FILE background-game.tsx ---
