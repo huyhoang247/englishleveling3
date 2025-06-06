@@ -1,6 +1,4 @@
-// --- START OF FILE background-game.tsx (24).txt ---
-
-// --- START OF FILE background-game.tsx (22).txt ---
+// --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -19,30 +17,17 @@ import GoldMine from './gold-miner.tsx';
 import Inventory from './inventory.tsx';
 import DungeonBackground from './background-dungeon.tsx';
 import LuckyChestGame from './lucky-game.tsx';
-import Blacksmith from './blacksmith.tsx'; // Import the Blacksmith component
+import Blacksmith from './blacksmith.tsx';
+import { uiAssets, lottieAssets, allImageUrls } from './game-assets';
 
 
 // ==================================================================
-// GIẢI PHÁP TẢI TRƯỚC: BƯỚC 1 - ĐỊNH NGHĨA TÀI NGUYÊN TẬP TRUNG
+// TÀI NGUYÊN TẬP TRUNG ĐÃ ĐƯỢC CHUYỂN SANG 'game-assets.ts'
 // ==================================================================
-const imageAssets = {
-  keyIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png",
-  menuIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png",
-  shopIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png",
-  inventoryIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png",
-  missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
-  blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
-};
-
-const lottieAssets = {
-    characterRun: "https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie",
-};
-
-const allImageUrls = Object.values(imageAssets);
 
 
 // ==================================================================
-// GIẢI PHÁP TẢI TRƯỚC: BƯỚC 2 - HÀM HELPER ĐỂ TẢI TRƯỚC HÌNH ẢNH
+// HÀM HELPER ĐỂ TẢI TRƯỚC HÌNH ẢNH
 // ==================================================================
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -79,7 +64,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 
 const KeyIcon = () => (
   <img
-    src={imageAssets.keyIcon}
+    src={uiAssets.keyIcon}
     alt="Key Icon"
     className="w-4 h-4 object-contain"
   />
@@ -147,7 +132,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
     let isCancelled = false;
     async function preloadAssets() {
-      console.log("Preloading game assets...");
+      console.log("Preloading ALL game assets...");
+      // Giờ đây `allImageUrls` bao gồm cả tài nguyên UI và vật phẩm
       await Promise.all(allImageUrls.map(preloadImage));
       if (!isCancelled) {
         console.log("All game assets preloaded and cached.");
@@ -523,7 +509,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         className="character-container absolute w-24 h-24 transition-all duration-300 ease-out"
         style={{
           bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
-          left: '5%',
           transition: jumping ? 'bottom 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)' : 'bottom 0.3s cubic-bezier(0.33, 1, 0.68, 1)'
         }}
       >
@@ -678,7 +663,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowLuckyGame={toggleLuckyGame}
       >
         {/* === PHẦN GAME CHÍNH === */}
-        {/* Luôn render phần này, nhưng ẩn nó bằng `display: none` nếu có overlay đang mở. */}
         <div 
           style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
           className="w-full h-full"
@@ -705,7 +689,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     title="Mở sidebar"
                 >
                      <img
-                        src={imageAssets.menuIcon}
+                        src={uiAssets.menuIcon}
                         alt="Menu Icon"
                         className="w-5 h-5 object-contain"
                         onError={(e) => {
@@ -785,7 +769,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {
                   icon: (
                     <img
-                      src={imageAssets.shopIcon}
+                      src={uiAssets.shopIcon}
                       alt="Shop Icon"
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -803,7 +787,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {
                   icon: (
                     <img
-                      src={imageAssets.inventoryIcon}
+                      src={uiAssets.inventoryIcon}
                       alt="Inventory Icon"
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -846,7 +830,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {
                   icon: (
                     <img
-                      src={imageAssets.missionIcon}
+                      src={uiAssets.missionIcon}
                       alt="Mission Icon"
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -864,7 +848,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {
                   icon: (
                     <img
-                      src={imageAssets.blacksmithIcon}
+                      src={uiAssets.blacksmithIcon}
                       alt="Blacksmith Icon"
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -920,13 +904,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         {/* === CÁC MÀN HÌNH OVERLAY === */}
-        {/*
-          * SỬA LỖI TẢI LẠI HÌNH ẢNH:
-          * Thay vì dùng {isInventoryOpen && <Inventory.../>}, chúng ta luôn render component
-          * nhưng dùng `style={{ display: ... }}` để ẩn/hiện.
-          * Điều này ngăn React unmount component, giúp giữ lại state và các ảnh đã tải.
-          * Áp dụng cho tất cả các màn hình overlay để có trải nghiệm mượt mà nhất.
-        */}
         <div style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
                 {auth.currentUser && (
@@ -986,3 +963,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+// --- END OF FILE background-game.tsx ---
