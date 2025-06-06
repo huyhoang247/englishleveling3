@@ -18,7 +18,7 @@ import Inventory from './inventory.tsx';
 import DungeonBackground from './background-dungeon.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
-import { uiAssets, lottieAssets, allImageUrls } from './game-assets';
+import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
 
 
 // ==================================================================
