@@ -1,45 +1,19 @@
 import React, { useMemo } from 'react';
 
-// === PHẦN CSS ĐƯỢC NÂNG CẤP VÀ GỘP VÀO ===
+// === PHẦN CSS ĐƯỢC GỘP VÀO ===
+// Chúng ta sẽ inject chuỗi CSS này vào một thẻ <style>
 const dungeonStyles = `
-/* ================================================== */
-/* === CSS NÂNG CẤP THẨM MỸ CHO DUNGEON BACKGROUND === */
-/* ================================================== */
+/* =============================================== */
+/* === CSS TỐI ƯU CHO DUNGEON BACKGROUND === */
+/* =============================================== */
 
-/* 
-  Kỹ thuật chính: Sử dụng perspective để tạo không gian 3D "giả".
-  Mọi element con có transform: translateZ() sẽ được hiển thị theo luật xa gần.
-*/
 .dungeon-background {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background-color: #0c0a09; /* Một màu đen-nâu ấm */
-  perspective: 300px; /* Đây là chìa khóa cho hiệu ứng chiều sâu! */
-  pointer-events: none;
-}
-
-/* 
-  Lớp kết cấu đá (stone texture)
-  Sử dụng ảnh nền lặp lại, rất nhẹ về hiệu năng.
-*/
-.stone-texture {
-  position: absolute;
-  inset: 0;
-  background-image: url('https://www.transparenttextures.com/patterns/rocky-wall.png');
-  opacity: 0.1;
-  mix-blend-mode: overlay; /* Hòa trộn vào nền một cách tự nhiên */
-}
-
-/* 
-  Lớp Vignette (làm tối góc)
-  Tạo sự tập trung và không khí ngột ngạt của hầm ngục.
-*/
-.vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%);
-  z-index: 10;
+  background: linear-gradient(to bottom, #1a202c, #0a0e13, #000000);
+  /* Tắt tương tác chuột để không cản trở game */
+  pointer-events: none; 
 }
 
 /* --- Icon --- */
@@ -48,122 +22,159 @@ const dungeonStyles = `
   top: 25%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 0.4;
-  filter: drop-shadow(0 0 20px #000);
+  z-index: 1; /* Nằm dưới các lớp hiệu ứng chính */
+  opacity: 0.5;
 }
 
 .dungeon-icon-image {
-  width: 192px;
-  height: 192px;
+  width: 192px; /* 12rem */
+  height: 192px; /* 12rem */
+  filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.7));
 }
 
-/* --- Hạt bụi/Tia lửa (Particles) được nâng cấp --- */
+/* --- Các lớp nền và hiệu ứng --- */
+.dungeon-light-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(139, 69, 19, 0.2) 0%, transparent 80%);
+  opacity: 0.5;
+}
+
+.dungeon-texture-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, transparent, rgba(100, 100, 100, 0.1), transparent);
+  opacity: 0.2;
+}
+
+/* --- Vết nứt (Cracks) --- */
+.dungeon-crack {
+  position: absolute;
+  background-color: #000;
+  border-radius: 1px;
+}
+
+/* --- Hạt bụi (Particles) --- */
 .dungeon-particle {
   position: absolute;
-  background-color: #ffc857; /* Màu vàng cam của lửa */
+  background-color: rgba(253, 230, 138, 0.7); /* Màu vàng nhạt, bán trong suốt */
+  border-radius: 50%;
   width: var(--size);
-  height: calc(var(--size) * 1.5); /* Hơi dài ra để giống tia lửa */
+  height: var(--size);
   top: var(--y-start);
   left: var(--x-start);
-  opacity: 0;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #ffc857;
-  /* Animation chính với translateZ để tạo chiều sâu */
-  animation: float-3d var(--duration) var(--delay) linear infinite;
+  opacity: 0; /* Bắt đầu với opacity 0, animation sẽ làm nó hiện ra */
+  box-shadow: 0 0 4px rgba(255, 255, 0, 0.2);
+  /* Animation chính, sử dụng các biến được truyền từ JS */
+  animation: float var(--duration) var(--delay) linear infinite;
 }
 
-@keyframes float-3d {
-  0% {
-    transform: translate3d(0, 0, var(--z-depth)) rotate(0deg);
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
     opacity: 0;
   }
-  20% {
+  25% {
+    transform: translate(15px, -20px);
     opacity: var(--opacity);
   }
-  80% {
-    opacity: var(--opacity);
-  }
-  100% {
-    /* Di chuyển một khoảng xa hơn để có cảm giác bay */
-    transform: translate3d(var(--x-end), var(--y-end), var(--z-depth)) rotate(360deg);
+  50% {
+    transform: translate(-10px, 10px);
     opacity: 0;
+  }
+  75% {
+    transform: translate(20px, 25px);
+    opacity: calc(var(--opacity) * 0.7);
   }
 }
 
-/* --- Ánh sáng đèn đuốc được tinh chỉnh --- */
+/* --- Ánh sáng đèn đuốc --- */
 .dungeon-torch-light {
   position: absolute;
   border-radius: 50%;
-  /* Gradient "nóng" hơn với lõi màu vàng sáng */
-  background: radial-gradient(circle, 
-    rgba(255, 230, 150, 0.4) 0%, 
-    rgba(255, 140, 0, 0.25) 30%, 
-    transparent 60%
-  );
-  animation: flicker-improved 7s infinite alternate;
+  /* Bỏ filter: blur() đắt đỏ, thay bằng gradient mượt */
+  background: radial-gradient(circle, rgba(255, 140, 0, 0.3) 0%, transparent 70%);
+  /* Animation nhấp nháy */
+  animation: flicker 7s infinite alternate;
 }
 
 .torch-left {
   top: 40px;
   left: 40px;
-  width: 300px;
-  height: 300px;
-  animation-duration: 5.5s;
+  width: 200px;
+  height: 200px;
+  animation-duration: 6s;
 }
 
 .torch-right {
   top: 64px;
   right: 48px;
-  width: 250px;
-  height: 250px;
-  animation-duration: 7s;
-  animation-delay: -1.5s;
+  width: 160px;
+  height: 160px;
+  animation-duration: 8s;
+  animation-delay: -2s;
 }
 
-@keyframes flicker-improved {
-  0%   { transform: scale(1, 1); opacity: 0.7; }
-  25%  { transform: scale(1.05, 0.95); opacity: 0.9; }
-  50%  { transform: scale(0.98, 1.02); opacity: 0.6; }
-  75%  { transform: scale(1.02, 0.98); opacity: 1; }
-  100% { transform: scale(1, 1); opacity: 0.7; }
+.dungeon-ambient-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(101, 67, 33, 0.1) 0%, transparent 70%);
+  animation: flicker 12s infinite alternate;
+}
+
+@keyframes flicker {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
 }
 `;
 
 // === PHẦN COMPONENT REACT ===
 const DungeonBackground = () => {
-    // Tạo ra các hạt bụi với thông số 3D
+    // Memoize các particles để chúng chỉ được tạo một lần duy nhất.
     const particles = useMemo(() => {
-        return Array.from({ length: 40 }, (_, i) => {
-            const zDepth = Math.random() * 250 - 50; // -50px to 200px
-            // Vật ở gần (z-depth âm) sẽ có vẻ to hơn và di chuyển nhanh hơn
-            const perspectiveScale = 1 + (zDepth / 300); 
-            return {
-                id: i,
-                style: {
-                    '--size': `${(Math.random() * 1.5 + 0.5) * perspectiveScale}px`,
-                    '--y-start': `${Math.random() * 100}%`,
-                    '--x-start': `${Math.random() * 100}%`,
-                    // Điểm cuối của animation
-                    '--x-end': `${(Math.random() - 0.5) * 50}px`,
-                    '--y-end': `${-50 - Math.random() * 50}px`, // Luôn bay lên
-                    // Các thông số cho animation
-                    '--duration': `${(Math.random() * 10 + 8) / perspectiveScale}s`, // Nhanh hơn khi ở gần
-                    '--delay': `-${Math.random() * 18}s`,
-                    '--opacity': `${Math.random() * 0.7 + 0.2}`,
-                    '--z-depth': `${zDepth}px`, // Độ sâu của hạt
-                } as React.CSSProperties
-            }
-        });
+        return Array.from({ length: 30 }, (_, i) => ({
+            id: i,
+            style: {
+                '--size': `${Math.random() * 2.5 + 1}px`,
+                '--x-start': `${Math.random() * 100}%`,
+                '--y-start': `${Math.random() * 100}%`,
+                '--duration': `${Math.random() * 15 + 10}s`,
+                '--delay': `-${Math.random() * 25}s`,
+                '--opacity': `${Math.random() * 0.6 + 0.2}`,
+            } as React.CSSProperties
+        }));
+    }, []);
+
+    const cracks = useMemo(() => {
+        return Array.from({ length: 8 }, (_, i) => ({
+            id: i,
+            style: {
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${Math.random() * 30 + 10}px`,
+                height: `${Math.random() * 2 + 1}px`,
+                transform: `rotate(${Math.random() * 45}deg)`,
+                opacity: `${Math.random() * 0.2 + 0.2}`,
+            } as React.CSSProperties
+        }));
     }, []);
 
     return (
         <>
+            {/* Inject CSS vào DOM. Thẻ style này chỉ được render một lần. */}
             <style>{dungeonStyles}</style>
 
             <div className="dungeon-background">
-                {/* Lớp kết cấu đá */}
-                <div className="stone-texture" />
-
                 {/* Icon chính giữa */}
                 <div className="dungeon-icon-container">
                     <img
@@ -174,7 +185,20 @@ const DungeonBackground = () => {
                     />
                 </div>
 
-                {/* Render các hạt bụi/tia lửa */}
+                {/* Các lớp nền và hiệu ứng ánh sáng */}
+                <div className="dungeon-light-overlay" />
+                <div className="dungeon-texture-overlay" />
+
+                {/* Render các vết nứt tĩnh */}
+                {cracks.map(crack => (
+                    <div
+                        key={crack.id}
+                        className="dungeon-crack"
+                        style={crack.style}
+                    />
+                ))}
+
+                {/* Render các hạt bụi */}
                 {particles.map(particle => (
                     <div
                         key={particle.id}
@@ -186,12 +210,12 @@ const DungeonBackground = () => {
                 {/* Ánh sáng đèn đuốc */}
                 <div className="dungeon-torch-light torch-left" />
                 <div className="dungeon-torch-light torch-right" />
-                
-                {/* Lớp Vignette được đặt ở trên cùng để làm tối mọi thứ bên dưới */}
-                <div className="vignette" />
+                <div className="dungeon-ambient-glow" />
             </div>
         </>
     );
 };
 
+// **CỰC KỲ QUAN TRỌNG:**
+// Bọc component bằng React.memo để ngăn nó render lại một cách không cần thiết.
 export default React.memo(DungeonBackground);
