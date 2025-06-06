@@ -2,20 +2,20 @@ import { useState, useEffect } from 'react';
 
 // Sample data for inventory items - INCREASED TO DEMONSTRATE PAGINATION
 const items = [
-  { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png' },
+  { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
   { id: 2, name: 'Thuốc hồi máu', type: 'potion', rarity: 'common', description: 'Hồi phục 50 điểm máu khi sử dụng.', stats: { healing: 50 }, quantity: 5, icon: '🧪' },
   { id: 3, name: 'Áo giáp da', type: 'armor', rarity: 'common', description: 'Áo giáp cơ bản, cung cấp một chút bảo vệ.', stats: { defense: 10 }, quantity: 1, icon: '🥋' },
-  { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png' },
+  { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png', level: 5, maxLevel: 20, currentExp: 300, requiredExp: 500 },
   { id: 5, name: 'Thuốc hồi năng lượng', type: 'potion', rarity: 'uncommon', description: 'Hồi phục 75 điểm năng lượng khi sử dụng.', stats: { energyRestore: 75 }, quantity: 3, icon: '⚡' },
   { id: 6, name: 'Nhẫn ma thuật', type: 'accessory', rarity: 'rare', description: 'Tăng 15% sức mạnh phép thuật cho người sử dụng.', stats: { magicBoost: 15, intelligence: 5 }, quantity: 1, icon: '💍' },
   { id: 7, name: 'Bùa hộ mệnh', type: 'accessory', rarity: 'rare', description: 'Tự động hồi sinh một lần khi HP về 0.', stats: { resurrection: 1 }, quantity: 1, icon: '🔮' },
-  { id: 8, name: 'Kiếm rồng', type: 'weapon', rarity: 'epic', description: 'Vũ khí huyền thoại được rèn từ xương rồng, gây thêm sát thương hỏa.', stats: { damage: 45, fireDamage: 20, durability: 100 }, quantity: 1, icon: '🔥' },
+  { id: 8, name: 'Kiếm rồng', type: 'weapon', rarity: 'epic', description: 'Vũ khí huyền thoại được rèn từ xương rồng, gây thêm sát thương hỏa.', stats: { damage: 45, fireDamage: 20, durability: 100 }, quantity: 1, icon: '🔥', level: 10, maxLevel: 50, currentExp: 1200, requiredExp: 2000 },
   { id: 9, name: 'Vàng', type: 'currency', rarity: 'common', description: 'Tiền tệ trong game.', quantity: 1450, icon: '💰' },
   { id: 10, name: 'Giáp huyền thoại', type: 'armor', rarity: 'legendary', description: 'Giáp được chế tác từ vảy của rồng cổ đại.', stats: { defense: 50, magicResist: 30 }, quantity: 1, icon: '🛡️' },
   { id: 11, name: 'Găng tay chiến binh', type: 'armor', rarity: 'uncommon', description: 'Tăng sức mạnh tấn công cận chiến.', stats: { strength: 5, attackSpeed: 10 }, quantity: 1, icon: '🧤' },
   { id: 12, name: 'Mũ phù thủy', type: 'armor', rarity: 'rare', description: 'Mũ ma thuật tăng cường khả năng phép thuật.', stats: { intelligence: 15, manaRegen: 5 }, quantity: 1, icon: '🎩' },
-  { id: 13, name: 'Cung gỗ', type: 'weapon', rarity: 'common', description: 'Cung gỗ cơ bản cho người mới.', stats: { damage: 7, range: 20 }, quantity: 1, icon: '🏹' },
-  { id: 14, name: 'Rìu chiến', type: 'weapon', rarity: 'uncommon', description: 'Rìu chiến nặng, gây sát thương cao.', stats: { damage: 20 }, quantity: 1, icon: '🪓' },
+  { id: 13, name: 'Cung gỗ', type: 'weapon', rarity: 'common', description: 'Cung gỗ cơ bản cho người mới.', stats: { damage: 7, range: 20 }, quantity: 1, icon: '🏹', level: 2, maxLevel: 15, currentExp: 80, requiredExp: 200 },
+  { id: 14, name: 'Rìu chiến', type: 'weapon', rarity: 'uncommon', description: 'Rìu chiến nặng, gây sát thương cao.', stats: { damage: 20 }, quantity: 1, icon: '🪓', level: 7, maxLevel: 25, currentExp: 700, requiredExp: 1000 },
   { id: 15, name: 'Thuốc độc', type: 'potion', rarity: 'rare', description: 'Gây sát thương độc trong 10 giây.', stats: { poisonDamage: 10, duration: 10 }, quantity: 2, icon: '☠️' },
   { id: 16, name: 'Lông phượng hoàng', type: 'material', rarity: 'epic', description: 'Nguyên liệu quý hiếm để chế tạo vật phẩm huyền thoại.', quantity: 1, icon: ' feather' },
   { id: 17, name: 'Đá cường hóa', type: 'material', rarity: 'uncommon', description: 'Dùng để nâng cấp vũ khí và giáp.', quantity: 10, icon: '🪨' },
@@ -44,7 +44,7 @@ const items = [
   { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
   { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
   // New item added: Song Kiếm
-  { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png' },
+  { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png', level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
 ];
 
 // Define props interface for Inventory component
@@ -79,14 +79,13 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
     setTimeout(() => {
       setIsModalOpen(false);
       setAnimation(false); // Reset animation state
-      // Optionally reset selected item here if modal should not retain state
-      // setSelectedItem(null);
+      setSelectedItem(null); // Reset selected item here to allow re-opening
     }, 200); // Corresponds to modal transition duration
   };
 
   // Handle closing the main inventory
   const handleCloseInventory = () => {
-    console.log("Đóng túi đồ");
+    console.log("Đóng túi đồ"); // Log for debugging
     onClose(); // Call the onClose prop when the close button is pressed
   };
 
@@ -197,6 +196,9 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                    opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
       <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
       <div className="text-gray-500 capitalize text-xs mb-1">{item.type} • {item.rarity}</div>
+      {item.type === 'weapon' && item.level !== undefined && (
+        <div className="text-yellow-400 text-xs mb-1">Level: {item.level}</div>
+      )}
       <div className="text-gray-300 text-xs leading-relaxed">{item.description.slice(0, 70)}{item.description.length > 70 ? '...' : ''}</div>
     </div>
   );
@@ -206,6 +208,7 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
     if (!isOpen || !item) return null;
 
     const isLegendary = item.rarity === 'legendary';
+    const isWeapon = item.type === 'weapon';
 
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
@@ -288,6 +291,14 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                   {isLegendary ? `✦ ${item.rarity.toUpperCase()} ✦` : item.rarity}
                 </span>
                 <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
+                
+                {/* Weapon Level Section - Placed right of type/rarity tags */}
+                {isWeapon && item.level !== undefined && (
+                  <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">
+                    Level: {item.level}
+                  </span>
+                )}
+
                 {item.quantity > 1 && (
                   <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
                     x{item.quantity}
@@ -298,6 +309,8 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
             </div>
           </div>
           
+          {/* Removed the previous dedicated Weapon Level Section */}
+
           {isLegendary ? (
             <div className="mt-4 bg-gradient-to-r from-gray-950 via-orange-900/25 to-gray-950 p-3 rounded-lg border border-orange-700/40 shadow-lg"> {/* Changed to orange */}
               <h4 className="text-orange-300 text-base font-semibold mb-2 flex items-center gap-1.5"> {/* Changed to orange */}
