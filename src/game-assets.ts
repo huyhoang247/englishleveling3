@@ -1,9 +1,16 @@
-// src/assets.ts
+// --- START OF FILE game-assets.ts ---
 
-// ==================================================================
-// TÀI SẢN CHO GAME CHÍNH & UI CHUNG
-// ==================================================================
-export const gameImageAssets = {
+// ========================================================
+// TRUNG TÂM QUẢN LÝ TÀI NGUYÊN GAME
+// Tất cả đường dẫn đến hình ảnh, icon, lottie...
+// sẽ được định nghĩa tại đây.
+// ========================================================
+
+/**
+ * Tài nguyên cho giao diện người dùng chung (UI)
+ * Ví dụ: icon menu, shop, nút đóng...
+ */
+export const uiAssets = {
   keyIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png",
   menuIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/right.png",
   shopIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png",
@@ -13,24 +20,28 @@ export const gameImageAssets = {
   closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png",
 };
 
-export const lottieAssets = {
-    characterRun: "https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie",
-};
-
-// ==================================================================
-// TÀI SẢN CHO TÚI ĐỒ (từ inventory.tsx)
-// ==================================================================
-export const inventoryImageAssets = {
+/**
+ * Tài nguyên cho các vật phẩm trong túi đồ
+ */
+export const itemAssets = {
     kiemGo: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png',
     kiemSat: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png',
     songKiem: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png',
 };
 
-// ==================================================================
-// DANH SÁCH TOÀN BỘ HÌNH ẢNH ĐỂ TẢI TRƯỚC
-// ==================================================================
-// Gom tất cả URL hình ảnh từ các đối tượng trên vào một mảng duy nhất
+/**
+ * Tài nguyên Lottie Animation
+ */
+export const lottieAssets = {
+    characterRun: "https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie",
+};
+
+/**
+ * Mảng tổng hợp TẤT CẢ CÁC URL HÌNH ẢNH cần được tải trước
+ * khi game bắt đầu.
+ */
 export const allImageUrls = [
-    ...Object.values(gameImageAssets),
-    ...Object.values(inventoryImageAssets),
+    ...Object.values(uiAssets),
+    ...Object.values(itemAssets),
 ];
+// --- END OF FILE game-assets.ts ---
