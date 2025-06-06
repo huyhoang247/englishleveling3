@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (24).txt ---
+
 // --- START OF FILE background-game.tsx (22).txt ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
@@ -664,14 +666,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  // ==================================================================
-  // === THAY ĐỔI LỚN BẮT ĐẦU TỪ ĐÂY ===
-  // ==================================================================
-
-  // 1. Tạo một biến cờ để kiểm tra xem có bất kỳ màn hình overlay nào đang mở không.
   const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
 
-  // 2. Bỏ cấu trúc `let mainContent; if/else...` và render trực tiếp.
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
@@ -683,12 +679,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       >
         {/* === PHẦN GAME CHÍNH === */}
         {/* Luôn render phần này, nhưng ẩn nó bằng `display: none` nếu có overlay đang mở. */}
-        {/* Khi quay lại, nó chỉ cần đổi thành `display: block` => không cần render lại. */}
         <div 
           style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
           className="w-full h-full"
         >
-          {/* Toàn bộ nội dung game chính được đặt vào đây */}
           <div
             ref={gameRef}
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
@@ -926,8 +920,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         {/* === CÁC MÀN HÌNH OVERLAY === */}
-        {/* Chỉ render các component này khi state của chúng là true */}
-        {isStatsFullscreen && (
+        {/*
+          * SỬA LỖI TẢI LẠI HÌNH ẢNH:
+          * Thay vì dùng {isInventoryOpen && <Inventory.../>}, chúng ta luôn render component
+          * nhưng dùng `style={{ display: ... }}` để ẩn/hiện.
+          * Điều này ngăn React unmount component, giúp giữ lại state và các ảnh đã tải.
+          * Áp dụng cho tất cả các màn hình overlay để có trải nghiệm mượt mà nhất.
+        */}
+        <div style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
                 {auth.currentUser && (
                     <CharacterCard
@@ -937,13 +937,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     />
                 )}
             </ErrorBoundary>
-        )}
-        {isRankOpen && (
+        </div>
+        <div style={{ display: isRankOpen ? 'block' : 'none' }}>
              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
                  <EnhancedLeaderboard onClose={toggleRank} />
              </ErrorBoundary>
-        )}
-        {isGoldMineOpen && (
+        </div>
+        <div style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
                 {auth.currentUser && (
                     <GoldMine
@@ -956,13 +956,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     />
                 )}
             </ErrorBoundary>
-        )}
-        {isInventoryOpen && (
+        </div>
+        <div style={{ display: isInventoryOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
                 <Inventory onClose={toggleInventory} />
             </ErrorBoundary>
-        )}
-        {isLuckyGameOpen && (
+        </div>
+        <div style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
                 {auth.currentUser && (
                     <LuckyChestGame
@@ -975,12 +975,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     />
                 )}
             </ErrorBoundary>
-        )}
-        {isBlacksmithOpen && (
+        </div>
+        <div style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
                 <Blacksmith onClose={toggleBlacksmith} />
             </ErrorBoundary>
-        )}
+        </div>
 
       </SidebarLayout>
     </div>
