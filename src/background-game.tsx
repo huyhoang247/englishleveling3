@@ -30,9 +30,7 @@ const imageAssets = {
   inventoryIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png",
   missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
   blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
-  cloud1: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud-computing.png",
-  cloud2: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/clouds.png",
-  cloud3: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/cloud.png",
+  // Đã xoá các tài sản hình ảnh đám mây
 };
 
 const lottieAssets = {
@@ -136,15 +134,7 @@ interface ObstacleRunnerGameProps {
   currentUser: User | null; // Added currentUser prop
 }
 
-// --- NEW: Define interface for Cloud with image source ---
-interface GameCloud {
-  id: number;
-  x: number; // Horizontal position in %
-  y: number; // Vertical position in %
-  size: number; // Size of the cloud (in pixels)
-  speed: number; // Speed of the cloud
-  imgSrc: string; // Source URL for the cloud image
-}
+// Đã xoá interface GameCloud
 
 // Define interface for session storage data (used by the hook internally now)
 // We define it here as well for clarity on what's being saved/loaded
@@ -204,7 +194,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jumping, setJumping] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [runFrame, setRunFrame] = useState(0);
-  const [clouds, setClouds] = useState<GameCloud[]>([]);
+  // Đã xoá state [clouds, setClouds]
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false);
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
@@ -237,18 +227,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Refs for timers that do NOT need session storage persistence
   const gameRef = useRef<HTMLDivElement | null>(null);
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null);
-  const gameLoopIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Đã xoá gameLoopIntervalRef
   const sidebarToggleRef = useRef<(() => void) | null>(null);
 
   // NEW: Firestore instance
   const db = getFirestore();
 
-  // --- NEW: Array of Cloud Image URLs ---
-  const cloudImageUrls = [
-      imageAssets.cloud1, // THAY THẾ URL
-      imageAssets.cloud2,
-      imageAssets.cloud3
-  ];
+  // Đã xoá mảng cloudImageUrls
 
   // NEW: Helper function to generate random number between min and max (inclusive)
   function randomBetween(min: number, max: number): number {
@@ -431,7 +416,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsInventoryOpen(false);
     setIsLuckyGameOpen(false);
     setIsBlacksmithOpen(false);
-    generateInitialClouds(5);
+    // Đã xoá lời gọi generateInitialClouds
   };
 
   // Effect to fetch user data and global jackpot pool
@@ -467,7 +452,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         sessionStorage.removeItem('gameHealth');
         sessionStorage.removeItem('gameCharacterPos');
         if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-        if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
       }
     });
     return () => unsubscribe();
@@ -479,7 +463,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setGameOver(true);
       setIsRunning(false);
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
     };
   }, [health, gameStarted]);
 
@@ -496,22 +479,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Generate initial cloud elements
-  const generateInitialClouds = (count: number) => {
-    const newClouds: GameCloud[] = [];
-    for (let i = 0; i < count; i++) {
-      const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
-      newClouds.push({
-        id: Date.now() + i,
-        x: Math.random() * 50 + 100,
-        y: Math.random() * 40 + 10,
-        size: Math.random() * 40 + 30,
-        speed: 0.2,
-        imgSrc: randomImgSrc
-      });
-    }
-    setClouds(newClouds);
-  };
+  // Đã xoá hàm generateInitialClouds
 
   // Handle character jump action
   const jump = () => {
@@ -556,44 +524,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setTimeout(() => setShowDamageNumber(false), 800);
   };
 
-  // Main game loop for movement
-  useEffect(() => {
-    if (!gameStarted || gameOver || isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) {
-        if (gameLoopIntervalRef.current) {
-            clearInterval(gameLoopIntervalRef.current);
-            gameLoopIntervalRef.current = null;
-        }
-        return;
-    }
-
-    if (!gameLoopIntervalRef.current && !isBackgroundPaused) {
-        gameLoopIntervalRef.current = setInterval(() => {
-            setClouds(prevClouds => prevClouds.map(cloud => {
-                const newX = cloud.x - cloud.speed;
-                if (newX < -50) {
-                    const randomImgSrc = cloudImageUrls[Math.floor(Math.random() * cloudImageUrls.length)];
-                    return {
-                        ...cloud,
-                        id: Date.now() + Math.random(),
-                        x: 100 + Math.random() * 30,
-                        y: Math.random() * 40 + 10,
-                        size: Math.random() * 40 + 30,
-                        speed: Math.random() * 0.3 + 0.15,
-                        imgSrc: randomImgSrc
-                    };
-                }
-                return { ...cloud, x: Math.min(120, Math.max(-50, newX)) };
-            }));
-        }, 30);
-    }
-
-    return () => {
-        if (gameLoopIntervalRef.current) {
-            clearInterval(gameLoopIntervalRef.current);
-            gameLoopIntervalRef.current = null;
-        }
-    };
-  }, [gameStarted, gameOver, jumping, characterPos, isStatsFullscreen, isRankOpen, coins, isLoading, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen, isBlacksmithOpen]);
+  // Đã xoá useEffect của vòng lặp game (game loop for movement)
 
   // Effect to manage scheduling timers
   useEffect(() => {
@@ -608,7 +539,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
     return () => {
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-      if (gameLoopIntervalRef.current) clearInterval(gameLoopIntervalRef.current);
     };
   }, []);
 
@@ -665,28 +595,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  const renderClouds = () => {
-    return clouds.map(cloud => (
-      <img
-        key={cloud.id}
-        src={cloud.imgSrc}
-        alt="Cloud Icon"
-        className="absolute object-contain"
-        style={{
-          width: `${cloud.size}px`,
-          height: `${cloud.size * 0.6}px`,
-          top: `${cloud.y}%`,
-          left: `${Math.min(120, Math.max(-50, cloud.x))}%`,
-          opacity: 0.8
-        }}
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.onerror = null;
-          target.src = "https://placehold.co/40x24/ffffff/000000?text=Cloud";
-        }}
-      />
-    ));
-  };
+  // Đã xoá hàm renderClouds
 
   const toggleStatsFullscreen = () => {
     if (gameOver || isLoading) return;
@@ -891,7 +800,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             onClick={handleTap}
           >
             <DungeonBackground />
-            {renderClouds()}
+            {/* Đã xoá lời gọi renderClouds() */}
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
