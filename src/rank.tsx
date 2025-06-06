@@ -165,7 +165,9 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
 
   return (
-    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative overflow-hidden h-full flex flex-col">
+    // FIX: Removed `overflow-hidden` and changed `h-full` to `h-screen`
+    // This prevents the container from clipping the footer on shorter screens.
+    <div className="bg-gradient-to-br from-indigo-950 via-purple-950 to-violet-950 text-white p-4 shadow-2xl w-full border border-indigo-700/30 relative h-screen flex flex-col">
       {/* Sparkling stars effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="star bg-white h-1 w-1 rounded-full absolute top-1/4 left-1/3 animate-twinkle"></div>
@@ -177,12 +179,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       {/* Glowing effects */}
       <div className="absolute -top-10 -left-10 w-20 h-20 bg-indigo-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
       <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-purple-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
-
-      {/* 
-        FIX: The wrapper div <div className="relative flex flex-col h-full"> has been removed.
-        All child elements are now direct children of the main flex container,
-        allowing the layout to work correctly.
-      */}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-4 flex-shrink-0">
@@ -362,17 +358,12 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                       </div>
                       <div className="truncate">
                         <span className="font-medium text-sm">{player.username}</span>
-                        {/* You might want to add user-specific details on hover if available in Firestore */}
-                        {/* {isHovering === index && (
-                          <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: ...</div>
-                        )} */}
                       </div>
                     </div>
                     <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end">
                       <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
                         {formatNumber(player.coins)}
                       </div>
-                      {/* Add logic for daily/weekly/monthly change if you have the data */}
                     </div>
                   </div>
                 ))
@@ -429,10 +420,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                       </div>
                       <div className="truncate">
                         <span className="font-medium text-sm">{player.username}</span>
-                          {/* Add collection-specific details on hover if available */}
-                          {/* {isHovering === index + 100 && (
-                          <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: ...</div>
-                        )} */}
                       </div>
                     </div>
                     <div className="col-span-3 text-center">
