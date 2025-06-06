@@ -30,7 +30,6 @@ const imageAssets = {
   inventoryIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png",
   missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
   blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
-  // Đã xoá các tài sản hình ảnh đám mây
 };
 
 const lottieAssets = {
@@ -50,7 +49,7 @@ function preloadImage(src: string): Promise<void> {
     img.onload = () => resolve();
     img.onerror = () => {
         console.warn(`Failed to preload image, but continuing: ${src}`);
-        resolve(); // Vẫn resolve để game không bị kẹt nếu một ảnh bị lỗi
+        resolve();
     };
   });
 }
@@ -78,7 +77,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 
 const KeyIcon = () => (
   <img
-    src={imageAssets.keyIcon} // THAY THẾ URL
+    src={imageAssets.keyIcon}
     alt="Key Icon"
     className="w-4 h-4 object-contain"
   />
@@ -126,30 +125,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 
-// Define interface for component props
 interface ObstacleRunnerGameProps {
   className?: string;
   hideNavBar: () => void;
   showNavBar: () => void;
-  currentUser: User | null; // Added currentUser prop
+  currentUser: User | null;
 }
 
-
-// Define interface for session storage data (used by the hook internally now)
-// We define it here as well for clarity on what's being saved/loaded
 interface GameSessionData {
     health: number;
     characterPos: number;
-    // Add other temporary game state you want to save
 }
 
-
-// Update component signature to accept className, hideNavBar, showNavBar, and currentUser props
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
 
-  // ==================================================================
-  // GIẢI PHÁP TẢI TRƯỚC: BƯỚC 3 - TÍCH HỢP LOGIC TẢI TRƯỚC VÀO COMPONENT
-  // ==================================================================
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
@@ -165,9 +154,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
     preloadAssets();
     return () => { isCancelled = true; };
-  }, []); // Mảng rỗng đảm bảo chỉ chạy một lần duy nhất
+  }, []);
 
-  // --- Global Overflow Control ---
   useEffect(() => {
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
@@ -181,13 +169,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
+  const MAX_HEALTH = 3000;
+  const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH);
+  const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0);
 
-  // Game states - Now using useSessionStorage for states that should persist in session
-  const MAX_HEALTH = 3000; // Define max health
-  const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH); // Use hook for health
-  const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0); // Use hook for char position
-
-  // States that do NOT need session storage persistence (reset on refresh)
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [jumping, setJumping] = useState(false);
@@ -196,21 +181,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false);
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
-
-  // State for Health Bar visual display
   const [damageAmount, setDamageAmount] = useState(0);
   const [showDamageNumber, setShowDamageNumber] = useState(false);
 
-
-  // --- Coin and Gem States (Persisted in Firestore) ---
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(42);
   const [keyCount, setKeyCount] = useState(0);
   const [jackpotPool, setJackpotPool] = useState(0);
 
-
-  // UI States
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isGoldMineOpen, setIsGoldMineOpen] = useState(false);
@@ -218,24 +197,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
 
-
-  // Define the new ground level percentage
   const GROUND_LEVEL_PERCENT = 45;
 
-  // Refs for timers that do NOT need session storage persistence
   const gameRef = useRef<HTMLDivElement | null>(null);
   const runAnimationRef = useRef<NodeJS.Timeout | null>(null);
   const sidebarToggleRef = useRef<(() => void) | null>(null);
 
-  // NEW: Firestore instance
   const db = getFirestore();
 
-  // NEW: Helper function to generate random number between min and max (inclusive)
   function randomBetween(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  // --- NEW: Function to fetch user data from Firestore ---
   const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
     try {
@@ -269,7 +242,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // --- NEW: Function to fetch global jackpotPool from Firestore ---
   const fetchJackpotPool = async () => {
     try {
         const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -288,7 +260,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // --- NEW: Function to update user's coin count in Firestore using a transaction ---
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update coins: User not authenticated.");
@@ -316,8 +287,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-   // Coin count animation function
-  const startCoinCountAnimation = (reward: number) => {
+   const startCoinCountAnimation = (reward: number) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
       let step = Math.ceil(reward / 30);
@@ -336,7 +306,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 50);
   };
 
-  // --- NEW: Function to update user's key count in Firestore using a transaction ---
   const updateKeysInFirestore = async (userId: string, amount: number) => {
     if (!userId) return;
     const userDocRef = doc(db, 'users', userId);
@@ -360,7 +329,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // --- NEW: Function to update the GLOBAL jackpot pool in Firestore using a transaction ---
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
@@ -382,13 +350,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-  // NEW: Function to handle gem rewards received from TreasureChest
   const handleGemReward = (amount: number) => {
       setGems(prev => prev + amount);
-      // TODO: Implement Firestore update for gems
   };
 
-  // NEW: Function to handle key collection
   const handleKeyCollect = (amount: number) => {
       setKeyCount(prev => Math.max(0, prev + amount));
       if (auth.currentUser) {
@@ -396,7 +361,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-  // Function to start a NEW game
   const startNewGame = () => {
     setHealth(MAX_HEALTH);
     setCharacterPos(0);
@@ -413,7 +377,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsBlacksmithOpen(false);
   };
 
-  // Effect to fetch user data and global jackpot pool
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
@@ -451,7 +414,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return () => unsubscribe();
   }, [auth, db]);
 
-  // Effect to handle game over
   useEffect(() => {
     if (health <= 0 && gameStarted) {
       setGameOver(true);
@@ -460,7 +422,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, [health, gameStarted]);
 
-  // Effect to handle tab visibility changes
   useEffect(() => {
       const handleVisibilityChange = () => {
           if (document.hidden) {
@@ -473,8 +434,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-
-  // Handle character jump action
   const jump = () => {
     if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) {
       setCharacterPos(80);
@@ -491,53 +450,39 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
   
-  // ==================================================================
-  // GIẢI PHÁP TẢI TRƯỚC: BƯỚC 4 - TẠO TRẠNG THÁI LOADING TỔNG HỢP
-  // ==================================================================
   const isLoading = isLoadingUserData || !imagesLoaded;
-  const isAnyModalOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
 
-
-  // Handle tap/click on the game area
   const handleTap = () => {
-    if (isAnyModalOpen || isLoading) return;
+    if (isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) return;
     if (!gameStarted || gameOver) {
       startNewGame();
     }
   };
 
-  // Trigger health bar damage effect
   const triggerHealthDamageEffect = () => {
       setShowHealthDamageEffect(true);
       setTimeout(() => setShowHealthDamageEffect(false), 300);
   };
 
-  // Trigger character damage effect and floating number
   const triggerCharacterDamageEffect = (amount: number) => {
       setDamageAmount(amount);
       setShowDamageNumber(true);
       setTimeout(() => setShowDamageNumber(false), 800);
   };
 
-  // Effect to manage scheduling timers
   useEffect(() => {
-      if (gameOver || isAnyModalOpen || isLoading || isBackgroundPaused) {
-        // Game logic is paused, do nothing or clean up
-      } else if (gameStarted) {
-        // Game logic can run
+      if (gameOver || isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) {
+      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoading && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) {
       }
       return () => {};
-  }, [gameStarted, gameOver, isAnyModalOpen, isLoading, isBackgroundPaused]);
+  }, [gameStarted, gameOver, isStatsFullscreen, isLoading, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen, isBlacksmithOpen]);
 
-
-  // Effect to clean up all timers on unmount
   useEffect(() => {
     return () => {
       if(runAnimationRef.current) clearInterval(runAnimationRef.current);
     };
   }, []);
 
-    // Effect for coin counter animation
   useEffect(() => {
     if (displayedCoins === coins) return;
     if (Math.abs(coins - displayedCoins) > 10) {
@@ -581,9 +526,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }}
       >
         <DotLottieReact
-          src={lottieAssets.characterRun} // THAY THẾ URL
+          src={lottieAssets.characterRun}
           loop
-          autoplay={!isAnyModalOpen && !isLoading && !isBackgroundPaused}
+          autoplay={!isStatsFullscreen && !isLoading && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen}
           className="w-full h-full"
         />
       </div>
@@ -702,7 +647,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
 
-  // Show loading indicator if assets or user data are being fetched
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-950 text-white">
@@ -720,6 +664,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
+  // ==================================================================
+  // === THAY ĐỔI LỚN BẮT ĐẦU TỪ ĐÂY ===
+  // ==================================================================
+
+  // 1. Tạo một biến cờ để kiểm tra xem có bất kỳ màn hình overlay nào đang mở không.
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+
+  // 2. Bỏ cấu trúc `let mainContent; if/else...` và render trực tiếp.
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
@@ -729,209 +681,307 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
       >
-        <div className="relative w-full h-full">
-            {/* LAYER 1: THE MAIN GAME (Background) */}
-            <div 
-              className={`w-full h-full transition-all duration-300 ${isAnyModalOpen ? 'filter blur-sm' : ''}`}
-            >
-                <div
-                    ref={gameRef}
-                    className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
-                    onClick={handleTap}
+        {/* === PHẦN GAME CHÍNH === */}
+        {/* Luôn render phần này, nhưng ẩn nó bằng `display: none` nếu có overlay đang mở. */}
+        {/* Khi quay lại, nó chỉ cần đổi thành `display: block` => không cần render lại. */}
+        <div 
+          style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
+          className="w-full h-full"
+        >
+          {/* Toàn bộ nội dung game chính được đặt vào đây */}
+          <div
+            ref={gameRef}
+            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
+            onClick={handleTap}
+          >
+            <DungeonBackground />
+            {renderCharacter()}
+
+            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
+                        rounded-b-lg shadow-2xl
+                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                        border-b border-l border-r border-slate-700/50">
+
+                <HeaderBackground />
+
+                <button
+                    onClick={() => sidebarToggleRef.current?.()}
+                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
+                    aria-label="Mở sidebar"
+                    title="Mở sidebar"
                 >
-                    {/* Invisible overlay to block clicks on the game when a modal is open */}
-                    {isAnyModalOpen && <div className="absolute inset-0 z-40"></div>}
-                    
-                    <DungeonBackground />
-                    {renderCharacter()}
-
-                    <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                                rounded-b-lg shadow-2xl
-                                bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                                border-b border-l border-r border-slate-700/50">
-
-                        <HeaderBackground />
-
-                        <button
-                            onClick={() => sidebarToggleRef.current?.()}
-                            className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
-                            aria-label="Mở sidebar"
-                            title="Mở sidebar"
-                        >
-                            <img
-                                src={imageAssets.menuIcon}
-                                alt="Menu Icon"
-                                className="w-5 h-5 object-contain"
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.onerror = null;
-                                    target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu";
-                                }}
-                            />
-                        </button>
-
-                        <div className="flex items-center relative z-10">
-                            <div className="w-32 relative">
-                                <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                                    <div className="h-full overflow-hidden">
-                                        <div
-                                            className={`${getColor()} h-full transform origin-left`}
-                                            style={{ transform: `scaleX(${healthPct})`, transition: 'transform 0.5s ease-out' }}
-                                        >
-                                            <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                                        </div>
-                                    </div>
-                                    <div
-                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                                        style={{ animation: 'pulse 3s infinite' }}
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                                            {Math.round(health)}/{MAX_HEALTH}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
-                                    {showDamageNumber && (
-                                        <div
-                                            className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                            style={{ animation: 'floatUp 0.8s ease-out forwards' }}
-                                        >
-                                            -{damageAmount}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-1 currency-display-container relative z-10">
-                            <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                                <div className="relative mr-0.5 flex items-center justify-center">
-                                    <GemIcon size={16} color="#a78bfa" className="relative z-20" />
-                                </div>
-                                <div className="font-bold text-purple-200 text-xs tracking-wide">
-                                    {gems.toLocaleString()}
-                                </div>
-                                <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-                                    <span className="text-white font-bold text-xs">+</span>
-                                </div>
-                                <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                                <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                            </div>
-                            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
-                        </div>
-                    </div>
-
-                    {gameOver && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
-                            <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
-                            <button
-                                className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                                onClick={startNewGame}
-                            >
-                                Chơi Lại
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-                        {[
-                          { icon: (<img src={imageAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop"; }}/>), label: "", notification: true, special: true, centered: true },
-                          { icon: (<img src={imageAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv"; }}/>), label: "", notification: true, special: true, centered: true, onClick: toggleInventory }
-                        ].map((item, index) => (
-                            <div key={index} className="group cursor-pointer">
-                                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
-                                    {item.icon}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-                        {[
-                          { icon: (<img src={imageAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission"; }}/>), label: "", notification: true, special: true, centered: true },
-                          { icon: (<img src={imageAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith"; }}/>), label: "", notification: true, special: true, centered: true, onClick: toggleBlacksmith }
-                        ].map((item, index) => (
-                          <div key={index} className="group cursor-pointer">
-                                <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
-                                    {item.icon}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <TreasureChest
-                        initialChests={3}
-                        keyCount={keyCount}
-                        onKeyCollect={(n) => {
-                            if (auth.currentUser) {
-                                updateKeysInFirestore(auth.currentUser!.uid, -n);
-                            }
+                     <img
+                        src={imageAssets.menuIcon}
+                        alt="Menu Icon"
+                        className="w-5 h-5 object-contain"
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu";
                         }}
-                        onCoinReward={startCoinCountAnimation}
-                        onGemReward={handleGemReward}
-                        isGamePaused={gameOver || !gameStarted || isLoading || isAnyModalOpen || isBackgroundPaused}
-                        isStatsFullscreen={isStatsFullscreen}
-                        currentUserId={currentUser ? currentUser.uid : null}
-                    />
+                     />
+                </button>
+
+                <div className="flex items-center relative z-10">
+                  <div className="w-32 relative">
+                      <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
+                          <div className="h-full overflow-hidden">
+                              <div
+                                  className={`${getColor()} h-full transform origin-left`}
+                                  style={{ transform: `scaleX(${healthPct})`, transition: 'transform 0.5s ease-out' }}
+                              >
+                                  <div className="w-full h-1/2 bg-white bg-opacity-20" />
+                              </div>
+                          </div>
+                          <div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
+                              style={{ animation: 'pulse 3s infinite' }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
+                                  {Math.round(health)}/{MAX_HEALTH}
+                              </span>
+                          </div>
+                      </div>
+                      <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
+                          {showDamageNumber && (
+                              <div
+                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
+                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }}
+                              >
+                                  -{damageAmount}
+                              </div>
+                          )}
+                      </div>
+                  </div>
+                </div>
+               <div className="flex items-center space-x-1 currency-display-container relative z-10">
+                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                        <div className="relative mr-0.5 flex items-center justify-center">
+                            <GemIcon size={16} color="#a78bfa" className="relative z-20" />
+                        </div>
+                        <div className="font-bold text-purple-200 text-xs tracking-wide">
+                            {gems.toLocaleString()}
+                        </div>
+                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                            <span className="text-white font-bold text-xs">+</span>
+                        </div>
+                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                    </div>
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
                 </div>
             </div>
 
-            {/* LAYER 2: THE MODALS / OVERLAYS (on top) */}
-            <div className="absolute inset-0 z-50 pointer-events-none">
-              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg pointer-events-auto">Lỗi hiển thị màn hình!</div>}>
-                {isStatsFullscreen && auth.currentUser && (
-                    <div className="pointer-events-auto">
-                        <CharacterCard
-                            onClose={toggleStatsFullscreen}
-                            coins={coins}
-                            onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        />
+            {gameOver && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
+                <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
+                <button
+                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
+                  onClick={startNewGame}
+                >
+                  Chơi Lại
+                </button>
+              </div>
+            )}
+
+            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+              {[
+                {
+                  icon: (
+                    <img
+                      src={imageAssets.shopIcon}
+                      alt="Shop Icon"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
+                      }}
+                    />
+                  ),
+                  label: "",
+                  notification: true,
+                  special: true,
+                  centered: true
+                },
+                {
+                  icon: (
+                    <img
+                      src={imageAssets.inventoryIcon}
+                      alt="Inventory Icon"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv";
+                      }}
+                    />
+                  ),
+                  label: "",
+                  notification: true,
+                  special: true,
+                  centered: true,
+                  onClick: toggleInventory
+                }
+              ].map((item, index) => (
+                <div key={index} className="group cursor-pointer">
+                  {item.special && item.centered ? (
+                      <div
+                          className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
+                          onClick={item.onClick}
+                      >
+                          {item.icon}
+                          {item.label && (
+                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                          )}
+                      </div>
+                  ) : (
+                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                      {item.icon}
+                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
                     </div>
-                )}
-                {isRankOpen && (
-                    <div className="pointer-events-auto">
-                        <EnhancedLeaderboard onClose={toggleRank} />
-                    </div>
-                )}
-                {isGoldMineOpen && auth.currentUser && (
-                    <div className="pointer-events-auto">
-                        <GoldMine
-                            onClose={toggleGoldMine}
-                            currentCoins={coins}
-                            onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                            onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
-                            currentUserId={auth.currentUser!.uid}
-                            isGamePaused={gameOver || !gameStarted || isLoading || isAnyModalOpen || isBackgroundPaused}
-                        />
-                    </div>
-                )}
-                {isInventoryOpen && (
-                    <div className="pointer-events-auto">
-                        <Inventory onClose={toggleInventory} />
-                    </div>
-                )}
-                {isLuckyGameOpen && auth.currentUser && (
-                    <div className="pointer-events-auto">
-                        <LuckyChestGame
-                            onClose={toggleLuckyGame}
-                            currentCoins={coins}
-                            onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                            currentJackpotPool={jackpotPool}
-                            onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
-                            isStatsFullscreen={isStatsFullscreen}
-                        />
-                    </div>
-                )}
-                {isBlacksmithOpen && (
-                    <div className="pointer-events-auto">
-                        <Blacksmith onClose={toggleBlacksmith} />
-                    </div>
-                )}
-              </ErrorBoundary>
+                  )}
+                </div>
+              ))}
             </div>
+
+             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+              {[
+                {
+                  icon: (
+                    <img
+                      src={imageAssets.missionIcon}
+                      alt="Mission Icon"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
+                      }}
+                    />
+                  ),
+                  label: "",
+                  notification: true,
+                  special: true,
+                  centered: true
+                },
+                {
+                  icon: (
+                    <img
+                      src={imageAssets.blacksmithIcon}
+                      alt="Blacksmith Icon"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
+                      }}
+                    />
+                  ),
+                  label: "",
+                  notification: true,
+                  special: true,
+                  centered: true,
+                  onClick: toggleBlacksmith
+                },
+              ].map((item, index) => (
+                <div key={index} className="group cursor-pointer">
+                  {item.special && item.centered ? (
+                      <div
+                          className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
+                          onClick={item.onClick}
+                      >
+                          {item.icon}
+                          {item.label && (
+                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
+                          )}
+                      </div>
+                  ) : (
+                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
+                      {item.icon}
+                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <TreasureChest
+              initialChests={3}
+              keyCount={keyCount}
+              onKeyCollect={(n) => {
+                if (auth.currentUser) {
+                  updateKeysInFirestore(auth.currentUser!.uid, -n);
+                }
+              }}
+              onCoinReward={startCoinCountAnimation}
+              onGemReward={handleGemReward}
+              isGamePaused={isAnyOverlayOpen || gameOver || !gameStarted || isLoading || isBackgroundPaused}
+              isStatsFullscreen={isStatsFullscreen}
+              currentUserId={currentUser ? currentUser.uid : null}
+            />
+          </div>
         </div>
+
+        {/* === CÁC MÀN HÌNH OVERLAY === */}
+        {/* Chỉ render các component này khi state của chúng là true */}
+        {isStatsFullscreen && (
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
+                {auth.currentUser && (
+                    <CharacterCard
+                        onClose={toggleStatsFullscreen}
+                        coins={coins}
+                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                    />
+                )}
+            </ErrorBoundary>
+        )}
+        {isRankOpen && (
+             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
+                 <EnhancedLeaderboard onClose={toggleRank} />
+             </ErrorBoundary>
+        )}
+        {isGoldMineOpen && (
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
+                {auth.currentUser && (
+                    <GoldMine
+                        onClose={toggleGoldMine}
+                        currentCoins={coins}
+                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                        onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
+                        currentUserId={auth.currentUser!.uid}
+                        isGamePaused={isAnyOverlayOpen}
+                    />
+                )}
+            </ErrorBoundary>
+        )}
+        {isInventoryOpen && (
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
+                <Inventory onClose={toggleInventory} />
+            </ErrorBoundary>
+        )}
+        {isLuckyGameOpen && (
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
+                {auth.currentUser && (
+                    <LuckyChestGame
+                        onClose={toggleLuckyGame}
+                        currentCoins={coins}
+                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                        currentJackpotPool={jackpotPool}
+                        onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
+                        isStatsFullscreen={isStatsFullscreen}
+                    />
+                )}
+            </ErrorBoundary>
+        )}
+        {isBlacksmithOpen && (
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
+                <Blacksmith onClose={toggleBlacksmith} />
+            </ErrorBoundary>
+        )}
+
       </SidebarLayout>
     </div>
   );
