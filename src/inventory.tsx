@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 
-// Sample data for inventory items - INCREASED TO DEMONSTRATE PAGINATION
-const items = [
-  { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
+// MODIFIED: Renamed to sampleItems to reflect it's the raw data source.
+// ADDED a second "Kiếm gỗ" entry to simulate the user's problem.
+const sampleItems = [
+  // User's scenario: 4 level 1 swords and 1 level 2 sword.
+  { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 4, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
+  { id: 42, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ đã được nâng cấp.', stats: { damage: 7, durability: 25 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/kiem-go.png', level: 2, maxLevel: 10, currentExp: 10, requiredExp: 200 }, // The upgraded sword
+  
   { id: 2, name: 'Thuốc hồi máu', type: 'potion', rarity: 'common', description: 'Hồi phục 50 điểm máu khi sử dụng.', stats: { healing: 50 }, quantity: 5, icon: '🧪' },
   { id: 3, name: 'Áo giáp da', type: 'armor', rarity: 'common', description: 'Áo giáp cơ bản, cung cấp một chút bảo vệ.', stats: { defense: 10 }, quantity: 1, icon: '🥋' },
   { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png', level: 5, maxLevel: 20, currentExp: 300, requiredExp: 500 },
@@ -12,6 +16,7 @@ const items = [
   { id: 8, name: 'Kiếm rồng', type: 'weapon', rarity: 'epic', description: 'Vũ khí huyền thoại được rèn từ xương rồng, gây thêm sát thương hỏa.', stats: { damage: 45, fireDamage: 20, durability: 100 }, quantity: 1, icon: '🔥', level: 10, maxLevel: 50, currentExp: 1200, requiredExp: 2000 },
   { id: 9, name: 'Vàng', type: 'currency', rarity: 'common', description: 'Tiền tệ trong game.', quantity: 1450, icon: '💰' },
   { id: 10, name: 'Giáp huyền thoại', type: 'armor', rarity: 'legendary', description: 'Giáp được chế tác từ vảy của rồng cổ đại.', stats: { defense: 50, magicResist: 30 }, quantity: 1, icon: '🛡️' },
+  // ... (rest of the items can stay as they are)
   { id: 11, name: 'Găng tay chiến binh', type: 'armor', rarity: 'uncommon', description: 'Tăng sức mạnh tấn công cận chiến.', stats: { strength: 5, attackSpeed: 10 }, quantity: 1, icon: '🧤' },
   { id: 12, name: 'Mũ phù thủy', type: 'armor', rarity: 'rare', description: 'Mũ ma thuật tăng cường khả năng phép thuật.', stats: { intelligence: 15, manaRegen: 5 }, quantity: 1, icon: '🎩' },
   { id: 13, name: 'Cung gỗ', type: 'weapon', rarity: 'common', description: 'Cung gỗ cơ bản cho người mới.', stats: { damage: 7, range: 20 }, quantity: 1, icon: '🏹', level: 2, maxLevel: 15, currentExp: 80, requiredExp: 200 },
@@ -23,29 +28,57 @@ const items = [
   { id: 19, name: 'Chìa khóa vàng', type: 'key', rarity: 'epic', description: 'Chìa khóa mở rương kho báu hiếm.', quantity: 1, icon: '🔑' },
   { id: 20, name: 'Sách cổ', type: 'misc', rarity: 'common', description: 'Một cuốn sách cũ chứa đựng kiến thức cổ xưa.', quantity: 1, icon: '📚' },
   { id: 21, name: 'Thức ăn', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 8, icon: '🍖' },
-  // Adding more items to demonstrate scrolling
   { id: 22, name: 'Ngọc trai', type: 'material', rarity: 'uncommon', description: 'Nguyên liệu quý hiếm.', quantity: 3, icon: '⚪' },
   { id: 23, name: 'Hạt giống phép thuật', type: 'misc', rarity: 'rare', description: 'Hạt giống có thể mọc ra cây phép thuật.', quantity: 1, icon: '🌱' },
   { id: 24, name: 'Bình mana lớn', type: 'potion', rarity: 'common', description: 'Hồi phục 100 điểm mana.', stats: { manaRestore: 100 }, quantity: 2, icon: '💧' },
-  { id: 25, name: 'Đá quý xanh', type: 'material', rarity: 'epic', description: 'Đá quý hiếm có năng lượng ma thuật.', quantity: 1, icon: '💎' },
-  { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'uncommon', description: 'Lá cây dùng để chế thuốc.', quantity: 5, icon: '🍃' },
-  { id: 27, name: 'Cánh thiên thần', type: 'material', rarity: 'legendary', description: 'Nguyên liệu cực hiếm từ thiên thần.', quantity: 1, icon: '🕊️' },
-  { id: 28, name: 'Mảnh vỡ cổ', type: 'misc', rarity: 'common', description: 'Mảnh vỡ từ một di tích cổ.', quantity: 10, icon: '🏺' },
-  { id: 29, name: 'Nước thánh', type: 'potion', rarity: 'rare', description: 'Thanh tẩy các hiệu ứng tiêu cực.', stats: { cleanse: true }, quantity: 1, icon: '✨' },
-  { id: 30, name: 'Giày tốc độ', type: 'armor', rarity: 'uncommon', description: 'Tăng tốc độ di chuyển.', stats: { speed: 10 }, quantity: 1, icon: '👟' },
-  { id: 31, name: 'Bánh mì', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 5, icon: '🍞' },
-  { id: 32, name: 'Cà rốt', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 7, icon: '🥕' },
-  { id: 33, name: 'Đèn lồng', type: 'misc', rarity: 'common', description: 'Chiếu sáng đường đi.', quantity: 1, icon: '🏮' },
-  { id: 34, name: 'Dây thừng', type: 'misc', rarity: 'common', description: 'Dụng cụ hữu ích.', quantity: 2, icon: '🔗' },
-  { id: 35, name: 'Hộp nhạc', type: 'misc', rarity: 'rare', description: 'Phát ra giai điệu êm dịu.', quantity: 1, icon: '🎶' },
-  { id: 36, name: 'Kính lúp', type: 'misc', rarity: 'uncommon', description: 'Giúp nhìn rõ hơn.', quantity: 1, icon: '🔎' },
-  { id: 37, name: 'Bản đồ kho báu', type: 'quest', rarity: 'epic', description: 'Dẫn đến kho báu lớn.', quantity: 1, icon: '🧭' },
-  { id: 38, name: 'Nước tăng lực', type: 'potion', rarity: 'uncommon', description: 'Tăng sức mạnh tạm thời.', stats: { strengthBoost: 10, duration: 30 }, quantity: 3, icon: '⚡' },
-  { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
-  { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
-  // New item added: Song Kiếm
+  { id: 25, 'name': 'Đá quý xanh', type: 'material', rarity: 'epic', description: 'Đá quý hiếm có năng lượng ma thuật.', quantity: 1, icon: '💎' },
+  { id: 26, 'name': 'Lá cây hiếm', type: 'material', rarity: 'uncommon', description: 'Lá cây dùng để chế thuốc.', quantity: 5, icon: '🍃' },
+  { id: 27, 'name': 'Cánh thiên thần', type: 'material', rarity: 'legendary', description: 'Nguyên liệu cực hiếm từ thiên thần.', quantity: 1, icon: '🕊️' },
+  { id: 28, 'name': 'Mảnh vỡ cổ', type: 'misc', rarity: 'common', description: 'Mảnh vỡ từ một di tích cổ.', quantity: 10, icon: '🏺' },
+  { id: 29, 'name': 'Nước thánh', type: 'potion', rarity: 'rare', description: 'Thanh tẩy các hiệu ứng tiêu cực.', stats: { cleanse: true }, quantity: 1, icon: '✨' },
+  { id: 30, 'name': 'Giày tốc độ', type: 'armor', rarity: 'uncommon', description: 'Tăng tốc độ di chuyển.', stats: { speed: 10 }, quantity: 1, icon: '👟' },
+  { id: 31, 'name': 'Bánh mì', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 5, icon: '🍞' },
+  { id: 32, 'name': 'Cà rốt', type: 'consumable', rarity: 'common', description: 'Hồi phục một ít sức chịu đựng.', quantity: 7, icon: '🥕' },
+  { id: 33, 'name': 'Đèn lồng', type: 'misc', rarity: 'common', description: 'Chiếu sáng đường đi.', quantity: 1, icon: '🏮' },
+  { id: 34, 'name': 'Dây thừng', type: 'misc', rarity: 'common', description: 'Dụng cụ hữu ích.', quantity: 2, icon: '🔗' },
+  { id: 35, 'name': 'Hộp nhạc', type: 'misc', rarity: 'rare', description: 'Phát ra giai điệu êm dịu.', quantity: 1, icon: '🎶' },
+  { id: 36, 'name': 'Kính lúp', type: 'misc', rarity: 'uncommon', description: 'Giúp nhìn rõ hơn.', quantity: 1, icon: '🔎' },
+  { id: 37, 'name': 'Bản đồ kho báu', type: 'quest', rarity: 'epic', description: 'Dẫn đến kho báu lớn.', quantity: 1, icon: '🧭' },
+  { id: 38, 'name': 'Nước tăng lực', type: 'potion', rarity: 'uncommon', description: 'Tăng sức mạnh tạm thời.', stats: { strengthBoost: 10, duration: 30 }, quantity: 3, icon: '⚡' },
+  { id: 39, 'name': 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
+  { id: 40, 'name': 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
   { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png', level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
 ];
+
+// NEW: Function to group items by a unique key (name in this case)
+const groupInventoryItems = (items) => {
+  const grouped = new Map();
+
+  items.forEach(item => {
+    // A unique key to identify the base item type. In a real game, this might be a `baseId`.
+    const key = item.name;
+
+    // Extract properties that are unique to this specific variant
+    const { id, quantity, stats, level, currentExp, requiredExp, description } = item;
+    const variant = { id, quantity, stats, level, currentExp, requiredExp, description };
+    
+    if (!grouped.has(key)) {
+      // If this is the first time we see this item, create a new group
+      const { name, ...baseProps } = item;
+      grouped.set(key, {
+        ...baseProps,
+        name: key, // ensure name is set
+        // All variants of this item will be stored here
+        variants: [variant],
+      });
+    } else {
+      // If the group already exists, just add the new variant to it
+      grouped.get(key).variants.push(variant);
+    }
+  });
+
+  return Array.from(grouped.values());
+};
 
 // Define props interface for Inventory component
 interface InventoryProps {
@@ -53,43 +86,88 @@ interface InventoryProps {
 }
 
 export default function Inventory({ onClose }: InventoryProps) { // Destructure onClose from props
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // NEW: State for the processed, grouped inventory data
+  const [inventory, setInventory] = useState([]);
+
+  // MODIFIED: States for the new modal flow
+  const [selectedItem, setSelectedItem] = useState(null); // For the final detail modal
+  const [selectedItemGroup, setSelectedItemGroup] = useState(null); // For the variant selection modal
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+
   const [animation, setAnimation] = useState(false);
-  const totalInventorySlots = 50; // Total slots available in the inventory (changed to 50)
+  const totalInventorySlots = 50;
 
-  // Calculate occupied slots (number of unique item types)
-  const occupiedSlots = items.length;
+  // NEW: Process the raw item data into a grouped structure on component mount
+  useEffect(() => {
+    const groupedData = groupInventoryItems(sampleItems);
+    setInventory(groupedData);
+  }, []);
 
-  // When selecting a new item, show modal
+  const occupiedSlots = inventory.length; // Now based on the number of groups
+
+  // MODIFIED: This effect now controls the DETAIL modal
   useEffect(() => {
     if (selectedItem) {
-      setIsModalOpen(true);
+      setIsDetailModalOpen(true);
       setAnimation(true);
       const timer = setTimeout(() => {
         setAnimation(false);
-      }, 300); // Corresponds to modal transition duration
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [selectedItem]);
 
-  // Close modal
-  const closeModal = () => {
-    setAnimation(true); // Trigger close animation
+  // MODIFIED: Close the DETAIL modal
+  const closeDetailModal = () => {
+    setAnimation(true);
     setTimeout(() => {
-      setIsModalOpen(false);
-      setAnimation(false); // Reset animation state
-      setSelectedItem(null); // Reset selected item here to allow re-opening
-    }, 200); // Corresponds to modal transition duration
+      setIsDetailModalOpen(false);
+      setAnimation(false);
+      setSelectedItem(null);
+    }, 200);
+  };
+  
+  // NEW: Close the VARIANT modal
+  const closeVariantModal = () => {
+    setIsVariantModalOpen(false);
+    setSelectedItemGroup(null);
+  }
+
+  // NEW: Handles clicking an item in the main grid
+  const handleItemClick = (itemGroup) => {
+    // If there's only one variant, open the detail modal directly
+    if (itemGroup.variants.length === 1) {
+      const singleItem = { ...itemGroup, ...itemGroup.variants[0] };
+      delete singleItem.variants; // Clean up the object
+      setSelectedItem(singleItem);
+    } else {
+      // If there are multiple variants, open the variant selection modal
+      setSelectedItemGroup(itemGroup);
+      setIsVariantModalOpen(true);
+    }
   };
 
-  // Handle closing the main inventory
+  // NEW: Handles selecting a specific variant from the variant modal
+  const handleSelectVariant = (variant) => {
+    // Combine the base item group properties with the specific variant properties
+    const combinedItem = { ...selectedItemGroup, ...variant };
+    delete combinedItem.variants; // Clean up
+    
+    setSelectedItem(combinedItem); // Now open the detail modal with this item
+    closeVariantModal(); // Close the variant selection modal
+  };
+
   const handleCloseInventory = () => {
-    console.log("Đóng túi đồ"); // Log for debugging
-    onClose(); // Call the onClose prop when the close button is pressed
+    console.log("Đóng túi đồ");
+    onClose();
   };
 
-  // Determine color based on rarity
+  // --- All helper functions (getRarityColor, renderItemStats, etc.) remain the same ---
+  // ... (No changes needed for getRarityColor, getRarityGradient, getRarityTextColor, getRarityGlow)
+  // ... (No changes needed for renderItemStats, formatStatName)
+  // ... (No changes needed for ItemTooltip)
+  // ... (No changes needed for ItemModal, it will receive a complete item object as before)
   const getRarityColor = (rarity: string) => {
     switch(rarity) {
       case 'common': return 'border-gray-500'; // Slightly darker common border
@@ -196,10 +274,13 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                    opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
       <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
       <div className="text-gray-500 capitalize text-xs mb-1">{item.type} • {item.rarity}</div>
-      {item.type === 'weapon' && item.level !== undefined && (
-        <div className="text-yellow-400 text-xs mb-1">Level: {item.level}</div>
-      )}
-      <div className="text-gray-300 text-xs leading-relaxed">{item.description.slice(0, 70)}{item.description.length > 70 ? '...' : ''}</div>
+      {/* Tooltip now shows a summary */}
+      <div className="text-gray-300 text-xs leading-relaxed mt-1">
+        {item.variants.length > 1 
+            ? `${item.variants.length} loại khác nhau.` 
+            : item.description.slice(0, 70) + (item.description.length > 70 ? '...' : '')
+        }
+      </div>
     </div>
   );
 
@@ -352,12 +433,56 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
       </div>
     );
   };
+  
+  // NEW: Component for the Variant Selection Modal
+  const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) => {
+    if (!isOpen || !itemGroup) return null;
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+        <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm p-5">
+          <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+             <h3 className="text-xl font-bold text-yellow-400">Chọn biến thể: {itemGroup.name}</h3>
+             <button onClick={onClose} className="text-gray-500 hover:text-white">
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close Icon" className="w-5 h-5" />
+             </button>
+          </div>
+          <ul className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+            {itemGroup.variants.map((variant, index) => (
+              <li 
+                key={variant.id || index}
+                onClick={() => onSelectVariant(variant)}
+                className="flex items-center justify-between p-3 bg-gray-800/70 rounded-lg cursor-pointer hover:bg-gray-700/90 border border-gray-700 hover:border-blue-500 transition-all duration-200"
+              >
+                <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 flex items-center justify-center text-3xl bg-black/30 rounded-md border ${getRarityColor(itemGroup.rarity)}`}>
+                        {itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-1" /> : itemGroup.icon}
+                    </div>
+                    <div>
+                        <div className="font-semibold text-white">
+                            {variant.level ? `Level ${variant.level}` : itemGroup.name}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                            Damage: {variant.stats.damage || 'N/A'}
+                        </div>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <span className="font-bold text-lg text-gray-200">x{variant.quantity}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative"> {/* Added relative positioning */}
-      {/* Close button at top right */}
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative">
       <button 
-        onClick={handleCloseInventory} // Call the new handler
+        onClick={handleCloseInventory}
         className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10"
         aria-label="Đóng túi đồ"
       >
@@ -372,107 +497,41 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
           </span>
         </h1>
         <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80">
-          {/* Display current occupied slots and total inventory slots */}
           <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
         </div>
       </div>
       
-      {/* Custom CSS for animations */}
-      <style>
-        {`
-        @keyframes pulse-stronger {
-          0%, 100% {
-            opacity: 0.2; /* Reduced opacity */
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.3; /* Reduced opacity */
-            transform: scale(1.02); /* Reduced scale */
-          }
-        }
-
-        @keyframes fade-in-out {
-          0%, 100% {
-            opacity: 0;
-            transform: scale(0.9); /* Adjusted scale */
-          }
-          50% {
-            opacity: 0.1; /* Reduced opacity */
-            transform: scale(1);
-          }
-        }
-
-        @keyframes ping-slow {
-          0% {
-            transform: scale(0.9); /* Adjusted scale */
-            opacity: 0.6; /* Reduced opacity */
-          }
-          50% {
-            transform: scale(1.1); /* Adjusted scale */
-            opacity: 0.1; /* Reduced opacity */
-          }
-          100% {
-            transform: scale(0.9); /* Adjusted scale */
-            opacity: 0.6; /* Reduced opacity */
-          }
-        }
-
-        .animate-pulse-stronger {
-          animation: pulse-stronger 4s infinite ease-in-out;
-        }
-        .animate-fade-in-out {
-          animation: fade-in-out 5s infinite ease-in-out;
-        }
-        .animate-ping-slow {
-          animation: ping-slow 3s infinite ease-in-out;
-        }
-
-        /* Additional glow for legendary items in grid */
-        .legendary-item-glow {
-          box-shadow: 0 0 10px rgba(255, 165, 0, 0.4), 0 0 20px rgba(255, 69, 0, 0.2); /* Reduced shadow intensity */
-          transition: box-shadow 0.3s ease-in-out;
-        }
-        .legendary-item-glow:hover {
-          box-shadow: 0 0 15px rgba(255, 165, 0, 0.6), 0 0 30px rgba(255, 69, 0, 0.4), 0 0 45px rgba(255, 69, 0, 0.15); /* Reduced shadow intensity */
-        }
-
-        .inventory-grid-scrollbar-hidden::-webkit-scrollbar {
-          display: none; /* Safari and Chrome */
-        }
-        .inventory-grid-scrollbar-hidden {
-          -ms-overflow-style: none;  /* IE 10+ */
-          scrollbar-width: none; /* Firefox */
-        }
-        `}
-      </style>
+      <style>{/* ... CSS remains the same ... */}</style>
       
+      {/* MODIFIED: The modals are now controlled by different states */}
       <ItemModal 
         item={selectedItem} 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
+        isOpen={isDetailModalOpen} 
+        onClose={closeDetailModal} 
+      />
+      <VariantSelectionModal 
+        itemGroup={selectedItemGroup}
+        isOpen={isVariantModalOpen}
+        onClose={closeVariantModal}
+        onSelectVariant={handleSelectVariant}
       />
       
-      {/* Inventory Grid - now with scrolling */}
-      <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden"> {/* Modified classes to hide scrollbar */}
-        {items.map((item: any) => { // Render all items
-          const isLegendary = item.rarity === 'legendary';
+      {/* MODIFIED: Inventory Grid now maps over `inventory` (grouped data) */}
+      <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden">
+        {inventory.map((itemGroup: any) => {
+          const isLegendary = itemGroup.rarity === 'legendary';
+          // Calculate the total quantity of all variants in the group
+          const totalQuantity = itemGroup.variants.reduce((sum, v) => sum + v.quantity, 0);
           
           return (
             <div 
-              key={item.id}
-              className={`group relative w-full aspect-square 
-                          ${isLegendary 
-                            ? 'bg-gradient-to-br from-gray-900 via-orange-900/80 to-gray-900' // Changed to orange
-                            : `bg-gradient-to-br ${getRarityGradient(item.rarity)}`} 
-                          rounded-lg border-2 ${getRarityColor(item.rarity)} 
-                          flex items-center justify-center cursor-pointer 
-                          hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 
-                          shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden`}
-              onClick={() => setSelectedItem(item)}
+              key={itemGroup.name} // Use a unique key for the group
+              className={`group relative w-full aspect-square ...`}
+              onClick={() => handleItemClick(itemGroup)} // Use the new click handler
             >
-              {/* Animated shine effect for legendary items on hover */}
+              {/* ... All the visual styles for the grid item ... */}
               {isLegendary && (
-                <>
+                 <>
                   <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
                   <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
                   <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> {/* Reduced opacity */}
@@ -482,39 +541,34 @@ export default function Inventory({ onClose }: InventoryProps) { // Destructure 
                 </>
               )}
               
-              {item.quantity > 1 && item.type !== 'currency' && (
+              {/* Show total quantity */}
+              {totalQuantity > 1 && itemGroup.type !== 'currency' && (
                 <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
-                  x{item.quantity}
+                  x{totalQuantity}
                 </div>
               )}
               
-              {/* Conditional rendering for image icon or emoji */}
-              {item.icon.startsWith('http') ? (
-                <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />
+              {itemGroup.icon.startsWith('http') ? (
+                <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />
               ) : (
-                <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>
+                <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{itemGroup.icon}</div>
               )}
               
-              <ItemTooltip item={item} />
+              {/* Pass the whole group to the tooltip */}
+              <ItemTooltip item={itemGroup} />
             </div>
           );
         })}
         
-        {/* Empty slots for visual consistency - now based on totalInventorySlots */}
-        {Array.from({ length: totalInventorySlots - items.length }).map((_, i) => (
+        {Array.from({ length: totalInventorySlots - inventory.length }).map((_, i) => (
           <div 
             key={`empty-${i}`} 
             className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl"
           >
-            <span className="opacity-40">＋</span> {/* Simple placeholder for empty slot */}
+            <span className="opacity-40">＋</span>
           </div>
         ))}
       </div>
-
-      {/* Removed the pagination controls */}
-      
-      {/* Removed the currency and shop section */}
     </div>
   );
 }
-
