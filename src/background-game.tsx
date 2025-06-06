@@ -369,7 +369,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       if (user) {
         fetchUserData(user.uid);
         fetchJackpotPool();
-        setGameStarted(true);
+        // Set gameStarted to true by default since it's the main screen now
+        setGameStarted(true); 
         setIsRunning(true);
       } else {
         setGameStarted(false);
@@ -651,8 +652,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }
 
   const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
-  // THAY ĐỔI: Tạo biến isGamePaused để tái sử dụng
-  const isGamePaused = isAnyOverlayOpen || gameOver || !gameStarted || isLoading || isBackgroundPaused;
+  // =====> THAY ĐỔI ĐƯỢC ÁP DỤNG TẠI ĐÂY <=====
+  // Loại bỏ các điều kiện `gameOver` và `!gameStarted` không còn cần thiết
+  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
@@ -673,9 +675,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
             onClick={handleTap}
           >
-            {/* THAY ĐỔI: Truyền prop 'isPaused' vào DungeonBackground */}
+            {/* Truyền prop 'isPaused' đã được cập nhật vào DungeonBackground */}
             <DungeonBackground isPaused={isGamePaused} />
 
+            {/* Bạn có thể cân nhắc xóa bỏ renderCharacter() nếu không còn dùng đến */}
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
