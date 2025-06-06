@@ -437,13 +437,13 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
           tabIndex={!isGamePaused && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1}
         >
           <div className="relative w-40 h-40 flex items-center justify-center">
-            {/* Static chest image - visible when closed, fades out on open */}
+            {/* Static chest image - always visible, but scales up when open */}
             <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest%20(1).png"
                 alt="Treasure Chest"
                 className={`w-32 h-32 object-contain transition-all duration-300 transform-gpu
                     ${chestShake ? 'animate-chest-shake' : ''}
-                    ${isChestOpen ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}
+                    ${isChestOpen ? 'scale-110' : 'scale-100'}`} // <<< THIS LINE WAS CHANGED: Removed opacity-0 so the chest stays visible
             />
 
             {/* Lottie animation for opening - only renders and plays when opening */}
