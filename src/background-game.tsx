@@ -904,7 +904,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         {/* === CÁC MÀN HÌNH OVERLAY === */}
-        <div style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
                 {auth.currentUser && (
                     <CharacterCard
@@ -915,12 +915,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        <div style={{ display: isRankOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isRankOpen ? 'block' : 'none' }}>
              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
                  <EnhancedLeaderboard onClose={toggleRank} />
              </ErrorBoundary>
         </div>
-        <div style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
                 {auth.currentUser && (
                     <GoldMine
@@ -934,12 +934,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        <div style={{ display: isInventoryOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
                 <Inventory onClose={toggleInventory} />
             </ErrorBoundary>
         </div>
-        <div style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
                 {auth.currentUser && (
                     <LuckyChestGame
@@ -953,7 +953,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        <div style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
                 <Blacksmith onClose={toggleBlacksmith} />
             </ErrorBoundary>
