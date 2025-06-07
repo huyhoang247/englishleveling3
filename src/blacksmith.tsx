@@ -922,14 +922,14 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
                     </div>
 
-                    {/* ----- START: NEW SPLIT BUTTONS ----- */}
+                    {/* ----- START: NEW SMALLER SPLIT BUTTONS ----- */}
                     <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center gap-4">
+                        <div className="flex items-center justify-center gap-2">
                             {/* Upgrade Button */}
                             <button
                                 onClick={handleUpgrade}
                                 disabled={upgradeChance === 0 || isProcessing}
-                                className={`px-8 py-3 rounded-xl text-lg font-bold shadow-lg transition-all duration-300 transform 
+                                className={`px-6 py-2 rounded-lg text-base font-bold shadow-lg transition-all duration-300 transform 
                                 ${
                                 upgradeChance > 0
                                     ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:brightness-110 hover:scale-105'
@@ -940,8 +940,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             </button>
 
                             {/* Rate Display */}
-                            <div className="px-6 py-3 rounded-xl bg-black/50 border border-gray-600 flex items-center justify-center">
-                                <span className="text-2xl font-bold text-yellow-400">
+                            <div className="px-4 py-2 rounded-lg bg-black/50 border border-gray-600 flex items-center justify-center">
+                                <span className="text-xl font-bold text-yellow-400">
                                     {upgradeChance}%
                                 </span>
                             </div>
@@ -953,7 +953,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             </p>
                         )}
                     </div>
-                    {/* ----- END: NEW SPLIT BUTTONS ----- */}
+                    {/* ----- END: NEW SMALLER SPLIT BUTTONS ----- */}
                 </div>
             </div>
           )}
