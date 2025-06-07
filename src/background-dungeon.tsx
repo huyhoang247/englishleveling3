@@ -63,7 +63,7 @@ const dungeonStyles = `
   height: var(--size);
   top: var(--y-start);
   left: var(--x-start);
-  opacity: 0;
+  /* opacity: 0; <-- SỬA LỖI: ĐÃ XÓA DÒNG NÀY */
   box-shadow: 0 0 4px rgba(255, 255, 0, 0.2);
   animation: float var(--duration) var(--delay) linear infinite;
 }
