@@ -901,7 +901,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
             <div className="flex flex-col h-full"> 
                 <div>
                     {/* Anvil frame with reduced margin-bottom */}
-                    <div className="mb-4 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
+                    <div className="mb-2 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                         <div className="flex items-center justify-center gap-4">
                             <div className="w-24">
                                 <ForgingSlot
@@ -923,7 +923,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                     </div>
 
                     {/* ----- START: NEW CONDITIONAL UI ----- */}
-                    <div className="flex flex-col items-center justify-center min-h-[6rem]">
+                    <div className="flex flex-col items-center justify-center min-h-[4rem]">
                         {upgradeChance > 0 ? (
                             // Show buttons when ready
                             <div className="flex items-center justify-center gap-2">
