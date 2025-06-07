@@ -846,18 +846,66 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans z-40"> {/* Fixed to fullscreen */}
       <div className="max-w-7xl mx-auto h-full flex flex-col"> {/* Added flex-col and h-full */}
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white shadow-lg z-50 transition-transform transform hover:scale-110"
-          aria-label="Đóng lò rèn"
-          title="Đóng lò rèn"
-        >
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" className="w-6 h-6" onError={(e) => e.target.src = 'https://placehold.co/24x24/FF0000/FFFFFF?text=X'} />
-        </button>
+        
+        {/* ----- START: NEW TOP BAR ----- */}
+        <div className="flex justify-between items-center shrink-0">
+          {/* Left side: Action button */}
+          <div className="min-w-[290px]"> {/* Min-width to prevent layout shift */}
+            {activeTab === 'upgrade' && (
+              <button
+                className={`w-full py-3 px-6 font-bold text-base rounded-xl shadow-xl transition-all duration-300 transform ${
+                  upgradeChance > 0
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-400 hover:to-indigo-400 hover:scale-105 shadow-purple-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleUpgrade}
+                disabled={upgradeChance === 0 || isProcessing}
+              >
+                {upgradeChance > 0 ? `🚀 Nâng cấp ${upgradeChance}%` : '⚠️ Cần đủ vật phẩm để nâng cấp'}
+              </button>
+            )}
+            {activeTab === 'craft' && (
+              <button
+                className={`w-full py-3 px-6 font-bold text-base rounded-xl shadow-xl transition-all duration-300 transform ${
+                  canCraftButtonBeEnabled && !isProcessing
+                    ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-400 hover:to-teal-400 hover:scale-105 shadow-green-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleCraft}
+                disabled={isProcessing || !canCraftButtonBeEnabled}
+              >
+                {canCraftButtonBeEnabled ? `✨ Rèn Vật phẩm ${detectedCraftRecipe?.rank}-rank` : '⚠️ Cần đủ mảnh & nguyên liệu'}
+              </button>
+            )}
+            {activeTab === 'skills' && (
+              <button
+                className={`w-full py-3 px-6 font-bold text-base rounded-xl shadow-xl transition-all duration-300 transform ${
+                  canLearnSkillButtonBeEnabled && !isProcessing
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 hover:scale-105 shadow-blue-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleLearnSkill}
+                disabled={isProcessing || !canLearnSkillButtonBeEnabled}
+              >
+                {canLearnSkillButtonBeEnabled ? '✨ Học Kỹ Năng' : '⚠️ Cần đủ vật phẩm để học'}
+              </button>
+            )}
+          </div>
+
+          {/* Right side: Close button */}
+          <button
+            onClick={onClose}
+            className="text-white shadow-lg z-50 transition-transform transform hover:scale-110"
+            aria-label="Đóng lò rèn"
+            title="Đóng lò rèn"
+          >
+            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" className="w-6 h-6" onError={(e) => e.target.src = 'https://placehold.co/24x24/FF0000/FFFFFF?text=X'} />
+          </button>
+        </div>
+        {/* ----- END: NEW TOP BAR ----- */}
 
         {/* Updated Tab Navigation (more compact, text only) */}
-        <div className="flex justify-center mb-8 gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 mt-8 max-w-fit mx-auto">
+        <div className="flex justify-center my-4 gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit mx-auto">
           <button
             className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
               activeTab === 'upgrade'
@@ -906,10 +954,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
           
           {/* ----- START: MODIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
-            <div className="flex flex-col justify-between h-full"> 
+            <div className="flex flex-col h-full"> 
                 <div>
-                    {/* Title and Clear button have been removed from here */}
-
                     {/* Anvil frame with applied styles */}
                     <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                         {/* Weapon Row */}
@@ -969,18 +1015,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </p>
                     </div>
                 </div>
-
-              <button
-                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
-                  upgradeChance > 0
-                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-400 hover:to-indigo-400 hover:scale-105 shadow-purple-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                }`}
-                onClick={handleUpgrade}
-                disabled={upgradeChance === 0 || isProcessing}
-              >
-                {upgradeChance > 0 ? `🚀 Nâng cấp ${upgradeChance}%` : '⚠️ Cần đủ vật phẩm để nâng cấp'}
-              </button>
+                {/* UPGRADE BUTTON REMOVED FROM HERE */}
             </div>
           )}
           {/* ----- END: MODIFIED UPGRADE TAB ----- */}
@@ -1016,8 +1051,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 />
               </div>
               
-              {/* Removed craftMaterialSlots UI here */}
-
               {/* Display Required Materials & Recipe Info */}
               {detectedCraftRecipe && craftShardSlot && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-teal-900/40 rounded-xl border border-blue-500/50 shadow-lg">
@@ -1076,19 +1109,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                {!craftShardSlot && (
                  <p className="text-center text-gray-400 italic my-4">Hãy đặt một mảnh trang bị vào lò để xem công thức.</p>
               )}
-
-
-              <button
-                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform ${
-                  canCraftButtonBeEnabled && !isProcessing
-                    ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-400 hover:to-teal-400 hover:scale-105 shadow-green-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                }`}
-                onClick={handleCraft}
-                disabled={isProcessing || !canCraftButtonBeEnabled}
-              >
-                {canCraftButtonBeEnabled ? `✨ Rèn Vật phẩm ${detectedCraftRecipe?.rank}-rank` : '⚠️ Cần đủ mảnh & nguyên liệu'}
-              </button>
+               {/* CRAFT BUTTON REMOVED FROM HERE */}
             </div>
           )}
 
@@ -1171,17 +1192,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 <p className="text-center text-gray-400 italic my-4">Hãy đặt trang bị và sách kỹ năng vào lò để học kỹ năng.</p>
               )}
 
-              <button
-                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform ${
-                  canLearnSkillButtonBeEnabled && !isProcessing
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 hover:scale-105 shadow-blue-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                }`}
-                onClick={handleLearnSkill}
-                disabled={isProcessing || !canLearnSkillButtonBeEnabled}
-              >
-                {canLearnSkillButtonBeEnabled ? '✨ Học Kỹ Năng' : '⚠️ Cần đủ vật phẩm để học'}
-              </button>
+              {/* LEARN SKILL BUTTON REMOVED FROM HERE */}
             </div>
           )}
 
