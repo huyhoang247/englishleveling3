@@ -898,7 +898,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
           
           {/* ----- START: SIMPLIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
-            <div className="flex flex-col justify-between h-full"> 
+            <div className="flex flex-col h-full"> 
                 <div>
                     {/* Anvil frame with simplified slots */}
                     <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
@@ -922,34 +922,33 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
                     </div>
 
-                    {/* Success Rate panel with updated text */}
-                    <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
-                        <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
-                            <span>📈</span> Tỷ lệ thành công
-                        </h3>
-                        <p className="text-4xl font-extrabold text-yellow-400">
-                            {upgradeChance}%
-                        </p>
-                        <p className="text-sm text-gray-300 mt-2">
-                            {upgradeChance === 0
-                            ? 'Đặt trang bị và đá cường hoá để xem tỷ lệ.'
-                            : 'Chúc may mắn!'}
-                        </p>
-                    </div>
+                    {/* ----- START: NEW INTEGRATED UPGRADE BUTTON ----- */}
+                    <button
+                        onClick={handleUpgrade}
+                        disabled={upgradeChance === 0 || isProcessing}
+                        className={`
+                            w-full p-4 rounded-xl border shadow-lg transition-all duration-300 transform
+                            flex items-center justify-center text-center
+                            ${
+                            upgradeChance > 0
+                                ? 'bg-gradient-to-r from-purple-800/60 to-blue-800/60 border-blue-500/50 cursor-pointer hover:border-blue-400 hover:brightness-125 hover:scale-105'
+                                : 'bg-gray-800/50 border-gray-700/50 cursor-not-allowed opacity-70'
+                            }
+                        `}
+                    >
+                        {upgradeChance > 0 ? (
+                            <div className="flex items-center justify-center gap-3">
+                                <span className="text-4xl font-extrabold text-yellow-400">{upgradeChance}%</span>
+                                <span className="text-3xl font-light text-blue-400/50">|</span>
+                                <span className="text-lg font-bold text-blue-200">Nâng Cấp</span>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-300">Đặt trang bị và đá cường hoá để nâng cấp</p>
+                        )}
+                    </button>
+                    {/* ----- END: NEW INTEGRATED UPGRADE BUTTON ----- */}
                 </div>
-
-              {/* ACTION BUTTON logic remains the same */}
-              <button
-                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
-                  upgradeChance > 0
-                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-400 hover:to-indigo-400 hover:scale-105 shadow-purple-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                }`}
-                onClick={handleUpgrade}
-                disabled={upgradeChance === 0 || isProcessing}
-              >
-                {upgradeChance > 0 ? `🚀 Nâng cấp ${upgradeChance}%` : '⚠️ Cần đủ vật phẩm để nâng cấp'}
-              </button>
+                {/* The old big button is now removed */}
             </div>
           )}
           {/* ----- END: SIMPLIFIED UPGRADE TAB ----- */}
