@@ -908,21 +908,9 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
           {activeTab === 'upgrade' && (
             <div className="flex flex-col justify-between h-full"> 
                 <div>
-                    {/* 1. Title and Clear Button are now outside */}
-                    <div className="flex items-center justify-between mb-6 px-2">
-                        <h2 className="text-2xl font-bold text-yellow-300 flex items-center gap-2">
-                        <span>✨</span> Lò Nâng Cấp Huyền Thoại
-                        </h2>
-                        <button
-                        onClick={handleClearSlots}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
-                        disabled={isProcessing || (upgradeWeaponSlots.every(slot => slot === null) && upgradeMaterialSlots.every(slot => slot === null))}
-                        >
-                        Xóa tất cả
-                        </button>
-                    </div>
+                    {/* Title and Clear button have been removed from here */}
 
-                    {/* 2. Styles applied directly to the anvil frame */}
+                    {/* Anvil frame with applied styles */}
                     <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                         {/* Weapon Row */}
                         <div className="flex items-center justify-center gap-3 mb-3">
@@ -966,7 +954,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
                     </div>
 
-                    {/* 3. Success Rate and Button remain */}
+                    {/* Success Rate panel */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
                         <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
                             <span>📈</span> Tỷ lệ thành công
