@@ -1164,8 +1164,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 </div>
             </div>
 
-            {/* --- START: REPLACED INVENTORY UI --- */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
+            {/* --- MODIFIED: Changed grid columns to 5 --- */}
+            <div className="grid grid-cols-5 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
               {inventory.map((item: any) => {
                   const isLegendary = item.rarity === 'legendary';
                   return (
