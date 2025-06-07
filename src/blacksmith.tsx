@@ -219,6 +219,63 @@ const SKILL_BOOKS = [
   { name: 'Sách Kỹ Năng S', type: 'skill_book', icon: '📕', rarity: 'legendary' },
 ];
 
+// --- START: UI Helper functions and components inspired by inventory.tsx ---
+
+const getRarityColor = (rarity: string) => {
+    switch(rarity) {
+      case 'common': return 'border-gray-500';
+      case 'uncommon': return 'border-green-500';
+      case 'rare': return 'border-blue-500';
+      case 'epic': return 'border-purple-600';
+      case 'legendary': return 'border-orange-500';
+      default: return 'border-gray-500';
+    }
+};
+
+const getRarityGradient = (rarity: string) => {
+    switch(rarity) {
+      case 'common': return 'from-gray-700/70 to-gray-800/70';
+      case 'uncommon': return 'from-green-800/80 to-gray-800/70';
+      case 'rare': return 'from-blue-800/80 to-gray-800/70';
+      case 'epic': return 'from-purple-800/80 to-gray-800/70';
+      case 'legendary': return 'from-gray-900 via-orange-900/80 to-gray-900';
+      default: return 'from-gray-700/70 to-gray-800/70';
+    }
+};
+
+const getRarityTextColor = (rarity: string) => {
+  switch(rarity) {
+    case 'common': return 'text-gray-300';
+    case 'uncommon': return 'text-green-400';
+    case 'rare': return 'text-blue-400';
+    case 'epic': return 'text-purple-400';
+    case 'legendary': return 'text-orange-300';
+    default: return 'text-gray-300';
+  }
+};
+
+const getRarityGlow = (rarity: string) => {
+    switch(rarity) {
+      case 'common': return '';
+      case 'uncommon': return 'shadow-sm shadow-green-500/40';
+      case 'rare': return 'shadow-md shadow-blue-500/40';
+      case 'epic': return 'shadow-lg shadow-purple-500/40';
+      case 'legendary': return 'shadow-md shadow-orange-400/30 legendary-item-glow';
+      default: return '';
+    }
+};
+
+const ItemTooltip = ({ item }: { item: any }) => (
+    <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+      <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name} {item.level > 0 ? `+${item.level}` : ''}</div>
+      <div className="text-gray-500 capitalize text-xs mb-1">{item.type} • {item.rarity}</div>
+    </div>
+);
+
+
+// --- END: UI Helper functions and components ---
+
+
 // Custom alert component
 const CustomAlert = ({ isVisible, message, onClose, type = 'info' }) => {
   if (!isVisible) return null;
@@ -722,7 +779,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Consume the weapon and skill book
-    updateInventory(skillWeaponSlot, -1);
     updateInventory(skillBookSlot, -1);
     setSkillWeaponSlot(null);
     setSkillBookSlot(null);
@@ -779,6 +835,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
 
   const canCraftButtonBeEnabled = checkCanCraft(detectedCraftRecipe, craftShardSlot, inventory);
   const canLearnSkillButtonBeEnabled = skillWeaponSlot !== null && skillBookSlot !== null;
+  const totalInventorySlots = 50; // Match inventory.tsx for visual consistency
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans z-40"> {/* Fixed to fullscreen */}
@@ -1123,63 +1180,60 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
           )}
 
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-blue-500/30">
-            <h2 className="text-2xl font-bold mb-6 text-blue-300 flex items-center gap-2">
-              <span>🎒</span> Túi Đồ ({inventory.reduce((acc, item) => acc + item.quantity, 0)} vật phẩm)
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-96 overflow-y-auto custom-scrollbar">
-              {inventory.length > 0 ? (
-                inventory.map(item => (
-                  <div
-                    key={item.id}
-                    className={`
-                      relative flex flex-col items-center p-4 rounded-xl cursor-pointer
-                      shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-xl
-                      ${item.type === 'weapon' || item.type === 'armor'
-                        ? 'bg-gradient-to-br from-red-800/40 to-red-900/40 border border-red-500/40 hover:border-red-400'
-                        : item.type === 'material'
-                            ? 'bg-gradient-to-br from-green-800/40 to-green-900/40 border border-green-500/40 hover:border-green-400'
-                            : item.type === 'shard'
-                                ? 'bg-gradient-to-br from-purple-800/40 to-purple-900/40 border border-purple-500/40 hover:border-purple-400'
-                                : 'bg-cyan-800/40 to-cyan-900/40 border border-cyan-500/40 hover:border-cyan-400' // For skill_book
-                      }
-                      ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                    onClick={() => handleItemClick(item)}
-                  >
-                    <div className="text-4xl mb-2">{item.icon}</div>
-                    <span className="text-sm font-medium text-gray-100 text-center leading-tight">
-                        {item.name} {item.level > 0 ? `+${item.level}` : ''}
-                    </span>
-                    {item.quantity > 0 && (
-                      <span className="absolute top-0 right-0 px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-bl-lg rounded-tr-lg">
-                        x{item.quantity}
-                      </span>
-                    )}
-                    <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full font-medium ${
-                      item.type === 'weapon' ? 'bg-red-600 text-red-100' :
-                      item.type === 'armor' ? 'bg-red-600 text-red-100' : // Add armor handling
-                      item.type === 'material' ? 'bg-green-600 text-green-100' :
-                      item.type === 'shard' ? 'bg-purple-600 text-purple-100' :
-                      'bg-cyan-600 text-cyan-100' // For skill_book
-                    }`}>
-                      {item.type === 'weapon' || item.type === 'armor' ? 'TB' : item.type === 'material' ? 'NL' : item.type === 'shard' ? 'Mảnh' : 'Sách'}
-                    </span>
-                    <div className={`absolute bottom-1 left-1 w-3 h-3 rounded-full border-2 border-white ${
-                      item.rarity === 'legendary' ? 'bg-yellow-400' :
-                      item.rarity === 'epic' ? 'bg-purple-400' :
-                      item.rarity === 'rare' ? 'bg-blue-400' :
-                      item.rarity === 'uncommon' ? 'bg-green-400' :
-                      'bg-gray-400'
-                    }`} />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full text-center text-gray-400 italic py-8">
-                  <div className="text-6xl mb-4">📦</div>
-                  <p>Túi đồ trống rỗng</p>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-blue-300 flex items-center gap-2">
+                <span>🎒</span> Túi Đồ
+                </h2>
+                <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80">
+                    <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{inventory.length}/{totalInventorySlots}</span>
                 </div>
-              )}
             </div>
+
+            {/* --- START: REPLACED INVENTORY UI --- */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
+              {inventory.map((item: any) => {
+                  const isLegendary = item.rarity === 'legendary';
+                  return (
+                    <div
+                      key={item.id}
+                      className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden
+                        ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
+                      `}
+                      onClick={() => !isProcessing && handleItemClick(item)}
+                    >
+                      {isLegendary && (
+                        <>
+                          <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div>
+                          <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-orange-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div>
+                          <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-orange-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div>
+                          <div className="absolute top-1 right-1 text-orange-300 text-xs opacity-60 group-hover:text-orange-100 transition-colors">✦</div>
+                        </>
+                      )}
+                      
+                      {item.quantity > 1 && (
+                        <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">
+                          x{item.quantity}
+                        </div>
+                      )}
+                      
+                      {typeof item.icon === 'string' && item.icon.startsWith('http') ? (
+                        <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />
+                      ) : (
+                        <div className="text-4xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>
+                      )}
+                      
+                      <ItemTooltip item={item} />
+                    </div>
+                  );
+                })}
+                
+                {Array.from({ length: Math.max(0, totalInventorySlots - inventory.length) }).map((_, i) => (
+                    <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
+                        <span className="opacity-40"></span>
+                    </div>
+                ))}
+            </div>
+            {/* --- END: REPLACED INVENTORY UI --- */}
 
             {/* New Learned Skills Section */}
             <div className="mt-8 pt-6 border-t border-gray-700">
@@ -1258,6 +1312,13 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #555;
+        }
+        .legendary-item-glow {
+          box-shadow: 0 0 10px rgba(255,165,0,.4), 0 0 20px rgba(255,69,0,.2);
+          transition: box-shadow .3s ease-in-out;
+        }
+        .legendary-item-glow:hover {
+          box-shadow: 0 0 15px rgba(255,165,0,.6), 0 0 30px rgba(255,69,0,.4);
         }
       `}</style>
     </div>
