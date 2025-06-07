@@ -367,7 +367,7 @@ const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverrid
   return (
     <div
       className={`
-        relative flex flex-col items-center justify-center h-36 md:h-40
+        relative flex flex-col items-center justify-center h-32
         rounded-xl border-2 transition-all duration-300 ease-in-out cursor-pointer
         ${style.border} ${style.bg} ${style.hoverBg} ${style.hoverBorder}
         ${item ? 'shadow-lg transform hover:scale-105' : 'border-dashed'}
@@ -898,6 +898,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
+          
           {activeTab === 'upgrade' && (
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
               <div className="flex items-center justify-between mb-6">
@@ -912,29 +913,41 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                   Xóa tất cả
                 </button>
               </div>
+
+              {/* --- START: MODIFIED WEAPON SLOTS SECTION --- */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center gap-2">
-                  <span>⚔️</span> Trang bị để nâng cấp (Cần 2 trang bị giống nhau)
+                <h3 className="text-lg font-semibold text-red-300 mb-4 text-center">
+                  Kết hợp 2 trang bị giống nhau
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <ForgingSlot
-                    item={upgradeWeaponSlots[0]}
-                    slotType="weapon"
-                    slotIndex={0}
-                    onClick={() => handleUpgradeWeaponSlotClick(0)}
-                    isEmpty={upgradeWeaponSlots[0] === null}
-                    labelOverride="Vật phẩm chính"
-                  />
-                  <ForgingSlot
-                    item={upgradeWeaponSlots[1]}
-                    slotType="weapon"
-                    slotIndex={1}
-                    onClick={() => handleUpgradeWeaponSlotClick(1)}
-                    isEmpty={upgradeWeaponSlots[1] === null}
-                    labelOverride="Vật phẩm hy sinh"
-                  />
+                <div className="flex items-center justify-center gap-4">
+                  {/* Slot 1 */}
+                  <div className="w-32">
+                    <ForgingSlot
+                      item={upgradeWeaponSlots[0]}
+                      slotType="weapon"
+                      slotIndex={0}
+                      onClick={() => handleUpgradeWeaponSlotClick(0)}
+                      isEmpty={upgradeWeaponSlots[0] === null}
+                    />
+                  </div>
+                  
+                  {/* Plus Icon */}
+                  <div className="text-4xl text-gray-400 font-light">+</div>
+
+                  {/* Slot 2 */}
+                  <div className="w-32">
+                    <ForgingSlot
+                      item={upgradeWeaponSlots[1]}
+                      slotType="weapon"
+                      slotIndex={1}
+                      onClick={() => handleUpgradeWeaponSlotClick(1)}
+                      isEmpty={upgradeWeaponSlots[1] === null}
+                    />
+                  </div>
                 </div>
               </div>
+              {/* --- END: MODIFIED WEAPON SLOTS SECTION --- */}
+
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-green-300 mb-4 flex items-center gap-2">
                   <span>💎</span> Đá Cường Hoá (Tối đa 3 viên)
