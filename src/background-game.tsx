@@ -3,12 +3,10 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import TreasureChest from './treasure.tsx';
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
-import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { GemIcon } from './library/icon.tsx';
 import { SidebarLayout } from './sidebar.tsx';
@@ -62,14 +60,6 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-const KeyIcon = () => (
-  <img
-    src={uiAssets.keyIcon}
-    alt="Key Icon"
-    className="w-4 h-4 object-contain"
-  />
-);
-
 
 // --- NEW: Error Boundary Component ---
 interface ErrorBoundaryProps {
@@ -119,11 +109,6 @@ interface ObstacleRunnerGameProps {
   currentUser: User | null;
 }
 
-interface GameSessionData {
-    health: number;
-    characterPos: number;
-}
-
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
 
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -156,25 +141,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
-  const MAX_HEALTH = 3000;
-  const [health, setHealth] = useSessionStorage<number>('gameHealth', MAX_HEALTH);
-  const [characterPos, setCharacterPos] = useSessionStorage<number>('gameCharacterPos', 0);
-
-  const [gameStarted, setGameStarted] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
-  const [jumping, setJumping] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [runFrame, setRunFrame] = useState(0);
-  const [showHealthDamageEffect, setShowHealthDamageEffect] = useState(false);
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
-
-  const [damageAmount, setDamageAmount] = useState(0);
-  const [showDamageNumber, setShowDamageNumber] = useState(false);
 
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
-  const [gems, setGems] = useState(42);
-  const [keyCount, setKeyCount] = useState(0);
+  const [gems, setGems] = useState(0);
   const [jackpotPool, setJackpotPool] = useState(0);
 
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
@@ -186,15 +158,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const GROUND_LEVEL_PERCENT = 45;
 
-  const gameRef = useRef<HTMLDivElement | null>(null);
-  const runAnimationRef = useRef<NodeJS.Timeout | null>(null);
   const sidebarToggleRef = useRef<(() => void) | null>(null);
 
   const db = getFirestore();
-
-  function randomBetween(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
 
   const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
@@ -208,7 +174,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0);
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
-        setKeyCount(userData.keys || 0);
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
@@ -220,7 +185,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setKeyCount(0);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -256,18 +220,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          transaction.set(userDocRef, {
-            coins: coins, gems: gems, keys: keyCount, createdAt: new Date()
-          });
-        } else {
-          const currentCoins = userDoc.data().coins || 0;
-          const newCoins = currentCoins + amount;
-          const finalCoins = Math.max(0, newCoins);
-          transaction.update(userDocRef, { coins: finalCoins });
-          console.log(`Coins updated in Firestore for user ${userId}: ${currentCoins} -> ${finalCoins}`);
-          setCoins(finalCoins);
-        }
+        const currentCoins = userDoc.exists() ? userDoc.data().coins || 0 : 0;
+        const newCoins = Math.max(0, currentCoins + amount);
+        transaction.set(userDocRef, { coins: newCoins }, { merge: true });
+        setCoins(newCoins);
       });
     } catch (error) {
       console.error("Firestore Transaction failed for coins: ", error);
@@ -293,29 +249,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 50);
   };
 
-  const updateKeysInFirestore = async (userId: string, amount: number) => {
-    if (!userId) return;
-    const userDocRef = doc(db, 'users', userId);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-           transaction.set(userDocRef, {
-            coins: coins, gems: gems, keys: keyCount, createdAt: new Date()
-          });
-        } else {
-          const currentKeys = userDoc.data().keys || 0;
-          const newKeys = currentKeys + amount;
-          const finalKeys = Math.max(0, newKeys);
-          transaction.update(userDocRef, { keys: finalKeys });
-          setKeyCount(finalKeys);
-        }
-      });
-    } catch (error) {
-      console.error("Firestore Transaction failed for keys: ", error);
-    }
-  };
-
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
@@ -337,50 +270,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-  const handleGemReward = (amount: number) => {
-      setGems(prev => prev + amount);
-  };
-
-  const handleKeyCollect = (amount: number) => {
-      setKeyCount(prev => Math.max(0, prev + amount));
-      if (auth.currentUser) {
-        updateKeysInFirestore(auth.currentUser.uid, amount);
-      }
-  };
-
-  const startNewGame = () => {
-    setHealth(MAX_HEALTH);
-    setCharacterPos(0);
-    setGameStarted(true);
-    setGameOver(false);
-    setIsRunning(true);
-    setShowHealthDamageEffect(false);
-    setDamageAmount(0);
-    setShowDamageNumber(false);
-    setIsBackgroundPaused(false);
-    setIsGoldMineOpen(false);
-    setIsInventoryOpen(false);
-    setIsLuckyGameOpen(false);
-    setIsBlacksmithOpen(false);
-  };
-
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         fetchUserData(user.uid);
         fetchJackpotPool();
-        // Set gameStarted to true by default since it's the main screen now
-        setGameStarted(true); 
         setIsRunning(true);
       } else {
-        setGameStarted(false);
-        setGameOver(false);
-        setHealth(MAX_HEALTH);
-        setCharacterPos(0);
         setIsRunning(false);
-        setShowHealthDamageEffect(false);
-        setDamageAmount(0);
-        setShowDamageNumber(false);
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
@@ -391,24 +288,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setKeyCount(0);
         setJackpotPool(0);
-        setIsLoadingUserData(false);
-        sessionStorage.removeItem('gameHealth');
-        sessionStorage.removeItem('gameCharacterPos');
-        if(runAnimationRef.current) clearInterval(runAnimationRef.current);
+        setIsLoadingUserData(true);
       }
     });
     return () => unsubscribe();
   }, [auth, db]);
-
-  useEffect(() => {
-    if (health <= 0 && gameStarted) {
-      setGameOver(true);
-      setIsRunning(false);
-      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-    };
-  }, [health, gameStarted]);
 
   useEffect(() => {
       const handleVisibilityChange = () => {
@@ -420,55 +305,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
-  const jump = () => {
-    if (!jumping && !gameOver && gameStarted && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) {
-      setCharacterPos(80);
-      setJumping(true);
-      setTimeout(() => {
-        if (gameStarted && !gameOver && !isStatsFullscreen && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) {
-          setCharacterPos(0);
-          setTimeout(() => setJumping(false), 100);
-        } else {
-             setCharacterPos(0);
-             setJumping(false);
-        }
-      }, 600);
-    }
-  };
-  
-  const isLoading = isLoadingUserData || !imagesLoaded;
-
-  const handleTap = () => {
-    if (isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) return;
-    if (!gameStarted || gameOver) {
-      startNewGame();
-    }
-  };
-
-  const triggerHealthDamageEffect = () => {
-      setShowHealthDamageEffect(true);
-      setTimeout(() => setShowHealthDamageEffect(false), 300);
-  };
-
-  const triggerCharacterDamageEffect = (amount: number) => {
-      setDamageAmount(amount);
-      setShowDamageNumber(true);
-      setTimeout(() => setShowDamageNumber(false), 800);
-  };
-
-  useEffect(() => {
-      if (gameOver || isStatsFullscreen || isLoading || isRankOpen || isBackgroundPaused || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen) {
-      } else if (gameStarted && !gameOver && !isStatsFullscreen && !isLoading && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen) {
-      }
-      return () => {};
-  }, [gameStarted, gameOver, isStatsFullscreen, isLoading, isRankOpen, isBackgroundPaused, isGoldMineOpen, isInventoryOpen, isLuckyGameOpen, isBlacksmithOpen]);
-
-  useEffect(() => {
-    return () => {
-      if(runAnimationRef.current) clearInterval(runAnimationRef.current);
-    };
   }, []);
 
   useEffect(() => {
@@ -495,27 +331,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
      return () => {};
   }, [displayedCoins, coins]);
 
-
-  const healthPct = health / MAX_HEALTH;
-  const getColor = () => {
-    if (healthPct > 0.6) return 'bg-green-500';
-    if (healthPct > 0.3) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
+  const isLoading = isLoadingUserData || !imagesLoaded;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused || !isRunning;
 
   const renderCharacter = () => {
     return (
       <div
-        className="character-container absolute w-24 h-24 transition-all duration-300 ease-out"
+        className="character-container absolute w-24 h-24"
         style={{
-          bottom: `calc(${GROUND_LEVEL_PERCENT}% + ${characterPos}px)`,
-          transition: jumping ? 'bottom 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)' : 'bottom 0.3s cubic-bezier(0.33, 1, 0.68, 1)'
+          bottom: `calc(${GROUND_LEVEL_PERCENT}%)`
         }}
       >
         <DotLottieReact
           src={lottieAssets.characterRun}
           loop
-          autoplay={!isStatsFullscreen && !isLoading && !isRankOpen && !isBackgroundPaused && !isGoldMineOpen && !isInventoryOpen && !isLuckyGameOpen && !isBlacksmithOpen}
+          autoplay={!isGamePaused}
           className="w-full h-full"
         />
       </div>
@@ -523,7 +354,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleStatsFullscreen = () => {
-    if (gameOver || isLoading) return;
+    if (isLoading) return;
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
@@ -541,7 +372,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleRank = () => {
-     if (gameOver || isLoading) return;
+     if (isLoading) return;
      setIsRankOpen(prev => {
          const newState = !prev;
          if (newState) {
@@ -559,7 +390,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleGoldMine = () => {
-    if (gameOver || isLoading) return;
+    if (isLoading) return;
     setIsGoldMineOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -577,7 +408,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleInventory = () => {
-    if (gameOver || isLoading) return;
+    if (isLoading) return;
     setIsInventoryOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -595,7 +426,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleLuckyGame = () => {
-    if (gameOver || isLoading) return;
+    if (isLoading) return;
     setIsLuckyGameOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -613,7 +444,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleBlacksmith = () => {
-    if (gameOver || isLoading) return;
+    if (isLoading) return;
     setIsBlacksmithOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -651,11 +482,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
-  // =====> THAY ĐỔI ĐƯỢC ÁP DỤNG TẠI ĐÂY <=====
-  // Loại bỏ các điều kiện `gameOver` và `!gameStarted` không còn cần thiết
-  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
-
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
       <SidebarLayout
@@ -671,14 +497,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           className="w-full h-full"
         >
           <div
-            ref={gameRef}
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl cursor-pointer bg-neutral-800`}
-            onClick={handleTap}
+            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-neutral-800`}
           >
-            {/* Truyền prop 'isPaused' đã được cập nhật vào DungeonBackground */}
             <DungeonBackground isPaused={isGamePaused} />
 
-            {/* Bạn có thể cân nhắc xóa bỏ renderCharacter() nếu không còn dùng đến */}
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
@@ -706,39 +528,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      />
                 </button>
 
-                <div className="flex items-center relative z-10">
-                  <div className="w-32 relative">
-                      <div className="h-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-md overflow-hidden border border-gray-600 shadow-inner">
-                          <div className="h-full overflow-hidden">
-                              <div
-                                  className={`${getColor()} h-full transform origin-left`}
-                                  style={{ transform: `scaleX(${healthPct})`, transition: 'transform 0.5s ease-out' }}
-                              >
-                                  <div className="w-full h-1/2 bg-white bg-opacity-20" />
-                              </div>
-                          </div>
-                          <div
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 pointer-events-none"
-                              style={{ animation: 'pulse 3s infinite' }}
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white text-xs font-bold drop-shadow-md tracking-wider">
-                                  {Math.round(health)}/{MAX_HEALTH}
-                              </span>
-                          </div>
-                      </div>
-                      <div className="absolute top-4 left-0 right-0 h-4 w-full overflow-hidden pointer-events-none">
-                          {showDamageNumber && (
-                              <div
-                                  className="absolute top-0 left-1/2 transform -translate-x-1/2 text-red-500 font-bold text-xs"
-                                  style={{ animation: 'floatUp 0.8s ease-out forwards' }}
-                              >
-                                  -{damageAmount}
-                              </div>
-                          )}
-                      </div>
-                  </div>
-                </div>
+                <div className="flex-grow"></div>
+
                <div className="flex items-center space-x-1 currency-display-container relative z-10">
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
@@ -758,18 +549,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {gameOver && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-filter backdrop-blur-sm z-40">
-                <h2 className="text-3xl font-bold mb-2 text-red-500">Game Over</h2>
-                <button
-                  className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 font-bold transform transition hover:scale-105 shadow-lg"
-                  onClick={startNewGame}
-                >
-                  Chơi Lại
-                </button>
-              </div>
-            )}
-
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
                 {
@@ -785,10 +564,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       }}
                     />
                   ),
-                  label: "",
-                  notification: true,
-                  special: true,
-                  centered: true
+                  onClick: () => {} // Placeholder for shop functionality
                 },
                 {
                   icon: (
@@ -803,30 +579,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       }}
                     />
                   ),
-                  label: "",
-                  notification: true,
-                  special: true,
-                  centered: true,
                   onClick: toggleInventory
                 }
               ].map((item, index) => (
                 <div key={index} className="group cursor-pointer">
-                  {item.special && item.centered ? (
                       <div
                           className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                           onClick={item.onClick}
                       >
                           {item.icon}
-                          {item.label && (
-                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                          )}
                       </div>
-                  ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                      {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -846,10 +608,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       }}
                     />
                   ),
-                  label: "",
-                  notification: true,
-                  special: true,
-                  centered: true
+                   onClick: () => {} // Placeholder for mission functionality
                 },
                 {
                   icon: (
@@ -864,48 +623,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                       }}
                     />
                   ),
-                  label: "",
-                  notification: true,
-                  special: true,
-                  centered: true,
                   onClick: toggleBlacksmith
                 },
               ].map((item, index) => (
                 <div key={index} className="group cursor-pointer">
-                  {item.special && item.centered ? (
                       <div
                           className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                           onClick={item.onClick}
                       >
                           {item.icon}
-                          {item.label && (
-                              <span className="text-white text-xs text-center block mt-0.5" style={{fontSize: '0.65rem'}}>{item.label}</span>
-                          )}
                       </div>
-                  ) : (
-                    <div className={`bg-gradient-to-br from-slate-700 to-slate-900 rounded-full p-3 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 group-hover:scale-110 relative flex flex-col items-center justify-center`}>
-                      {item.icon}
-                      <span className="text-white text-xs text-center block mt-1">{item.label}</span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
-
-            <TreasureChest
-              initialChests={3}
-              keyCount={keyCount}
-              onKeyCollect={(n) => {
-                if (auth.currentUser) {
-                  updateKeysInFirestore(auth.currentUser!.uid, -n);
-                }
-              }}
-              onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward}
-              isGamePaused={isGamePaused}
-              isStatsFullscreen={isStatsFullscreen}
-              currentUserId={currentUser ? currentUser.uid : null}
-            />
           </div>
         </div>
 
