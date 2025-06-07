@@ -847,10 +847,10 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans z-40"> {/* Fixed to fullscreen */}
       <div className="max-w-7xl mx-auto h-full flex flex-col"> {/* Added flex-col and h-full */}
         
-        {/* ----- START: NEW TOP BAR WITH TAB NAVIGATION ----- */}
-        <div className="relative flex justify-center items-center shrink-0 py-4 mb-4">
-          {/* Tab Navigation (moved to center) */}
-          <div className="flex justify-center gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit mx-auto">
+        {/* ----- START: CORRECTED TOP BAR ----- */}
+        <div className="flex justify-between items-center shrink-0 py-4 mb-4">
+          {/* Left side: Tab Navigation */}
+          <div className="flex justify-center gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit">
               <button
                 className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
                   activeTab === 'upgrade'
@@ -895,17 +895,17 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               </button>
           </div>
 
-          {/* Close Button (positioned to the right) */}
+          {/* Right side: Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-1/2 -translate-y-1/2 right-0 text-white shadow-lg z-50 transition-transform transform hover:scale-110"
+            className="text-white shadow-lg z-50 transition-transform transform hover:scale-110"
             aria-label="Đóng lò rèn"
             title="Đóng lò rèn"
           >
             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" className="w-6 h-6" onError={(e) => e.target.src = 'https://placehold.co/24x24/FF0000/FFFFFF?text=X'} />
           </button>
         </div>
-        {/* ----- END: NEW TOP BAR ----- */}
+        {/* ----- END: CORRECTED TOP BAR ----- */}
 
         <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
           
