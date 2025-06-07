@@ -341,8 +341,8 @@ const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverrid
       bg: item ? 'bg-gradient-to-br from-green-900/40 to-green-800/40' : 'bg-gradient-to-br from-green-900/20 to-green-800/20',
       hoverBg: 'hover:bg-green-700/30',
       hoverBorder: 'hover:border-green-400',
-      icon: '🪨',
-      label: 'Nguyên Liệu'
+      icon: '💎', // Changed icon for clarity
+      label: 'Đá Cường Hoá'
     },
     shard: {
       border: 'border-purple-500/50',
@@ -559,7 +559,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     if (isProcessing) return;
 
     if (activeTab === 'upgrade') {
-      if (itemToMove.type === 'weapon') {
+      if (itemToMove.type === 'weapon' || itemToMove.type === 'armor') { // Allow armor too
         if (upgradeWeaponSlots[0] === null) {
           setUpgradeWeaponSlots([itemToMove, upgradeWeaponSlots[1]]);
           updateInventory(itemToMove, -1);
@@ -843,7 +843,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         {/* Close Button */}
         <button
           onClick={onClose}
-          // Removed bg-red-600, hover:bg-red-700, p-2, rounded-full
           className="absolute top-4 right-4 text-white shadow-lg z-50 transition-transform transform hover:scale-110"
           aria-label="Đóng lò rèn"
           title="Đóng lò rèn"
@@ -900,87 +899,83 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
           
           {activeTab === 'upgrade' && (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-yellow-300 flex items-center gap-2">
-                  <span>✨</span> Lò Nâng Cấp Huyền Thoại
-                </h2>
-                <button
-                  onClick={handleClearSlots}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
-                  disabled={isProcessing || (upgradeWeaponSlots.every(slot => slot === null) && upgradeMaterialSlots.every(slot => slot === null))}
-                >
-                  Xóa tất cả
-                </button>
-              </div>
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm flex flex-col justify-between">
+                <div>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-yellow-300 flex items-center gap-2">
+                        <span>✨</span> Lò Nâng Cấp Huyền Thoại
+                        </h2>
+                        <button
+                        onClick={handleClearSlots}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
+                        disabled={isProcessing || (upgradeWeaponSlots.every(slot => slot === null) && upgradeMaterialSlots.every(slot => slot === null))}
+                        >
+                        Xóa tất cả
+                        </button>
+                    </div>
 
-              {/* --- START: MODIFIED WEAPON SLOTS SECTION --- */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-red-300 mb-4 text-center">
-                  Kết hợp 2 trang bị giống nhau
-                </h3>
-                <div className="flex items-center justify-center gap-4">
-                  {/* Slot 1 */}
-                  <div className="w-32">
-                    <ForgingSlot
-                      item={upgradeWeaponSlots[0]}
-                      slotType="weapon"
-                      slotIndex={0}
-                      onClick={() => handleUpgradeWeaponSlotClick(0)}
-                      isEmpty={upgradeWeaponSlots[0] === null}
-                    />
-                  </div>
-                  
-                  {/* Plus Icon */}
-                  <div className="text-4xl text-gray-400 font-light">+</div>
+                    {/* --- START: MODIFIED ANVIL AREA --- */}
+                    <div className="mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-700/80">
+                        {/* Weapon Row */}
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <div className="w-32">
+                                <ForgingSlot
+                                item={upgradeWeaponSlots[0]}
+                                slotType="weapon"
+                                slotIndex={0}
+                                onClick={() => handleUpgradeWeaponSlotClick(0)}
+                                isEmpty={upgradeWeaponSlots[0] === null}
+                                />
+                            </div>
+                            <div className="text-4xl text-gray-400 font-light">+</div>
+                            <div className="w-32">
+                                <ForgingSlot
+                                item={upgradeWeaponSlots[1]}
+                                slotType="weapon"
+                                slotIndex={1}
+                                onClick={() => handleUpgradeWeaponSlotClick(1)}
+                                isEmpty={upgradeWeaponSlots[1] === null}
+                                />
+                            </div>
+                        </div>
 
-                  {/* Slot 2 */}
-                  <div className="w-32">
-                    <ForgingSlot
-                      item={upgradeWeaponSlots[1]}
-                      slotType="weapon"
-                      slotIndex={1}
-                      onClick={() => handleUpgradeWeaponSlotClick(1)}
-                      isEmpty={upgradeWeaponSlots[1] === null}
-                    />
-                  </div>
+                        {/* Separator */}
+                        <div className="w-1/2 mx-auto h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-4"></div>
+
+                        {/* Material Row */}
+                        <div className="flex items-center justify-center gap-4">
+                            {upgradeMaterialSlots.map((slot, index) => (
+                                <div className="w-32" key={`material-wrapper-${index}`}>
+                                <ForgingSlot
+                                    item={slot}
+                                    slotType="material"
+                                    slotIndex={index}
+                                    onClick={() => handleUpgradeMaterialSlotClick(index)}
+                                    isEmpty={slot === null}
+                                />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    {/* --- END: MODIFIED ANVIL AREA --- */}
+
+                    <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
+                        <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
+                            <span>📈</span> Tỷ lệ thành công
+                        </h3>
+                        <p className="text-4xl font-extrabold text-yellow-400">
+                            {upgradeChance}%
+                        </p>
+                        <p className="text-sm text-gray-300 mt-2">
+                            {upgradeChance === 0
+                            ? 'Đặt 2 trang bị giống nhau và đá cường hoá để xem tỷ lệ.'
+                            : 'Chúc may mắn!'}
+                        </p>
+                    </div>
                 </div>
-              </div>
-              {/* --- END: MODIFIED WEAPON SLOTS SECTION --- */}
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-green-300 mb-4 flex items-center gap-2">
-                  <span>💎</span> Đá Cường Hoá (Tối đa 3 viên)
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {upgradeMaterialSlots.map((slot, index) => (
-                    <ForgingSlot
-                      key={`material-${index}`}
-                      item={slot}
-                      slotType="material"
-                      slotIndex={index}
-                      onClick={() => handleUpgradeMaterialSlotClick(index)}
-                      isEmpty={slot === null}
-                      labelOverride="Đá Cường Hoá"
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
-                  <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
-                      <span>📈</span> Tỷ lệ thành công
-                  </h3>
-                  <p className="text-4xl font-extrabold text-yellow-400">
-                      {upgradeChance}%
-                  </p>
-                  <p className="text-sm text-gray-300 mt-2">
-                      {upgradeChance === 0
-                      ? 'Hãy đặt 2 trang bị giống nhau và Đá Cường Hoá để xem tỷ lệ.'
-                      : 'Chúc may mắn!'}
-                  </p>
-              </div>
               <button
-                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform ${
+                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
                   upgradeChance > 0
                     ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-400 hover:to-indigo-400 hover:scale-105 shadow-purple-500/25'
                     : 'bg-gray-600 text-gray-300 cursor-not-allowed'
