@@ -50,6 +50,8 @@ const sampleItems = [
     { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: itemAssets.songKiem, level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
     { id: 43, name: 'Sắt', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để rèn trang bị.', quantity: 20, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000f5ac61f79336c38977abbfa5.png' },
     { id: 44, name: 'Gỗ', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', quantity: 35, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000004f0461f793d26e238db690f7.png' },
+    { id: 45, name: 'Da', type: 'material', rarity: 'common', description: 'Da động vật, nguyên liệu cơ bản để chế tạo giáp nhẹ.', quantity: 15, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000006f30623086e0c4e366dface0.png' },
+    { id: 46, name: 'Vải', type: 'material', rarity: 'common', description: 'Vải thô, dùng để chế tạo quần áo và túi.', quantity: 25, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000863c6230a96cb9487701c9c8.png' },
 ];
 
 const groupInventoryItems = (items) => {
