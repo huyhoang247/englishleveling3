@@ -37,11 +37,20 @@ export const lottieAssets = {
 };
 
 /**
+ * Tài nguyên cho rương báu (Treasure Chest)
+ */
+export const treasureAssets = {
+  chestClosed: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest%20(1).png",
+};
+
+
+/**
  * Mảng tổng hợp TẤT CẢ CÁC URL HÌNH ẢNH cần được tải trước
  * khi game bắt đầu.
  */
 export const allImageUrls = [
     ...Object.values(uiAssets),
     ...Object.values(itemAssets),
+    ...Object.values(treasureAssets),
 ];
 // --- END OF FILE game-assets.ts ---
