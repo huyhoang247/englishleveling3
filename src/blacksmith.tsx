@@ -334,7 +334,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     { id: 'm1', name: 'Quặng Đồng', type: 'material', icon: '🪨', rarity: 'common', quantity: 1 },
     { id: 'w2', name: 'Cung Gỗ', type: 'weapon', icon: '🏹', rarity: 'common', level: 0, quantity: 1 },
     { id: 'm2', name: 'Đá Lửa', type: 'material', icon: '🔥', rarity: 'uncommon', quantity: 1 },
-    { id: 'w3', name: 'Dao Găm', type: 'weapon', icon: '🔪', rarity: 'common', quantity: 1 },
+    { id: 'w3', name: 'Dao Găm', type: 'weapon', icon: '🔪', rarity: 'common', level: 0, quantity: 1 },
     { id: 'm3', name: 'Gỗ Sồi', type: 'material', icon: '🌳', rarity: 'common', quantity: 1 },
     { id: 'm4', name: 'Đá Cường Hoá', type: 'material', icon: '💎', rarity: 'rare', quantity: 5 },
     { id: 'm5', name: 'Gỗ E', type: 'material', icon: '🌲', rarity: 'common', quantity: 30 },
@@ -904,10 +904,12 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
 
         <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
           
+          {/* ----- START: MODIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm flex flex-col justify-between">
+            <div className="flex flex-col justify-between h-full"> 
                 <div>
-                    <div className="flex items-center justify-between mb-6">
+                    {/* 1. Title and Clear Button are now outside */}
+                    <div className="flex items-center justify-between mb-6 px-2">
                         <h2 className="text-2xl font-bold text-yellow-300 flex items-center gap-2">
                         <span>✨</span> Lò Nâng Cấp Huyền Thoại
                         </h2>
@@ -920,8 +922,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </button>
                     </div>
 
-                    {/* --- START: REFINED ANVIL AREA --- */}
-                    <div className="mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-700/80">
+                    {/* 2. Styles applied directly to the anvil frame */}
+                    <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                         {/* Weapon Row */}
                         <div className="flex items-center justify-center gap-3 mb-3">
                             <div className="w-24">
@@ -963,8 +965,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             ))}
                         </div>
                     </div>
-                    {/* --- END: REFINED ANVIL AREA --- */}
 
+                    {/* 3. Success Rate and Button remain */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
                         <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
                             <span>📈</span> Tỷ lệ thành công
@@ -993,6 +995,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               </button>
             </div>
           )}
+          {/* ----- END: MODIFIED UPGRADE TAB ----- */}
+
 
           {activeTab === 'craft' && (
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
