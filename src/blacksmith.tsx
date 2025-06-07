@@ -926,7 +926,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                     <div className="flex flex-col items-center justify-center min-h-[4rem]">
                         {upgradeChance > 0 ? (
                             // Show buttons when ready
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-3">
                                 {/* Upgrade Button */}
                                 <button
                                     onClick={handleUpgrade}
@@ -936,12 +936,16 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                                     Nâng Cấp
                                 </button>
 
-                                {/* Rate Display */}
-                                <div className="px-4 py-2 rounded-lg bg-gray-900/70 border border-yellow-500/50 backdrop-blur-sm flex items-center justify-center shadow-md shadow-yellow-500/10">
-                                    <span className="text-xl font-bold text-yellow-300">
+                                {/* --- START: REDESIGNED RATE DISPLAY --- */}
+                                <div 
+                                    className="flex items-center px-3 py-1 bg-black/40 rounded-full border border-yellow-400/60 backdrop-blur-sm shadow-inner shadow-white/5"
+                                    title={`Tỉ lệ thành công: ${upgradeChance}%`}
+                                >
+                                    <span className="text-sm font-bold text-yellow-300 tracking-wider">
                                         {upgradeChance}%
                                     </span>
                                 </div>
+                                {/* --- END: REDESIGNED RATE DISPLAY --- */}
                             </div>
                         ) : (
                             // Show instructional text when not ready
