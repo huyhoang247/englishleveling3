@@ -48,14 +48,15 @@ const sampleItems = [
     { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
     { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
     { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: itemAssets.songKiem, level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
+    { id: 43, name: 'Đá cường hóa', type: 'material', rarity: 'common', description: 'Đá cường hóa cấp thấp, dùng cho các trang bị cơ bản.', quantity: 20, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000002bd461f7946aae1d61399a56.png' },
 ];
 
 const groupInventoryItems = (items) => {
     const grouped = new Map();
     items.forEach(item => {
         const key = item.name;
-        const { id, quantity, stats, level, currentExp, requiredExp, description } = item;
-        const variant = { id, quantity, stats, level, currentExp, requiredExp, description };
+        const { id, quantity, stats, level, currentExp, requiredExp, description, icon, rarity } = item;
+        const variant = { id, quantity, stats, level, currentExp, requiredExp, description, icon, rarity };
         if (!grouped.has(key)) {
             const { name, ...baseProps } = item;
             grouped.set(key, { ...baseProps, name: key, variants: [variant] });
@@ -259,10 +260,10 @@ export default function Inventory({ onClose }: InventoryProps) {
             {itemGroup.variants.map((variant, index) => (
               <li key={variant.id || index} onClick={() => onSelectVariant(variant)} className="flex items-center justify-between p-3 bg-gray-800/70 rounded-lg cursor-pointer hover:bg-gray-700/90 border border-gray-700 hover:border-blue-500 transition-all duration-200">
                 <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 flex items-center justify-center text-3xl bg-black/30 rounded-md border-2 ${getRarityColor(itemGroup.rarity)}`}>{itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-1" /> : itemGroup.icon}</div>
+                    <div className={`w-12 h-12 flex items-center justify-center text-3xl bg-black/30 rounded-md border-2 ${getRarityColor(variant.rarity)}`}>{variant.icon.startsWith('http') ? <img src={variant.icon} alt={itemGroup.name} className="w-full h-full object-contain p-1" /> : variant.icon}</div>
                     <div>
                         <div className="font-semibold text-white">{variant.level ? `Level ${variant.level}` : itemGroup.name}</div>
-                        <div className="text-xs text-gray-400">Sát thương: {variant.stats?.damage || 'N/A'}</div>
+                        <div className={`text-xs capitalize ${getRarityTextColor(variant.rarity)}`}>{variant.rarity}</div>
                     </div>
                 </div>
                 <div className="text-right"><span className="font-bold text-lg text-gray-200">x{variant.quantity}</span></div>
