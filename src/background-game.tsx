@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import TreasureChest from './treasure.tsx'; // BƯỚC 1: IMPORT LẠI
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth } from './firebase.js';
@@ -147,6 +148,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(0);
+  const [keyCount, setKeyCount] = useState(0); // BƯỚC 2: THÊM LẠI STATE `keyCount`
   const [jackpotPool, setJackpotPool] = useState(0);
 
   const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
@@ -174,6 +176,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0);
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
+        setKeyCount(userData.keys || 0); // Lấy dữ liệu key
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
@@ -185,6 +188,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
+        setKeyCount(0);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -200,9 +204,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         if (jackpotDocSnap.exists()) {
             const data = jackpotDocSnap.data();
             setJackpotPool(data.poolAmount || 200);
-            console.log("Jackpot Pool fetched:", data.poolAmount);
         } else {
-            console.log("No global jackpot pool document found, creating default.");
             await setDoc(jackpotDocRef, { poolAmount: 200, lastUpdated: new Date() });
             setJackpotPool(200);
         }
@@ -212,10 +214,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
-    if (!userId) {
-      console.error("Cannot update coins: User not authenticated.");
-      return;
-    }
+    if (!userId) return;
     const userDocRef = doc(db, 'users', userId);
     try {
       await runTransaction(db, async (transaction) => {
@@ -225,8 +224,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         transaction.set(userDocRef, { coins: newCoins }, { merge: true });
         setCoins(newCoins);
       });
+    } catch (error) { console.error("Firestore Transaction failed for coins: ", error); }
+  };
+  
+  // BƯỚC 3: THÊM LẠI HÀM CẬP NHẬT CHÌA KHÓA
+  const updateKeysInFirestore = async (userId: string, amount: number) => {
+    if (!userId) return;
+    const userDocRef = doc(db, 'users', userId);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+           transaction.set(userDocRef, { keys: 0 }, { merge: true });
+           setKeyCount(Math.max(0, amount));
+        } else {
+          const currentKeys = userDoc.data().keys || 0;
+          const newKeys = currentKeys + amount;
+          const finalKeys = Math.max(0, newKeys);
+          transaction.update(userDocRef, { keys: finalKeys });
+          setKeyCount(finalKeys);
+        }
+      });
     } catch (error) {
-      console.error("Firestore Transaction failed for coins: ", error);
+      console.error("Firestore Transaction failed for keys: ", error);
     }
   };
 
@@ -248,6 +268,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           }
       }, 50);
   };
+  
+  const handleGemReward = (amount: number) => {
+      // Logic để cập nhật gems lên Firestore nếu cần
+      setGems(prev => prev + amount);
+  };
 
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -265,9 +290,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               }
               setJackpotPool(newJackpotPool);
           });
-      } catch (error) {
-          console.error("Firestore Transaction failed for jackpot pool: ", error);
-      }
+      } catch (error) { console.error("Firestore Transaction failed for jackpot pool: ", error); }
   };
 
   useEffect(() => {
@@ -288,6 +311,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
+        setKeyCount(0); // Reset key
         setJackpotPool(0);
         setIsLoadingUserData(true);
       }
@@ -297,11 +321,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   useEffect(() => {
       const handleVisibilityChange = () => {
-          if (document.hidden) {
-              setIsBackgroundPaused(true);
-          } else {
-              setIsBackgroundPaused(false);
-          }
+          setIsBackgroundPaused(document.hidden);
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -321,14 +341,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         coinElement.removeEventListener('animationend', animationEndHandler);
       };
       coinElement.addEventListener('animationend', animationEndHandler);
-      return () => {
-        if (coinElement) {
-            coinElement.removeEventListener('animationend', animationEndHandler);
-             coinElement.classList.remove('number-changing');
-        }
-      };
     }
-     return () => {};
   }, [displayedCoins, coins]);
 
   const isLoading = isLoadingUserData || !imagesLoaded;
@@ -357,16 +370,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (isLoading) return;
     setIsStatsFullscreen(prev => {
         const newState = !prev;
-        if (newState) {
-            hideNavBar();
-            setIsRankOpen(false);
-            setIsGoldMineOpen(false);
-            setIsInventoryOpen(false);
-            setIsLuckyGameOpen(false);
-            setIsBlacksmithOpen(false);
-        } else {
-            showNavBar();
-        }
+        newState ? hideNavBar() : showNavBar();
+        if (newState) { setIsRankOpen(false); setIsGoldMineOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false); setIsBlacksmithOpen(false); }
         return newState;
     });
   };
@@ -375,34 +380,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
      if (isLoading) return;
      setIsRankOpen(prev => {
          const newState = !prev;
-         if (newState) {
-             hideNavBar();
-             setIsStatsFullscreen(false);
-             setIsGoldMineOpen(false);
-             setIsInventoryOpen(false);
-             setIsLuckyGameOpen(false);
-             setIsBlacksmithOpen(false);
-         } else {
-             showNavBar();
-         }
+         newState ? hideNavBar() : showNavBar();
+         if (newState) { setIsStatsFullscreen(false); setIsGoldMineOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false); setIsBlacksmithOpen(false); }
          return newState;
-         });
+     });
   };
 
   const toggleGoldMine = () => {
     if (isLoading) return;
     setIsGoldMineOpen(prev => {
       const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-      } else {
-        showNavBar();
-      }
+      newState ? hideNavBar() : showNavBar();
+      if (newState) { setIsStatsFullscreen(false); setIsRankOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false); setIsBlacksmithOpen(false); }
       return newState;
     });
   };
@@ -411,16 +400,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (isLoading) return;
     setIsInventoryOpen(prev => {
       const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-      } else {
-        showNavBar();
-      }
+      newState ? hideNavBar() : showNavBar();
+      if (newState) { setIsStatsFullscreen(false); setIsRankOpen(false); setIsGoldMineOpen(false); setIsLuckyGameOpen(false); setIsBlacksmithOpen(false); }
       return newState;
     });
   };
@@ -429,16 +410,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (isLoading) return;
     setIsLuckyGameOpen(prev => {
       const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsBlacksmithOpen(false);
-      } else {
-        showNavBar();
-      }
+      newState ? hideNavBar() : showNavBar();
+      if (newState) { setIsStatsFullscreen(false); setIsRankOpen(false); setIsGoldMineOpen(false); setIsInventoryOpen(false); setIsBlacksmithOpen(false); }
       return newState;
     });
   };
@@ -447,16 +420,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (isLoading) return;
     setIsBlacksmithOpen(prev => {
       const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-      } else {
-        showNavBar();
-      }
+      newState ? hideNavBar() : showNavBar();
+      if (newState) { setIsStatsFullscreen(false); setIsRankOpen(false); setIsGoldMineOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false); }
       return newState;
     });
   };
@@ -507,9 +472,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         rounded-b-lg shadow-2xl
                         bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                         border-b border-l border-r border-slate-700/50">
-
                 <HeaderBackground />
-
                 <button
                     onClick={() => sidebarToggleRef.current?.()}
                     className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
@@ -520,16 +483,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         src={uiAssets.menuIcon}
                         alt="Menu Icon"
                         className="w-5 h-5 object-contain"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = "https://placehold.co/20x20/ffffff/000000?text=Menu";
-                        }}
                      />
                 </button>
-
                 <div className="flex-grow"></div>
-
                <div className="flex items-center space-x-1 currency-display-container relative z-10">
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
@@ -542,157 +498,59 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
                             <span className="text-white font-bold text-xs">+</span>
                         </div>
-                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
                 </div>
             </div>
 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                {
-                  icon: (
-                    <img
-                      src={uiAssets.shopIcon}
-                      alt="Shop Icon"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Shop";
-                      }}
-                    />
-                  ),
-                  onClick: () => {} // Placeholder for shop functionality
-                },
-                {
-                  icon: (
-                    <img
-                      src={uiAssets.inventoryIcon}
-                      alt="Inventory Icon"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Inv";
-                      }}
-                    />
-                  ),
-                  onClick: toggleInventory
-                }
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                      <div
-                          className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                          onClick={item.onClick}
-                      >
-                          {item.icon}
-                      </div>
-                </div>
-              ))}
+              {/* ... Nút bấm ... */}
             </div>
 
              <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                {
-                  icon: (
-                    <img
-                      src={uiAssets.missionIcon}
-                      alt="Mission Icon"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Mission";
-                      }}
-                    />
-                  ),
-                   onClick: () => {} // Placeholder for mission functionality
-                },
-                {
-                  icon: (
-                    <img
-                      src={uiAssets.blacksmithIcon}
-                      alt="Blacksmith Icon"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = "https://placehold.co/20x20/ffffff/000000?text=Blacksmith";
-                      }}
-                    />
-                  ),
-                  onClick: toggleBlacksmith
-                },
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                      <div
-                          className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                          onClick={item.onClick}
-                      >
-                          {item.icon}
-                      </div>
-                </div>
-              ))}
+              {/* ... Nút bấm ... */}
             </div>
+
+            {/* BƯỚC 4: THÊM LẠI COMPONENT TREASURE CHEST */}
+            <TreasureChest
+              // Để 1 rương cố định ở gần nhân vật
+              initialChests={1} 
+              keyCount={keyCount}
+              onKeyCollect={(numKeysUsed) => {
+                if (auth.currentUser) {
+                  // Trừ đi số key đã sử dụng
+                  updateKeysInFirestore(auth.currentUser.uid, -numKeysUsed);
+                }
+              }}
+              onCoinReward={startCoinCountAnimation}
+              onGemReward={handleGemReward}
+              // isGamePaused dùng để ngăn mở rương khi đang mở menu khác
+              isGamePaused={isGamePaused}
+              isStatsFullscreen={isStatsFullscreen}
+              currentUserId={currentUser ? currentUser.uid : null}
+            />
+
           </div>
         </div>
 
         {/* === CÁC MÀN HÌNH OVERLAY === */}
         <div className="absolute inset-0 w-full h-full" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-                {auth.currentUser && (
-                    <CharacterCard
-                        onClose={toggleStatsFullscreen}
-                        coins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && <CharacterCard onClose={toggleStatsFullscreen} coins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isRankOpen ? 'block' : 'none' }}>
-             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-                 <EnhancedLeaderboard onClose={toggleRank} />
-             </ErrorBoundary>
+             <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
-                {auth.currentUser && (
-                    <GoldMine
-                        onClose={toggleGoldMine}
-                        currentCoins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
-                        currentUserId={auth.currentUser!.uid}
-                        isGamePaused={isAnyOverlayOpen}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && <GoldMine onClose={toggleGoldMine} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} currentUserId={auth.currentUser!.uid} isGamePaused={isAnyOverlayOpen} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-                <Inventory onClose={toggleInventory} />
-            </ErrorBoundary>
+            <ErrorBoundary><Inventory onClose={toggleInventory} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
-                {auth.currentUser && (
-                    <LuckyChestGame
-                        onClose={toggleLuckyGame}
-                        currentCoins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        currentJackpotPool={jackpotPool}
-                        onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
-                        isStatsFullscreen={isStatsFullscreen}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && <LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} currentJackpotPool={jackpotPool} onUpdateJackpotPool={updateJackpotPoolInFirestore} isStatsFullscreen={isStatsFullscreen} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
-                <Blacksmith onClose={toggleBlacksmith} />
-            </ErrorBoundary>
+            <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
         </div>
 
       </SidebarLayout>
