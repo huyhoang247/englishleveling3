@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (UPDATED) ---
+// --- START OF FILE background-game.tsx (UPDATED & FIXED) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -15,7 +15,7 @@ import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 import GoldMine from './gold-miner.tsx';
 import Inventory from './inventory.tsx';
-import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // <<<< THAY ĐỔI: Sử dụng background canvas mới
+import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
@@ -577,21 +577,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
       >
+        {/* 
+          <<<< THAY ĐỔI QUAN TRỌNG 1 >>>>
+          Component canvas được đặt ở đây, BÊN NGOÀI khối div bị ẩn đi.
+          Nó sẽ luôn được render và chỉ bị tạm dừng thông qua prop `isGamePaused`.
+          Component này đã có zIndex: 0 nên sẽ nằm ở lớp dưới cùng.
+        */}
+        <DungeonCanvasBackground isPaused={isGamePaused} />
+
         {/* === MAIN LOBBY SCREEN === */}
+        {/* Khối div này bây giờ chỉ chứa các yếu tố của sảnh chờ, KHÔNG chứa background nữa */}
         <div 
           style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
           className="w-full h-full"
         >
           <div
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-neutral-800`}
+            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`}
             onClick={handleTap} // Click no longer does anything for gameplay
           >
             {/* 
-              <<<< THAY ĐỔI QUAN TRỌNG >>>>
-              Sử dụng component canvas mới siêu hiệu năng.
-              Nó đã tích hợp sẵn logic isPaused để giải phóng CPU khi cần.
+              <<<< THAY ĐỔI QUAN TRỌNG 2 >>>>
+              Component DungeonCanvasBackground đã được DI CHUYỂN ra ngoài từ đây.
             */}
-            <DungeonCanvasBackground isPaused={isGamePaused} />
 
             {renderCharacter()}
 
