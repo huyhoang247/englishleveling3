@@ -361,8 +361,10 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     { id: 'sb_s', name: 'Sách Kỹ Năng S', type: 'skill_book', icon: '📕', rarity: 'legendary', quantity: 1 },
   ]);
 
-  const [upgradeWeaponSlots, setUpgradeWeaponSlots] = useState([null, null]);
-  const [upgradeMaterialSlots, setUpgradeMaterialSlots] = useState([null, null, null]);
+  // --- START: SIMPLIFIED UPGRADE STATE ---
+  const [upgradeWeaponSlot, setUpgradeWeaponSlot] = useState(null);
+  const [upgradeMaterialSlot, setUpgradeMaterialSlot] = useState(null);
+  // --- END: SIMPLIFIED UPGRADE STATE ---
   
   const [craftShardSlot, setCraftShardSlot] = useState(null);
 
@@ -492,22 +494,16 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     });
   }, []);
 
+  // --- START: SIMPLIFIED UPGRADE CHANCE LOGIC ---
   useEffect(() => {
-    const mainWeapon = upgradeWeaponSlots[0];
-    const sacrificialWeapon = upgradeWeaponSlots[1];
-    const reinforcementStones = upgradeMaterialSlots.filter(slot => slot && slot.name === 'Đá Cường Hoá');
-
-    if (mainWeapon && sacrificialWeapon && mainWeapon.name === sacrificialWeapon.name) {
-      const stoneCount = reinforcementStones.length;
-      let chance = 0;
-      if (stoneCount === 1) chance = 30;
-      else if (stoneCount === 2) chance = 50;
-      else if (stoneCount === 3) chance = 70;
-      setUpgradeChance(chance);
+    if (upgradeWeaponSlot && upgradeMaterialSlot) {
+      setUpgradeChance(50); // Fixed chance for simplicity, can be adjusted
     } else {
       setUpgradeChance(0);
     }
-  }, [upgradeWeaponSlots, upgradeMaterialSlots]);
+  }, [upgradeWeaponSlot, upgradeMaterialSlot]);
+  // --- END: SIMPLIFIED UPGRADE CHANCE LOGIC ---
+
 
   // Detect crafting recipe based only on the shard in the slot
   const detectCraftRecipeLogic = useCallback((currentShardSlot) => {
@@ -565,29 +561,25 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     if (isProcessing) return;
 
     if (activeTab === 'upgrade') {
-      if (itemToMove.type === 'weapon' || itemToMove.type === 'armor') { // Allow armor too
-        if (upgradeWeaponSlots[0] === null) {
-          setUpgradeWeaponSlots([itemToMove, upgradeWeaponSlots[1]]);
-          updateInventory(itemToMove, -1);
-        } else if (upgradeWeaponSlots[1] === null && upgradeWeaponSlots[0].name === itemToMove.name) {
-          setUpgradeWeaponSlots([upgradeWeaponSlots[0], itemToMove]);
+      // --- START: SIMPLIFIED UPGRADE ITEM PLACEMENT LOGIC ---
+      if (itemToMove.type === 'weapon' || itemToMove.type === 'armor') {
+        if (upgradeWeaponSlot === null) {
+          setUpgradeWeaponSlot(itemToMove);
           updateInventory(itemToMove, -1);
         } else {
-          showAlert('Chỉ có thể đặt 2 trang bị giống nhau vào các ô này!', 'warning');
+          showAlert('Đã có trang bị trong ô nâng cấp!', 'warning');
         }
       } else if (itemToMove.type === 'material' && itemToMove.name === 'Đá Cường Hoá') {
-        const emptySlotIndex = upgradeMaterialSlots.findIndex(slot => slot === null);
-        if (emptySlotIndex !== -1) {
-          const newMaterialSlots = [...upgradeMaterialSlots];
-          newMaterialSlots[emptySlotIndex] = { ...itemToMove, quantity: 1 };
-          setUpgradeMaterialSlots(newMaterialSlots);
+        if (upgradeMaterialSlot === null) {
+          setUpgradeMaterialSlot({ ...itemToMove, quantity: 1 });
           updateInventory(itemToMove, -1);
         } else {
-          showAlert('Không còn ô nguyên liệu trống! Tối đa 3 Đá Cường Hoá.', 'warning');
+          showAlert('Đã có Đá Cường Hoá trong ô!', 'warning');
         }
       } else {
         showAlert('Loại vật phẩm này không thể đặt vào lò nâng cấp.', 'warning');
       }
+      // --- END: SIMPLIFIED UPGRADE ITEM PLACEMENT LOGIC ---
     } else if (activeTab === 'craft') {
       if (itemToMove.type === 'weapon' || itemToMove.type === 'armor' || itemToMove.type === 'material') {
         showAlert('Chỉ có thể đặt Mảnh Trang Bị vào lò rèn. Nguyên liệu cần thiết sẽ được lấy từ túi đồ.', 'warning');
@@ -627,27 +619,24 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     }
   };
 
-  const handleUpgradeWeaponSlotClick = (slotIndex) => {
+  // --- START: SIMPLIFIED UPGRADE SLOT CLICK HANDLERS ---
+  const handleUpgradeWeaponSlotClick = () => {
     if (isProcessing) return;
-    const itemInSlot = upgradeWeaponSlots[slotIndex];
-    if (itemInSlot) {
-      updateInventory(itemInSlot, 1);
-      const newWeaponSlots = [...upgradeWeaponSlots];
-      newWeaponSlots[slotIndex] = null;
-      setUpgradeWeaponSlots(newWeaponSlots);
+    if (upgradeWeaponSlot) {
+      updateInventory(upgradeWeaponSlot, 1);
+      setUpgradeWeaponSlot(null);
     }
   };
 
-  const handleUpgradeMaterialSlotClick = (slotIndex) => {
+  const handleUpgradeMaterialSlotClick = () => {
     if (isProcessing) return;
-    const itemInSlot = upgradeMaterialSlots[slotIndex];
-    if (itemInSlot) {
-      updateInventory(itemInSlot, 1);
-      const newMaterialSlots = [...upgradeMaterialSlots];
-      newMaterialSlots[slotIndex] = null;
-      setUpgradeMaterialSlots(newMaterialSlots);
+    if (upgradeMaterialSlot) {
+      updateInventory(upgradeMaterialSlot, 1);
+      setUpgradeMaterialSlot(null);
     }
   };
+  // --- END: SIMPLIFIED UPGRADE SLOT CLICK HANDLERS ---
+
 
   const handleCraftShardSlotClick = () => {
     if (isProcessing) return;
@@ -675,18 +664,10 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     }
   };
 
+  // --- START: SIMPLIFIED UPGRADE LOGIC ---
   const handleUpgrade = async () => {
-    const mainWeapon = upgradeWeaponSlots[0];
-    const sacrificialWeapon = upgradeWeaponSlots[1];
-    const reinforcementStones = upgradeMaterialSlots.filter(slot => slot && slot.name === 'Đá Cường Hoá');
-    const stoneCount = reinforcementStones.length;
-
-    if (!mainWeapon || !sacrificialWeapon || mainWeapon.name !== sacrificialWeapon.name) {
-      showAlert('Cần 2 trang bị giống nhau để nâng cấp!', 'error');
-      return;
-    }
-    if (stoneCount === 0 || stoneCount > 3) {
-      showAlert('Cần 1 đến 3 Đá Cường Hoá để nâng cấp!', 'error');
+    if (!upgradeWeaponSlot || !upgradeMaterialSlot) {
+      showAlert('Cần 1 trang bị và 1 Đá Cường Hoá để nâng cấp!', 'error');
       return;
     }
 
@@ -695,20 +676,21 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
 
     let success = false;
     const randomChance = Math.random() * 100;
+    
+    // Using the fixed 50% chance
+    if (randomChance <= upgradeChance) success = true;
 
-    if (stoneCount === 1 && randomChance <= 30) success = true;
-    else if (stoneCount === 2 && randomChance <= 50) success = true;
-    else if (stoneCount === 3 && randomChance <= 70) success = true;
-
-    setUpgradeWeaponSlots([null, null]);
-    setUpgradeMaterialSlots([null, null, null]);
+    const itemToUpgrade = { ...upgradeWeaponSlot }; // Save item info before clearing slot
+    
+    setUpgradeWeaponSlot(null);
+    setUpgradeMaterialSlot(null);
 
     if (success) {
-      const newLevel = (mainWeapon.level || 0) + 1;
-      const newRarity = getNextRarity(mainWeapon.rarity);
+      const newLevel = (itemToUpgrade.level || 0) + 1;
+      const newRarity = getNextRarity(itemToUpgrade.rarity);
       const upgradedItem = {
-        ...mainWeapon,
-        id: `${mainWeapon.name}_L${newLevel}_${Date.now()}`,
+        ...itemToUpgrade,
+        id: `${itemToUpgrade.name}_L${newLevel}_${Date.now()}`,
         level: newLevel,
         rarity: newRarity,
         quantity: 1,
@@ -716,10 +698,13 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
       updateInventory(upgradedItem, 1);
       showAlert(`Nâng cấp thành công! Bạn đã tạo ra ${upgradedItem.name} +${upgradedItem.level}!`, 'success');
     } else {
-      showAlert('Nâng cấp thất bại! Trang bị và nguyên liệu đã bị mất.', 'error');
+       // On failure, only the material is lost. The weapon is returned.
+      updateInventory(itemToUpgrade, 1);
+      showAlert('Nâng cấp thất bại! Đá Cường Hoá đã bị mất, nhưng trang bị được bảo toàn.', 'error');
     }
     setIsProcessing(false);
   };
+  // --- END: SIMPLIFIED UPGRADE LOGIC ---
 
   const handleCraft = async () => {
     if (!detectedCraftRecipe || !craftShardSlot) {
@@ -797,17 +782,19 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     setIsProcessing(false);
   };
   
+  // --- START: SIMPLIFIED CLEAR SLOTS LOGIC ---
   const handleClearUpgradeSlots = useCallback(() => {
-    upgradeWeaponSlots.forEach(item => {
-      if (item) updateInventory(item, 1);
-    });
-    setUpgradeWeaponSlots([null, null]);
+    if (upgradeWeaponSlot) {
+      updateInventory(upgradeWeaponSlot, 1);
+      setUpgradeWeaponSlot(null);
+    }
+    if (upgradeMaterialSlot) {
+      updateInventory(upgradeMaterialSlot, 1);
+      setUpgradeMaterialSlot(null);
+    }
+  }, [upgradeWeaponSlot, upgradeMaterialSlot, updateInventory]);
+  // --- END: SIMPLIFIED CLEAR SLOTS LOGIC ---
 
-    upgradeMaterialSlots.forEach(item => {
-      if (item) updateInventory(item, 1);
-    });
-    setUpgradeMaterialSlots([null, null, null]);
-  }, [upgradeWeaponSlots, upgradeMaterialSlots, updateInventory]);
 
   const handleClearCraftSlots = useCallback(() => {
     if (craftShardSlot) {
@@ -909,55 +896,33 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
 
         <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar mt-4"> {/* Added mt-4 for spacing */}
           
-          {/* ----- START: MODIFIED UPGRADE TAB ----- */}
+          {/* ----- START: SIMPLIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
             <div className="flex flex-col justify-between h-full"> 
                 <div>
-                    {/* Anvil frame with applied styles */}
+                    {/* Anvil frame with simplified slots */}
                     <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
-                        {/* Weapon Row */}
-                        <div className="flex items-center justify-center gap-3 mb-3">
+                        <div className="flex items-center justify-center gap-4">
                             <div className="w-24">
                                 <ForgingSlot
-                                item={upgradeWeaponSlots[0]}
-                                slotType="weapon"
-                                slotIndex={0}
-                                onClick={() => handleUpgradeWeaponSlotClick(0)}
-                                isEmpty={upgradeWeaponSlots[0] === null}
+                                  item={upgradeWeaponSlot}
+                                  slotType="weapon"
+                                  onClick={handleUpgradeWeaponSlotClick}
+                                  isEmpty={upgradeWeaponSlot === null}
                                 />
                             </div>
-                            <div className="text-3xl text-gray-400 font-light">+</div>
                             <div className="w-24">
                                 <ForgingSlot
-                                item={upgradeWeaponSlots[1]}
-                                slotType="weapon"
-                                slotIndex={1}
-                                onClick={() => handleUpgradeWeaponSlotClick(1)}
-                                isEmpty={upgradeWeaponSlots[1] === null}
+                                  item={upgradeMaterialSlot}
+                                  slotType="material"
+                                  onClick={handleUpgradeMaterialSlotClick}
+                                  isEmpty={upgradeMaterialSlot === null}
                                 />
                             </div>
-                        </div>
-
-                        {/* Separator */}
-                        <div className="w-1/2 mx-auto h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-3"></div>
-
-                        {/* Material Row */}
-                        <div className="flex items-center justify-center gap-3">
-                            {upgradeMaterialSlots.map((slot, index) => (
-                                <div className="w-24" key={`material-wrapper-${index}`}>
-                                <ForgingSlot
-                                    item={slot}
-                                    slotType="material"
-                                    slotIndex={index}
-                                    onClick={() => handleUpgradeMaterialSlotClick(index)}
-                                    isEmpty={slot === null}
-                                />
-                                </div>
-                            ))}
                         </div>
                     </div>
 
-                    {/* Success Rate panel */}
+                    {/* Success Rate panel with updated text */}
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
                         <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
                             <span>📈</span> Tỷ lệ thành công
@@ -967,13 +932,13 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </p>
                         <p className="text-sm text-gray-300 mt-2">
                             {upgradeChance === 0
-                            ? 'Đặt 2 trang bị giống nhau và đá cường hoá để xem tỷ lệ.'
+                            ? 'Đặt trang bị và đá cường hoá để xem tỷ lệ.'
                             : 'Chúc may mắn!'}
                         </p>
                     </div>
                 </div>
 
-              {/* ACTION BUTTON RETURNED TO BOTTOM */}
+              {/* ACTION BUTTON logic remains the same */}
               <button
                 className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
                   upgradeChance > 0
@@ -987,7 +952,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               </button>
             </div>
           )}
-          {/* ----- END: MODIFIED UPGRADE TAB ----- */}
+          {/* ----- END: SIMPLIFIED UPGRADE TAB ----- */}
 
 
           {activeTab === 'craft' && (
