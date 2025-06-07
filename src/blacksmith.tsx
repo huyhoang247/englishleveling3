@@ -894,7 +894,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         </div>
         {/* ----- END: FINALIZED TOP BAR ----- */}
 
-        <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar mt-4"> {/* Added mt-4 for spacing */}
+        <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto hide-scrollbar mt-4"> {/* Added mt-4 for spacing */}
           
           {/* ----- START: SIMPLIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
@@ -922,33 +922,39 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
                     </div>
 
-                    {/* ----- START: NEW INTEGRATED UPGRADE BUTTON ----- */}
-                    <button
-                        onClick={handleUpgrade}
-                        disabled={upgradeChance === 0 || isProcessing}
-                        className={`
-                            w-full p-4 rounded-xl border shadow-lg transition-all duration-300 transform
-                            flex items-center justify-center text-center
-                            ${
-                            upgradeChance > 0
-                                ? 'bg-gradient-to-r from-purple-800/60 to-blue-800/60 border-blue-500/50 cursor-pointer hover:border-blue-400 hover:brightness-125 hover:scale-105'
-                                : 'bg-gray-800/50 border-gray-700/50 cursor-not-allowed opacity-70'
-                            }
-                        `}
-                    >
-                        {upgradeChance > 0 ? (
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="text-4xl font-extrabold text-yellow-400">{upgradeChance}%</span>
-                                <span className="text-3xl font-light text-blue-400/50">|</span>
-                                <span className="text-lg font-bold text-blue-200">Nâng Cấp</span>
+                    {/* ----- START: NEW SPLIT BUTTONS ----- */}
+                    <div className="flex flex-col items-center">
+                        <div className="flex items-center justify-center gap-4">
+                            {/* Upgrade Button */}
+                            <button
+                                onClick={handleUpgrade}
+                                disabled={upgradeChance === 0 || isProcessing}
+                                className={`px-8 py-3 rounded-xl text-lg font-bold shadow-lg transition-all duration-300 transform 
+                                ${
+                                upgradeChance > 0
+                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:brightness-110 hover:scale-105'
+                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                Nâng Cấp
+                            </button>
+
+                            {/* Rate Display */}
+                            <div className="px-6 py-3 rounded-xl bg-black/50 border border-gray-600 flex items-center justify-center">
+                                <span className="text-2xl font-bold text-yellow-400">
+                                    {upgradeChance}%
+                                </span>
                             </div>
-                        ) : (
-                            <p className="text-sm text-gray-300">Đặt trang bị và đá cường hoá để nâng cấp</p>
+                        </div>
+                        {/* Instructional Text */}
+                        {upgradeChance === 0 && (
+                            <p className="text-center text-sm text-gray-400 mt-4">
+                                Đặt trang bị và đá cường hoá để nâng cấp.
+                            </p>
                         )}
-                    </button>
-                    {/* ----- END: NEW INTEGRATED UPGRADE BUTTON ----- */}
+                    </div>
+                    {/* ----- END: NEW SPLIT BUTTONS ----- */}
                 </div>
-                {/* The old big button is now removed */}
             </div>
           )}
           {/* ----- END: SIMPLIFIED UPGRADE TAB ----- */}
@@ -1273,20 +1279,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         }
         .animate-scale-up {
           animation: scale-up 0.3s ease-out;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #333;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #888;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #555;
         }
         .legendary-item-glow {
           box-shadow: 0 0 10px rgba(255,165,0,.4), 0 0 20px rgba(255,69,0,.2);
