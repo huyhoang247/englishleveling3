@@ -922,27 +922,29 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
                     </div>
 
-                    {/* ----- START: NEW CONDITIONAL UI ----- */}
-                    <div className="flex flex-col items-center justify-center min-h-[4rem]">
+                    {/* ----- START: REFINED UPGRADE BUTTON AND CONDITIONAL UI ----- */}
+                    <div className="flex flex-col items-center justify-center min-h-[4rem] py-2">
                         {upgradeChance > 0 ? (
-                            // Show buttons when ready
-                            <div className="flex items-center justify-center gap-2">
-                                {/* Upgrade Button */}
-                                <button
-                                    onClick={handleUpgrade}
-                                    disabled={isProcessing}
-                                    className="px-6 py-2 rounded-lg text-base font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:brightness-110 hover:scale-105"
-                                >
-                                    Nâng Cấp
-                                </button>
+                            // Show integrated button when ready
+                            <button
+                                onClick={handleUpgrade}
+                                disabled={isProcessing}
+                                className="flex items-center justify-center gap-4 px-6 py-2.5 rounded-lg text-base shadow-lg transition-all duration-300 transform bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:brightness-110 hover:scale-105 active:scale-100"
+                            >
+                                {/* Main Action Text */}
+                                <span className="font-bold text-lg">Nâng Cấp</span>
+                                
+                                {/* Subtle Divider */}
+                                <div className="w-px h-6 bg-white/20"></div>
 
-                                {/* Rate Display */}
-                                <div className="px-4 py-2 rounded-lg bg-black/50 border border-gray-600 flex items-center justify-center">
-                                    <span className="text-xl font-bold text-yellow-400">
-                                        {upgradeChance}%
-                                    </span>
+                                {/* Chance Display */}
+                                <div className="flex flex-col items-center leading-none text-center">
+                                  <span className="text-xs font-semibold text-indigo-200/90 tracking-wider">TỈ LỆ</span>
+                                  <span className="font-mono font-bold text-yellow-300 text-xl">
+                                    {upgradeChance}%
+                                  </span>
                                 </div>
-                            </div>
+                            </button>
                         ) : (
                             // Show instructional text when not ready
                             <p className="text-center text-sm text-gray-400">
@@ -950,7 +952,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             </p>
                         )}
                     </div>
-                    {/* ----- END: NEW CONDITIONAL UI ----- */}
+                    {/* ----- END: REFINED UPGRADE BUTTON AND CONDITIONAL UI ----- */}
                 </div>
             </div>
           )}
