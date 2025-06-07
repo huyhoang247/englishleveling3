@@ -847,55 +847,58 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans z-40"> {/* Fixed to fullscreen */}
       <div className="max-w-7xl mx-auto h-full flex flex-col"> {/* Added flex-col and h-full */}
         
-        {/* ----- START: NEW TOP BAR ----- */}
-        <div className="flex justify-between items-center shrink-0">
-          {/* Left side: Action button */}
-          <div className="min-w-[290px]"> {/* Min-width to prevent layout shift */}
-            {activeTab === 'upgrade' && (
+        {/* ----- START: NEW TOP BAR WITH TAB NAVIGATION ----- */}
+        <div className="relative flex justify-center items-center shrink-0 py-4 mb-4">
+          {/* Tab Navigation (moved to center) */}
+          <div className="flex justify-center gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit mx-auto">
               <button
-                className={`w-full py-3 px-6 font-bold text-base rounded-xl shadow-xl transition-all duration-300 transform ${
-                  upgradeChance > 0
-                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-400 hover:to-indigo-400 hover:scale-105 shadow-purple-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
+                  activeTab === 'upgrade'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                    : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
                 }`}
-                onClick={handleUpgrade}
-                disabled={upgradeChance === 0 || isProcessing}
+                onClick={() => {
+                  setActiveTab('upgrade');
+                  handleClearCraftSlots(); 
+                  handleClearSkillSlots();
+                }}
               >
-                {upgradeChance > 0 ? `🚀 Nâng cấp ${upgradeChance}%` : '⚠️ Cần đủ vật phẩm để nâng cấp'}
+                Nâng Cấp
               </button>
-            )}
-            {activeTab === 'craft' && (
               <button
-                className={`w-full py-3 px-6 font-bold text-base rounded-xl shadow-xl transition-all duration-300 transform ${
-                  canCraftButtonBeEnabled && !isProcessing
-                    ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-400 hover:to-teal-400 hover:scale-105 shadow-green-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
+                  activeTab === 'craft'
+                    ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-md'
+                    : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
                 }`}
-                onClick={handleCraft}
-                disabled={isProcessing || !canCraftButtonBeEnabled}
+                onClick={() => {
+                  setActiveTab('craft');
+                  handleClearUpgradeSlots();
+                  handleClearSkillSlots();
+                }}
               >
-                {canCraftButtonBeEnabled ? `✨ Rèn Vật phẩm ${detectedCraftRecipe?.rank}-rank` : '⚠️ Cần đủ mảnh & nguyên liệu'}
+                Rèn
               </button>
-            )}
-            {activeTab === 'skills' && (
               <button
-                className={`w-full py-3 px-6 font-bold text-base rounded-xl shadow-xl transition-all duration-300 transform ${
-                  canLearnSkillButtonBeEnabled && !isProcessing
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 hover:scale-105 shadow-blue-500/25'
-                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
+                  activeTab === 'skills'
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md'
+                    : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
                 }`}
-                onClick={handleLearnSkill}
-                disabled={isProcessing || !canLearnSkillButtonBeEnabled}
+                onClick={() => {
+                  setActiveTab('skills');
+                  handleClearUpgradeSlots();
+                  handleClearCraftSlots();
+                }}
               >
-                {canLearnSkillButtonBeEnabled ? '✨ Học Kỹ Năng' : '⚠️ Cần đủ vật phẩm để học'}
+                Kỹ Năng
               </button>
-            )}
           </div>
 
-          {/* Right side: Close button */}
+          {/* Close Button (positioned to the right) */}
           <button
             onClick={onClose}
-            className="text-white shadow-lg z-50 transition-transform transform hover:scale-110"
+            className="absolute top-1/2 -translate-y-1/2 right-0 text-white shadow-lg z-50 transition-transform transform hover:scale-110"
             aria-label="Đóng lò rèn"
             title="Đóng lò rèn"
           >
@@ -904,57 +907,11 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         </div>
         {/* ----- END: NEW TOP BAR ----- */}
 
-        {/* Updated Tab Navigation (more compact, text only) */}
-        <div className="flex justify-center my-4 gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit mx-auto">
-          <button
-            className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
-              activeTab === 'upgrade'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-            }`}
-            onClick={() => {
-              setActiveTab('upgrade');
-              handleClearCraftSlots(); 
-              handleClearSkillSlots();
-            }}
-          >
-            Nâng Cấp
-          </button>
-          <button
-            className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
-              activeTab === 'craft'
-                ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-md'
-                : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-            }`}
-            onClick={() => {
-              setActiveTab('craft');
-              handleClearUpgradeSlots();
-              handleClearSkillSlots();
-            }}
-          >
-            Rèn
-          </button>
-          <button
-            className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${
-              activeTab === 'skills'
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md'
-                : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-            }`}
-            onClick={() => {
-              setActiveTab('skills');
-              handleClearUpgradeSlots();
-              handleClearCraftSlots();
-            }}
-          >
-            Kỹ Năng
-          </button>
-        </div>
-
         <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
           
           {/* ----- START: MODIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
-            <div className="flex flex-col h-full"> 
+            <div className="flex flex-col justify-between h-full"> 
                 <div>
                     {/* Anvil frame with applied styles */}
                     <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
@@ -1015,184 +972,221 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </p>
                     </div>
                 </div>
-                {/* UPGRADE BUTTON REMOVED FROM HERE */}
+
+              {/* ACTION BUTTON RETURNED TO BOTTOM */}
+              <button
+                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
+                  upgradeChance > 0
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-400 hover:to-indigo-400 hover:scale-105 shadow-purple-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleUpgrade}
+                disabled={upgradeChance === 0 || isProcessing}
+              >
+                {upgradeChance > 0 ? `🚀 Nâng cấp ${upgradeChance}%` : '⚠️ Cần đủ vật phẩm để nâng cấp'}
+              </button>
             </div>
           )}
           {/* ----- END: MODIFIED UPGRADE TAB ----- */}
 
 
           {activeTab === 'craft' && (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-green-300 flex items-center gap-2">
-                  <span>✨</span> Lò Rèn Vật Phẩm
-                </h2>
-                <button
-                  onClick={handleClearSlots}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
-                  disabled={isProcessing || craftShardSlot === null}
-                >
-                  Xóa tất cả
-                </button>
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-green-300 flex items-center gap-2">
+                    <span>✨</span> Lò Rèn Vật Phẩm
+                  </h2>
+                  <button
+                    onClick={handleClearSlots}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
+                    disabled={isProcessing || craftShardSlot === null}
+                  >
+                    Xóa tất cả
+                  </button>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
+                    <span>🧩</span> Mảnh Trang Bị (Đặt 1 loại mảnh vào đây)
+                  </h3>
+                  <ForgingSlot
+                    item={craftShardSlot}
+                    slotType="shard"
+                    slotIndex={0} // Only one shard slot
+                    onClick={handleCraftShardSlotClick}
+                    isEmpty={craftShardSlot === null}
+                    labelOverride="Đặt mảnh vào đây"
+                    showQuantity={true}
+                  />
+                </div>
+                
+                {/* Display Required Materials & Recipe Info */}
+                {detectedCraftRecipe && craftShardSlot && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-teal-900/40 rounded-xl border border-blue-500/50 shadow-lg">
+                    <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
+                      <span>💡</span> Công thức nhận diện: <span className="text-yellow-300">{detectedCraftRecipe.rank}-Rank</span>
+                    </h3>
+                    <div className="text-sm text-gray-300 mb-2">
+                       <h4 className="font-semibold text-purple-200 mb-1">Yêu cầu từ Lò Rèn & Túi Đồ:</h4>
+                       <ul className="space-y-1 list-disc list-inside ml-2">
+                          {/* Shard requirement display */}
+                          <li className="flex justify-between items-center">
+                            <span>
+                              {craftShardSlot.icon} {detectedCraftRecipe.shardRequired.name}:
+                            </span>
+                            <span className={`font-bold ${
+                              craftShardSlot.quantity >= detectedCraftRecipe.shardRequired.quantity
+                                ? 'text-green-300'
+                                : 'text-red-300'
+                            }`}>
+                              {craftShardSlot.quantity} / {detectedCraftRecipe.shardRequired.quantity} (Trong lò)
+                            </span>
+                          </li>
+                          {/* Material requirements display */}
+                          {detectedCraftRecipe.materialsRequired.map((mat, idx) => {
+                            const invItem = inventory.find(i => i.name === mat.name && i.type === 'material');
+                            const currentAmount = invItem ? invItem.quantity : 0;
+                            const hasEnough = currentAmount >= mat.quantity;
+                            const materialIcon = inventory.find(i => i.name === mat.name)?.icon || '🧱';
+                            return (
+                              <li key={idx} className="flex justify-between items-center">
+                                <span>
+                                  {materialIcon} {mat.name}:
+                                </span>
+                                <span className={`font-bold ${hasEnough ? 'text-green-300' : 'text-red-300'}`}>
+                                  {currentAmount} / {mat.quantity} (Trong túi)
+                                </span>
+                              </li>
+                            );
+                          })}
+                       </ul>
+                    </div>
+                    <div className="text-sm text-gray-300 mt-3">
+                      <span className="font-semibold text-green-200">Kết quả có thể nhận:</span>
+                      <ul className="list-disc list-inside ml-2 mt-1 text-xs text-gray-400">
+                        {detectedCraftRecipe.outputPool.map((item, index) => (
+                          <li key={index}>{item.icon} {item.name} ({item.rarity})</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-3">{detectedCraftRecipe.description}</p>
+                  </div>
+                )}
+                {!detectedCraftRecipe && craftShardSlot && (
+                   <p className="text-center text-yellow-400 italic my-4">Không tìm thấy công thức cho mảnh này.</p>
+                )}
+                 {!craftShardSlot && (
+                   <p className="text-center text-gray-400 italic my-4">Hãy đặt một mảnh trang bị vào lò để xem công thức.</p>
+                )}
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-purple-300 mb-4 flex items-center gap-2">
-                  <span>🧩</span> Mảnh Trang Bị (Đặt 1 loại mảnh vào đây)
-                </h3>
-                <ForgingSlot
-                  item={craftShardSlot}
-                  slotType="shard"
-                  slotIndex={0} // Only one shard slot
-                  onClick={handleCraftShardSlotClick}
-                  isEmpty={craftShardSlot === null}
-                  labelOverride="Đặt mảnh vào đây"
-                  showQuantity={true}
-                />
-              </div>
-              
-              {/* Display Required Materials & Recipe Info */}
-              {detectedCraftRecipe && craftShardSlot && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-teal-900/40 rounded-xl border border-blue-500/50 shadow-lg">
-                  <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
-                    <span>💡</span> Công thức nhận diện: <span className="text-yellow-300">{detectedCraftRecipe.rank}-Rank</span>
-                  </h3>
-                  <div className="text-sm text-gray-300 mb-2">
-                     <h4 className="font-semibold text-purple-200 mb-1">Yêu cầu từ Lò Rèn & Túi Đồ:</h4>
-                     <ul className="space-y-1 list-disc list-inside ml-2">
-                        {/* Shard requirement display */}
-                        <li className="flex justify-between items-center">
-                          <span>
-                            {craftShardSlot.icon} {detectedCraftRecipe.shardRequired.name}:
-                          </span>
-                          <span className={`font-bold ${
-                            craftShardSlot.quantity >= detectedCraftRecipe.shardRequired.quantity
-                              ? 'text-green-300'
-                              : 'text-red-300'
-                          }`}>
-                            {craftShardSlot.quantity} / {detectedCraftRecipe.shardRequired.quantity} (Trong lò)
-                          </span>
-                        </li>
-                        {/* Material requirements display */}
-                        {detectedCraftRecipe.materialsRequired.map((mat, idx) => {
-                          const invItem = inventory.find(i => i.name === mat.name && i.type === 'material');
-                          const currentAmount = invItem ? invItem.quantity : 0;
-                          const hasEnough = currentAmount >= mat.quantity;
-                          const materialIcon = inventory.find(i => i.name === mat.name)?.icon || '🧱';
-                          return (
-                            <li key={idx} className="flex justify-between items-center">
-                              <span>
-                                {materialIcon} {mat.name}:
-                              </span>
-                              <span className={`font-bold ${hasEnough ? 'text-green-300' : 'text-red-300'}`}>
-                                {currentAmount} / {mat.quantity} (Trong túi)
-                              </span>
-                            </li>
-                          );
-                        })}
-                     </ul>
-                  </div>
-                  <div className="text-sm text-gray-300 mt-3">
-                    <span className="font-semibold text-green-200">Kết quả có thể nhận:</span>
-                    <ul className="list-disc list-inside ml-2 mt-1 text-xs text-gray-400">
-                      {detectedCraftRecipe.outputPool.map((item, index) => (
-                        <li key={index}>{item.icon} {item.name} ({item.rarity})</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-3">{detectedCraftRecipe.description}</p>
-                </div>
-              )}
-              {!detectedCraftRecipe && craftShardSlot && (
-                 <p className="text-center text-yellow-400 italic my-4">Không tìm thấy công thức cho mảnh này.</p>
-              )}
-               {!craftShardSlot && (
-                 <p className="text-center text-gray-400 italic my-4">Hãy đặt một mảnh trang bị vào lò để xem công thức.</p>
-              )}
-               {/* CRAFT BUTTON REMOVED FROM HERE */}
+              <button
+                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
+                  canCraftButtonBeEnabled && !isProcessing
+                    ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-400 hover:to-teal-400 hover:scale-105 shadow-green-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleCraft}
+                disabled={isProcessing || !canCraftButtonBeEnabled}
+              >
+                {canCraftButtonBeEnabled ? `✨ Rèn Vật phẩm ${detectedCraftRecipe?.rank}-rank` : '⚠️ Cần đủ mảnh & nguyên liệu'}
+              </button>
             </div>
           )}
 
           {activeTab === 'skills' && ( // New Skills tab content
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-cyan-500/30 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-cyan-300 flex items-center gap-2">
-                  <span>📚</span> Lò Học Kỹ Năng
-                </h2>
-                <button
-                  onClick={handleClearSlots}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
-                  disabled={isProcessing || (skillWeaponSlot === null && skillBookSlot === null)}
-                >
-                  Xóa tất cả
-                </button>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center gap-2">
-                  <span>⚔️</span> Trang Bị Cần Thiết (Để học kỹ năng)
-                </h3>
-                <ForgingSlot
-                  item={skillWeaponSlot}
-                  slotType="weapon"
-                  slotIndex={0}
-                  onClick={handleSkillWeaponSlotClick}
-                  isEmpty={skillWeaponSlot === null}
-                  labelOverride="Đặt trang bị vào đây"
-                />
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-                  <span>📖</span> Sách Kỹ Năng
-                </h3>
-                <ForgingSlot
-                  item={skillBookSlot}
-                  slotType="skill_book"
-                  slotIndex={0}
-                  onClick={handleSkillBookSlotClick}
-                  isEmpty={skillBookSlot === null}
-                  labelOverride="Đặt sách kỹ năng vào đây"
-                />
-              </div>
-
-              {skillBookSlot && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl border border-blue-500/50 shadow-lg">
-                  <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
-                    <span>🌟</span> Thông tin Sách Kỹ Năng:
-                  </h3>
-                  <p className="text-sm text-gray-300 mb-2">
-                    Sách kỹ năng: <span className="font-semibold text-white">{skillBookSlot.name}</span>
-                  </p>
-                  <p className="text-sm text-gray-300 mb-2">
-                    Độ hiếm: <span className={`font-bold ${
-                      skillBookSlot.rarity === 'legendary' ? 'text-yellow-400' :
-                      skillBookSlot.rarity === 'epic' ? 'text-purple-400' :
-                      skillBookSlot.rarity === 'rare' ? 'text-blue-400' :
-                      skillBookSlot.rarity === 'uncommon' ? 'text-green-400' :
-                      'text-gray-400'
-                    }`}>
-                      {skillBookSlot.rarity.charAt(0).toUpperCase() + skillBookSlot.rarity.slice(1)}
-                    </span>
-                  </p>
-                  <div className="text-sm text-gray-300 mt-3">
-                    <span className="font-semibold text-green-200">Kỹ năng có thể học:</span>
-                    <ul className="list-disc list-inside ml-2 mt-1 text-xs text-gray-400">
-                      {(SKILL_POOLS_BY_RARITY[skillBookSlot.rarity] || []).map((skill, index) => (
-                        <li key={index}>{skill.icon} {skill.name} ({skill.rarity})</li>
-                      ))}
-                    </ul>
-                  </div>
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-cyan-500/30 backdrop-blur-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-cyan-300 flex items-center gap-2">
+                    <span>📚</span> Lò Học Kỹ Năng
+                  </h2>
+                  <button
+                    onClick={handleClearSlots}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
+                    disabled={isProcessing || (skillWeaponSlot === null && skillBookSlot === null)}
+                  >
+                    Xóa tất cả
+                  </button>
                 </div>
-              )}
-              {!skillBookSlot && skillWeaponSlot && (
-                <p className="text-center text-gray-400 italic my-4">Hãy đặt một sách kỹ năng vào lò để xem các kỹ năng có thể học.</p>
-              )}
-              {!skillBookSlot && !skillWeaponSlot && (
-                <p className="text-center text-gray-400 italic my-4">Hãy đặt trang bị và sách kỹ năng vào lò để học kỹ năng.</p>
-              )}
 
-              {/* LEARN SKILL BUTTON REMOVED FROM HERE */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center gap-2">
+                    <span>⚔️</span> Trang Bị Cần Thiết (Để học kỹ năng)
+                  </h3>
+                  <ForgingSlot
+                    item={skillWeaponSlot}
+                    slotType="weapon"
+                    slotIndex={0}
+                    onClick={handleSkillWeaponSlotClick}
+                    isEmpty={skillWeaponSlot === null}
+                    labelOverride="Đặt trang bị vào đây"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+                    <span>📖</span> Sách Kỹ Năng
+                  </h3>
+                  <ForgingSlot
+                    item={skillBookSlot}
+                    slotType="skill_book"
+                    slotIndex={0}
+                    onClick={handleSkillBookSlotClick}
+                    isEmpty={skillBookSlot === null}
+                    labelOverride="Đặt sách kỹ năng vào đây"
+                  />
+                </div>
+
+                {skillBookSlot && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl border border-blue-500/50 shadow-lg">
+                    <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center gap-2">
+                      <span>🌟</span> Thông tin Sách Kỹ Năng:
+                    </h3>
+                    <p className="text-sm text-gray-300 mb-2">
+                      Sách kỹ năng: <span className="font-semibold text-white">{skillBookSlot.name}</span>
+                    </p>
+                    <p className="text-sm text-gray-300 mb-2">
+                      Độ hiếm: <span className={`font-bold ${
+                        skillBookSlot.rarity === 'legendary' ? 'text-yellow-400' :
+                        skillBookSlot.rarity === 'epic' ? 'text-purple-400' :
+                        skillBookSlot.rarity === 'rare' ? 'text-blue-400' :
+                        skillBookSlot.rarity === 'uncommon' ? 'text-green-400' :
+                        'text-gray-400'
+                      }`}>
+                        {skillBookSlot.rarity.charAt(0).toUpperCase() + skillBookSlot.rarity.slice(1)}
+                      </span>
+                    </p>
+                    <div className="text-sm text-gray-300 mt-3">
+                      <span className="font-semibold text-green-200">Kỹ năng có thể học:</span>
+                      <ul className="list-disc list-inside ml-2 mt-1 text-xs text-gray-400">
+                        {(SKILL_POOLS_BY_RARITY[skillBookSlot.rarity] || []).map((skill, index) => (
+                          <li key={index}>{skill.icon} {skill.name} ({skill.rarity})</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                {!skillBookSlot && skillWeaponSlot && (
+                  <p className="text-center text-gray-400 italic my-4">Hãy đặt một sách kỹ năng vào lò để xem các kỹ năng có thể học.</p>
+                )}
+                {!skillBookSlot && !skillWeaponSlot && (
+                  <p className="text-center text-gray-400 italic my-4">Hãy đặt trang bị và sách kỹ năng vào lò để học kỹ năng.</p>
+                )}
+              </div>
+
+              <button
+                className={`w-full py-4 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-auto ${
+                  canLearnSkillButtonBeEnabled && !isProcessing
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 hover:scale-105 shadow-blue-500/25'
+                    : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                }`}
+                onClick={handleLearnSkill}
+                disabled={isProcessing || !canLearnSkillButtonBeEnabled}
+              >
+                {canLearnSkillButtonBeEnabled ? '✨ Học Kỹ Năng' : '⚠️ Cần đủ vật phẩm để học'}
+              </button>
             </div>
           )}
 
