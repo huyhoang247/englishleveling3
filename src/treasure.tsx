@@ -3,6 +3,9 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 // Import the image URLs list
 import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
 
+// NEW: Import treasure assets
+import { treasureAssets } from './game-assets.ts'; // Adjust path if necessary
+
 // Import db from your firebase.js file
 import { db } from './firebase.js'; // Adjust the path if necessary
 
@@ -439,7 +442,7 @@ export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward
           <div className="relative w-40 h-40 flex items-center justify-center">
             {/* Static chest image - always visible, but scales up when open */}
             <img
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest%20(1).png"
+                src={treasureAssets.chestClosed}
                 alt="Treasure Chest"
                 className={`w-32 h-32 object-contain transition-all duration-300 transform-gpu
                     ${chestShake ? 'animate-chest-shake' : ''}
