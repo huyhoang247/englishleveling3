@@ -325,91 +325,6 @@ const ForgingAnimation = ({ isProcessing }) => {
   );
 };
 
-// Forging Slot Component
-const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverride, showQuantity = false }) => {
-  const slotStyles = {
-    weapon: {
-      border: 'border-red-500/50',
-      bg: item ? 'bg-gradient-to-br from-red-900/40 to-red-800/40' : 'bg-gradient-to-br from-red-900/20 to-red-800/20',
-      hoverBg: 'hover:bg-red-700/30',
-      hoverBorder: 'hover:border-red-400',
-      icon: '⚔️',
-      label: 'Trang Bị'
-    },
-    material: {
-      border: 'border-green-500/50',
-      bg: item ? 'bg-gradient-to-br from-green-900/40 to-green-800/40' : 'bg-gradient-to-br from-green-900/20 to-green-800/20',
-      hoverBg: 'hover:bg-green-700/30',
-      hoverBorder: 'hover:border-green-400',
-      icon: '💎', // Changed icon for clarity
-      label: 'Đá Cường Hoá'
-    },
-    shard: {
-      border: 'border-purple-500/50',
-      bg: item ? 'bg-gradient-to-br from-purple-900/40 to-purple-800/40' : 'bg-gradient-to-br from-purple-900/20 to-purple-800/20',
-      hoverBg: 'hover:bg-purple-700/30',
-      hoverBorder: 'hover:border-purple-400',
-      icon: '🧩',
-      label: 'Mảnh Trang Bị'
-    },
-    skill_book: { // New style for skill books
-      border: 'border-cyan-500/50',
-      bg: item ? 'bg-gradient-to-br from-cyan-900/40 to-cyan-800/40' : 'bg-gradient-to-br from-cyan-900/20 to-cyan-800/20',
-      hoverBg: 'hover:bg-cyan-700/30',
-      hoverBorder: 'hover:border-cyan-400',
-      icon: '📖',
-      label: 'Sách Kỹ Năng'
-    }
-  };
-
-  const style = slotStyles[slotType];
-
-  return (
-    <div
-      className={`
-        relative flex flex-col items-center justify-center h-32
-        rounded-xl border-2 transition-all duration-300 ease-in-out cursor-pointer
-        ${style.border} ${style.bg} ${style.hoverBg} ${style.hoverBorder}
-        ${item ? 'shadow-lg transform hover:scale-105' : 'border-dashed'}
-        ${isEmpty ? 'animate-pulse' : ''}
-      `}
-      onClick={onClick}
-    >
-      {item ? (
-        <>
-          <div className="text-4xl md:text-5xl mb-2 animate-pulse">
-            {item.icon}
-          </div>
-          <span className="text-xs md:text-sm font-medium text-center px-2 text-white">
-            {item.name} {item.level > 0 ? `+${item.level}` : ''}
-          </span>
-          {showQuantity && item.quantity > 0 && (
-            <span className={`absolute bottom-1 right-1 px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full`}>
-              {`x${item.quantity}`}
-            </span>
-          )}
-          <div className={`absolute top-2 left-2 text-xs px-2 py-1 rounded-full font-medium ${
-            item.rarity === 'legendary' ? 'bg-yellow-600 text-yellow-100' :
-            item.rarity === 'epic' ? 'bg-purple-600 text-purple-100' :
-            item.rarity === 'rare' ? 'bg-blue-600 text-blue-100' :
-            item.rarity === 'uncommon' ? 'bg-green-600 text-green-100' :
-            'bg-gray-600 text-gray-100'
-          }`}>
-            {item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1)}
-          </div>
-        </>
-      ) : (
-        <div className="text-center">
-          <div className="text-3xl mb-2 opacity-50">{style.icon}</div>
-          <span className="text-gray-400 text-xs font-medium">
-            {labelOverride || style.label}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-};
-
 // Main App Component
 const Blacksmith = ({ onClose }) => { // Accept onClose prop
   const [activeTab, setActiveTab] = useState('upgrade');
@@ -460,6 +375,97 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
   const [isProcessing, setIsProcessing] = useState(false);
   const [upgradeChance, setUpgradeChance] = useState(0);
   const [detectedCraftRecipe, setDetectedCraftRecipe] = useState(null);
+
+  // Forging Slot Component - Placed inside to access activeTab
+  const ForgingSlot = ({ item, slotType, slotIndex, onClick, isEmpty, labelOverride, showQuantity = false }) => {
+    const slotStyles = {
+      weapon: {
+        border: 'border-red-500/50',
+        bg: item ? 'bg-gradient-to-br from-red-900/40 to-red-800/40' : 'bg-gradient-to-br from-red-900/20 to-red-800/20',
+        hoverBg: 'hover:bg-red-700/30',
+        hoverBorder: 'hover:border-red-400',
+        icon: '⚔️',
+        label: 'Trang Bị'
+      },
+      material: {
+        border: 'border-green-500/50',
+        bg: item ? 'bg-gradient-to-br from-green-900/40 to-green-800/40' : 'bg-gradient-to-br from-green-900/20 to-green-800/20',
+        hoverBg: 'hover:bg-green-700/30',
+        hoverBorder: 'hover:border-green-400',
+        icon: '💎', // Changed icon for clarity
+        label: 'Đá Cường Hoá'
+      },
+      shard: {
+        border: 'border-purple-500/50',
+        bg: item ? 'bg-gradient-to-br from-purple-900/40 to-purple-800/40' : 'bg-gradient-to-br from-purple-900/20 to-purple-800/20',
+        hoverBg: 'hover:bg-purple-700/30',
+        hoverBorder: 'hover:border-purple-400',
+        icon: '🧩',
+        label: 'Mảnh Trang Bị'
+      },
+      skill_book: { // New style for skill books
+        border: 'border-cyan-500/50',
+        bg: item ? 'bg-gradient-to-br from-cyan-900/40 to-cyan-800/40' : 'bg-gradient-to-br from-cyan-900/20 to-cyan-800/20',
+        hoverBg: 'hover:bg-cyan-700/30',
+        hoverBorder: 'hover:border-cyan-400',
+        icon: '📖',
+        label: 'Sách Kỹ Năng'
+      }
+    };
+
+    const style = slotStyles[slotType];
+
+    const isUpgradeSlot = slotType === 'weapon' || slotType === 'material';
+    // Use smaller size for upgrade tab, normal size for others
+    const sizeClass = activeTab === 'upgrade' && isUpgradeSlot ? 'h-24' : 'h-32';
+
+    return (
+      <div
+        className={`
+          relative flex flex-col items-center justify-center
+          rounded-xl border-2 transition-all duration-300 ease-in-out cursor-pointer
+          ${sizeClass} 
+          ${style.border} ${style.bg} ${style.hoverBg} ${style.hoverBorder}
+          ${item ? 'shadow-lg transform hover:scale-105' : 'border-dashed'}
+          ${isEmpty ? 'animate-pulse' : ''}
+        `}
+        onClick={onClick}
+      >
+        {item ? (
+          <>
+            <div className={sizeClass === 'h-24' ? "text-3xl mb-1" : "text-4xl md:text-5xl mb-2"}>
+              {item.icon}
+            </div>
+            <span className={`font-medium text-center px-1 text-white ${sizeClass === 'h-24' ? 'text-xs leading-tight' : 'text-xs md:text-sm'}`}>
+              {item.name} {item.level > 0 ? `+${item.level}` : ''}
+            </span>
+            {showQuantity && item.quantity > 0 && (
+              <span className={`absolute bottom-1 right-1 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full`}>
+                {`x${item.quantity}`}
+              </span>
+            )}
+            <div className={`absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+              item.rarity === 'legendary' ? 'bg-yellow-600 text-yellow-100' :
+              item.rarity === 'epic' ? 'bg-purple-600 text-purple-100' :
+              item.rarity === 'rare' ? 'bg-blue-600 text-blue-100' :
+              item.rarity === 'uncommon' ? 'bg-green-600 text-green-100' :
+              'bg-gray-600 text-gray-100'
+            }`}>
+              {item.rarity.charAt(0).toUpperCase()}
+            </div>
+          </>
+        ) : (
+          <div className="text-center">
+            <div className={`mb-1 opacity-50 ${sizeClass === 'h-24' ? 'text-2xl' : 'text-3xl'}`}>{style.icon}</div>
+            <span className="text-gray-400 text-xs font-medium">
+              {labelOverride || style.label}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   const updateInventory = useCallback((item, quantityChange) => {
     setInventory(prevInventory => {
@@ -914,11 +920,11 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </button>
                     </div>
 
-                    {/* --- START: MODIFIED ANVIL AREA --- */}
+                    {/* --- START: REFINED ANVIL AREA --- */}
                     <div className="mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-700/80">
                         {/* Weapon Row */}
-                        <div className="flex items-center justify-center gap-4 mb-4">
-                            <div className="w-32">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                            <div className="w-24">
                                 <ForgingSlot
                                 item={upgradeWeaponSlots[0]}
                                 slotType="weapon"
@@ -927,8 +933,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                                 isEmpty={upgradeWeaponSlots[0] === null}
                                 />
                             </div>
-                            <div className="text-4xl text-gray-400 font-light">+</div>
-                            <div className="w-32">
+                            <div className="text-3xl text-gray-400 font-light">+</div>
+                            <div className="w-24">
                                 <ForgingSlot
                                 item={upgradeWeaponSlots[1]}
                                 slotType="weapon"
@@ -940,12 +946,12 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
 
                         {/* Separator */}
-                        <div className="w-1/2 mx-auto h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-4"></div>
+                        <div className="w-1/2 mx-auto h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent my-3"></div>
 
                         {/* Material Row */}
-                        <div className="flex items-center justify-center gap-4">
+                        <div className="flex items-center justify-center gap-3">
                             {upgradeMaterialSlots.map((slot, index) => (
-                                <div className="w-32" key={`material-wrapper-${index}`}>
+                                <div className="w-24" key={`material-wrapper-${index}`}>
                                 <ForgingSlot
                                     item={slot}
                                     slotType="material"
@@ -957,7 +963,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             ))}
                         </div>
                     </div>
-                    {/* --- END: MODIFIED ANVIL AREA --- */}
+                    {/* --- END: REFINED ANVIL AREA --- */}
 
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
                         <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
