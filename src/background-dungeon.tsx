@@ -119,19 +119,23 @@ const dungeonStyles = `
 
 @keyframes enhancedDrift {
   0% { 
-    transform: translate(0, 0) scale(0); 
+    transform: translate(0, 0) scale(0) rotate(0deg); 
     opacity: 0; 
   }
-  10% { 
-    transform: translate(5px, -5px) scale(1); 
+  15% { 
+    transform: translate(8px, -8px) scale(1) rotate(45deg); 
     opacity: var(--opacity); 
   }
-  90% { 
-    transform: translate(var(--x-end), var(--y-end)) scale(0.5); 
-    opacity: calc(var(--opacity) * 0.3); 
+  50% {
+    transform: translate(var(--mid-x), var(--mid-y)) scale(1.2) rotate(180deg);
+    opacity: calc(var(--opacity) * 0.8);
+  }
+  85% { 
+    transform: translate(var(--x-end), var(--y-end)) scale(0.6) rotate(315deg); 
+    opacity: calc(var(--opacity) * 0.2); 
   }
   100% { 
-    transform: translate(calc(var(--x-end) + 20px), calc(var(--y-end) + 20px)) scale(0); 
+    transform: translate(calc(var(--x-end) + 30px), calc(var(--y-end) + 30px)) scale(0) rotate(360deg); 
     opacity: 0; 
   }
 }
@@ -165,29 +169,34 @@ const dungeonStyles = `
 
 @keyframes enhancedFlicker {
   0% { 
-    transform: scale(0.8, 0.9); 
-    opacity: 0.5; 
-    filter: blur(1px);
+    transform: scale(0.85, 0.95) rotate(-0.5deg); 
+    opacity: 0.6; 
+    filter: blur(0.5px) brightness(0.9);
   }
-  25% { 
-    transform: scale(1.1, 1.2); 
-    opacity: 0.9; 
-    filter: blur(0px);
+  20% { 
+    transform: scale(1.05, 1.15) rotate(0.3deg); 
+    opacity: 0.95; 
+    filter: blur(0px) brightness(1.1);
   }
-  50% { 
-    transform: scale(0.9, 1.1); 
-    opacity: 0.7; 
-    filter: blur(0.5px);
+  40% { 
+    transform: scale(0.95, 1.05) rotate(-0.2deg); 
+    opacity: 0.75; 
+    filter: blur(0.3px) brightness(1);
   }
-  75% { 
-    transform: scale(1.2, 0.8); 
+  60% { 
+    transform: scale(1.1, 0.9) rotate(0.4deg); 
+    opacity: 0.85; 
+    filter: blur(0px) brightness(1.05);
+  }
+  80% { 
+    transform: scale(0.9, 1.1) rotate(-0.1deg); 
     opacity: 0.8; 
-    filter: blur(0px);
+    filter: blur(0.2px) brightness(0.95);
   }
   100% { 
-    transform: scale(0.8, 0.9); 
-    opacity: 0.6; 
-    filter: blur(1px);
+    transform: scale(0.85, 0.95) rotate(-0.5deg); 
+    opacity: 0.65; 
+    filter: blur(0.5px) brightness(0.9);
   }
 }
 
@@ -268,27 +277,35 @@ const dungeonStyles = `
   }
 }
 
-/* --- New: Energy Waves --- */
-.energy-wave {
+/* --- New: Floating Motes --- */
+.floating-mote {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 2px solid rgba(100, 150, 255, 0.3);
+  width: var(--size);
+  height: var(--size);
   border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: energyPulse var(--duration) var(--delay) ease-out infinite;
+  background: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.9), var(--color) 80%);
+  box-shadow: 
+    0 0 15px var(--color),
+    0 0 30px rgba(255, 255, 255, 0.1);
+  animation: gentleFloat var(--duration) var(--delay) ease-in-out infinite;
 }
 
-@keyframes energyPulse {
-  0% { 
-    transform: translate(-50%, -50%) scale(0.1); 
+@keyframes gentleFloat {
+  0%, 100% { 
+    transform: translate(0, 0) scale(0.8); 
+    opacity: 0.4; 
+  }
+  25% { 
+    transform: translate(var(--x1), var(--y1)) scale(1.1); 
     opacity: 0.8; 
   }
-  100% { 
-    transform: translate(-50%, -50%) scale(4); 
-    opacity: 0; 
+  50% { 
+    transform: translate(var(--x2), var(--y2)) scale(0.9); 
+    opacity: 0.6; 
+  }
+  75% { 
+    transform: translate(var(--x3), var(--y3)) scale(1.2); 
+    opacity: 0.9; 
   }
 }
 
@@ -336,8 +353,10 @@ const DungeonBackground: React.FC<DungeonBackgroundProps> = ({ isPaused }) => {
                 '--duration': `${Math.random() * 25 + 20}s`,
                 '--delay': `-${Math.random() * 40}s`,
                 '--opacity': `${Math.random() * 0.6 + 0.2}`,
-                '--x-end': `${Math.random() * 120 - 60}px`,
-                '--y-end': `${Math.random() * 120 - 60}px`,
+                '--x-end': `${Math.random() * 100 - 50}px`,
+                '--y-end': `${Math.random() * 100 - 50}px`,
+                '--mid-x': `${Math.random() * 50 - 25}px`,
+                '--mid-y': `${Math.random() * 50 - 25}px`,
                 '--color': colors[Math.floor(Math.random() * colors.length)],
             } as React.CSSProperties
         }));
@@ -398,13 +417,30 @@ const DungeonBackground: React.FC<DungeonBackgroundProps> = ({ isPaused }) => {
         }));
     }, []);
 
-    // New: Energy waves
-    const energyWaves = useMemo(() => {
-        return Array.from({ length: 3 }, (_, i) => ({
+    // New: Floating motes (thay thế energy waves)
+    const floatingMotes = useMemo(() => {
+        const moteColors = [
+            'rgba(255, 204, 153, 0.7)',
+            'rgba(153, 204, 255, 0.6)',
+            'rgba(204, 153, 255, 0.5)',
+            'rgba(255, 153, 204, 0.6)'
+        ];
+
+        return Array.from({ length: 12 }, (_, i) => ({
             id: i,
             style: {
-                '--duration': `${4 + i * 2}s`,
-                '--delay': `-${i * 2}s`,
+                left: `${Math.random() * 90 + 5}%`,
+                top: `${Math.random() * 90 + 5}%`,
+                '--size': `${Math.random() * 8 + 4}px`,
+                '--duration': `${Math.random() * 20 + 15}s`,
+                '--delay': `-${Math.random() * 25}s`,
+                '--color': moteColors[Math.floor(Math.random() * moteColors.length)],
+                '--x1': `${Math.random() * 60 - 30}px`,
+                '--y1': `${Math.random() * 60 - 30}px`,
+                '--x2': `${Math.random() * 80 - 40}px`,
+                '--y2': `${Math.random() * 80 - 40}px`,
+                '--x3': `${Math.random() * 40 - 20}px`,
+                '--y3': `${Math.random() * 40 - 20}px`,
             } as React.CSSProperties
         }));
     }, []);
@@ -419,9 +455,9 @@ const DungeonBackground: React.FC<DungeonBackgroundProps> = ({ isPaused }) => {
                     <div key={ray.id} className="god-ray" style={ray.style} />
                 ))}
 
-                {/* Energy Waves */}
-                {energyWaves.map(wave => (
-                    <div key={wave.id} className="energy-wave" style={wave.style} />
+                {/* Floating Motes */}
+                {floatingMotes.map(mote => (
+                    <div key={mote.id} className="floating-mote" style={mote.style} />
                 ))}
 
                 {/* Enhanced Icon */}
