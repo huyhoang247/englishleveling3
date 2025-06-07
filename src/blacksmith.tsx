@@ -894,7 +894,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         </div>
         {/* ----- END: FINALIZED TOP BAR ----- */}
 
-        <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto hide-scrollbar mt-4"> {/* Added mt-4 for spacing */}
+        <div className="grid lg:grid-cols-2 gap-y-2 gap-x-8 flex-grow overflow-y-auto hide-scrollbar mt-4"> {/* MODIFIED: Reduced vertical gap */}
           
           {/* ----- START: SIMPLIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
