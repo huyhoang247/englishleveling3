@@ -1,10 +1,10 @@
-// --- START OF FILE DungeonCanvasBackground.tsx (FIXED & OPTIMIZED) ---
+// --- START OF FILE DungeonCanvasBackground.tsx (VỚI CHUYỂN ĐỘNG ORB MƯỢT MÀ) ---
 
 import React, { useRef, useEffect } from 'react';
 
 // === CÁC HẰNG SỐ CẤU HÌNH CHO HIỆU ỨNG ===
 const PARTICLE_COUNT = 50;
-const ORB_COUNT = 6;
+const ORB_COUNT = 8; // Tăng nhẹ số lượng orb cho thêm phần sống động
 const ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png";
 const ICON_FALLBACK_URL = "https://placehold.co/192x192/2D1B69/FFFFFF?text=🏰";
 
@@ -22,16 +22,25 @@ interface Particle {
   opacity: number;
 }
 
+// THAY ĐỔI: Cấu trúc Orb được làm lại hoàn toàn để hỗ trợ chuyển động mượt mà
 interface Orb {
-  x: number;
-  y: number;
+  // Điểm neo trung tâm mà quả cầu sẽ trôi nổi xung quanh
+  anchorX: number;
+  anchorY: number;
+  // Bán kính quỹ đạo (cho phép quỹ đạo hình elip)
+  orbitRadiusX: number;
+  orbitRadiusY: number;
+  // Góc hiện tại trên quỹ đạo
+  angle: number;
+  // Tốc độ quay
+  angleSpeed: number;
+  // Kích thước cơ bản
   radius: number;
+  // Màu sắc và độ mờ
   color: string;
-  opacity: number;
-  targetX: number;
-  targetY: number;
-  speed: number;
+  baseOpacity: number;
 }
+
 
 interface DungeonCanvasBackgroundProps {
   isPaused: boolean;
@@ -48,12 +57,10 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    // TỐI ƯU: alpha: false giúp trình duyệt render nhanh hơn vì không cần tính toán độ trong suốt của nền canvas.
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    // Khởi tạo ảnh icon một lần
+    // Khởi tạo ảnh icon (giữ nguyên)
     const icon = new Image();
     icon.src = ICON_URL;
     icon.onload = () => { dungeonIconRef.current = icon; iconLoadedRef.current = true; };
@@ -67,12 +74,12 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
     // Vòng lặp animation chính
     const animate = (time: number) => {
         if (!isPaused) {
-            // Lấy kích thước đã được thiết lập, không cần query DOM nữa
-            const width = canvas.width / window.devicePixelRatio;
-            const height = canvas.height / window.devicePixelRatio;
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // ... (Phần vẽ nền, đuốc, icon giữ nguyên) ...
             // 1. Vẽ nền Gradient
             const bgGradient = ctx.createLinearGradient(0, 0, width, height);
             bgGradient.addColorStop(0, '#0f0f23');
@@ -112,27 +119,35 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
                 ctx.restore();
             }
 
-            // 4. Cập nhật và vẽ các quả cầu
+            // 4. CẬP NHẬT VÀ VẼ CÁC QUẢ CẦU (LOGIC MỚI)
             orbsRef.current.forEach(orb => {
-                orb.x += (orb.targetX - orb.x) * orb.speed;
-                orb.y += (orb.targetY - orb.y) * orb.speed;
-                if (Math.abs(orb.targetX - orb.x) < 1 && Math.abs(orb.targetY - orb.y) < 1) {
-                    orb.targetX = random(orb.radius, width - orb.radius);
-                    orb.targetY = random(orb.radius, height - orb.radius);
-                }
+                // Cập nhật góc để tạo chuyển động quay
+                orb.angle += orb.angleSpeed;
+
+                // Tính toán vị trí x, y mới dựa trên quỹ đạo elip
+                const x = orb.anchorX + Math.cos(orb.angle) * orb.orbitRadiusX;
+                const y = orb.anchorY + Math.sin(orb.angle) * orb.orbitRadiusY;
+
+                // Tạo hiệu ứng "thở" (pulsating) cho kích thước và độ mờ
+                const pulse = (Math.sin(orb.angle * 2.5) + 1) / 2; // giá trị từ 0 đến 1
+                const currentRadius = orb.radius + pulse * 5;
+                const currentOpacity = orb.baseOpacity * (0.7 + pulse * 0.3);
+
+                // Vẽ quả cầu
                 ctx.beginPath();
-                const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
-                grad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-                grad.addColorStop(0.5, orb.color);
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, currentRadius);
+                grad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                grad.addColorStop(0.6, orb.color);
                 grad.addColorStop(1, 'rgba(0,0,0,0)');
+                
                 ctx.fillStyle = grad;
-                ctx.globalAlpha = orb.opacity;
-                ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
+                ctx.globalAlpha = currentOpacity;
+                ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.globalAlpha = 1;
+                ctx.globalAlpha = 1; // Reset global alpha
             });
 
-            // 5. Cập nhật và vẽ các hạt bụi
+            // 5. Cập nhật và vẽ các hạt bụi (giữ nguyên)
             particlesRef.current.forEach(p => {
                 p.x += p.vx;
                 p.y += p.vy;
@@ -149,38 +164,42 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
         animationFrameIdRef.current = requestAnimationFrame(animate);
     };
 
-    // SỬA LỖI MÉO HÌNH: Dùng ResizeObserver để luôn lấy đúng kích thước
+    // Sửa lỗi méo hình và khởi tạo các đối tượng
     const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         const dpr = window.devicePixelRatio || 1;
-
-        // XỬ LÝ MÀN HÌNH DPI CAO (RETINA): Set độ phân giải thật của canvas
         canvas.width = Math.round(width * dpr);
         canvas.height = Math.round(height * dpr);
-
-        // Set kích thước hiển thị bằng CSS
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
-
-        // Scale context để các câu lệnh vẽ không bị ảnh hưởng bởi DPI
         ctx.scale(dpr, dpr);
 
-        // Khởi tạo lại các phần tử để chúng phân bố đều trên kích thước mới
         const logicalWidth = width;
         const logicalHeight = height;
 
+        // Khởi tạo hạt bụi (giữ nguyên)
         particlesRef.current = [];
         const particleColors = ['rgba(253, 230, 138, 0.8)', 'rgba(100, 150, 255, 0.6)', 'rgba(150, 255, 100, 0.5)'];
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             particlesRef.current.push({ x: random(0, logicalWidth), y: random(0, logicalHeight), vx: random(-0.3, 0.3), vy: random(-0.3, 0.3), radius: random(1, 2.5), color: particleColors[Math.floor(random(0, particleColors.length))], opacity: random(0.3, 0.8) });
         }
         
+        // THAY ĐỔI: Khởi tạo các quả cầu với thuộc tính mới
         orbsRef.current = [];
         const orbColors = ['rgba(100, 150, 255, 0.6)', 'rgba(255, 100, 150, 0.5)', 'rgba(150, 255, 100, 0.4)'];
         for (let i = 0; i < ORB_COUNT; i++) {
-            const radius = random(10, 20);
-            orbsRef.current.push({ x: random(radius, logicalWidth - radius), y: random(radius, logicalHeight - radius), radius: radius, color: orbColors[Math.floor(random(0, orbColors.length))], opacity: random(0.2, 0.5), targetX: random(radius, logicalWidth - radius), targetY: random(radius, logicalHeight - radius), speed: random(0.005, 0.02) });
+            orbsRef.current.push({
+                anchorX: random(logicalWidth * 0.2, logicalWidth * 0.8),
+                anchorY: random(logicalHeight * 0.2, logicalHeight * 0.8),
+                orbitRadiusX: random(50, logicalWidth / 4),
+                orbitRadiusY: random(50, logicalHeight / 4),
+                angle: random(0, Math.PI * 2),
+                angleSpeed: random(0.002, 0.008) * (Math.random() > 0.5 ? 1 : -1), // Quay theo 2 chiều
+                radius: random(15, 30),
+                color: orbColors[Math.floor(random(0, orbColors.length))],
+                baseOpacity: random(0.2, 0.5),
+            });
         }
       }
     });
@@ -194,21 +213,12 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
         cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
-  }, [isPaused]); // Phụ thuộc vào `isPaused` để có thể dừng/chạy animation
+  }, [isPaused]);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: 0,
-        // Thêm thuộc tính này để trình duyệt tối ưu việc re-render
-        willChange: 'transform',
-      }}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0, willChange: 'transform' }}
     />
   );
 };
