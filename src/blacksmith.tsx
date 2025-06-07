@@ -847,8 +847,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 font-sans z-40"> {/* Fixed to fullscreen */}
       <div className="max-w-7xl mx-auto h-full flex flex-col"> {/* Added flex-col and h-full */}
         
-        {/* ----- START: CORRECTED TOP BAR ----- */}
-        <div className="flex justify-between items-center shrink-0 py-4 mb-4">
+        {/* ----- START: FINALIZED TOP BAR ----- */}
+        <div className="flex justify-between items-center shrink-0">
           {/* Left side: Tab Navigation */}
           <div className="flex justify-center gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit">
               <button
@@ -905,9 +905,9 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" className="w-6 h-6" onError={(e) => e.target.src = 'https://placehold.co/24x24/FF0000/FFFFFF?text=X'} />
           </button>
         </div>
-        {/* ----- END: CORRECTED TOP BAR ----- */}
+        {/* ----- END: FINALIZED TOP BAR ----- */}
 
-        <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar"> {/* Added flex-grow and overflow */}
+        <div className="grid lg:grid-cols-2 gap-8 flex-grow overflow-y-auto custom-scrollbar mt-4"> {/* Added mt-4 for spacing */}
           
           {/* ----- START: MODIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
