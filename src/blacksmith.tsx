@@ -920,8 +920,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </button>
                     </div>
 
-                    {/* --- START: REFINED ANVIL AREA --- */}
-                    <div className="mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-700/80">
+                    {/* --- START: CLEANED ANVIL AREA (NO OUTER WRAPPER) --- */}
+                    <div className="mb-8">
                         {/* Weapon Row */}
                         <div className="flex items-center justify-center gap-3 mb-3">
                             <div className="w-24">
@@ -963,7 +963,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                             ))}
                         </div>
                     </div>
-                    {/* --- END: REFINED ANVIL AREA --- */}
+                    {/* --- END: CLEANED ANVIL AREA --- */}
 
                     <div className="mb-6 p-4 bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl border border-blue-500/50 shadow-lg text-center">
                         <h3 className="text-lg font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
