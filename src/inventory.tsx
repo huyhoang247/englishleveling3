@@ -48,6 +48,8 @@ const sampleItems = [
     { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
     { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
     { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: itemAssets.songKiem, level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
+    { id: 43, name: 'Sắt', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để rèn trang bị.', quantity: 20, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000f5ac61f79336c38977abbfa5.png' },
+    { id: 44, name: 'Gỗ', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', quantity: 35, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000004f0461f793d26e238db690f7.png' },
 ];
 
 const groupInventoryItems = (items) => {
