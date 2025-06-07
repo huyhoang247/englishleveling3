@@ -47,6 +47,8 @@ const sampleItems = [
     { id: 44, name: 'Gỗ', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', quantity: 35, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000004f0461f793d26e238db690f7.png' },
     { id: 45, name: 'Da', type: 'material', rarity: 'common', description: 'Da động vật, nguyên liệu cơ bản để chế tạo giáp nhẹ.', quantity: 15, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000006f30623086e0c4e366dface0.png' },
     { id: 46, name: 'Vải', type: 'material', rarity: 'common', description: 'Vải thô, dùng để chế tạo quần áo và túi.', quantity: 25, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000863c6230a96cb9487701c9c8.png' },
+    { id: 47, name: 'Mảnh ghép vũ khí', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một vũ khí ngẫu nhiên.', quantity: 10, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%207%2C%202025%2C%2001_37_49%20PM.png' },
+    { id: 48, name: 'Mảnh ghép áo giáp', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một áo giáp ngẫu nhiên.', quantity: 8, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_19_04%20PM.png' },
 ];
 
 const groupInventoryItems = (items) => {
