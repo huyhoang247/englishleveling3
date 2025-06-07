@@ -900,8 +900,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
           {activeTab === 'upgrade' && (
             <div className="flex flex-col h-full"> 
                 <div>
-                    {/* Anvil frame with simplified slots */}
-                    <div className="mb-8 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
+                    {/* Anvil frame with reduced margin-bottom */}
+                    <div className="mb-4 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                         <div className="flex items-center justify-center gap-4">
                             <div className="w-24">
                                 <ForgingSlot
