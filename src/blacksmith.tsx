@@ -922,38 +922,35 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                         </div>
                     </div>
 
-                    {/* ----- START: NEW SMALLER SPLIT BUTTONS ----- */}
-                    <div className="flex flex-col items-center">
-                        <div className="flex items-center justify-center gap-2">
-                            {/* Upgrade Button */}
-                            <button
-                                onClick={handleUpgrade}
-                                disabled={upgradeChance === 0 || isProcessing}
-                                className={`px-6 py-2 rounded-lg text-base font-bold shadow-lg transition-all duration-300 transform 
-                                ${
-                                upgradeChance > 0
-                                    ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:brightness-110 hover:scale-105'
-                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                }`}
-                            >
-                                Nâng Cấp
-                            </button>
+                    {/* ----- START: NEW CONDITIONAL UI ----- */}
+                    <div className="flex flex-col items-center justify-center min-h-[6rem]">
+                        {upgradeChance > 0 ? (
+                            // Show buttons when ready
+                            <div className="flex items-center justify-center gap-2">
+                                {/* Upgrade Button */}
+                                <button
+                                    onClick={handleUpgrade}
+                                    disabled={isProcessing}
+                                    className="px-6 py-2 rounded-lg text-base font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:brightness-110 hover:scale-105"
+                                >
+                                    Nâng Cấp
+                                </button>
 
-                            {/* Rate Display */}
-                            <div className="px-4 py-2 rounded-lg bg-black/50 border border-gray-600 flex items-center justify-center">
-                                <span className="text-xl font-bold text-yellow-400">
-                                    {upgradeChance}%
-                                </span>
+                                {/* Rate Display */}
+                                <div className="px-4 py-2 rounded-lg bg-black/50 border border-gray-600 flex items-center justify-center">
+                                    <span className="text-xl font-bold text-yellow-400">
+                                        {upgradeChance}%
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        {/* Instructional Text */}
-                        {upgradeChance === 0 && (
-                            <p className="text-center text-sm text-gray-400 mt-4">
+                        ) : (
+                            // Show instructional text when not ready
+                            <p className="text-center text-sm text-gray-400">
                                 Đặt trang bị và đá cường hoá để nâng cấp.
                             </p>
                         )}
                     </div>
-                    {/* ----- END: NEW SMALLER SPLIT BUTTONS ----- */}
+                    {/* ----- END: NEW CONDITIONAL UI ----- */}
                 </div>
             </div>
           )}
