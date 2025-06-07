@@ -1164,8 +1164,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 </div>
             </div>
 
-            {/* --- MODIFIED: Changed grid columns to 4 --- */}
-            <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
+            {/* --- MODIFIED: Changed grid columns to 4 and added hide-scrollbar --- */}
+            <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto hide-scrollbar">
               {inventory.map((item: any) => {
                   const isLegendary = item.rarity === 'legendary';
                   return (
@@ -1215,7 +1215,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               <h2 className="text-2xl font-bold mb-6 text-yellow-300 flex items-center gap-2">
                 <span>📚</span> Kỹ Năng Đã Học ({learnedSkills.length})
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-48 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-48 overflow-y-auto hide-scrollbar">
                 {learnedSkills.length > 0 ? (
                   learnedSkills.map(skill => (
                     <div
@@ -1294,6 +1294,14 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         }
         .legendary-item-glow:hover {
           box-shadow: 0 0 15px rgba(255,165,0,.6), 0 0 30px rgba(255,69,0,.4);
+        }
+        /* New class to hide scrollbar */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
       `}</style>
     </div>
