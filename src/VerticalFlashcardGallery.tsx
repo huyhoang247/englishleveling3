@@ -129,6 +129,27 @@ const animations = `
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
 `;
 
+// Helper function to generate page numbers for pagination
+const generatePagination = (currentPage: number, totalPages: number) => {
+  // If total pages are 7 or less, show all pages
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  // If current page is near the start
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 5, '...', totalPages];
+  }
+
+  // If current page is near the end
+  if (currentPage > totalPages - 4) {
+    return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  }
+
+  // If current page is in the middle
+  return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+};
+
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
   const scrollContainerRef = useRef(null);
@@ -386,18 +407,60 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     <p className="text-gray-500 dark:text-gray-400 max-w-md">{activeTab === 'collection' ? 'Hãy mở rương để nhận thêm flashcard mới!' : selectedPlaylistId === 'all' ? 'Nhấn vào biểu tượng trái tim để thêm từ vào mục yêu thích.' : 'Hãy thêm các từ yêu thích vào playlist này.'}</p>
                   </div>
                 )}
-                {/* Pagination - No changes needed */}
+                
+                {/* Pagination - UPDATED with truncation */}
                 {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
-                    <nav className="flex space-x-2" aria-label="Pagination">
-                      <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === 1 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Trước</button>
-                      {Array.from({ length: totalPages }, (_, index) => (
-                        <button key={index + 1} onClick={() => handlePageChange(index + 1)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === index + 1 ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{index + 1}</button>
-                      ))}
-                      <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === totalPages ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Sau</button>
+                    <nav className="flex items-center space-x-2" aria-label="Pagination">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                          currentPage === 1
+                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        Trước
+                      </button>
+
+                      {/* Use the helper function to generate page numbers */}
+                      {generatePagination(currentPage, totalPages).map((page, index) =>
+                        typeof page === 'number' ? (
+                          <button
+                            key={index}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                              currentPage === page
+                                ? 'bg-indigo-600 text-white shadow-md'
+                                : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ) : (
+                          // Render ellipsis as a non-clickable span
+                          <span key={index} className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+                            ...
+                          </span>
+                        )
+                      )}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                          currentPage === totalPages
+                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        Sau
+                      </button>
                     </nav>
                   </div>
                 )}
+
               </div>
             </div>
 
