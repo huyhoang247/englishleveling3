@@ -27,14 +27,21 @@ const MenuIcon = () => (
   </svg>
 );
 
-const XIcon = () => ( // For closing sidebar
+const XIcon = () => ( // For closing modals and sidebar
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
 );
 
+// THÊM ICON THỐNG KÊ
+const StatsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
+  </svg>
+);
 
-// Interfaces (Vocabulary, Flashcard)
+
+// --- Interfaces ---
 interface Vocabulary {
   word: string;
   meaning: string;
@@ -57,7 +64,6 @@ interface Flashcard {
   vocabulary: Vocabulary;
 }
 
-// THÊM INTERFACE PLAYLIST
 interface Playlist {
   id: string;
   name: string;
@@ -68,6 +74,16 @@ interface EbookReaderProps {
   hideNavBar: () => void;
   showNavBar: () => void;
 }
+
+// THÊM INTERFACE CHO THỐNG KÊ SÁCH
+interface BookStats {
+  totalWords: number;
+  uniqueWordsCount: number;
+  vocabMatchCount: number;
+  vocabMismatchCount: number;
+  wordFrequencies: Map<string, number>;
+}
+
 
 const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
   return books.reduce((acc, book) => {
@@ -193,6 +209,80 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
   );
 };
 
+// --- Book Stats Modal Component ---
+interface BookStatsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  stats: BookStats | null;
+  bookTitle: string;
+  vocabMap: Map<string, Vocabulary>;
+}
+
+const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats, bookTitle, vocabMap }) => {
+    if (!isOpen || !stats) return null;
+
+    const sortedFrequencies = Array.from(stats.wordFrequencies.entries());
+
+    const StatCard = ({ label, value }: { label: string, value: string | number }) => (
+        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center shadow">
+            <p className="text-sm text-gray-600 dark:text-gray-300">{label}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value.toLocaleString()}</p>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div 
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 max-h-[90vh] flex flex-col"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
+                        Thống kê sách: <span className="text-blue-600 dark:text-blue-400">{bookTitle}</span>
+                    </h2>
+                    <button onClick={onClose} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <XIcon />
+                    </button>
+                </div>
+
+                <div className="p-6 overflow-y-auto space-y-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <StatCard label="Tổng số từ" value={stats.totalWords} />
+                        <StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} />
+                        <StatCard label="Từ trong từ điển" value={stats.vocabMatchCount} />
+                        <StatCard label="Từ ngoài từ điển" value={stats.vocabMismatchCount} />
+                    </div>
+
+                    <div>
+                        <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-2">Tần suất từ (sắp xếp theo số lần xuất hiện)</h3>
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
+                            <ul className="space-y-1">
+                                {sortedFrequencies.map(([word, count]) => (
+                                    <li key={word} className="flex justify-between items-center text-sm p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+                                        <span className={`font-medium ${vocabMap.has(word) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                            {word}
+                                        </span>
+                                        <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-right">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+                    >
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 // --- EbookReader Component ---
 const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => {
@@ -210,12 +300,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // THÊM STATE CHO DỮ LIỆU NGƯỜI DÙNG VÀ MODAL
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
+  
+  // THÊM STATE CHO MODAL THỐNG KÊ
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
-  // THÊM EFFECT ĐỂ LẮNG NGHE AUTH VÀ DỮ LIỆU FIRESTORE
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
@@ -261,7 +352,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const currentBook = booksData.find(book => book.id === selectedBookId);
   
-  // DÙNG useMemo ĐỂ TÍNH TOÁN DANH SÁCH ID TỪ VỰNG TRONG SÁCH
   const bookVocabularyCardIds = useMemo(() => {
     if (!currentBook || vocabMap.size === 0) {
       return [];
@@ -279,6 +369,46 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     
     return Array.from(wordsInBook).map(word => cardIdMap.get(word)).filter((id): id is number => id !== undefined);
   }, [currentBook, vocabMap]);
+  
+  // LOGIC TÍNH TOÁN THỐNG KÊ SÁCH
+  const bookStats = useMemo<BookStats | null>(() => {
+    if (!currentBook || vocabMap.size === 0) {
+      return null;
+    }
+    const words = currentBook.content.match(/\b\w+\b/g) || [];
+    const totalWords = words.length;
+    
+    const wordFrequencies = new Map<string, number>();
+    const uniqueWords = new Set<string>();
+
+    words.forEach(word => {
+      const normalizedWord = word.toLowerCase();
+      wordFrequencies.set(normalizedWord, (wordFrequencies.get(normalizedWord) || 0) + 1);
+      uniqueWords.add(normalizedWord);
+    });
+
+    let vocabMatchCount = 0;
+    uniqueWords.forEach(word => {
+      if (vocabMap.has(word)) {
+        vocabMatchCount++;
+      }
+    });
+
+    const uniqueWordsCount = uniqueWords.size;
+    const vocabMismatchCount = uniqueWordsCount - vocabMatchCount;
+    
+    // Sắp xếp map tần suất theo số lần xuất hiện giảm dần
+    const sortedFrequencies = new Map([...wordFrequencies.entries()].sort((a, b) => b[1] - a[1]));
+
+    return {
+      totalWords,
+      uniqueWordsCount,
+      vocabMatchCount,
+      vocabMismatchCount,
+      wordFrequencies: sortedFrequencies
+    };
+  }, [currentBook, vocabMap]);
+
 
   useEffect(() => {
     if (selectedBookId) {
@@ -544,21 +674,28 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
                 
-                {/* === NÚT LƯU TẤT CẢ TỪ VỰNG === */}
-                {currentUser && bookVocabularyCardIds.length > 0 && (
-                    <div className="mt-6 flex justify-center">
-                        <button
-                            onClick={() => setIsBatchPlaylistModalOpen(true)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" />
-                                <path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" />
-                            </svg>
-                            Lưu {bookVocabularyCardIds.length} từ vựng vào Playlist
-                        </button>
-                    </div>
-                )}
+                {/* === CÁC NÚT HÀNH ĐỘNG === */}
+                <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
+                  {currentUser && bookVocabularyCardIds.length > 0 && (
+                      <button
+                          onClick={() => setIsBatchPlaylistModalOpen(true)}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
+                      >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" />
+                              <path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" />
+                          </svg>
+                          Lưu {bookVocabularyCardIds.length} từ vựng
+                      </button>
+                  )}
+                  <button
+                    onClick={() => setIsStatsModalOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
+                  >
+                    <StatsIcon />
+                    Thống kê Sách
+                  </button>
+                </div>
               </div>
             )}
             {renderBookContent()}
@@ -619,7 +756,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         />
       )}
 
-      {/* === MODAL THÊM HÀNG LOẠT VÀO PLAYLIST === */}
       {isBatchPlaylistModalOpen && (
           <AddToPlaylistModal
             isOpen={isBatchPlaylistModalOpen}
@@ -629,6 +765,15 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             existingPlaylists={playlists}
           />
       )}
+
+      {/* MODAL THỐNG KÊ SÁCH */}
+      <BookStatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
+        stats={bookStats}
+        bookTitle={currentBook?.title || ''}
+        vocabMap={vocabMap}
+      />
     </div>
   );
 };
