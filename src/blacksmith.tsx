@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // --- START: DATA IMPORTS ---
 // Import assets from the central asset management file
-import { uiAssets, itemAssets } from './game-assets.tsx';
+import { uiAssets, itemAssets } from './game-assets.ts';
 // Import data structures and actual data from provided files
 import { itemDatabase, ItemDefinition } from './data/item-database.ts';
 import { playerInventoryData, PlayerItem } from './data/player-inventory-data.ts';
