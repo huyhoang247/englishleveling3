@@ -2,7 +2,7 @@
 // FILE: VerticalFlashcardGallery.tsx (FULL VERSION - NEW PLAYLIST LOGIC)
 // ========================================================================
 
-import { useRef, useState, useEffect, useMemo } from 'react'; // Thêm useMemo
+import { useRef, useState, useEffect, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
@@ -131,28 +131,21 @@ const animations = `
 
 // Helper function to generate page numbers for pagination
 const generatePagination = (currentPage: number, totalPages: number) => {
-  // If total pages are 7 or less, show all pages
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
-
-  // If current page is near the start
   if (currentPage <= 4) {
     return [1, 2, 3, 4, 5, '...', totalPages];
   }
-
-  // If current page is near the end
   if (currentPage > totalPages - 4) {
     return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
   }
-
-  // If current page is in the middle
   return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
 };
 
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
-  const scrollContainerRef = useRef(null);
+  const mainScrollContainerRef = useRef<HTMLDivElement>(null); // <<< THAY ĐỔI 1: Ref cho vùng cuộn chính
   const [flashcards, setFlashcards] = useState<Flashcard[]>(ALL_POSSIBLE_FLASHCARDS);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState('collection');
@@ -181,13 +174,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
   
   // --- Derived State ---
-  // Một card được coi là "yêu thích" nếu nó nằm trong bất kỳ playlist nào.
   const allFavoriteCardIds = useMemo(() => {
     return new Set(playlists.flatMap(p => p.cardIds));
   }, [playlists]);
 
   // --- Effects ---
-  // Lắng nghe dữ liệu người dùng từ Firestore
   useEffect(() => {
     if (!currentUser) {
       setLoading(false);
@@ -222,7 +213,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Cập nhật trạng thái isFavorite của flashcards khi allFavoriteCardIds thay đổi
   useEffect(() => {
     setFlashcards(prev => prev.map(card => ({...card, isFavorite: allFavoriteCardIds.has(card.id)})));
   }, [allFavoriteCardIds]);
@@ -249,7 +239,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const endIndex = startIndex + itemsPerPage;
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
-  const favoriteCount = allFavoriteCardIds.size; // Cập nhật số lượng yêu thích
+  const favoriteCount = allFavoriteCardIds.size;
 
   // --- Handlers ---
   const handleShowHome = () => setActiveScreen('home');
@@ -263,7 +253,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   const handleFavoriteClick = (id: number) => {
     if (!currentUser) return;
-    openPlaylistModal(id); // Luôn mở modal khi nhấn nút trái tim
+    openPlaylistModal(id);
   };
   
   const openPlaylistModal = (cardId: number) => {
@@ -297,10 +287,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   };
 
+  // <<< THAY ĐỔI 2: Cập nhật hàm xử lý chuyển trang
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
-    if (scrollContainerRef.current) {
-      (scrollContainerRef.current as HTMLElement).scrollTo({ top: 0, behavior: 'smooth' });
+    if (mainScrollContainerRef.current) {
+      mainScrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -321,12 +312,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      <div className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
+      {/* <<< THAY ĐỔI 3: Gắn ref vào đúng vùng cuộn */}
+      <div ref={mainScrollContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         <style>{animations}</style>
 
         {activeScreen === 'home' && (
           <>
-            {/* Header and Tabs - No changes needed here */}
             <div className="w-full max-w-6xl py-6 mx-auto">
               <div className="flex justify-between items-center mb-4 px-4">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
@@ -375,13 +366,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             <div className="min-h-0">
               <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
-                  <div ref={scrollContainerRef} className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     {flashcardsForCurrentPage.map((card) => (
                       <div key={card.id}>
                         <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
                           <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
-                             {/* Nút trái tim là điểm truy cập duy nhất để quản lý playlist */}
                             <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${card.isFavorite ? 'scale-110' : 'scale-100'}`} 
                                     onClick={() => handleFavoriteClick(card.id)} 
                                     aria-label={card.isFavorite ? "Quản lý trong Playlist" : "Thêm vào Playlist"}>
@@ -408,23 +398,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 )}
                 
-                {/* Pagination - UPDATED with truncation */}
+                {/* <<< THAY ĐỔI 4: Xóa nút "Trước" và "Sau" */}
                 {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex items-center space-x-2" aria-label="Pagination">
-                      <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                          currentPage === 1
-                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        Trước
-                      </button>
-
-                      {/* Use the helper function to generate page numbers */}
                       {generatePagination(currentPage, totalPages).map((page, index) =>
                         typeof page === 'number' ? (
                           <button
@@ -439,24 +416,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                             {page}
                           </button>
                         ) : (
-                          // Render ellipsis as a non-clickable span
                           <span key={index} className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
                             ...
                           </span>
                         )
                       )}
-
-                      <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                          currentPage === totalPages
-                            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                            : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        Sau
-                      </button>
                     </nav>
                   </div>
                 )}
@@ -464,7 +428,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </div>
             </div>
 
-            {/* Settings Modal - No changes needed */}
             {showSettings && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}></div>
@@ -477,7 +440,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                       </div>
                     </div>
                     <div className="p-6 overflow-y-auto max-h-[70vh] flex-grow">
-                      {/* Layout Mode */}
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
@@ -496,7 +458,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           </div>
                         </div>
                       </div>
-                      {/* Visual Style */}
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
@@ -533,7 +494,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
             <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleImages={exampleImages} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
             
-            {/* THAY ĐỔI: Truyền một mảng vào prop cardIds */}
             {isPlaylistModalOpen && selectedCardForPlaylist && (
               <AddToPlaylistModal 
                 isOpen={isPlaylistModalOpen} 
@@ -546,7 +506,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           </>
         )}
         
-        {/* Other screens - No changes needed */}
         {activeScreen !== 'home' && (
             <div className="flex items-center justify-center h-full text-2xl text-gray-600 dark:text-gray-300">
                 {activeScreen === 'stats' && 'Màn hình Stats'}
