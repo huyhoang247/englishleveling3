@@ -10,7 +10,7 @@
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal_REFINED.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
+import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
