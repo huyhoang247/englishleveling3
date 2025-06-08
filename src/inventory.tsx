@@ -1,62 +1,37 @@
 // --- START OF FILE inventory.tsx ---
 
 import { useState, useEffect } from 'react';
-import { itemAssets, uiAssets } from './game-assets.ts'; // Import tài nguyên tập trung
+import { uiAssets } from './game-assets.ts'; // Giữ lại import uiAssets
+import { itemDatabase } from './inventory/item-database.ts'; // Import database item
+import { playerInventoryData } from './inventory/player-inventory-data.ts'; // Import dữ liệu túi đồ của người chơi
 
-// Sample data for inventory items
-const sampleItems = [
-    // Sử dụng hằng số từ itemAssets cho các icon là URL
-    { id: 1, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ cơ bản, thích hợp cho người mới bắt đầu.', stats: { damage: 5, durability: 20 }, quantity: 5, icon: itemAssets.kiemGo, level: 1, maxLevel: 10, currentExp: 50, requiredExp: 100 },
-    { id: 42, name: 'Kiếm gỗ', type: 'weapon', rarity: 'common', description: 'Một thanh kiếm gỗ đã được nâng cấp.', stats: { damage: 7, durability: 25 }, quantity: 1, icon: itemAssets.kiemGo, level: 2, maxLevel: 10, currentExp: 10, requiredExp: 200 },
-    { id: 2, name: 'Thuốc hồi máu', type: 'potion', rarity: 'common', description: 'Hồi phục 50 điểm máu khi sử dụng.', stats: { healing: 50 }, quantity: 5, icon: '🧪' },
-    { id: 3, name: 'Áo giáp da', type: 'armor', rarity: 'common', description: 'Áo giáp cơ bản, cung cấp một chút bảo vệ.', stats: { defense: 10 }, quantity: 1, icon: '🥋' },
-    { id: 4, name: 'Kiếm sắt', type: 'weapon', rarity: 'uncommon', description: 'Thanh kiếm sắt sắc bén, gây sát thương vật lý cao.', stats: { damage: 15, durability: 50 }, quantity: 1, icon: itemAssets.kiemSat, level: 5, maxLevel: 20, currentExp: 300, requiredExp: 500 },
-    { id: 5, name: 'Thuốc hồi năng lượng', type: 'potion', rarity: 'uncommon', description: 'Hồi phục 75 điểm năng lượng khi sử dụng.', stats: { energyRestore: 75 }, quantity: 3, icon: '⚡' },
-    { id: 6, name: 'Nhẫn ma thuật', type: 'accessory', rarity: 'rare', description: 'Tăng 15% sức mạnh phép thuật cho người sử dụng.', stats: { magicBoost: 15, intelligence: 5 }, quantity: 1, icon: '💍' },
-    { id: 7, name: 'Bùa hộ mệnh', type: 'accessory', rarity: 'rare', description: 'Tự động hồi sinh một lần khi HP về 0.', stats: { resurrection: 1 }, quantity: 1, icon: '🔮' },
-    { id: 8, name: 'Kiếm rồng', type: 'weapon', rarity: 'epic', description: 'Vũ khí huyền thoại được rèn từ xương rồng, gây thêm sát thương hỏa.', stats: { damage: 45, fireDamage: 20, durability: 100 }, quantity: 1, icon: '🔥', level: 10, maxLevel: 50, currentExp: 1200, requiredExp: 2000 },
-    { id: 9, name: 'Vàng', type: 'currency', rarity: 'common', description: 'Tiền tệ trong game.', quantity: 1450, icon: '💰' },
-    { id: 10, name: 'Giáp huyền thoại', type: 'armor', rarity: 'legendary', description: 'Giáp được chế tác từ vảy của rồng cổ đại.', stats: { defense: 50, magicResist: 30 }, quantity: 1, icon: '🛡️' },
-    { id: 11, name: 'Găng tay chiến binh', type: 'armor', rarity: 'uncommon', description: 'Tăng sức mạnh tấn công cận chiến.', stats: { strength: 5, attackSpeed: 10 }, quantity: 1, icon: '🧤' },
-    { id: 12, name: 'Mũ phù thủy', type: 'armor', rarity: 'rare', description: 'Mũ ma thuật tăng cường khả năng phép thuật.', stats: { intelligence: 15, manaRegen: 5 }, quantity: 1, icon: '🎩' },
-    { id: 13, name: 'Cung gỗ', type: 'weapon', rarity: 'common', description: 'Cung gỗ cơ bản cho người mới.', stats: { damage: 7, range: 20 }, quantity: 1, icon: '🏹', level: 2, maxLevel: 15, currentExp: 80, requiredExp: 200 },
-    { id: 14, name: 'Rìu chiến', type: 'weapon', rarity: 'uncommon', description: 'Rìu chiến nặng, gây sát thương cao.', stats: { damage: 20 }, quantity: 1, icon: '🪓', level: 7, maxLevel: 25, currentExp: 700, requiredExp: 1000 },
-    { id: 17, name: 'Đá cường hóa', type: 'material', rarity: 'common', description: 'Dùng để nâng cấp vũ khí và giáp.', quantity: 10, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000002bd461f7946aae1d61399a56.png' },
-    { id: 20, name: 'Sách cổ', type: 'misc', rarity: 'common', description: 'Một cuốn sách cũ chứa đựng kiến thức cổ xưa.', quantity: 1, icon: '📚' },
-    { id: 24, name: 'Bình mana lớn', type: 'potion', rarity: 'common', description: 'Hồi phục 100 điểm mana.', stats: { manaRestore: 100 }, quantity: 2, icon: '💧' },
-    { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'uncommon', description: 'Lá cây dùng để chế thuốc.', quantity: 5, icon: '🍃' },
-    { id: 27, name: 'Cánh thiên thần', type: 'material', rarity: 'legendary', description: 'Nguyên liệu cực hiếm từ thiên thần.', quantity: 1, icon: '🕊️' },
-    { id: 28, name: 'Mảnh vỡ cổ', type: 'misc', rarity: 'common', description: 'Mảnh vỡ từ một di tích cổ.', quantity: 10, icon: '🏺' },
-    { id: 29, name: 'Nước thánh', type: 'potion', rarity: 'rare', description: 'Thanh tẩy các hiệu ứng tiêu cực.', stats: { cleanse: true }, quantity: 1, icon: '✨' },
-    { id: 30, name: 'Giày tốc độ', type: 'armor', rarity: 'uncommon', description: 'Tăng tốc độ di chuyển.', stats: { speed: 10 }, quantity: 1, icon: '👟' },
-    { id: 34, name: 'Dây thừng', type: 'misc', rarity: 'common', description: 'Dụng cụ hữu ích.', quantity: 2, icon: '🔗' },
-    { id: 35, name: 'Hộp nhạc', type: 'misc', rarity: 'rare', description: 'Phát ra giai điệu êm dịu.', quantity: 1, icon: '🎶' },
-    { id: 36, name: 'Kính lúp', type: 'misc', rarity: 'uncommon', description: 'Giúp nhìn rõ hơn.', quantity: 1, icon: '🔎' },
-    { id: 37, name: 'Bản đồ kho báu', type: 'quest', rarity: 'epic', description: 'Dẫn đến kho báu lớn.', quantity: 1, icon: '🧭' },
-    { id: 38, name: 'Nước tăng lực', type: 'potion', rarity: 'uncommon', description: 'Tăng sức mạnh tạm thời.', stats: { strengthBoost: 10, duration: 30 }, quantity: 3, icon: '⚡' },
-    { id: 39, name: 'Vòng cổ may mắn', type: 'accessory', rarity: 'rare', description: 'Tăng cơ hội tìm thấy vật phẩm hiếm.', stats: { luck: 5 }, quantity: 1, icon: '🍀' },
-    { id: 40, name: 'Đá dịch chuyển', type: 'misc', rarity: 'epic', description: 'Dịch chuyển đến địa điểm đã đánh dấu.', quantity: 1, icon: '🪨' },
-    { id: 41, name: 'Song Kiếm', type: 'weapon', rarity: 'epic', description: 'Cặp kiếm đôi sắc bén, cho phép tấn công nhanh và liên tục.', stats: { damage: 30, attackSpeed: 15, durability: 80 }, quantity: 1, icon: itemAssets.songKiem, level: 8, maxLevel: 30, currentExp: 800, requiredExp: 1500 },
-    { id: 43, name: 'Sắt', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để rèn trang bị.', quantity: 20, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000f5ac61f79336c38977abbfa5.png' },
-    { id: 44, name: 'Gỗ', type: 'material', rarity: 'common', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', quantity: 35, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000004f0461f793d26e238db690f7.png' },
-    { id: 45, name: 'Da', type: 'material', rarity: 'common', description: 'Da động vật, nguyên liệu cơ bản để chế tạo giáp nhẹ.', quantity: 15, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_000000006f30623086e0c4e366dface0.png' },
-    { id: 46, name: 'Vải', type: 'material', rarity: 'common', description: 'Vải thô, dùng để chế tạo quần áo và túi.', quantity: 25, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/file_00000000863c6230a96cb9487701c9c8.png' },
-    { id: 47, name: 'Mảnh ghép vũ khí', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một vũ khí ngẫu nhiên.', quantity: 10, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%207%2C%202025%2C%2001_37_49%20PM.png' },
-    { id: 48, name: 'Mảnh ghép áo giáp', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một áo giáp ngẫu nhiên.', quantity: 8, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_19_04%20PM.png' },
-    { id: 49, name: 'Thạch anh', type: 'material', rarity: 'common', description: 'Thạch anh, một loại nguyên liệu phổ biến.', quantity: 15, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_51_03%20PM.png' },
-    { id: 50, name: 'Ngọc lục bảo', type: 'material', rarity: 'common', description: 'Ngọc lục bảo, nguyên liệu dùng trong chế tác.', quantity: 12, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_53_08%20PM.png' },
-    { id: 51, name: 'Mảnh ghép helmet', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một chiếc mũ ngẫu nhiên.', quantity: 7, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_00_18%20PM.png' },
-    { id: 52, name: 'Mảnh ghép găng tay', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi găng tay ngẫu nhiên.', quantity: 5, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_02_27%20PM.png' },
-    { id: 53, name: 'Mảnh ghép giày', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi giày ngẫu nhiên.', quantity: 9, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_08_08%20PM.png' },
-    { id: 54, name: 'Mảnh ghép trang sức', type: 'piece', rarity: 'common', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một món trang sức ngẫu nhiên.', quantity: 3, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_10_49%20PM.png' },
-];
+// Hàm này sẽ "hydrate" dữ liệu túi đồ của người chơi với thông tin đầy đủ từ database
+const getHydratedInventory = () => {
+  return playerInventoryData.map(playerItem => {
+    const baseItem = itemDatabase.get(playerItem.id);
+    if (!baseItem) {
+      console.warn(`Item with id ${playerItem.id} not found in database.`);
+      return null;
+    }
+    // Kết hợp thông tin gốc và thông tin của người chơi
+    // Thuộc tính của playerItem sẽ ghi đè lên thuộc tính của baseItem nếu trùng lặp
+    return {
+      ...baseItem,
+      ...playerItem,
+      // Ghi đè stats nếu có, nếu không thì dùng stats gốc
+      stats: playerItem.stats ? { ...baseItem.stats, ...playerItem.stats } : baseItem.stats,
+    };
+  }).filter(item => item !== null); // Lọc bỏ các item không tìm thấy
+};
 
 const groupInventoryItems = (items) => {
     const grouped = new Map();
     items.forEach(item => {
-        const key = item.name;
-        const { id, quantity, stats, level, currentExp, requiredExp, description } = item;
-        const variant = { id, quantity, stats, level, currentExp, requiredExp, description };
+        // Sử dụng `id` từ item gốc để nhóm, vì `name` có thể thay đổi (vd: Kiếm gỗ +1)
+        // Hoặc tốt hơn là nhóm theo `name` để gộp các biến thể
+        const key = item.name.split(' (')[0]; // Nhóm "Kiếm gỗ (+1)" vào chung với "Kiếm gỗ"
+        const { instanceId, quantity, stats, level, currentExp, requiredExp, description } = item;
+        const variant = { id: instanceId, quantity, stats, level, currentExp, requiredExp, description };
         if (!grouped.has(key)) {
             const { name, ...baseProps } = item;
             grouped.set(key, { ...baseProps, name: key, variants: [variant] });
@@ -72,7 +47,8 @@ interface InventoryProps {
 }
 
 export default function Inventory({ onClose }: InventoryProps) {
-  const [inventory, setInventory] = useState(() => groupInventoryItems(sampleItems));
+  // Khởi tạo state bằng cách hydrate và nhóm dữ liệu ngay từ đầu
+  const [inventory, setInventory] = useState(() => groupInventoryItems(getHydratedInventory()));
   
   const [selectedItemGroup, setSelectedItemGroup] = useState(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -127,7 +103,10 @@ export default function Inventory({ onClose }: InventoryProps) {
   const handleCloseInventory = () => {
     onClose();
   };
-
+  
+  // Các hàm render, modal, style... giữ nguyên như cũ
+  // ... (Toàn bộ các hàm getRarityColor, ItemModal, VariantSelectionModal... và phần JSX)
+  // ... (Không cần thay đổi phần còn lại của file)
   const getRarityColor = (rarity: string) => {
     switch(rarity) {
       case 'common': return 'border-gray-500';
