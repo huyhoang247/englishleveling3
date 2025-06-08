@@ -1,5 +1,5 @@
 // ========================================================================
-// FILE: VerticalFlashcardGallery.tsx (FIXED: Corrected Smart Pagination Logic)
+// FILE: VerticalFlashcardGallery.tsx (FIXED: Removed Prev/Next Buttons)
 // ========================================================================
 
 import { useRef, useState, useEffect, useMemo } from 'react';
@@ -224,12 +224,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   };
 
-  // *** THAY ĐỔI: Logic phân trang mới (Sửa lỗi) ***
+  // Logic phân trang thông minh
   const paginationItems = useMemo(() => {
-    const siblingCount = 1; // Số trang hiển thị ở mỗi bên của trang hiện tại
-    const totalPageNumbers = siblingCount + 5; // siblingCount + firstPage + lastPage + currentPage + 2*DOTS
+    const siblingCount = 1; 
+    const totalPageNumbers = siblingCount + 5; 
 
-    // Trường hợp 1: Tổng số trang ít hơn số nút chúng ta muốn hiển thị -> hiển thị tất cả
     if (totalPageNumbers >= totalPages) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
@@ -245,27 +244,23 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       return Array.from({ length }, (_, idx) => idx + start);
     };
 
-    // Trường hợp 2: Chỉ hiển thị dấu ... ở bên phải
     if (!shouldShowLeftDots && shouldShowRightDots) {
       let leftItemCount = 3 + 2 * siblingCount;
       let leftRange = range(1, leftItemCount);
       return [...leftRange, '...', totalPages];
     }
 
-    // Trường hợp 3: Chỉ hiển thị dấu ... ở bên trái
     if (shouldShowLeftDots && !shouldShowRightDots) {
       let rightItemCount = 3 + 2 * siblingCount;
       let rightRange = range(totalPages - rightItemCount + 1, totalPages);
       return [1, '...', ...rightRange];
     }
 
-    // Trường hợp 4: Hiển thị dấu ... ở cả hai bên
     if (shouldShowLeftDots && shouldShowRightDots) {
       let middleRange = range(leftSiblingIndex, rightSiblingIndex);
       return [1, '...', ...middleRange, '...', totalPages];
     }
-
-    // Mặc định trả về một mảng rỗng nếu không có trường hợp nào khớp
+    
     return [];
 
   }, [currentPage, totalPages]);
@@ -373,12 +368,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 )}
                 
-                {/* Pagination with Corrected Logic */}
+                {/* *** THAY ĐỔI: Đã xóa nút "Trước" và "Sau" *** */}
                 {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
-                      <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === 1 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Trước</button>
-                      
                       {paginationItems.map((item, index) => 
                         typeof item === 'string' ? (
                           <span key={`ellipsis-${index}`} className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">...</span>
@@ -392,8 +385,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           </button>
                         )
                       )}
-
-                      <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === totalPages ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Sau</button>
                     </nav>
                   </div>
                 )}
