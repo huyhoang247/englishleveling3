@@ -1,13 +1,3 @@
-// FILE: VerticalFlashcardGallery_FINAL.tsx
-//
-// This is a complete, synthesized version incorporating all requested changes:
-// - Optimization 1: Lazy-loading images.
-// - Optimization 2: Efficient state management (no large flashcards state).
-// - Optimization 3: Memoized FlashcardItem component.
-// - UI Redesign 1: Imports and uses the redesigned AddToPlaylistModal.
-// - UI Redesign 2: Replaces the <select> playlist filter with a modern,
-//                  horizontal "pill" interface.
-
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
