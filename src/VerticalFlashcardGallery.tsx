@@ -1,8 +1,11 @@
 // ========================================================================
-// FILE: VerticalFlashcardGallery.tsx (FIXED: Removed Prev/Next Buttons)
+// FILE: VerticalFlashcardGallery.tsx (FIXED & OPTIMIZED)
+// - Tối ưu 1: Tải lười (lazy-loading) hình ảnh.
+// - Tối ưu 2: Loại bỏ state lớn, tính toán `isFavorite` linh hoạt.
+// - Tối ưu 3: Tách và memoize component FlashcardItem.
 // ========================================================================
 
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
@@ -103,12 +106,7 @@ const exampleImages = [
   "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
 ];
 const animations = `
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(-10px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
-  }
+  @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
   @keyframes slideIn { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
   @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes scaleIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -119,10 +117,53 @@ const animations = `
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
 `;
 
+
+// OPTIMIZATION 3: Tách FlashcardItem ra component riêng và memoize nó.
+// ========================================================================
+interface FlashcardItemProps {
+  card: Flashcard;
+  visualStyle: string;
+  onImageClick: (card: Flashcard) => void;
+  onFavoriteClick: (id: number) => void;
+  getImageUrlForStyle: (card: Flashcard, style: string) => string;
+}
+
+const FlashcardItem = memo(({ card, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
+  return (
+    <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
+      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+      <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
+        <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${card.isFavorite ? 'scale-110' : 'scale-100'}`} 
+                onClick={() => onFavoriteClick(card.id)} 
+                aria-label={card.isFavorite ? "Quản lý trong Playlist" : "Thêm vào Playlist"}>
+            <img src={card.isFavorite ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png" : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"} alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"} className={`h-4 w-4 transition-all duration-300 ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} />
+        </button>
+      </div>
+      <div className="w-full">
+        <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : ''}`}>
+          {visualStyle === 'anime' && <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>}
+          {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={{backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)', backgroundSize: '4px 4px'}}></div>}
+          {visualStyle === 'realistic' && <div className="absolute inset-0 shadow-inner pointer-events-none"></div>}
+          <img 
+            src={getImageUrlForStyle(card, visualStyle)} 
+            alt={`Flashcard ${card.id}`} 
+            className={`w-full h-auto ${visualStyle === 'anime' ? 'saturate-150 contrast-105' : visualStyle === 'comic' ? 'contrast-125 brightness-105' : visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : ''} cursor-pointer`} 
+            style={{aspectRatio: '1024/1536', filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'}} 
+            onClick={() => onImageClick(card)} 
+            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = card.imageUrl.default; }}
+            loading="lazy" // OPTIMIZATION 1: Thêm lazy loading cho hình ảnh
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
   const mainContainerRef = useRef<HTMLDivElement>(null);
-  const [flashcards, setFlashcards] = useState<Flashcard[]>(ALL_POSSIBLE_FLASHCARDS);
+  // OPTIMIZATION 2: Loại bỏ state 'flashcards' không cần thiết. Dữ liệu sẽ được lấy từ hằng số ALL_POSSIBLE_FLASHCARDS.
+  // const [flashcards, setFlashcards] = useState<Flashcard[]>(ALL_POSSIBLE_FLASHCARDS);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState('collection');
   const [showSettings, setShowSettings] = useState(false);
@@ -164,26 +205,48 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return () => unsubscribe();
   }, [currentUser]);
 
-  useEffect(() => {
-    setFlashcards(prev => prev.map(card => ({...card, isFavorite: allFavoriteCardIds.has(card.id)})));
-  }, [allFavoriteCardIds]);
+  // OPTIMIZATION 2: Loại bỏ useEffect cập nhật toàn bộ danh sách flashcard.
+  // useEffect(() => {
+  //   setFlashcards(prev => prev.map(card => ({...card, isFavorite: allFavoriteCardIds.has(card.id)})));
+  // }, [allFavoriteCardIds]);
 
   // --- Logic lọc và phân trang ---
-  const filteredFlashcardsByTab = (() => {
+  // OPTIMIZATION 2: Tính toán danh sách thẻ cần hiển thị một cách hiệu quả với useMemo.
+  const filteredFlashcardsByTab = useMemo(() => {
+    const getCardWithFavoriteStatus = (id: number): Flashcard | undefined => {
+      const card = ALL_POSSIBLE_FLASHCARDS.find(c => c.id === id);
+      if (!card) return undefined;
+      // Trả về một object mới với trạng thái favorite được cập nhật
+      return {
+        ...card,
+        isFavorite: allFavoriteCardIds.has(id)
+      };
+    };
+
     if (activeTab === 'collection') {
       return [...openedImageIds].reverse()
-        .map(id => flashcards.find(card => card.id === id))
+        .map(id => getCardWithFavoriteStatus(id))
         .filter((card): card is Flashcard => card !== undefined);
     }
+
     if (activeTab === 'favorite') {
-      const allFavorites = flashcards.filter(card => card.isFavorite);
-      if (selectedPlaylistId === 'all') return allFavorites;
+      const allFavorites = [...allFavoriteCardIds]
+        .map(id => getCardWithFavoriteStatus(id))
+        .filter((card): card is Flashcard => card !== undefined);
+
+      if (selectedPlaylistId === 'all') {
+        return allFavorites;
+      }
       const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
-      if (selectedPlaylist) return allFavorites.filter(card => selectedPlaylist.cardIds.includes(card.id));
+      if (selectedPlaylist) {
+        const playlistCardIds = new Set(selectedPlaylist.cardIds);
+        return allFavorites.filter(card => playlistCardIds.has(card.id));
+      }
       return [];
     }
     return [];
-  })();
+  }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
+
 
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -202,19 +265,34 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const handleShowSettings = () => setActiveScreen('settings');
   const handleShowHelp = () => setActiveScreen('help');
 
-  const handleFavoriteClick = (id: number) => { if (!currentUser) return; openPlaylistModal(id); };
-  const openPlaylistModal = (cardId: number) => { setSelectedCardForPlaylist(cardId); setIsPlaylistModalOpen(true); };
   const closePlaylistModal = () => { setIsPlaylistModalOpen(false); setSelectedCardForPlaylist(null); };
-  const openVocabDetail = (card: Flashcard) => { setSelectedCard(card); setShowVocabDetail(true); hideNavBar(); };
   const closeVocabDetail = () => { setShowVocabDetail(false); setSelectedCard(null); showNavBar(); };
-  const getImageUrlForStyle = (card: Flashcard, style: string): string => {
+
+  // OPTIMIZATION 3: Bọc các handler bằng useCallback để truyền vào component con memoized.
+  const openPlaylistModal = useCallback((cardId: number) => { 
+    setSelectedCardForPlaylist(cardId); 
+    setIsPlaylistModalOpen(true); 
+  }, []);
+
+  const handleFavoriteClick = useCallback((id: number) => { 
+    if (!currentUser) return; 
+    openPlaylistModal(id); 
+  }, [currentUser, openPlaylistModal]);
+  
+  const openVocabDetail = useCallback((card: Flashcard) => { 
+    setSelectedCard(card); 
+    setShowVocabDetail(true); 
+    hideNavBar(); 
+  }, [hideNavBar]);
+  
+  const getImageUrlForStyle = useCallback((card: Flashcard, style: string): string => {
     switch (style) {
         case 'anime': return card.imageUrl.anime || card.imageUrl.default;
         case 'comic': return card.imageUrl.comic || card.imageUrl.default;
         case 'realistic': return card.imageUrl.realistic || card.imageUrl.default;
         default: return card.imageUrl.default;
     }
-  };
+  }, []);
 
   const handlePageChange = (pageNumber: number) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
@@ -224,7 +302,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   };
 
-  // Logic phân trang thông minh
   const paginationItems = useMemo(() => {
     const siblingCount = 1; 
     const totalPageNumbers = siblingCount + 5; 
@@ -337,27 +414,16 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
                   <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {/* OPTIMIZATION 3: Sử dụng component FlashcardItem đã được memoize */}
                     {flashcardsForCurrentPage.map((card) => (
-                      <div key={card.id}>
-                        <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-                          <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
-                            <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${card.isFavorite ? 'scale-110' : 'scale-100'}`} 
-                                    onClick={() => handleFavoriteClick(card.id)} 
-                                    aria-label={card.isFavorite ? "Quản lý trong Playlist" : "Thêm vào Playlist"}>
-                                <img src={card.isFavorite ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png" : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"} alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"} className={`h-4 w-4 transition-all duration-300 ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} />
-                            </button>
-                          </div>
-                          <div className="w-full">
-                            <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : ''}`}>
-                              {visualStyle === 'anime' && <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>}
-                              {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={{backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)', backgroundSize: '4px 4px'}}></div>}
-                              {visualStyle === 'realistic' && <div className="absolute inset-0 shadow-inner pointer-events-none"></div>}
-                              <img src={getImageUrlForStyle(card, visualStyle)} alt={`Flashcard ${card.id}`} className={`w-full h-auto ${visualStyle === 'anime' ? 'saturate-150 contrast-105' : visualStyle === 'comic' ? 'contrast-125 brightness-105' : visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : ''} cursor-pointer`} style={{aspectRatio: '1024/1536', filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'}} onClick={() => openVocabDetail(card)} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = card.imageUrl.default; }}/>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <FlashcardItem
+                        key={card.id}
+                        card={card}
+                        visualStyle={visualStyle}
+                        onImageClick={openVocabDetail}
+                        onFavoriteClick={handleFavoriteClick}
+                        getImageUrlForStyle={getImageUrlForStyle}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -368,7 +434,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 )}
                 
-                {/* *** THAY ĐỔI: Đã xóa nút "Trước" và "Sau" *** */}
                 {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
@@ -394,8 +459,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             {/* Modals and other UI (no changes) */}
             {showSettings && (
               <>
-                <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}></div>
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }} onClick={() => setShowSettings(false)}></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={(e) => {if(e.target === e.currentTarget) setShowSettings(false)}}>
                   <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" style={{ animation: 'scaleIn 0.3s ease-out forwards' }} id="settings-panel">
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0">
                       <div className="flex justify-between items-center">
@@ -405,45 +470,25 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </div>
                     <div className="p-6 overflow-y-auto max-h-[70vh] flex-grow">
                       <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                          Bố cục hiển thị
-                        </h4>
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>Bố cục hiển thị</h4>
                         <div className="flex space-x-2">
                           <div className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${layoutMode === 'single' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600'}`} onClick={() => setLayoutMode('single')}>
                             <div className="w-8 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm mb-1"></div>
                             <span className={`text-xs ${layoutMode === 'single' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>1 Cột</span>
                           </div>
                           <div className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${layoutMode === 'double' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600'}`} onClick={() => setLayoutMode('double')}>
-                            <div className="flex space-x-1 mb-1">
-                              <div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div><div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div>
-                            </div>
+                            <div className="flex space-x-1 mb-1"><div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div><div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div></div>
                             <span className={`text-xs ${layoutMode === 'double' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>2 Cột</span>
                           </div>
                         </div>
                       </div>
                       <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
-                          Phong cách hiển thị
-                        </h4>
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" /></svg>Phong cách hiển thị</h4>
                         <div className="grid grid-cols-2 gap-2">
-                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'default' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200'}`} onClick={() => setVisualStyle('default')}>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" /></svg></div>
-                            <span className={`text-xs ${visualStyle === 'default' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Mặc định</span>
-                          </div>
-                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'anime' ? 'border-pink-500 bg-pink-50 dark:border-pink-900' : 'border-gray-200 dark:border-gray-700 hover:border-pink-200'}`} onClick={() => setVisualStyle('anime')}>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg></div>
-                            <span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span>
-                          </div>
-                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'comic' ? 'border-blue-500 bg-blue-50 dark:border-blue-900' : 'border-gray-200 dark:border-gray-700 hover:border-blue-200'}`} onClick={() => setVisualStyle('comic')}>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /></svg></div>
-                            <span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span>
-                          </div>
-                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'realistic' ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200'}`} onClick={() => setVisualStyle('realistic')}>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div>
-                            <span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span>
-                          </div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'default' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200'}`} onClick={() => setVisualStyle('default')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" /></svg></div><span className={`text-xs ${visualStyle === 'default' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Mặc định</span></div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'anime' ? 'border-pink-500 bg-pink-50 dark:border-pink-900' : 'border-gray-200 dark:border-gray-700 hover:border-pink-200'}`} onClick={() => setVisualStyle('anime')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span></div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'comic' ? 'border-blue-500 bg-blue-50 dark:border-blue-900' : 'border-gray-200 dark:border-gray-700 hover:border-blue-200'}`} onClick={() => setVisualStyle('comic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /></svg></div><span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span></div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'realistic' ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200'}`} onClick={() => setVisualStyle('realistic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span></div>
                         </div>
                       </div>
                     </div>
