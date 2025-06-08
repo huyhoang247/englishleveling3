@@ -371,7 +371,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
   // New states for Skill tab
   const [skillWeaponSlot, setSkillWeaponSlot] = useState(null);
   const [skillBookSlot, setSkillBookSlot] = useState(null);
-  const [learnedSkills, setLearnedSkills] = useState([]);
 
   const [alert, setAlert] = useState({ isVisible: false, message: '', type: 'info' });
   const [isProcessing, setIsProcessing] = useState(false);
@@ -770,14 +769,14 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Consume the weapon and skill book
-    updateInventory(skillBookSlot, -1);
+    // Note: The original request kept the weapon. We are removing it as part of the cost.
     setSkillWeaponSlot(null);
     setSkillBookSlot(null);
 
     // Learn a random skill from the pool
     const learnedSkill = skillPool[Math.floor(Math.random() * skillPool.length)];
-    setLearnedSkills(prevSkills => [...prevSkills, { ...learnedSkill, id: `${learnedSkill.name}_${Date.now()}` }]);
     showAlert(`Bạn đã học được kỹ năng: ${learnedSkill.name} (${learnedSkill.rarity})!`, 'success');
+    // Note: The visual tracking of learned skills has been removed per the latest request.
 
     setIsProcessing(false);
   };
@@ -1217,43 +1216,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
             </div>
             {/* --- END: REPLACED INVENTORY UI --- */}
 
-            {/* New Learned Skills Section */}
-            <div className="mt-8 pt-6 border-t border-gray-700">
-              <h2 className="text-2xl font-bold mb-6 text-yellow-300 flex items-center gap-2">
-                <span>📚</span> Kỹ Năng Đã Học ({learnedSkills.length})
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-48 overflow-y-auto hide-scrollbar">
-                {learnedSkills.length > 0 ? (
-                  learnedSkills.map(skill => (
-                    <div
-                      key={skill.id}
-                      className={`
-                        relative flex flex-col items-center p-4 rounded-xl
-                        shadow-md bg-gradient-to-br from-indigo-800/40 to-indigo-900/40 border border-indigo-500/40
-                      `}
-                    >
-                      <div className="text-4xl mb-2">{skill.icon}</div>
-                      <span className="text-sm font-medium text-gray-100 text-center leading-tight">
-                          {skill.name}
-                      </span>
-                      <p className="text-xs text-gray-400 text-center mt-1">{skill.description}</p>
-                      <div className={`absolute bottom-1 left-1 w-3 h-3 rounded-full border-2 border-white ${
-                        skill.rarity === 'legendary' ? 'bg-yellow-400' :
-                        skill.rarity === 'epic' ? 'bg-purple-400' :
-                        skill.rarity === 'rare' ? 'bg-blue-400' :
-                        skill.rarity === 'uncommon' ? 'bg-green-400' :
-                        'bg-gray-400'
-                      }`} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center text-gray-400 italic py-8">
-                    <div className="text-6xl mb-4">📜</div>
-                    <p>Chưa có kỹ năng nào được học</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* DELETED Learned Skills Section */}
           </div>
         </div>
       </div>
