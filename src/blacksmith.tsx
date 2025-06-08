@@ -1171,8 +1171,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 </div>
             </div>
 
-            {/* --- MODIFIED: Changed grid columns to 4 and added hide-scrollbar --- */}
-            <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto hide-scrollbar">
+            {/* --- MODIFIED: Changed max-height from 96 to 72 to make it shorter --- */}
+            <div className="grid grid-cols-4 gap-3 max-h-72 overflow-y-auto hide-scrollbar">
               {inventory.map((item: any) => {
                   const isLegendary = item.rarity === 'legendary';
                   return (
