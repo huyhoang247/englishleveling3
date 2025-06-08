@@ -1171,7 +1171,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 </div>
             </div>
 
-            {/* --- MODIFIED: Changed max-height from 96 to 72 to make it shorter --- */}
+            {/* --- MODIFIED: Removed empty slot rendering --- */}
             <div className="grid grid-cols-4 gap-3 max-h-72 overflow-y-auto hide-scrollbar">
               {inventory.map((item: any) => {
                   const isLegendary = item.rarity === 'legendary';
@@ -1208,16 +1208,8 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                     </div>
                   );
                 })}
-                
-                {Array.from({ length: Math.max(0, totalInventorySlots - inventory.length) }).map((_, i) => (
-                    <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
-                        <span className="opacity-40"></span>
-                    </div>
-                ))}
             </div>
-            {/* --- END: REPLACED INVENTORY UI --- */}
-
-            {/* DELETED Learned Skills Section */}
+            {/* --- END: MODIFIED INVENTORY UI --- */}
           </div>
         </div>
       </div>
