@@ -103,7 +103,7 @@ const animations = `
   @keyframes slideIn { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
   @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes scaleIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-  @keyframes modalBackdropIn { 0% { opacity: 0; } 100% { opacity: 0.4; } }
+  @keyframes modalBackdropIn { 0% { opacity: 0; } 100% { opacity: 0.5; } }
   @keyframes modalIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
   @keyframes animeSparkle { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
   @keyframes comicPop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -171,6 +171,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
+  const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
+  const [playlistSearch, setPlaylistSearch] = useState('');
   
   // --- Derived State ---
   const allFavoriteCardIds = useMemo(() => {
@@ -186,7 +188,17 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
-        setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
+        const fetchedPlaylists = Array.isArray(userData.playlists) ? userData.playlists : [];
+        // Giả sử có 5 playlist ví dụ để test
+        const examplePlaylists: Playlist[] = [
+          {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4]},
+          {id: 'pl2', name: 'Voca 2', cardIds: [5]},
+          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6)},
+          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369]},
+          {id: 'pl5', name: 'Từ vựng chuyên ngành Công nghệ thông tin', cardIds: [370, 371, 372]},
+        ];
+        setPlaylists([...examplePlaylists, ...fetchedPlaylists]);
+
       } else {
         setOpenedImageIds([]); setPlaylists([]);
       }
@@ -382,7 +394,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </button>
               </div>
 
-              {/* GIAO DIỆN CHỌN PLAYLIST MỚI */}
+              {/* GIAO DIỆN CHỌN PLAYLIST MỚI - CÓ KHẢ NĂNG MỞ RỘNG */}
               {activeTab === 'favorite' && (
                 <div className="px-4 mb-6">
                   <div className="w-full">
@@ -391,46 +403,56 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </label>
 
                     {/* Giao diện PILL cuộn ngang mới */}
-                    <div className="flex items-center space-x-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                      {/* Nút "Tất cả" */}
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                      {/* Nút "Tất cả" - Luôn hiển thị */}
                       <button
                         onClick={() => { setSelectedPlaylistId('all'); handlePageChange(1); }}
-                        className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border-2
+                        className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
                           ${selectedPlaylistId === 'all'
-                            ? 'bg-pink-600 text-white border-pink-600 shadow-md'
-                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/50'}`
-                        }
+                            ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
+                          }
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
                         <span>Tất cả</span>
-                        <span className={`px-1.5 py-0.5 text-xs rounded-full 
-                          ${selectedPlaylistId === 'all' ? 'bg-pink-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                        <span className={`px-2 py-0.5 text-xs rounded-full 
+                          ${selectedPlaylistId === 'all' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
                         }>
                           {favoriteCount}
                         </span>
                       </button>
 
-                      {/* Các playlist khác */}
-                      {playlists.map(p => (
+                      {/* Hiển thị 2 playlist đầu tiên */}
+                      {playlists.slice(0, 2).map(p => (
                         <button
                           key={p.id}
                           onClick={() => { setSelectedPlaylistId(p.id); handlePageChange(1); }}
-                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border-2
+                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[200px]
                             ${selectedPlaylistId === p.id
-                              ? 'bg-pink-600 text-white border-pink-600 shadow-md'
-                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/50'}`
-                          }
+                              ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
+                            }
                         >
-                          <span>{p.name}</span>
-                          <span className={`px-1.5 py-0.5 text-xs rounded-full 
-                            ${selectedPlaylistId === p.id ? 'bg-pink-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                          <span className="truncate">{p.name}</span>
+                          <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full 
+                            ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
                           }>
                             {p.cardIds.length}
                           </span>
                         </button>
                       ))}
+
+                      {/* Nút "Tất cả playlist" nếu có nhiều hơn 2 playlist */}
+                      {playlists.length > 2 && (
+                        <button
+                          onClick={() => setShowAllPlaylistsModal(true)}
+                          className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+                        >
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                          </svg>
+                          <span>Tất cả Playlist</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -526,7 +548,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </div>
               </>
             )}
+
             <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleImages={exampleImages} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
+            
             {isPlaylistModalOpen && selectedCardForPlaylist && (
               <AddToPlaylistModal 
                 isOpen={isPlaylistModalOpen} 
@@ -535,6 +559,69 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 currentUser={currentUser} 
                 existingPlaylists={playlists} 
               />
+            )}
+
+            {/* MODAL CHỌN TẤT CẢ PLAYLIST */}
+            {showAllPlaylistsModal && (
+              <>
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setShowAllPlaylistsModal(false)} style={{ animation: 'modalBackdropIn 0.3s' }}></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setShowAllPlaylistsModal(false) }}>
+                  <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-xl flex flex-col max-h-[70vh]" style={{ animation: 'modalIn 0.3s' }}>
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Chọn một Playlist</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Tìm kiếm hoặc chọn từ danh sách bên dưới.</p>
+                    </div>
+                    
+                    <div className="p-4 flex-shrink-0">
+                        <div className="relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                            <input 
+                                type="text" 
+                                placeholder="Tìm tên playlist..." 
+                                value={playlistSearch}
+                                onChange={(e) => setPlaylistSearch(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="overflow-y-auto px-4 pb-4 flex-grow">
+                      <ul className="space-y-2">
+                        {playlists
+                          .filter(p => p.name.toLowerCase().includes(playlistSearch.toLowerCase()))
+                          .map(p => (
+                            <li key={p.id}>
+                              <button
+                                onClick={() => {
+                                  setSelectedPlaylistId(p.id);
+                                  handlePageChange(1);
+                                  setShowAllPlaylistsModal(false);
+                                  setPlaylistSearch('');
+                                }}
+                                className={`w-full flex items-center justify-between text-left p-3 rounded-lg transition-colors duration-200 
+                                  ${selectedPlaylistId === p.id 
+                                    ? 'bg-pink-100 dark:bg-pink-900/60 text-pink-800 dark:text-pink-200 font-semibold' 
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`
+                                }
+                              >
+                                <span className="flex-grow">{p.name}</span>
+                                <span className={`flex-shrink-0 ml-4 px-2 py-0.5 text-xs rounded-full 
+                                  ${selectedPlaylistId === p.id 
+                                    ? 'bg-pink-200 dark:bg-pink-800 text-pink-800 dark:text-pink-200' 
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                                }>
+                                  {p.cardIds.length}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </>
         )}
