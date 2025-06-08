@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // --- START: DATA IMPORTS ---
-import { uiAssets, itemAssets } from './game-assets';
-import { itemDatabase, ItemDefinition } from './data/item-database';
-import { playerInventoryData, PlayerItem } from './data/player-inventory-data';
+import { uiAssets, itemAssets } from './game-assets.ts';
+import { itemDatabase, ItemDefinition } from './inventory/item-database.ts';
+import { playerInventoryData, PlayerItem } from './inventory/player-inventory-data.ts';
 // --- END: DATA IMPORTS ---
 
 
