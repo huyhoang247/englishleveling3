@@ -174,7 +174,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
   const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
   const [playlistSearch, setPlaylistSearch] = useState('');
-  const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null); // STATE MỚI CHO VIỆC XOÁ
+  const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
+  const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false); // STATE MỚI CHO LOADING
 
   // --- Derived State ---
   const allFavoriteCardIds = useMemo(() => {
@@ -190,22 +191,23 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
-        const fetchedPlaylists = (Array.isArray(userData.playlists) ? userData.playlists : []).map((p: Playlist) => ({...p, isPinned: p.isPinned || false}));
-        // Giả sử có 5 playlist ví dụ để test
-        const examplePlaylists: Playlist[] = [
+        // onSnapshot sẽ tự động cập nhật playlists khi có thay đổi trên Firestore
+        // nên chúng ta không cần thêm các playlist ví dụ mỗi lần snapshot chạy
+        setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
+      } else {
+        // Nếu user chưa có data, có thể tạo ví dụ tại đây
+         const examplePlaylists: Playlist[] = [
           {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
           {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
           {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
           {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
-          {id: 'pl5', name: 'Từ vựng chuyên ngành Công nghệ thông tin siêu dài', cardIds: [370, 371, 372], isPinned: false},
+          {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [370, 371, 372], isPinned: false},
         ];
-        setPlaylists([...examplePlaylists, ...fetchedPlaylists]);
-
-      } else {
-        setOpenedImageIds([]); setPlaylists([]);
+        setPlaylists(examplePlaylists);
+        setOpenedImageIds([]);
       }
       setLoading(false);
-    }, (error) => { setLoading(false); });
+    }, (error) => { setLoading(false); console.error("Error fetching user data:", error) });
     return () => unsubscribe();
   }, [currentUser]);
 
@@ -346,9 +348,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const pinnedCount = useMemo(() => playlists.filter(p => p.isPinned).length, [playlists]);
 
   const handleTogglePin = useCallback(async (playlistId: string) => {
-    const newPlaylists = playlists.map(p => {
+    if (!currentUser) return;
+
+    const originalPlaylists = [...playlists];
+    const newPlaylists = originalPlaylists.map(p => {
         if (p.id === playlistId) {
-            // Nếu đang cố gắng ghim và đã đủ 2 mục, không làm gì cả
             if (!p.isPinned && pinnedCount >= 2) {
                 alert("Bạn chỉ có thể ghim tối đa 2 playlist.");
                 return p;
@@ -358,13 +362,22 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         return p;
     });
 
-    if (JSON.stringify(newPlaylists) !== JSON.stringify(playlists)) {
-      setPlaylists(newPlaylists);
-      // TODO: Cập nhật `newPlaylists` vào Firestore
-      // if (currentUser) {
-      //   const userDocRef = doc(db, 'users', currentUser.uid);
-      //   await updateDoc(userDocRef, { playlists: newPlaylists });
-      // }
+    if (JSON.stringify(newPlaylists) === JSON.stringify(originalPlaylists)) {
+        return; // Không có gì thay đổi
+    }
+
+    setIsUpdatingPlaylists(true);
+    setPlaylists(newPlaylists); // Cập nhật UI trước (Optimistic Update)
+
+    try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, { playlists: newPlaylists });
+    } catch (error) {
+        console.error("Lỗi khi ghim/bỏ ghim playlist:", error);
+        alert("Đã xảy ra lỗi. Vui lòng thử lại.");
+        setPlaylists(originalPlaylists); // Hoàn tác lại nếu có lỗi
+    } finally {
+        setIsUpdatingPlaylists(false);
     }
   }, [playlists, pinnedCount, currentUser]);
 
@@ -375,7 +388,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
     const displaySet = new Set<Playlist>();
     pinned.forEach(p => displaySet.add(p));
-    if (selected && !displaySet.has(selected)) {
+    if (selected && !displaySet.has(selected) && selectedPlaylistId !== 'all') {
         displaySet.add(selected);
     }
     return Array.from(displaySet).sort((a,b) => a.name.localeCompare(b.name));
@@ -385,23 +398,27 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const handleConfirmDelete = useCallback(async () => {
     if (!playlistToDelete || !currentUser) return;
 
-    const newPlaylists = playlists.filter(p => p.id !== playlistToDelete.id);
-    setPlaylists(newPlaylists);
+    const originalPlaylists = [...playlists];
+    const newPlaylists = originalPlaylists.filter(p => p.id !== playlistToDelete.id);
 
-    if (selectedPlaylistId === playlistToDelete.id) {
-      setSelectedPlaylistId('all');
+    setIsUpdatingPlaylists(true);
+
+    try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, { playlists: newPlaylists });
+        
+        // Chỉ cập nhật state sau khi Firestore thành công
+        setPlaylists(newPlaylists);
+        if (selectedPlaylistId === playlistToDelete.id) {
+            setSelectedPlaylistId('all');
+        }
+        setPlaylistToDelete(null); // Đóng modal xác nhận
+    } catch (error) {
+        console.error("Lỗi khi xoá playlist:", error);
+        alert("Đã xảy ra lỗi khi xoá playlist. Vui lòng thử lại.");
+    } finally {
+        setIsUpdatingPlaylists(false);
     }
-
-    // TODO: Cập nhật `newPlaylists` vào Firestore
-    // try {
-    //   const userDocRef = doc(db, 'users', currentUser.uid);
-    //   await updateDoc(userDocRef, { playlists: newPlaylists });
-    // } catch (error) {
-    //   console.error("Lỗi khi xoá playlist:", error);
-    //   setPlaylists(playlists); // Hoàn tác lại nếu có lỗi
-    // }
-
-    setPlaylistToDelete(null);
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
 
@@ -672,13 +689,13 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                                 }
                               >
                                 <div className="flex-grow pr-4">
-                                  <p className={`font-medium ${selectedPlaylistId === p.id ? 'text-pink-800 dark:text-pink-200' : 'text-gray-800 dark:text-gray-200'}`}>{p.name}</p>
+                                  <p className={`font-medium truncate ${selectedPlaylistId === p.id ? 'text-pink-800 dark:text-pink-200' : 'text-gray-800 dark:text-gray-200'}`}>{p.name}</p>
                                   <span className={`text-xs ${selectedPlaylistId === p.id ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}>{p.cardIds.length} từ vựng</span>
                                 </div>
                                 <div className="flex items-center flex-shrink-0 space-x-1">
                                     <button
                                       onClick={(e) => { e.stopPropagation(); handleTogglePin(p.id); }}
-                                      disabled={!p.isPinned && pinnedCount >= 2}
+                                      disabled={(!p.isPinned && pinnedCount >= 2) || isUpdatingPlaylists}
                                       className="p-2 rounded-full transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
                                       aria-label={p.isPinned ? "Bỏ ghim playlist" : "Ghim playlist"}
                                     >
@@ -688,7 +705,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setPlaylistToDelete(p); }}
-                                        className="p-2 rounded-full transition-colors duration-200 group-hover:bg-red-100 dark:group-hover:bg-red-900/50"
+                                        disabled={isUpdatingPlaylists}
+                                        className="p-2 rounded-full transition-colors duration-200 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 disabled:opacity-30 disabled:cursor-not-allowed"
                                         aria-label={`Xoá playlist ${p.name}`}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-red-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
@@ -716,11 +734,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                                     Bạn có chắc chắn muốn xoá playlist <strong className="font-semibold text-gray-800 dark:text-white">"{playlistToDelete.name}"</strong>? <br/>Hành động này không thể hoàn tác.
                                 </p>
                                 <div className="mt-6 flex justify-center space-x-4">
-                                    <button type="button" onClick={() => setPlaylistToDelete(null)} className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    <button type="button" onClick={() => setPlaylistToDelete(null)} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
                                         Huỷ
                                     </button>
-                                    <button type="button" onClick={handleConfirmDelete} className="flex-1 rounded-lg border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                        Xác nhận Xoá
+                                    <button type="button" onClick={handleConfirmDelete} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {isUpdatingPlaylists ? 'Đang xoá...' : 'Xác nhận Xoá'}
                                     </button>
                                 </div>
                             </div>
