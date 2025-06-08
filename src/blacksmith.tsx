@@ -128,7 +128,12 @@ const getRarityGlow = (rarity: string) => {
 
 const ItemTooltip = ({ item }: { item: EnrichedPlayerItem }) => (
     <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-      <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name} {item.level && item.level > 1 ? `+${item.level - 1}` : ''}</div>
+      {/* --- START: MODIFIED LEVEL DISPLAY IN TOOLTIP --- */}
+      <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>
+        {item.name} 
+        {item.level ? ` Lv.${item.level}` : ''}
+      </div>
+      {/* --- END: MODIFIED LEVEL DISPLAY IN TOOLTIP --- */}
       <div className="text-gray-500 capitalize text-xs mb-1">{item.type} • {item.rarity}</div>
       <div className="text-gray-400 text-xs">{item.description}</div>
     </div>
@@ -205,16 +210,16 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
               )}
             </div>
             
-            {/* --- START: FIX & REDESIGN FOR ITEM NAME AND LEVEL --- */}
+            {/* --- START: MODIFIED LEVEL DISPLAY IN FORGING SLOT --- */}
             <span className={`font-medium text-center px-1 text-white text-xs md:text-sm`}>
               {enrichedItem.name.replace(/\s*\(\+\d+\)/, '')} 
-              {enrichedItem.level > 1 && (
+              {enrichedItem.level && (
                 <span className="font-bold text-yellow-400 ml-1">
-                  +{enrichedItem.level - 1}
+                  Lv.{enrichedItem.level}
                 </span>
               )}
             </span>
-            {/* --- END: FIX & REDESIGN FOR ITEM NAME AND LEVEL --- */}
+            {/* --- END: MODIFIED LEVEL DISPLAY IN FORGING SLOT --- */}
 
             {showQuantity && enrichedItem.quantity > 0 && (
               <span className={`absolute bottom-1 right-1 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full`}>{`x${enrichedItem.quantity}`}</span>
@@ -328,7 +333,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
       const newLevel = (originalItem.level || 1) + 1;
       addNewItemToInventory(originalItem.id, 1, { ...originalItem, level: newLevel, instanceId: 0 });
       const upgradedItemDef = itemDatabase.get(originalItem.id);
-      showAlert(`Nâng cấp thành công! ${upgradedItemDef?.name} đã đạt cấp +${newLevel-1}!`, 'success');
+      showAlert(`Nâng cấp thành công! ${upgradedItemDef?.name} đã lên Lv.${newLevel}!`, 'success');
     } else { returnItemToInventory(originalItem); showAlert('Nâng cấp thất bại! Đá Cường Hoá đã bị mất, nhưng trang bị được bảo toàn.', 'error'); }
     setIsProcessing(false);
   };
