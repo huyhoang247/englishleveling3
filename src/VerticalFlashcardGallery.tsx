@@ -13,6 +13,7 @@ interface Playlist {
   id: string;
   name: string;
   cardIds: number[];
+  isPinned?: boolean; // THÊM THUỘC TÍNH GHIM
 }
 interface VerticalFlashcardGalleryProps {
   hideNavBar: () => void;
@@ -188,14 +189,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
-        const fetchedPlaylists = Array.isArray(userData.playlists) ? userData.playlists : [];
+        const fetchedPlaylists = (Array.isArray(userData.playlists) ? userData.playlists : []).map((p: Playlist) => ({...p, isPinned: p.isPinned || false}));
         // Giả sử có 5 playlist ví dụ để test
         const examplePlaylists: Playlist[] = [
-          {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4]},
-          {id: 'pl2', name: 'Voca 2', cardIds: [5]},
-          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6)},
-          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369]},
-          {id: 'pl5', name: 'Từ vựng chuyên ngành Công nghệ thông tin', cardIds: [370, 371, 372]},
+          {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
+          {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
+          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
+          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
+          {id: 'pl5', name: 'Từ vựng chuyên ngành Công nghệ thông tin siêu dài', cardIds: [370, 371, 372], isPinned: false},
         ];
         setPlaylists([...examplePlaylists, ...fetchedPlaylists]);
 
@@ -340,6 +341,53 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   `;
 
+  // --- LOGIC MỚI CHO VIỆC GHIM PLAYLIST ---
+  const pinnedCount = useMemo(() => playlists.filter(p => p.isPinned).length, [playlists]);
+
+  const handleTogglePin = useCallback(async (playlistId: string) => {
+    const newPlaylists = playlists.map(p => {
+        if (p.id === playlistId) {
+            // Nếu đang cố gắng ghim và đã đủ 2 mục, không làm gì cả
+            if (!p.isPinned && pinnedCount >= 2) {
+                alert("Bạn chỉ có thể ghim tối đa 2 playlist.");
+                return p;
+            }
+            return { ...p, isPinned: !p.isPinned };
+        }
+        return p;
+    });
+
+    // Chỉ cập nhật nếu có sự thay đổi (tránh trường hợp alert)
+    if (JSON.stringify(newPlaylists) !== JSON.stringify(playlists)) {
+      setPlaylists(newPlaylists);
+      // TODO: Cập nhật `newPlaylists` vào Firestore
+      // if (currentUser) {
+      //   const userDocRef = doc(db, 'users', currentUser.uid);
+      //   await updateDoc(userDocRef, { playlists: newPlaylists });
+      // }
+    }
+  }, [playlists, pinnedCount, currentUser]);
+
+  // --- LOGIC MỚI ĐỂ HIỂN THỊ "PILL" ---
+  const pillsToDisplay = useMemo(() => {
+    const pinned = playlists.filter(p => p.isPinned);
+    const selected = playlists.find(p => p.id === selectedPlaylistId);
+
+    const displaySet = new Set<Playlist>();
+
+    // Luôn thêm các playlist đã ghim
+    pinned.forEach(p => displaySet.add(p));
+
+    // Thêm playlist đang được chọn nếu nó chưa có trong danh sách và không phải là "Tất cả"
+    if (selected && !displaySet.has(selected)) {
+        displaySet.add(selected);
+    }
+    
+    // Chuyển Set thành Array và sắp xếp để thứ tự ổn định
+    return Array.from(displaySet).sort((a,b) => a.name.localeCompare(b.name));
+  }, [playlists, selectedPlaylistId]);
+
+
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
@@ -394,7 +442,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </button>
               </div>
 
-              {/* GIAO DIỆN CHỌN PLAYLIST MỚI - CÓ KHẢ NĂNG MỞ RỘNG */}
+              {/* GIAO DIỆN CHỌN PLAYLIST MỚI - CÓ GHIM VÀ TRUNCATE */}
               {activeTab === 'favorite' && (
                 <div className="px-4 mb-6">
                   <div className="w-full">
@@ -402,7 +450,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                       Đang xem trong Playlist
                     </label>
 
-                    {/* Giao diện PILL cuộn ngang mới */}
                     <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                       {/* Nút "Tất cả" - Luôn hiển thị */}
                       <button
@@ -421,17 +468,18 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         </span>
                       </button>
 
-                      {/* Hiển thị 2 playlist đầu tiên */}
-                      {playlists.slice(0, 2).map(p => (
+                      {/* Hiển thị các "pill" đã được tính toán */}
+                      {pillsToDisplay.map(p => (
                         <button
                           key={p.id}
                           onClick={() => { setSelectedPlaylistId(p.id); handlePageChange(1); }}
-                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[200px]
+                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px]
                             ${selectedPlaylistId === p.id
                               ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
                               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
                             }
                         >
+                          {p.isPinned && <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>}
                           <span className="truncate">{p.name}</span>
                           <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full 
                             ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
@@ -441,18 +489,16 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         </button>
                       ))}
 
-                      {/* Nút "Tất cả playlist" nếu có nhiều hơn 2 playlist */}
-                      {playlists.length > 2 && (
-                        <button
+                      {/* Nút "Tất cả playlist" */}
+                       <button
                           onClick={() => setShowAllPlaylistsModal(true)}
-                          className="flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+                          className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+                          aria-label="Xem tất cả playlist"
                         >
-                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                           </svg>
-                          <span>Tất cả Playlist</span>
                         </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -561,15 +607,17 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               />
             )}
 
-            {/* MODAL CHỌN TẤT CẢ PLAYLIST */}
+            {/* MODAL CHỌN TẤT CẢ PLAYLIST VỚI CHỨC NĂNG GHIM */}
             {showAllPlaylistsModal && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setShowAllPlaylistsModal(false)} style={{ animation: 'modalBackdropIn 0.3s' }}></div>
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setShowAllPlaylistsModal(false) }}>
-                  <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-xl flex flex-col max-h-[70vh]" style={{ animation: 'modalIn 0.3s' }}>
+                  <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-xl flex flex-col max-h-[80vh]" style={{ animation: 'modalIn 0.3s' }}>
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                       <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Chọn một Playlist</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Tìm kiếm hoặc chọn từ danh sách bên dưới.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Ghim (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 inline-block -mt-1 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                      ) tối đa 2 playlist để luôn hiển thị.</p>
                     </div>
                     
                     <div className="p-4 flex-shrink-0">
@@ -588,33 +636,42 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </div>
 
                     <div className="overflow-y-auto px-4 pb-4 flex-grow">
-                      <ul className="space-y-2">
+                      <ul className="space-y-1">
                         {playlists
                           .filter(p => p.name.toLowerCase().includes(playlistSearch.toLowerCase()))
                           .map(p => (
                             <li key={p.id}>
-                              <button
+                              <div
                                 onClick={() => {
                                   setSelectedPlaylistId(p.id);
                                   handlePageChange(1);
                                   setShowAllPlaylistsModal(false);
                                   setPlaylistSearch('');
                                 }}
-                                className={`w-full flex items-center justify-between text-left p-3 rounded-lg transition-colors duration-200 
+                                className={`w-full flex items-center text-left p-3 rounded-lg transition-colors duration-200 group cursor-pointer
                                   ${selectedPlaylistId === p.id 
-                                    ? 'bg-pink-100 dark:bg-pink-900/60 text-pink-800 dark:text-pink-200 font-semibold' 
-                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`
+                                    ? 'bg-pink-100 dark:bg-pink-900/60' 
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`
                                 }
                               >
-                                <span className="flex-grow">{p.name}</span>
-                                <span className={`flex-shrink-0 ml-4 px-2 py-0.5 text-xs rounded-full 
-                                  ${selectedPlaylistId === p.id 
-                                    ? 'bg-pink-200 dark:bg-pink-800 text-pink-800 dark:text-pink-200' 
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
-                                }>
-                                  {p.cardIds.length}
-                                </span>
-                              </button>
+                                <div className="flex-grow pr-4">
+                                  <p className={`font-medium ${selectedPlaylistId === p.id ? 'text-pink-800 dark:text-pink-200' : 'text-gray-800 dark:text-gray-200'}`}>{p.name}</p>
+                                  <span className={`text-xs ${selectedPlaylistId === p.id ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}>{p.cardIds.length} từ vựng</span>
+                                </div>
+                                <button 
+                                  onClick={(e) => {
+                                      e.stopPropagation(); // Ngăn việc chọn playlist khi chỉ muốn ghim
+                                      handleTogglePin(p.id);
+                                  }}
+                                  disabled={!p.isPinned && pinnedCount >= 2}
+                                  className="p-2 rounded-full transition-colors duration-200 flex-shrink-0 disabled:opacity-30 disabled:cursor-not-allowed group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
+                                  aria-label={p.isPinned ? "Bỏ ghim playlist" : "Ghim playlist"}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-200 ${p.isPinned ? 'text-yellow-400 scale-110' : 'text-gray-400 dark:text-gray-500 group-hover:text-yellow-500'}`} viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                </button>
+                              </div>
                             </li>
                           ))}
                       </ul>
@@ -623,6 +680,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </div>
               </>
             )}
+
           </>
         )}
         
