@@ -15,7 +15,8 @@ interface Playlist {
 interface AddToPlaylistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  cardId: number;
+  // THAY ĐỔI: Chấp nhận một cardId hoặc một mảng cardIds
+  cardIds: number[]; 
   currentUser: User | null;
   existingPlaylists: Playlist[];
 }
@@ -23,7 +24,7 @@ interface AddToPlaylistModalProps {
 export default function AddToPlaylistModal({
   isOpen,
   onClose,
-  cardId,
+  cardIds, // Đã cập nhật
   currentUser,
   existingPlaylists,
 }: AddToPlaylistModalProps) {
@@ -34,19 +35,26 @@ export default function AddToPlaylistModal({
   // State để hiển thị trạng thái đang lưu
   const [isSaving, setIsSaving] = useState(false);
 
-  // Effect này sẽ chạy mỗi khi modal mở ra để xác định
-  // các playlist nào đã chứa cardId này và tick sẵn checkbox
+  // Effect này sẽ chạy mỗi khi modal mở ra
   useEffect(() => {
     if (isOpen) {
-      const initialSelectedIds = new Set<string>();
-      existingPlaylists.forEach(playlist => {
-        if (playlist.cardIds.includes(cardId)) {
-          initialSelectedIds.add(playlist.id);
-        }
-      });
-      setSelectedPlaylistIds(initialSelectedIds);
+      // Nếu chỉ thêm một thẻ, hãy chọn trước các playlist đã chứa nó
+      if (cardIds.length === 1) {
+        const cardId = cardIds[0];
+        const initialSelectedIds = new Set<string>();
+        existingPlaylists.forEach(playlist => {
+          if (playlist.cardIds.includes(cardId)) {
+            initialSelectedIds.add(playlist.id);
+          }
+        });
+        setSelectedPlaylistIds(initialSelectedIds);
+      } else {
+        // Nếu thêm hàng loạt, bắt đầu với lựa chọn trống
+        setSelectedPlaylistIds(new Set());
+      }
+      setNewPlaylistName(''); // Reset input khi mở modal
     }
-  }, [isOpen, cardId, existingPlaylists]);
+  }, [isOpen, cardIds, existingPlaylists]);
 
   if (!isOpen || !currentUser) return null;
 
@@ -63,13 +71,14 @@ export default function AddToPlaylistModal({
 
   // Xử lý tạo playlist mới
   const handleCreateNewPlaylist = async () => {
-    if (newPlaylistName.trim() === '') return;
+    if (newPlaylistName.trim() === '' || !cardIds || cardIds.length === 0) return;
     setIsSaving(true);
     
     const newPlaylist: Playlist = {
       id: Date.now().toString(),
       name: newPlaylistName.trim(),
-      cardIds: [cardId], // Tự động thêm thẻ hiện tại vào playlist mới
+      // Tự động thêm tất cả các thẻ hiện tại vào playlist mới
+      cardIds: [...cardIds], 
     };
 
     const userDocRef = doc(db, 'users', currentUser.uid);
@@ -92,22 +101,35 @@ export default function AddToPlaylistModal({
 
   // Xử lý khi nhấn nút "Lưu thay đổi"
   const handleSave = async () => {
+    if (!cardIds || cardIds.length === 0) return;
     setIsSaving(true);
     const userDocRef = doc(db, 'users', currentUser.uid);
 
     // Tạo một mảng playlist mới dựa trên các lựa chọn
     const updatedPlaylists = existingPlaylists.map(playlist => {
       const isSelected = selectedPlaylistIds.has(playlist.id);
-      const alreadyContainsCard = playlist.cardIds.includes(cardId);
 
-      // Nếu được chọn và chưa chứa thẻ -> thêm vào
-      if (isSelected && !alreadyContainsCard) {
-        return { ...playlist, cardIds: [...playlist.cardIds, cardId] };
-      }
-      
-      // Nếu không được chọn và đang chứa thẻ -> xóa đi
-      if (!isSelected && alreadyContainsCard) {
-        return { ...playlist, cardIds: playlist.cardIds.filter(id => id !== cardId) };
+      if (cardIds.length === 1) {
+        // --- LOGIC CŨ CHO MỘT THẺ (thêm và xóa) ---
+        const cardId = cardIds[0];
+        const alreadyContainsCard = playlist.cardIds.includes(cardId);
+        
+        if (isSelected && !alreadyContainsCard) {
+          // Nếu được chọn và chưa chứa thẻ -> thêm vào
+          return { ...playlist, cardIds: [...playlist.cardIds, cardId] };
+        }
+        
+        if (!isSelected && alreadyContainsCard) {
+          // Nếu không được chọn và đang chứa thẻ -> xóa đi
+          return { ...playlist, cardIds: playlist.cardIds.filter(id => id !== cardId) };
+        }
+      } else {
+        // --- LOGIC MỚI CHO NHIỀU THẺ (chỉ thêm) ---
+        if (isSelected) {
+          // Nếu được chọn, hợp nhất các cardIds mới vào, đảm bảo không trùng lặp
+          const combinedIds = new Set([...playlist.cardIds, ...cardIds]);
+          return { ...playlist, cardIds: Array.from(combinedIds) };
+        }
       }
       
       // Không thay đổi
@@ -127,17 +149,20 @@ export default function AddToPlaylistModal({
     }
   };
 
+  const modalTitle = cardIds.length > 1 ? `Thêm ${cardIds.length} từ vào Playlist` : "Thêm vào Playlist";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={onClose}>
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-4 flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()} // Ngăn việc click vào modal làm nó bị đóng
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Thêm vào Playlist</h3>
+          {/* TIÊU ĐỀ ĐỘNG */}
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{modalTitle}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -145,7 +170,6 @@ export default function AddToPlaylistModal({
 
         {/* Body */}
         <div className="p-6 overflow-y-auto">
-          {/* Danh sách playlist hiện có */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Chọn playlist</label>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
@@ -169,8 +193,6 @@ export default function AddToPlaylistModal({
               )}
             </div>
           </div>
-
-          {/* Tạo playlist mới */}
           <div>
             <label htmlFor="new-playlist" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Hoặc tạo playlist mới</label>
             <div className="flex space-x-2">
