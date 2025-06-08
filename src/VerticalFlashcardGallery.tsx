@@ -1,13 +1,16 @@
-// ========================================================================
-// FILE: VerticalFlashcardGallery.tsx (FIXED & OPTIMIZED)
-// - Tối ưu 1: Tải lười (lazy-loading) hình ảnh.
-// - Tối ưu 2: Loại bỏ state lớn, tính toán `isFavorite` linh hoạt.
-// - Tối ưu 3: Tách và memoize component FlashcardItem.
-// ========================================================================
+// FILE: VerticalFlashcardGallery_FINAL.tsx
+//
+// This is a complete, synthesized version incorporating all requested changes:
+// - Optimization 1: Lazy-loading images.
+// - Optimization 2: Efficient state management (no large flashcards state).
+// - Optimization 3: Memoized FlashcardItem component.
+// - UI Redesign 1: Imports and uses the redesigned AddToPlaylistModal.
+// - UI Redesign 2: Replaces the <select> playlist filter with a modern,
+//                  horizontal "pill" interface.
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal.tsx';
+import AddToPlaylistModal from './AddToPlaylistModal_REFINED.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
@@ -15,7 +18,7 @@ import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { SidebarLayout } from './sidebar-story.tsx';
 
-// --- Interfaces and Data (No changes here) ---
+// --- Interfaces and Data ---
 interface Playlist {
   id: string;
   name: string;
@@ -119,7 +122,6 @@ const animations = `
 
 
 // OPTIMIZATION 3: Tách FlashcardItem ra component riêng và memoize nó.
-// ========================================================================
 interface FlashcardItemProps {
   card: Flashcard;
   visualStyle: string;
@@ -151,7 +153,7 @@ const FlashcardItem = memo(({ card, visualStyle, onImageClick, onFavoriteClick, 
             style={{aspectRatio: '1024/1536', filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'}} 
             onClick={() => onImageClick(card)} 
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = card.imageUrl.default; }}
-            loading="lazy" // OPTIMIZATION 1: Thêm lazy loading cho hình ảnh
+            loading="lazy"
           />
         </div>
       </div>
@@ -162,8 +164,6 @@ const FlashcardItem = memo(({ card, visualStyle, onImageClick, onFavoriteClick, 
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
   const mainContainerRef = useRef<HTMLDivElement>(null);
-  // OPTIMIZATION 2: Loại bỏ state 'flashcards' không cần thiết. Dữ liệu sẽ được lấy từ hằng số ALL_POSSIBLE_FLASHCARDS.
-  // const [flashcards, setFlashcards] = useState<Flashcard[]>(ALL_POSSIBLE_FLASHCARDS);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState('collection');
   const [showSettings, setShowSettings] = useState(false);
@@ -176,7 +176,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all'); 
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number | null>(null);
+  const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null); // Chấp nhận mảng
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
@@ -205,18 +205,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return () => unsubscribe();
   }, [currentUser]);
 
-  // OPTIMIZATION 2: Loại bỏ useEffect cập nhật toàn bộ danh sách flashcard.
-  // useEffect(() => {
-  //   setFlashcards(prev => prev.map(card => ({...card, isFavorite: allFavoriteCardIds.has(card.id)})));
-  // }, [allFavoriteCardIds]);
-
   // --- Logic lọc và phân trang ---
-  // OPTIMIZATION 2: Tính toán danh sách thẻ cần hiển thị một cách hiệu quả với useMemo.
   const filteredFlashcardsByTab = useMemo(() => {
     const getCardWithFavoriteStatus = (id: number): Flashcard | undefined => {
       const card = ALL_POSSIBLE_FLASHCARDS.find(c => c.id === id);
       if (!card) return undefined;
-      // Trả về một object mới với trạng thái favorite được cập nhật
       return {
         ...card,
         isFavorite: allFavoriteCardIds.has(id)
@@ -247,7 +240,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return [];
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
-
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -268,9 +260,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const closePlaylistModal = () => { setIsPlaylistModalOpen(false); setSelectedCardForPlaylist(null); };
   const closeVocabDetail = () => { setShowVocabDetail(false); setSelectedCard(null); showNavBar(); };
 
-  // OPTIMIZATION 3: Bọc các handler bằng useCallback để truyền vào component con memoized.
   const openPlaylistModal = useCallback((cardId: number) => { 
-    setSelectedCardForPlaylist(cardId); 
+    setSelectedCardForPlaylist([cardId]); 
     setIsPlaylistModalOpen(true); 
   }, []);
 
@@ -341,6 +332,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return [];
 
   }, [currentPage, totalPages]);
+  
+  const scrollbarHide = `
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  `;
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
@@ -361,6 +357,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     >
       <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         <style>{animations}</style>
+        <style>{scrollbarHide}</style>
 
         {activeScreen === 'home' && (
           <>
@@ -395,15 +392,55 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </button>
               </div>
 
+              {/* GIAO DIỆN CHỌN PLAYLIST MỚI */}
               {activeTab === 'favorite' && (
-                <div className="px-4 mb-4">
-                  <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div className="flex-grow">
-                      <label htmlFor="playlist-select" className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Chọn Playlist</label>
-                      <select id="playlist-select" value={selectedPlaylistId} onChange={(e) => { setSelectedPlaylistId(e.target.value); handlePageChange(1); }} className="w-full md:w-auto bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2 px-3">
-                        <option value="all">Tất cả từ yêu thích ({favoriteCount})</option>
-                        {playlists.map(p => <option key={p.id} value={p.id}>{p.name} ({p.cardIds.length})</option>)}
-                      </select>
+                <div className="px-4 mb-6">
+                  <div className="w-full">
+                    <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                      Đang xem trong Playlist
+                    </label>
+
+                    {/* Giao diện PILL cuộn ngang mới */}
+                    <div className="flex items-center space-x-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                      {/* Nút "Tất cả" */}
+                      <button
+                        onClick={() => { setSelectedPlaylistId('all'); handlePageChange(1); }}
+                        className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border-2
+                          ${selectedPlaylistId === 'all'
+                            ? 'bg-pink-600 text-white border-pink-600 shadow-md'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/50'}`
+                        }
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        <span>Tất cả</span>
+                        <span className={`px-1.5 py-0.5 text-xs rounded-full 
+                          ${selectedPlaylistId === 'all' ? 'bg-pink-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                        }>
+                          {favoriteCount}
+                        </span>
+                      </button>
+
+                      {/* Các playlist khác */}
+                      {playlists.map(p => (
+                        <button
+                          key={p.id}
+                          onClick={() => { setSelectedPlaylistId(p.id); handlePageChange(1); }}
+                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border-2
+                            ${selectedPlaylistId === p.id
+                              ? 'bg-pink-600 text-white border-pink-600 shadow-md'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-700 hover:bg-pink-50 dark:hover:bg-pink-900/50'}`
+                          }
+                        >
+                          <span>{p.name}</span>
+                          <span className={`px-1.5 py-0.5 text-xs rounded-full 
+                            ${selectedPlaylistId === p.id ? 'bg-pink-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                          }>
+                            {p.cardIds.length}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -414,7 +451,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
                   <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {/* OPTIMIZATION 3: Sử dụng component FlashcardItem đã được memoize */}
                     {flashcardsForCurrentPage.map((card) => (
                       <FlashcardItem
                         key={card.id}
@@ -456,7 +492,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </div>
             </div>
 
-            {/* Modals and other UI (no changes) */}
+            {/* Modals and other UI */}
             {showSettings && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }} onClick={() => setShowSettings(false)}></div>
@@ -505,7 +541,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               <AddToPlaylistModal 
                 isOpen={isPlaylistModalOpen} 
                 onClose={closePlaylistModal} 
-                cardIds={[selectedCardForPlaylist]} 
+                cardIds={selectedCardForPlaylist} 
                 currentUser={currentUser} 
                 existingPlaylists={playlists} 
               />
