@@ -57,7 +57,7 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
   }
   return urls;
 };
-const numberOfSampleFlashcards = 200;
+const numberOfSampleFlashcards = 3200;
 const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
@@ -215,19 +215,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
     if (activeTab === 'favorite') {
       const allFavorites = flashcards.filter(card => card.isFavorite);
-      if (selectedPlaylistId === 'all') {
-        return allFavorites;
-      }
+      if (selectedPlaylistId === 'all') return allFavorites;
       const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
-      if (selectedPlaylist) {
-        // ======================= FIX START =======================
-        // Logic mới: Dùng playlist làm nguồn chính.
-        // Với mỗi ID trong playlist, tìm đối tượng flashcard đầy đủ tương ứng.
-        return selectedPlaylist.cardIds
-          .map(id => ALL_POSSIBLE_FLASHCARDS.find(card => card.id === id))
-          .filter((card): card is Flashcard => card !== undefined); // Lọc bỏ các kết quả undefined
-        // ======================== FIX END ========================
-      }
+      if (selectedPlaylist) return allFavorites.filter(card => selectedPlaylist.cardIds.includes(card.id));
       return [];
     }
     return [];
