@@ -4,7 +4,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal'; // Import modal mới
+import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // Import modal mới
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore'; 
