@@ -1,5 +1,5 @@
 // ========================================================================
-// FILE: VerticalFlashcardGallery.tsx (FIXED: Smart Pagination)
+// FILE: VerticalFlashcardGallery.tsx (FIXED: Corrected Smart Pagination Logic)
 // ========================================================================
 
 import { useRef, useState, useEffect, useMemo } from 'react';
@@ -217,73 +217,58 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   };
 
   const handlePageChange = (pageNumber: number) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
     setCurrentPage(pageNumber);
     if (mainContainerRef.current) {
       mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
     }
   };
 
-  // *** THAY ĐỔI: Thêm logic tạo các mục phân trang thông minh ***
+  // *** THAY ĐỔI: Logic phân trang mới (Sửa lỗi) ***
   const paginationItems = useMemo(() => {
-    const pages: (number | string)[] = [];
-    const totalVisiblePages = 7; // Tổng số nút sẽ hiển thị (ví dụ: 1, ..., 5, 6, 7, ..., 100)
+    const siblingCount = 1; // Số trang hiển thị ở mỗi bên của trang hiện tại
+    const totalPageNumbers = siblingCount + 5; // siblingCount + firstPage + lastPage + currentPage + 2*DOTS
 
-    if (totalPages <= totalVisiblePages) {
-      // Nếu tổng số trang ít, hiển thị tất cả
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Luôn hiển thị trang 1
-      pages.push(1);
-
-      // Logic hiển thị các trang và dấu "..."
-      const showEllipsisStart = currentPage > 4;
-      const showEllipsisEnd = currentPage < totalPages - 3;
-
-      if (showEllipsisStart) {
-        pages.push('...');
-      }
-
-      const startPage = Math.max(2, currentPage - 1);
-      const endPage = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = startPage; i <= endPage; i++) {
-        if (!pages.includes(i)) {
-          pages.push(i);
-        }
-      }
-      
-      // Điều chỉnh để đảm bảo đủ số lượng trang hiển thị xung quanh
-      // Nếu đang ở gần đầu
-      if (currentPage <= 4) {
-          if (!pages.includes(2)) pages.splice(1, 0, 2);
-          if (!pages.includes(3)) pages.splice(2, 0, 3);
-          if (!pages.includes(4)) pages.splice(3, 0, 4);
-          if (!pages.includes(5)) pages.splice(4, 0, 5);
-      }
-       // Nếu đang ở gần cuối
-      if (currentPage >= totalPages - 3) {
-          if (!pages.includes(totalPages-4)) pages.push(totalPages-4);
-          if (!pages.includes(totalPages-3)) pages.push(totalPages-3);
-          if (!pages.includes(totalPages-2)) pages.push(totalPages-2);
-          if (!pages.includes(totalPages-1)) pages.push(totalPages-1);
-      }
-
-      if (showEllipsisEnd) {
-        if (pages[pages.length-1] < totalPages - 1) {
-            pages.push('...');
-        }
-      }
-      
-      // Luôn hiển thị trang cuối
-      if (!pages.includes(totalPages)) {
-        pages.push(totalPages);
-      }
+    // Trường hợp 1: Tổng số trang ít hơn số nút chúng ta muốn hiển thị -> hiển thị tất cả
+    if (totalPageNumbers >= totalPages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
-    return pages;
-  }, [currentPage, totalPages]);
 
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+    const range = (start: number, end: number) => {
+      let length = end - start + 1;
+      return Array.from({ length }, (_, idx) => idx + start);
+    };
+
+    // Trường hợp 2: Chỉ hiển thị dấu ... ở bên phải
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      let leftItemCount = 3 + 2 * siblingCount;
+      let leftRange = range(1, leftItemCount);
+      return [...leftRange, '...', totalPages];
+    }
+
+    // Trường hợp 3: Chỉ hiển thị dấu ... ở bên trái
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      let rightItemCount = 3 + 2 * siblingCount;
+      let rightRange = range(totalPages - rightItemCount + 1, totalPages);
+      return [1, '...', ...rightRange];
+    }
+
+    // Trường hợp 4: Hiển thị dấu ... ở cả hai bên
+    if (shouldShowLeftDots && shouldShowRightDots) {
+      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
+      return [1, '...', ...middleRange, '...', totalPages];
+    }
+
+    // Mặc định trả về một mảng rỗng nếu không có trường hợp nào khớp
+    return [];
+
+  }, [currentPage, totalPages]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
@@ -388,7 +373,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 )}
                 
-                {/* *** THAY ĐỔI: Sử dụng logic phân trang thông minh *** */}
+                {/* Pagination with Corrected Logic */}
                 {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
@@ -423,7 +408,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" style={{ animation: 'scaleIn 0.3s ease-out forwards' }} id="settings-panel">
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold text-white flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Cài đặt hiển thị</h3>
+                        <h3 className="text-lg font-semibold text-white flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Cài đặt hiển thị</h3>
                         <button onClick={() => setShowSettings(false)} className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
                       </div>
                     </div>
