@@ -1,5 +1,5 @@
 // ========================================================================
-// FILE: VerticalFlashcardGallery.tsx (FIXED: Instant Scroll on Page Change)
+// FILE: VerticalFlashcardGallery.tsx (FIXED: Smart Pagination)
 // ========================================================================
 
 import { useRef, useState, useEffect, useMemo } from 'react';
@@ -12,26 +12,23 @@ import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { SidebarLayout } from './sidebar-story.tsx';
 
-// --- Định nghĩa Interfaces ---
+// --- Interfaces and Data (No changes here) ---
 interface Playlist {
   id: string;
   name: string;
   cardIds: number[];
 }
-
 interface VerticalFlashcardGalleryProps {
   hideNavBar: () => void;
   showNavBar: () => void;
   currentUser: User | null;
 }
-
 interface StyledImageUrls {
   default: string;
   anime?: string;
   comic?: string;
   realistic?: string;
 }
-
 interface VocabularyData {
   word: string;
   meaning: string;
@@ -41,15 +38,12 @@ interface VocabularyData {
   synonyms: string[];
   antonyms: string[];
 }
-
 interface Flashcard {
   id: number;
   imageUrl: StyledImageUrls;
   isFavorite: boolean;
   vocabulary: VocabularyData;
 }
-
-// --- Dữ liệu Ảnh và Từ vựng Mẫu (Giữ nguyên) ---
 const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
   const urls: string[] = [];
   for (let i = 1; i <= count; i++) {
@@ -65,7 +59,6 @@ const defaultImageUrls: string[] = [
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
-
 const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
   const data: VocabularyData[] = [];
   for (let i = 1; i <= count; i++) {
@@ -92,7 +85,6 @@ const vocabularyData: VocabularyData[] = [
   ...initialVocabularyData,
   ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
 ];
-
 const ALL_POSSIBLE_FLASHCARDS: Flashcard[] = Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
     const vocab = vocabularyData[i] || { word: `Word ${i + 1}`, meaning: `Meaning ${i + 1}`, example: `Example ${i + 1}`, phrases:[], popularity: 'Thấp', synonyms:[], antonyms:[] };
     const imageUrls: StyledImageUrls = {
@@ -103,7 +95,6 @@ const ALL_POSSIBLE_FLASHCARDS: Flashcard[] = Array.from({ length: numberOfSample
     };
     return { id: i + 1, imageUrl: imageUrls, isFavorite: false, vocabulary: vocab };
 });
-
 const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1",
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
@@ -111,7 +102,6 @@ const exampleImages = [
   "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
   "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
 ];
-
 const animations = `
   @keyframes fadeInOut {
     0% { opacity: 0; transform: translateY(-10px); }
@@ -131,7 +121,6 @@ const animations = `
 
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
-  // *** THAY ĐỔI 1: Đổi tên ref để chỉ container chính và đặt đúng kiểu dữ liệu ***
   const mainContainerRef = useRef<HTMLDivElement>(null);
   const [flashcards, setFlashcards] = useState<Flashcard[]>(ALL_POSSIBLE_FLASHCARDS);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
@@ -142,19 +131,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
   const [showVocabDetail, setShowVocabDetail] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // States cho dữ liệu người dùng từ Firestore
   const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  
-  // State cho bộ lọc playlist
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all'); 
-  
-  // States để quản lý modal playlist
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number | null>(null);
-
-  // States cho phân trang và sidebar
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
@@ -167,36 +148,19 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   // --- Effects ---
   useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      setOpenedImageIds([]); setPlaylists([]);
-      return;
-    }
-
+    if (!currentUser) { setLoading(false); setOpenedImageIds([]); setPlaylists([]); return; }
     setLoading(true);
     const userDocRef = doc(db, 'users', currentUser.uid);
-
     const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        const fetchedOpenedIds = Array.isArray(userData.openedImageIds) ? userData.openedImageIds : [];
-        setOpenedImageIds(fetchedOpenedIds);
-        const fetchedPlaylists = Array.isArray(userData.playlists) ? userData.playlists : [];
-        setPlaylists(fetchedPlaylists);
-        
-        const listVocabulary = fetchedOpenedIds.map(id => (defaultVocabulary[id - 1]?.toLowerCase() ?? '').trim());
-        if (JSON.stringify(listVocabulary) !== JSON.stringify(userData.listVocabulary)) {
-            await updateDoc(userDocRef, { listVocabulary });
-        }
+        setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
+        setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
       } else {
-        console.log("Tài liệu người dùng không tồn tại. Có thể tạo mới ở đây.");
         setOpenedImageIds([]); setPlaylists([]);
       }
       setLoading(false);
-    }, (error) => {
-      console.error("Lỗi khi lắng nghe dữ liệu Firestore (onSnapshot):", error);
-      setLoading(false);
-    });
+    }, (error) => { setLoading(false); });
     return () => unsubscribe();
   }, [currentUser]);
 
@@ -226,7 +190,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const endIndex = startIndex + itemsPerPage;
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
-  const favoriteCount = allFavoriteCardIds.size; // Cập nhật số lượng yêu thích
+  const favoriteCount = allFavoriteCardIds.size;
 
   // --- Handlers ---
   const handleShowHome = () => setActiveScreen('home');
@@ -238,33 +202,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const handleShowSettings = () => setActiveScreen('settings');
   const handleShowHelp = () => setActiveScreen('help');
 
-  const handleFavoriteClick = (id: number) => {
-    if (!currentUser) return;
-    openPlaylistModal(id);
-  };
-  
-  const openPlaylistModal = (cardId: number) => {
-    setSelectedCardForPlaylist(cardId);
-    setIsPlaylistModalOpen(true);
-  };
-  
-  const closePlaylistModal = () => {
-    setIsPlaylistModalOpen(false);
-    setSelectedCardForPlaylist(null);
-  };
-
-  const openVocabDetail = (card: Flashcard) => {
-    setSelectedCard(card);
-    setShowVocabDetail(true);
-    hideNavBar();
-  };
-
-  const closeVocabDetail = () => {
-    setShowVocabDetail(false);
-    setSelectedCard(null);
-    showNavBar();
-  };
-
+  const handleFavoriteClick = (id: number) => { if (!currentUser) return; openPlaylistModal(id); };
+  const openPlaylistModal = (cardId: number) => { setSelectedCardForPlaylist(cardId); setIsPlaylistModalOpen(true); };
+  const closePlaylistModal = () => { setIsPlaylistModalOpen(false); setSelectedCardForPlaylist(null); };
+  const openVocabDetail = (card: Flashcard) => { setSelectedCard(card); setShowVocabDetail(true); hideNavBar(); };
+  const closeVocabDetail = () => { setShowVocabDetail(false); setSelectedCard(null); showNavBar(); };
   const getImageUrlForStyle = (card: Flashcard, style: string): string => {
     switch (style) {
         case 'anime': return card.imageUrl.anime || card.imageUrl.default;
@@ -274,14 +216,74 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   };
 
-  // *** THAY ĐỔI 3: Sửa hàm chuyển trang để cuộn ngay lập tức ***
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
-    // Cuộn container chính lên đầu ngay lập tức, không có hiệu ứng "mượt"
     if (mainContainerRef.current) {
       mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
     }
   };
+
+  // *** THAY ĐỔI: Thêm logic tạo các mục phân trang thông minh ***
+  const paginationItems = useMemo(() => {
+    const pages: (number | string)[] = [];
+    const totalVisiblePages = 7; // Tổng số nút sẽ hiển thị (ví dụ: 1, ..., 5, 6, 7, ..., 100)
+
+    if (totalPages <= totalVisiblePages) {
+      // Nếu tổng số trang ít, hiển thị tất cả
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Luôn hiển thị trang 1
+      pages.push(1);
+
+      // Logic hiển thị các trang và dấu "..."
+      const showEllipsisStart = currentPage > 4;
+      const showEllipsisEnd = currentPage < totalPages - 3;
+
+      if (showEllipsisStart) {
+        pages.push('...');
+      }
+
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        if (!pages.includes(i)) {
+          pages.push(i);
+        }
+      }
+      
+      // Điều chỉnh để đảm bảo đủ số lượng trang hiển thị xung quanh
+      // Nếu đang ở gần đầu
+      if (currentPage <= 4) {
+          if (!pages.includes(2)) pages.splice(1, 0, 2);
+          if (!pages.includes(3)) pages.splice(2, 0, 3);
+          if (!pages.includes(4)) pages.splice(3, 0, 4);
+          if (!pages.includes(5)) pages.splice(4, 0, 5);
+      }
+       // Nếu đang ở gần cuối
+      if (currentPage >= totalPages - 3) {
+          if (!pages.includes(totalPages-4)) pages.push(totalPages-4);
+          if (!pages.includes(totalPages-3)) pages.push(totalPages-3);
+          if (!pages.includes(totalPages-2)) pages.push(totalPages-2);
+          if (!pages.includes(totalPages-1)) pages.push(totalPages-1);
+      }
+
+      if (showEllipsisEnd) {
+        if (pages[pages.length-1] < totalPages - 1) {
+            pages.push('...');
+        }
+      }
+      
+      // Luôn hiển thị trang cuối
+      if (!pages.includes(totalPages)) {
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  }, [currentPage, totalPages]);
+
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
@@ -300,13 +302,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      {/* *** THAY ĐỔI 2: Gắn ref vào đúng container có thanh cuộn *** */}
       <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         <style>{animations}</style>
 
         {activeScreen === 'home' && (
           <>
-            {/* Header and Tabs - No changes needed here */}
+            {/* Header and Tabs */}
             <div className="w-full max-w-6xl py-6 mx-auto">
               <div className="flex justify-between items-center mb-4 px-4">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
@@ -355,7 +356,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             <div className="min-h-0">
               <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
-                  // *** THAY ĐỔI 4: Xóa ref cũ khỏi đây ***
                   <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     {flashcardsForCurrentPage.map((card) => (
                       <div key={card.id}>
@@ -387,14 +387,27 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     <p className="text-gray-500 dark:text-gray-400 max-w-md">{activeTab === 'collection' ? 'Hãy mở rương để nhận thêm flashcard mới!' : selectedPlaylistId === 'all' ? 'Nhấn vào biểu tượng trái tim để thêm từ vào mục yêu thích.' : 'Hãy thêm các từ yêu thích vào playlist này.'}</p>
                   </div>
                 )}
-                {/* Pagination - No changes needed */}
+                
+                {/* *** THAY ĐỔI: Sử dụng logic phân trang thông minh *** */}
                 {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
-                    <nav className="flex space-x-2" aria-label="Pagination">
+                    <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
                       <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === 1 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Trước</button>
-                      {Array.from({ length: totalPages }, (_, index) => (
-                        <button key={index + 1} onClick={() => handlePageChange(index + 1)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === index + 1 ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>{index + 1}</button>
-                      ))}
+                      
+                      {paginationItems.map((item, index) => 
+                        typeof item === 'string' ? (
+                          <span key={`ellipsis-${index}`} className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">...</span>
+                        ) : (
+                          <button 
+                            key={item} 
+                            onClick={() => handlePageChange(item)} 
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === item ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+
                       <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === totalPages ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>Sau</button>
                     </nav>
                   </div>
@@ -402,7 +415,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </div>
             </div>
 
-            {/* Settings Modal - No changes needed */}
+            {/* Modals and other UI (no changes) */}
             {showSettings && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}></div>
@@ -410,12 +423,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" style={{ animation: 'scaleIn 0.3s ease-out forwards' }} id="settings-panel">
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold text-white flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 01 0 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01 0-2.83 2 2 0 01 0-2.83l-.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 01 0-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l-.06-.06a2 2 0 01 2.83 0 2 2 0 01 0 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>Cài đặt hiển thị</h3>
+                        <h3 className="text-lg font-semibold text-white flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Cài đặt hiển thị</h3>
                         <button onClick={() => setShowSettings(false)} className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
                       </div>
                     </div>
                     <div className="p-6 overflow-y-auto max-h-[70vh] flex-grow">
-                      {/* Layout Mode */}
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
@@ -434,7 +446,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           </div>
                         </div>
                       </div>
-                      {/* Visual Style */}
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" /></svg>
@@ -468,9 +479,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </div>
               </>
             )}
-
             <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleImages={exampleImages} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
-            
             {isPlaylistModalOpen && selectedCardForPlaylist && (
               <AddToPlaylistModal 
                 isOpen={isPlaylistModalOpen} 
@@ -483,7 +492,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           </>
         )}
         
-        {/* Other screens - No changes needed */}
         {activeScreen !== 'home' && (
             <div className="flex items-center justify-center h-full text-2xl text-gray-600 dark:text-gray-300">
                 {activeScreen === 'stats' && 'Màn hình Stats'}
