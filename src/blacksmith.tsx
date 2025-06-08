@@ -197,7 +197,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
       >
         {enrichedItem ? (
           <>
-            {/* --- START: APPLIED FIX --- */}
             <div className="w-16 h-16 flex items-center justify-center mb-2">
               {typeof enrichedItem.icon === 'string' && enrichedItem.icon.startsWith('http') ? (
                 <img src={enrichedItem.icon} alt={enrichedItem.name} className="max-w-full max-h-full object-contain" />
@@ -205,8 +204,18 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 <div className="text-4xl md:text-5xl">{enrichedItem.icon}</div>
               )}
             </div>
-            {/* --- END: APPLIED FIX --- */}
-            <span className={`font-medium text-center px-1 text-white text-xs md:text-sm`}>{enrichedItem.name} {enrichedItem.level > 1 ? `+${enrichedItem.level-1}` : ''}</span>
+            
+            {/* --- START: FIX & REDESIGN FOR ITEM NAME AND LEVEL --- */}
+            <span className={`font-medium text-center px-1 text-white text-xs md:text-sm`}>
+              {enrichedItem.name.replace(/\s*\(\+\d+\)/, '')} 
+              {enrichedItem.level > 1 && (
+                <span className="font-bold text-yellow-400 ml-1">
+                  +{enrichedItem.level - 1}
+                </span>
+              )}
+            </span>
+            {/* --- END: FIX & REDESIGN FOR ITEM NAME AND LEVEL --- */}
+
             {showQuantity && enrichedItem.quantity > 0 && (
               <span className={`absolute bottom-1 right-1 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full`}>{`x${enrichedItem.quantity}`}</span>
             )}
