@@ -893,12 +893,12 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
         </div>
         {/* ----- END: FINALIZED TOP BAR ----- */}
 
-        {/* MODIFIED: Added min-h-0 to ensure flex container can shrink and enable scrolling */}
-        <div className="grid lg:grid-cols-2 gap-y-2 gap-x-8 flex-grow overflow-y-auto hide-scrollbar mt-4 min-h-0">
+        {/* MODIFIED: Changed min-h-0 to ensure flex container can shrink and enable scrolling */}
+        <div className="grid lg:grid-cols-2 gap-y-4 gap-x-8 flex-grow overflow-y-auto hide-scrollbar mt-4 min-h-0">
           
           {/* ----- START: SIMPLIFIED UPGRADE TAB ----- */}
           {activeTab === 'upgrade' && (
-            <div className="flex flex-col h-full"> 
+            <div className="flex flex-col"> 
                 <div>
                     {/* Anvil frame with reduced margin-bottom */}
                     <div className="mb-2 p-6 md:p-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
