@@ -7,6 +7,7 @@ import { auth, db } from './firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
+import { useDarkMode } from './useDarkMode'; // BƯỚC 3: IMPORT CUSTOM HOOK
 
 // --- Icons ---
 const PlayIcon = () => (
@@ -33,11 +34,23 @@ const XIcon = () => ( // For closing modals and sidebar
     </svg>
 );
 
-// THÊM ICON THỐNG KÊ
 const StatsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
   </svg>
+);
+
+// --- NEW ICONS FOR DARK MODE TOGGLE ---
+const SunIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zM4.464 4.95l-.707-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414zM1.879 9.5a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM18.121 9.5a1 1 0 010 1.414l.707.707a1 1 0 011.414-1.414l-.707-.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+    </svg>
+);
+
+const MoonIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+    </svg>
 );
 
 
@@ -75,7 +88,6 @@ interface EbookReaderProps {
   showNavBar: () => void;
 }
 
-// THÊM INTERFACE CHO THỐNG KÊ SÁCH
 interface BookStats {
   totalWords: number;
   uniqueWordsCount: number;
@@ -102,10 +114,11 @@ interface BookSidebarProps {
   onClose: () => void;
   book: Book | undefined;
   isDarkMode: boolean;
-  toggleDarkMode: () => void;
+  // Sửa lại prop này để nhận hàm setter trực tiếp
+  setDarkMode: (isDark: boolean) => void;
 }
 
-const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDarkMode, toggleDarkMode }) => {
+const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDarkMode, setDarkMode }) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -178,25 +191,32 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
 
           <hr className="border-gray-200 dark:border-gray-700" />
 
+          {/* === REDESIGNED DARK MODE SETTING === */}
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cài đặt hiển thị</h3>
-            <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <span className="text-gray-700 dark:text-gray-300">Chế độ tối</span>
-              <button
-                onClick={toggleDarkMode}
-                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 ${
-                  isDarkMode ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-                role="switch"
-                aria-checked={isDarkMode}
-              >
-                <span className="sr-only">Chuyển đổi chế độ tối</span>
-                <span
-                  className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out ${
-                    isDarkMode ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+            <h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Chế độ hiển thị</h3>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
+                <button
+                    onClick={() => setDarkMode(false)}
+                    className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                        !isDarkMode
+                            ? 'bg-white dark:bg-gray-700/80 text-blue-600 dark:text-blue-300 shadow-sm'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700'
+                    }`}
+                >
+                    <SunIcon />
+                    Sáng
+                </button>
+                <button
+                    onClick={() => setDarkMode(true)}
+                    className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                        isDarkMode
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700'
+                    }`}
+                >
+                    <MoonIcon />
+                    Tối
+                </button>
             </div>
           </div>
         </div>
@@ -366,14 +386,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // BƯỚC 3: SỬ DỤNG CUSTOM HOOK
+  const [isDarkMode, setDarkMode] = useDarkMode();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
   
-  // THÊM STATE CHO MODAL THỐNG KÊ
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -439,7 +459,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     return Array.from(wordsInBook).map(word => cardIdMap.get(word)).filter((id): id is number => id !== undefined);
   }, [currentBook, vocabMap]);
   
-  // LOGIC TÍNH TOÁN THỐNG KÊ SÁCH
   const bookStats = useMemo<BookStats | null>(() => {
     if (!currentBook || vocabMap.size === 0) {
       return null;
@@ -466,7 +485,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const uniqueWordsCount = uniqueWords.size;
     const vocabMismatchCount = uniqueWordsCount - vocabMatchCount;
     
-    // Sắp xếp map tần suất theo số lần xuất hiện giảm dần
     const sortedFrequencies = new Map([...wordFrequencies.entries()].sort((a, b) => b[1] - a[1]));
 
     return {
@@ -505,13 +523,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]);
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+  // XÓA useEffect này đi vì logic đã được chuyển vào hook useDarkMode
+  // useEffect(() => {
+  //   if (isDarkMode) {
+  //     document.documentElement.classList.add('dark');
+  //   } else {
+  //     document.documentElement.classList.remove('dark');
+  //   }
+  // }, [isDarkMode]);
 
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
@@ -553,7 +572,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const groupedBooks = groupBooksByCategory(booksData);
 
-  // START: === PHẦN NÂNG CẤP DARK MODE CHO NỘI DUNG SÁCH ===
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
@@ -561,28 +579,20 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const contentLines = currentBook.content.trim().split(/\n+/);
 
     return (
-      // Sử dụng font-serif để có cảm giác đọc sách truyền thống, dễ đọc hơn trên màn hình.
-      <div className="font-serif px-2 sm:px-4 pb-24">
+      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
-          if (line.trim() === '') return <div key={`blank-${index}`} className="h-4 sm:h-5"></div>; // Tăng khoảng cách cho các đoạn trống
-          
+          if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
           const renderableParts = parts.map((part, partIndex) => {
             if (!part) return null;
             const isWord = /^\w+$/.test(part);
             const normalizedPart = part.toLowerCase();
             const isVocabWord = isWord && vocabMap.has(normalizedPart);
-
             if (isVocabWord) {
               return (
                 <span
                   key={`${index}-${partIndex}`}
-                  // Dark mode: màu xanh sáng (blue-400) nổi bật trên nền tối.
-                  // Khi hover: màu xanh sáng hơn (blue-300) và có một lớp nền rất mờ (bg-blue-500/10) để tăng cảm giác tương tác.
-                  className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 
-                             hover:bg-blue-100/60 dark:hover:bg-blue-500/10 rounded-sm p-0.5 -m-0.5
-                             underline underline-offset-2 decoration-dotted decoration-blue-500/50 dark:decoration-blue-400/50
-                             cursor-pointer transition-all duration-150 ease-in-out"
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
                   onClick={() => handleWordClick(part)}
                   role="button" tabIndex={0}
                   onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
@@ -594,28 +604,16 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             return <span key={`${index}-${partIndex}`}>{part}</span>;
           }).filter(Boolean);
 
-          // Logic phát hiện tiêu đề chương và đề mục được giữ nguyên nhưng style được tinh chỉnh.
           const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
           const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
 
-          if (isLikelyChapterTitle) {
-            // Dark mode: Tiêu đề chính màu trắng (text-white) để có độ tương phản cao nhất, tạo sự nổi bật.
-            // Sử dụng font-sans để tạo sự tương phản với font-serif của nội dung chính.
-            return <h2 key={`line-${index}`} className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-4 mb-8 text-center font-sans tracking-tight">{renderableParts}</h2>;
-          }
-          if (isLikelySectionTitle) {
-            // Dark mode: Tiêu đề phụ màu trắng ngà (gray-100), dịu hơn tiêu đề chính, tạo hệ thống phân cấp.
-            return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-10 mb-5 font-sans">{renderableParts}</h3>;
-          }
-          // Nội dung chính:
-          // Dark mode: màu chữ gray-300 (trắng ngà) giúp giảm mỏi mắt so với màu trắng tinh.
-          // Giãn dòng lớn (leading-loose) và căn đều hai lề (text-justify) giúp dễ đọc và trông chuyên nghiệp hơn.
-          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-justify">{renderableParts}</p>;
+          if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
+          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
+          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
         })}
       </div>
     );
   };
-  // END: === PHẦN NÂNG CẤP DARK MODE CHO NỘI DUNG SÁCH ===
 
   const togglePlayPause = () => {
     if (!audioPlayerRef.current) return;
@@ -708,7 +706,8 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   );
 
   return (
-    <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
+    // Bỏ class 'dark' ở đây, hook sẽ tự quản lý
+    <div className={`flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {/* Header */}
       {selectedBookId && (
         <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 py-2 sm:py-3`}>
@@ -742,7 +741,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             onClose={toggleSidebar}
             book={currentBook}
             isDarkMode={isDarkMode}
-            toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+            setDarkMode={setDarkMode} // BƯỚC 3: TRUYỀN PROP MỚI
           />
       )}
 
@@ -760,7 +759,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
                 
-                {/* === CÁC NÚT HÀNH ĐỘNG === */}
                 <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
                   {currentUser && bookVocabularyCardIds.length > 0 && (
                       <button
