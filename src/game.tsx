@@ -145,18 +145,17 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
         className={`fixed inset-y-0 left-0 w-72 sm:w-80 bg-white dark:bg-gray-800 shadow-xl z-40 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ transitionProperty: 'transform, background-color, border-color, color' }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="sidebar-title"
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 transition-colors duration-300">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <h2 id="sidebar-title" className="text-lg font-semibold text-gray-800 dark:text-white truncate">
             {book?.title || "Menu"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Đóng menu"
           >
             <XIcon />
@@ -169,7 +168,7 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
             <ul className="space-y-1">
               {['Chương 1: Giới thiệu', 'Chương 2: Phát triển câu chuyện', 'Chương 3: Cao trào', 'Chương 4: Kết luận', 'Phụ lục'].map(item => (
                 <li key={item}>
-                  <a href="#" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                  <a href="#" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     {item}
                   </a>
                 </li>
@@ -177,11 +176,11 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
             </ul>
           </div>
 
-          <hr className="border-gray-200 dark:border-gray-700 transition-colors duration-300" />
+          <hr className="border-gray-200 dark:border-gray-700" />
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cài đặt hiển thị</h3>
-            <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+            <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <span className="text-gray-700 dark:text-gray-300">Chế độ tối</span>
               <button
                 onClick={toggleDarkMode}
@@ -202,7 +201,7 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
           </div>
         </div>
         
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 transition-colors duration-300">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">© 2024 Ebook Reader</p>
         </div>
       </div>
@@ -247,7 +246,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
     if (!isOpen || !stats) return null;
 
     const StatCard = ({ label, value }: { label: string, value: string | number }) => (
-        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center shadow transition-colors duration-300">
+        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center shadow">
             <p className="text-sm text-gray-600 dark:text-gray-300">{label}</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{value.toLocaleString()}</p>
         </div>
@@ -278,7 +277,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
                         Thống kê
                     </h2>
@@ -303,7 +302,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                         <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">Tần suất từ vựng</h3>
 
                         {/* Elegant Tab Control */}
-                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4 transition-colors duration-300">
+                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4">
                             <TabButton
                                 isActive={activeTab === 'in'}
                                 onClick={() => setActiveTab('in')}
@@ -322,13 +321,13 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                         <div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]">
                             <ul className="space-y-1">
                                 {activeTab === 'in' && inDictionaryWords.map(([word, count]) => (
-                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors duration-200">
+                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60">
                                         <span className="font-medium text-blue-600 dark:text-blue-400">{word}</span>
                                         <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
                                     </li>
                                 ))}
                                 {activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (
-                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors duration-200">
+                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60">
                                         <span className="font-medium text-gray-700 dark:text-gray-300">{word}</span>
                                         <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
                                     </li>
@@ -561,7 +560,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const contentLines = currentBook.content.trim().split(/\n+/);
 
     return (
-      <div className="font-['Inter',_sans-serif] px-2 sm:px-4 pb-24 transition-colors duration-300">
+      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
@@ -674,10 +673,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 role="button" tabIndex={0}
                 onKeyPress={(e) => e.key === 'Enter' && handleSelectBook(book.id)}
               >
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-all duration-300 group-hover:shadow-xl">
+                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-shadow group-hover:shadow-xl">
                   {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">{book.title}</div>}
                 </div>
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">{book.title}</h3>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">{book.title}</h3>
                 {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>}
               </div>
             ))}
@@ -688,14 +687,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   );
 
   return (
-    <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300`}>
+    <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {/* Header */}
       {selectedBookId && (
         <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 py-2 sm:py-3`}>
           {currentBook ? (
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               aria-label="Mở menu"
             >
               <MenuIcon />
@@ -729,14 +728,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
       {/* Main content */}
       {!selectedBookId ? (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850 transition-colors duration-300">
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
           {renderLibrary()}
         </main>
       ) : (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8 transition-colors duration-300">
-          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10 relative transition-colors duration-300">
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
+          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10 relative">
             {currentBook && (
-              <div className="mb-6 sm:mb-8 pb-4 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+              <div className="mb-6 sm:mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
                 
@@ -779,7 +778,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       />
 
       {selectedBookId && currentBook?.audioUrl && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30 transition-colors duration-300">
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30">
           <div className="max-w-3xl mx-auto flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={togglePlayPause}
