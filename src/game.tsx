@@ -209,15 +209,7 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
   );
 };
 
-// --- Book Stats Modal Component ---
-interface BookStatsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  stats: BookStats | null;
-  bookTitle: string;
-  vocabMap: Map<string, Vocabulary>;
-}
-
+// --- Book Stats Modal Component (UPDATED) ---
 const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats, bookTitle, vocabMap }) => {
     const [activeTab, setActiveTab] = useState<'in' | 'out'>('in');
 
@@ -236,6 +228,13 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
         return { inDictionaryWords: inDict, outOfDictionaryWords: outDict };
     }, [stats, vocabMap]);
 
+    // Reset tab to 'in' whenever the modal opens with new stats
+    useEffect(() => {
+      if(isOpen) {
+        setActiveTab('in');
+      }
+    }, [isOpen]);
+
     if (!isOpen || !stats) return null;
 
     const StatCard = ({ label, value }: { label: string, value: string | number }) => (
@@ -245,9 +244,28 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
         </div>
     );
 
+    const TabButton = ({ isActive, onClick, label, count }: { isActive: boolean, onClick: () => void, label: string, count: number }) => (
+        <button
+            onClick={onClick}
+            className={`flex-1 text-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                isActive
+                    ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-600/50'
+            }`}
+            aria-current={isActive ? 'page' : undefined}
+        >
+            {label}
+            <span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium transition-colors ${
+                isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300' : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-200'
+            }`}>
+                {count}
+            </span>
+        </button>
+    );
+
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div 
+            <div
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
@@ -270,66 +288,48 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
 
                     <div>
                         <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">Tần suất từ vựng</h3>
-                        
-                        {/* Tab navigation */}
-                        <div className="border-b border-gray-200 dark:border-gray-700 mb-4">
-                            <nav className="-mb-px flex space-x-4" aria-label="Tabs">
-                                <button
-                                    onClick={() => setActiveTab('in')}
-                                    className={`group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                                        activeTab === 'in'
-                                            ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'
-                                    }`}
-                                    aria-current={activeTab === 'in' ? 'page' : undefined}
-                                >
-                                    Trong Từ điển
-                                    <span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${
-                                        activeTab === 'in' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                                    }`}>
-                                        {inDictionaryWords.length}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('out')}
-                                    className={`group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                                        activeTab === 'out'
-                                            ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'
-                                    }`}
-                                    aria-current={activeTab === 'out' ? 'page' : undefined}
-                                >
-                                    Ngoài Từ điển
-                                    <span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${
-                                        activeTab === 'out' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                                    }`}>
-                                        {outOfDictionaryWords.length}
-                                    </span>
-                                </button>
-                            </nav>
+
+                        {/* Elegant Tab Control */}
+                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4">
+                            <TabButton
+                                isActive={activeTab === 'in'}
+                                onClick={() => setActiveTab('in')}
+                                label="Trong Từ điển"
+                                count={inDictionaryWords.length}
+                            />
+                            <TabButton
+                                isActive={activeTab === 'out'}
+                                onClick={() => setActiveTab('out')}
+                                label="Ngoài Từ điển"
+                                count={outOfDictionaryWords.length}
+                            />
                         </div>
-                        
-                        {/* Tab content */}
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 min-h-[10rem]">
+
+                        {/* Tab Content */}
+                        <div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]">
                             <ul className="space-y-1">
                                 {activeTab === 'in' && inDictionaryWords.map(([word, count]) => (
-                                    <li key={word} className="flex justify-between items-center text-sm p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60">
                                         <span className="font-medium text-blue-600 dark:text-blue-400">{word}</span>
                                         <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
                                     </li>
                                 ))}
                                 {activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (
-                                    <li key={word} className="flex justify-between items-center text-sm p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60">
                                         <span className="font-medium text-gray-700 dark:text-gray-300">{word}</span>
                                         <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
                                     </li>
                                 ))}
                             </ul>
-                             {activeTab === 'in' && inDictionaryWords.length === 0 && (
-                                <p className="text-center text-gray-500 dark:text-gray-400 pt-12">Không có từ nào trong từ điển được tìm thấy.</p>
+                            {activeTab === 'in' && inDictionaryWords.length === 0 && (
+                                <div className="flex items-center justify-center h-full min-h-[8rem]">
+                                    <p className="text-center text-gray-500 dark:text-gray-400">Không có từ nào trong từ điển được tìm thấy.</p>
+                                </div>
                             )}
                             {activeTab === 'out' && outOfDictionaryWords.length === 0 && (
-                                <p className="text-center text-gray-500 dark:text-gray-400 pt-12">Tất cả các từ duy nhất đều có trong từ điển.</p>
+                                <div className="flex items-center justify-center h-full min-h-[8rem]">
+                                    <p className="text-center text-gray-500 dark:text-gray-400">Tất cả các từ duy nhất đều có trong từ điển.</p>
+                                </div>
                             )}
                         </div>
                     </div>
