@@ -689,34 +689,30 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {/* Header */}
-      <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 ${selectedBookId ? 'py-2 sm:py-3' : 'py-4'}`}>
-        {selectedBookId && currentBook ? (
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-            aria-label="Mở menu"
-          >
-            <MenuIcon />
-          </button>
-        ) : (
-          <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 text-xl sm:text-2xl`}>
-            Thư viện Sách
-          </h1>
-        )}
+      {selectedBookId && (
+        <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 py-2 sm:py-3`}>
+          {currentBook ? (
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              aria-label="Mở menu"
+            >
+              <MenuIcon />
+            </button>
+          ) : <div />}
 
-        {selectedBookId && (
           <button
-            onClick={handleBackToLibrary}
-            className="flex items-center h-8 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
-            aria-label="Quay lại Thư viện"
-          >
-            <span className="bg-gray-400 dark:bg-gray-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back to Library" className="w-5 h-5" />
-            </span>
-            <span className="ml-1.5 mr-2.5 font-semibold text-sm">BACK</span>
-          </button>
-        )}
-      </header>
+              onClick={handleBackToLibrary}
+              className="flex items-center h-8 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-500"
+              aria-label="Quay lại Thư viện"
+            >
+              <span className="bg-gray-400 dark:bg-gray-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back to Library" className="w-5 h-5" />
+              </span>
+              <span className="ml-1.5 mr-2.5 font-semibold text-sm">BACK</span>
+            </button>
+        </header>
+      )}
 
       {/* Sidebar */}
       {currentBook && (
@@ -733,6 +729,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       {/* Main content */}
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
+          <div className='p-4 md:p-6 bg-white dark:bg-gray-800'>
+            <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 text-xl sm:text-2xl`}>
+              Thư viện Sách
+            </h1>
+          </div>
           {renderLibrary()}
         </main>
       ) : (
