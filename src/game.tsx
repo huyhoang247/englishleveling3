@@ -729,11 +729,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       {/* Main content */}
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
-          <div className='p-4 md:p-6 bg-white dark:bg-gray-800'>
-            <h1 className={`font-bold text-gray-900 dark:text-white transition-all duration-300 text-xl sm:text-2xl`}>
-              Thư viện Sách
-            </h1>
-          </div>
           {renderLibrary()}
         </main>
       ) : (
