@@ -1,6 +1,6 @@
 // --- START OF FILE blacksmith.tsx ---
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'; // Thêm useRef
 
 // --- START: DATA IMPORTS ---
 import { uiAssets, itemAssets } from './game-assets.ts';
@@ -144,7 +144,37 @@ const Blacksmith = ({ onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [upgradeChance, setUpgradeChance] = useState(0);
 
-  // --- START: PERFORMANCE OPTIMIZATION (FIXES LAG) ---
+  // --- START: TỐI ƯU SCROLL (GIẢM LAG KHI CUỘN) ---
+  const inventoryGridRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  useEffect(() => {
+    const gridElement = inventoryGridRef.current;
+    if (!gridElement) return;
+
+    const handleScroll = () => {
+      if (!isScrolling) {
+        setIsScrolling(true);
+      }
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+    };
+
+    gridElement.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      gridElement.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [isScrolling]);
+  // --- END: TỐI ƯU SCROLL ---
+
   const enrichPlayerItem = useCallback((playerItem: PlayerItem | null): EnrichedPlayerItem | null => {
     if (!playerItem) return null;
     const definition = itemDatabase.get(playerItem.id);
@@ -210,8 +240,7 @@ const Blacksmith = ({ onClose }) => {
     }
     return true;
   }, [playerInventory]);
-  // --- END: PERFORMANCE OPTIMIZATION ---
-
+  
   useEffect(() => {
     setUpgradeChance(upgradeWeaponSlot && upgradeMaterialSlot ? 50 : 0);
   }, [upgradeWeaponSlot, upgradeMaterialSlot]);
@@ -416,13 +445,14 @@ const Blacksmith = ({ onClose }) => {
             </div>
           )}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-2xl border border-blue-500/30">
-            {/* TIÊU ĐỀ "TÚI ĐỒ" ĐÃ BỊ XÓA */}
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[20rem] sm:max-h-full overflow-y-auto hide-scrollbar pr-2">
+            {/* THÊM ref VÀ className CHO VÙNG SCROLL */}
+            <div ref={inventoryGridRef} className={`grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[20rem] sm:max-h-full overflow-y-auto hide-scrollbar pr-2 ${isScrolling ? 'is-scrolling' : ''}`}>
               {fullInventory.map((item) => {
                   if (!item) return null;
                   const isSSRRarity = item.rarity === 'SSR';
                   return (
-                    <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
+                    // THÊM will-change-transform
+                    <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden will-change-transform ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
                       {isSSRRarity && ( <> <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div> <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-cyan-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-fuchsia-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute top-1 right-1 text-cyan-300 text-xs opacity-60 group-hover:text-cyan-100 transition-colors">✨</div> </>)}
                       {item.quantity > 1 && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>)}
                       {typeof item.icon === 'string' && item.icon.startsWith('http') ? (<img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />) : (<div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>)}
@@ -436,7 +466,20 @@ const Blacksmith = ({ onClose }) => {
       </div>
       <CustomAlert isVisible={alert.isVisible} message={alert.message} type={alert.type} onClose={hideAlert}/>
       <ForgingAnimation isProcessing={isProcessing} />
+      {/* THÊM CSS ĐỂ VÔ HIỆU HÓA HOVER KHI SCROLL */}
       <style jsx>{`
+        .is-scrolling .group:hover {
+            transform: none !important;
+            filter: none !important;
+            --tw-brightness: 1 !important;
+        }
+        .is-scrolling .group .group-hover\:opacity-100 {
+            opacity: 0 !important;
+        }
+        .is-scrolling .group .group-hover\:scale-110 {
+            transform: none !important;
+        }
+
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes scale-up { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out; }
