@@ -452,9 +452,11 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 </button>
             </div>
           )}
-          {/* --- START: MODIFIED INVENTORY PANEL --- */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-blue-500/30 flex flex-col">
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 flex-grow overflow-y-auto hide-scrollbar">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-blue-500/30">
+            {/* --- START: MODIFIED INVENTORY HEADER --- */}
+            {/* The header with title and slot count has been removed. */}
+            {/* --- END: MODIFIED INVENTORY HEADER --- */}
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-72 overflow-y-auto hide-scrollbar">
               {fullInventory.map((item) => {
                   if (!item) return null;
                   const isLegendary = item.rarity === 'legendary';
@@ -469,7 +471,6 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 })}
             </div>
           </div>
-          {/* --- END: MODIFIED INVENTORY PANEL --- */}
         </div>
       </div>
       <CustomAlert isVisible={alert.isVisible} message={alert.message} type={alert.type} onClose={hideAlert}/>
