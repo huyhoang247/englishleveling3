@@ -7,7 +7,6 @@ import { auth, db } from './firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
-import { useDarkMode } from './useDarkMode.ts'; // BƯỚC 3: IMPORT CUSTOM HOOK
 
 // --- Icons ---
 const PlayIcon = () => (
@@ -34,23 +33,11 @@ const XIcon = () => ( // For closing modals and sidebar
     </svg>
 );
 
+// THÊM ICON THỐNG KÊ
 const StatsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
   </svg>
-);
-
-// --- NEW ICONS FOR DARK MODE TOGGLE ---
-const SunIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zM4.464 4.95l-.707-.707a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414zM1.879 9.5a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM18.121 9.5a1 1 0 010 1.414l.707.707a1 1 0 011.414-1.414l-.707-.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-    </svg>
-);
-
-const MoonIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-    </svg>
 );
 
 
@@ -88,6 +75,7 @@ interface EbookReaderProps {
   showNavBar: () => void;
 }
 
+// THÊM INTERFACE CHO THỐNG KÊ SÁCH
 interface BookStats {
   totalWords: number;
   uniqueWordsCount: number;
@@ -114,11 +102,10 @@ interface BookSidebarProps {
   onClose: () => void;
   book: Book | undefined;
   isDarkMode: boolean;
-  // Sửa lại prop này để nhận hàm setter trực tiếp
-  setDarkMode: (isDark: boolean) => void;
+  toggleDarkMode: () => void;
 }
 
-const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDarkMode, setDarkMode }) => {
+const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDarkMode, toggleDarkMode }) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -158,17 +145,18 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
         className={`fixed inset-y-0 left-0 w-72 sm:w-80 bg-white dark:bg-gray-800 shadow-xl z-40 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ transitionProperty: 'transform, background-color, border-color, color' }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="sidebar-title"
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 transition-colors duration-300">
           <h2 id="sidebar-title" className="text-lg font-semibold text-gray-800 dark:text-white truncate">
             {book?.title || "Menu"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             aria-label="Đóng menu"
           >
             <XIcon />
@@ -181,7 +169,7 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
             <ul className="space-y-1">
               {['Chương 1: Giới thiệu', 'Chương 2: Phát triển câu chuyện', 'Chương 3: Cao trào', 'Chương 4: Kết luận', 'Phụ lục'].map(item => (
                 <li key={item}>
-                  <a href="#" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <a href="#" className="block px-3 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
                     {item}
                   </a>
                 </li>
@@ -189,39 +177,32 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
             </ul>
           </div>
 
-          <hr className="border-gray-200 dark:border-gray-700" />
+          <hr className="border-gray-200 dark:border-gray-700 transition-colors duration-300" />
 
-          {/* === REDESIGNED DARK MODE SETTING === */}
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Chế độ hiển thị</h3>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
-                <button
-                    onClick={() => setDarkMode(false)}
-                    className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
-                        !isDarkMode
-                            ? 'bg-white dark:bg-gray-700/80 text-blue-600 dark:text-blue-300 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700'
-                    }`}
-                >
-                    <SunIcon />
-                    Sáng
-                </button>
-                <button
-                    onClick={() => setDarkMode(true)}
-                    className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
-                        isDarkMode
-                            ? 'bg-blue-600 text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-700'
-                    }`}
-                >
-                    <MoonIcon />
-                    Tối
-                </button>
+            <h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cài đặt hiển thị</h3>
+            <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+              <span className="text-gray-700 dark:text-gray-300">Chế độ tối</span>
+              <button
+                onClick={toggleDarkMode}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 ${
+                  isDarkMode ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+                role="switch"
+                aria-checked={isDarkMode}
+              >
+                <span className="sr-only">Chuyển đổi chế độ tối</span>
+                <span
+                  className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out ${
+                    isDarkMode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </div>
         </div>
         
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 transition-colors duration-300">
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">© 2024 Ebook Reader</p>
         </div>
       </div>
@@ -266,7 +247,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
     if (!isOpen || !stats) return null;
 
     const StatCard = ({ label, value }: { label: string, value: string | number }) => (
-        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center shadow">
+        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center shadow transition-colors duration-300">
             <p className="text-sm text-gray-600 dark:text-gray-300">{label}</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{value.toLocaleString()}</p>
         </div>
@@ -297,7 +278,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
                         Thống kê
                     </h2>
@@ -322,7 +303,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                         <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">Tần suất từ vựng</h3>
 
                         {/* Elegant Tab Control */}
-                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4">
+                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4 transition-colors duration-300">
                             <TabButton
                                 isActive={activeTab === 'in'}
                                 onClick={() => setActiveTab('in')}
@@ -341,13 +322,13 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                         <div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]">
                             <ul className="space-y-1">
                                 {activeTab === 'in' && inDictionaryWords.map(([word, count]) => (
-                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60">
+                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors duration-200">
                                         <span className="font-medium text-blue-600 dark:text-blue-400">{word}</span>
                                         <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
                                     </li>
                                 ))}
                                 {activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (
-                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60">
+                                    <li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors duration-200">
                                         <span className="font-medium text-gray-700 dark:text-gray-300">{word}</span>
                                         <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 px-2 py-0.5 rounded-full">{count} lần</span>
                                     </li>
@@ -386,14 +367,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  // BƯỚC 3: SỬ DỤNG CUSTOM HOOK
-  const [isDarkMode, setDarkMode] = useDarkMode();
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
   
+  // THÊM STATE CHO MODAL THỐNG KÊ
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -459,6 +440,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     return Array.from(wordsInBook).map(word => cardIdMap.get(word)).filter((id): id is number => id !== undefined);
   }, [currentBook, vocabMap]);
   
+  // LOGIC TÍNH TOÁN THỐNG KÊ SÁCH
   const bookStats = useMemo<BookStats | null>(() => {
     if (!currentBook || vocabMap.size === 0) {
       return null;
@@ -485,6 +467,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const uniqueWordsCount = uniqueWords.size;
     const vocabMismatchCount = uniqueWordsCount - vocabMatchCount;
     
+    // Sắp xếp map tần suất theo số lần xuất hiện giảm dần
     const sortedFrequencies = new Map([...wordFrequencies.entries()].sort((a, b) => b[1] - a[1]));
 
     return {
@@ -523,14 +506,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]);
 
-  // XÓA useEffect này đi vì logic đã được chuyển vào hook useDarkMode
-  // useEffect(() => {
-  //   if (isDarkMode) {
-  //     document.documentElement.classList.add('dark');
-  //   } else {
-  //     document.documentElement.classList.remove('dark');
-  //   }
-  // }, [isDarkMode]);
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
@@ -579,7 +561,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const contentLines = currentBook.content.trim().split(/\n+/);
 
     return (
-      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
+      <div className="font-['Inter',_sans-serif] px-2 sm:px-4 pb-24 transition-colors duration-300">
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
@@ -692,10 +674,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 role="button" tabIndex={0}
                 onKeyPress={(e) => e.key === 'Enter' && handleSelectBook(book.id)}
               >
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-shadow group-hover:shadow-xl">
+                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-all duration-300 group-hover:shadow-xl">
                   {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">{book.title}</div>}
                 </div>
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">{book.title}</h3>
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">{book.title}</h3>
                 {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>}
               </div>
             ))}
@@ -706,15 +688,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   );
 
   return (
-    // Bỏ class 'dark' ở đây, hook sẽ tự quản lý
-    <div className={`flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
+    <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300`}>
       {/* Header */}
       {selectedBookId && (
         <header className={`flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md flex-shrink-0 sticky top-0 z-20 transition-all duration-300 py-2 sm:py-3`}>
           {currentBook ? (
             <button
               onClick={toggleSidebar}
-              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
               aria-label="Mở menu"
             >
               <MenuIcon />
@@ -741,24 +722,25 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             onClose={toggleSidebar}
             book={currentBook}
             isDarkMode={isDarkMode}
-            setDarkMode={setDarkMode} // BƯỚC 3: TRUYỀN PROP MỚI
+            toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
           />
       )}
 
 
       {/* Main content */}
       {!selectedBookId ? (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850 transition-colors duration-300">
           {renderLibrary()}
         </main>
       ) : (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
-          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10 relative">
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8 transition-colors duration-300">
+          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10 relative transition-colors duration-300">
             {currentBook && (
-              <div className="mb-6 sm:mb-8 pb-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="mb-6 sm:mb-8 pb-4 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
                 
+                {/* === CÁC NÚT HÀNH ĐỘNG === */}
                 <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
                   {currentUser && bookVocabularyCardIds.length > 0 && (
                       <button
@@ -797,7 +779,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       />
 
       {selectedBookId && currentBook?.audioUrl && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30">
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30 transition-colors duration-300">
           <div className="max-w-3xl mx-auto flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={togglePlayPause}
