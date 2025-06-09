@@ -452,12 +452,9 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 </button>
             </div>
           )}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-blue-500/30">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-blue-300 flex items-center gap-2"><span>🎒</span> Túi Đồ</h2>
-                <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80"><span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{playerInventory.length}/{totalInventorySlots}</span></div>
-            </div>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-72 overflow-y-auto hide-scrollbar">
+          {/* --- START: MODIFIED INVENTORY PANEL --- */}
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl shadow-2xl border border-blue-500/30 flex flex-col">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 flex-grow overflow-y-auto hide-scrollbar">
               {fullInventory.map((item) => {
                   if (!item) return null;
                   const isLegendary = item.rarity === 'legendary';
@@ -472,6 +469,7 @@ const Blacksmith = ({ onClose }) => { // Accept onClose prop
                 })}
             </div>
           </div>
+          {/* --- END: MODIFIED INVENTORY PANEL --- */}
         </div>
       </div>
       <CustomAlert isVisible={alert.isVisible} message={alert.message} type={alert.type} onClose={hideAlert}/>
