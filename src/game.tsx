@@ -278,15 +278,15 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
-                        Thống kê sách: <span className="text-blue-600 dark:text-blue-400">{bookTitle}</span>
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                        Thống kê
                     </h2>
                     <button 
                         onClick={onClose} 
-                        className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
+                        className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
                         aria-label="Đóng"
                     >
-                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" />
+                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6 flex-shrink-0" />
                     </button>
                 </div>
 
