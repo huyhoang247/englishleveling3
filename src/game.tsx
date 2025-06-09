@@ -210,6 +210,14 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
 };
 
 // --- Book Stats Modal Component (UPDATED) ---
+interface BookStatsModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    stats: BookStats | null;
+    bookTitle: string;
+    vocabMap: Map<string, Vocabulary>;
+}
+
 const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats, bookTitle, vocabMap }) => {
     const [activeTab, setActiveTab] = useState<'in' | 'out'>('in');
 
@@ -282,8 +290,8 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <StatCard label="Tổng số từ" value={stats.totalWords} />
                         <StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} />
-                        <StatCard label="Từ trong từ điển" value={stats.vocabMatchCount} />
-                        <StatCard label="Từ ngoài từ điển" value={stats.vocabMismatchCount} />
+                        <StatCard label="Có sẵn" value={stats.vocabMatchCount} />
+                        <StatCard label="Chưa có" value={stats.vocabMismatchCount} />
                     </div>
 
                     <div>
@@ -294,13 +302,13 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                             <TabButton
                                 isActive={activeTab === 'in'}
                                 onClick={() => setActiveTab('in')}
-                                label="Trong Từ điển"
+                                label="Có sẵn"
                                 count={inDictionaryWords.length}
                             />
                             <TabButton
                                 isActive={activeTab === 'out'}
                                 onClick={() => setActiveTab('out')}
-                                label="Ngoài Từ điển"
+                                label="Chưa có"
                                 count={outOfDictionaryWords.length}
                             />
                         </div>
@@ -323,12 +331,12 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                             </ul>
                             {activeTab === 'in' && inDictionaryWords.length === 0 && (
                                 <div className="flex items-center justify-center h-full min-h-[8rem]">
-                                    <p className="text-center text-gray-500 dark:text-gray-400">Không có từ nào trong từ điển được tìm thấy.</p>
+                                    <p className="text-center text-gray-500 dark:text-gray-400">Không có từ nào có sẵn được tìm thấy.</p>
                                 </div>
                             )}
                             {activeTab === 'out' && outOfDictionaryWords.length === 0 && (
                                 <div className="flex items-center justify-center h-full min-h-[8rem]">
-                                    <p className="text-center text-gray-500 dark:text-gray-400">Tất cả các từ duy nhất đều có trong từ điển.</p>
+                                    <p className="text-center text-gray-500 dark:text-gray-400">Tất cả các từ duy nhất đều đã có sẵn.</p>
                                 </div>
                             )}
                         </div>
