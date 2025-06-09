@@ -416,8 +416,8 @@ const Blacksmith = ({ onClose }) => {
             </div>
           )}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-2xl border border-blue-500/30">
-            <h3 className="text-xl font-bold text-blue-300 mb-4">Túi Đồ</h3>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-72 overflow-y-auto hide-scrollbar pr-2">
+            {/* TIÊU ĐỀ "TÚI ĐỒ" ĐÃ BỊ XÓA */}
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[20rem] sm:max-h-full overflow-y-auto hide-scrollbar pr-2">
               {fullInventory.map((item) => {
                   if (!item) return null;
                   const isSSRRarity = item.rarity === 'SSR';
