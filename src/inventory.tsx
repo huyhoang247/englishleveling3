@@ -1,6 +1,6 @@
 // --- START OF FILE inventory.tsx ---
 
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, memo, useRef } from 'react'; // Thêm useRef
 import { uiAssets } from './game-assets.ts'; 
 import { itemDatabase } from './inventory/item-database.ts'; 
 import { playerInventoryData } from './inventory/player-inventory-data.ts'; 
@@ -155,7 +155,8 @@ const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItem
   const totalQuantity = itemGroup.variants.reduce((sum, v) => sum + v.quantity, 0);
 
   return (
-    <div className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(itemGroup.rarity)} overflow-hidden`} onClick={() => onItemClick(itemGroup)}>
+    // TỐI ƯU 2: Thêm `will-change-transform` để báo cho trình duyệt tối ưu hóa animation scale
+    <div className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(itemGroup.rarity)} overflow-hidden will-change-transform`} onClick={() => onItemClick(itemGroup)}>
       {isSSRRarity && ( <> <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div> <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-cyan-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-fuchsia-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute inset-0 bg-gradient-radial from-purple-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div> <div className="absolute top-1 right-1 text-cyan-300 text-xs opacity-60 group-hover:text-cyan-100 transition-colors">✨</div> <div className="absolute bottom-1 left-1 text-fuchsia-300 text-xs opacity-60 group-hover:text-fuchsia-100 transition-colors">✨</div> </>)}
       {totalQuantity > 1 && itemGroup.type !== 'currency' && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{totalQuantity}</div>)}
       {itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" /> : <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{itemGroup.icon}</div>}
@@ -182,6 +183,44 @@ export default function Inventory({ onClose }: InventoryProps) {
   
   const totalInventorySlots = 50;
   const occupiedSlots = inventory.length;
+
+  // --- START: TỐI ƯU 1: XỬ LÝ SCROLL ĐỂ GIẢM LAG ---
+  const gridRef = useRef<HTMLDivElement>(null);
+  const scrollTimeout = useRef<number | null>(null);
+  const [scrollingClass, setScrollingClass] = useState('');
+
+  useEffect(() => {
+    const gridElement = gridRef.current;
+    if (!gridElement) return;
+
+    const handleScroll = () => {
+      // Khi bắt đầu scroll, thêm class để vô hiệu hóa hover
+      if (!scrollingClass) {
+          setScrollingClass('is-scrolling');
+      }
+
+      // Xóa timeout cũ nếu có
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+
+      // Đặt timeout mới. Nếu không scroll nữa trong 150ms, xóa class đi
+      scrollTimeout.current = window.setTimeout(() => {
+        setScrollingClass('');
+        scrollTimeout.current = null;
+      }, 150);
+    };
+
+    gridElement.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      gridElement.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, [scrollingClass]); // Thêm scrollingClass vào dependency array
+  // --- END: TỐI ƯU 1 ---
 
   useEffect(() => {
     if (selectedDetailItem) {
@@ -236,7 +275,20 @@ export default function Inventory({ onClose }: InventoryProps) {
         <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80"><span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span></div>
       </div>
       
+      {/* THÊM STYLE CHO VIỆC TỐI ƯU SCROLL */}
       <style>{`
+        /* Vô hiệu hóa các hiệu ứng hover tốn kém khi đang scroll */
+        .is-scrolling .group:hover {
+            transform: none !important;
+            filter: none !important;
+        }
+        .is-scrolling .group .group-hover\:opacity-100 {
+            opacity: 0 !important;
+        }
+        .is-scrolling .group .group-hover\:scale-110 {
+            transform: none !important;
+        }
+        
         @keyframes pulse-stronger { 0%,100% {opacity:.2;transform:scale(1)} 50% {opacity:.3;transform:scale(1.02)} }
         @keyframes fade-in-out { 0%,100% {opacity:0;transform:scale(.9)} 50% {opacity:.1;transform:scale(1)} }
         @keyframes ping-slow { 0% {transform:scale(.9);opacity:.6} 50% {transform:scale(1.1);opacity:.1} 100% {transform:scale(.9);opacity:.6} }
@@ -256,7 +308,8 @@ export default function Inventory({ onClose }: InventoryProps) {
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation}/>
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
-      <div className="grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden">
+      {/* THÊM ref VÀ className VÀO LƯỚI */}
+      <div ref={gridRef} className={`grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
         {inventory.map((itemGroup: any) => (
             <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleItemClick} />
         ))}
