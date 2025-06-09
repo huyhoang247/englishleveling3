@@ -553,6 +553,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const groupedBooks = groupBooksByCategory(booksData);
 
+  // START: === PHẦN NÂNG CẤP DARK MODE CHO NỘI DUNG SÁCH ===
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
@@ -560,20 +561,28 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const contentLines = currentBook.content.trim().split(/\n+/);
 
     return (
-      <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
+      // Sử dụng font-serif để có cảm giác đọc sách truyền thống, dễ đọc hơn trên màn hình.
+      <div className="font-serif px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
-          if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
+          if (line.trim() === '') return <div key={`blank-${index}`} className="h-4 sm:h-5"></div>; // Tăng khoảng cách cho các đoạn trống
+          
           const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
           const renderableParts = parts.map((part, partIndex) => {
             if (!part) return null;
             const isWord = /^\w+$/.test(part);
             const normalizedPart = part.toLowerCase();
             const isVocabWord = isWord && vocabMap.has(normalizedPart);
+
             if (isVocabWord) {
               return (
                 <span
                   key={`${index}-${partIndex}`}
-                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
+                  // Dark mode: màu xanh sáng (blue-400) nổi bật trên nền tối.
+                  // Khi hover: màu xanh sáng hơn (blue-300) và có một lớp nền rất mờ (bg-blue-500/10) để tăng cảm giác tương tác.
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 
+                             hover:bg-blue-100/60 dark:hover:bg-blue-500/10 rounded-sm p-0.5 -m-0.5
+                             underline underline-offset-2 decoration-dotted decoration-blue-500/50 dark:decoration-blue-400/50
+                             cursor-pointer transition-all duration-150 ease-in-out"
                   onClick={() => handleWordClick(part)}
                   role="button" tabIndex={0}
                   onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
@@ -585,16 +594,28 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             return <span key={`${index}-${partIndex}`}>{part}</span>;
           }).filter(Boolean);
 
+          // Logic phát hiện tiêu đề chương và đề mục được giữ nguyên nhưng style được tinh chỉnh.
           const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
           const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
 
-          if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
-          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
-          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+          if (isLikelyChapterTitle) {
+            // Dark mode: Tiêu đề chính màu trắng (text-white) để có độ tương phản cao nhất, tạo sự nổi bật.
+            // Sử dụng font-sans để tạo sự tương phản với font-serif của nội dung chính.
+            return <h2 key={`line-${index}`} className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mt-4 mb-8 text-center font-sans tracking-tight">{renderableParts}</h2>;
+          }
+          if (isLikelySectionTitle) {
+            // Dark mode: Tiêu đề phụ màu trắng ngà (gray-100), dịu hơn tiêu đề chính, tạo hệ thống phân cấp.
+            return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-10 mb-5 font-sans">{renderableParts}</h3>;
+          }
+          // Nội dung chính:
+          // Dark mode: màu chữ gray-300 (trắng ngà) giúp giảm mỏi mắt so với màu trắng tinh.
+          // Giãn dòng lớn (leading-loose) và căn đều hai lề (text-justify) giúp dễ đọc và trông chuyên nghiệp hơn.
+          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-justify">{renderableParts}</p>;
         })}
       </div>
     );
   };
+  // END: === PHẦN NÂNG CẤP DARK MODE CHO NỘI DUNG SÁCH ===
 
   const togglePlayPause = () => {
     if (!audioPlayerRef.current) return;
