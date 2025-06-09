@@ -7,7 +7,7 @@ import { auth, db } from './firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
-import { useDarkMode } from './useDarkMode'; // BƯỚC 3: IMPORT CUSTOM HOOK
+import { useDarkMode } from './useDarkMode.ts'; // BƯỚC 3: IMPORT CUSTOM HOOK
 
 // --- Icons ---
 const PlayIcon = () => (
