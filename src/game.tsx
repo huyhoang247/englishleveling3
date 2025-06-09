@@ -281,12 +281,16 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
                         Thống kê sách: <span className="text-blue-600 dark:text-blue-400">{bookTitle}</span>
                     </h2>
-                    <button onClick={onClose} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700">
-                        <XIcon />
+                    <button 
+                        onClick={onClose} 
+                        className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
+                        aria-label="Đóng"
+                    >
+                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" />
                     </button>
                 </div>
 
-                <div className="p-6 overflow-y-auto space-y-6">
+                <div className="p-6 overflow-y-auto space-y-6 pb-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <StatCard label="Tổng số từ" value={stats.totalWords} />
                         <StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} />
@@ -343,14 +347,6 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                     </div>
                 </div>
 
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-right">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
-                    >
-                        Đóng
-                    </button>
-                </div>
             </div>
         </div>
     );
