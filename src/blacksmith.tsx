@@ -44,7 +44,6 @@ const SKILL_POOLS_BY_RANK = {
   A: [{ name: 'Sấm Sét', icon: '⚡', rarity: 'A' as ItemRank, description: 'Triệu hồi sấm sét tấn công một mục tiêu.' }],
   S: [{ name: 'Phán Quyết Thần Thánh', icon: '🌟', rarity: 'S' as ItemRank, description: 'Gây sát thương lớn và hồi HP.' }],
   SR: [{ name: 'Thiên Thạch Giáng', icon: '☄️', rarity: 'SR' as ItemRank, description: 'Triệu hồi thiên thạch hủy diệt.' }],
-  SSR: [{ name: 'Vết Nứt Hư Không', icon: '🌌', rarity: 'SSR' as ItemRank, description: 'Mở ra một vết nứt gây sát thương theo % máu tối đa.' }],
 };
 
 const SKILL_BOOKS = [
@@ -53,7 +52,7 @@ const SKILL_BOOKS = [
     { id: 9003, name: 'Sách Kỹ Năng B', type: 'skill_book', icon: '📙', rarity: 'B' as ItemRank, quantity: 1, instanceId: 9003 },
 ];
 
-const RANK_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
+const RANK_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
 
 const getNextRank = (currentRank: ItemRank): ItemRank => {
   const currentIndex = RANK_ORDER.indexOf(currentRank);
@@ -78,7 +77,6 @@ const getRarityColor = (rarity: ItemRank) => {
       case 'A': return 'border-purple-600';
       case 'S': return 'border-yellow-400';
       case 'SR': return 'border-red-500';
-      case 'SSR': return 'border-cyan-400 ssr-border-anim';
       default: return 'border-gray-500';
     }
 };
@@ -91,7 +89,6 @@ const getRarityGradient = (rarity: ItemRank) => {
       case 'A': return 'from-purple-800/80 to-gray-800/70';
       case 'S': return 'from-yellow-900/80 via-gray-800/70 to-gray-800/70';
       case 'SR': return 'from-red-800/80 to-gray-800/70';
-      case 'SSR': return 'from-cyan-900/80 via-purple-900/70 to-fuchsia-900/80';
       default: return 'from-gray-700/70 to-gray-800/70';
     }
 };
@@ -104,7 +101,6 @@ const getRarityTextColor = (rarity: ItemRank) => {
       case 'A': return 'text-purple-400';
       case 'S': return 'text-yellow-300';
       case 'SR': return 'text-red-400';
-      case 'SSR': return 'text-cyan-200 ssr-text-anim';
       default: return 'text-gray-300';
     }
 };
@@ -115,7 +111,6 @@ const getRarityGlow = (rarity: ItemRank) => {
       case 'A': return 'shadow-md shadow-purple-500/40';
       case 'S': return 'shadow-lg shadow-yellow-400/50';
       case 'SR': return 'shadow-xl shadow-red-500/50';
-      case 'SSR': return 'shadow-xl ssr-item-glow';
       default: return '';
     }
 };
@@ -449,11 +444,9 @@ const Blacksmith = ({ onClose }) => {
             <div ref={inventoryGridRef} className={`grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[20rem] sm:max-h-full overflow-y-auto hide-scrollbar pr-2 ${isScrolling ? 'is-scrolling' : ''}`}>
               {fullInventory.map((item) => {
                   if (!item) return null;
-                  const isSSRRarity = item.rarity === 'SSR';
                   return (
                     // THÊM will-change-transform
                     <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden will-change-transform ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
-                      {isSSRRarity && ( <> <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[calc(100%+4rem)] transition-transform duration-1000 ease-out opacity-0 group-hover:opacity-100 pointer-events-none z-10"></div> <div className="absolute top-0.5 left-0.5 w-4 h-4 border-t-2 border-l-2 border-cyan-400/50 rounded-tl-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute bottom-0.5 right-0.5 w-4 h-4 border-b-2 border-r-2 border-fuchsia-400/50 rounded-br-md opacity-40 group-hover:opacity-70 transition-opacity"></div> <div className="absolute top-1 right-1 text-cyan-300 text-xs opacity-60 group-hover:text-cyan-100 transition-colors">✨</div> </>)}
                       {item.quantity > 1 && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>)}
                       {typeof item.icon === 'string' && item.icon.startsWith('http') ? (<img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />) : (<div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>)}
                       <ItemTooltip item={item} />
@@ -486,22 +479,6 @@ const Blacksmith = ({ onClose }) => {
         .animate-scale-up { animation: scale-up 0.3s ease-out; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes ssr-glow-anim {
-          0% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 25px rgba(255, 0, 255, 0.3); }
-          50% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.7), 0 0 30px rgba(255, 0, 255, 0.5); }
-          100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), 0 0 25px rgba(255, 0, 255, 0.3); }
-        }
-        .ssr-item-glow { animation: ssr-glow-anim 3s infinite ease-in-out; }
-        @keyframes ssr-border-anim {
-          0% { border-color: #06b6d4; } 33% { border-color: #d946ef; } 66% { border-color: #a855f7; } 100% { border-color: #06b6d4; }
-        }
-        .ssr-border-anim { animation: ssr-border-anim 4s infinite linear; }
-        @keyframes ssr-text-anim {
-          0% { text-shadow: 0 0 5px rgba(0, 255, 255, 0.8); color: #a5f3fc; }
-          50% { text-shadow: 0 0 8px rgba(217, 70, 239, 0.8); color: #f0abfc; }
-          100% { text-shadow: 0 0 5px rgba(0, 255, 255, 0.8); color: #a5f3fc; }
-        }
-        .ssr-text-anim { animation: ssr-text-anim 4s infinite linear; }
       `}</style>
     </div>
   );
