@@ -5,7 +5,7 @@ import Home from './background-game.tsx'; // Assuming Home is in background-game
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './newgame.tsx';
-import Quiz from './quiz/QuizAppHome.tsx';
+import Quiz from './quiz/quiz-app-home.tsx';
 import GameBrowser from './game.tsx'; // Import the new GameBrowser component
 import AuthComponent from './auth.js';
 import { auth, db } from './firebase.js'; // Import đối tượng auth và db của Firebase
