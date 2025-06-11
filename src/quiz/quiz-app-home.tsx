@@ -214,12 +214,12 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        {/* Container chính không có padding */}
-        <div className="h-[calc(100%-8px)]"> {/* 8px = height của gradient line trên cùng */}
+        {/* Container chính không có padding, sử dụng flexbox để co giãn */}
+        <div className="h-[calc(100%-8px)] flex flex-col"> {/* 8px = height của gradient line, thêm flex flex-col */}
           {/* Navigation bar và Breadcrumbs - Có padding */}
           {currentView !== 'main' && (
-            // Thêm padding p-6 vào div chứa breadcrumbs, loại bỏ mb-6
-            <div className="p-6">
+            // Thêm padding p-6 vào div chứa breadcrumbs, và class shrink-0
+            <div className="p-6 shrink-0">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
                     currentView={currentView}
@@ -233,9 +233,8 @@ export default function QuizAppHome() {
             </div>
           )}
 
-          {/* Main content - Padding có điều kiện và Z-index */}
-          {/* Thêm class z-[51] khi currentView không phải là 'main' */}
-           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
+          {/* Main content - Thêm class 'grow' để nó lấp đầy không gian còn lại */}
+           <div className={`overflow-y-auto grow ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}>
             {renderContent()}
           </div>
         </div>
