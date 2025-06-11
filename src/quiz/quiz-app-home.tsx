@@ -211,7 +211,8 @@ export default function QuizAppHome() {
   // Thay đổi phần return cuối cùng để có background và container đẹp hơn
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
-      <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
+      {/* Loại bỏ 'bg-white' ở đây để nền gradient bên ngoài được hiển thị, tạo sự liền mạch. */}
+      <div className="w-full h-full rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
         {/* Container chính không có padding */}
