@@ -313,8 +313,8 @@ export default function QuizApp() {
 
 
   return (
-    // Removed min-h-screen to allow content to dictate height
-    <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    // THÊM LẠI: min-h-screen để đảm bảo component chiếm toàn bộ chiều cao màn hình
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
         {/* Display message if no matching questions */}
         {filteredQuizData.length === 0 && !showScore ? (
@@ -514,45 +514,54 @@ export default function QuizApp() {
                   </div>
                 )}
 
-                <div className="space-y-3 mb-6">
+                <div className="space-y-4 mb-6">
                   {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
                   {/* Use filteredQuizData to get the correct answer */}
                   {shuffledOptions.map((option, index) => {
                     const isCorrect = option === filteredQuizData[currentQuestion]?.correctAnswer;
                     const isSelected = option === selectedOption;
 
-                    let bgColor = "bg-white";
-                    let borderColor = "border-gray-200";
-                    let textColor = "text-gray-700";
-                    let labelBg = "bg-gray-100";
+                    // Define base classes
+                    const baseButtonClass = "w-full text-left p-3 rounded-xl border flex items-center transition-all duration-300 group";
+                    const baseLabelClass = "flex items-center justify-center w-7 h-7 rounded-full mr-4 text-sm font-bold transition-colors duration-300";
+
+                    let dynamicButtonClass = "";
+                    let dynamicLabelClass = "";
+                    let icon = null;
 
                     if (answered) {
-                      if (isCorrect) {
-                        bgColor = "bg-green-50";
-                        borderColor = "border-green-500";
-                        textColor = "text-green-800";
-                        labelBg = "bg-green-500 text-white";
-                      } else if (isSelected) {
-                        bgColor = "bg-red-50";
-                        borderColor = "border-red-500";
-                        textColor = "text-red-800";
-                        labelBg = "bg-red-500 text-white";
-                      }
+                        if (isCorrect) {
+                            dynamicButtonClass = "bg-green-100 border-green-400 text-green-800 font-semibold shadow-md";
+                            dynamicLabelClass = "bg-green-500 text-white";
+                            icon = <CheckIcon className="h-5 w-5 text-green-600 ml-auto" />;
+                        } else if (isSelected) {
+                            dynamicButtonClass = "bg-red-100 border-red-400 text-red-800 font-semibold shadow-md";
+                            dynamicLabelClass = "bg-red-500 text-white";
+                            icon = <XIcon className="h-5 w-5 text-red-600 ml-auto" />;
+                        } else {
+                            // Unselected options after an answer has been given
+                            dynamicButtonClass = "bg-gray-50 border-gray-200 text-gray-400 opacity-70 pointer-events-none";
+                            dynamicLabelClass = "bg-gray-200 text-gray-500";
+                        }
+                    } else {
+                        // Default state before answering
+                        dynamicButtonClass = "bg-white border-gray-200 text-gray-700 shadow-sm hover:shadow-md hover:border-indigo-400 hover:-translate-y-0.5";
+                        dynamicLabelClass = "bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-600";
                     }
+
                     return (
                       <button
                         key={option} // Use option as key since it's unique within options
                         onClick={() => !answered && handleAnswer(option)}
                         disabled={answered || filteredQuizData.length === 0} // Disable button if no questions
-                        className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered && filteredQuizData.length > 0 ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                        className={`${baseButtonClass} ${dynamicButtonClass}`}
                       >
-                        <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
+                        <div className={`${baseLabelClass} ${dynamicLabelClass}`}>
                           {/* Keep original index for labels A, B, C, D */}
                           {optionLabels[index]}
                         </div>
                         <span className="flex-grow">{option}</span>
-                        {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
-                        {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />} {/* Using XIcon SVG */}
+                        {icon}
                       </button>
                     );
                   })}
