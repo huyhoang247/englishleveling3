@@ -313,9 +313,10 @@ export default function QuizApp() {
 
 
   return (
-    // Removed min-h-screen to allow content to dictate height
-    <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
+    // This container will now be full-width and have a white background,
+    // which will act as the background for the options area.
+    // It seamlessly integrates into the parent layout, removing the "weird" intermediate background.
+    <div className="w-full bg-white">
         {/* Display message if no matching questions */}
         {filteredQuizData.length === 0 && !showScore ? (
            <div className="p-10 text-center">
@@ -592,7 +593,6 @@ export default function QuizApp() {
             </>
           )
         )}
-      </div>
     </div>
   );
 }
