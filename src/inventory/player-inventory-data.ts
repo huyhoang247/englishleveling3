@@ -59,7 +59,8 @@ export const playerInventoryData: PlayerItem[] = [
     { instanceId: 1043, id: 54, quantity: 3 },
     { instanceId: 1044, id: 55, quantity: 1 },
     { instanceId: 1045, id: 56, quantity: 1 },
-    { instanceId: 1046, id: 57, quantity: 1 }
+    { instanceId: 1046, id: 57, quantity: 1 },
+    { instanceId: 1047, id: 58, quantity: 1 }
 ];
 
 // --- END OF FILE src/data/player-inventory-data.ts ---
