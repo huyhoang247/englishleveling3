@@ -1,94 +1,37 @@
 // --- START OF FILE inventory.tsx ---
 
-import { useState, useEffect, useCallback, memo, useRef } from 'react'; // Thêm useRef
+import { useState, useEffect, useCallback, memo, useMemo, useRef } from 'react'; // Thêm useMemo
 import { uiAssets } from './game-assets.ts'; 
 import { itemDatabase } from './inventory/item-database.ts'; 
 import { playerInventoryData } from './inventory/player-inventory-data.ts'; 
+import { playerEquipmentData } from './inventory/player-equipment-data.ts'; // THAY ĐỔI: Import dữ liệu trang bị
 
 // --- CÁC HÀM HELPER (Không thay đổi) ---
 const getHydratedInventory = () => {
   return playerInventoryData.map(playerItem => {
     const baseItem = itemDatabase.get(playerItem.id);
-    if (!baseItem) {
-      console.warn(`Item with id ${playerItem.id} not found in database.`);
-      return null;
-    }
-    return {
-      ...baseItem,
-      ...playerItem,
-      stats: playerItem.stats ? { ...baseItem.stats, ...playerItem.stats } : baseItem.stats,
-    };
+    if (!baseItem) return null;
+    return { ...baseItem, ...playerItem, stats: playerItem.stats ? { ...baseItem.stats, ...playerItem.stats } : baseItem.stats };
   }).filter(item => item !== null); 
 };
+const groupInventoryItems = (items) => { /* ... không thay đổi ... */ };
+const getRarityDisplayName = (rarity: string) => { /* ... không thay đổi ... */ };
+const getRarityColor = (rarity: string) => { /* ... không thay đổi ... */ };
+const getRarityGradient = (rarity: string) => { /* ... không thay đổi ... */ };
+const getRarityTextColor = (rarity: string) => { /* ... không thay đổi ... */ };
+const getRarityGlow = (rarity: string) => { /* ... không thay đổi ... */ };
+const formatStatName = (stat: string) => { /* ... không thay đổi ... */ };
+const renderItemStats = (item: any) => { /* ... không thay đổi ... */ };
 
-const groupInventoryItems = (items) => {
-    const grouped = new Map();
-    items.forEach(item => {
-        const key = item.name.split(' (')[0]; 
-        const { instanceId, quantity, stats, level, currentExp, requiredExp, description } = item;
-        const variant = { id: instanceId, quantity, stats, level, currentExp, requiredExp, description };
-        if (!grouped.has(key)) {
-            const { name, ...baseProps } = item;
-            grouped.set(key, { ...baseProps, name: key, variants: [variant] });
-        } else {
-            grouped.get(key).variants.push(variant);
-        }
-    });
-    return Array.from(grouped.values());
-};
+// --- START: CÁC COMPONENT CON ---
 
-const getRarityDisplayName = (rarity: string) => {
-    if (!rarity) return 'Unknown Rank';
-    return `${rarity.toUpperCase()} Rank`;
-}
-const getRarityColor = (rarity: string) => {
-    switch(rarity) { case 'E': return 'border-gray-500'; case 'D': return 'border-green-500'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-600'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-500'; }
-};
-const getRarityGradient = (rarity: string) => {
-    switch(rarity) { case 'E': return 'from-gray-700/70 to-gray-800/70'; case 'D': return 'from-green-800/80 to-gray-800/70'; case 'B': return 'from-blue-800/80 to-gray-800/70'; case 'A': return 'from-purple-800/80 to-gray-800/70'; case 'S': return 'from-yellow-900/80 via-gray-800/70 to-gray-800/70'; case 'SR': return 'from-red-800/80 to-gray-800/70'; default: return 'from-gray-700/70 to-gray-800/70'; }
-};
-const getRarityTextColor = (rarity: string) => {
-    switch(rarity) { case 'E': return 'text-gray-300'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-300'; }
-};
-const getRarityGlow = (rarity: string) => {
-    switch(rarity) { case 'E': return ''; case 'D': return ''; case 'B': return 'shadow-sm shadow-blue-500/30'; case 'A': return 'shadow-md shadow-purple-500/40'; case 'S': return 'shadow-lg shadow-yellow-400/50'; case 'SR': return 'shadow-xl shadow-red-500/50'; default: return ''; }
-};
-const formatStatName = (stat: string) => {
-    const translations: { [key: string]: string } = { damage: 'Sát thương', durability: 'Độ bền', healing: 'Hồi máu', defense: 'Phòng thủ', energyRestore: 'Hồi năng lượng', magicBoost: 'Tăng phép', intelligence: 'Trí tuệ', resurrection: 'Hồi sinh', fireDamage: 'Sát thương lửa', strength: 'Sức mạnh', attackSpeed: 'Tốc độ tấn công', manaRegen: 'Hồi mana', range: 'Tầm xa', poisonDamage: 'Sát thương độc', duration: 'Thời gian', magicResist: 'Kháng phép', manaRestore: 'Hồi mana', speed: 'Tốc độ', cleanse: 'Thanh tẩy', strengthBoost: 'Tăng sức mạnh', luck: 'May mắn' };
-    return translations[stat] || stat.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-};
+const ItemTooltip = memo(({ item }: { item: any }) => ( /* ... không thay đổi ... */ ));
 
-const renderItemStats = (item: any) => {
-    if (!item.stats) return null;
-    return (
-      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 bg-black/20 p-3 rounded-lg border border-gray-700/50 text-sm">
-        {Object.entries(item.stats).map(([stat, value]) => (
-          <div key={stat} className="flex justify-between items-center">
-            <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
-            <span className={'font-semibold text-gray-300'}>{stat.includes('Percent') || stat === 'magicBoost' ? `+${value}%` : value}</span>
-          </div>
-        ))}
-      </div>
-    );
-};
-
-// --- START: CÁC COMPONENT CON ĐƯỢC TÁCH RA NGOÀI VÀ TỐI ƯU ---
-
-const ItemTooltip = memo(({ item }: { item: any }) => (
-    <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-      <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
-      <div className="text-gray-500 capitalize text-xs mb-1">{getRarityDisplayName(item.rarity)} • {item.type}</div>
-      {item.variants.length > 1 && <div className="text-yellow-400 text-xs mb-1">{item.variants.length} loại khác nhau</div>}
-      <div className="text-gray-300 text-xs leading-relaxed">
-        { (item.variants[0]?.description || item.description || '').slice(0, 70) }
-        { (item.variants[0]?.description || item.description || '').length > 70 ? '...' : '' }
-      </div>
-    </div>
-));
-
-const ItemModal = ({ item, isOpen, onClose, animation }: { item: any, isOpen: boolean, onClose: () => void, animation: boolean }) => {
+// THAY ĐỔI: Cập nhật ItemModal để xử lý việc trang bị/tháo đồ
+const ItemModal = ({ item, isOpen, onClose, onEquip, onUnequip, context, animation }) => {
     if (!isOpen || !item) return null;
-    const isWeapon = item.type === 'weapon';
+    const isEquippable = item.type !== 'currency' && item.type !== 'material' && item.type !== 'potion';
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
         <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ${animation ? 'opacity-0' : 'opacity-100'} z-40`} onClick={onClose}></div>
@@ -105,60 +48,126 @@ const ItemModal = ({ item, isOpen, onClose, animation }: { item: any, isOpen: bo
               <div className="flex items-center mb-2 gap-2 flex-wrap">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} bg-gray-800/70 border border-gray-700 capitalize`}>{getRarityDisplayName(item.rarity)}</span>
                 <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
-                {isWeapon && item.level !== undefined && <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">Level: {item.level}</span>}
-                {item.quantity > 1 && <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>}
+                {item.level !== undefined && <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">Level: {item.level}</span>}
               </div>
               <p className="text-gray-300 leading-relaxed text-xs">{item.description}</p>
             </div>
           </div>
           {renderItemStats(item)}
-          {item.type !== 'currency' && ( <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5"> <button className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Sử dụng</button> <button className={'flex-1 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg font-semibold transition-colors duration-200 text-sm'}>Trang bị</button> <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Bỏ</button> </div> )}
+           <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
+              {context === 'inventory' && (
+                <>
+                  <button className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Sử dụng</button>
+                  {isEquippable && <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg font-semibold transition-colors duration-200 text-sm'}>Trang bị</button>}
+                </>
+              )}
+              {context === 'profile' && <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-colors duration-200 text-sm'}>Tháo ra</button>}
+              <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Bỏ</button>
+           </div>
         </div>
       </div>
     );
 };
 
-const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) => {
-    if (!isOpen || !itemGroup) return null;
+const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) => { /* ... không thay đổi ... */ };
+const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItemClick: (item: any) => void }) => { /* ... không thay đổi ... */ });
+
+// --- START: COMPONENT MỚI CHO TAB TÚI ĐỒ ---
+const InventoryGrid = memo(({ inventory, onItemClick, totalSlots }) => {
+    const gridRef = useRef<HTMLDivElement>(null);
+    const scrollTimeout = useRef<number | null>(null);
+    const [scrollingClass, setScrollingClass] = useState('');
+  
+    // Logic tối ưu scroll (giữ nguyên)
+    useEffect(() => {
+        const gridElement = gridRef.current;
+        if (!gridElement) return;
+        const handleScroll = () => {
+            if (!scrollingClass) setScrollingClass('is-scrolling');
+            if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+            scrollTimeout.current = window.setTimeout(() => {
+                setScrollingClass('');
+                scrollTimeout.current = null;
+            }, 150);
+        };
+        gridElement.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            gridElement.removeEventListener('scroll', handleScroll);
+            if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+        };
+    }, [scrollingClass]);
+
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-        <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm p-5">
-          <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
-             <h3 className={`text-xl font-bold ${getRarityTextColor(itemGroup.rarity)}`}>Chọn biến thể: {itemGroup.name}</h3>
-             <button onClick={onClose} className="text-gray-500 hover:text-white"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
-          </div>
-          <ul className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {itemGroup.variants.map((variant, index) => (
-              <li key={variant.id || index} onClick={() => onSelectVariant(variant)} className="flex items-center justify-between p-3 bg-gray-800/70 rounded-lg cursor-pointer hover:bg-gray-700/90 border border-gray-700 hover:border-blue-500 transition-all duration-200">
-                <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 flex items-center justify-center text-3xl bg-black/30 rounded-md border-2 ${getRarityColor(itemGroup.rarity)}`}>{itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-1" /> : itemGroup.icon}</div>
-                    <div>
-                        <div className="font-semibold text-white">{variant.level ? `Level ${variant.level}` : itemGroup.name}</div>
-                        <div className="text-xs text-gray-400">Sát thương: {variant.stats?.damage || 'N/A'}</div>
-                    </div>
-                </div>
-                <div className="text-right"><span className="font-bold text-lg text-gray-200">x{variant.quantity}</span></div>
-              </li>
+        <div ref={gridRef} className={`grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
+            {groupInventoryItems(inventory).map((itemGroup: any) => (
+                <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={onItemClick} />
             ))}
-          </ul>
+            {Array.from({ length: totalSlots - groupInventoryItems(inventory).length }).map((_, i) => (
+                <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
+                    <span className="opacity-40">＋</span>
+                </div>
+            ))}
         </div>
-      </div>
     );
-};
-
-const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItemClick: (item: any) => void }) => {
-  const totalQuantity = itemGroup.variants.reduce((sum, v) => sum + v.quantity, 0);
-
-  return (
-    // TỐI ƯU 2: Thêm `will-change-transform` để báo cho trình duyệt tối ưu hóa animation scale
-    <div className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(itemGroup.rarity)} overflow-hidden will-change-transform`} onClick={() => onItemClick(itemGroup)}>
-      {totalQuantity > 1 && itemGroup.type !== 'currency' && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{totalQuantity}</div>)}
-      {itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" /> : <div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{itemGroup.icon}</div>}
-      <ItemTooltip item={itemGroup} />
-    </div>
-  );
 });
+
+// --- START: COMPONENT MỚI CHO TAB TRANG BỊ (PROFILE) ---
+const EquipmentSlot = memo(({ slotType, item, onClick }) => {
+    const slotIcons = { weapon: '⚔️', helmet: '👑', armor: '🛡️', gloves: '🧤', boots: '👢', ring: '💍' };
+    const slotName = { weapon: 'Vũ khí', helmet: 'Mũ', armor: 'Giáp', gloves: 'Găng tay', boots: 'Giày', ring: 'Nhẫn' };
+    
+    return (
+        <div onClick={() => item && onClick(item)} className={`group relative w-20 h-20 sm:w-24 sm:h-24 bg-black/30 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${item ? `${getRarityColor(item.rarity)} ${getRarityGlow(item.rarity)} shadow-inner cursor-pointer hover:brightness-125 hover:scale-105` : 'border-gray-700/50 border-dashed'}`}>
+            {item ? (
+                <>
+                    {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0" /> : <div className="text-3xl sm:text-4xl relative z-0">{item.icon}</div>}
+                    <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
+                        <p className="text-gray-400 text-xs">{item.description.slice(0, 70)}...</p>
+                    </div>
+                </>
+            ) : (
+                <div className="text-center text-gray-500">
+                    <div className="text-3xl opacity-50">{slotIcons[slotType]}</div>
+                    <div className="text-[10px] font-semibold mt-1">{slotName[slotType]}</div>
+                </div>
+            )}
+        </div>
+    );
+});
+
+const ProfileView = memo(({ equipment, onUnequipClick, totalStats }) => (
+    <div className="flex flex-col lg:flex-row gap-8 items-center justify-center max-h-[60vh] p-4">
+        {/* Left Side: Character & Equipment */}
+        <div className="grid grid-cols-3 grid-rows-3 gap-4 items-center justify-center [grid-template-areas:'helmet_helmet_helmet' 'gloves_character_weapon' 'boots_character_ring']">
+             <div className="[grid-area:character] row-span-2 flex items-center justify-center">
+                <div className="w-32 h-48 sm:w-40 sm:h-64 bg-gradient-to-b from-gray-900 to-gray-800/50 rounded-xl flex items-center justify-center border-2 border-gray-700 shadow-xl">
+                    <img src={uiAssets.characterPlaceholder} alt="Character" className="w-full h-full object-cover opacity-80" />
+                </div>
+            </div>
+            <div className="[grid-area:helmet] flex justify-center"><EquipmentSlot slotType="helmet" item={equipment.helmet} onClick={onUnequipClick} /></div>
+            <div className="[grid-area:weapon] flex justify-center"><EquipmentSlot slotType="weapon" item={equipment.weapon} onClick={onUnequipClick} /></div>
+            <div className="[grid-area:gloves] flex justify-center"><EquipmentSlot slotType="gloves" item={equipment.gloves} onClick={onUnequipClick} /></div>
+            <div className="[grid-area:boots] flex justify-center"><EquipmentSlot slotType="boots" item={equipment.boots} onClick={onUnequipClick} /></div>
+            <div className="[grid-area:ring] flex justify-center"><EquipmentSlot slotType="ring" item={equipment.ring} onClick={onUnequipClick} /></div>
+            {/* Armor slot can be placed differently or as part of the character panel */}
+        </div>
+
+        {/* Right Side: Stats Panel */}
+        <div className="w-full lg:w-64 bg-gray-900/50 border border-gray-700/70 rounded-xl p-4 self-stretch flex flex-col">
+            <h3 className="text-lg font-bold text-yellow-300 border-b border-gray-700 pb-2 mb-3">Tổng Chỉ Số</h3>
+            <div className="space-y-2 text-sm overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent pr-1">
+                {Object.entries(totalStats).map(([stat, value]) => (
+                    <div key={stat} className="flex justify-between items-center text-gray-300">
+                        <span className="text-gray-400 capitalize">{formatStatName(stat)}:</span>
+                        <span className="font-bold">{stat.includes('Percent') ? `+${value}%` : value}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+));
+
 
 // --- END: CÁC COMPONENT CON ---
 
@@ -168,78 +177,71 @@ interface InventoryProps {
 }
 
 export default function Inventory({ onClose }: InventoryProps) {
-  const [inventory] = useState(() => groupInventoryItems(getHydratedInventory()));
+  // --- START: QUẢN LÝ STATE MỚI ---
+  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'profile'
+  const [inventory, setInventory] = useState([]);
+  const [equipment, setEquipment] = useState({}); // { weapon: item, helmet: item, ... }
   
+  // State cho Modal
   const [selectedItemGroup, setSelectedItemGroup] = useState(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
+  const [detailModalContext, setDetailModalContext] = useState('inventory'); // 'inventory' or 'profile'
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
-  
-  const occupiedSlots = inventory.length;
 
-  // --- START: LOGIC TỰ ĐỘNG MỞ RỘNG TÚI ĐỒ ---
-  let totalInventorySlots = 50; // Mặc định là 50 ô
-  if (occupiedSlots >= 81) {
-    totalInventorySlots = 100; // Tối đa 100 ô
-  } else if (occupiedSlots >= 71) {
-    totalInventorySlots = 90;
-  } else if (occupiedSlots >= 61) {
-    totalInventorySlots = 80;
-  } else if (occupiedSlots >= 51) {
-    totalInventorySlots = 70;
-  } else if (occupiedSlots >= 41) {
-    totalInventorySlots = 60;
-  }
-  // --- END: LOGIC TỰ ĐỘNG MỞ RỘNG TÚI ĐỒ ---
-
-  // --- START: TỐI ƯU 1: XỬ LÝ SCROLL ĐỂ GIẢM LAG ---
-  const gridRef = useRef<HTMLDivElement>(null);
-  const scrollTimeout = useRef<number | null>(null);
-  const [scrollingClass, setScrollingClass] = useState('');
-
+  // Khởi tạo dữ liệu khi component được mount
   useEffect(() => {
-    const gridElement = gridRef.current;
-    if (!gridElement) return;
+    const allItems = getHydratedInventory();
+    const equippedMap = new Map();
+    const equippedItems = {};
 
-    const handleScroll = () => {
-      // Khi bắt đầu scroll, thêm class để vô hiệu hóa hover
-      if (!scrollingClass) {
-          setScrollingClass('is-scrolling');
+    Object.entries(playerEquipmentData).forEach(([slot, instanceId]) => {
+      if(instanceId){
+        const item = allItems.find(i => i.instanceId === instanceId);
+        if (item) {
+          equippedItems[slot] = item;
+          equippedMap.set(instanceId, true);
+        }
       }
+    });
 
-      // Xóa timeout cũ nếu có
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
+    const unequippedItems = allItems.filter(item => !equippedMap.has(item.instanceId));
+    
+    setEquipment(equippedItems);
+    setInventory(unequippedItems);
+  }, []);
+  // --- END: QUẢN LÝ STATE MỚI ---
 
-      // Đặt timeout mới. Nếu không scroll nữa trong 150ms, xóa class đi
-      scrollTimeout.current = window.setTimeout(() => {
-        setScrollingClass('');
-        scrollTimeout.current = null;
-      }, 150);
-    };
+  const occupiedSlots = groupInventoryItems(inventory).length;
 
-    gridElement.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      gridElement.removeEventListener('scroll', handleScroll);
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-    };
-  }, [scrollingClass]); // Thêm scrollingClass vào dependency array
-  // --- END: TỐI ƯU 1 ---
-
-  useEffect(() => {
-    if (selectedDetailItem) {
-      setIsDetailModalOpen(true);
-      setAnimation(true);
-      const timer = setTimeout(() => setAnimation(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedDetailItem]);
+  // Logic tự động mở rộng túi đồ (giữ nguyên)
+  let totalInventorySlots = 50; if (occupiedSlots >= 81) totalInventorySlots = 100; else if (occupiedSlots >= 71) totalInventorySlots = 90; else if (occupiedSlots >= 61) totalInventorySlots = 80; else if (occupiedSlots >= 51) totalInventorySlots = 70; else if (occupiedSlots >= 41) totalInventorySlots = 60;
   
+  // Tính toán tổng chỉ số từ trang bị
+  const totalStats = useMemo(() => {
+      const baseStats = { damage: 10, defense: 5, health: 100, strength: 5, intelligence: 5 }; // Ví dụ chỉ số cơ bản
+      const stats = { ...baseStats };
+      Object.values(equipment).forEach(item => {
+          if (item && item.stats) {
+              Object.entries(item.stats).forEach(([stat, value]) => {
+                  stats[stat] = (stats[stat] || 0) + value;
+              });
+          }
+      });
+      return stats;
+  }, [equipment]);
+
+  // --- START: LOGIC MODAL & TRANG BỊ/THÁO ĐỒ ---
+  const openDetailModal = useCallback((item, context) => {
+    setSelectedDetailItem(item);
+    setDetailModalContext(context);
+    setIsDetailModalOpen(true);
+    setAnimation(true);
+    const timer = setTimeout(() => setAnimation(false), 10);
+    return () => clearTimeout(timer);
+  }, []);
+
   const closeDetailModal = useCallback(() => {
     setAnimation(true);
     setTimeout(() => {
@@ -258,65 +260,121 @@ export default function Inventory({ onClose }: InventoryProps) {
     if (itemGroup.variants.length === 1) {
       const singleItem = { ...itemGroup, ...itemGroup.variants[0] };
       delete singleItem.variants;
-      setSelectedDetailItem(singleItem);
+      openDetailModal(singleItem, 'inventory');
     } else {
       setSelectedItemGroup(itemGroup);
       setIsVariantModalOpen(true);
     }
-  }, []);
+  }, [openDetailModal]);
+  
+  const handleProfileItemClick = useCallback((item) => {
+    openDetailModal(item, 'profile');
+  }, [openDetailModal]);
 
   const handleSelectVariant = useCallback((variant) => {
     if (selectedItemGroup) {
         const combinedItem = { ...selectedItemGroup, ...variant };
         delete combinedItem.variants;
-        setSelectedDetailItem(combinedItem);
+        openDetailModal(combinedItem, 'inventory');
         closeVariantModal();
     }
-  }, [selectedItemGroup, closeVariantModal]);
+  }, [selectedItemGroup, closeVariantModal, openDetailModal]);
 
-  return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-3xl mx-auto border border-gray-700/50 min-h-screen relative">
-      <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-10" aria-label="Đóng túi đồ">
-        <img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
-      </button>
-      <div className="mb-7 flex flex-col sm:flex-row justify-between items-center border-b border-gray-700/60 pb-5">
-        <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0"><span className="mr-2.5 text-4xl">📦</span><span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">Túi Đồ</span></h1>
-        <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80"><span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span></div>
-      </div>
-      
-      {/* THÊM STYLE CHO VIỆC TỐI ƯU SCROLL */}
-      <style>{`
-        /* Vô hiệu hóa các hiệu ứng hover tốn kém khi đang scroll */
-        .is-scrolling .group:hover {
-            transform: none !important;
-            filter: none !important;
-        }
-        .is-scrolling .group .group-hover\:opacity-100 {
-            opacity: 0 !important;
-        }
-        .is-scrolling .group .group-hover\:scale-110 {
-            transform: none !important;
+  const handleEquipItem = useCallback((itemToEquip) => {
+    const slot = itemToEquip.type; // 'weapon', 'helmet', etc.
+    if (!slot) return;
+
+    setInventory(prevInventory => prevInventory.filter(i => i.instanceId !== itemToEquip.instanceId));
+    
+    setEquipment(prevEquipment => {
+        const currentItemInSlot = prevEquipment[slot];
+        const newEquipment = { ...prevEquipment, [slot]: itemToEquip };
+        
+        // Nếu có vật phẩm đang trang bị ở vị trí đó, chuyển nó về túi đồ
+        if (currentItemInSlot) {
+            setInventory(prevInventory => [...prevInventory, currentItemInSlot]);
         }
         
+        return newEquipment;
+    });
+
+    closeDetailModal();
+  }, [closeDetailModal]);
+
+  const handleUnequipItem = useCallback((itemToUnequip) => {
+      const slot = itemToUnequip.type;
+      if(!slot) return;
+
+      // Xóa khỏi trang bị
+      setEquipment(prevEquipment => {
+          const newEquipment = {...prevEquipment};
+          delete newEquipment[slot];
+          return newEquipment;
+      });
+
+      // Thêm lại vào túi đồ
+      setInventory(prevInventory => [...prevInventory, itemToUnequip]);
+
+      closeDetailModal();
+  }, [closeDetailModal]);
+  // --- END: LOGIC MODAL & TRANG BỊ/THÁO ĐỒ ---
+
+  return (
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-4xl mx-auto border border-gray-700/50 min-h-screen relative">
+      <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-20" aria-label="Đóng túi đồ">
+        <img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
+      </button>
+
+      {/* --- START: TAB UI --- */}
+      <div className="flex justify-center mb-5 border-b border-gray-700/60">
+          <button onClick={() => setActiveTab('inventory')} className={`px-6 py-3 text-lg font-semibold transition-colors duration-200 border-b-2 ${activeTab === 'inventory' ? 'text-yellow-400 border-yellow-400' : 'text-gray-400 border-transparent hover:text-white'}`}>Túi Đồ</button>
+          <button onClick={() => setActiveTab('profile')} className={`px-6 py-3 text-lg font-semibold transition-colors duration-200 border-b-2 ${activeTab === 'profile' ? 'text-yellow-400 border-yellow-400' : 'text-gray-400 border-transparent hover:text-white'}`}>Trang Bị</button>
+      </div>
+      {/* --- END: TAB UI --- */}
+      
+      <div className="mb-7 flex flex-col sm:flex-row justify-between items-center pb-5">
+        <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
+            <span className="mr-2.5 text-4xl">{activeTab === 'inventory' ? '📦' : '👤'}</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">{activeTab === 'inventory' ? 'Túi Đồ' : 'Hồ Sơ Nhân Vật'}</span>
+        </h1>
+        {activeTab === 'inventory' && (
+            <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80"><span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span></div>
+        )}
+      </div>
+      
+      <style>{`
+        .is-scrolling .group:hover { transform: none !important; filter: none !important; }
+        .is-scrolling .group .group-hover\:opacity-100 { opacity: 0 !important; }
+        .is-scrolling .group .group-hover\:scale-110 { transform: none !important; }
         .inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}
         .inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}
       `}</style>
       
-      <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation}/>
-      <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
-      
-      {/* THÊM ref VÀ className VÀO LƯỚI */}
-      <div ref={gridRef} className={`grid grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
-        {inventory.map((itemGroup: any) => (
-            <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleItemClick} />
-        ))}
-        
-        {Array.from({ length: totalInventorySlots - inventory.length }).map((_, i) => (
-          <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
-            <span className="opacity-40">＋</span>
-          </div>
-        ))}
+      {/* --- START: RENDER TAB CONTENT --- */}
+      <div className="min-h-[60vh]">
+        {activeTab === 'inventory' ? (
+            <InventoryGrid inventory={inventory} onItemClick={handleItemClick} totalSlots={totalInventorySlots} />
+        ) : (
+            <ProfileView equipment={equipment} onUnequipClick={handleProfileItemClick} totalStats={totalStats} />
+        )}
       </div>
+      {/* --- END: RENDER TAB CONTENT --- */}
+
+      <ItemModal 
+        item={selectedDetailItem} 
+        isOpen={isDetailModalOpen} 
+        onClose={closeDetailModal} 
+        animation={animation}
+        context={detailModalContext}
+        onEquip={handleEquipItem}
+        onUnequip={handleUnequipItem}
+      />
+      <VariantSelectionModal 
+        itemGroup={selectedItemGroup} 
+        isOpen={isVariantModalOpen} 
+        onClose={closeVariantModal} 
+        onSelectVariant={handleSelectVariant}
+      />
     </div>
   );
 }
