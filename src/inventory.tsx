@@ -176,7 +176,7 @@ export default function Inventory({ onClose }: InventoryProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
   
-  const totalInventorySlots = 50;
+  const totalInventorySlots = 100;
   const occupiedSlots = inventory.length;
 
   // --- START: TỐI ƯU 1: XỬ LÝ SCROLL ĐỂ GIẢM LAG ---
