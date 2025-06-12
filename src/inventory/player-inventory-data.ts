@@ -73,6 +73,8 @@ export const playerInventoryData: PlayerItem[] = [
     { instanceId: 1057, id: 68, quantity: 1 },
     { instanceId: 1058, id: 69, quantity: 1 },
     { instanceId: 1059, id: 70, quantity: 1 },
+    { instanceId: 1060, id: 71, quantity: 1 },
+    
     
     
     
