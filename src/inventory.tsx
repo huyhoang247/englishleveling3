@@ -1,6 +1,6 @@
 // --- START OF FILE inventory.tsx ---
 
-import { useState, useEffect, useCallback, memo, useRef, useMemo } from 'react'; // Thêm useMemo
+import { useState, useEffect, useCallback, memo, useRef, useMemo } from 'react';
 import { uiAssets } from './game-assets.ts'; 
 import { itemDatabase } from './inventory/item-database.ts'; 
 import { playerInventoryData } from './inventory/player-inventory-data.ts'; 
@@ -15,13 +15,13 @@ const basePlayerStats = {
     luck: 2,
 };
 
-// Định nghĩa các loại slot trang bị
-const equipmentSlotTypes = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'ring'];
+// --- THAY ĐỔI 1: Thay 'ring' bằng 'skin' ---
+const equipmentSlotTypes = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'skin'];
 
 const getSlotPlaceholderIcon = (slotType: string) => {
     const icons: { [key: string]: string } = {
         weapon: '⚔️', helmet: '⛑️', armor: '🛡️',
-        gloves: '🧤', boots: '👢', ring: '💍'
+        gloves: '🧤', boots: '👢', skin: '👕' // Thay đổi icon cho slot mới
     };
     return icons[slotType] || '?';
 };
@@ -44,10 +44,10 @@ const getHydratedInventory = () => {
   }).filter(item => item !== null); 
 };
 
-const groupInventoryItems = (items: any[]) => { // Thêm kiểu cho items
+const groupInventoryItems = (items: any[]) => {
     const grouped = new Map();
     items.forEach(item => {
-        if (!item) return; // Bỏ qua các item null
+        if (!item) return;
         const key = item.name.split(' (')[0]; 
         const { instanceId, quantity, stats, level, currentExp, requiredExp, description } = item;
         const variant = { id: instanceId, quantity, stats, level, currentExp, requiredExp, description };
@@ -110,7 +110,6 @@ const ItemTooltip = memo(({ item, isEquipped }: { item: any, isEquipped?: boolea
     </div>
 ));
 
-// --- CẬP NHẬT ItemModal ĐỂ XỬ LÝ TRANG BỊ/GỠ BỎ ---
 const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, context }: { item: any, isOpen: boolean, onClose: () => void, animation: boolean, onEquip: (item: any) => void, onUnequip: (item: any) => void, context: 'inventory' | 'profile' | null }) => {
     if (!isOpen || !item) return null;
     
@@ -197,15 +196,13 @@ const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItem
   );
 });
 
-
-// --- COMPONENT MỚI: Ô TRANG BỊ ---
 const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string, item: any, onSlotClick: (item: any, slotType: string) => void }) => {
     const rarity = item ? item.rarity : 'E';
     return (
         <div className="flex flex-col items-center gap-1.5">
             <span className="text-xs text-gray-400 capitalize">{slotType}</span>
             <div 
-                className={`group relative w-20 h-20 bg-gradient-to-br ${item ? getRarityGradient(rarity) : 'from-gray-900 to-gray-800'} rounded-lg border-2 ${item ? getRarityColor(rarity) : 'border-gray-700'} flex items-center justify-center cursor-pointer hover:brightness-125 transition-all duration-200 shadow-lg ${item ? getRarityGlow(rarity) : ''} overflow-hidden`}
+                className={`group relative w-24 h-24 bg-gradient-to-br ${item ? getRarityGradient(rarity) : 'from-gray-900 to-gray-800'} rounded-lg border-2 ${item ? getRarityColor(rarity) : 'border-gray-700'} flex items-center justify-center cursor-pointer hover:brightness-125 transition-all duration-200 shadow-lg ${item ? getRarityGlow(rarity) : ''} overflow-hidden`}
                 onClick={() => item && onSlotClick(item, slotType)}
             >
                 {item ? (
@@ -214,17 +211,15 @@ const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string,
                         <ItemTooltip item={item} isEquipped={true} />
                     </>
                 ) : (
-                    <span className="text-3xl text-gray-600">{getSlotPlaceholderIcon(slotType)}</span>
+                    <span className="text-4xl text-gray-600">{getSlotPlaceholderIcon(slotType)}</span>
                 )}
             </div>
         </div>
     );
 });
 
-
-// --- COMPONENT MỚI: BẢNG CHỈ SỐ ---
 const StatsPanel = memo(({ stats }: { stats: any }) => (
-    <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/70">
+    <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/70 w-full">
         <h3 className="text-lg font-bold text-yellow-300 mb-4 text-center">Chỉ Số Nhân Vật</h3>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {Object.entries(stats).map(([stat, value]) => (
@@ -245,15 +240,13 @@ interface InventoryManagerProps {
   onClose: () => void;
 }
 
-// --- ĐỔI TÊN COMPONENT CHÍNH ---
 export default function InventoryManager({ onClose }: InventoryManagerProps) {
-  // --- START: STATE QUẢN LÝ TAB, TRANG BỊ VÀ TÚI ĐỒ ---
   const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('inventory');
   const [inventory, setInventory] = useState(() => getHydratedInventory());
+  // --- THAY ĐỔI 2: Cập nhật state trang bị ---
   const [equippedItems, setEquippedItems] = useState<{[key: string]: any | null}>({
-      weapon: null, helmet: null, armor: null, gloves: null, boots: null, ring: null
+      weapon: null, helmet: null, armor: null, gloves: null, boots: null, skin: null
   });
-  // --- END: STATE ---
 
   const [selectedItemGroup, setSelectedItemGroup] = useState(null);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -272,7 +265,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
   else if (occupiedSlots >= 51) totalInventorySlots = 70;
   else if (occupiedSlots >= 41) totalInventorySlots = 60;
   
-  // --- LOGIC TÍNH TOÁN CHỈ SỐ TỔNG ---
   const totalPlayerStats = useMemo(() => {
       const finalStats = { ...basePlayerStats };
       Object.values(equippedItems).forEach(item => {
@@ -285,19 +277,17 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       return finalStats;
   }, [equippedItems]);
 
-  // --- Tối ưu Scroll (giữ nguyên) ---
   const gridRef = useRef<HTMLDivElement>(null);
   const scrollTimeout = useRef<number | null>(null);
   const [scrollingClass, setScrollingClass] = useState('');
 
-  useEffect(() => { /* ... logic scroll không đổi ... */
+  useEffect(() => {
     const gridElement = gridRef.current; if (!gridElement) return;
     const handleScroll = () => { if (!scrollingClass) { setScrollingClass('is-scrolling'); } if (scrollTimeout.current) { clearTimeout(scrollTimeout.current); } scrollTimeout.current = window.setTimeout(() => { setScrollingClass(''); scrollTimeout.current = null; }, 150); };
     gridElement.addEventListener('scroll', handleScroll, { passive: true });
     return () => { gridElement.removeEventListener('scroll', handleScroll); if (scrollTimeout.current) { clearTimeout(scrollTimeout.current); } };
   }, [scrollingClass]);
   
-  // --- XỬ LÝ MỞ/ĐÓNG MODAL ---
   useEffect(() => {
     if (selectedDetailItem) {
       setIsDetailModalOpen(true);
@@ -327,7 +317,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       setModalContext(context);
   }, []);
 
-  // --- CÁC HÀM XỬ LÝ KHI CLICK ---
   const handleInventoryItemClick = useCallback((itemGroup) => {
     if (itemGroup.variants.length === 1) {
       const singleItem = { ...itemGroup, ...itemGroup.variants[0] };
@@ -354,7 +343,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
     }
   }, [selectedItemGroup, closeVariantModal, openDetailModal]);
 
-  // --- LOGIC TRANG BỊ / GỠ BỎ ---
   const handleEquip = useCallback((itemToEquip) => {
       const slot = itemToEquip.type;
       if (!equipmentSlotTypes.includes(slot)) return;
@@ -388,7 +376,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
         <img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
       </button>
 
-      {/* --- START: UI CHO TAB VÀ HEADER --- */}
       <div className="mb-6 border-b border-gray-700/60 pb-5">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-5">
               <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
@@ -408,14 +395,12 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
               <button onClick={() => setActiveTab('profile')} className={`flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'profile' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>Trang Bị</button>
           </div>
       </div>
-      {/* --- END: UI CHO TAB VÀ HEADER --- */}
       
       <style>{`.is-scrolling .group:hover{transform:none!important;filter:none!important}.is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}.is-scrolling .group .group-hover\\:scale-110{transform:none!important}.inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}.inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}`}</style>
       
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
-      {/* --- START: HIỂN THỊ CÓ ĐIỀU KIỆN GIỮA 2 TAB --- */}
       {activeTab === 'inventory' ? (
           <div ref={gridRef} className={`grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
             {groupedInventory.map((itemGroup: any) => (
@@ -429,32 +414,33 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
             ))}
           </div>
       ) : (
+          // --- THAY ĐỔI 3: Cấu trúc lại toàn bộ layout của tab Trang Bị ---
           <div className="flex flex-col lg:flex-row gap-8 items-start">
+              {/* Cột trái: Lưới trang bị */}
               <div className="w-full lg:w-2/3">
-                  <div className="relative grid grid-cols-3 gap-y-6 items-center justify-items-center p-4 rounded-xl bg-black/20 border border-gray-800">
-                      {/* Dòng trên */}
-                      <div className="col-start-2"><EquipmentSlot slotType="helmet" item={equippedItems.helmet} onSlotClick={handleProfileSlotClick} /></div>
-
-                      {/* Dòng giữa */}
-                      <EquipmentSlot slotType="weapon" item={equippedItems.weapon} onSlotClick={handleProfileSlotClick} />
-                      <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full bg-gradient-to-br from-purple-900/50 via-gray-900 to-black flex items-center justify-center border-2 border-purple-500/50 shadow-lg shadow-purple-900/30">
-                          <span className="text-6xl opacity-60">👻</span>
-                      </div>
-                      <EquipmentSlot slotType="ring" item={equippedItems.ring} onSlotClick={handleProfileSlotClick} />
-                      
-                      {/* Dòng dưới */}
-      
-                      <EquipmentSlot slotType="gloves" item={equippedItems.gloves} onSlotClick={handleProfileSlotClick} />
-                      <EquipmentSlot slotType="armor" item={equippedItems.armor} onSlotClick={handleProfileSlotClick} />
-                      <EquipmentSlot slotType="boots" item={equippedItems.boots} onSlotClick={handleProfileSlotClick} />
+                  <div className="grid grid-cols-3 gap-4 p-4 rounded-xl bg-black/20 border border-gray-800">
+                    {equipmentSlotTypes.map(slotType => (
+                      <EquipmentSlot
+                        key={slotType}
+                        slotType={slotType}
+                        item={equippedItems[slotType]}
+                        onSlotClick={handleProfileSlotClick}
+                      />
+                    ))}
                   </div>
               </div>
-              <div className="w-full lg:w-1/3">
+
+              {/* Cột phải: Hình ảnh nhân vật và Chỉ số */}
+              <div className="w-full lg:w-1/3 flex flex-col items-center">
+                  {/* Hình ảnh nhân vật */}
+                  <div className="w-40 h-40 rounded-full bg-gradient-to-br from-purple-900/50 via-gray-900 to-black flex items-center justify-center border-2 border-purple-500/50 shadow-lg shadow-purple-900/30 mb-6">
+                      <span className="text-6xl opacity-60">👻</span>
+                  </div>
+                  {/* Bảng chỉ số */}
                   <StatsPanel stats={totalPlayerStats} />
               </div>
           </div>
       )}
-      {/* --- END: HIỂN THỊ CÓ ĐIỀU KIỆN --- */}
     </div>
   );
 }
