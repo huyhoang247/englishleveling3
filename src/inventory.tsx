@@ -176,8 +176,22 @@ export default function Inventory({ onClose }: InventoryProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
   
-  const totalInventorySlots = 100;
   const occupiedSlots = inventory.length;
+
+  // --- START: LOGIC TỰ ĐỘNG MỞ RỘNG TÚI ĐỒ ---
+  let totalInventorySlots = 50; // Mặc định là 50 ô
+  if (occupiedSlots >= 81) {
+    totalInventorySlots = 100; // Tối đa 100 ô
+  } else if (occupiedSlots >= 71) {
+    totalInventorySlots = 90;
+  } else if (occupiedSlots >= 61) {
+    totalInventorySlots = 80;
+  } else if (occupiedSlots >= 51) {
+    totalInventorySlots = 70;
+  } else if (occupiedSlots >= 41) {
+    totalInventorySlots = 60;
+  }
+  // --- END: LOGIC TỰ ĐỘNG MỞ RỘNG TÚI ĐỒ ---
 
   // --- START: TỐI ƯU 1: XỬ LÝ SCROLL ĐỂ GIẢM LAG ---
   const gridRef = useRef<HTMLDivElement>(null);
