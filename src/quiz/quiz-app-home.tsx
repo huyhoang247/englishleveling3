@@ -12,30 +12,42 @@ export default function QuizAppHome() {
   const [selectedType, setSelectedType] = useState(null);
   // Thêm state mới để lưu practice đã chọn
   const [selectedPractice, setSelectedPractice] = useState(null);
+  // Các state liên quan đến câu hỏi và đáp án có thể không cần thiết ở đây nữa
+  // nếu logic quiz được xử lý hoàn toàn trong QuizApp từ quiz.tsx
+  // const [currentQuestion, setCurrentQuestion] = useState(1);
+  // const [selectedAnswer, setSelectedAnswer] = useState(null);
+  // const [timer, setTimer] = useState(0); // Cần thêm logic để quản lý timer
 
   // Hàm xử lý khi chọn Quiz
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
-    setSelectedType(null);
-    setSelectedPractice(null);
+    // Reset states liên quan đến quiz nếu có
+    setSelectedType(null); // Reset type khi chọn lại quiz
+    setSelectedPractice(null); // Reset practice khi chọn lại quiz
   };
 
   // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
   const handleTypeSelect = (type) => {
     setSelectedType(type);
+    // Chuyển đến màn hình practices nếu chọn trắc nghiệm
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
+      // Nếu chọn điền từ, chuyển view sang 'fillInBlanks' để render VocabularyGame
       setCurrentView('fillInBlanks');
     }
-    setSelectedPractice(null);
+    setSelectedPractice(null); // Reset practice khi chọn loại bài tập
   };
 
   // Hàm xử lý khi chọn Practice
   const handlePracticeSelect = (practice) => {
+    // Khi chọn practice, chuyển view sang 'quiz' để render component QuizApp
     setCurrentView('quiz');
+    // Lưu practice đã chọn vào state mới
     setSelectedPractice(practice);
+    // Có thể truyền thêm thông tin về practice đã chọn vào state nếu cần
+    // Ví dụ: setSelectedPractice(practice);
   };
 
   // Hàm quay lại màn hình trước
@@ -43,15 +55,19 @@ export default function QuizAppHome() {
     if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
-      setSelectedType(null);
-      setSelectedPractice(null);
-    } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
+      setSelectedType(null); // Reset type khi quay lại main
+      setSelectedPractice(null); // Reset practice khi quay lại main
+    } else if (currentView === 'practices' || currentView === 'fillInBlanks') { // Bao gồm cả fillInBlanks khi quay lại
       setCurrentView('quizTypes');
-      setSelectedType(null);
-      setSelectedPractice(null);
-    } else if (currentView === 'quiz') {
+      setSelectedType(null); // Reset type khi quay lại quizTypes
+      setSelectedPractice(null); // Reset practice khi quay lại quizTypes
+    } else if (currentView === 'quiz') { // Nếu đang ở màn hình quiz, quay lại màn hình practices
        setCurrentView('practices');
+       // selectedPractice sẽ được giữ lại để hiển thị trong breadcrumbs khi quay lại practices
     }
+    // Reset states liên quan khi quay lại
+    // setCurrentQuestion(1);
+    // setSelectedAnswer(null);
   };
 
   // Hàm quay về màn hình chính
@@ -59,8 +75,14 @@ export default function QuizAppHome() {
     setCurrentView('main');
     setSelectedQuiz(null);
     setSelectedType(null);
-    setSelectedPractice(null);
+    setSelectedPractice(null); // Reset practice khi về trang chủ
+    // Reset states liên quan khi về trang chủ
+    // setCurrentQuestion(1);
+    // setSelectedAnswer(null);
   };
+
+  // Các hàm xử lý trong quiz (handleNextQuestion, handlePrevQuestion, handleSelectAnswer)
+  // sẽ được xử lý bên trong component QuizApp từ quiz.tsx
 
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
@@ -169,12 +191,15 @@ export default function QuizAppHome() {
         );
 
       case 'fillInBlanks':
+         // Render component VocabularyGame khi chọn điền từ
         return (
           <VocabularyGame />
         );
 
-      case 'quiz':
+      case 'quiz': // Case mới để render component QuizApp
         return (
+          // Render component QuizApp từ quiz.tsx
+          // Bạn có thể truyền props vào đây nếu QuizApp cần thông tin về quiz/practice
           <QuizApp />
         );
 
@@ -183,15 +208,17 @@ export default function QuizAppHome() {
     }
   };
 
+  // Thay đổi phần return cuối cùng để có background và container đẹp hơn
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        {/* SỬA ĐỔI 1: Thêm 'flex flex-col' để biến đây thành flex container */}
-        <div className="h-[calc(100%-8px)] flex flex-col">
-          {/* Breadcrumbs sẽ chiếm không gian cần thiết của nó */}
+        {/* Container chính không có padding */}
+        <div className="h-[calc(100%-8px)]"> {/* 8px = height của gradient line trên cùng */}
+          {/* Navigation bar và Breadcrumbs - Có padding */}
           {currentView !== 'main' && (
+            // Thêm padding p-6 vào div chứa breadcrumbs, loại bỏ mb-6
             <div className="p-6">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
@@ -206,8 +233,9 @@ export default function QuizAppHome() {
             </div>
           )}
 
-          {/* SỬA ĐỔI 2: Thay 'h-full' bằng 'flex-1' để nó lấp đầy không gian CÒN LẠI */}
-          <div className={`flex-1 overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}>
+          {/* Main content - Padding có điều kiện và Z-index */}
+          {/* Thêm class z-[51] khi currentView không phải là 'main' */}
+           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
             {renderContent()}
           </div>
         </div>
