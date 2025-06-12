@@ -234,8 +234,8 @@ export default function QuizAppHome() {
           )}
 
           {/* Main content - Padding có điều kiện và Z-index */}
-          {/* Thêm class z-[51] khi currentView không phải là 'main' */}
-           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
+          {/* SỬA ĐỔI: Thêm class h-full vào đây */}
+           <div className={`h-full overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}>
             {renderContent()}
           </div>
         </div>
