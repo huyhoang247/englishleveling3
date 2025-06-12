@@ -371,30 +371,35 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
 
 
   return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-4xl mx-auto border border-gray-700/50 min-h-screen relative">
-      <button onClick={onClose} className="absolute top-5 right-5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl z-20" aria-label="Đóng túi đồ">
-        <img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
-      </button>
-
-      <div className="mb-6 border-b border-gray-700/60 pb-5">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-5">
-              <h1 className="text-3xl font-bold text-yellow-400 flex items-center mb-3 sm:mb-0">
-                  <span className="mr-2.5 text-4xl">{activeTab === 'inventory' ? '📦' : '👤'}</span>
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-yellow-200">
-                      {activeTab === 'inventory' ? 'Túi Đồ' : 'Trang Bị'}
-                  </span>
-              </h1>
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-4xl mx-auto border border-gray-700/50 min-h-screen">
+      
+      {/* START: Header được thiết kế lại */}
+      <div className="flex justify-between items-center mb-6 border-b border-gray-700/60 pb-5">
+          {/* Nhóm Tabs điều hướng */}
+          <div className="flex space-x-2 bg-gray-900/70 p-1 rounded-lg border border-gray-800 w-full sm:w-auto">
+              <button onClick={() => setActiveTab('inventory')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'inventory' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                <span>📦</span>
+                <span>Túi Đồ</span>
+              </button>
+              <button onClick={() => setActiveTab('profile')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'profile' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                <span>👤</span>
+                <span>Trang Bị</span>
+              </button>
+          </div>
+          
+          {/* Các nút bên phải */}
+          <div className="flex items-center gap-4 pl-4">
               {activeTab === 'inventory' && 
-                  <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80">
+                  <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80 hidden sm:block">
                       <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
                   </div>
               }
-          </div>
-          <div className="flex space-x-2 bg-gray-900/70 p-1 rounded-lg border border-gray-800 w-full sm:w-auto">
-              <button onClick={() => setActiveTab('inventory')} className={`flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'inventory' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>Túi Đồ</button>
-              <button onClick={() => setActiveTab('profile')} className={`flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'profile' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>Trang Bị</button>
+              <button onClick={onClose} className="text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl flex-shrink-0" aria-label="Đóng túi đồ">
+                <img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
+              </button>
           </div>
       </div>
+      {/* END: Header được thiết kế lại */}
       
       <style>{`.is-scrolling .group:hover{transform:none!important;filter:none!important}.is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}.is-scrolling .group .group-hover\\:scale-110{transform:none!important}.inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}.inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}`}</style>
       
