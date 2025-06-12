@@ -313,8 +313,8 @@ export default function QuizApp() {
 
 
   return (
-    // Removed min-h-screen to allow content to dictate height
-    <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    // SỬA ĐỔI: Thêm class h-full vào đây
+    <div className="h-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
         {/* Display message if no matching questions */}
         {filteredQuizData.length === 0 && !showScore ? (
