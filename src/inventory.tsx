@@ -419,31 +419,43 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
             ))}
           </div>
       ) : (
-          // --- THAY ĐỔI 3: Cấu trúc lại toàn bộ layout của tab Trang Bị ---
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-              {/* Cột trái: Lưới trang bị */}
-              <div className="w-full lg:w-2/3">
-                  <div className="grid grid-cols-3 gap-4 p-4 rounded-xl bg-black/20 border border-gray-800">
-                    {equipmentSlotTypes.map(slotType => (
+          // --- THAY ĐỔI 3: Cấu trúc lại toàn bộ layout của tab Trang Bị theo thiết kế mới ---
+          <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-10 lg:gap-16 mt-4">
+              
+              {/* Cột trái: 3 trang bị */}
+              <div className="flex flex-row lg:flex-col gap-5">
+                  {['weapon', 'gloves', 'boots'].map(slotType => (
                       <EquipmentSlot
-                        key={slotType}
-                        slotType={slotType}
-                        item={equippedItems[slotType]}
-                        onSlotClick={handleProfileSlotClick}
+                          key={slotType}
+                          slotType={slotType}
+                          item={equippedItems[slotType]}
+                          onSlotClick={handleProfileSlotClick}
                       />
-                    ))}
-                  </div>
+                  ))}
               </div>
 
-              {/* Cột phải: Hình ảnh nhân vật và Chỉ số */}
-              <div className="w-full lg:w-1/3 flex flex-col items-center">
+              {/* Giữa: Hình ảnh nhân vật và Chỉ số */}
+              <div className="flex flex-col items-center gap-8 order-first lg:order-none w-full lg:w-auto">
                   {/* Hình ảnh nhân vật */}
-                  <div className="w-40 h-40 rounded-full bg-gradient-to-br from-purple-900/50 via-gray-900 to-black flex items-center justify-center border-2 border-purple-500/50 shadow-lg shadow-purple-900/30 mb-6">
-                      <span className="text-6xl opacity-60">👻</span>
+                  <div className="w-48 h-48 rounded-full bg-gradient-to-br from-purple-900/50 via-gray-900 to-black flex items-center justify-center border-2 border-purple-500/50 shadow-lg shadow-purple-900/40 mb-2">
+                      <span className="text-7xl opacity-80 -translate-y-2 select-none">👻</span>
                   </div>
                   {/* Bảng chỉ số */}
                   <StatsPanel stats={totalPlayerStats} />
               </div>
+
+              {/* Cột phải: 3 trang bị */}
+              <div className="flex flex-row lg:flex-col gap-5">
+                  {['helmet', 'armor', 'skin'].map(slotType => (
+                      <EquipmentSlot
+                          key={slotType}
+                          slotType={slotType}
+                          item={equippedItems[slotType]}
+                          onSlotClick={handleProfileSlotClick}
+                      />
+                  ))}
+              </div>
+
           </div>
       )}
     </div>
