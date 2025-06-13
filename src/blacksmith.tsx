@@ -20,16 +20,15 @@ const CRAFTING_RECIPES_DEFINITION = [
     pieceId: 47, // Mảnh ghép vũ khí
     materialsRequired: [{ id: 44, quantity: 20 }, { id: 43, quantity: 10 }], // Gỗ, Sắt
     outputPool: [1, 13], // Kiếm gỗ (E), Cung gỗ (E)
-    description: 'Rèn một vũ khí Cấp E ngẫu nhiên từ mảnh ghép và nguyên liệu.'
+    description: 'Rèn một vũ khí Cấp E ngẫu nhiên từ nguyên liệu.'
   },
   {
     type: 'piece_based',
     pieceId: 48, // Mảnh ghép áo giáp
     materialsRequired: [{ id: 45, quantity: 15 }, { id: 46, quantity: 10 }], // Da, Vải
     outputPool: [3, 11], // Áo giáp da (E), Găng tay chiến binh (D)
-    description: 'Rèn một áo giáp Cấp E/D ngẫu nhiên từ mảnh ghép và nguyên liệu.'
+    description: 'Rèn một áo giáp Cấp E/D ngẫu nhiên từ nguyên liệu.'
   },
-  // We keep specific recipes for potential future use, but the new UI focuses on piece-based crafting.
   {
     type: 'specific',
     outputItemId: 4, // Kiếm sắt (D)
@@ -130,7 +129,7 @@ const ItemTooltip = ({ item }: { item: EnrichedPlayerItem }) => (
 
 // Main Component
 const Blacksmith = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState('craft');
+  const [activeTab, setActiveTab] = useState('upgrade');
   const [playerInventory, setPlayerInventory] = useState<PlayerItem[]>(playerInventoryData);
   const [upgradeWeaponSlot, setUpgradeWeaponSlot] = useState<PlayerItem | null>(null);
   const [upgradeMaterialSlot, setUpgradeMaterialSlot] = useState<PlayerItem | null>(null);
@@ -294,23 +293,14 @@ const Blacksmith = ({ onClose }) => {
   }, [craftingPieceSlot]);
 
   const craftingMaterialReqs = useMemo(() => {
-    if (!activeCraftingRecipe) return [];
+    if (!activeCraftingRecipe) return [null, null];
     return activeCraftingRecipe.materialsRequired.map(mat => {
         const definition = enrichPlayerItem({ id: mat.id, instanceId: 0, quantity: mat.quantity });
         if (!definition) return null;
         const playerHas = playerInventory.filter(pItem => pItem.id === mat.id).reduce((sum, current) => sum + current.quantity, 0);
         return { ...definition, required: mat.quantity, has: playerHas };
-    }).filter(Boolean);
+    });
   }, [activeCraftingRecipe, playerInventory, enrichPlayerItem]);
-  
-  const craftOutputPreview = useMemo(() => {
-      if (!activeCraftingRecipe) return null;
-      // Show the first item in the pool as a representative example
-      const previewItemId = activeCraftingRecipe.outputPool[0];
-      const itemDef = itemDatabase.get(previewItemId);
-      if (!itemDef) return null;
-      return { ...itemDef, instanceId: -1, quantity: 1, isRandom: activeCraftingRecipe.outputPool.length > 1 };
-  }, [activeCraftingRecipe]);
 
   const canCraft = useMemo(() => {
     if (!activeCraftingRecipe || craftingMaterialReqs.some(m => !m)) return false;
@@ -357,43 +347,53 @@ const Blacksmith = ({ onClose }) => {
 
   // --- Sub-Components defined inside Blacksmith ---
 
-  const ForgingSlot = ({ item, slotType, onClick, isEmpty, labelOverride, isPreview = false }) => {
+  const ForgingSlot = ({ item, slotType, onClick, isEmpty, labelOverride }) => {
     const enrichedItem = item && item.id >= 9001 ? item : enrichPlayerItem(item);
     const style = {
         weapon: { border: 'border-red-500/50', bg: 'bg-gradient-to-br from-red-900/40 to-red-800/40', hoverBg: 'hover:bg-red-700/30', hoverBorder: 'hover:border-red-400', icon: '⚔️', label: 'Trang Bị'},
         material: { border: 'border-green-500/50', bg: 'bg-gradient-to-br from-green-900/40 to-green-800/40', hoverBg: 'hover:bg-green-700/30', hoverBorder: 'hover:border-green-400', icon: '💎', label: 'Nguyên Liệu'},
-        skill_book: { border: 'border-cyan-500/50', bg: 'bg-gradient-to-br from-cyan-900/40 to-cyan-800/40', hoverBg: 'hover:bg-cyan-700/30', hoverBorder: 'hover:border-cyan-400', icon: '📖', label: 'Sách Kỹ Năng' },
-        output: { border: 'border-yellow-500/50', bg: 'bg-gradient-to-br from-yellow-900/40 to-yellow-800/40', hoverBg: '', hoverBorder: '', icon: '❔', label: 'Thành Phẩm' },
+        skill_book: { border: 'border-cyan-500/50', bg: 'bg-gradient-to-br from-cyan-900/40 to-cyan-800/40', hoverBg: 'hover:bg-cyan-700/30', hoverBorder: 'hover:border-cyan-400', icon: '📖', label: 'Sách Kỹ Năng' }
     }[slotType];
     
-    const clickHandler = isPreview ? undefined : onClick;
-
     return (
-      <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-32 ${clickHandler ? 'cursor-pointer' : 'cursor-default'} ${style.border} ${style.bg} ${clickHandler ? style.hoverBg : ''} ${clickHandler ? style.hoverBorder : ''} ${enrichedItem && !isEmpty ? 'shadow-lg transform hover:scale-105' : 'border-dashed'} ${isEmpty ? 'animate-pulse' : ''}`} onClick={clickHandler} >
-        {enrichedItem && !isEmpty ? (
+      <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-32 cursor-pointer ${style.border} ${style.bg} ${style.hoverBg} ${style.hoverBorder} ${enrichedItem ? 'shadow-lg transform hover:scale-105' : 'border-dashed'} ${isEmpty ? 'animate-pulse' : ''}`} onClick={onClick} >
+        {enrichedItem ? (
           <>
             <div className="w-16 h-16 flex items-center justify-center mb-2">{typeof enrichedItem.icon === 'string' && enrichedItem.icon.startsWith('http') ? <img src={enrichedItem.icon} alt={enrichedItem.name} className="max-w-full max-h-full" /> : <div className="text-5xl">{enrichedItem.icon}</div>}</div>
             <span className="font-medium text-center text-white text-sm">{enrichedItem.name.replace(/\s*\(\+\d+\)/, '')} {enrichedItem.level && <span className="font-bold text-yellow-400 ml-1">Lv.{enrichedItem.level}</span>}</span>
             {enrichedItem.quantity > 1 && <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] font-bold rounded-full">{`x${enrichedItem.quantity}`}</span>}
             <div className={`absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold ${getRarityTextColor(enrichedItem.rarity)} ${getRarityColor(enrichedItem.rarity).replace('border-','bg-')}/30`}>{enrichedItem.rarity}</div>
-            {enrichedItem.isRandom && <div className="absolute -bottom-2.5 text-xs text-yellow-300 bg-black/50 px-2 py-0.5 rounded-md">Ngẫu nhiên</div>}
           </>
         ) : (
-          <div className="text-center"><div className="mb-1 opacity-50 text-5xl">{style.icon}</div><span className="text-gray-400 text-xs font-medium">{labelOverride || style.label}</span></div>
+          <div className="text-center"><div className="mb-1 opacity-50 text-3xl">{style.icon}</div><span className="text-gray-400 text-xs font-medium">{labelOverride || style.label}</span></div>
         )}
       </div>
     );
   };
   
-  const MaterialRequirementIndicator = ({ material }) => {
+  // New helper component for displaying material requirements
+  const MaterialRequirementDisplay = ({ material }) => {
+    if (!material) {
+        return (
+             <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600/50 bg-black/20 h-32 w-full text-center">
+                <div className="mb-1 opacity-50 text-3xl">❓</div>
+                <span className="text-gray-500 text-xs font-medium">Nguyên liệu</span>
+             </div>
+        );
+    }
+    
     const hasEnough = material.has >= material.required;
+
     return (
-        <div className={`relative flex items-center gap-2 rounded-lg p-2 transition-all w-full text-left bg-black/30 border ${hasEnough ? 'border-gray-700' : 'border-red-600/70'}`}>
-            <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center text-2xl">{material.icon}</div>
-            <div className="flex-grow">
-                <div className="text-white text-xs font-semibold -mb-0.5">{material.name}</div>
-                <div className={`font-bold text-xs ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>{material.has} / {material.required}</div>
+        <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-32 w-full text-center bg-gradient-to-br from-gray-900 to-black/20 ${hasEnough ? 'border-gray-500' : 'border-red-600 shadow-md shadow-red-500/20'}`}>
+            <div className="w-14 h-14 flex items-center justify-center mb-2">
+                {typeof material.icon === 'string' && material.icon.startsWith('http') ? <img src={material.icon} alt={material.name} className="max-w-full max-h-full" /> : <div className="text-4xl">{material.icon}</div>}
             </div>
+            <span className="font-medium text-center text-white text-xs -mt-1">{material.name}</span>
+            <span className={`font-bold text-sm mt-1 ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
+                {material.has} / {material.required}
+            </span>
+            <div className={`absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold ${getRarityTextColor(material.rarity)} ${getRarityColor(material.rarity).replace('border-','bg-')}/30`}>{material.rarity}</div>
         </div>
     );
   };
@@ -436,8 +436,8 @@ const Blacksmith = ({ onClose }) => {
       <div className="max-w-7xl mx-auto h-full flex flex-col">
         <div className="flex justify-between items-center shrink-0">
           <div className="flex justify-center gap-1 p-1 bg-gray-800/50 rounded-full shadow-lg border border-gray-700 max-w-fit">
-              <button className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${activeTab === 'craft' ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-md' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`} onClick={() => setActiveTab('craft')}>Rèn</button>
               <button className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${activeTab === 'upgrade' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`} onClick={() => setActiveTab('upgrade')}>Nâng Cấp</button>
+              <button className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${activeTab === 'craft' ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-md' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`} onClick={() => setActiveTab('craft')}>Rèn</button>
               <button className={`flex items-center justify-center px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 transform ${activeTab === 'skills' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md' : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'}`} onClick={() => setActiveTab('skills')}>Kỹ Năng</button>
           </div>
           <button onClick={onClose} className="text-white shadow-lg z-50 transition-transform transform hover:scale-110" aria-label="Đóng lò rèn" title="Đóng lò rèn">
@@ -464,30 +464,34 @@ const Blacksmith = ({ onClose }) => {
             </div>
           )}
           {activeTab === 'craft' && (
-            <div className="p-4 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm flex flex-col justify-center">
-                <div className="flex items-center justify-around gap-2">
-                    {/* INPUT SECTION */}
-                    <div className="flex flex-col items-center gap-3 w-[160px]">
-                        <ForgingSlot item={craftingPieceSlot} slotType="material" onClick={handleCraftingPieceSlotClick} isEmpty={!craftingPieceSlot} labelOverride="Mảnh Ghép"/>
-                        <div className="w-full space-y-1.5">
-                            {craftingPieceSlot && craftingMaterialReqs.map((mat, i) => mat ? <MaterialRequirementIndicator key={i} material={mat} /> : null)}
+            <div className="flex flex-col">
+                <div className="mb-4 p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
+                    <div className="flex items-center justify-center gap-2 sm:gap-4">
+                        <div className="w-24 sm:w-32 flex-shrink-0">
+                            <ForgingSlot item={craftingPieceSlot} slotType="material" onClick={handleCraftingPieceSlotClick} isEmpty={!craftingPieceSlot} labelOverride="Mảnh Ghép"/>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-light text-gray-500 self-center pb-8">+</div>
+                        <div className="w-24 sm:w-32 flex-shrink-0">
+                            <MaterialRequirementDisplay material={craftingMaterialReqs[0]} />
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-light text-gray-500 self-center pb-8">+</div>
+                        <div className="w-24 sm:w-32 flex-shrink-0">
+                            <MaterialRequirementDisplay material={craftingMaterialReqs[1]} />
                         </div>
                     </div>
-
-                    {/* ACTION/CONNECTOR SECTION */}
-                    <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                       <div className="text-4xl text-gray-500 px-4">➡️</div>
-                       <button onClick={handleCraft} disabled={!canCraft || isProcessing} className="px-5 py-2 rounded-lg font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-green-500 to-teal-500 text-white hover:brightness-110 hover:scale-105 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100 disabled:brightness-100 text-sm">
-                           {isProcessing ? 'Đang Rèn...' : 'Rèn'}
-                       </button>
-                    </div>
-
-                    {/* OUTPUT SECTION */}
-                    <div className="flex flex-col items-center gap-3 w-[160px]">
-                        <ForgingSlot item={craftOutputPreview} slotType="output" isEmpty={!craftOutputPreview} isPreview={true} />
-                    </div>
                 </div>
-                 {!craftingPieceSlot && (<p className="text-center text-sm text-gray-400 mt-4">Đặt một mảnh ghép vào ô bên trái để bắt đầu.</p>)}
+                <div className="flex flex-col items-center justify-center min-h-[4rem] text-center">
+                    {activeCraftingRecipe ? (
+                        <>
+                            <p className="text-sm text-gray-400 mb-3 px-4">{activeCraftingRecipe.description}</p>
+                            <button onClick={handleCraft} disabled={!canCraft || isProcessing} className="px-8 py-3 rounded-lg text-lg font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-green-500 to-teal-500 text-white hover:brightness-110 hover:scale-105 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100 disabled:brightness-100">
+                                {isProcessing ? 'Đang Rèn...' : 'Rèn Vật Phẩm'}
+                            </button>
+                        </>
+                    ) : (
+                        <p className="text-center text-sm text-gray-400">Đặt một mảnh ghép vào để xem công thức.</p>
+                    )}
+                </div>
             </div>
           )}
           {activeTab === 'skills' && (
@@ -508,10 +512,12 @@ const Blacksmith = ({ onClose }) => {
             </div>
           )}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-2xl border border-blue-500/30">
+            {/* THÊM ref VÀ className CHO VÙNG SCROLL */}
             <div ref={inventoryGridRef} className={`grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[20rem] sm:max-h-full overflow-y-auto hide-scrollbar pr-2 ${isScrolling ? 'is-scrolling' : ''}`}>
               {fullInventory.map((item) => {
                   if (!item) return null;
                   return (
+                    // THÊM will-change-transform
                     <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden will-change-transform ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
                       {item.quantity > 1 && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>)}
                       {typeof item.icon === 'string' && item.icon.startsWith('http') ? (<img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />) : (<div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>)}
@@ -525,6 +531,7 @@ const Blacksmith = ({ onClose }) => {
       </div>
       <CustomAlert isVisible={alert.isVisible} message={alert.message} type={alert.type} onClose={hideAlert}/>
       <ForgingAnimation isProcessing={isProcessing} />
+      {/* THÊM CSS ĐỂ VÔ HIỆU HÓA HOVER KHI SCROLL */}
       <style jsx>{`
         .is-scrolling .group:hover {
             transform: none !important;
