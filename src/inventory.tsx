@@ -102,7 +102,7 @@ const getRarityTextColor = (rarity: string) => { // Dùng cho màu chữ
         default: return 'text-gray-400'; 
     }
 };
-const getRarityGlowClass = (rarity: string) => { // THAY ĐỔI: Trả về class cho hiệu ứng hào quang bên trong
+const getRarityGlowClass = (rarity: string) => { // Trả về class cho hiệu ứng hào quang bên trong
     switch(rarity) {
         // Không có glow cho E, D
         case 'B': return 'glow-B';
@@ -222,7 +222,6 @@ const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) 
     );
 };
 
-// THAY ĐỔI: Cập nhật component InventoryItem để chứa hiệu ứng hào quang
 const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItemClick: (item: any) => void }) => {
   const totalQuantity = itemGroup.variants.reduce((sum, v) => sum + v.quantity, 0);
   const glowClass = getRarityGlowClass(itemGroup.rarity);
@@ -245,7 +244,6 @@ const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItem
   );
 });
 
-// THAY ĐỔI: Cập nhật component EquipmentSlot để chứa hiệu ứng hào quang
 const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string, item: any, onSlotClick: (item: any, slotType: string) => void }) => {
     const rarity = item ? item.rarity : 'E';
     const glowClass = item ? getRarityGlowClass(rarity) : '';
@@ -292,7 +290,8 @@ interface InventoryManagerProps {
 }
 
 export default function InventoryManager({ onClose }: InventoryManagerProps) {
-  const [activeTab, setActiveTab] = 'profile'>('profile'); // Default to profile for demo
+  // ** SỬA LỖI TẠI ĐÂY **
+  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('profile'); // Default to profile for demo
   const [inventory, setInventory] = useState(() => getHydratedInventory());
   const [equippedItems, setEquippedItems] = useState<{[key: string]: any | null}>({
       weapon: null, helmet: null, armor: null, gloves: null, boots: null, skin: null
@@ -441,7 +440,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
           </div>
       </div>
       
-      {/* THAY ĐỔI: CSS cho hiệu ứng hào quang bên trong */}
       <style>{`
         @keyframes subtle-glow-pulse { 50% { opacity: 0.7; transform: scale(1.05); } }
         
