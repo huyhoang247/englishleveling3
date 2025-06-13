@@ -135,6 +135,7 @@ const Blacksmith = ({ onClose }) => {
   const [upgradeMaterialSlot, setUpgradeMaterialSlot] = useState<PlayerItem | null>(null);
   const [skillWeaponSlot, setSkillWeaponSlot] = useState<PlayerItem | null>(null);
   const [skillBookSlot, setSkillBookSlot] = useState<any | null>(null);
+  const [craftingPieceSlot, setCraftingPieceSlot] = useState<PlayerItem | null>(null); // New state for crafting
   const [alert, setAlert] = useState({ isVisible: false, message: '', type: 'info' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [upgradeChance, setUpgradeChance] = useState(0);
@@ -226,16 +227,7 @@ const Blacksmith = ({ onClose }) => {
       return [...prev, itemToReturn];
     })
   }, []);
-  
-  const checkCanCraft = useCallback((recipe) => {
-    if (!recipe) return false;
-    for (const mat of recipe.materialsRequired) {
-        const totalInInventory = playerInventory.filter(pItem => pItem.id === mat.id).reduce((sum, current) => sum + current.quantity, 0);
-        if (totalInInventory < mat.quantity) return false;
-    }
-    return true;
-  }, [playerInventory]);
-  
+    
   useEffect(() => {
     setUpgradeChance(upgradeWeaponSlot && upgradeMaterialSlot ? 50 : 0);
   }, [upgradeWeaponSlot, upgradeMaterialSlot]);
@@ -252,7 +244,18 @@ const Blacksmith = ({ onClose }) => {
         if (!upgradeWeaponSlot) { setUpgradeWeaponSlot(playerItem); updateItemInInventory(playerItem.instanceId, -playerItem.quantity); } else showAlert('Đã có trang bị trong ô nâng cấp!', 'warning');
       } else if (itemToMove.id === 17) { if (!upgradeMaterialSlot) { const materialStack = { ...playerItem, quantity: 1 }; setUpgradeMaterialSlot(materialStack); updateItemInInventory(playerItem.instanceId, -1); } else showAlert('Đã có Đá Cường Hoá trong ô!', 'warning');
       } else showAlert('Vật phẩm này không thể dùng để nâng cấp.', 'warning');
-    } else if (activeTab === 'craft') { showAlert('Vui lòng chọn công thức bên trái, nguyên liệu sẽ được lấy tự động.', 'info');
+    } else if (activeTab === 'craft') {
+        if (itemToMove.type === 'piece') {
+            if (!craftingPieceSlot) {
+                const pieceItem = { ...playerItem, quantity: 1 };
+                setCraftingPieceSlot(pieceItem);
+                updateItemInInventory(playerItem.instanceId, -1);
+            } else {
+                showAlert('Đã có mảnh ghép trong ô rèn!', 'warning');
+            }
+        } else {
+            showAlert('Chỉ có thể đặt Mảnh Ghép vào ô này.', 'warning');
+        }
     } else if (activeTab === 'skills') {
       if (['weapon', 'armor', 'accessory'].includes(itemToMove.type)) { if (!skillWeaponSlot) { setSkillWeaponSlot(playerItem); updateItemInInventory(playerItem.instanceId, -playerItem.quantity); } else showAlert('Đã có trang bị trong ô.', 'warning');
       } else if (itemToMove.type === 'skill_book') { if (!skillBookSlot) { setSkillBookSlot(itemToMove); } else showAlert('Đã có sách kỹ năng trong ô.', 'warning');
@@ -264,6 +267,8 @@ const Blacksmith = ({ onClose }) => {
   const handleUpgradeMaterialSlotClick = () => { if (isProcessing || !upgradeMaterialSlot) return; const originalStack = playerInventory.find(i => i.id === 17); if(originalStack) { updateItemInInventory(originalStack.instanceId, 1); } else { addNewItemToInventory(17, 1); } setUpgradeMaterialSlot(null); };
   const handleSkillWeaponSlotClick = () => { if (isProcessing || !skillWeaponSlot) return; returnItemToInventory(skillWeaponSlot); setSkillWeaponSlot(null); };
   const handleSkillBookSlotClick = () => { if (isProcessing || !skillBookSlot) return; setSkillBookSlot(null); };
+  const handleCraftingPieceSlotClick = () => { if (isProcessing || !craftingPieceSlot) return; returnItemToInventory(craftingPieceSlot); setCraftingPieceSlot(null); };
+
 
   const handleUpgrade = async () => {
     if (!upgradeWeaponSlot || !upgradeMaterialSlot) { showAlert('Cần 1 trang bị và 1 Đá Cường Hoá để nâng cấp!', 'error'); return; }
@@ -280,13 +285,39 @@ const Blacksmith = ({ onClose }) => {
     } else { returnItemToInventory(originalItem); showAlert('Nâng cấp thất bại! Đá Cường Hoá đã bị mất, nhưng trang bị được bảo toàn.', 'error'); }
     setIsProcessing(false);
   };
+  
+  // --- START: NEW CRAFTING LOGIC ---
+  const activeCraftingRecipe = useMemo(() => {
+    if (!craftingPieceSlot) return null;
+    return CRAFTING_RECIPES_DEFINITION.find(r => r.type === 'piece_based' && r.pieceId === craftingPieceSlot.id);
+  }, [craftingPieceSlot]);
 
-  const handleCraft = async (recipe) => {
-    if (!recipe || !checkCanCraft(recipe)) { showAlert('Không đủ nguyên liệu để rèn!', 'error'); return; }
+  const craftingMaterialReqs = useMemo(() => {
+    if (!activeCraftingRecipe) return [null, null];
+    return activeCraftingRecipe.materialsRequired.map(mat => {
+        const definition = enrichPlayerItem({ id: mat.id, instanceId: 0, quantity: mat.quantity });
+        if (!definition) return null;
+        const playerHas = playerInventory.filter(pItem => pItem.id === mat.id).reduce((sum, current) => sum + current.quantity, 0);
+        return { ...definition, required: mat.quantity, has: playerHas };
+    });
+  }, [activeCraftingRecipe, playerInventory, enrichPlayerItem]);
+
+  const canCraft = useMemo(() => {
+    if (!activeCraftingRecipe || craftingMaterialReqs.some(m => !m)) return false;
+    return craftingMaterialReqs.every(mat => mat.has >= mat.required);
+  }, [activeCraftingRecipe, craftingMaterialReqs]);
+
+  const handleCraft = async () => {
+    if (!canCraft || !activeCraftingRecipe) {
+        showAlert('Không đủ nguyên liệu hoặc chưa chọn mảnh ghép!', 'error');
+        return;
+    }
     setIsProcessing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Consume materials
     let inventoryCopy = [...playerInventory];
-    for (const mat of recipe.materialsRequired) {
+    for (const mat of activeCraftingRecipe.materialsRequired) {
         let quantityToConsume = mat.quantity;
         for (let i = 0; i < inventoryCopy.length; i++) {
             if (inventoryCopy[i].id === mat.id) {
@@ -298,15 +329,21 @@ const Blacksmith = ({ onClose }) => {
         }
     }
     setPlayerInventory(inventoryCopy.filter(i => i.quantity > 0));
-    const outputId = recipe.outputPool[Math.floor(Math.random() * recipe.outputPool.length)];
+
+    // Get output
+    const outputId = activeCraftingRecipe.outputPool[Math.floor(Math.random() * activeCraftingRecipe.outputPool.length)];
     addNewItemToInventory(outputId, 1);
     const craftedItemDef = itemDatabase.get(outputId);
+    
+    setCraftingPieceSlot(null);
     showAlert(`Rèn thành công! Bạn đã tạo ra ${craftedItemDef?.name}!`, 'success');
     setIsProcessing(false);
   };
+  // --- END: NEW CRAFTING LOGIC ---
+
 
   const handleLearnSkill = async () => { if (!skillWeaponSlot || !skillBookSlot) return; showAlert('Học kỹ năng thành công!', 'success'); /* Logic chi tiết ở đây */ };
-  const handleClearSlots = () => { if (isProcessing) return; handleUpgradeWeaponSlotClick(); handleUpgradeMaterialSlotClick(); handleSkillWeaponSlotClick(); handleSkillBookSlotClick(); };
+  const handleClearSlots = () => { if (isProcessing) return; handleUpgradeWeaponSlotClick(); handleUpgradeMaterialSlotClick(); handleSkillWeaponSlotClick(); handleSkillBookSlotClick(); handleCraftingPieceSlotClick(); };
 
   // --- Sub-Components defined inside Blacksmith ---
 
@@ -334,6 +371,34 @@ const Blacksmith = ({ onClose }) => {
     );
   };
   
+  // New helper component for displaying material requirements
+  const MaterialRequirementDisplay = ({ material }) => {
+    if (!material) {
+        return (
+             <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600/50 bg-black/20 h-32 w-full text-center">
+                <div className="mb-1 opacity-50 text-3xl">❓</div>
+                <span className="text-gray-500 text-xs font-medium">Nguyên liệu</span>
+             </div>
+        );
+    }
+    
+    const hasEnough = material.has >= material.required;
+
+    return (
+        <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-32 w-full text-center bg-gradient-to-br from-gray-900 to-black/20 ${hasEnough ? 'border-gray-500' : 'border-red-600 shadow-md shadow-red-500/20'}`}>
+            <div className="w-14 h-14 flex items-center justify-center mb-2">
+                {typeof material.icon === 'string' && material.icon.startsWith('http') ? <img src={material.icon} alt={material.name} className="max-w-full max-h-full" /> : <div className="text-4xl">{material.icon}</div>}
+            </div>
+            <span className="font-medium text-center text-white text-xs -mt-1">{material.name}</span>
+            <span className={`font-bold text-sm mt-1 ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
+                {material.has} / {material.required}
+            </span>
+            <div className={`absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold ${getRarityTextColor(material.rarity)} ${getRarityColor(material.rarity).replace('border-','bg-')}/30`}>{material.rarity}</div>
+        </div>
+    );
+  };
+
+
   const CustomAlert = ({ isVisible, message, onClose, type = 'info' }) => { 
     if (!isVisible) return null; 
     const typeStyles = { 
@@ -399,27 +464,34 @@ const Blacksmith = ({ onClose }) => {
             </div>
           )}
           {activeTab === 'craft' && (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm flex flex-col">
-              <h2 className="text-2xl font-bold text-green-300 mb-4">📜 Danh sách công thức</h2>
-              <div className="space-y-3 overflow-y-auto max-h-[30rem] hide-scrollbar pr-2">
-                {CRAFTING_RECIPES_DEFINITION.map((recipe, index) => {
-                  const canCraft = checkCanCraft(recipe);
-                  const outputDef = itemDatabase.get(recipe.outputPool ? recipe.outputPool[0] : recipe.outputItemId);
-                  return (
-                    <div key={index} className={`p-3 rounded-lg border ${canCraft ? 'border-green-500/50' : 'border-gray-700/50'} bg-black/20`}>
-                      <h3 className="font-bold text-lg text-yellow-300">{outputDef?.name} {recipe.outputPool ? '(Ngẫu nhiên)' : ''}</h3>
-                      <p className="text-xs text-gray-400 mb-2">{recipe.description}</p>
-                      <div className="text-sm">
-                        <span className="font-semibold text-gray-300">Yêu cầu:</span>
-                        <ul className="list-disc list-inside ml-2 text-xs">
-                          {recipe.materialsRequired.map(mat => { const matDef = itemDatabase.get(mat.id); return <li key={mat.id} className="text-gray-400">{matDef?.name} x{mat.quantity}</li> })}
-                        </ul>
-                      </div>
-                      <button onClick={() => handleCraft(recipe)} disabled={!canCraft || isProcessing} className="w-full mt-3 py-2 text-sm font-bold rounded-md transition-all disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed bg-green-600 hover:bg-green-500 text-white">{isProcessing ? 'Đang rèn...' : 'Rèn'}</button>
+            <div className="flex flex-col">
+                <div className="mb-4 p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
+                    <div className="flex items-center justify-center gap-2 sm:gap-4">
+                        <div className="w-24 sm:w-32 flex-shrink-0">
+                            <ForgingSlot item={craftingPieceSlot} slotType="material" onClick={handleCraftingPieceSlotClick} isEmpty={!craftingPieceSlot} labelOverride="Mảnh Ghép"/>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-light text-gray-500 self-center pb-8">+</div>
+                        <div className="w-24 sm:w-32 flex-shrink-0">
+                            <MaterialRequirementDisplay material={craftingMaterialReqs[0]} />
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-light text-gray-500 self-center pb-8">+</div>
+                        <div className="w-24 sm:w-32 flex-shrink-0">
+                            <MaterialRequirementDisplay material={craftingMaterialReqs[1]} />
+                        </div>
                     </div>
-                  )
-                })}
-              </div>
+                </div>
+                <div className="flex flex-col items-center justify-center min-h-[4rem] text-center">
+                    {activeCraftingRecipe ? (
+                        <>
+                            <p className="text-sm text-gray-400 mb-3 px-4">{activeCraftingRecipe.description}</p>
+                            <button onClick={handleCraft} disabled={!canCraft || isProcessing} className="px-8 py-3 rounded-lg text-lg font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-green-500 to-teal-500 text-white hover:brightness-110 hover:scale-105 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100 disabled:brightness-100">
+                                {isProcessing ? 'Đang Rèn...' : 'Rèn Vật Phẩm'}
+                            </button>
+                        </>
+                    ) : (
+                        <p className="text-center text-sm text-gray-400">Đặt một mảnh ghép vào để xem công thức.</p>
+                    )}
+                </div>
             </div>
           )}
           {activeTab === 'skills' && (
@@ -485,5 +557,3 @@ const Blacksmith = ({ onClose }) => {
 };
 
 export default Blacksmith;
-
-// --- END OF FILE blacksmith.tsx ---
