@@ -199,7 +199,6 @@ const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItem
   );
 });
 
-// --- THAY ĐỔI 1: Tinh chỉnh EquipmentSlot để có giao diện gọn gàng hơn ---
 const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string, item: any, onSlotClick: (item: any, slotType: string) => void }) => {
     const rarity = item ? item.rarity : 'E';
     return (
@@ -218,7 +217,6 @@ const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string,
         </div>
     );
 });
-// --- KẾT THÚC THAY ĐỔI 1 ---
 
 // StatsPanel không còn được dùng trong layout mới, nhưng vẫn giữ lại để có thể tái sử dụng
 const StatsPanel = memo(({ stats }: { stats: any }) => (
@@ -330,13 +328,13 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
     }
   }, [openDetailModal]);
 
+  // --- THAY ĐỔI: Loại bỏ hành vi khi click vào ô trống ---
   const handleProfileSlotClick = useCallback((item, slotType) => {
+      // Chỉ thực hiện hành động nếu có item (item không phải null)
       if(item) {
           openDetailModal(item, 'profile');
-      } else {
-        // Optional: Open inventory filtered by slotType when clicking an empty slot
-        setActiveTab('inventory');
       }
+      // Khi 'item' là null (ô trống), không làm gì cả.
   }, [openDetailModal]);
   
   const handleSelectVariant = useCallback((variant) => {
@@ -419,7 +417,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
             ))}
           </div>
       ) : (
-          // --- THAY ĐỔI 2: Layout Trang Bị mới, được thiết kế lại hoàn toàn ---
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 sm:gap-x-4 md:gap-x-6 py-4">
               
               {/* Cột Trái: 3 ô trang bị */}
@@ -478,7 +475,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
                   ))}
               </div>
           </div>
-           // --- KẾT THÚC THAY ĐỔI 2 ---
       )}
     </div>
   );
