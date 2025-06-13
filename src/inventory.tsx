@@ -7,6 +7,8 @@ import { playerInventoryData } from './inventory/player-inventory-data.ts';
 
 // --- START: DỮ LIỆU VÀ CÁC LOẠI TRANG BỊ MỚI ---
 const basePlayerStats = {
+    // Added base health for display purposes
+    health: 5000,
     damage: 10,
     defense: 5,
     strength: 15,
@@ -15,13 +17,14 @@ const basePlayerStats = {
     luck: 2,
 };
 
-// --- THAY ĐỔI 1: Thay 'ring' bằng 'skin' ---
+// The image shows 6 slots. This list from the original code has 6 types, which is a perfect match.
 const equipmentSlotTypes = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'skin'];
 
 const getSlotPlaceholderIcon = (slotType: string) => {
+    // Using more thematic icons for placeholders
     const icons: { [key: string]: string } = {
-        weapon: '⚔️', helmet: '⛑️', armor: '🛡️',
-        gloves: '🧤', boots: '👢', skin: '👕' // Thay đổi icon cho slot mới
+        weapon: '⚔️', helmet: '👑', armor: '🛡️',
+        gloves: '🧤', boots: '👢', skin: '💎' // skin can be a relic/amulet
     };
     return icons[slotType] || '?';
 };
@@ -78,7 +81,7 @@ const getRarityGlow = (rarity: string) => {
     switch(rarity) { case 'E': return ''; case 'D': return ''; case 'B': return 'shadow-sm shadow-blue-500/30'; case 'A': return 'shadow-md shadow-purple-500/40'; case 'S': return 'shadow-lg shadow-yellow-400/50'; case 'SR': return 'shadow-xl shadow-red-500/50'; default: return ''; }
 };
 const formatStatName = (stat: string) => {
-    const translations: { [key: string]: string } = { damage: 'Sát thương', durability: 'Độ bền', healing: 'Hồi máu', defense: 'Phòng thủ', energyRestore: 'Hồi năng lượng', magicBoost: 'Tăng phép', intelligence: 'Trí tuệ', resurrection: 'Hồi sinh', fireDamage: 'Sát thương lửa', strength: 'Sức mạnh', attackSpeed: 'Tốc độ tấn công', manaRegen: 'Hồi mana', range: 'Tầm xa', poisonDamage: 'Sát thương độc', duration: 'Thời gian', magicResist: 'Kháng phép', manaRestore: 'Hồi mana', speed: 'Tốc độ', cleanse: 'Thanh tẩy', strengthBoost: 'Tăng sức mạnh', luck: 'May mắn' };
+    const translations: { [key: string]: string } = { damage: 'Sát thương', health: 'Máu', durability: 'Độ bền', healing: 'Hồi máu', defense: 'Phòng thủ', energyRestore: 'Hồi năng lượng', magicBoost: 'Tăng phép', intelligence: 'Trí tuệ', resurrection: 'Hồi sinh', fireDamage: 'Sát thương lửa', strength: 'Sức mạnh', attackSpeed: 'Tốc độ tấn công', manaRegen: 'Hồi mana', range: 'Tầm xa', poisonDamage: 'Sát thương độc', duration: 'Thời gian', magicResist: 'Kháng phép', manaRestore: 'Hồi mana', speed: 'Tốc độ', cleanse: 'Thanh tẩy', strengthBoost: 'Tăng sức mạnh', luck: 'May mắn' };
     return translations[stat] || stat.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 };
 
@@ -196,28 +199,28 @@ const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItem
   );
 });
 
+// --- THAY ĐỔI 1: Tinh chỉnh EquipmentSlot để có giao diện gọn gàng hơn ---
 const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string, item: any, onSlotClick: (item: any, slotType: string) => void }) => {
     const rarity = item ? item.rarity : 'E';
     return (
-        <div className="flex flex-col items-center gap-1.5">
-            <span className="text-xs text-gray-400 capitalize">{slotType}</span>
-            <div 
-                className={`group relative w-24 h-24 bg-gradient-to-br ${item ? getRarityGradient(rarity) : 'from-gray-900 to-gray-800'} rounded-lg border-2 ${item ? getRarityColor(rarity) : 'border-gray-700'} flex items-center justify-center cursor-pointer hover:brightness-125 transition-all duration-200 shadow-lg ${item ? getRarityGlow(rarity) : ''} overflow-hidden`}
-                onClick={() => item && onSlotClick(item, slotType)}
-            >
-                {item ? (
-                    <>
-                        {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-1.5" /> : <div className="text-3xl">{item.icon}</div>}
-                        <ItemTooltip item={item} isEquipped={true} />
-                    </>
-                ) : (
-                    <span className="text-4xl text-gray-600">{getSlotPlaceholderIcon(slotType)}</span>
-                )}
-            </div>
+        <div 
+            className={`group relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br ${item ? getRarityGradient(rarity) : 'from-gray-900/60 to-gray-800/40'} rounded-lg border-2 ${item ? getRarityColor(rarity) : 'border-gray-700/60'} flex items-center justify-center cursor-pointer hover:brightness-125 transition-all duration-200 shadow-lg ${item ? getRarityGlow(rarity) : 'shadow-inner'} overflow-hidden`}
+            onClick={() => onSlotClick(item, slotType)}
+        >
+            {item ? (
+                <>
+                    {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-1.5" /> : <div className="text-3xl">{item.icon}</div>}
+                    <ItemTooltip item={item} isEquipped={true} />
+                </>
+            ) : (
+                <span className="text-4xl text-gray-600 opacity-60">{getSlotPlaceholderIcon(slotType)}</span>
+            )}
         </div>
     );
 });
+// --- KẾT THÚC THAY ĐỔI 1 ---
 
+// StatsPanel không còn được dùng trong layout mới, nhưng vẫn giữ lại để có thể tái sử dụng
 const StatsPanel = memo(({ stats }: { stats: any }) => (
     <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/70 w-full">
         <h3 className="text-lg font-bold text-yellow-300 mb-4 text-center">Chỉ Số Nhân Vật</h3>
@@ -241,9 +244,8 @@ interface InventoryManagerProps {
 }
 
 export default function InventoryManager({ onClose }: InventoryManagerProps) {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('profile'); // Default to profile for demo
   const [inventory, setInventory] = useState(() => getHydratedInventory());
-  // --- THAY ĐỔI 2: Cập nhật state trang bị ---
   const [equippedItems, setEquippedItems] = useState<{[key: string]: any | null}>({
       weapon: null, helmet: null, armor: null, gloves: null, boots: null, skin: null
   });
@@ -331,6 +333,9 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
   const handleProfileSlotClick = useCallback((item, slotType) => {
       if(item) {
           openDetailModal(item, 'profile');
+      } else {
+        // Optional: Open inventory filtered by slotType when clicking an empty slot
+        setActiveTab('inventory');
       }
   }, [openDetailModal]);
   
@@ -373,9 +378,7 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
   return (
     <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-4xl mx-auto border border-gray-700/50 min-h-screen">
       
-      {/* START: Header được thiết kế lại */}
       <div className="flex justify-between items-center mb-6 border-b border-gray-700/60 pb-5">
-          {/* Nhóm Tabs điều hướng */}
           <div className="flex space-x-2 bg-gray-900/70 p-1 rounded-lg border border-gray-800 w-full sm:w-auto">
               <button onClick={() => setActiveTab('inventory')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'inventory' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
                 <span>📦</span>
@@ -386,8 +389,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
                 <span>Trang Bị</span>
               </button>
           </div>
-          
-          {/* Các nút bên phải */}
           <div className="flex items-center gap-4 pl-4">
               {activeTab === 'inventory' && 
                   <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80 hidden sm:block">
@@ -399,7 +400,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
               </button>
           </div>
       </div>
-      {/* END: Header được thiết kế lại */}
       
       <style>{`.is-scrolling .group:hover{transform:none!important;filter:none!important}.is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}.is-scrolling .group .group-hover\\:scale-110{transform:none!important}.inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}.inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}`}</style>
       
@@ -419,11 +419,11 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
             ))}
           </div>
       ) : (
-          // --- START: BỐ CỤC TAB TRANG BỊ MỚI ---
-          <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-10 lg:gap-16 mt-4">
+          // --- THAY ĐỔI 2: Layout Trang Bị mới, được thiết kế lại hoàn toàn ---
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 sm:gap-x-4 md:gap-x-6 py-4">
               
-              {/* Cột trái: 3 trang bị */}
-              <div className="flex flex-row lg:flex-col gap-5">
+              {/* Cột Trái: 3 ô trang bị */}
+              <div className="flex flex-col items-center justify-center gap-y-4">
                   {['weapon', 'gloves', 'boots'].map(slotType => (
                       <EquipmentSlot
                           key={slotType}
@@ -434,18 +434,40 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
                   ))}
               </div>
 
-              {/* Giữa: Hình ảnh nhân vật và Chỉ số */}
-              <div className="flex flex-col items-center gap-8 order-first lg:order-none w-full lg:w-auto">
-                  {/* Hình ảnh nhân vật */}
-                  <div className="w-48 h-48 rounded-full bg-gradient-to-br from-purple-900/50 via-gray-900 to-black flex items-center justify-center border-2 border-purple-500/50 shadow-lg shadow-purple-900/40 mb-2">
-                      <span className="text-7xl opacity-80 -translate-y-2 select-none">👻</span>
+              {/* Cột Giữa: Nhân vật và Chỉ số */}
+              <div className="flex flex-col items-center gap-y-5 self-start pt-2">
+                  {/* Placeholder cho ảnh nhân vật */}
+                  <div className="w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center">
+                       {/* Thay thế bằng ảnh nhân vật thật. Ví dụ: <img src="/capybara-warrior.png" /> */}
+                       <span className="text-8xl sm:text-9xl drop-shadow-lg" style={{ transform: 'scaleX(-1)' }}>🐻</span>
                   </div>
-                  {/* Bảng chỉ số */}
-                  <StatsPanel stats={totalPlayerStats} />
+                  
+                  {/* Chỉ số sức mạnh */}
+                  <div className="flex items-center gap-2 bg-yellow-900/50 border border-yellow-600/80 rounded-md px-4 py-1.5 shadow-md shadow-black/40">
+                      {/* Thay thế bằng icon thật. Ví dụ: <img src={uiAssets.powerIcon} /> */}
+                      <span className="text-yellow-400 font-bold text-lg relative top-[-1px]">⚜️</span>
+                      <span className="font-bold text-white text-xl tracking-wider">30.3K</span>
+                  </div>
+
+                  {/* Thanh chỉ số cơ bản */}
+                  <div className="flex items-center justify-around w-full max-w-xs gap-x-4 rounded-full bg-black/30 px-4 py-2 border border-gray-700/50 shadow-inner">
+                      <div title={`Health: ${totalPlayerStats.health.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
+                          <span className="text-red-400">❤️</span>
+                          <span className="text-gray-200">{totalPlayerStats.health > 1000 ? `${(totalPlayerStats.health/1000).toFixed(1)}k` : totalPlayerStats.health.toFixed(0)}</span>
+                      </div>
+                      <div title={`Damage: ${totalPlayerStats.damage.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
+                          <span className="text-gray-400">⚔️</span>
+                          <span className="text-gray-200">{totalPlayerStats.damage > 1000 ? `${(totalPlayerStats.damage/1000).toFixed(1)}k` : totalPlayerStats.damage.toFixed(0)}</span>
+                      </div>
+                      <div title={`Defense: ${totalPlayerStats.defense.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
+                          <span className="text-blue-400">🛡️</span>
+                          <span className="text-gray-200">{totalPlayerStats.defense.toFixed(0)}</span>
+                      </div>
+                  </div>
               </div>
 
-              {/* Cột phải: 3 trang bị */}
-              <div className="flex flex-row lg:flex-col gap-5">
+              {/* Cột Phải: 3 ô trang bị */}
+              <div className="flex flex-col items-center justify-center gap-y-4">
                   {['helmet', 'armor', 'skin'].map(slotType => (
                       <EquipmentSlot
                           key={slotType}
@@ -455,9 +477,8 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
                       />
                   ))}
               </div>
-
           </div>
-          // --- END: BỐ CỤC TAB TRANG BỊ MỚI ---
+           // --- KẾT THÚC THAY ĐỔI 2 ---
       )}
     </div>
   );
