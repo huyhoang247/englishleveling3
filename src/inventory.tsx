@@ -23,7 +23,7 @@ const equipmentSlotTypes = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'ski
 const getSlotPlaceholderIcon = (slotType: string) => {
     // Using more thematic icons for placeholders
     const icons: { [key: string]: string } = {
-        weapon: '⚔️', helmet: '👑', armor: '🛡️',
+        weapon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2009_52_21%20PM.png', helmet: '👑', armor: '🛡️',
         gloves: '🧤', boots: '👢', skin: '💎' // skin can be a relic/amulet
     };
     return icons[slotType] || '?';
@@ -261,7 +261,13 @@ const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string,
                     <ItemTooltip item={item} isEquipped={true} />
                 </>
             ) : (
-                <span className="text-4xl text-gray-600 opacity-60">{getSlotPlaceholderIcon(slotType)}</span>
+                (() => {
+                    const placeholder = getSlotPlaceholderIcon(slotType);
+                    if (placeholder.startsWith('http')) {
+                        return <img src={placeholder} alt={`${slotType} slot`} className="w-10 h-10 opacity-60" />;
+                    }
+                    return <span className="text-4xl text-gray-600 opacity-60">{placeholder}</span>;
+                })()
             )}
         </div>
     );
