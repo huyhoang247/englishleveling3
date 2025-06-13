@@ -419,7 +419,7 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
             ))}
           </div>
       ) : (
-          // --- THAY ĐỔI 3: Cấu trúc lại toàn bộ layout của tab Trang Bị theo thiết kế mới ---
+          // --- START: BỐ CỤC TAB TRANG BỊ MỚI ---
           <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-10 lg:gap-16 mt-4">
               
               {/* Cột trái: 3 trang bị */}
@@ -457,6 +457,7 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
               </div>
 
           </div>
+          // --- END: BỐ CỤC TAB TRANG BỊ MỚI ---
       )}
     </div>
   );
