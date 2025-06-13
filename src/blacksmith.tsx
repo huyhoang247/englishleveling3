@@ -129,7 +129,7 @@ const ItemTooltip = ({ item }: { item: EnrichedPlayerItem }) => (
 
 // Main Component
 const Blacksmith = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState('craft'); // Đổi tab mặc định để dễ xem
+  const [activeTab, setActiveTab] = useState('craft');
   const [playerInventory, setPlayerInventory] = useState<PlayerItem[]>(playerInventoryData);
   const [upgradeWeaponSlot, setUpgradeWeaponSlot] = useState<PlayerItem | null>(null);
   const [upgradeMaterialSlot, setUpgradeMaterialSlot] = useState<PlayerItem | null>(null);
@@ -356,7 +356,7 @@ const Blacksmith = ({ onClose }) => {
     }[slotType];
     
     return (
-      <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-32 cursor-pointer ${style.border} ${style.bg} ${style.hoverBg} ${style.hoverBorder} ${enrichedItem ? 'shadow-lg transform hover:scale-105' : 'border-dashed'} ${isEmpty ? 'animate-pulse' : ''}`} onClick={onClick} >
+      <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-full w-full cursor-pointer ${style.border} ${style.bg} ${style.hoverBg} ${style.hoverBorder} ${enrichedItem ? 'shadow-lg transform hover:scale-105' : 'border-dashed'} ${isEmpty ? 'animate-pulse' : ''}`} onClick={onClick} >
         {enrichedItem ? (
           <>
             <div className="w-16 h-16 flex items-center justify-center mb-2">{typeof enrichedItem.icon === 'string' && enrichedItem.icon.startsWith('http') ? <img src={enrichedItem.icon} alt={enrichedItem.name} className="max-w-full max-h-full" /> : <div className="text-5xl">{enrichedItem.icon}</div>}</div>
@@ -371,13 +371,13 @@ const Blacksmith = ({ onClose }) => {
     );
   };
   
-  // *** UPDATED COMPONENT ***
-  const MaterialRequirementDisplay = ({ material }) => {
+  // *** NEW COMPONENT: Compact version for horizontal layout ***
+  const MaterialRequirementDisplayCompact = ({ material }) => {
     if (!material) {
         return (
-             <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600/50 bg-black/20 h-28 w-24 sm:w-28 text-center">
-                <div className="mb-1 opacity-50 text-2xl">❓</div>
-                <span className="text-gray-500 text-[11px] font-medium">Nguyên liệu</span>
+             <div className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-600/50 bg-black/20 h-24 w-20 text-center">
+                <div className="opacity-50 text-xl">❓</div>
+                <span className="text-gray-500 text-[10px] font-medium mt-1">Nguyên liệu</span>
              </div>
         );
     }
@@ -385,15 +385,15 @@ const Blacksmith = ({ onClose }) => {
     const hasEnough = material.has >= material.required;
 
     return (
-        <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-28 w-24 sm:w-28 text-center bg-gradient-to-br from-gray-900 to-black/20 ${hasEnough ? 'border-gray-500' : 'border-red-600 shadow-md shadow-red-500/20'}`}>
-            <div className="w-10 h-10 flex items-center justify-center mb-1.5">
-                {typeof material.icon === 'string' && material.icon.startsWith('http') ? <img src={material.icon} alt={material.name} className="max-w-full max-h-full" /> : <div className="text-3xl">{material.icon}</div>}
+        <div className={`relative flex flex-col items-center justify-center rounded-lg border-2 transition-all h-24 w-20 text-center p-1 bg-gradient-to-br from-gray-900 to-black/20 ${hasEnough ? 'border-gray-500' : 'border-red-600'}`}>
+            <div className="w-9 h-9 flex items-center justify-center">
+                {typeof material.icon === 'string' && material.icon.startsWith('http') ? <img src={material.icon} alt={material.name} className="max-w-full max-h-full" /> : <div className="text-2xl">{material.icon}</div>}
             </div>
-            <span className="font-medium text-center text-white text-[11px] leading-tight">{material.name}</span>
-            <span className={`font-bold text-xs mt-1 ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
-                {material.has} / {material.required}
+            <span className="font-medium text-center text-white text-[10px] leading-tight mt-1">{material.name}</span>
+            <span className={`font-bold text-xs mt-0.5 ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
+                {material.has}/{material.required}
             </span>
-            <div className={`absolute top-1 left-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold ${getRarityTextColor(material.rarity)} ${getRarityColor(material.rarity).replace('border-','bg-')}/30`}>{material.rarity}</div>
+            <div className={`absolute top-0.5 left-0.5 text-[8px] px-1 rounded-full font-bold ${getRarityTextColor(material.rarity)} ${getRarityColor(material.rarity).replace('border-','bg-')}/30`}>{material.rarity}</div>
         </div>
     );
   };
@@ -449,8 +449,8 @@ const Blacksmith = ({ onClose }) => {
             <div className="flex flex-col"> 
                 <div className="mb-4 p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                     <div className="flex items-center justify-center gap-4">
-                        <div className="w-32"><ForgingSlot item={upgradeWeaponSlot} slotType="weapon" onClick={handleUpgradeWeaponSlotClick} isEmpty={!upgradeWeaponSlot} /></div>
-                        <div className="w-32"><ForgingSlot item={upgradeMaterialSlot} slotType="material" onClick={handleUpgradeMaterialSlotClick} isEmpty={!upgradeMaterialSlot} labelOverride="Đá Cường Hóa"/></div>
+                        <div className="w-32 h-32"><ForgingSlot item={upgradeWeaponSlot} slotType="weapon" onClick={handleUpgradeWeaponSlotClick} isEmpty={!upgradeWeaponSlot} /></div>
+                        <div className="w-32 h-32"><ForgingSlot item={upgradeMaterialSlot} slotType="material" onClick={handleUpgradeMaterialSlotClick} isEmpty={!upgradeMaterialSlot} labelOverride="Đá Cường Hóa"/></div>
                     </div>
                 </div>
                 <div className="flex flex-col items-center justify-center min-h-[4rem]">
@@ -466,24 +466,21 @@ const Blacksmith = ({ onClose }) => {
           {/* *** UPDATED JSX BLOCK FOR CRAFTING TAB *** */}
           {activeTab === 'craft' && (
             <div className="flex flex-col">
-                <div className="mb-4 p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
-                    {/* Bố cục dọc mới */}
-                    <div className="flex flex-col items-center justify-center gap-3">
+                <div className="mb-4 p-4 sm:p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
+                    {/* Bố cục ngang nhỏ gọn mới */}
+                    <div className="flex items-center justify-center gap-2 sm:gap-4">
                         {/* 1. Ô Mảnh Ghép (Chính) */}
-                        <div className="w-32">
+                        <div className="w-28 h-32 sm:w-32 flex-shrink-0">
                             <ForgingSlot item={craftingPieceSlot} slotType="material" onClick={handleCraftingPieceSlotClick} isEmpty={!craftingPieceSlot} labelOverride="Mảnh Ghép"/>
                         </div>
 
                         {/* 2. Mũi tên chỉ dẫn */}
-                        <div className="text-2xl font-light text-green-400/70">
-                            ↓
-                        </div>
+                        <div className="text-2xl sm:text-3xl font-light text-gray-500">»</div>
 
-                        {/* 3. Container cho các nguyên liệu (Phụ) */}
-                        <div className="flex items-center justify-center gap-2 sm:gap-4">
-                            <MaterialRequirementDisplay material={craftingMaterialReqs[0]} />
-                            <div className="text-2xl font-light text-gray-500 self-center">+</div>
-                            <MaterialRequirementDisplay material={craftingMaterialReqs[1]} />
+                        {/* 3. Container cho các nguyên liệu nhỏ gọn */}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <MaterialRequirementDisplayCompact material={craftingMaterialReqs[0]} />
+                            <MaterialRequirementDisplayCompact material={craftingMaterialReqs[1]} />
                         </div>
                     </div>
                 </div>
@@ -509,8 +506,8 @@ const Blacksmith = ({ onClose }) => {
                     <button onClick={handleClearSlots} className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg transition-colors" disabled={isProcessing || (skillWeaponSlot === null && skillBookSlot === null)}>Xóa</button>
                   </div>
                   <div className="flex items-center justify-center gap-4">
-                    <div className="w-32"><ForgingSlot item={skillWeaponSlot} slotType="weapon" onClick={handleSkillWeaponSlotClick} isEmpty={!skillWeaponSlot} /></div>
-                    <div className="w-32"><ForgingSlot item={skillBookSlot} slotType="skill_book" onClick={handleSkillBookSlotClick} isEmpty={!skillBookSlot} /></div>
+                    <div className="w-32 h-32"><ForgingSlot item={skillWeaponSlot} slotType="weapon" onClick={handleSkillWeaponSlotClick} isEmpty={!skillWeaponSlot} /></div>
+                    <div className="w-32 h-32"><ForgingSlot item={skillBookSlot} slotType="skill_book" onClick={handleSkillBookSlotClick} isEmpty={!skillBookSlot} /></div>
                   </div>
                 </div>
                 <button className={`w-full py-3 px-6 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 transform mt-4 ${canLearnSkillButtonBeEnabled && !isProcessing ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:brightness-110 hover:scale-105' : 'bg-gray-600 text-gray-300 cursor-not-allowed'}`} onClick={handleLearnSkill} disabled={isProcessing || !canLearnSkillButtonBeEnabled}>
