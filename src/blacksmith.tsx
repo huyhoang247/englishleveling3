@@ -371,6 +371,34 @@ const Blacksmith = ({ onClose }) => {
     );
   };
   
+  // *** NEW COMPONENT: Compact slot for Upgrade Material ***
+  const ForgingSlotCompact = ({ item, onClick, isEmpty, labelOverride, slotType = 'material' }) => {
+    const enrichedItem = enrichPlayerItem(item);
+    const style = {
+        weapon: { border: 'border-red-500/50', bg: 'bg-gradient-to-br from-red-900/40 to-red-800/40', icon: '⚔️'},
+        material: { border: 'border-green-500/50', bg: 'bg-gradient-to-br from-green-900/40 to-green-800/40', icon: '💎'},
+    }[slotType];
+
+    return (
+        <div className={`relative flex flex-col items-center justify-center rounded-lg border-2 transition-all h-24 w-20 text-center p-1 cursor-pointer ${enrichedItem ? `${style.border} ${style.bg}` : 'border-dashed border-gray-600/50 bg-black/20'}`} onClick={onClick}>
+            {enrichedItem ? (
+                <>
+                    <div className="w-9 h-9 flex items-center justify-center">
+                        {typeof enrichedItem.icon === 'string' && enrichedItem.icon.startsWith('http') ? <img src={enrichedItem.icon} alt={enrichedItem.name} className="max-w-full max-h-full" /> : <div className="text-2xl">{enrichedItem.icon}</div>}
+                    </div>
+                    <span className="font-medium text-center text-white text-[10px] leading-tight mt-1">{enrichedItem.name}</span>
+                    <div className={`absolute top-0.5 left-0.5 text-[8px] px-1 rounded-full font-bold ${getRarityTextColor(enrichedItem.rarity)} ${getRarityColor(enrichedItem.rarity).replace('border-','bg-')}/30`}>{enrichedItem.rarity}</div>
+                </>
+            ) : (
+                <>
+                    <div className="opacity-50 text-xl">{style.icon}</div>
+                    <span className="text-gray-500 text-[10px] font-medium mt-1">{labelOverride}</span>
+                </>
+            )}
+        </div>
+    );
+  };
+  
   const MaterialRequirementDisplayCompact = ({ material }) => {
     if (!material) {
         return (
@@ -444,12 +472,22 @@ const Blacksmith = ({ onClose }) => {
           </button>
         </div>
         <div className="grid lg:grid-cols-2 gap-y-4 gap-x-8 flex-grow overflow-y-auto hide-scrollbar mt-4 min-h-0 content-start">
+          
+          {/* *** UPDATED JSX BLOCK FOR UPGRADE TAB *** */}
           {activeTab === 'upgrade' && (
             <div className="flex flex-col"> 
-                <div className="mb-4 p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
-                    <div className="flex items-center justify-center gap-4">
-                        <div className="w-32 h-32"><ForgingSlot item={upgradeWeaponSlot} slotType="weapon" onClick={handleUpgradeWeaponSlotClick} isEmpty={!upgradeWeaponSlot} /></div>
-                        <div className="w-32 h-32"><ForgingSlot item={upgradeMaterialSlot} slotType="material" onClick={handleUpgradeMaterialSlotClick} isEmpty={!upgradeMaterialSlot} labelOverride="Đá Cường Hóa"/></div>
+                <div className="mb-4 p-4 sm:p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
+                    <div className="flex items-center justify-center gap-2 sm:gap-4">
+                        {/* 1. Ô Trang bị (Chính - Lớn) */}
+                        <div className="w-28 h-32 sm:w-32 flex-shrink-0">
+                           <ForgingSlot item={upgradeWeaponSlot} slotType="weapon" onClick={handleUpgradeWeaponSlotClick} isEmpty={!upgradeWeaponSlot} />
+                        </div>
+                        {/* 2. Mũi tên chỉ dẫn */}
+                        <div className="text-2xl sm:text-3xl font-light text-gray-500">+</div>
+                        {/* 3. Ô Đá Cường Hóa (Phụ - Nhỏ) */}
+                        <div className="flex items-center">
+                            <ForgingSlotCompact item={upgradeMaterialSlot} onClick={handleUpgradeMaterialSlotClick} isEmpty={!upgradeMaterialSlot} labelOverride="Đá Cường Hóa" slotType="material"/>
+                        </div>
                     </div>
                 </div>
                 <div className="flex flex-col items-center justify-center min-h-[4rem]">
@@ -479,9 +517,7 @@ const Blacksmith = ({ onClose }) => {
                 </div>
                 <div className="flex flex-col items-center justify-center min-h-[4rem]">
                     {activeCraftingRecipe ? (
-                        // Nếu có công thức, kiểm tra xem có thể rèn không
                         canCraft ? (
-                            // Nếu có thể rèn, chỉ hiển thị nút
                            <button 
                                 onClick={handleCraft} 
                                 disabled={isProcessing} 
@@ -490,13 +526,11 @@ const Blacksmith = ({ onClose }) => {
                                 {isProcessing ? 'Đang Rèn...' : 'Rèn Vật Phẩm'}
                            </button>
                         ) : (
-                            // Nếu không thể rèn, hiển thị mô tả
                             <p className="text-center text-sm text-gray-400 px-4">
                                 {activeCraftingRecipe.description}
                             </p>
                         )
                     ) : (
-                        // Nếu chưa có công thức (chưa bỏ mảnh ghép)
                         <p className="text-center text-sm text-gray-400">Đặt một mảnh ghép vào để xem công thức.</p>
                     )}
                 </div>
