@@ -350,7 +350,7 @@ const Blacksmith = ({ onClose }) => {
   const ForgingSlot = ({ item, slotType, onClick, isEmpty, labelOverride }) => {
     const enrichedItem = item && item.id >= 9001 ? item : enrichPlayerItem(item);
     const style = {
-        weapon: { border: 'border-red-500/50', bg: 'bg-gradient-to-br from-red-900/40 to-red-800/40', hoverBg: 'hover:bg-red-700/30', hoverBorder: 'hover:border-red-400', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2010_26_14%20PM.png', label: ''},
+        weapon: { border: 'border-red-500/50', bg: 'bg-gradient-to-br from-red-900/40 to-red-800/40', hoverBg: 'hover:bg-red-700/30', hoverBorder: 'hover:border-red-400', icon: '⚔️', label: 'Trang Bị'},
         material: { border: 'border-green-500/50', bg: 'bg-gradient-to-br from-green-900/40 to-green-800/40', hoverBg: 'hover:bg-green-700/30', hoverBorder: 'hover:border-green-400', icon: '💎', label: 'Nguyên Liệu'},
         skill_book: { border: 'border-cyan-500/50', bg: 'bg-gradient-to-br from-cyan-900/40 to-cyan-800/40', hoverBg: 'hover:bg-cyan-700/30', hoverBorder: 'hover:border-cyan-400', icon: '📖', label: 'Sách Kỹ Năng' }
     }[slotType];
@@ -365,15 +365,7 @@ const Blacksmith = ({ onClose }) => {
             <div className={`absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold ${getRarityTextColor(enrichedItem.rarity)} ${getRarityColor(enrichedItem.rarity).replace('border-','bg-')}/30`}>{enrichedItem.rarity}</div>
           </>
         ) : (
-          <div className="text-center">
-            <div className="w-10 h-10 mx-auto mb-1 opacity-50 flex items-center justify-center">
-                {typeof style.icon === 'string' && style.icon.startsWith('http') 
-                    ? <img src={style.icon} alt={labelOverride || style.label} className="max-w-full max-h-full object-contain" /> 
-                    : <span className="text-3xl">{style.icon}</span>
-                }
-            </div>
-            <span className="text-gray-400 text-xs font-medium mt-1">{labelOverride || style.label}</span>
-          </div>
+          <div className="text-center"><div className="mb-1 opacity-50 text-3xl">{style.icon}</div><span className="text-gray-400 text-xs font-medium">{labelOverride || style.label}</span></div>
         )}
       </div>
     );
@@ -383,7 +375,7 @@ const Blacksmith = ({ onClose }) => {
   const ForgingSlotCompact = ({ item, onClick, isEmpty, labelOverride, slotType = 'material' }) => {
     const enrichedItem = enrichPlayerItem(item);
     const style = {
-        weapon: { border: 'border-red-500/50', bg: 'bg-gradient-to-br from-red-900/40 to-red-800/40', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2010_26_14%20PM.png'},
+        weapon: { border: 'border-red-500/50', bg: 'bg-gradient-to-br from-red-900/40 to-red-800/40', icon: '⚔️'},
         material: { border: 'border-green-500/50', bg: 'bg-gradient-to-br from-green-900/40 to-green-800/40', icon: '💎'},
     }[slotType];
 
@@ -399,13 +391,8 @@ const Blacksmith = ({ onClose }) => {
                 </>
             ) : (
                 <>
-                    <div className="w-6 h-6 mx-auto opacity-50 flex items-center justify-center">
-                        {typeof style.icon === 'string' && style.icon.startsWith('http') 
-                            ? <img src={style.icon} alt={labelOverride} className="max-w-full max-h-full object-contain" /> 
-                            : <span className="text-xl">{style.icon}</span>
-                        }
-                    </div>
-                    <span className="text-gray-500 text-[10px] font-medium mt-1">{labelOverride || ''}</span>
+                    <div className="opacity-50 text-xl">{style.icon}</div>
+                    <span className="text-gray-500 text-[10px] font-medium mt-1">{labelOverride}</span>
                 </>
             )}
         </div>
