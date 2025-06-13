@@ -129,7 +129,7 @@ const ItemTooltip = ({ item }: { item: EnrichedPlayerItem }) => (
 
 // Main Component
 const Blacksmith = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState('upgrade');
+  const [activeTab, setActiveTab] = useState('craft'); // Đổi tab mặc định để dễ xem
   const [playerInventory, setPlayerInventory] = useState<PlayerItem[]>(playerInventoryData);
   const [upgradeWeaponSlot, setUpgradeWeaponSlot] = useState<PlayerItem | null>(null);
   const [upgradeMaterialSlot, setUpgradeMaterialSlot] = useState<PlayerItem | null>(null);
@@ -371,13 +371,13 @@ const Blacksmith = ({ onClose }) => {
     );
   };
   
-  // New helper component for displaying material requirements
+  // *** UPDATED COMPONENT ***
   const MaterialRequirementDisplay = ({ material }) => {
     if (!material) {
         return (
-             <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600/50 bg-black/20 h-32 w-full text-center">
-                <div className="mb-1 opacity-50 text-3xl">❓</div>
-                <span className="text-gray-500 text-xs font-medium">Nguyên liệu</span>
+             <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600/50 bg-black/20 h-28 w-24 sm:w-28 text-center">
+                <div className="mb-1 opacity-50 text-2xl">❓</div>
+                <span className="text-gray-500 text-[11px] font-medium">Nguyên liệu</span>
              </div>
         );
     }
@@ -385,15 +385,15 @@ const Blacksmith = ({ onClose }) => {
     const hasEnough = material.has >= material.required;
 
     return (
-        <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-32 w-full text-center bg-gradient-to-br from-gray-900 to-black/20 ${hasEnough ? 'border-gray-500' : 'border-red-600 shadow-md shadow-red-500/20'}`}>
-            <div className="w-14 h-14 flex items-center justify-center mb-2">
-                {typeof material.icon === 'string' && material.icon.startsWith('http') ? <img src={material.icon} alt={material.name} className="max-w-full max-h-full" /> : <div className="text-4xl">{material.icon}</div>}
+        <div className={`relative flex flex-col items-center justify-center rounded-xl border-2 transition-all h-28 w-24 sm:w-28 text-center bg-gradient-to-br from-gray-900 to-black/20 ${hasEnough ? 'border-gray-500' : 'border-red-600 shadow-md shadow-red-500/20'}`}>
+            <div className="w-10 h-10 flex items-center justify-center mb-1.5">
+                {typeof material.icon === 'string' && material.icon.startsWith('http') ? <img src={material.icon} alt={material.name} className="max-w-full max-h-full" /> : <div className="text-3xl">{material.icon}</div>}
             </div>
-            <span className="font-medium text-center text-white text-xs -mt-1">{material.name}</span>
-            <span className={`font-bold text-sm mt-1 ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
+            <span className="font-medium text-center text-white text-[11px] leading-tight">{material.name}</span>
+            <span className={`font-bold text-xs mt-1 ${hasEnough ? 'text-green-400' : 'text-red-400'}`}>
                 {material.has} / {material.required}
             </span>
-            <div className={`absolute top-1.5 left-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold ${getRarityTextColor(material.rarity)} ${getRarityColor(material.rarity).replace('border-','bg-')}/30`}>{material.rarity}</div>
+            <div className={`absolute top-1 left-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold ${getRarityTextColor(material.rarity)} ${getRarityColor(material.rarity).replace('border-','bg-')}/30`}>{material.rarity}</div>
         </div>
     );
   };
@@ -463,19 +463,26 @@ const Blacksmith = ({ onClose }) => {
                 </div>
             </div>
           )}
+          {/* *** UPDATED JSX BLOCK FOR CRAFTING TAB *** */}
           {activeTab === 'craft' && (
             <div className="flex flex-col">
                 <div className="mb-4 p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
-                    <div className="flex items-center justify-center gap-2 sm:gap-4">
-                        <div className="w-24 sm:w-32 flex-shrink-0">
+                    {/* Bố cục dọc mới */}
+                    <div className="flex flex-col items-center justify-center gap-3">
+                        {/* 1. Ô Mảnh Ghép (Chính) */}
+                        <div className="w-32">
                             <ForgingSlot item={craftingPieceSlot} slotType="material" onClick={handleCraftingPieceSlotClick} isEmpty={!craftingPieceSlot} labelOverride="Mảnh Ghép"/>
                         </div>
-                        <div className="text-2xl sm:text-3xl font-light text-gray-500 self-center pb-8">+</div>
-                        <div className="w-24 sm:w-32 flex-shrink-0">
-                            <MaterialRequirementDisplay material={craftingMaterialReqs[0]} />
+
+                        {/* 2. Mũi tên chỉ dẫn */}
+                        <div className="text-2xl font-light text-green-400/70">
+                            ↓
                         </div>
-                        <div className="text-2xl sm:text-3xl font-light text-gray-500 self-center pb-8">+</div>
-                        <div className="w-24 sm:w-32 flex-shrink-0">
+
+                        {/* 3. Container cho các nguyên liệu (Phụ) */}
+                        <div className="flex items-center justify-center gap-2 sm:gap-4">
+                            <MaterialRequirementDisplay material={craftingMaterialReqs[0]} />
+                            <div className="text-2xl font-light text-gray-500 self-center">+</div>
                             <MaterialRequirementDisplay material={craftingMaterialReqs[1]} />
                         </div>
                     </div>
