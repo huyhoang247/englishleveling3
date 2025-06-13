@@ -479,17 +479,24 @@ const Blacksmith = ({ onClose }) => {
                 </div>
                 <div className="flex flex-col items-center justify-center min-h-[4rem]">
                     {activeCraftingRecipe ? (
-                        <div className="flex flex-col items-center justify-center gap-3 text-center">
-                           <p className="text-sm text-gray-400 px-4 mb-2">{activeCraftingRecipe.description}</p>
+                        // Nếu có công thức, kiểm tra xem có thể rèn không
+                        canCraft ? (
+                            // Nếu có thể rèn, chỉ hiển thị nút
                            <button 
                                 onClick={handleCraft} 
-                                disabled={!canCraft || isProcessing} 
+                                disabled={isProcessing} 
                                 className="px-6 py-2 rounded-lg text-base font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-green-500 to-teal-500 text-white hover:brightness-110 hover:scale-105 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100 disabled:brightness-100"
                             >
                                 {isProcessing ? 'Đang Rèn...' : 'Rèn Vật Phẩm'}
                            </button>
-                        </div>
+                        ) : (
+                            // Nếu không thể rèn, hiển thị mô tả
+                            <p className="text-center text-sm text-gray-400 px-4">
+                                {activeCraftingRecipe.description}
+                            </p>
+                        )
                     ) : (
+                        // Nếu chưa có công thức (chưa bỏ mảnh ghép)
                         <p className="text-center text-sm text-gray-400">Đặt một mảnh ghép vào để xem công thức.</p>
                     )}
                 </div>
