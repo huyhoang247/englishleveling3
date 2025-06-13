@@ -371,7 +371,6 @@ const Blacksmith = ({ onClose }) => {
     );
   };
   
-  // *** NEW COMPONENT: Compact version for horizontal layout ***
   const MaterialRequirementDisplayCompact = ({ material }) => {
     if (!material) {
         return (
@@ -463,38 +462,39 @@ const Blacksmith = ({ onClose }) => {
                 </div>
             </div>
           )}
-          {/* *** UPDATED JSX BLOCK FOR CRAFTING TAB *** */}
           {activeTab === 'craft' && (
             <div className="flex flex-col">
                 <div className="mb-4 p-4 sm:p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-green-500/30 backdrop-blur-sm">
-                    {/* Bố cục ngang nhỏ gọn mới */}
                     <div className="flex items-center justify-center gap-2 sm:gap-4">
-                        {/* 1. Ô Mảnh Ghép (Chính) */}
                         <div className="w-28 h-32 sm:w-32 flex-shrink-0">
                             <ForgingSlot item={craftingPieceSlot} slotType="material" onClick={handleCraftingPieceSlotClick} isEmpty={!craftingPieceSlot} labelOverride="Mảnh Ghép"/>
                         </div>
-
-                        {/* 2. Mũi tên chỉ dẫn */}
                         <div className="text-2xl sm:text-3xl font-light text-gray-500">»</div>
-
-                        {/* 3. Container cho các nguyên liệu nhỏ gọn */}
                         <div className="flex items-center gap-1.5 sm:gap-2">
                             <MaterialRequirementDisplayCompact material={craftingMaterialReqs[0]} />
                             <MaterialRequirementDisplayCompact material={craftingMaterialReqs[1]} />
                         </div>
                     </div>
                 </div>
+                {/* *** UPDATED BUTTON LOGIC *** */}
                 <div className="flex flex-col items-center justify-center min-h-[4rem] text-center">
-                    {activeCraftingRecipe ? (
-                        <>
-                            <p className="text-sm text-gray-400 mb-3 px-4">{activeCraftingRecipe.description}</p>
-                            <button onClick={handleCraft} disabled={!canCraft || isProcessing} className="px-8 py-3 rounded-lg text-lg font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-green-500 to-teal-500 text-white hover:brightness-110 hover:scale-105 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100 disabled:brightness-100">
-                                {isProcessing ? 'Đang Rèn...' : 'Rèn Vật Phẩm'}
-                            </button>
-                        </>
-                    ) : (
-                        <p className="text-center text-sm text-gray-400">Đặt một mảnh ghép vào để xem công thức.</p>
+                    {activeCraftingRecipe && (
+                        <p className="text-sm text-gray-400 mb-3 px-4">{activeCraftingRecipe.description}</p>
                     )}
+                    <div className="flex items-center justify-center gap-3">
+                        <button
+                            onClick={handleCraft}
+                            disabled={!canCraft || isProcessing}
+                            className="px-8 py-3 rounded-lg text-lg font-bold shadow-lg transition-all duration-300 transform bg-gradient-to-r from-green-500 to-teal-500 text-white hover:brightness-110 hover:scale-105 disabled:from-gray-600 disabled:to-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100 disabled:brightness-100"
+                        >
+                            {isProcessing
+                                ? 'Đang Rèn...'
+                                : activeCraftingRecipe
+                                    ? 'Rèn Vật Phẩm'
+                                    : 'Đặt mảnh ghép để xem công thức'
+                            }
+                        </button>
+                    </div>
                 </div>
             </div>
           )}
@@ -516,12 +516,10 @@ const Blacksmith = ({ onClose }) => {
             </div>
           )}
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-2xl shadow-2xl border border-blue-500/30">
-            {/* THÊM ref VÀ className CHO VÙNG SCROLL */}
             <div ref={inventoryGridRef} className={`grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[20rem] sm:max-h-full overflow-y-auto hide-scrollbar pr-2 ${isScrolling ? 'is-scrolling' : ''}`}>
               {fullInventory.map((item) => {
                   if (!item) return null;
                   return (
-                    // THÊM will-change-transform
                     <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden will-change-transform ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
                       {item.quantity > 1 && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>)}
                       {typeof item.icon === 'string' && item.icon.startsWith('http') ? (<img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 relative z-0 group-hover:scale-110 transition-transform duration-200" />) : (<div className="text-2xl sm:text-3xl relative z-0 group-hover:scale-110 transition-transform duration-200">{item.icon}</div>)}
@@ -535,7 +533,6 @@ const Blacksmith = ({ onClose }) => {
       </div>
       <CustomAlert isVisible={alert.isVisible} message={alert.message} type={alert.type} onClose={hideAlert}/>
       <ForgingAnimation isProcessing={isProcessing} />
-      {/* THÊM CSS ĐỂ VÔ HIỆU HÓA HOVER KHI SCROLL */}
       <style jsx>{`
         .is-scrolling .group:hover {
             transform: none !important;
