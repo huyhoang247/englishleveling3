@@ -31,7 +31,7 @@ const getSlotPlaceholderIcon = (slotType: string) => {
 // --- END: DỮ LIỆU VÀ CÁC LOẠI TRANG BỊ MỚI ---
 
 
-// --- CÁC HÀM HELPER (Không thay đổi) ---
+// --- CÁC HÀM HELPER (BẮT ĐẦU PHẦN NÂNG CẤP GIAO DIỆN) ---
 const getHydratedInventory = () => {
   return playerInventoryData.map(playerItem => {
     const baseItem = itemDatabase.get(playerItem.id);
@@ -68,18 +68,53 @@ const getRarityDisplayName = (rarity: string) => {
     if (!rarity) return 'Unknown Rank';
     return `${rarity.toUpperCase()} Rank`;
 }
-const getRarityColor = (rarity: string) => {
-    switch(rarity) { case 'E': return 'border-gray-500'; case 'D': return 'border-green-500'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-600'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-500'; }
+// --- START: NÂNG CẤP GIAO DIỆN CÁC BẬC HIẾM ---
+const getRarityColor = (rarity: string) => { // Dùng cho viền (border)
+    switch(rarity) { 
+        case 'E': return 'border-gray-600'; 
+        case 'D': return 'border-green-700'; 
+        case 'B': return 'border-blue-500'; 
+        case 'A': return 'border-purple-500'; 
+        case 'S': return 'border-yellow-400'; 
+        case 'SR': return 'border-red-500'; 
+        default: return 'border-gray-600'; 
+    }
 };
-const getRarityGradient = (rarity: string) => {
-    switch(rarity) { case 'E': return 'from-gray-700/70 to-gray-800/70'; case 'D': return 'from-green-800/80 to-gray-800/70'; case 'B': return 'from-blue-800/80 to-gray-800/70'; case 'A': return 'from-purple-800/80 to-gray-800/70'; case 'S': return 'from-yellow-900/80 via-gray-800/70 to-gray-800/70'; case 'SR': return 'from-red-800/80 to-gray-800/70'; default: return 'from-gray-700/70 to-gray-800/70'; }
+const getRarityGradient = (rarity: string) => { // Dùng cho nền (background)
+    switch(rarity) { 
+        case 'E': return 'from-gray-800/95 to-gray-900/95'; 
+        case 'D': return 'from-green-900/70 to-gray-900'; 
+        case 'B': return 'from-blue-800/80 to-gray-900'; 
+        case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; 
+        case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; 
+        case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; 
+        default: return 'from-gray-800/95 to-gray-900/95'; 
+    }
 };
-const getRarityTextColor = (rarity: string) => {
-    switch(rarity) { case 'E': return 'text-gray-300'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-300'; }
+const getRarityTextColor = (rarity: string) => { // Dùng cho màu chữ
+    switch(rarity) { 
+        case 'E': return 'text-gray-400'; 
+        case 'D': return 'text-green-400'; 
+        case 'B': return 'text-blue-400'; 
+        case 'A': return 'text-purple-400'; 
+        case 'S': return 'text-yellow-300'; 
+        case 'SR': return 'text-red-400'; 
+        default: return 'text-gray-400'; 
+    }
 };
-const getRarityGlow = (rarity: string) => {
-    switch(rarity) { case 'E': return ''; case 'D': return ''; case 'B': return 'shadow-sm shadow-blue-500/30'; case 'A': return 'shadow-md shadow-purple-500/40'; case 'S': return 'shadow-lg shadow-yellow-400/50'; case 'SR': return 'shadow-xl shadow-red-500/50'; default: return ''; }
+const getRarityGlow = (rarity: string) => { // Dùng cho hiệu ứng tỏa sáng và animation
+    switch(rarity) { 
+        case 'E': return ''; 
+        case 'D': return ''; 
+        case 'B': return 'shadow-lg shadow-blue-500/40'; 
+        case 'A': return 'shadow-xl shadow-purple-500/50'; 
+        case 'S': return 'shadow-2xl shadow-yellow-400/60 animate-subtle-pulse';
+        case 'SR': return 'shadow-2xl shadow-red-500/70 ring-2 ring-orange-500/30 animate-subtle-pulse'; 
+        default: return ''; 
+    }
 };
+// --- END: NÂNG CẤP GIAO DIỆN CÁC BẬC HIẾM ---
+
 const formatStatName = (stat: string) => {
     const translations: { [key: string]: string } = { damage: 'Sát thương', health: 'Máu', durability: 'Độ bền', healing: 'Hồi máu', defense: 'Phòng thủ', energyRestore: 'Hồi năng lượng', magicBoost: 'Tăng phép', intelligence: 'Trí tuệ', resurrection: 'Hồi sinh', fireDamage: 'Sát thương lửa', strength: 'Sức mạnh', attackSpeed: 'Tốc độ tấn công', manaRegen: 'Hồi mana', range: 'Tầm xa', poisonDamage: 'Sát thương độc', duration: 'Thời gian', magicResist: 'Kháng phép', manaRestore: 'Hồi mana', speed: 'Tốc độ', cleanse: 'Thanh tẩy', strengthBoost: 'Tăng sức mạnh', luck: 'May mắn' };
     return translations[stat] || stat.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
@@ -98,6 +133,8 @@ const renderItemStats = (item: any) => {
       </div>
     );
 };
+// --- CÁC HÀM HELPER (KẾT THÚC PHẦN NÂNG CẤP GIAO DIỆN) ---
+
 
 // --- START: CÁC COMPONENT CON ĐƯỢC TÁCH RA NGOÀI VÀ TỐI ƯU ---
 
@@ -399,7 +436,16 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
           </div>
       </div>
       
-      <style>{`.is-scrolling .group:hover{transform:none!important;filter:none!important}.is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}.is-scrolling .group .group-hover\\:scale-110{transform:none!important}.inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}.inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}`}</style>
+      {/* THÊM STYLE CHO ANIMATION CỦA CÁC BẬC HIẾM S VÀ SR */}
+      <style>{`
+        @keyframes subtle-glow-pulse { 50% { opacity: 0.8; } }
+        .animate-subtle-pulse { animation: subtle-glow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .is-scrolling .group:hover{transform:none!important;filter:none!important}
+        .is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}
+        .is-scrolling .group .group-hover\\:scale-110{transform:none!important}
+        .inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}
+        .inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}
+      `}</style>
       
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
