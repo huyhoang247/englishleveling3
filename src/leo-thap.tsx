@@ -65,7 +65,8 @@ const TowerExplorerGame = () => {
   const [gameState, setGameState] = useState('playing');
   const [battleState, setBattleState] = useState(null);
   const [rewards, setRewards] = useState([]);
-  const [autoNext, setAutoNext] = useState(false);
+  // THAY ĐỔI 1: Đổi tên state từ autoNext thành autoAttack
+  const [autoAttack, setAutoAttack] = useState(false);
   const [animationState, setAnimationState] = useState({ playerHit: false, monsterHit: false });
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   
@@ -84,6 +85,16 @@ const TowerExplorerGame = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+  
+  // THAY ĐỔI 2: Thêm useEffect để xử lý tự động tấn công
+  useEffect(() => {
+    if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
+      const attackTimeout = setTimeout(() => {
+        attackMonster();
+      }, 700); // Thêm độ trễ để người chơi kịp nhìn
+      return () => clearTimeout(attackTimeout); // Cleanup timeout
+    }
+  }, [autoAttack, gameState, battleState]);
 
   const generateMonster = (floor) => {
     const baseHealth = 30 + floor * 15;
@@ -134,7 +145,7 @@ const TowerExplorerGame = () => {
       setBattleState(prev => ({ ...prev, monsterHealth: 0, battleLog: newLog }));
       setTimeout(() => {
         setGameState('victory');
-        if (autoNext) setTimeout(() => nextFloor(), 2000);
+        // THAY ĐỔI 3: Xóa logic auto next
       }, 1000);
       return;
     }
@@ -221,6 +232,17 @@ const TowerExplorerGame = () => {
 
           {gameState === 'fighting' && battleState && (
             <div className="w-full h-full flex flex-col justify-between animate-fade-in">
+                {/* THAY ĐỔI 4: Thêm chỉ báo lượt tấn công */}
+                <div className="text-center mb-2 animate-fade-in">
+                    {battleState.monsterHealth > 0 ? (
+                        <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+                            {battleState.turn === 'player' ? "Your Turn" : `${battleState.monster.name}'s Turn`}
+                        </h4>
+                    ) : (
+                        <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
+                    )}
+                </div>
+
                 <div className="flex justify-between items-start">
                     <CombatantView 
                         name="You"
@@ -242,8 +264,9 @@ const TowerExplorerGame = () => {
                     />
                 </div>
                 <div className="text-center">
-                    {battleState.turn === 'player' && battleState.monsterHealth > 0 && (<button onClick={attackMonster} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300">Attack!</button>)}
-                    {battleState.turn === 'monster' && ( <div className="text-yellow-400 font-semibold italic h-12 flex items-center justify-center">Monster is attacking...</div> )}
+                    {battleState.turn === 'player' && battleState.monsterHealth > 0 && (<button onClick={attackMonster} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait" disabled={autoAttack}>Attack!</button>)}
+                    {battleState.turn === 'monster' && ( <div className="text-yellow-400 font-semibold italic h-[52px] flex items-center justify-center">Monster is attacking...</div> )}
+                    {battleState.monsterHealth <= 0 && (<div className="h-[52px]"></div>)}
                 </div>
             </div>
           )}
@@ -280,12 +303,13 @@ const TowerExplorerGame = () => {
             <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!battleState}>
                 📜 View Log
             </button>
+            {/* THAY ĐỔI 1 (tiếp): Cập nhật giao diện cho Auto Attack */}
             <label className="flex items-center space-x-2 cursor-pointer">
-                <span className="text-sm font-medium">Auto Next</span>
+                <span className="text-sm font-medium">Auto Attack</span>
                 <div className="relative">
-                    <input type="checkbox" checked={autoNext} onChange={(e) => setAutoNext(e.target.checked)} className="sr-only"/>
+                    <input type="checkbox" checked={autoAttack} onChange={(e) => setAutoAttack(e.target.checked)} className="sr-only"/>
                     <div className="block bg-gray-600 w-10 h-6 rounded-full"></div>
-                    <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoNext ? 'transform translate-x-full bg-green-400' : ''}`}></div>
+                    <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoAttack ? 'transform translate-x-full bg-green-400' : ''}`}></div>
                 </div>
             </label>
         </div>
