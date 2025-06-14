@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// --- Icon URL ---
+const closeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png';
+
+// --- Component Props Interface ---
+interface TowerExplorerGameProps {
+  onClose: () => void;
+}
+
 // --- Các hằng số điều chỉnh nhịp độ game ---
 const ACTION_DELAY = 1400; // Thời gian chờ giữa các lượt (ms)
 const IMPACT_DELAY = 300;  // Thời gian trễ giữa animation và cập nhật sát thương (ms)
@@ -61,7 +69,7 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
 );
 
 
-const TowerExplorerGame = () => {
+const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   const [currentFloor, setCurrentFloor] = useState(1);
   const [playerStats, setPlayerStats] = useState({
     health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0
@@ -83,11 +91,17 @@ const TowerExplorerGame = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') setIsLogModalOpen(false);
+      if (event.key === 'Escape') {
+        if (isLogModalOpen) {
+          setIsLogModalOpen(false);
+        } else {
+          onClose(); // Close the game on Escape key
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isLogModalOpen, onClose]);
   
   useEffect(() => {
     if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
@@ -207,10 +221,19 @@ const TowerExplorerGame = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-800 text-gray-100 font-sans p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans p-4 flex items-center justify-center animate-fade-in">
       <GameStyles />
-      <div className="w-full max-w-md bg-gray-900/70 backdrop-blur-sm rounded-2xl shadow-2xl shadow-purple-500/10 overflow-hidden border border-purple-500/30">
+      <div className="w-full max-w-md bg-gray-900/70 backdrop-blur-sm rounded-2xl shadow-2xl shadow-purple-500/10 overflow-hidden border border-purple-500/30 relative animate-fade-in-up">
         
+        <button
+            onClick={onClose}
+            className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+            aria-label="Đóng"
+            title="Đóng Tháp"
+        >
+            <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
+        </button>
+
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30">
             <h1 className="text-2xl font-bold text-center tracking-wider">Tower of Valor</h1>
             <div className="text-center text-lg font-semibold mt-1 opacity-80">Floor {currentFloor}</div>
@@ -240,7 +263,6 @@ const TowerExplorerGame = () => {
 
           {gameState === 'fighting' && battleState && (
             <div className="w-full h-full flex flex-col justify-between animate-fade-in">
-                {/* THAY ĐỔI: Đơn giản hóa chỉ báo lượt và ổn định layout */}
                 <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
                     {battleState.monsterHealth > 0 ? (
                         <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
