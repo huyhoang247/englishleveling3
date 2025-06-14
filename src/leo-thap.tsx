@@ -225,14 +225,16 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
       <GameStyles />
       <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col overflow-hidden relative animate-fade-in-up">
         
+        {/* <<<< THAY ĐỔI Ở ĐÂY >>>> */}
         <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-1.5 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+            className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80"
             aria-label="Đóng"
             title="Đóng Tháp (Esc)"
         >
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
+        {/* <<<< KẾT THÚC THAY ĐỔI >>>> */}
 
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30">
             <h1 className="text-2xl font-bold text-center tracking-wider">Tower of Valor</h1>
