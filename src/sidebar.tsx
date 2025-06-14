@@ -267,16 +267,22 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
         />
       )}
 
-      {/* Sidebar container with fixed positioning */}
-      {/* MODIFIED: Changed positioning to fixed and added z-index */}
+      {/* 
+        >>> FIX START <<<
+        The conflicting classes 'md:translate-x-0' and 'md:hidden' have been removed.
+        Now, only 'isSidebarVisible' state controls the sidebar's position
+        using 'translate-x-0' (visible) or '-translate-x-full' (hidden).
+        This creates a single source of truth and removes the initial "flicker" effect.
+      */}
       <div
         className={`
           fixed left-0 top-0 z-50 h-screen flex items-center
           transform transition-all duration-300 ease-in-out
           ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0 ${isSidebarVisible ? 'md:block' : 'md:hidden'}
         `}
       >
+        {/* >>> FIX END <<< */}
+        
         {/* Floating sidebar with reduced height */}
         <div
           className={`
