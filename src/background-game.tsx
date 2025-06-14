@@ -120,6 +120,10 @@ interface ObstacleRunnerGameProps {
 
 // NOTE: This component is now a static lobby screen, not an active game.
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
+  
+  // >>> FIX START: Add state to ensure component is only rendered on the client
+  const [isClient, setIsClient] = useState(false);
+  // >>> FIX END
 
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
@@ -144,6 +148,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const GROUND_LEVEL_PERCENT = 45;
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
+
+  // >>> FIX START: Use useEffect to set the isClient flag to true after mounting
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  // >>> FIX END
 
   const db = getFirestore();
 
@@ -592,211 +602,215 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-gray-950">
-      <SidebarLayout
-          setToggleSidebar={handleSetToggleSidebar}
-          onShowStats={toggleStatsFullscreen}
-          onShowRank={toggleRank}
-          onShowGoldMine={toggleGoldMine}
-          onShowLuckyGame={toggleLuckyGame}
-      >
-        <DungeonCanvasBackground isPaused={isGamePaused} />
-
-        {/* === MAIN LOBBY SCREEN === */}
-        <div 
-          style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
-          className="w-full h-full"
+      {/* >>> FIX START: Conditionally render the entire layout only on the client */}
+      {isClient && (
+        <SidebarLayout
+            setToggleSidebar={handleSetToggleSidebar}
+            onShowStats={toggleStatsFullscreen}
+            onShowRank={toggleRank}
+            onShowGoldMine={toggleGoldMine}
+            onShowLuckyGame={toggleLuckyGame}
         >
-          <div
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`}
-            onClick={handleTap}
+          <DungeonCanvasBackground isPaused={isGamePaused} />
+
+          {/* === MAIN LOBBY SCREEN === */}
+          <div 
+            style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
+            className="w-full h-full"
           >
-            {renderCharacter()}
+            <div
+              className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`}
+              onClick={handleTap}
+            >
+              {renderCharacter()}
 
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                        rounded-b-lg shadow-2xl
-                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                        border-b border-l border-r border-slate-700/50">
+              <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
+                          rounded-b-lg shadow-2xl
+                          bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                          border-b border-l border-r border-slate-700/50">
 
-                <HeaderBackground />
+                  <HeaderBackground />
 
-                <button
-                    onClick={() => sidebarToggleRef.current?.()}
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
-                    aria-label="Mở sidebar"
-                    title="Mở sidebar"
-                >
-                     <img
-                        src={uiAssets.menuIcon}
-                        alt="Menu Icon"
-                        className="w-5 h-5 object-contain"
-                     />
-                </button>
-
-                <div className="flex-1"></div>
-
-                <div className="flex items-center space-x-1 currency-display-container relative z-10">
-                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center">
-                            <GemIcon size={16} color="#a78bfa" className="relative z-20" />
-                        </div>
-                        <div className="font-bold text-purple-200 text-xs tracking-wide">
-                            {gems.toLocaleString()}
-                        </div>
-                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-                            <span className="text-white font-bold text-xs">+</span>
-                        </div>
-                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                    </div>
-                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
-                </div>
-            </div>
-
-            {/* <<<< 5. UPDATE LEFT-SIDE ACTION BUTTONS >>>> */}
-            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                {
-                  icon: <img src={uiAssets.towerIcon} alt="Tháp" className="w-full h-full object-contain" />,
-                  label: "Tháp",
-                  special: true,
-                  centered: true,
-                  onClick: toggleTowerGame
-                },
-                {
-                  icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleInventory
-                }
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                  <div
-                      className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                      onClick={item.onClick}
-                      title={item.label}
+                  <button
+                      onClick={() => sidebarToggleRef.current?.()}
+                      className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
+                      aria-label="Mở sidebar"
+                      title="Mở sidebar"
                   >
-                      {item.icon}
-                  </div>
-                </div>
-              ))}
-            </div>
+                       <img
+                          src={uiAssets.menuIcon}
+                          alt="Menu Icon"
+                          className="w-5 h-5 object-contain"
+                       />
+                  </button>
 
-            {/* Right-side Action Buttons */}
-            <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                {
-                  icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleBlacksmith
-                },
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
+                  <div className="flex-1"></div>
+
+                  <div className="flex items-center space-x-1 currency-display-container relative z-10">
+                      <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                          <div className="relative mr-0.5 flex items-center justify-center">
+                              <GemIcon size={16} color="#a78bfa" className="relative z-20" />
+                          </div>
+                          <div className="font-bold text-purple-200 text-xs tracking-wide">
+                              {gems.toLocaleString()}
+                          </div>
+                          <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
+                              <span className="text-white font-bold text-xs">+</span>
+                          </div>
+                          <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                          <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                      </div>
+                      <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
+                  </div>
+              </div>
+
+              {/* <<<< 5. UPDATE LEFT-SIDE ACTION BUTTONS >>>> */}
+              <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+                {[
+                  {
+                    icon: <img src={uiAssets.towerIcon} alt="Tháp" className="w-full h-full object-contain" />,
+                    label: "Tháp",
+                    special: true,
+                    centered: true,
+                    onClick: toggleTowerGame
+                  },
+                  {
+                    icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
+                    label: "",
+                    special: true,
+                    centered: true
+                  },
+                  {
+                    icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />,
+                    label: "",
+                    special: true,
+                    centered: true,
+                    onClick: toggleInventory
+                  }
+                ].map((item, index) => (
+                  <div key={index} className="group cursor-pointer">
                     <div
                         className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                         onClick={item.onClick}
+                        title={item.label}
                     >
                         {item.icon}
                     </div>
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Right-side Action Buttons */}
+              <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+                {[
+                  {
+                    icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />,
+                    label: "",
+                    special: true,
+                    centered: true
+                  },
+                  {
+                    icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />,
+                    label: "",
+                    special: true,
+                    centered: true,
+                    onClick: toggleBlacksmith
+                  },
+                ].map((item, index) => (
+                  <div key={index} className="group cursor-pointer">
+                      <div
+                          className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
+                          onClick={item.onClick}
+                      >
+                          {item.icon}
+                      </div>
+                  </div>
+                ))}
+              </div>
+
+              <TreasureChest
+                initialChests={3}
+                keyCount={keyCount}
+                onKeyCollect={(n) => {
+                  if (auth.currentUser) {
+                    updateKeysInFirestore(auth.currentUser!.uid, -n);
+                  }
+                }}
+                onCoinReward={startCoinCountAnimation}
+                onGemReward={handleGemReward}
+                isGamePaused={isGamePaused}
+                currentUserId={currentUser ? currentUser.uid : null}
+              />
             </div>
-
-            <TreasureChest
-              initialChests={3}
-              keyCount={keyCount}
-              onKeyCollect={(n) => {
-                if (auth.currentUser) {
-                  updateKeysInFirestore(auth.currentUser!.uid, -n);
-                }
-              }}
-              onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward}
-              isGamePaused={isGamePaused}
-              currentUserId={currentUser ? currentUser.uid : null}
-            />
           </div>
-        </div>
 
-        {/* === OVERLAY SCREENS === */}
-        <div className="absolute inset-0 w-full h-full" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-                {auth.currentUser && (
-                    <CharacterCard
-                        onClose={toggleStatsFullscreen}
-                        coins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                    />
-                )}
-            </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isRankOpen ? 'block' : 'none' }}>
-             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-                 <EnhancedLeaderboard onClose={toggleRank} />
-             </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
-                {auth.currentUser && (
-                    <GoldMine
-                        onClose={toggleGoldMine}
-                        currentCoins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
-                        currentUserId={auth.currentUser!.uid}
-                        isGamePaused={isAnyOverlayOpen}
-                    />
-                )}
-            </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-                <Inventory onClose={toggleInventory} />
-            </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
-                {auth.currentUser && (
-                    <LuckyChestGame
-                        onClose={toggleLuckyGame}
-                        currentCoins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        currentJackpotPool={jackpotPool}
-                        onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
-                        isStatsFullscreen={isStatsFullscreen}
-                    />
-                )}
-            </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
-                <Blacksmith onClose={toggleBlacksmith} />
-            </ErrorBoundary>
-        </div>
+          {/* === OVERLAY SCREENS === */}
+          <div className="absolute inset-0 w-full h-full" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
+                  {auth.currentUser && (
+                      <CharacterCard
+                          onClose={toggleStatsFullscreen}
+                          coins={coins}
+                          onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                      />
+                  )}
+              </ErrorBoundary>
+          </div>
+          <div className="absolute inset-0 w-full h-full" style={{ display: isRankOpen ? 'block' : 'none' }}>
+               <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
+                   <EnhancedLeaderboard onClose={toggleRank} />
+               </ErrorBoundary>
+          </div>
+          <div className="absolute inset-0 w-full h-full" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
+                  {auth.currentUser && (
+                      <GoldMine
+                          onClose={toggleGoldMine}
+                          currentCoins={coins}
+                          onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                          onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
+                          currentUserId={auth.currentUser!.uid}
+                          isGamePaused={isAnyOverlayOpen}
+                      />
+                  )}
+              </ErrorBoundary>
+          </div>
+          <div className="absolute inset-0 w-full h-full" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
+                  <Inventory onClose={toggleInventory} />
+              </ErrorBoundary>
+          </div>
+          <div className="absolute inset-0 w-full h-full" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
+                  {auth.currentUser && (
+                      <LuckyChestGame
+                          onClose={toggleLuckyGame}
+                          currentCoins={coins}
+                          onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                          currentJackpotPool={jackpotPool}
+                          onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
+                          isStatsFullscreen={isStatsFullscreen}
+                      />
+                  )}
+              </ErrorBoundary>
+          </div>
+          <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
+                  <Blacksmith onClose={toggleBlacksmith} />
+              </ErrorBoundary>
+          </div>
 
-        {/* <<<< 6. ADD TOWER GAME OVERLAY >>>> */}
-        <div className="absolute inset-0 w-full h-full z-40" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Tháp Thử Thách!</div>}>
-                <TowerExplorerGame onClose={toggleTowerGame} />
-            </ErrorBoundary>
-        </div>
+          {/* <<<< 6. ADD TOWER GAME OVERLAY >>>> */}
+          <div className="absolute inset-0 w-full h-full z-40" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
+              <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Tháp Thử Thách!</div>}>
+                  <TowerExplorerGame onClose={toggleTowerGame} />
+              </ErrorBoundary>
+          </div>
 
-      </SidebarLayout>
+        </SidebarLayout>
+      )}
+      {/* >>> FIX END <<< */}
     </div>
   );
 }
