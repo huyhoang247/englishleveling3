@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sword, Shield, Heart, Coins, Star, ChevronUp, Play, RotateCcw, User } from 'lucide-react';
 
-// Thêm một style tag để định nghĩa animation. 
-// Cách này tiện lợi cho component nhỏ, không cần sửa file CSS hay config Tailwind.
+// Không cần import lucide-react nữa
+
+// Style cho animation vẫn được giữ nguyên
 const GameStyles = () => (
   <style>{`
     @keyframes shake {
@@ -116,7 +116,6 @@ const TowerExplorerGame = () => {
     let newLog = [...battleState.battleLog, `You dealt ${damage} damage!`];
     
     if (newMonsterHealth <= 0) {
-      // Quái vật chết
       const floorRewards = generateRewards(currentFloor);
       setRewards(floorRewards);
       setPlayerStats(prev => ({
@@ -182,10 +181,9 @@ const TowerExplorerGame = () => {
     setBattleState(null);
     setRewards([]);
     
-    // Hồi máu một chút sau mỗi tầng
     setPlayerStats(prev => ({
       ...prev,
-      health: Math.min(prev.maxHealth, prev.health + Math.ceil(prev.maxHealth * 0.1)) // Hồi 10% máu tối đa
+      health: Math.min(prev.maxHealth, prev.health + Math.ceil(prev.maxHealth * 0.1))
     }));
   };
 
@@ -197,8 +195,6 @@ const TowerExplorerGame = () => {
     setBattleState(null);
     setRewards([]);
   };
-
-  // --- Render Helper Components ---
 
   const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
     <div className={`w-full ${bgColorClass} rounded-full h-4 shadow-inner`}>
@@ -229,7 +225,6 @@ const TowerExplorerGame = () => {
       <GameStyles />
       <div className="w-full max-w-md bg-gray-900/70 backdrop-blur-sm rounded-2xl shadow-2xl shadow-purple-500/10 overflow-hidden border border-purple-500/30">
         
-        {/* Header */}
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30">
           <h1 className="text-2xl font-bold text-center tracking-wider">Tower of Valor</h1>
           <div className="text-center text-lg font-semibold mt-1 opacity-80">
@@ -237,38 +232,36 @@ const TowerExplorerGame = () => {
           </div>
         </div>
 
-        {/* Player Stats */}
         <div className="p-4 bg-black/20">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold text-lg">Your Stats</h3>
                 <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-1" title="Coins">
-                        <Coins className="text-yellow-400" size={18} />
+                        <span className="text-yellow-400">💰</span>
                         <span className="font-semibold">{playerStats.coins}</span>
                     </div>
                     <div className="flex items-center space-x-1" title="Gems">
-                        <Star className="text-purple-400" size={18} />
+                        <span className="text-purple-400">💎</span>
                         <span className="font-semibold">{playerStats.gems}</span>
                     </div>
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-4 text-center">
                  <div className="flex flex-col items-center justify-center" title="Health">
-                    <Heart className="text-red-500 mb-1" size={24} />
+                    <span className="text-2xl mb-1">❤️</span>
                     <span className="font-semibold">{battleState ? battleState.playerHealth : playerStats.health}/{playerStats.maxHealth}</span>
                 </div>
                 <div className="flex flex-col items-center justify-center" title="Attack">
-                    <Sword className="text-blue-400 mb-1" size={24} />
+                    <span className="text-2xl mb-1">⚔️</span>
                     <span className="font-semibold">{playerStats.attack}</span>
                 </div>
                 <div className="flex flex-col items-center justify-center" title="Defense">
-                    <Shield className="text-gray-400 mb-1" size={24} />
+                    <span className="text-2xl mb-1">🛡️</span>
                     <span className="font-semibold">{playerStats.defense}</span>
                 </div>
             </div>
         </div>
 
-        {/* Game Area */}
         <div className="h-96 relative flex flex-col items-center justify-between p-6 bg-gradient-to-b from-gray-800 to-gray-900">
           {gameState === 'playing' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full">
@@ -277,9 +270,9 @@ const TowerExplorerGame = () => {
               <p className="text-gray-400 mb-8">A new challenge lies beyond this door.</p>
               <button
                 onClick={startBattle}
-                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8 py-3 rounded-lg font-bold flex items-center space-x-2 shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300"
+                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300"
               >
-                <Play size={22} />
+                <span className="mr-2 text-xl">▶️</span>
                 <span>Enter Floor {currentFloor}</span>
               </button>
             </div>
@@ -287,7 +280,6 @@ const TowerExplorerGame = () => {
 
           {gameState === 'fighting' && battleState && (
             <>
-              {/* Monster Area */}
               <div className={`w-full text-center ${animationState.monsterHit ? 'animate-shake' : ''}`}>
                 <div className={`text-6xl mb-2 ${battleState.monster.color}`}>{battleState.monster.emoji}</div>
                 <h3 className="text-xl font-bold">{battleState.monster.name}</h3>
@@ -299,10 +291,9 @@ const TowerExplorerGame = () => {
               
               <div className="text-4xl text-gray-500 my-4">⚔️</div>
 
-              {/* Player Area */}
               <div className={`w-full text-center ${animationState.playerHit ? 'animate-shake' : ''}`}>
                 <div className="w-20 h-20 bg-blue-900/50 rounded-full mx-auto mb-2 flex items-center justify-center border-2 border-blue-400">
-                    <User size={40} className="text-blue-300"/>
+                    <div className="text-4xl">🦸</div>
                 </div>
                 <h3 className="text-xl font-bold">You</h3>
                 <div className="mt-2 px-4">
@@ -331,20 +322,20 @@ const TowerExplorerGame = () => {
                 <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3>
                 <div className="flex justify-center space-x-6 text-lg">
                   <div className="flex items-center space-x-2">
-                    <Coins className="text-yellow-400" size={20} />
+                    <span className="text-yellow-400">💰</span>
                     <span>+{rewards.coins}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Star className="text-purple-400" size={20} />
+                    <span className="text-purple-400">💎</span>
                     <span>+{rewards.gems}</span>
                   </div>
                 </div>
               </div>
               <button
                 onClick={nextFloor}
-                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center space-x-2 shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300"
+                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300"
               >
-                <ChevronUp size={22} />
+                <span className="mr-2 text-xl">🔼</span>
                 <span>Proceed to Floor {currentFloor + 1}</span>
               </button>
             </div>
@@ -357,16 +348,15 @@ const TowerExplorerGame = () => {
               <p className="text-gray-400 mb-8">Your journey ended on Floor {currentFloor}.</p>
               <button
                 onClick={resetGame}
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center space-x-2 shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300"
               >
-                <RotateCcw size={22} />
+                <span className="mr-2 text-xl">🔄</span>
                 <span>Try Again</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* Battle Log */}
         {battleState && (
           <div className="bg-black/20 p-4 border-t border-purple-500/30">
             <h4 className="font-bold text-sm mb-2 text-gray-400">Battle Log</h4>
@@ -378,7 +368,6 @@ const TowerExplorerGame = () => {
           </div>
         )}
 
-        {/* Footer & Settings */}
         <div className="bg-gray-900 p-4 border-t border-purple-500/30 flex justify-between items-center">
             <div className="text-sm text-gray-400">Floor {currentFloor}</div>
             <label className="flex items-center space-x-2 cursor-pointer">
@@ -388,7 +377,7 @@ const TowerExplorerGame = () => {
                     type="checkbox"
                     checked={autoNext}
                     onChange={(e) => setAutoNext(e.target.checked)}
-                    className="sr-only" // hide default checkbox
+                    className="sr-only"
                     />
                     <div className="block bg-gray-600 w-10 h-6 rounded-full"></div>
                     <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoNext ? 'transform translate-x-full bg-green-400' : ''}`}></div>
