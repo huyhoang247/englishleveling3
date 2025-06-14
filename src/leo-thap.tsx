@@ -223,9 +223,9 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   return (
     <div className="w-full h-full bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
-      <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col overflow-hidden relative animate-fade-in-up">
+      {/* <<<< THAY ĐỔI 1: Gỡ bỏ `overflow-hidden` >>>> */}
+      <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
         
-        {/* <<<< THAY ĐỔI Ở ĐÂY >>>> */}
         <button
             onClick={onClose}
             className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80"
@@ -234,7 +234,6 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
         >
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
-        {/* <<<< KẾT THÚC THAY ĐỔI >>>> */}
 
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30">
             <h1 className="text-2xl font-bold text-center tracking-wider">Tower of Valor</h1>
@@ -251,7 +250,8 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
         </div>
         
-        <div className="flex-grow relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900 overflow-y-auto">
+        {/* <<<< THAY ĐỔI 2: Thêm `min-h-0` >>>> */}
+        <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900 overflow-y-auto">
            {gameState === 'playing' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4 animate-pulse">🚪</div>
