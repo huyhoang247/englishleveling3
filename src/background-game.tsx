@@ -1,5 +1,3 @@
-// --- START OF FILE background-game.tsx (UPDATED & FIXED) ---
-
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -15,9 +13,10 @@ import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 import GoldMine from './gold-miner.tsx';
 import Inventory from './inventory.tsx';
-import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
+import DungeonCanvasBackground from './DungeonCanvasBackground.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
+import TowerExplorerGame from './leo-thap.tsx'; // <<<< 1. IMPORT TOWER GAME
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
 
 
@@ -140,6 +139,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
+  const [isTowerGameOpen, setIsTowerGameOpen] = useState(false); // <<<< 2. ADD STATE FOR TOWER GAME
 
   const GROUND_LEVEL_PERCENT = 45;
 
@@ -348,6 +348,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -408,7 +409,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Renders the character, now with a static position
   const renderCharacter = () => {
     // Combined condition to check if any overlay is open
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen;
     // Condition to pause animations
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -436,12 +437,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const newState = !prev;
         if (newState) {
             hideNavBar();
-            // Close other overlays
             setIsRankOpen(false);
             setIsGoldMineOpen(false);
             setIsInventoryOpen(false);
             setIsLuckyGameOpen(false);
             setIsBlacksmithOpen(false);
+            setIsTowerGameOpen(false);
         } else {
             showNavBar();
         }
@@ -455,12 +456,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
          const newState = !prev;
          if (newState) {
              hideNavBar();
-             // Close other overlays
              setIsStatsFullscreen(false);
              setIsGoldMineOpen(false);
              setIsInventoryOpen(false);
              setIsLuckyGameOpen(false);
              setIsBlacksmithOpen(false);
+             setIsTowerGameOpen(false);
          } else {
              showNavBar();
          }
@@ -474,12 +475,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
       } else {
         showNavBar();
       }
@@ -493,12 +494,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
       } else {
         showNavBar();
       }
@@ -512,12 +513,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
         setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
       } else {
         showNavBar();
       }
@@ -531,12 +532,32 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
+        setIsTowerGameOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+  
+  // <<<< 3. ADD TOGGLE FUNCTION FOR TOWER GAME
+  const toggleTowerGame = () => {
+    if (isLoading) return;
+    setIsTowerGameOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
       } else {
         showNavBar();
       }
@@ -565,7 +586,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+  // <<<< 4. UPDATE OVERLAY CHECK
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
@@ -577,29 +599,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
       >
-        {/* 
-          <<<< THAY ĐỔI QUAN TRỌNG 1 >>>>
-          Component canvas được đặt ở đây, BÊN NGOÀI khối div bị ẩn đi.
-          Nó sẽ luôn được render và chỉ bị tạm dừng thông qua prop `isGamePaused`.
-          Component này đã có zIndex: 0 nên sẽ nằm ở lớp dưới cùng.
-        */}
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
         {/* === MAIN LOBBY SCREEN === */}
-        {/* Khối div này bây giờ chỉ chứa các yếu tố của sảnh chờ, KHÔNG chứa background nữa */}
         <div 
           style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
           className="w-full h-full"
         >
           <div
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`}
-            onClick={handleTap} // Click no longer does anything for gameplay
+            onClick={handleTap}
           >
-            {/* 
-              <<<< THAY ĐỔI QUAN TRỌNG 2 >>>>
-              Component DungeonCanvasBackground đã được DI CHUYỂN ra ngoài từ đây.
-            */}
-
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
@@ -622,7 +632,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      />
                 </button>
 
-                {/* Placeholder for where the health bar used to be, to maintain layout */}
                 <div className="flex-1"></div>
 
                 <div className="flex items-center space-x-1 currency-display-container relative z-10">
@@ -644,9 +653,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {/* Left-side Action Buttons */}
+            {/* <<<< 5. UPDATE LEFT-SIDE ACTION BUTTONS >>>> */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
+                {
+                  icon: <img src={uiAssets.towerIcon} alt="Tháp" className="w-full h-full object-contain" />,
+                  label: "Tháp",
+                  special: true,
+                  centered: true,
+                  onClick: toggleTowerGame
+                },
                 {
                   icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
                   label: "",
@@ -665,6 +681,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   <div
                       className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                       onClick={item.onClick}
+                      title={item.label}
                   >
                       {item.icon}
                   </div>
@@ -769,6 +786,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
                 <Blacksmith onClose={toggleBlacksmith} />
+            </ErrorBoundary>
+        </div>
+
+        {/* <<<< 6. ADD TOWER GAME OVERLAY >>>> */}
+        <div className="absolute inset-0 w-full h-full z-40" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Tháp Thử Thách!</div>}>
+                <TowerExplorerGame onClose={toggleTowerGame} />
             </ErrorBoundary>
         </div>
 
