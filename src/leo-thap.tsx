@@ -8,11 +8,10 @@ interface TowerExplorerGameProps {
   onClose: () => void;
 }
 
-// --- Các hằng số điều chỉnh game ---
-const ACTION_DELAY = 1400; 
-const IMPACT_DELAY = 300;
-const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2;
-const TOTAL_TOWER_FLOORS = 10; // <<-- THÊM MỚI: Tổng số tầng của tháp
+// --- Các hằng số điều chỉnh nhịp độ game ---
+const ACTION_DELAY = 1400; // Thời gian chờ giữa các lượt (ms)
+const IMPACT_DELAY = 300;  // Thời gian trễ giữa animation và cập nhật sát thương (ms)
+const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2; // Tổng thời gian 1 vòng đánh
 
 // Component chứa các style cho animation
 const GameStyles = () => (
@@ -22,80 +21,39 @@ const GameStyles = () => (
       10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
       20%, 40%, 60%, 80% { transform: translateX(5px); }
     }
-    .animate-shake { animation: shake 0.5s ease-in-out; }
+    .animate-shake {
+      animation: shake 0.5s ease-in-out;
+    }
     
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fade-in-up {
       from { opacity: 0; transform: translateY(20px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    @keyframes pulse-bright {
-      0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
-      50% { opacity: 0.8; box-shadow: 0 0 20px rgba(168, 85, 247, 0.8); }
-    }
-    .animate-pulse-bright { animation: pulse-bright 2s infinite; }
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
   `}</style>
 );
 
 // --- Helper Components ---
-
-// <<<--- THÊM MỚI: Component thanh tiến trình các tầng ---
-const FloorProgressBar = ({ currentFloor, totalFloors }) => {
-    const floors = Array.from({ length: totalFloors }, (_, i) => i + 1);
-
-    return (
-        <div className="flex justify-center items-center mt-3">
-            {floors.map((floor, index) => {
-                const isCompleted = floor < currentFloor;
-                const isCurrent = floor === currentFloor;
-                const isLocked = floor > currentFloor;
-                
-                let stateClasses = '';
-                let icon = '•';
-
-                if (isCompleted) {
-                    stateClasses = 'bg-green-500/30 text-green-300';
-                    icon = '✔';
-                } else if (isCurrent) {
-                    stateClasses = 'bg-purple-500/50 text-purple-200 ring-2 ring-purple-400 animate-pulse-bright';
-                    icon = '⚔️';
-                } else { // isLocked
-                    stateClasses = 'bg-gray-700/50 text-gray-500';
-                    icon = '🔒';
-                }
-
-                return (
-                    <React.Fragment key={floor}>
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-xs transition-all duration-500 ${stateClasses}`}>
-                           <span className={!isCurrent ? 'opacity-70' : ''}>{isCurrent ? floor : icon}</span>
-                        </div>
-                        {index < totalFloors - 1 && (
-                            <div className={`h-1 flex-1 ${isCompleted ? 'bg-green-500/50' : 'bg-gray-700/50'}`}></div>
-                        )}
-                    </React.Fragment>
-                );
-            })}
-        </div>
-    );
-};
-
 const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
     <div className={`w-full ${bgColorClass} rounded-full h-3 shadow-inner`}>
-        <div className={`${colorClass} h-3 rounded-full transition-all duration-500 ease-out flex items-center justify-center`} style={{ width: `${(current / max) * 100}%` }}></div>
-        <div className="text-xs font-bold text-white text-shadow-sm text-center -mt-3.5">{current} / {max}</div>
+      <div className={`${colorClass} h-3 rounded-full transition-all duration-500 ease-out flex items-center justify-center`} style={{ width: `${(current / max) * 100}%` }}>
+      </div>
+      <div className="text-xs font-bold text-white text-shadow-sm text-center -mt-3.5">
+          {current} / {max}
+      </div>
     </div>
 );
 
 const LogMessage = ({ log }) => {
-  const getColor = () => {
-    if (log.includes('dealt')) return 'text-red-400';
-    if (log.includes('gained')) return 'text-yellow-400';
-    if (log.includes('defeated!')) return 'text-green-400';
-    return 'text-gray-300';
-  };
-  return <div className={`animate-fade-in-up ${getColor()}`}>{log}</div>;
+    const getColor = () => {
+      if (log.includes('dealt')) return 'text-red-400';
+      if (log.includes('gained')) return 'text-yellow-400';
+      if (log.includes('defeated!')) return 'text-green-400';
+      return 'text-gray-300';
+    };
+    return <div className={`animate-fade-in-up ${getColor()}`}>{log}</div>;
 };
 
 const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, healthBarColor, isHit }) => (
@@ -109,12 +67,101 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
 );
 
 
+// --- THAY ĐỔI LỚN: Component màn hình chọn tầng ---
+const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
+  const totalFloors = 20; // Tổng số tầng của tháp
+  const floors = Array.from({ length: totalFloors }, (_, i) => i + 1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Tự động cuộn đến tầng hiện tại
+  useEffect(() => {
+    const currentFloorElement = scrollRef.current?.querySelector(`#floor-${highestFloorCleared + 1}`);
+    if (currentFloorElement) {
+      currentFloorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highestFloorCleared]);
+
+  const getFloorStatus = (floor) => {
+    if (floor <= highestFloorCleared) return 'completed';
+    if (floor === highestFloorCleared + 1) return 'current';
+    return 'locked';
+  };
+
+  const getStatusInfo = (status, floor) => {
+    switch (status) {
+      case 'completed':
+        return {
+          icon: '✅',
+          label: 'Farm',
+          bgColor: 'bg-green-800/50 hover:bg-green-700/70',
+          textColor: 'text-green-300',
+          borderColor: 'border-green-500/30'
+        };
+      case 'current':
+        return {
+          icon: '⚔️',
+          label: 'Challenge',
+          bgColor: 'bg-yellow-600/60 hover:bg-yellow-500/80 animate-pulse',
+          textColor: 'text-yellow-300',
+          borderColor: 'border-yellow-400/50'
+        };
+      default: // locked
+        return {
+          icon: '🔒',
+          label: 'Locked',
+          bgColor: 'bg-gray-800/50 cursor-not-allowed',
+          textColor: 'text-gray-500',
+          borderColor: 'border-gray-600/30'
+        };
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col items-center p-4 animate-fade-in">
+        <h2 className="text-2xl font-bold mb-4 text-gray-200">Select a Floor</h2>
+        <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto pr-2">
+            {floors.map(floor => {
+                const status = getFloorStatus(floor);
+                const { icon, label, bgColor, textColor, borderColor } = getStatusInfo(status, floor);
+                const isLocked = status === 'locked';
+
+                return (
+                    <button
+                        key={floor}
+                        id={`floor-${floor}`}
+                        onClick={() => !isLocked && onSelectFloor(floor)}
+                        disabled={isLocked}
+                        className={`w-full flex items-center justify-between p-4 rounded-lg border ${borderColor} ${bgColor} transition-all duration-200 transform hover:scale-105`}
+                    >
+                        <div className="flex items-center">
+                            <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>
+                            <div>
+                                <h3 className={`font-bold text-lg text-left ${textColor}`}>Floor {floor}</h3>
+                                {status === 'completed' && <p className="text-xs text-green-400/80">Re-enter for rewards</p>}
+                            </div>
+                        </div>
+                        <span className={`font-semibold px-3 py-1 rounded-full text-sm ${textColor}`}>{label}</span>
+                    </button>
+                );
+            })}
+        </div>
+    </div>
+  );
+};
+
+
 const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
-  const [currentFloor, setCurrentFloor] = useState(1);
-  const [playerStats, setPlayerStats] = useState({ health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0 });
-  const [gameState, setGameState] = useState('playing');
+  // --- Cập nhật State ---
+  // Giả sử người chơi đã qua tầng 4 để demo, thực tế nên là 0
+  const [highestFloorCleared, setHighestFloorCleared] = useState(4); 
+  const [battleFloor, setBattleFloor] = useState(1); // Tầng đang chiến đấu
+  const [playerStats, setPlayerStats] = useState({
+    health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 1500, gems: 20
+  });
+  // Đổi gameState mặc định thành 'floor_selection'
+  const [gameState, setGameState] = useState<'floor_selection' | 'fighting' | 'victory' | 'defeat'>('floor_selection');
   const [battleState, setBattleState] = useState(null);
-  const [rewards, setRewards] = useState([]);
+  const [rewards, setRewards] = useState(null);
   const [autoAttack, setAutoAttack] = useState(false);
   const [animationState, setAnimationState] = useState({ playerHit: false, monsterHit: false });
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -132,14 +179,17 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
       if (event.key === 'Escape') {
         if (isLogModalOpen) {
           setIsLogModalOpen(false);
+        } else if (gameState !== 'floor_selection') {
+           // Nếu đang trong trận, quay về màn hình chọn tầng
+           setGameState('floor_selection');
         } else {
-          onClose();
+          onClose(); // Nếu ở màn hình chọn tầng, đóng game
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLogModalOpen, onClose]);
+  }, [isLogModalOpen, onClose, gameState]);
   
   useEffect(() => {
     if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
@@ -166,17 +216,29 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   };
 
   const generateRewards = (floor) => {
-    const baseCoins = 50 + floor * 25;
-    const baseGems = Math.floor(floor / 3) + 1;
-    return { coins: baseCoins + Math.floor(Math.random() * 50), gems: baseGems + (Math.random() < 0.3 ? 1 : 0) };
+    // Farm lại tầng cũ sẽ được ít phần thưởng hơn
+    const rewardModifier = floor > highestFloorCleared ? 1.0 : 0.4;
+    const baseCoins = (50 + floor * 25) * rewardModifier;
+    const baseGems = (Math.floor(floor / 3) + 1);
+    const gemChance = floor > highestFloorCleared ? 0.3 : 0.1;
+
+    return { 
+        coins: Math.ceil(baseCoins + Math.floor(Math.random() * 50 * rewardModifier)), 
+        gems: (Math.random() < gemChance ? baseGems : 0)
+    };
   };
 
-  const startBattle = () => {
-    if (currentFloor > TOTAL_TOWER_FLOORS) return; // Không cho bắt đầu nếu đã hoàn thành tháp
-    const monster = generateMonster(currentFloor);
+  // Hàm được gọi khi người chơi chọn một tầng
+  const handleSelectFloor = (floor) => {
+    setBattleFloor(floor);
+    startBattle(floor);
+  };
+  
+  const startBattle = (floor) => {
+    const monster = generateMonster(floor);
     setBattleState({
       monster: monster, playerHealth: playerStats.health, monsterHealth: monster.health,
-      turn: 'player', battleLog: [`A ${monster.name} ${monster.emoji} appears on Floor ${currentFloor}!`]
+      turn: 'player', battleLog: [`Entering Floor ${floor}... A ${monster.name} ${monster.emoji} appears!`]
     });
     setGameState('fighting');
   };
@@ -196,20 +258,13 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
       setBattleState(prev => ({ ...prev, monsterHealth: newMonsterHealth, battleLog: newLog }));
 
       if (newMonsterHealth <= 0) {
-        const floorRewards = generateRewards(currentFloor);
+        const floorRewards = generateRewards(battleFloor);
         setRewards(floorRewards);
         setPlayerStats(prev => ({ ...prev, coins: prev.coins + floorRewards.coins, gems: prev.gems + floorRewards.gems }));
         newLog.push(`${battleState.monster.name} defeated!`);
         newLog.push(`You gained ${floorRewards.coins} coins and ${floorRewards.gems} gems.`);
         setBattleState(prev => ({ ...prev, monsterHealth: 0, battleLog: newLog }));
-        // <<< THAY ĐỔI: Chuyển sang trạng thái 'victory' sau một khoảng trễ
-        setTimeout(() => {
-            if (currentFloor === TOTAL_TOWER_FLOORS) {
-                 setGameState('tower_completed');
-            } else {
-                 setGameState('victory');
-            }
-        }, 1000);
+        setTimeout(() => setGameState('victory'), 1000);
         return;
       }
       
@@ -237,18 +292,22 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     }, IMPACT_DELAY);
   };
   
-  const nextFloor = () => {
-    setCurrentFloor(prev => prev + 1);
-    setGameState('playing');
-    setRewards([]);
+  // Hàm xử lý sau khi chiến thắng
+  const returnToMap = () => {
+    // Nếu thắng tầng mới, cập nhật tiến trình
+    if (battleFloor > highestFloorCleared) {
+      setHighestFloorCleared(battleFloor);
+    }
+    // Hồi một ít máu
     setPlayerStats(prev => ({ ...prev, health: Math.min(prev.maxHealth, prev.health + Math.ceil(prev.maxHealth * 0.1)) }));
+    setGameState('floor_selection');
+    setRewards(null);
   };
   
-  const resetGame = () => {
-    setCurrentFloor(1);
-    setPlayerStats({ health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0 });
-    setGameState('playing');
-    setRewards([]);
+  // Hàm xử lý sau khi thua
+  const handleDefeat = () => {
+    // Chỉ cần quay lại map, không cần reset tiến trình
+    setGameState('floor_selection');
   };
 
   const BattleLogModal = () => (
@@ -275,36 +334,30 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
 
-        {/* --- THAY ĐỔI: Tích hợp FloorProgressBar vào header --- */}
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30">
             <h1 className="text-2xl font-bold text-center tracking-wider">Tower of Valor</h1>
-            <FloorProgressBar currentFloor={currentFloor} totalFloors={TOTAL_TOWER_FLOORS} />
+            <div className="text-center text-lg font-semibold mt-1 opacity-80">
+              {gameState === 'fighting' || gameState === 'victory' ? `Floor ${battleFloor}` : `Highest: ${highestFloorCleared}`}
+            </div>
         </div>
         
         <div className="p-4 bg-black/20">
-            <div className="flex justify-around items-center text-sm sm:text-base">
+            <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2" title="Health"><span className="text-xl">❤️</span><span className="font-semibold">{playerStats.health}/{playerStats.maxHealth}</span></div>
                 <div className="flex items-center space-x-2" title="Attack"><span className="text-xl">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
                 <div className="flex items-center space-x-2" title="Defense"><span className="text-xl">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
-                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400 text-xl">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
-                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400 text-xl">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
+                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
+                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
             </div>
         </div>
         
-        <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900 overflow-y-auto">
-           {gameState === 'playing' && (
-            <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
-              <div className="text-7xl mb-4 animate-pulse">🚪</div>
-              <h2 className="text-2xl font-bold mb-2">Floor {currentFloor}: The Gate Awaits</h2>
-              <p className="text-gray-400 mb-8">A new challenge lies beyond this door.</p>
-              <button onClick={startBattle} className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300">
-                <span className="mr-2 text-xl">▶️</span><span>Enter Floor {currentFloor}</span>
-              </button>
-            </div>
-          )}
+        <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900 overflow-hidden">
+           {gameState === 'floor_selection' && (
+             <FloorSelectionScreen highestFloorCleared={highestFloorCleared} onSelectFloor={handleSelectFloor} />
+           )}
 
           {gameState === 'fighting' && battleState && (
-             <div className="w-full h-full flex flex-col justify-between animate-fade-in">
+            <div className="w-full h-full flex flex-col justify-between animate-fade-in p-4">
                 <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
                     {battleState.monsterHealth > 0 ? (
                         <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
@@ -314,62 +367,53 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
                         <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
                     )}
                 </div>
+
                 <div className="w-full flex justify-around items-start px-4 md:px-16">
-                    <CombatantView name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth} healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit}/>
+                    <CombatantView 
+                        name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth}
+                        healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit}
+                    />
                     <div className="text-4xl text-gray-500 pt-12">⚔️</div>
-                    <CombatantView name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color} currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth} healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit}/>
+                    <CombatantView 
+                        name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color}
+                        currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth}
+                        healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit}
+                    />
                 </div>
                 <div className="text-center">
-                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
+                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} 
+                            className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
                       Attack!
                     </button>
                 </div>
             </div>
           )}
-          
+
           {gameState === 'victory' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4">🏆</div>
               <h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
-              <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
-                <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor {currentFloor} Cleared! Rewards:</h3>
-                <div className="flex justify-center space-x-6 text-lg">
-                  <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
-                  <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
-                </div>
-              </div>
-              <button onClick={nextFloor} className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300">
-                <span className="mr-2 text-xl">🔼</span><span>Proceed to Floor {currentFloor + 1}</span>
+              {rewards && (
+                  <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3>
+                    <div className="flex justify-center space-x-6 text-lg">
+                      <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
+                      <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
+                    </div>
+                  </div>
+              )}
+              <button onClick={returnToMap} className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300">
+                <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
               </button>
             </div>
           )}
-
-          {/* <<< THÊM MỚI: Màn hình khi hoàn thành toàn bộ tháp >>> */}
-          {gameState === 'tower_completed' && (
-            <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
-                <div className="text-7xl mb-4">👑</div>
-                <h2 className="text-3xl font-bold mb-4 text-yellow-300">TOWER CONQUERED!</h2>
-                <p className="text-gray-300 mb-8">You have proven your valor and defeated all challenges!</p>
-                <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
-                    <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Final Spoils:</h3>
-                    <div className="flex justify-center space-x-6 text-lg">
-                        <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
-                        <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
-                    </div>
-                </div>
-                <button onClick={resetGame} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
-                    <span className="mr-2 text-xl">🔄</span><span>Play Again</span>
-                </button>
-            </div>
-          )}
-
           {gameState === 'defeat' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4">💀</div>
               <h2 className="text-3xl font-bold mb-4 text-red-500">DEFEATED</h2>
-              <p className="text-gray-400 mb-8">Your journey ended on Floor {currentFloor}.</p>
-              <button onClick={resetGame} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
-                <span className="mr-2 text-xl">🔄</span><span>Try Again</span>
+              <p className="text-gray-400 mb-8">Your journey paused on Floor {battleFloor}.</p>
+              <button onClick={handleDefeat} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
+                <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
               </button>
             </div>
           )}
