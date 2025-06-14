@@ -19,6 +19,7 @@ import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử d�
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
+import PetCollection from './collection/PetCollection.tsx';
 
 
 // ==================================================================
@@ -140,6 +141,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
+  const [isPetCollectionOpen, setIsPetCollectionOpen] = useState(false);
 
   const GROUND_LEVEL_PERCENT = 45;
 
@@ -348,6 +350,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsPetCollectionOpen(false);
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -408,7 +411,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Renders the character, now with a static position
   const renderCharacter = () => {
     // Combined condition to check if any overlay is open
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isPetCollectionOpen;
     // Condition to pause animations
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -442,6 +445,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsInventoryOpen(false);
             setIsLuckyGameOpen(false);
             setIsBlacksmithOpen(false);
+            setIsPetCollectionOpen(false);
         } else {
             showNavBar();
         }
@@ -461,6 +465,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsInventoryOpen(false);
              setIsLuckyGameOpen(false);
              setIsBlacksmithOpen(false);
+             setIsPetCollectionOpen(false);
          } else {
              showNavBar();
          }
@@ -480,6 +485,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsPetCollectionOpen(false);
       } else {
         showNavBar();
       }
@@ -499,6 +505,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsGoldMineOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsPetCollectionOpen(false);
       } else {
         showNavBar();
       }
@@ -518,6 +525,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
         setIsBlacksmithOpen(false);
+        setIsPetCollectionOpen(false);
       } else {
         showNavBar();
       }
@@ -537,6 +545,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
+        setIsPetCollectionOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+  
+  const togglePetCollection = () => {
+    if (isLoading) return;
+    setIsPetCollectionOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        // Close other overlays
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
       } else {
         showNavBar();
       }
@@ -565,7 +594,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isPetCollectionOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
@@ -647,6 +676,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             {/* Left-side Action Buttons */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
+                {
+                  icon: <img src={uiAssets.petIcon} alt="Pet Icon" className="w-full h-full object-contain" />,
+                  label: "",
+                  special: true,
+                  centered: true,
+                  onClick: togglePetCollection
+                },
                 {
                   icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
                   label: "",
@@ -769,6 +805,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
                 <Blacksmith onClose={toggleBlacksmith} />
+            </ErrorBoundary>
+        </div>
+        <div className="absolute inset-0 w-full h-full" style={{ display: isPetCollectionOpen ? 'block' : 'none' }}>
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Bộ sưu tập Pet!</div>}>
+                <PetCollection onClose={togglePetCollection} />
             </ErrorBoundary>
         </div>
 
