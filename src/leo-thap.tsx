@@ -12,41 +12,16 @@ interface TowerExplorerGameProps {
 const ACTION_DELAY = 1400;
 const IMPACT_DELAY = 300;
 const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2;
-const FLOORS_PER_MAP = 10;
 const TOTAL_FLOORS = 100; // Tổng số tầng trong tháp
-
-// --- Dữ liệu game (Tên các khu vực) ---
-const MAP_NAMES = [
-    "Area 1: The Lower Bailey",
-    "Area 2: The Haunted Spire",
-    "Area 3: The Crimson Halls",
-    "Area 4: The Frozen Keep",
-    "Area 5: The Molten Core",
-    "Area 6: The Shadow Realm",
-    "Area 7: The Sky Citadel",
-    "Area 8: The Astral Plane",
-    "Area 9: The Void Nexus",
-    "Area 10: The Apex of Valor",
-];
+const FLOORS_TO_SHOW = 9;  // Số tầng hiển thị trong khung nhìn
 
 // --- Component chứa các style cho animation ---
 const GameStyles = () => (
   <style>{`
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-      20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-    .animate-shake {
-      animation: shake 0.5s ease-in-out;
-    }
-    
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+    .animate-shake { animation: shake 0.5s ease-in-out; }
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fade-in-up {
-      from { opacity: 0; transform: translateY(20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
+    @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
   `}</style>
@@ -79,17 +54,32 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
     </div>
 );
 
-const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor, currentMap, setCurrentMap }) => {
+const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const totalMaps = Math.ceil(TOTAL_FLOORS / FLOORS_PER_MAP);
 
-  const startFloor = (currentMap - 1) * FLOORS_PER_MAP + 1;
-  const endFloor = currentMap * FLOORS_PER_MAP;
-  const floorsToDisplay = Array.from({ length: FLOORS_PER_MAP }, (_, i) => startFloor + i);
+  const centerOffset = Math.floor(FLOORS_TO_SHOW / 2);
+  const currentChallengeFloor = highestFloorCleared + 1;
+
+  let startFloor = Math.max(1, currentChallengeFloor - centerOffset);
+  let endFloor = startFloor + FLOORS_TO_SHOW - 1;
+
+  if (endFloor > TOTAL_FLOORS) {
+    endFloor = TOTAL_FLOORS;
+    startFloor = Math.max(1, endFloor - FLOORS_TO_SHOW + 1);
+  }
   
+  const floorsToDisplay = Array.from({ length: endFloor - startFloor + 1 }, (_, i) => startFloor + i);
+  
+  useEffect(() => {
+    const currentFloorElement = scrollRef.current?.querySelector(`#floor-${currentChallengeFloor}`);
+    if (currentFloorElement) {
+      currentFloorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentChallengeFloor]);
+
   const getFloorStatus = (floor) => {
     if (floor <= highestFloorCleared) return 'completed';
-    if (floor === highestFloorCleared + 1) return 'current';
+    if (floor === currentChallengeFloor) return 'current';
     return 'locked';
   };
 
@@ -100,21 +90,9 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor, currentMap, 
       default: return { icon: '🔒', label: 'Locked', bgColor: 'bg-gray-800/50 cursor-not-allowed', textColor: 'text-gray-500', borderColor: 'border-gray-600/30' };
     }
   };
-  
-  const isNextMapUnlocked = highestFloorCleared >= currentMap * FLOORS_PER_MAP;
 
   return (
     <div className="w-full h-full flex flex-col items-center p-4 animate-fade-in">
-        <div className="w-full max-w-md flex justify-between items-center mb-4 px-2">
-            <button onClick={() => setCurrentMap(m => m - 1)} disabled={currentMap === 1} className="px-4 py-2 bg-purple-700/50 rounded-lg hover:bg-purple-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                ◀
-            </button>
-            <h2 className="text-xl font-bold text-purple-300 tracking-wide text-center">{MAP_NAMES[currentMap - 1] || `Area ${currentMap}`}</h2>
-            <button onClick={() => setCurrentMap(m => m + 1)} disabled={!isNextMapUnlocked || currentMap >= totalMaps} className="px-4 py-2 bg-purple-700/50 rounded-lg hover:bg-purple-600/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                ▶
-            </button>
-        </div>
-        
         <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto pr-2 flex-grow">
             {floorsToDisplay.map(floor => {
                 const status = getFloorStatus(floor);
@@ -143,7 +121,6 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor, currentMap, 
 
 const BattleLogModal = ({ logs, isOpen, onClose, logRef }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
       <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
@@ -160,12 +137,10 @@ const BattleLogModal = ({ logs, isOpen, onClose, logRef }) => {
   );
 };
 
-
 // --- Component Chính Của Game ---
 const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
-  const [highestFloorCleared, setHighestFloorCleared] = useState(11); // Ví dụ: đã qua tầng 11
+  const [highestFloorCleared, setHighestFloorCleared] = useState(5);
   const [battleFloor, setBattleFloor] = useState(1);
-  const [currentMap, setCurrentMap] = useState(1);
   const [playerStats, setPlayerStats] = useState({ health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 1500, gems: 20 });
   const [gameState, setGameState] = useState<'floor_selection' | 'fighting' | 'victory' | 'defeat'>('floor_selection');
   const [battleState, setBattleState] = useState(null);
@@ -174,12 +149,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   const [animationState, setAnimationState] = useState({ playerHit: false, monsterHit: false });
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const battleLogRef = useRef(null);
-
-  useEffect(() => {
-    const mapOfHighestChallenge = Math.ceil((highestFloorCleared + 1) / FLOORS_PER_MAP);
-    setCurrentMap(mapOfHighestChallenge);
-  }, [highestFloorCleared]);
-
+  
   useEffect(() => {
     if (battleLogRef.current) {
       battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
@@ -236,17 +206,15 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   const startBattle = (floor) => {
     const monster = generateMonster(floor);
     setBattleState({
-      monster,
-      playerHealth: playerStats.health,
-      monsterHealth: monster.health,
-      turn: 'player',
-      battleLog: [`Entering Floor ${floor}... A ${monster.name} ${monster.emoji} appears!`]
+      monster, playerHealth: playerStats.health, monsterHealth: monster.health,
+      turn: 'player', battleLog: [`Entering Floor ${floor}... A ${monster.name} ${monster.emoji} appears!`]
     });
     setGameState('fighting');
   };
 
   const attackMonster = () => {
     if (!battleState || battleState.turn !== 'player') return;
+
     setBattleState(p => ({ ...p, turn: 'attacking' }));
     const damage = Math.max(1, playerStats.attack - Math.floor(Math.random() * 5));
     const newMonsterHealth = Math.max(0, battleState.monsterHealth - damage);
@@ -268,7 +236,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
         return;
       }
       
-      setBattleState(p => ({...p, turn: 'monster'}));
+      setBattleState(p => ({ ...p, turn: 'monster' }));
 
       setTimeout(() => {
         const monsterDamage = Math.max(1, battleState.monster.attack - playerStats.defense + Math.floor(Math.random() * 3));
@@ -297,22 +265,22 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     setPlayerStats(p => ({ ...p, health: Math.min(p.maxHealth, p.health + Math.ceil(p.maxHealth * 0.1)) }));
     setGameState('floor_selection');
     setRewards(null);
-    setBattleState(null); // Reset battle state
+    setBattleState(null);
   };
   
   const handleDefeat = () => {
     setGameState('floor_selection');
-    setBattleState(null); // Reset battle state
+    setBattleState(null);
   };
 
   return (
     <div className="fixed inset-0 z-40 bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
       <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
+        {/* Header */}
         <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)">
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
-
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30 text-center">
             <h1 className="text-2xl font-bold tracking-wider">Tower of Valor</h1>
             {gameState !== 'floor_selection' && (
@@ -320,6 +288,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             )}
         </div>
         
+        {/* Thanh chỉ số (Chỉ hiện khi chiến đấu) */}
         {gameState !== 'floor_selection' && (
             <div className="p-4 bg-black/20 animate-fade-in">
                 <div className="flex justify-around items-center text-sm md:text-base">
@@ -332,17 +301,16 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
         )}
         
+        {/* Khu vực hiển thị chính */}
         <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900 overflow-hidden">
            {gameState === 'floor_selection' && (
              <FloorSelectionScreen 
                 highestFloorCleared={highestFloorCleared} 
                 onSelectFloor={handleSelectFloor}
-                currentMap={currentMap}
-                setCurrentMap={setCurrentMap}
              />
            )}
            {gameState === 'fighting' && battleState && (
-             <div className="w-full h-full flex flex-col justify-between animate-fade-in p-4">
+            <div className="w-full h-full flex flex-col justify-between animate-fade-in p-4">
                 <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
                     {battleState.monsterHealth > 0 ? (
                         <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
@@ -394,6 +362,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
            )}
         </div>
         
+        {/* Footer (Chỉ hiện khi chiến đấu) */}
         {gameState !== 'floor_selection' && (
             <div className="bg-gray-900 p-4 border-t border-purple-500/30 flex justify-between items-center animate-fade-in">
                 <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50" disabled={!battleState}>
