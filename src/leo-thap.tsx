@@ -8,10 +8,11 @@ interface TowerExplorerGameProps {
   onClose: () => void;
 }
 
-// --- Các hằng số điều chỉnh nhịp độ game ---
-const ACTION_DELAY = 1400; // Thời gian chờ giữa các lượt (ms)
-const IMPACT_DELAY = 300;  // Thời gian trễ giữa animation và cập nhật sát thương (ms)
-const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2; // Tổng thời gian 1 vòng đánh
+// --- Các hằng số điều chỉnh game ---
+const ACTION_DELAY = 1400; 
+const IMPACT_DELAY = 300;
+const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2;
+const TOTAL_TOWER_FLOORS = 10; // <<-- THÊM MỚI: Tổng số tầng của tháp
 
 // Component chứa các style cho animation
 const GameStyles = () => (
@@ -21,16 +22,18 @@ const GameStyles = () => (
       10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
       20%, 40%, 60%, 80% { transform: translateX(5px); }
     }
-    .animate-shake {
-      animation: shake 0.5s ease-in-out;
-    }
+    .animate-shake { animation: shake 0.5s ease-in-out; }
     
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fade-in-up {
       from { opacity: 0; transform: translateY(20px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
-
+    @keyframes pulse-bright {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+      50% { opacity: 0.8; box-shadow: 0 0 20px rgba(168, 85, 247, 0.8); }
+    }
+    .animate-pulse-bright { animation: pulse-bright 2s infinite; }
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
   `}</style>
@@ -38,14 +41,51 @@ const GameStyles = () => (
 
 // --- Helper Components ---
 
+// <<<--- THÊM MỚI: Component thanh tiến trình các tầng ---
+const FloorProgressBar = ({ currentFloor, totalFloors }) => {
+    const floors = Array.from({ length: totalFloors }, (_, i) => i + 1);
+
+    return (
+        <div className="flex justify-center items-center mt-3">
+            {floors.map((floor, index) => {
+                const isCompleted = floor < currentFloor;
+                const isCurrent = floor === currentFloor;
+                const isLocked = floor > currentFloor;
+                
+                let stateClasses = '';
+                let icon = '•';
+
+                if (isCompleted) {
+                    stateClasses = 'bg-green-500/30 text-green-300';
+                    icon = '✔';
+                } else if (isCurrent) {
+                    stateClasses = 'bg-purple-500/50 text-purple-200 ring-2 ring-purple-400 animate-pulse-bright';
+                    icon = '⚔️';
+                } else { // isLocked
+                    stateClasses = 'bg-gray-700/50 text-gray-500';
+                    icon = '🔒';
+                }
+
+                return (
+                    <React.Fragment key={floor}>
+                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-xs transition-all duration-500 ${stateClasses}`}>
+                           <span className={!isCurrent ? 'opacity-70' : ''}>{isCurrent ? floor : icon}</span>
+                        </div>
+                        {index < totalFloors - 1 && (
+                            <div className={`h-1 flex-1 ${isCompleted ? 'bg-green-500/50' : 'bg-gray-700/50'}`}></div>
+                        )}
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+};
+
 const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
-  <div className={`w-full ${bgColorClass} rounded-full h-3 shadow-inner`}>
-    <div className={`${colorClass} h-3 rounded-full transition-all duration-500 ease-out flex items-center justify-center`} style={{ width: `${(current / max) * 100}%` }}>
+    <div className={`w-full ${bgColorClass} rounded-full h-3 shadow-inner`}>
+        <div className={`${colorClass} h-3 rounded-full transition-all duration-500 ease-out flex items-center justify-center`} style={{ width: `${(current / max) * 100}%` }}></div>
+        <div className="text-xs font-bold text-white text-shadow-sm text-center -mt-3.5">{current} / {max}</div>
     </div>
-    <div className="text-xs font-bold text-white text-shadow-sm text-center -mt-3.5">
-        {current} / {max}
-    </div>
-  </div>
 );
 
 const LogMessage = ({ log }) => {
@@ -71,9 +111,7 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
 
 const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   const [currentFloor, setCurrentFloor] = useState(1);
-  const [playerStats, setPlayerStats] = useState({
-    health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0
-  });
+  const [playerStats, setPlayerStats] = useState({ health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0 });
   const [gameState, setGameState] = useState('playing');
   const [battleState, setBattleState] = useState(null);
   const [rewards, setRewards] = useState([]);
@@ -95,7 +133,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
         if (isLogModalOpen) {
           setIsLogModalOpen(false);
         } else {
-          onClose(); // Close the game on Escape key
+          onClose();
         }
       }
     };
@@ -134,6 +172,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   };
 
   const startBattle = () => {
+    if (currentFloor > TOTAL_TOWER_FLOORS) return; // Không cho bắt đầu nếu đã hoàn thành tháp
     const monster = generateMonster(currentFloor);
     setBattleState({
       monster: monster, playerHealth: playerStats.health, monsterHealth: monster.health,
@@ -163,7 +202,14 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
         newLog.push(`${battleState.monster.name} defeated!`);
         newLog.push(`You gained ${floorRewards.coins} coins and ${floorRewards.gems} gems.`);
         setBattleState(prev => ({ ...prev, monsterHealth: 0, battleLog: newLog }));
-        setTimeout(() => setGameState('victory'), 1000);
+        // <<< THAY ĐỔI: Chuyển sang trạng thái 'victory' sau một khoảng trễ
+        setTimeout(() => {
+            if (currentFloor === TOTAL_TOWER_FLOORS) {
+                 setGameState('tower_completed');
+            } else {
+                 setGameState('victory');
+            }
+        }, 1000);
         return;
       }
       
@@ -221,32 +267,27 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   );
 
   return (
-    // <<<< THAY ĐỔI: Sử dụng `fixed inset-0` để component chiếm toàn bộ vùng an toàn của màn hình >>>>
     <div className="fixed inset-0 z-40 bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
       <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
         
-        <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80"
-            aria-label="Đóng"
-            title="Đóng Tháp (Esc)"
-        >
+        <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)">
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
 
+        {/* --- THAY ĐỔI: Tích hợp FloorProgressBar vào header --- */}
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30">
             <h1 className="text-2xl font-bold text-center tracking-wider">Tower of Valor</h1>
-            <div className="text-center text-lg font-semibold mt-1 opacity-80">Floor {currentFloor}</div>
+            <FloorProgressBar currentFloor={currentFloor} totalFloors={TOTAL_TOWER_FLOORS} />
         </div>
         
         <div className="p-4 bg-black/20">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-around items-center text-sm sm:text-base">
                 <div className="flex items-center space-x-2" title="Health"><span className="text-xl">❤️</span><span className="font-semibold">{playerStats.health}/{playerStats.maxHealth}</span></div>
                 <div className="flex items-center space-x-2" title="Attack"><span className="text-xl">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
                 <div className="flex items-center space-x-2" title="Defense"><span className="text-xl">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
-                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
-                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
+                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400 text-xl">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
+                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400 text-xl">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
             </div>
         </div>
         
@@ -254,7 +295,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
            {gameState === 'playing' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4 animate-pulse">🚪</div>
-              <h2 className="text-2xl font-bold mb-2">The Gate Awaits</h2>
+              <h2 className="text-2xl font-bold mb-2">Floor {currentFloor}: The Gate Awaits</h2>
               <p className="text-gray-400 mb-8">A new challenge lies beyond this door.</p>
               <button onClick={startBattle} className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300">
                 <span className="mr-2 text-xl">▶️</span><span>Enter Floor {currentFloor}</span>
@@ -263,7 +304,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
           )}
 
           {gameState === 'fighting' && battleState && (
-            <div className="w-full h-full flex flex-col justify-between animate-fade-in">
+             <div className="w-full h-full flex flex-col justify-between animate-fade-in">
                 <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
                     {battleState.monsterHealth > 0 ? (
                         <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
@@ -273,34 +314,25 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
                         <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
                     )}
                 </div>
-
                 <div className="w-full flex justify-around items-start px-4 md:px-16">
-                    <CombatantView 
-                        name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth}
-                        healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit}
-                    />
+                    <CombatantView name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth} healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit}/>
                     <div className="text-4xl text-gray-500 pt-12">⚔️</div>
-                    <CombatantView 
-                        name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color}
-                        currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth}
-                        healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit}
-                    />
+                    <CombatantView name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color} currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth} healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit}/>
                 </div>
                 <div className="text-center">
-                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} 
-                            className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
+                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
                       Attack!
                     </button>
                 </div>
             </div>
           )}
-
+          
           {gameState === 'victory' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4">🏆</div>
               <h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
               <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
-                <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3>
+                <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor {currentFloor} Cleared! Rewards:</h3>
                 <div className="flex justify-center space-x-6 text-lg">
                   <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
                   <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
@@ -311,6 +343,26 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
               </button>
             </div>
           )}
+
+          {/* <<< THÊM MỚI: Màn hình khi hoàn thành toàn bộ tháp >>> */}
+          {gameState === 'tower_completed' && (
+            <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
+                <div className="text-7xl mb-4">👑</div>
+                <h2 className="text-3xl font-bold mb-4 text-yellow-300">TOWER CONQUERED!</h2>
+                <p className="text-gray-300 mb-8">You have proven your valor and defeated all challenges!</p>
+                <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Final Spoils:</h3>
+                    <div className="flex justify-center space-x-6 text-lg">
+                        <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
+                        <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
+                    </div>
+                </div>
+                <button onClick={resetGame} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
+                    <span className="mr-2 text-xl">🔄</span><span>Play Again</span>
+                </button>
+            </div>
+          )}
+
           {gameState === 'defeat' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4">💀</div>
