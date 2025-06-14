@@ -20,6 +20,16 @@ const basePlayerStats = {
 // The image shows 6 slots. This list from the original code has 6 types, which is a perfect match.
 const equipmentSlotTypes = ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'skin'];
 
+// --- START: ĐỊNH NGHĨA CÁC LOẠI VẬT PHẨM CHO TAB LỌC ---
+const filterCategories = {
+    equipment: ['weapon', 'helmet', 'armor', 'gloves', 'boots', 'skin'],
+    // Giả sử có các loại item 'material' và 'quest' trong itemDatabase của bạn
+    // Bạn có thể tùy chỉnh danh sách này cho phù hợp với dữ liệu game
+    material: ['material', 'upgrade_stone', 'crafting'], 
+    // Các loại còn lại sẽ tự động được xếp vào mục "Khác"
+};
+// --- END: ĐỊNH NGHĨA CÁC LOẠI VẬT PHẨM ---
+
 const getSlotPlaceholderIcon = (slotType: string) => {
     // Using more thematic icons for placeholders
     const icons: { [key: string]: string } = {
@@ -296,8 +306,7 @@ interface InventoryManagerProps {
 }
 
 export default function InventoryManager({ onClose }: InventoryManagerProps) {
-  // ** SỬA LỖI TẠI ĐÂY **
-  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('profile'); // Default to profile for demo
+  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('inventory'); // Default back to inventory
   const [inventory, setInventory] = useState(() => getHydratedInventory());
   const [equippedItems, setEquippedItems] = useState<{[key: string]: any | null}>({
       weapon: null, helmet: null, armor: null, gloves: null, boots: null, skin: null
@@ -310,7 +319,31 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
   
+  // --- START: STATE VÀ LOGIC LỌC CHO CÁC TAB TÚI ĐỒ ---
+  const [inventoryFilter, setInventoryFilter] = useState<'all' | 'equipment' | 'material' | 'other'>('all');
+  
   const groupedInventory = useMemo(() => groupInventoryItems(inventory), [inventory]);
+
+  const filteredGroupedInventory = useMemo(() => {
+    if (inventoryFilter === 'all') {
+      return groupedInventory;
+    }
+    const isEquipment = (type: string) => filterCategories.equipment.includes(type);
+    const isMaterial = (type: string) => filterCategories.material.includes(type);
+
+    if (inventoryFilter === 'equipment') {
+      return groupedInventory.filter(item => isEquipment(item.type));
+    }
+    if (inventoryFilter === 'material') {
+      return groupedInventory.filter(item => isMaterial(item.type));
+    }
+    if (inventoryFilter === 'other') {
+      return groupedInventory.filter(item => !isEquipment(item.type) && !isMaterial(item.type));
+    }
+    return groupedInventory;
+  }, [groupedInventory, inventoryFilter]);
+  // --- END: STATE VÀ LOGIC LỌC ---
+
   const occupiedSlots = groupedInventory.length;
 
   let totalInventorySlots = 50; 
@@ -426,7 +459,7 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       <div className="flex justify-between items-center mb-6 border-b border-gray-700/60 pb-5">
           <div className="flex space-x-2 bg-gray-900/70 p-1 rounded-lg border border-gray-800 w-full sm:w-auto">
               <button onClick={() => setActiveTab('inventory')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'inventory' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
-                <span>📦</span>
+                <span>🎒</span> {/* Changed icon for better representation */}
                 <span>Túi Đồ</span>
               </button>
               <button onClick={() => setActiveTab('profile')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'profile' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
@@ -479,17 +512,45 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
       {activeTab === 'inventory' ? (
-          <div ref={gridRef} className={`grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 max-h-[60vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
-            {groupedInventory.map((itemGroup: any) => (
-                <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleInventoryItemClick} />
-            ))}
-            
-            {Array.from({ length: totalInventorySlots - groupedInventory.length }).map((_, i) => (
-              <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
-                <span className="opacity-40">＋</span>
-              </div>
-            ))}
+          // --- START: CẬP NHẬT GIAO DIỆN TAB TÚI ĐỒ ---
+          <div className="flex flex-col">
+            <div ref={gridRef} className={`grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 max-h-[60vh] min-h-[20vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
+              {filteredGroupedInventory.map((itemGroup: any) => (
+                  <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleInventoryItemClick} />
+              ))}
+              
+              {/* Hiển thị ô trống dựa trên tổng số vật phẩm, không phải số vật phẩm đã lọc */}
+              {Array.from({ length: totalInventorySlots - groupedInventory.length }).map((_, i) => (
+                <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
+                  <span className="opacity-40">＋</span>
+                </div>
+              ))}
+            </div>
+
+            {/* THANH TAB LỌC MỚI */}
+            <div className="mt-6 flex justify-center">
+                <div className="flex space-x-1 bg-gray-900/70 p-1 rounded-lg border border-gray-800">
+                    <button onClick={() => setInventoryFilter('all')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'all' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        <span>📦</span>
+                        <span>Tất cả</span>
+                    </button>
+                    <button onClick={() => setInventoryFilter('equipment')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'equipment' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        <span>⚔️</span>
+                        <span>Trang bị</span>
+                    </button>
+                    <button onClick={() => setInventoryFilter('material')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'material' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        <span>💎</span>
+                        <span>Nguyên liệu</span>
+                    </button>
+                    <button onClick={() => setInventoryFilter('other')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'other' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        <span>📜</span>
+                        <span>Khác</span>
+                    </button>
+                </div>
+            </div>
+            {/* KẾT THÚC THANH TAB LỌC MỚI */}
           </div>
+          // --- END: CẬP NHẬT GIAO DIỆN TAB TÚI ĐỒ ---
       ) : (
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 sm:gap-x-4 md:gap-x-6 py-4">
               
