@@ -598,7 +598,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowRank={toggleRank}
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
-          onShowTowerGame={toggleTowerGame} // <<<< THÊM DÒNG NÀY
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
