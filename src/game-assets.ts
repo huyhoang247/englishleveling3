@@ -18,6 +18,8 @@ export const uiAssets = {
   missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
   blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
   closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png",
+  // <<<< THÊM DÒNG NÀY VÀO >>>>
+  towerIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png",
 };
 
 /**
