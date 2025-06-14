@@ -582,7 +582,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowRank={toggleRank}
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
-          onShowTowerGame={toggleTowerGame} // <<<< SỬA Ở ĐÂY: Thêm prop này
+          onShowTowerGame={toggleTowerGame}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
