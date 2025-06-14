@@ -308,7 +308,8 @@ const InventoryFilterTabs = ({ activeFilter, onFilterChange }: { activeFilter: F
     ] as const;
 
     return (
-        <div className="absolute bottom-0 left-0 right-0 w-full bg-black/40 backdrop-blur-lg border-t border-gray-700/60 p-2 z-30">
+        // SỬA LỖI: Bỏ position: absolute, để flexbox tự định vị ở dưới cùng. Thêm flex-shrink-0 để không bị co lại.
+        <div className="flex-shrink-0 w-full bg-black/40 backdrop-blur-lg border-t border-gray-700/60 p-2 z-30">
             <div className="flex justify-center space-x-1 sm:space-x-2 bg-gray-900/80 p-1.5 rounded-xl border border-gray-800 max-w-lg mx-auto shadow-lg">
                 {tabs.map(tab => (
                     <button
@@ -352,7 +353,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
   const [modalContext, setModalContext] = useState<'inventory' | 'profile' | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
-  // ** SỬA LỖI TẠI ĐÂY ** (Thêm state cho tab lọc)
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   
   const groupedInventory = useMemo(() => groupInventoryItems(inventory), [inventory]);
@@ -471,9 +471,10 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
 
 
   return (
-    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-4xl mx-auto border border-gray-700/50 min-h-screen">
+    // SỬA LỖI: Chuyển layout chính sang flex-col và đặt chiều cao tối đa để footer có thể dính vào đáy
+    <div className="bg-gradient-to-b from-gray-950 to-black text-white p-5 sm:p-7 rounded-b-xl shadow-2xl max-w-4xl mx-auto border border-gray-700/50 h-screen flex flex-col">
       
-      <div className="flex justify-between items-center mb-6 border-b border-gray-700/60 pb-5">
+      <div className="flex justify-between items-center mb-6 border-b border-gray-700/60 pb-5 flex-shrink-0">
           <div className="flex space-x-2 bg-gray-900/70 p-1 rounded-lg border border-gray-800 w-full sm:w-auto">
               <button onClick={() => setActiveTab('inventory')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'inventory' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
                 <span>📦</span>
@@ -528,63 +529,67 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
-      {activeTab === 'inventory' ? (
-          <div className="relative">
-            <div ref={gridRef} className={`grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 max-h-[60vh] overflow-y-auto pr-2 pb-24 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
+      {/* SỬA LỖI: Bọc nội dung chính vào một div flex-1 để nó chiếm hết không gian còn lại */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === 'inventory' ? (
+            <div ref={gridRef} className={`grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
               {filteredInventory.map((itemGroup: any) => (
                   <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleInventoryItemClick} />
               ))}
               
-              {activeFilter === 'all' && Array.from({ length: totalInventorySlots - groupedInventory.length }).map((_, i) => (
+              {/* SỬA LỖI: Luôn hiển thị ô trống và tính toán dựa trên `filteredInventory` */}
+              {Array.from({ length: Math.max(0, totalInventorySlots - filteredInventory.length) }).map((_, i) => (
                 <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
                   <span className="opacity-40">＋</span>
                 </div>
               ))}
             </div>
-            <InventoryFilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-          </div>
-      ) : (
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 sm:gap-x-4 md:gap-x-6 py-4">
-              
-              <div className="flex flex-col items-center justify-center gap-y-4">
-                  {['weapon', 'gloves', 'boots'].map(slotType => (
-                      <EquipmentSlot key={slotType} slotType={slotType} item={equippedItems[slotType]} onSlotClick={handleProfileSlotClick} />
-                  ))}
-              </div>
+        ) : (
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 sm:gap-x-4 md:gap-x-6 py-4">
+                
+                <div className="flex flex-col items-center justify-center gap-y-4">
+                    {['weapon', 'gloves', 'boots'].map(slotType => (
+                        <EquipmentSlot key={slotType} slotType={slotType} item={equippedItems[slotType]} onSlotClick={handleProfileSlotClick} />
+                    ))}
+                </div>
 
-              <div className="flex flex-col items-center gap-y-5 self-start pt-2">
-                  <div className="w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center">
-                       <span className="text-8xl sm:text-9xl drop-shadow-lg" style={{ transform: 'scaleX(-1)' }}>🐻</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 bg-yellow-900/50 border border-yellow-600/80 rounded-md px-4 py-1.5 shadow-md shadow-black/40">
-                      <span className="text-yellow-400 font-bold text-lg relative top-[-1px]">⚜️</span>
-                      <span className="font-bold text-white text-xl tracking-wider">30.3K</span>
-                  </div>
+                <div className="flex flex-col items-center gap-y-5 self-start pt-2">
+                    <div className="w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center">
+                         <span className="text-8xl sm:text-9xl drop-shadow-lg" style={{ transform: 'scaleX(-1)' }}>🐻</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 bg-yellow-900/50 border border-yellow-600/80 rounded-md px-4 py-1.5 shadow-md shadow-black/40">
+                        <span className="text-yellow-400 font-bold text-lg relative top-[-1px]">⚜️</span>
+                        <span className="font-bold text-white text-xl tracking-wider">30.3K</span>
+                    </div>
 
-                  <div className="flex items-center justify-around w-full max-w-xs gap-x-4 rounded-full bg-black/30 px-4 py-2 border border-gray-700/50 shadow-inner">
-                      <div title={`Health: ${totalPlayerStats.health.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
-                          <span className="text-red-400">❤️</span>
-                          <span className="text-gray-200">{totalPlayerStats.health > 1000 ? `${(totalPlayerStats.health/1000).toFixed(1)}k` : totalPlayerStats.health.toFixed(0)}</span>
-                      </div>
-                      <div title={`Damage: ${totalPlayerStats.damage.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
-                          <span className="text-gray-400">⚔️</span>
-                          <span className="text-gray-200">{totalPlayerStats.damage > 1000 ? `${(totalPlayerStats.damage/1000).toFixed(1)}k` : totalPlayerStats.damage.toFixed(0)}</span>
-                      </div>
-                      <div title={`Defense: ${totalPlayerStats.defense.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
-                          <span className="text-blue-400">🛡️</span>
-                          <span className="text-gray-200">{totalPlayerStats.defense.toFixed(0)}</span>
-                      </div>
-                  </div>
-              </div>
+                    <div className="flex items-center justify-around w-full max-w-xs gap-x-4 rounded-full bg-black/30 px-4 py-2 border border-gray-700/50 shadow-inner">
+                        <div title={`Health: ${totalPlayerStats.health.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
+                            <span className="text-red-400">❤️</span>
+                            <span className="text-gray-200">{totalPlayerStats.health > 1000 ? `${(totalPlayerStats.health/1000).toFixed(1)}k` : totalPlayerStats.health.toFixed(0)}</span>
+                        </div>
+                        <div title={`Damage: ${totalPlayerStats.damage.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
+                            <span className="text-gray-400">⚔️</span>
+                            <span className="text-gray-200">{totalPlayerStats.damage > 1000 ? `${(totalPlayerStats.damage/1000).toFixed(1)}k` : totalPlayerStats.damage.toFixed(0)}</span>
+                        </div>
+                        <div title={`Defense: ${totalPlayerStats.defense.toFixed(0)}`} className="flex items-center gap-1.5 text-sm font-semibold">
+                            <span className="text-blue-400">🛡️</span>
+                            <span className="text-gray-200">{totalPlayerStats.defense.toFixed(0)}</span>
+                        </div>
+                    </div>
+                </div>
 
-              <div className="flex flex-col items-center justify-center gap-y-4">
-                  {['helmet', 'armor', 'skin'].map(slotType => (
-                      <EquipmentSlot key={slotType} slotType={slotType} item={equippedItems[slotType]} onSlotClick={handleProfileSlotClick} />
-                  ))}
-              </div>
-          </div>
-      )}
+                <div className="flex flex-col items-center justify-center gap-y-4">
+                    {['helmet', 'armor', 'skin'].map(slotType => (
+                        <EquipmentSlot key={slotType} slotType={slotType} item={equippedItems[slotType]} onSlotClick={handleProfileSlotClick} />
+                    ))}
+                </div>
+            </div>
+        )}
+      </div>
+
+      {/* SỬA LỖI: Đặt thanh tab ở đây để nó nằm dưới cùng của layout flex-col */}
+      {activeTab === 'inventory' && <InventoryFilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />}
     </div>
   );
 }
