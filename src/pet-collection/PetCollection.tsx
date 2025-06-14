@@ -1,7 +1,7 @@
 // --- START OF FILE PetCollection.tsx ---
 
 import { useState, useMemo, memo } from 'react';
-import { uiAssets } from './game-assets.ts';
+import { uiAssets } from '../game-assets.ts';
 import { petDatabase, PetData } from './pet-database.ts';
 import { playerPetsData, PlayerPet } from './player-pets-data.ts';
 
