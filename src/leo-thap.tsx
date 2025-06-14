@@ -25,7 +25,7 @@ const GameStyles = () => (
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
 
-    /* === THÊM MỚI: CSS để ẩn thanh cuộn === */
+    /* === CSS để ẩn thanh cuộn === */
     .hide-scrollbar::-webkit-scrollbar {
       display: none; /* Dành cho Chrome, Safari, and Opera */
     }
@@ -63,7 +63,7 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
     </div>
 );
 
-// --- START: CẬP NHẬT COMPONENT FloorSelectionScreen ---
+// === START: PHIÊN BẢN CẬP NHẬT CỦA FloorSelectionScreen ===
 const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -92,45 +92,24 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
     if (floor === currentChallengeFloor) return 'current';
     return 'locked';
   };
-
-  // --- Thay đổi lớn ở đây: Hàm getStatusInfo được thiết kế lại hoàn toàn ---
-  const getStatusInfo = (status, floor) => {
-    // Hiệu ứng "kính" và "nổi" cơ bản
-    const glassEffect = 'shadow-lg shadow-black/40 backdrop-blur-sm border';
-    const hoverEffect = 'transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:border-white/50';
-    
-    // Bảng màu đẹp mắt cho các tầng đã hoàn thành
-    const floorColors = [
-      { bg: 'bg-gradient-to-br from-sky-800/60 to-sky-900/80', border: 'border-sky-500/40', text: 'text-sky-200', highlight: 'text-sky-300/80' },
-      { bg: 'bg-gradient-to-br from-emerald-800/60 to-emerald-900/80', border: 'border-emerald-500/40', text: 'text-emerald-200', highlight: 'text-emerald-300/80' },
-      { bg: 'bg-gradient-to-br from-rose-800/60 to-rose-900/80', border: 'border-rose-500/40', text: 'text-rose-200', highlight: 'text-rose-300/80' },
-      { bg: 'bg-gradient-to-br from-violet-800/60 to-violet-900/80', border: 'border-violet-500/40', text: 'text-violet-200', highlight: 'text-violet-300/80' },
-      { bg: 'bg-gradient-to-br from-amber-800/60 to-amber-900/80', border: 'border-amber-500/40', text: 'text-amber-200', highlight: 'text-amber-300/80' },
-      { bg: 'bg-gradient-to-br from-teal-800/60 to-teal-900/80', border: 'border-teal-500/40', text: 'text-teal-200', highlight: 'text-teal-300/80' },
-    ];
-
+  
+  // Cập nhật hàm getStatusInfo để trả về màu cho shadow và hover
+  const getStatusInfo = (status) => {
     switch (status) {
-      case 'completed': {
-        // Lấy màu dựa trên số tầng để mỗi tầng có màu khác nhau
-        const color = floorColors[floor % floorColors.length];
-        return {
-          icon: '✅', label: 'Farm',
-          buttonClasses: `${color.bg} ${color.border} ${color.text} ${glassEffect} ${hoverEffect}`,
-          titleClasses: `font-bold text-lg text-left`,
-          statusTextClasses: `flex items-center mt-1 text-xs ${color.highlight}`,
-        };
-      }
-      case 'current': return {
-          icon: '⚔️', label: 'Challenge',
-          buttonClasses: `bg-gradient-to-br from-yellow-600/70 to-orange-700/80 border-yellow-400/50 text-yellow-200 ${glassEffect} ${hoverEffect} animate-pulse`,
-          titleClasses: `font-bold text-lg text-left`,
-          statusTextClasses: '' // không dùng
+      case 'completed': return { 
+        icon: '✅', label: 'Farm', textColor: 'text-green-300', 
+        shadowColor: 'shadow-green-600/20', 
+        hoverEffect: 'hover:shadow-green-500/40 hover:border-green-500/50' 
       };
-      default: return { // locked
-          icon: '🔒', label: 'Locked',
-          buttonClasses: `bg-black/40 border-gray-600/30 text-gray-500 cursor-not-allowed shadow-inner`,
-          titleClasses: 'font-bold text-lg text-left',
-          statusTextClasses: '' // không dùng
+      case 'current': return { 
+        icon: '⚔️', label: 'Challenge', textColor: 'text-yellow-300', 
+        shadowColor: 'shadow-yellow-500/30 animate-pulse', 
+        hoverEffect: 'hover:shadow-yellow-400/50 hover:border-yellow-400/60' 
+      };
+      default: return { 
+        icon: '🔒', label: 'Locked', textColor: 'text-gray-500', 
+        shadowColor: 'shadow-gray-900/20', 
+        hoverEffect: 'cursor-not-allowed'
       };
     }
   };
@@ -140,36 +119,43 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
         <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto p-4 flex-grow hide-scrollbar">
             {floorsToDisplay.map(floor => {
                 const status = getFloorStatus(floor);
-                // Lấy các class CSS từ hàm getStatusInfo
-                const { icon, label, buttonClasses, titleClasses, statusTextClasses } = getStatusInfo(status, floor);
+                const { icon, label, textColor, shadowColor, hoverEffect } = getStatusInfo(status);
                 const isLocked = status === 'locked';
                 
                 return (
                     <button
                         key={floor} id={`floor-${floor}`} onClick={() => !isLocked && onSelectFloor(floor)} disabled={isLocked}
-                        // Áp dụng class cho button chính
-                        className={`w-full flex items-center justify-between p-4 rounded-lg ${buttonClasses}`}
+                        // Cập nhật toàn bộ className để có hiệu ứng kính
+                        className={`
+                            w-full flex items-center justify-between p-4 rounded-lg 
+                            transform transition-all duration-300
+                            
+                            bg-black/80 backdrop-blur-sm
+                            
+                            border-2 border-black border-t-white/10
+
+                            shadow-xl ${shadowColor}
+
+                            hover:scale-105 ${hoverEffect}
+                        `}
                     >
                         <div className="flex items-center">
                             {status !== 'completed' && (
                                 <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>
                             )}
                             <div>
-                                {/* Áp dụng class cho tiêu đề tầng */}
-                                <h3 className={titleClasses}>Floor {floor}</h3>
+                                <h3 className={`font-bold text-lg text-left ${textColor}`}>Tầng {floor}</h3>
                                 {status === 'completed' && (
-                                    // Áp dụng class cho text 'Cleared'
-                                    <div className={statusTextClasses}>
+                                    <div className="flex items-center mt-1 text-xs text-green-400/80">
                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
-                                        <span>Cleared</span>
+                                        <span>Đã vượt qua</span>
                                     </div>
                                 )}
                             </div>
                         </div>
-                        {/* Nhãn (Farm, Challenge, Locked) sẽ tự nhận màu từ button cha */}
-                        <span className={`font-semibold px-3 py-1 rounded-full text-sm`}>{label}</span>
+                        <span className={`font-semibold px-3 py-1 rounded-full text-sm ${textColor}`}>{label}</span>
                     </button>
                 );
             })}
@@ -177,7 +163,8 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
     </div>
   );
 };
-// --- END: CẬP NHẬT COMPONENT FloorSelectionScreen ---
+// === END: PHIÊN BẢN CẬP NHẬT CỦA FloorSelectionScreen ===
+
 
 const BattleLogModal = ({ logs, isOpen, onClose, logRef }) => {
   if (!isOpen) return null;
