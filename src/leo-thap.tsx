@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // --- Icon URL ---
 const closeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png';
+// === THÊM MỚI: URL hình nền cho hiệu ứng kính ===
+const backgroundImageUrl = 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80';
+
 
 // --- Component Props Interface ---
 interface TowerExplorerGameProps {
@@ -25,7 +28,7 @@ const GameStyles = () => (
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
 
-    /* === THÊM MỚI: CSS để ẩn thanh cuộn === */
+    /* CSS để ẩn thanh cuộn */
     .hide-scrollbar::-webkit-scrollbar {
       display: none; /* Dành cho Chrome, Safari, and Opera */
     }
@@ -63,6 +66,7 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
     </div>
 );
 
+// === THAY ĐỔI: Cập nhật component FloorSelectionScreen để có hiệu ứng kính ===
 const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -91,36 +95,46 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
     if (floor === currentChallengeFloor) return 'current';
     return 'locked';
   };
-
+  
+  // Cập nhật style cho hiệu ứng kính
   const getStatusInfo = (status) => {
     switch (status) {
-      case 'completed': return { icon: '✅', label: 'Farm', bgColor: 'bg-green-800/50 hover:bg-green-700/70', textColor: 'text-green-300', borderColor: 'border-green-500/30' };
-      case 'current': return { icon: '⚔️', label: 'Challenge', bgColor: 'bg-yellow-600/60 hover:bg-yellow-500/80 animate-pulse', textColor: 'text-yellow-300', borderColor: 'border-yellow-400/50' };
-      default: return { icon: '🔒', label: 'Locked', bgColor: 'bg-gray-800/50 cursor-not-allowed', textColor: 'text-gray-500', borderColor: 'border-gray-600/30' };
+      case 'completed': return { 
+        icon: '✅', label: 'Farm', 
+        classes: 'bg-green-500/10 hover:bg-green-500/20 border-green-400/20 hover:border-green-400/30', 
+        textColor: 'text-green-300' 
+      };
+      case 'current': return { 
+        icon: '⚔️', label: 'Challenge', 
+        classes: 'bg-yellow-400/20 hover:bg-yellow-400/30 border-yellow-300/30 animate-pulse shadow-lg shadow-yellow-500/10', 
+        textColor: 'text-yellow-200' 
+      };
+      default: return { 
+        icon: '🔒', label: 'Locked', 
+        classes: 'bg-black/20 border-white/10 cursor-not-allowed', 
+        textColor: 'text-gray-500' 
+      };
     }
   };
 
   return (
     <div className="w-full h-full flex flex-col items-center animate-fade-in">
-        {/* === THAY ĐỔI: Thêm lớp 'hide-scrollbar' === */}
         <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto p-4 flex-grow hide-scrollbar">
             {floorsToDisplay.map(floor => {
                 const status = getFloorStatus(floor);
-                const { icon, label, bgColor, textColor, borderColor } = getStatusInfo(status);
+                const { icon, label, classes, textColor } = getStatusInfo(status);
                 const isLocked = status === 'locked';
                 return (
                     <button
                         key={floor} id={`floor-${floor}`} onClick={() => !isLocked && onSelectFloor(floor)} disabled={isLocked}
-                        className={`w-full flex items-center justify-between p-4 rounded-lg border ${borderColor} ${bgColor} transition-all duration-200 transform hover:scale-105`}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 transform hover:scale-105 backdrop-blur-sm ${classes}`}
                     >
                         <div className="flex items-center">
-                            {/* Chỉ hiển thị icon lớn cho tầng hiện tại và tầng bị khóa */}
                             {status !== 'completed' && (
                                 <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>
                             )}
                             <div>
-                                <h3 className={`font-bold text-lg text-left ${textColor}`}>Floor {floor}</h3>
-                                {/* Hiển thị tick nhỏ và chữ Cleared cho tầng đã hoàn thành */}
+                                <h3 className={`font-bold text-lg text-left ${textColor}`}>{`Floor ${floor}`}</h3>
                                 {status === 'completed' && (
                                     <div className="flex items-center mt-1 text-xs text-green-400/80">
                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -140,11 +154,12 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   );
 };
 
+
 const BattleLogModal = ({ logs, isOpen, onClose, logRef }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-      <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+      <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up backdrop-blur-md" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-200">Battle Log</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button>
@@ -297,12 +312,12 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   return (
     <div className="fixed inset-0 z-40 bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
-      <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
+      <div className="w-full h-full bg-gray-900/80 flex flex-col relative animate-fade-in-up">
         {/* Header */}
         <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)">
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
-        <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30 text-center">
+        <div className="bg-gradient-to-r from-purple-800/80 to-indigo-800/80 text-white p-4 border-b border-purple-500/30 text-center backdrop-blur-sm">
             <h1 className="text-2xl font-bold tracking-wider">Tower of Valor</h1>
             {gameState !== 'floor_selection' && (
                 <div className="text-lg font-semibold mt-1 opacity-80">Floor {battleFloor}</div>
@@ -311,7 +326,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
         
         {/* Thanh chỉ số (Chỉ hiện khi chiến đấu) */}
         {gameState !== 'floor_selection' && (
-            <div className="p-4 bg-black/20 animate-fade-in">
+            <div className="p-4 bg-black/30 animate-fade-in backdrop-blur-sm">
                 <div className="flex justify-around items-center text-sm md:text-base">
                     <div className="flex items-center space-x-2" title="Health"><span className="text-lg">❤️</span><span className="font-semibold">{battleState?.playerHealth ?? playerStats.health}/{playerStats.maxHealth}</span></div>
                     <div className="flex items-center space-x-2" title="Attack"><span className="text-lg">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
@@ -322,71 +337,83 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
         )}
         
-        {/* Khu vực hiển thị chính */}
-        <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900 overflow-hidden">
-           {gameState === 'floor_selection' && (
-             <FloorSelectionScreen 
-                highestFloorCleared={highestFloorCleared} 
-                onSelectFloor={handleSelectFloor}
-             />
-           )}
-           {gameState === 'fighting' && battleState && (
-            <div className="w-full h-full flex flex-col justify-between animate-fade-in p-4">
-                <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
-                    {battleState.monsterHealth > 0 ? (
-                        <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
-                            {battleState.turn === 'monster' ? `${battleState.monster.name}'s Turn` : "Your Turn"}
-                        </h4>
-                    ) : (
-                        <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
-                    )}
-                </div>
-                <div className="w-full flex justify-around items-start px-4 md:px-16">
-                    <CombatantView name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth} healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit} />
-                    <div className="text-4xl text-gray-500 pt-12">⚔️</div>
-                    <CombatantView name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color} currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth} healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit} />
-                </div>
-                <div className="text-center">
-                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
-                      Attack!
-                    </button>
-                </div>
-            </div>
-           )}
-           {gameState === 'victory' && (
-             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in p-4">
-                <div className="text-7xl mb-4">🏆</div>
-                <h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
-                {rewards && (
-                  <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
-                    <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3>
-                    <div className="flex justify-center space-x-6 text-lg">
-                      <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
-                      <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
+        {/* === THAY ĐỔI: Thêm hình nền vào đây === */}
+        <div 
+          className="flex-grow min-h-0 relative flex flex-col items-center justify-center bg-cover bg-center"
+          style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+        >
+           {/* Thêm một lớp phủ tối để chữ dễ đọc hơn */}
+           <div className="absolute inset-0 bg-black/40"></div>
+           <div className="relative w-full h-full z-10">
+              {gameState === 'floor_selection' && (
+                <FloorSelectionScreen 
+                    highestFloorCleared={highestFloorCleared} 
+                    onSelectFloor={handleSelectFloor}
+                />
+              )}
+              {/* Các màn hình fighting, victory, defeat sẽ hiển thị trên một lớp phủ khác để rõ ràng hơn */}
+              {(gameState === 'fighting' || gameState === 'victory' || gameState === 'defeat') && (
+                <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-md flex flex-col items-center justify-center">
+                  {gameState === 'fighting' && battleState && (
+                    <div className="w-full h-full flex flex-col justify-between animate-fade-in p-4">
+                        <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
+                            {battleState.monsterHealth > 0 ? (
+                                <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
+                                    {battleState.turn === 'monster' ? `${battleState.monster.name}'s Turn` : "Your Turn"}
+                                </h4>
+                            ) : (
+                                <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
+                            )}
+                        </div>
+                        <div className="w-full flex justify-around items-start px-4 md:px-16">
+                            <CombatantView name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth} healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit} />
+                            <div className="text-4xl text-gray-500 pt-12">⚔️</div>
+                            <CombatantView name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color} currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth} healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit} />
+                        </div>
+                        <div className="text-center">
+                            <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
+                              Attack!
+                            </button>
+                        </div>
                     </div>
-                  </div>
-                )}
-                <button onClick={returnToMap} className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300">
-                    <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
-                </button>
-             </div>
-           )}
-           {gameState === 'defeat' && (
-             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in p-4">
-                <div className="text-7xl mb-4">💀</div>
-                <h2 className="text-3xl font-bold mb-4 text-red-500">DEFEATED</h2>
-                <p className="text-gray-400 mb-8">Your journey paused on Floor {battleFloor}.</p>
-                <button onClick={handleDefeat} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
-                    <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
-                </button>
-             </div>
-           )}
+                  )}
+                  {gameState === 'victory' && (
+                    <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in p-4">
+                        <div className="text-7xl mb-4">🏆</div>
+                        <h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
+                        {rewards && (
+                          <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg p-4 mb-6 w-full max-w-xs">
+                            <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3>
+                            <div className="flex justify-center space-x-6 text-lg">
+                              <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
+                              <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
+                            </div>
+                          </div>
+                        )}
+                        <button onClick={returnToMap} className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300">
+                            <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
+                        </button>
+                    </div>
+                  )}
+                  {gameState === 'defeat' && (
+                    <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in p-4">
+                        <div className="text-7xl mb-4">💀</div>
+                        <h2 className="text-3xl font-bold mb-4 text-red-500">DEFEATED</h2>
+                        <p className="text-gray-400 mb-8">Your journey paused on Floor {battleFloor}.</p>
+                        <button onClick={handleDefeat} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
+                            <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
+                        </button>
+                    </div>
+                  )}
+                </div>
+              )}
+           </div>
         </div>
         
         {/* Footer (Chỉ hiện khi chiến đấu) */}
         {gameState !== 'floor_selection' && (
-            <div className="bg-gray-900 p-4 border-t border-purple-500/30 flex justify-between items-center animate-fade-in">
-                <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50" disabled={!battleState}>
+            <div className="bg-gray-900/80 p-4 border-t border-purple-500/30 flex justify-between items-center animate-fade-in backdrop-blur-sm">
+                <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700/50 hover:bg-gray-600/70 border border-white/10 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50" disabled={!battleState}>
                     📜 View Log
                 </button>
                 <label className="flex items-center space-x-2 cursor-pointer">
