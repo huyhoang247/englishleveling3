@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// --- Các hằng số điều chỉnh nhịp độ game ---
+const ACTION_DELAY = 1400; // Thời gian chờ giữa các lượt (ms)
+const IMPACT_DELAY = 300;  // Thời gian trễ giữa animation và cập nhật sát thương (ms)
+const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2; // Tổng thời gian 1 vòng đánh
+
 // Component chứa các style cho animation
 const GameStyles = () => (
   <style>{`
@@ -45,7 +50,6 @@ const LogMessage = ({ log }) => {
   return <div className={`animate-fade-in-up ${getColor()}`}>{log}</div>;
 };
 
-// COMPONENT MỚI: Dành cho Người chơi và Quái vật
 const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, healthBarColor, isHit }) => (
     <div className={`flex flex-col items-center p-4 space-y-3 w-36 transition-transform duration-300 ${isHit ? 'animate-shake' : ''}`}>
         <h3 className="text-lg font-bold truncate">{name}</h3>
@@ -65,7 +69,6 @@ const TowerExplorerGame = () => {
   const [gameState, setGameState] = useState('playing');
   const [battleState, setBattleState] = useState(null);
   const [rewards, setRewards] = useState([]);
-  // THAY ĐỔI 1: Đổi tên state từ autoNext thành autoAttack
   const [autoAttack, setAutoAttack] = useState(false);
   const [animationState, setAnimationState] = useState({ playerHit: false, monsterHit: false });
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -86,13 +89,12 @@ const TowerExplorerGame = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
   
-  // THAY ĐỔI 2: Thêm useEffect để xử lý tự động tấn công
   useEffect(() => {
     if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
       const attackTimeout = setTimeout(() => {
         attackMonster();
-      }, 700); // Thêm độ trễ để người chơi kịp nhìn
-      return () => clearTimeout(attackTimeout); // Cleanup timeout
+      }, AUTO_ATTACK_DELAY / 2); // Tự động tấn công nhanh hơn 1 chút so với 1 vòng đầy đủ
+      return () => clearTimeout(attackTimeout);
     }
   }, [autoAttack, gameState, battleState]);
 
@@ -126,47 +128,63 @@ const TowerExplorerGame = () => {
     setGameState('fighting');
   };
 
+  // THAY ĐỔI: TÁI CẤU TRÚC HOÀN TOÀN HÀM TẤN CÔNG ĐỂ TẠO NHỊP ĐỘ
   const attackMonster = () => {
     if (!battleState || battleState.turn !== 'player') return;
 
+    // --- Lượt của người chơi ---
+    setBattleState(prev => ({ ...prev, turn: 'attacking' })); // Chuyển sang trạng thái trung gian để tránh double-click
     const damage = Math.max(1, playerStats.attack - Math.floor(Math.random() * 5));
     const newMonsterHealth = Math.max(0, battleState.monsterHealth - damage);
     
+    // 1. Hiệu ứng tấn công ngay lập tức
     setAnimationState({ playerHit: false, monsterHit: true });
     setTimeout(() => setAnimationState(prev => ({ ...prev, monsterHit: false })), 500);
-    let newLog = [...battleState.battleLog, `You dealt ${damage} damage!`];
-    
-    if (newMonsterHealth <= 0) {
-      const floorRewards = generateRewards(currentFloor);
-      setRewards(floorRewards);
-      setPlayerStats(prev => ({ ...prev, coins: prev.coins + floorRewards.coins, gems: prev.gems + floorRewards.gems }));
-      newLog.push(`${battleState.monster.name} defeated!`);
-      newLog.push(`You gained ${floorRewards.coins} coins and ${floorRewards.gems} gems.`);
-      setBattleState(prev => ({ ...prev, monsterHealth: 0, battleLog: newLog }));
-      setTimeout(() => {
-        setGameState('victory');
-        // THAY ĐỔI 3: Xóa logic auto next
-      }, 1000);
-      return;
-    }
 
-    setBattleState(prev => ({ ...prev, monsterHealth: newMonsterHealth, battleLog: newLog, turn: 'monster' }));
-
+    // 2. Delay một chút rồi mới cập nhật HP và log (Impact Delay)
     setTimeout(() => {
-      const monsterDamage = Math.max(1, battleState.monster.attack - playerStats.defense + Math.floor(Math.random() * 3));
-      const newPlayerHealth = Math.max(0, battleState.playerHealth - monsterDamage);
-      
-      setAnimationState({ playerHit: true, monsterHit: false });
-      setTimeout(() => setAnimationState(prev => ({ ...prev, playerHit: false })), 500);
-      newLog.push(`${battleState.monster.name} dealt ${monsterDamage} damage!`);
-      
-      if (newPlayerHealth <= 0) {
-        setBattleState(prev => ({ ...prev, playerHealth: 0, monsterHealth: newMonsterHealth, battleLog: [...newLog, "You have been defeated!"] }));
-        setGameState('defeat');
-      } else {
-        setBattleState(prev => ({ ...prev, playerHealth: newPlayerHealth, monsterHealth: newMonsterHealth, battleLog: newLog, turn: 'player' }));
+      let newLog = [...battleState.battleLog, `You dealt ${damage} damage!`];
+      setBattleState(prev => ({ ...prev, monsterHealth: newMonsterHealth, battleLog: newLog }));
+
+      // 3. Kiểm tra quái vật đã bị hạ gục chưa
+      if (newMonsterHealth <= 0) {
+        const floorRewards = generateRewards(currentFloor);
+        setRewards(floorRewards);
+        setPlayerStats(prev => ({ ...prev, coins: prev.coins + floorRewards.coins, gems: prev.gems + floorRewards.gems }));
+        newLog.push(`${battleState.monster.name} defeated!`);
+        newLog.push(`You gained ${floorRewards.coins} coins and ${floorRewards.gems} gems.`);
+        setBattleState(prev => ({ ...prev, monsterHealth: 0, battleLog: newLog }));
+        setTimeout(() => setGameState('victory'), 1000);
+        return;
       }
-    }, 1000);
+      
+      // 4. Chuyển sang lượt quái vật sau một khoảng trễ (Action Delay)
+      setBattleState(prev => ({...prev, turn: 'monster'}));
+
+      setTimeout(() => {
+        // --- Lượt của quái vật ---
+        const monsterDamage = Math.max(1, battleState.monster.attack - playerStats.defense + Math.floor(Math.random() * 3));
+        const newPlayerHealth = Math.max(0, battleState.playerHealth - monsterDamage);
+
+        // 5. Hiệu ứng quái vật tấn công
+        setAnimationState({ playerHit: true, monsterHit: false });
+        setTimeout(() => setAnimationState(prev => ({ ...prev, playerHit: false })), 500);
+        
+        // 6. Delay một chút rồi mới cập nhật HP người chơi và log (Impact Delay)
+        setTimeout(() => {
+          let monsterAttackLog = [...battleState.battleLog, `You dealt ${damage} damage!`, `${battleState.monster.name} dealt ${monsterDamage} damage!`];
+          
+          if (newPlayerHealth <= 0) {
+            setBattleState(prev => ({ ...prev, playerHealth: 0, battleLog: [...monsterAttackLog, "You have been defeated!"] }));
+            setGameState('defeat');
+          } else {
+            // 7. Kết thúc lượt, trả quyền điều khiển về cho người chơi
+            setBattleState(prev => ({ ...prev, playerHealth: newPlayerHealth, battleLog: monsterAttackLog, turn: 'player' }));
+          }
+        }, IMPACT_DELAY);
+
+      }, ACTION_DELAY);
+    }, IMPACT_DELAY);
   };
   
   const nextFloor = () => {
@@ -232,11 +250,12 @@ const TowerExplorerGame = () => {
 
           {gameState === 'fighting' && battleState && (
             <div className="w-full h-full flex flex-col justify-between animate-fade-in">
-                {/* THAY ĐỔI 4: Thêm chỉ báo lượt tấn công */}
                 <div className="text-center mb-2 animate-fade-in">
                     {battleState.monsterHealth > 0 ? (
                         <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
-                            {battleState.turn === 'player' ? "Your Turn" : `${battleState.monster.name}'s Turn`}
+                            {battleState.turn === 'player' && "Your Turn"}
+                            {battleState.turn === 'monster' && `${battleState.monster.name}'s Turn`}
+                            {battleState.turn === 'attacking' && "Attacking..."}
                         </h4>
                     ) : (
                         <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
@@ -245,28 +264,21 @@ const TowerExplorerGame = () => {
 
                 <div className="flex justify-between items-start">
                     <CombatantView 
-                        name="You"
-                        avatar="🦸"
-                        currentHealth={battleState.playerHealth}
-                        maxHealth={playerStats.maxHealth}
-                        healthBarColor="bg-gradient-to-r from-green-500 to-green-400"
-                        isHit={animationState.playerHit}
+                        name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth}
+                        healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit}
                     />
                     <div className="text-4xl text-gray-500 pt-12">⚔️</div>
                     <CombatantView 
-                        name={battleState.monster.name}
-                        avatar={battleState.monster.emoji}
-                        avatarClass={battleState.monster.color}
-                        currentHealth={battleState.monsterHealth}
-                        maxHealth={battleState.monster.maxHealth}
-                        healthBarColor="bg-gradient-to-r from-red-500 to-red-400"
-                        isHit={animationState.monsterHit}
+                        name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color}
+                        currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth}
+                        healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit}
                     />
                 </div>
                 <div className="text-center">
-                    {battleState.turn === 'player' && battleState.monsterHealth > 0 && (<button onClick={attackMonster} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait" disabled={autoAttack}>Attack!</button>)}
-                    {battleState.turn === 'monster' && ( <div className="text-yellow-400 font-semibold italic h-[52px] flex items-center justify-center">Monster is attacking...</div> )}
-                    {battleState.monsterHealth <= 0 && (<div className="h-[52px]"></div>)}
+                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} 
+                            className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
+                      Attack!
+                    </button>
                 </div>
             </div>
           )}
@@ -303,7 +315,6 @@ const TowerExplorerGame = () => {
             <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!battleState}>
                 📜 View Log
             </button>
-            {/* THAY ĐỔI 1 (tiếp): Cập nhật giao diện cho Auto Attack */}
             <label className="flex items-center space-x-2 cursor-pointer">
                 <span className="text-sm font-medium">Auto Attack</span>
                 <div className="relative">
