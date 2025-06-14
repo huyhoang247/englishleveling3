@@ -369,16 +369,16 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </>
         ) : gameState === 'fighting' ? (
             <>
-                {/* Compact Header for battle view */}
-                <div className="p-2 border-b border-purple-500/30 flex items-center justify-start bg-gray-900/70 backdrop-blur-sm relative">
+                {/* Compact Header for battle view - REDESIGNED */}
+                <div className="p-2 border-b border-purple-500/30 flex items-center justify-between bg-gray-900/70 backdrop-blur-sm">
                     <button 
                         onClick={handleRetreat} 
                         className="bg-gray-700/80 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm flex items-center shadow-md">
                         <span className="mr-2 text-base">🗺️</span>
                         Return to Map
                     </button>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold text-purple-300 tracking-wider">
-                        Floor {battleFloor}
+                    <div className="bg-black/40 border border-purple-500/30 rounded-md px-4 py-1 shadow-inner">
+                         <span className="text-base font-bold text-purple-300 tracking-wider">Floor {battleFloor}</span>
                     </div>
                 </div>
             </>
