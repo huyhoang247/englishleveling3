@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef }_from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // --- Icon URL ---
 const closeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png';
@@ -13,7 +13,7 @@ const ACTION_DELAY = 1200; // Thời gian chờ giữa các lượt (ms)
 const IMPACT_DELAY = 250;  // Thời gian trễ giữa animation và cập nhật sát thương (ms)
 const AUTO_ATTACK_DELAY = ACTION_DELAY + IMPACT_DELAY * 2; // Tổng thời gian 1 vòng đánh
 
-// <<<< THAY ĐỔI: Thêm animation cho số sát thương bay lên và các hiệu ứng khác >>>>
+// Component chứa các style cho animation
 const GameStyles = () => (
   <style>{`
     @keyframes shake {
@@ -52,7 +52,16 @@ const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
     </div>
 );
 
-// <<<< THAY ĐỔI: Component hiển thị số sát thương bay lên >>>>
+const LogMessage = ({ log }) => {
+  const getColor = () => {
+    if (log.includes('dealt')) return 'text-red-400';
+    if (log.includes('gained')) return 'text-yellow-400';
+    if (log.includes('defeated!')) return 'text-green-400';
+    return 'text-gray-300';
+  };
+  return <div className={`animate-fade-in-up ${getColor()}`}>{log}</div>;
+};
+
 const DamageFloater = ({ text, color, id }) => (
   <div key={id} className={`absolute top-1/3 left-1/2 -translate-x-1/2 font-bold text-2xl text-shadow-lg pointer-events-none animate-float-up ${color}`}>
     {text}
@@ -60,12 +69,10 @@ const DamageFloater = ({ text, color, id }) => (
 );
 
 const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, healthBarColor, isHit }) => (
-    // <<<< THAY ĐỔI: Thêm "bệ đỡ" (podium) và tinh chỉnh style >>>>
     <div className={`flex flex-col items-center p-2 space-y-3 w-40 transition-transform duration-300 ${isHit ? 'animate-shake' : ''}`}>
         <div className="relative">
           <div className={`text-6xl ${avatarClass}`}>{avatar}</div>
         </div>
-        {/* Podium effect */}
         <div className="w-2/3 h-2 bg-gray-600/50 rounded-full border-b-2 border-gray-500/50"></div>
         <h3 className="text-lg font-bold truncate text-white">{name}</h3>
         <div className="w-full">
@@ -80,21 +87,35 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   const [playerStats, setPlayerStats] = useState({
     health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0
   });
-  const [gameState, setGameState] = useState('playing'); // playing, fighting, victory, defeat
+  const [gameState, setGameState] = useState('playing');
   const [battleState, setBattleState] = useState(null);
   const [rewards, setRewards] = useState(null);
   const [autoAttack, setAutoAttack] = useState(false);
   const [animationState, setAnimationState] = useState({ playerHit: false, monsterHit: false });
-  // <<<< THAY ĐỔI: State cho hiệu ứng số sát thương >>>>
   const [damageFloaters, setDamageFloaters] = useState([]);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  
+  const battleLogRef = useRef(null);
+
+  useEffect(() => {
+    if (battleLogRef.current) {
+      battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
+    }
+  }, [battleState?.battleLog, isLogModalOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        if (isLogModalOpen) {
+          setIsLogModalOpen(false);
+        } else {
+          onClose();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isLogModalOpen, onClose]);
   
   useEffect(() => {
     if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
@@ -103,7 +124,6 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     }
   }, [autoAttack, gameState, battleState]);
 
-  // <<<< THAY ĐỔI: Hàm thêm và xóa số sát thương >>>>
   const showDamage = (amount, target) => {
     const id = Date.now() + Math.random();
     const color = target === 'player' ? 'text-red-400' : 'text-yellow-200';
@@ -151,7 +171,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     setTimeout(() => setAnimationState(prev => ({ ...prev, monsterHit: false })), 500);
 
     setTimeout(() => {
-      showDamage(damage, 'monster'); // <<<< THAY ĐỔI: Hiển thị sát thương
+      showDamage(damage, 'monster');
       let newLog = [...battleState.battleLog, `You dealt ${damage} damage!`];
       setBattleState(prev => ({ ...prev, monsterHealth: newMonsterHealth, battleLog: newLog }));
 
@@ -176,15 +196,15 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
         setTimeout(() => setAnimationState(prev => ({ ...prev, playerHit: false })), 500);
         
         setTimeout(() => {
-          showDamage(monsterDamage, 'player'); // <<<< THAY ĐỔI: Hiển thị sát thương
+          showDamage(monsterDamage, 'player');
           let monsterAttackLog = [...newLog, `${battleState.monster.name} dealt ${monsterDamage} damage!`];
           
           if (newPlayerHealth <= 0) {
             setBattleState(prev => ({ ...prev, playerHealth: 0, battleLog: [...monsterAttackLog, "You have been defeated!"] }));
             setGameState('defeat');
           } else {
+            // <<<< SỬA LỖI: Chỉ cập nhật `battleState`, không cập nhật `playerStats` ở đây >>>>
             setBattleState(prev => ({ ...prev, playerHealth: newPlayerHealth, battleLog: monsterAttackLog, turn: 'player' }));
-            setPlayerStats(prev => ({ ...prev, health: newPlayerHealth }));
           }
         }, IMPACT_DELAY);
 
@@ -193,11 +213,15 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   };
   
   const nextFloor = () => {
+    // <<<< SỬA LỖI: Cập nhật `playerStats.health` từ `battleState.playerHealth` trước khi hồi máu >>>>
+    setPlayerStats(prev => ({ 
+        ...prev, 
+        health: Math.min(prev.maxHealth, battleState.playerHealth + Math.ceil(prev.maxHealth * 0.2)) 
+    }));
     setCurrentFloor(prev => prev + 1);
     setGameState('playing');
     setRewards(null);
     setBattleState(null);
-    setPlayerStats(prev => ({ ...prev, health: Math.min(prev.maxHealth, prev.health + Math.ceil(prev.maxHealth * 0.2)) })); // Hồi máu nhiều hơn
   };
   
   const resetGame = () => {
@@ -208,18 +232,30 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     setBattleState(null);
   };
 
+  const BattleLogModal = () => (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setIsLogModalOpen(false)}>
+      <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-200">Battle Log</h3>
+          <button onClick={() => setIsLogModalOpen(false)} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button>
+        </div>
+        <div ref={battleLogRef} className="text-sm space-y-2 h-80 overflow-y-auto pr-2 bg-black/20 p-4 rounded-md">
+          {battleState?.battleLog.length > 0 ? battleState.battleLog.map((log, index) => <LogMessage key={index} log={log} />) : <p className="text-gray-400">No battle has occurred yet.</p>}
+        </div>
+        <button onClick={() => setIsLogModalOpen(false)} className="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Close</button>
+      </div>
+    </div>
+  );
+
   return (
-    // <<<< THAY ĐỔI: Container chính của game, tạo cảm giác như một cửa sổ nhìn vào tháp >>>>
     <div className="fixed inset-0 z-40 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 font-sans text-gray-100 animate-fade-in">
       <GameStyles />
-      {/* The Tower itself */}
       <div className="w-full max-w-md h-full max-h-[720px] bg-gradient-to-b from-gray-800 to-black rounded-2xl shadow-2xl shadow-purple-500/20 border border-purple-500/30 flex flex-col relative overflow-hidden animate-fade-in-up">
         
         <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)">
             <img src={closeIconUrl} alt="Close" className="w-7 h-7" />
         </button>
 
-        {/* Header */}
         <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 text-white p-4 border-b border-purple-500/30 flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold tracking-wider">Tower of Valor</h1>
@@ -231,14 +267,12 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
         </div>
 
-        {/* Player Mini Stats */}
         <div className="p-3 bg-black/20 grid grid-cols-3 gap-2 text-center text-sm">
             <div title="Health"><span className="mr-1">❤️</span>{battleState ? battleState.playerHealth : playerStats.health}/{playerStats.maxHealth}</div>
             <div title="Attack"><span className="mr-1">⚔️</span>{playerStats.attack}</div>
             <div title="Defense"><span className="mr-1">🛡️</span>{playerStats.defense}</div>
         </div>
         
-        {/* Main Content Area */}
         <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center p-4">
            {gameState === 'playing' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
@@ -253,13 +287,11 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
 
           {gameState === 'fighting' && battleState && (
             <div className="w-full h-full flex flex-col justify-around animate-fade-in">
-                {/* <<<< THAY ĐỔI: Container cho các số sát thương bay lên >>>> */}
                 <div className="absolute inset-0 pointer-events-none z-10">
                   {damageFloaters.map(df => (
                     <DamageFloater key={df.id} {...df} />
                   ))}
                 </div>
-                {/* <<<< THAY ĐỔI: Bố cục combatant mới với VS ở giữa >>>> */}
                 <div className="w-full flex justify-around items-center">
                     <CombatantView name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth}
                         healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit} />
@@ -269,7 +301,6 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
                         healthBarColor="bg-gradient-to-r from-red-600 to-red-500" isHit={animationState.monsterHit} />
                 </div>
                 
-                {/* <<<< THAY ĐỔI: Hiển thị battle log trực tiếp >>>> */}
                 <div className="text-center h-16 bg-black/20 p-2 rounded-md text-sm text-gray-300 flex flex-col-reverse overflow-hidden">
                   {battleState.battleLog.slice(-3).reverse().map((log, i) => (
                     <div key={i} className={`truncate ${log.includes('dealt') ? 'text-red-400' : ''} ${log.includes('gained') ? 'text-yellow-400' : ''}`}>{log}</div>
@@ -285,8 +316,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
           )}
 
-          {/* <<<< THAY ĐỔI: Giao diện Victory được làm mới >>>> */}
-          {gameState === 'victory' && (
+          {gameState === 'victory' && rewards && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in-up">
               <div className="text-8xl mb-4 animate-bounce">🏆</div>
               <h2 className="text-4xl font-bold mb-4 text-yellow-300 drop-shadow-[0_0_15px_rgba(252,211,77,0.5)]">VICTORY!</h2>
@@ -314,8 +344,10 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
           )}
         </div>
         
-        {/* Footer */}
-        <div className="bg-gray-900/80 p-3 border-t border-purple-500/30 flex justify-end items-center">
+        <div className="bg-gray-900/80 p-3 border-t border-purple-500/30 flex justify-between items-center">
+            <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!battleState}>
+                📜 View Full Log
+            </button>
             <label className="flex items-center space-x-3 cursor-pointer">
                 <span className="text-sm font-medium text-gray-300">Auto Attack</span>
                 <div className="relative">
@@ -326,6 +358,8 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </label>
         </div>
       </div>
+      
+      {isLogModalOpen && <BattleLogModal />}
     </div>
   );
 };
