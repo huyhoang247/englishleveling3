@@ -149,8 +149,8 @@ const renderItemStats = (item: any) => {
 const ItemTooltip = memo(({ item, isEquipped }: { item: any, isEquipped?: boolean }) => (
     <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
       <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
-      <div className="text-gray-500 capitalize text-xs mb-1">{getRarityDisplayName(item.rarity)} • {item.type} {isEquipped && <span className="text-green-400">(Đã trang bị)</span>}</div>
-      {item.variants && item.variants.length > 1 && <div className="text-yellow-400 text-xs mb-1">{item.variants.length} loại khác nhau</div>}
+      <div className="text-gray-500 capitalize text-xs mb-1">{getRarityDisplayName(item.rarity)} • {item.type} {isEquipped && <span className="text-green-400">(Equipped)</span>}</div>
+      {item.variants && item.variants.length > 1 && <div className="text-yellow-400 text-xs mb-1">{item.variants.length} different types</div>}
       <div className="text-gray-300 text-xs leading-relaxed">
         { (item.variants?.[0]?.description || item.description || '').slice(0, 70) }
         { (item.variants?.[0]?.description || item.description || '').length > 70 ? '...' : '' }
@@ -191,11 +191,11 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
             <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
               {isEquippable && (
                 isEquipped ? 
-                <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Gỡ bỏ</button>
+                <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Unequip</button>
                 :
-                <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Trang bị</button>
+                <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Equip</button>
               )}
-              <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Bỏ</button>
+              <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Drop</button>
             </div>
           )}
         </div>
@@ -210,7 +210,7 @@ const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) 
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
         <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm p-5">
           <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
-             <h3 className={`text-xl font-bold ${getRarityTextColor(itemGroup.rarity)}`}>Chọn biến thể: {itemGroup.name}</h3>
+             <h3 className={`text-xl font-bold ${getRarityTextColor(itemGroup.rarity)}`}>Select variant: {itemGroup.name}</h3>
              <button onClick={onClose} className="text-gray-500 hover:text-white"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
           </div>
           <ul className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
@@ -220,7 +220,7 @@ const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) 
                     <div className={`w-12 h-12 flex items-center justify-center text-3xl bg-black/30 rounded-md border-2 ${getRarityColor(itemGroup.rarity)}`}>{itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-1" /> : itemGroup.icon}</div>
                     <div>
                         <div className="font-semibold text-white">{variant.level ? `Level ${variant.level}` : itemGroup.name}</div>
-                        <div className="text-xs text-gray-400">Sát thương: {variant.stats?.damage || 'N/A'}</div>
+                        <div className="text-xs text-gray-400">Damage: {variant.stats?.damage || 'N/A'}</div>
                     </div>
                 </div>
                 <div className="text-right"><span className="font-bold text-lg text-gray-200">x{variant.quantity}</span></div>
@@ -241,7 +241,6 @@ const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItem
       className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg overflow-hidden will-change-transform ${glowClass}`} 
       onClick={() => onItemClick(itemGroup)}
     >
-      {/* Icon và số lượng được đặt ở z-10 để nổi lên trên lớp ::before (hào quang) */}
       <div className="relative z-10 flex items-center justify-center w-full h-full">
         {itemGroup.icon.startsWith('http') ? 
           <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-200" /> : 
@@ -285,7 +284,7 @@ const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string,
 
 const StatsPanel = memo(({ stats }: { stats: any }) => (
     <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/70 w-full">
-        <h3 className="text-lg font-bold text-yellow-300 mb-4 text-center">Chỉ Số Nhân Vật</h3>
+        <h3 className="text-lg font-bold text-yellow-300 mb-4 text-center">Character Stats</h3>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {Object.entries(stats).map(([stat, value]) => (
                 <div key={stat} className="flex justify-between items-baseline">
@@ -306,7 +305,7 @@ interface InventoryManagerProps {
 }
 
 export default function InventoryManager({ onClose }: InventoryManagerProps) {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('inventory'); // Default back to inventory
+  const [activeTab, setActiveTab] = useState<'inventory' | 'profile'>('inventory');
   const [inventory, setInventory] = useState(() => getHydratedInventory());
   const [equippedItems, setEquippedItems] = useState<{[key: string]: any | null}>({
       weapon: null, helmet: null, armor: null, gloves: null, boots: null, skin: null
@@ -319,7 +318,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
   
-  // --- START: STATE VÀ LOGIC LỌC CHO CÁC TAB TÚI ĐỒ ---
   const [inventoryFilter, setInventoryFilter] = useState<'all' | 'equipment' | 'material' | 'other'>('all');
   
   const groupedInventory = useMemo(() => groupInventoryItems(inventory), [inventory]);
@@ -342,7 +340,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
     }
     return groupedInventory;
   }, [groupedInventory, inventoryFilter]);
-  // --- END: STATE VÀ LOGIC LỌC ---
 
   const occupiedSlots = groupedInventory.length;
 
@@ -459,48 +456,35 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       <div className="flex justify-between items-center mb-6 border-b border-gray-700/60 pb-5">
           <div className="flex space-x-2 bg-gray-900/70 p-1 rounded-lg border border-gray-800 w-full sm:w-auto">
               <button onClick={() => setActiveTab('inventory')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'inventory' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
-                <span>🎒</span> {/* Changed icon for better representation */}
-                <span>Túi Đồ</span>
+                <span>🎒</span>
+                <span>Inventory</span>
               </button>
               <button onClick={() => setActiveTab('profile')} className={`flex items-center justify-center gap-2 flex-1 sm:flex-auto px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${activeTab === 'profile' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
                 <span>👤</span>
-                <span>Trang Bị</span>
+                <span>Profile</span>
               </button>
           </div>
           <div className="flex items-center gap-4 pl-4">
               {activeTab === 'inventory' && 
                   <div className="text-xs bg-gray-900/70 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gray-700/80 hidden sm:block">
-                      <span className="text-gray-400">Số ô:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
+                      <span className="text-gray-400">Slots:</span> <span className="font-semibold text-gray-200">{occupiedSlots}/{totalInventorySlots}</span>
                   </div>
               }
-              <button onClick={onClose} className="text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl flex-shrink-0" aria-label="Đóng túi đồ">
+              <button onClick={onClose} className="text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl flex-shrink-0" aria-label="Close inventory">
                 <img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" />
               </button>
           </div>
       </div>
       
       <style>{`
+        /* ... (styles remain the same) ... */
         @keyframes subtle-glow-pulse { 50% { opacity: 0.7; transform: scale(1.05); } }
-        
-        .glow-B::before, .glow-A::before, .glow-S::before, .glow-SR::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          z-index: 1; /* Nằm dưới icon (z-10) */
-          background: var(--glow-gradient);
-          filter: blur(12px);
-          transition: opacity 0.3s ease-in-out;
-        }
-        
+        .glow-B::before, .glow-A::before, .glow-S::before, .glow-SR::before { content: ''; position: absolute; inset: 0; z-index: 1; background: var(--glow-gradient); filter: blur(12px); transition: opacity 0.3s ease-in-out; }
         .glow-B::before { --glow-gradient: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.35) 0%, transparent 75%); }
         .glow-A::before { --glow-gradient: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.45) 0%, transparent 75%); }
         .glow-S::before { --glow-gradient: radial-gradient(ellipse at center, rgba(250, 204, 21, 0.45) 0%, transparent 70%); }
         .glow-SR::before { --glow-gradient: radial-gradient(ellipse at center, rgba(239, 68, 68, 0.55) 0%, transparent 70%); }
-        
-        .glow-pulse::before {
-          animation: subtle-glow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
+        .glow-pulse::before { animation: subtle-glow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .is-scrolling .group:hover{transform:none!important;filter:none!important}
         .is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}
         .is-scrolling .group .group-hover\\:scale-110{transform:none!important}
@@ -512,14 +496,14 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
       {activeTab === 'inventory' ? (
-          // --- START: CẬP NHẬT GIAO DIỆN TAB TÚI ĐỒ ---
-          <div className="flex flex-col">
-            <div ref={gridRef} className={`grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 max-h-[60vh] min-h-[20vh] overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
+          // --- START: CẬP NHẬT GIAO DIỆN VỚI LAYOUT CỐ ĐỊNH ---
+          <div className="flex flex-col h-[65vh]">
+            {/* Lưới đồ sẽ tự giãn ra để lấp đầy không gian */}
+            <div ref={gridRef} className={`flex-grow grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 overflow-y-auto pr-2 inventory-grid-scrollbar-hidden ${scrollingClass}`}>
               {filteredGroupedInventory.map((itemGroup: any) => (
                   <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleInventoryItemClick} />
               ))}
               
-              {/* Hiển thị ô trống dựa trên tổng số vật phẩm, không phải số vật phẩm đã lọc */}
               {Array.from({ length: totalInventorySlots - groupedInventory.length }).map((_, i) => (
                 <div key={`empty-${i}`} className="w-full aspect-square bg-gray-900/20 rounded-lg border border-gray-700/50 flex items-center justify-center text-gray-600 text-2xl">
                   <span className="opacity-40">＋</span>
@@ -527,30 +511,25 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
               ))}
             </div>
 
-            {/* THANH TAB LỌC MỚI */}
-            <div className="mt-6 flex justify-center">
+            {/* Thanh tab được đẩy xuống dưới cùng */}
+            <div className="flex-shrink-0 pt-6 flex justify-center">
                 <div className="flex space-x-1 bg-gray-900/70 p-1 rounded-lg border border-gray-800">
-                    <button onClick={() => setInventoryFilter('all')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'all' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
-                        <span>📦</span>
-                        <span>Tất cả</span>
+                    <button onClick={() => setInventoryFilter('all')} className={`px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'all' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        All
                     </button>
-                    <button onClick={() => setInventoryFilter('equipment')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'equipment' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
-                        <span>⚔️</span>
-                        <span>Trang bị</span>
+                    <button onClick={() => setInventoryFilter('equipment')} className={`px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'equipment' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        Equipment
                     </button>
-                    <button onClick={() => setInventoryFilter('material')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'material' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
-                        <span>💎</span>
-                        <span>Nguyên liệu</span>
+                    <button onClick={() => setInventoryFilter('material')} className={`px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'material' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        Material
                     </button>
-                    <button onClick={() => setInventoryFilter('other')} className={`flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'other' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
-                        <span>📜</span>
-                        <span>Khác</span>
+                    <button onClick={() => setInventoryFilter('other')} className={`px-5 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${inventoryFilter === 'other' ? 'bg-yellow-500/20 text-yellow-300 shadow-inner' : 'text-gray-400 hover:bg-gray-800/60'}`}>
+                        Other
                     </button>
                 </div>
             </div>
-            {/* KẾT THÚC THANH TAB LỌC MỚI */}
           </div>
-          // --- END: CẬP NHẬT GIAO DIỆN TAB TÚI ĐỒ ---
+          // --- END: CẬP NHẬT GIAO DIỆN ---
       ) : (
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 sm:gap-x-4 md:gap-x-6 py-4">
               
