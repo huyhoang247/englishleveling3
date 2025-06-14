@@ -221,15 +221,15 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans p-4 flex items-center justify-center animate-fade-in">
+    <div className="w-full h-full bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
-      <div className="w-full max-w-md bg-gray-900/70 backdrop-blur-sm rounded-2xl shadow-2xl shadow-purple-500/10 overflow-hidden border border-purple-500/30 relative animate-fade-in-up">
+      <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col overflow-hidden relative animate-fade-in-up">
         
         <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+            className="absolute top-4 right-4 z-20 p-1.5 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
             aria-label="Đóng"
-            title="Đóng Tháp"
+            title="Đóng Tháp (Esc)"
         >
             <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
         </button>
@@ -249,7 +249,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
         </div>
         
-        <div className="h-80 relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900">
+        <div className="flex-grow relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900 overflow-y-auto">
            {gameState === 'playing' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4 animate-pulse">🚪</div>
@@ -273,7 +273,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
                     )}
                 </div>
 
-                <div className="flex justify-between items-start">
+                <div className="w-full flex justify-around items-start px-4 md:px-16">
                     <CombatantView 
                         name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth}
                         healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit}
