@@ -118,43 +118,64 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   );
 };
 
+// === START: POPUP ĐƯỢC THIẾT KẾ LẠI HOÀN TOÀN ===
 const FloorInfoPopup = ({ data, onClose, onAttack, onFarm }) => {
     if (!data) return null;
     const { floor, monster, status } = data;
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-gray-800 border-2 border-black rounded-lg shadow-xl w-full max-w-sm p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-200">Floor {floor} - Monster Info</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+            <div 
+                className="bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-purple-500/30 rounded-lg shadow-2xl shadow-purple-900/50 w-full max-w-sm animate-fade-in-up" 
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex justify-between items-center p-4 border-b-2 border-purple-500/10">
+                    <h3 className="text-xl font-bold text-purple-300 tracking-wider">Floor {floor}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button>
                 </div>
-                
-                <div className="bg-black/30 rounded-lg p-4 mb-6">
-                    <div className="flex items-center justify-center space-x-4 mb-4">
-                         <div className={`text-6xl ${monster.color}`}>{monster.emoji}</div>
-                         <h4 className="text-2xl font-bold">{monster.name}</h4>
+
+                {/* Monster Info */}
+                <div className="p-6 text-center">
+                    <div className="flex flex-col items-center mb-6">
+                        <div className="bg-black/30 p-4 rounded-full mb-3 shadow-inner">
+                            <span className={`text-8xl ${monster.color}`}>{monster.emoji}</span>
+                        </div>
+                        <h4 className="text-3xl font-bold tracking-wider">{monster.name}</h4>
+                        <p className="text-sm text-gray-400">Guardian of this floor</p>
                     </div>
-                    <div className="space-y-2 text-lg">
-                        <div className="flex justify-between items-center"><span className="font-semibold text-gray-400">❤️ Health:</span> <span className="font-bold text-red-400">{monster.maxHealth}</span></div>
-                        <div className="flex justify-between items-center"><span className="font-semibold text-gray-400">⚔️ Attack:</span> <span className="font-bold text-orange-400">{monster.attack}</span></div>
+
+                    {/* Stats */}
+                    <div className="bg-black/20 p-4 rounded-lg space-y-3 text-left">
+                        <div className="flex justify-between items-center">
+                            <span className="text-lg flex items-center"><span className="text-red-400 mr-3 text-xl">❤️</span> Health</span>
+                            <span className="font-bold text-xl text-red-300">{monster.maxHealth}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-lg flex items-center"><span className="text-orange-400 mr-3 text-xl">⚔️</span> Attack</span>
+                            <span className="font-bold text-xl text-orange-300">{monster.attack}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col space-y-3">
+                {/* Actions */}
+                <div className="p-4 bg-black/20 rounded-b-lg">
                     {status === 'completed' && (
-                        <button onClick={onFarm} className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
-                            Farm (Instant Rewards)
+                        <button onClick={onFarm} className="w-full bg-gradient-to-r from-green-600 to-teal-500 hover:from-green-500 hover:to-teal-400 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-green-500/20 hover:shadow-green-400/30">
+                            Farm Rewards
                         </button>
                     )}
-                    <button onClick={onAttack} className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
-                        {status === 'current' ? 'Challenge!' : 'Attack Again'}
-                    </button>
+                    {status === 'current' && (
+                        <button onClick={onAttack} className="w-full bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-red-500/20 hover:shadow-red-400/30">
+                            Challenge!
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
     );
 };
+// === END: POPUP ĐƯỢC THIẾT KẾ LẠI HOÀN TOÀN ===
 
 const BattleLogModal = ({ logs, isOpen, onClose, logRef }) => {
   if (!isOpen) return null;
