@@ -24,6 +24,15 @@ const GameStyles = () => (
     @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
+
+    /* === THÊM MỚI: CSS để ẩn thanh cuộn === */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none; /* Dành cho Chrome, Safari, and Opera */
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;  /* Dành cho IE and Edge */
+      scrollbar-width: none;  /* Dành cho Firefox */
+    }
   `}</style>
 );
 
@@ -93,7 +102,8 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
 
   return (
     <div className="w-full h-full flex flex-col items-center animate-fade-in">
-        <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto p-4 flex-grow">
+        {/* === THAY ĐỔI: Thêm lớp 'hide-scrollbar' === */}
+        <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto p-4 flex-grow hide-scrollbar">
             {floorsToDisplay.map(floor => {
                 const status = getFloorStatus(floor);
                 const { icon, label, bgColor, textColor, borderColor } = getStatusInfo(status);
