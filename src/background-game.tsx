@@ -19,7 +19,7 @@ import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sá»­ dá»
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
-import PetCollection from './collection/PetCollection.tsx';
+import PetCollection from './pet-collection/PetCollection.tsx';
 
 
 // ==================================================================
