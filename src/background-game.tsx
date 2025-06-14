@@ -19,10 +19,23 @@ import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử d�
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
+import TowerExplorerGame from './leo-thap.tsx'; // <<<< THÊM IMPORT MỚI
 
 
 // ==================================================================
 // TÀI NGUYÊN TẬP TRUNG ĐÃ ĐƯỢC CHUYỂN SANG 'game-assets.ts'
+// --- LƯU Ý: Thêm icon mới cho tòa tháp vào file game-assets.ts ---
+/* 
+  Trong file `game-assets.ts`, hãy thêm dòng sau:
+  
+  export const uiAssets = {
+    ...,
+    towerIcon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png',
+  };
+
+  Và thêm vào mảng `allImageUrls`:
+  allImageUrls.push(uiAssets.towerIcon);
+*/
 // ==================================================================
 
 
@@ -140,6 +153,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
+  const [isTowerOpen, setIsTowerOpen] = useState(false); // <<<< THÊM STATE MỚI
 
   const GROUND_LEVEL_PERCENT = 45;
 
@@ -348,6 +362,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsTowerOpen(false); // <<<< RESET STATE
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -408,7 +423,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Renders the character, now with a static position
   const renderCharacter = () => {
     // Combined condition to check if any overlay is open
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerOpen;
     // Condition to pause animations
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -430,18 +445,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
+  const closeAllOverlays = () => {
+    setIsStatsFullscreen(false);
+    setIsRankOpen(false);
+    setIsGoldMineOpen(false);
+    setIsInventoryOpen(false);
+    setIsLuckyGameOpen(false);
+    setIsBlacksmithOpen(false);
+    setIsTowerOpen(false);
+  }
+
   const toggleStatsFullscreen = () => {
     if (isLoading) return;
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
             hideNavBar();
-            // Close other overlays
-            setIsRankOpen(false);
-            setIsGoldMineOpen(false);
-            setIsInventoryOpen(false);
-            setIsLuckyGameOpen(false);
-            setIsBlacksmithOpen(false);
+            closeAllOverlays();
+            setIsStatsFullscreen(true);
         } else {
             showNavBar();
         }
@@ -455,12 +476,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
          const newState = !prev;
          if (newState) {
              hideNavBar();
-             // Close other overlays
-             setIsStatsFullscreen(false);
-             setIsGoldMineOpen(false);
-             setIsInventoryOpen(false);
-             setIsLuckyGameOpen(false);
-             setIsBlacksmithOpen(false);
+             closeAllOverlays();
+             setIsRankOpen(true);
          } else {
              showNavBar();
          }
@@ -474,12 +491,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
+        closeAllOverlays();
+        setIsGoldMineOpen(true);
       } else {
         showNavBar();
       }
@@ -493,12 +506,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
+        closeAllOverlays();
+        setIsInventoryOpen(true);
       } else {
         showNavBar();
       }
@@ -512,12 +521,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsBlacksmithOpen(false);
+        closeAllOverlays();
+        setIsLuckyGameOpen(true);
       } else {
         showNavBar();
       }
@@ -531,12 +536,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
+        closeAllOverlays();
+        setIsBlacksmithOpen(true);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+  
+  // <<<< HÀM TOGGLE MỚI CHO TÒA THÁP >>>>
+  const toggleTower = () => {
+    if (isLoading) return;
+    setIsTowerOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        closeAllOverlays();
+        setIsTowerOpen(true);
       } else {
         showNavBar();
       }
@@ -565,7 +582,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
@@ -644,24 +661,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {/* Left-side Action Buttons */}
+            {/* <<<< CẬP NHẬT: Left-side Action Buttons >>>> */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
+                { // NÚT TÒA THÁP MỚI
+                  icon: <img src={uiAssets.towerIcon} alt="Tower Icon" className="w-full h-full object-contain" />,
+                  label: "Tháp",
+                  special: true,
+                  centered: true,
+                  onClick: toggleTower
+                },
                 {
                   icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
-                  label: "",
+                  label: "Cửa hàng",
                   special: true,
                   centered: true
                 },
                 {
                   icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />,
-                  label: "",
+                  label: "Túi đồ",
                   special: true,
                   centered: true,
                   onClick: toggleInventory
                 }
               ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
+                <div key={index} className="group cursor-pointer" title={item.label}>
                   <div
                       className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                       onClick={item.onClick}
@@ -677,19 +701,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               {[
                 {
                   icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />,
-                  label: "",
+                  label: "Nhiệm vụ",
                   special: true,
                   centered: true
                 },
                 {
                   icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />,
-                  label: "",
+                  label: "Lò rèn",
                   special: true,
                   centered: true,
                   onClick: toggleBlacksmith
                 },
               ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
+                <div key={index} className="group cursor-pointer" title={item.label}>
                     <div
                         className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
                         onClick={item.onClick}
@@ -771,6 +795,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 <Blacksmith onClose={toggleBlacksmith} />
             </ErrorBoundary>
         </div>
+        
+        {/* <<<< OVERLAY MỚI CHO TÒA THÁP >>>> */}
+        <div className="absolute inset-0 w-full h-full" style={{ display: isTowerOpen ? 'block' : 'none' }}>
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Leo Tháp!</div>}>
+                <TowerExplorerGame onClose={toggleTower} />
+            </ErrorBoundary>
+        </div>
+
 
       </SidebarLayout>
     </div>
