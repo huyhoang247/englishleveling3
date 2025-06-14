@@ -24,15 +24,8 @@ const GameStyles = () => (
     @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     .animate-fade-in { animation: fade-in 0.2s ease-out; }
     .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
-
-    /* === CSS để ẩn thanh cuộn === */
-    .hide-scrollbar::-webkit-scrollbar {
-      display: none; /* Dành cho Chrome, Safari, and Opera */
-    }
-    .hide-scrollbar {
-      -ms-overflow-style: none;  /* Dành cho IE and Edge */
-      scrollbar-width: none;  /* Dành cho Firefox */
-    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 );
 
@@ -48,7 +41,7 @@ const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
 const LogMessage = ({ log }) => {
     const getColor = () => {
       if (log.includes('dealt')) return 'text-red-400';
-      if (log.includes('gained')) return 'text-yellow-400';
+      if (log.includes('gained') || log.includes('Farmed')) return 'text-yellow-400';
       if (log.includes('defeated!')) return 'text-green-400';
       return 'text-gray-300';
     };
@@ -63,28 +56,21 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
     </div>
 );
 
-// === START: PHIÊN BẢN CẬP NHẬT CỦA FloorSelectionScreen (Không có Shadow) ===
 const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-
   const centerOffset = Math.floor(FLOORS_TO_SHOW / 2);
   const currentChallengeFloor = highestFloorCleared + 1;
-
   let startFloor = Math.max(1, currentChallengeFloor - centerOffset);
   let endFloor = startFloor + FLOORS_TO_SHOW - 1;
-
   if (endFloor > TOTAL_FLOORS) {
     endFloor = TOTAL_FLOORS;
     startFloor = Math.max(1, endFloor - FLOORS_TO_SHOW + 1);
   }
-  
   const floorsToDisplay = Array.from({ length: endFloor - startFloor + 1 }, (_, i) => startFloor + i);
   
   useEffect(() => {
     const currentFloorElement = scrollRef.current?.querySelector(`#floor-${currentChallengeFloor}`);
-    if (currentFloorElement) {
-      currentFloorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    if (currentFloorElement) currentFloorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [currentChallengeFloor]);
 
   const getFloorStatus = (floor) => {
@@ -93,22 +79,11 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
     return 'locked';
   };
   
-  // Cập nhật hàm getStatusInfo để trả về các class bổ sung
   const getStatusInfo = (status) => {
     switch (status) {
-      case 'completed': return { 
-        icon: '✅', label: 'Farm', textColor: 'text-green-300', 
-        extraClasses: 'hover:border-green-500/70' // Thay đổi màu viền khi hover
-      };
-      case 'current': return { 
-        icon: '⚔️', label: 'Challenge', textColor: 'text-yellow-300', 
-        // Viền vàng để nổi bật và hiệu ứng pulse
-        extraClasses: 'border-yellow-400/80 animate-pulse hover:border-yellow-300'
-      };
-      default: return { 
-        icon: '🔒', label: 'Locked', textColor: 'text-gray-500', 
-        extraClasses: 'cursor-not-allowed opacity-60' // Làm mờ đi và không cho click
-      };
+      case 'completed': return { icon: '✅', label: 'Farm', textColor: 'text-green-300', extraClasses: 'hover:border-green-500/70' };
+      case 'current': return { icon: '⚔️', label: 'Challenge', textColor: 'text-yellow-300', extraClasses: 'border-yellow-400/80 animate-pulse hover:border-yellow-300' };
+      default: return { icon: '🔒', label: 'Locked', textColor: 'text-gray-500', extraClasses: 'cursor-not-allowed opacity-60' };
     }
   };
 
@@ -119,39 +94,16 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
                 const status = getFloorStatus(floor);
                 const { icon, label, textColor, extraClasses } = getStatusInfo(status);
                 const isLocked = status === 'locked';
-                
                 return (
-                    <button
-                        key={floor} id={`floor-${floor}`} onClick={() => !isLocked && onSelectFloor(floor)} disabled={isLocked}
-                        // Cập nhật className: Không shadow, border đen, bg trong suốt
-                        className={`
-                            w-full flex items-center justify-between p-4 rounded-lg 
-                            transform transition-all duration-300
-                            
-                            // Nền đen với 80% opacity
-                            bg-black/80
-                            
-                            // Viền dày 2px, màu đen tuyền (không opacity)
-                            border-2 border-black
-
-                            // Hiệu ứng phóng to khi hover
-                            hover:scale-105
-                            
-                            // Thêm các class đặc biệt cho từng trạng thái
-                            ${extraClasses}
-                        `}
-                    >
+                    <button key={floor} id={`floor-${floor}`} onClick={() => !isLocked && onSelectFloor(floor, status)} disabled={isLocked}
+                        className={`w-full flex items-center justify-between p-4 rounded-lg transform transition-all duration-300 bg-black/80 border-2 border-black hover:scale-105 ${extraClasses}`}>
                         <div className="flex items-center">
-                            {status !== 'completed' && (
-                                <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>
-                            )}
+                            {status !== 'completed' && <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>}
                             <div>
                                 <h3 className={`font-bold text-lg text-left ${textColor}`}>Tầng {floor}</h3>
                                 {status === 'completed' && (
                                     <div className="flex items-center mt-1 text-xs text-green-400/80">
-                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
+                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                         <span>Đã vượt qua</span>
                                     </div>
                                 )}
@@ -165,18 +117,51 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
     </div>
   );
 };
-// === END: PHIÊN BẢN CẬP NHẬT CỦA FloorSelectionScreen ===
 
+const FloorInfoPopup = ({ data, onClose, onAttack, onFarm }) => {
+    if (!data) return null;
+    const { floor, monster, status } = data;
+
+    return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
+            <div className="bg-gray-800 border-2 border-black rounded-lg shadow-xl w-full max-w-sm p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-gray-200">Floor {floor} - Monster Info</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button>
+                </div>
+                
+                <div className="bg-black/30 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-center space-x-4 mb-4">
+                         <div className={`text-6xl ${monster.color}`}>{monster.emoji}</div>
+                         <h4 className="text-2xl font-bold">{monster.name}</h4>
+                    </div>
+                    <div className="space-y-2 text-lg">
+                        <div className="flex justify-between items-center"><span className="font-semibold text-gray-400">❤️ Health:</span> <span className="font-bold text-red-400">{monster.maxHealth}</span></div>
+                        <div className="flex justify-between items-center"><span className="font-semibold text-gray-400">⚔️ Attack:</span> <span className="font-bold text-orange-400">{monster.attack}</span></div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col space-y-3">
+                    {status === 'completed' && (
+                        <button onClick={onFarm} className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
+                            Farm (Instant Rewards)
+                        </button>
+                    )}
+                    <button onClick={onAttack} className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
+                        {status === 'current' ? 'Challenge!' : 'Attack Again'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const BattleLogModal = ({ logs, isOpen, onClose, logRef }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={onClose}>
       <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-200">Battle Log</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button>
-        </div>
+        <div className="flex justify-between items-center mb-4"><h3 className="text-xl font-bold text-gray-200">Battle Log</h3><button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button></div>
         <div ref={logRef} className="text-sm space-y-2 h-80 overflow-y-auto pr-2 bg-black/20 p-4 rounded-md">
           {logs && logs.length > 0 ? logs.map((log, index) => <LogMessage key={index} log={log} />) : <p className="text-gray-400">No battle has occurred yet.</p>}
         </div>
@@ -198,24 +183,24 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   const [animationState, setAnimationState] = useState({ playerHit: false, monsterHit: false });
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const battleLogRef = useRef(null);
-  
+  const [selectedFloorData, setSelectedFloorData] = useState(null);
+
   useEffect(() => {
-    if (battleLogRef.current) {
-      battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
-    }
+    if (battleLogRef.current) battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
   }, [battleState?.battleLog, isLogModalOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        if (isLogModalOpen) setIsLogModalOpen(false);
+        if (selectedFloorData) setSelectedFloorData(null);
+        else if (isLogModalOpen) setIsLogModalOpen(false);
         else if (gameState !== 'floor_selection') setGameState('floor_selection');
         else onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLogModalOpen, onClose, gameState]);
+  }, [isLogModalOpen, onClose, gameState, selectedFloorData]);
   
   useEffect(() => {
     if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
@@ -237,23 +222,24 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   };
 
   const generateRewards = (floor) => {
-    const rewardModifier = floor > highestFloorCleared ? 1.0 : 0.4;
+    const isFirstClear = floor > highestFloorCleared;
+    const rewardModifier = isFirstClear ? 1.0 : 0.4;
     const baseCoins = (50 + floor * 25) * rewardModifier;
     const baseGems = Math.floor(floor / 3) + 1;
-    const gemChance = floor > highestFloorCleared ? 0.3 : 0.1;
+    const gemChance = isFirstClear ? 0.3 : 0.1;
     return { 
         coins: Math.ceil(baseCoins + Math.floor(Math.random() * 50 * rewardModifier)), 
         gems: (Math.random() < gemChance ? baseGems : 0)
     };
   };
 
-  const handleSelectFloor = (floor) => {
-    setBattleFloor(floor);
-    startBattle(floor);
+  const handleSelectFloor = (floor, status) => {
+    const monster = generateMonster(floor);
+    setSelectedFloorData({ floor, monster, status });
   };
   
-  const startBattle = (floor) => {
-    const monster = generateMonster(floor);
+  const startBattle = (floor, monster) => {
+    setBattleFloor(floor);
     setBattleState({
       monster, playerHealth: playerStats.health, monsterHealth: monster.health,
       turn: 'player', battleLog: [`Entering Floor ${floor}... A ${monster.name} ${monster.emoji} appears!`]
@@ -261,6 +247,25 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     setGameState('fighting');
   };
 
+  const handleAttack = () => {
+    if (!selectedFloorData) return;
+    startBattle(selectedFloorData.floor, selectedFloorData.monster);
+    setSelectedFloorData(null);
+  };
+
+  const handleFarm = () => {
+    if (!selectedFloorData) return;
+    const { floor } = selectedFloorData;
+    const farmRewards = generateRewards(floor);
+    
+    setPlayerStats(p => ({ ...p, coins: p.coins + farmRewards.coins, gems: p.gems + farmRewards.gems }));
+    setRewards(farmRewards);
+    setBattleFloor(floor);
+    setBattleState({ battleLog: [`Farmed Floor ${floor} successfully!`, `You gained ${farmRewards.coins} coins and ${farmRewards.gems} gems.`] });
+    setGameState('victory');
+    setSelectedFloorData(null);
+  };
+  
   const attackMonster = () => {
     if (!battleState || battleState.turn !== 'player') return;
 
@@ -286,11 +291,9 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
       }
       
       setBattleState(p => ({ ...p, turn: 'monster' }));
-
       setTimeout(() => {
         const monsterDamage = Math.max(1, battleState.monster.attack - playerStats.defense + Math.floor(Math.random() * 3));
         const newPlayerHealth = Math.max(0, battleState.playerHealth - monsterDamage);
-
         setAnimationState({ playerHit: true, monsterHit: false });
         setTimeout(() => setAnimationState(p => ({ ...p, playerHit: false })), 500);
         
@@ -311,7 +314,9 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     if (battleFloor > highestFloorCleared) {
       setHighestFloorCleared(battleFloor);
     }
-    setPlayerStats(p => ({ ...p, health: Math.min(p.maxHealth, p.health + Math.ceil(p.maxHealth * 0.1)) }));
+    if (gameState !== 'victory' || (rewards && gameState === 'victory' && battleFloor > highestFloorCleared)) {
+        setPlayerStats(p => ({ ...p, health: Math.min(p.maxHealth, p.health + Math.ceil(p.maxHealth * 0.1)) }));
+    }
     setGameState('floor_selection');
     setRewards(null);
     setBattleState(null);
@@ -326,115 +331,70 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     <div className="fixed inset-0 z-40 bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
       <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
-        {/* Header */}
-        <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)">
-            <img src={closeIconUrl} alt="Close" className="w-6 h-6" />
-        </button>
+        <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)"><img src={closeIconUrl} alt="Close" className="w-6 h-6" /></button>
         <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30 text-center">
             <h1 className="text-2xl font-bold tracking-wider">Tower of Valor</h1>
-            {gameState !== 'floor_selection' && (
-                <div className="text-lg font-semibold mt-1 opacity-80">Floor {battleFloor}</div>
-            )}
+            {gameState !== 'floor_selection' && <div className="text-lg font-semibold mt-1 opacity-80">Floor {battleFloor}</div>}
         </div>
         
-        {/* Thanh chỉ số (Chỉ hiện khi chiến đấu) */}
         {gameState !== 'floor_selection' && (
-            <div className="p-4 bg-black/20 animate-fade-in">
-                <div className="flex justify-around items-center text-sm md:text-base">
-                    <div className="flex items-center space-x-2" title="Health"><span className="text-lg">❤️</span><span className="font-semibold">{battleState?.playerHealth ?? playerStats.health}/{playerStats.maxHealth}</span></div>
-                    <div className="flex items-center space-x-2" title="Attack"><span className="text-lg">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
-                    <div className="flex items-center space-x-2" title="Defense"><span className="text-lg">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
-                    <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400 text-lg">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
-                    <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400 text-lg">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
-                </div>
-            </div>
+            <div className="p-4 bg-black/20 animate-fade-in"><div className="flex justify-around items-center text-sm md:text-base">
+                <div className="flex items-center space-x-2" title="Health"><span className="text-lg">❤️</span><span className="font-semibold">{battleState?.playerHealth ?? playerStats.health}/{playerStats.maxHealth}</span></div>
+                <div className="flex items-center space-x-2" title="Attack"><span className="text-lg">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
+                <div className="flex items-center space-x-2" title="Defense"><span className="text-lg">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
+                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400 text-lg">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
+                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400 text-lg">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
+            </div></div>
         )}
         
-        {/* Khu vực hiển thị chính */}
         <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900 overflow-hidden">
-           {gameState === 'floor_selection' && (
-             <FloorSelectionScreen 
-                highestFloorCleared={highestFloorCleared} 
-                onSelectFloor={handleSelectFloor}
-             />
-           )}
+           {gameState === 'floor_selection' && <FloorSelectionScreen highestFloorCleared={highestFloorCleared} onSelectFloor={handleSelectFloor} />}
            {gameState === 'fighting' && battleState && (
             <div className="w-full h-full flex flex-col justify-between animate-fade-in p-4">
                 <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
                     {battleState.monsterHealth > 0 ? (
-                        <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
-                            {battleState.turn === 'monster' ? `${battleState.monster.name}'s Turn` : "Your Turn"}
-                        </h4>
-                    ) : (
-                        <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
-                    )}
+                        <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>{battleState.turn === 'monster' ? `${battleState.monster.name}'s Turn` : "Your Turn"}</h4>
+                    ) : ( <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4> )}
                 </div>
                 <div className="w-full flex justify-around items-start px-4 md:px-16">
                     <CombatantView name="You" avatar="🦸" currentHealth={battleState.playerHealth} maxHealth={playerStats.maxHealth} healthBarColor="bg-gradient-to-r from-green-500 to-green-400" isHit={animationState.playerHit} />
                     <div className="text-4xl text-gray-500 pt-12">⚔️</div>
                     <CombatantView name={battleState.monster.name} avatar={battleState.monster.emoji} avatarClass={battleState.monster.color} currentHealth={battleState.monsterHealth} maxHealth={battleState.monster.maxHealth} healthBarColor="bg-gradient-to-r from-red-500 to-red-400" isHit={animationState.monsterHit} />
                 </div>
-                <div className="text-center">
-                    <button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
-                      Attack!
-                    </button>
-                </div>
+                <div className="text-center"><button onClick={attackMonster} disabled={battleState.turn !== 'player' || autoAttack} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">Attack!</button></div>
             </div>
            )}
            {gameState === 'victory' && (
              <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in p-4">
-                <div className="text-7xl mb-4">🏆</div>
-                <h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
-                {rewards && (
-                  <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
-                    <h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3>
-                    <div className="flex justify-center space-x-6 text-lg">
-                      <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
-                      <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
-                    </div>
-                  </div>
-                )}
-                <button onClick={returnToMap} className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300">
-                    <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
-                </button>
+                <div className="text-7xl mb-4">🏆</div><h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
+                {rewards && (<div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs"><h3 className="text-lg font-bold text-yellow-400 mb-3 border-b border-yellow-400/20 pb-2">Floor Cleared! Rewards:</h3><div className="flex justify-center space-x-6 text-lg">
+                    <div className="flex items-center space-x-2"><span className="text-yellow-400">💰</span><span>+{rewards.coins}</span></div>
+                    <div className="flex items-center space-x-2"><span className="text-purple-400">💎</span><span>+{rewards.gems}</span></div>
+                </div></div>)}
+                <button onClick={returnToMap} className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-green-500/20 transform hover:scale-105 transition-all duration-300"><span className="mr-2 text-xl">🗺️</span><span>Return to Map</span></button>
              </div>
            )}
            {gameState === 'defeat' && (
              <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in p-4">
-                <div className="text-7xl mb-4">💀</div>
-                <h2 className="text-3xl font-bold mb-4 text-red-500">DEFEATED</h2>
-                <p className="text-gray-400 mb-8">Your journey paused on Floor {battleFloor}.</p>
-                <button onClick={handleDefeat} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300">
-                    <span className="mr-2 text-xl">🗺️</span><span>Return to Map</span>
-                </button>
+                <div className="text-7xl mb-4">💀</div><h2 className="text-3xl font-bold mb-4 text-red-500">DEFEATED</h2><p className="text-gray-400 mb-8">Your journey paused on Floor {battleFloor}.</p>
+                <button onClick={handleDefeat} className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-3 rounded-lg font-bold flex items-center shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-all duration-300"><span className="mr-2 text-xl">🗺️</span><span>Return to Map</span></button>
              </div>
            )}
         </div>
         
-        {/* Footer (Chỉ hiện khi chiến đấu) */}
         {gameState !== 'floor_selection' && (
             <div className="bg-gray-900 p-4 border-t border-purple-500/30 flex justify-between items-center animate-fade-in">
-                <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50" disabled={!battleState}>
-                    📜 View Log
-                </button>
-                <label className="flex items-center space-x-2 cursor-pointer">
-                    <span className="text-sm font-medium">Auto Attack</span>
-                    <div className="relative">
-                        <input type="checkbox" checked={autoAttack} onChange={(e) => setAutoAttack(e.target.checked)} className="sr-only"/>
-                        <div className="block bg-gray-600 w-10 h-6 rounded-full"></div>
-                        <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoAttack ? 'transform translate-x-full bg-green-400' : ''}`}></div>
-                    </div>
-                </label>
+                <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50" disabled={!battleState}>📜 View Log</button>
+                <label className="flex items-center space-x-2 cursor-pointer"><span className="text-sm font-medium">Auto Attack</span><div className="relative">
+                    <input type="checkbox" checked={autoAttack} onChange={(e) => setAutoAttack(e.target.checked)} className="sr-only"/><div className="block bg-gray-600 w-10 h-6 rounded-full"></div>
+                    <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoAttack ? 'transform translate-x-full bg-green-400' : ''}`}></div>
+                </div></label>
             </div>
         )}
       </div>
       
-      <BattleLogModal 
-        isOpen={isLogModalOpen} 
-        onClose={() => setIsLogModalOpen(false)}
-        logs={battleState?.battleLog}
-        logRef={battleLogRef}
-      />
+      <BattleLogModal isOpen={isLogModalOpen} onClose={() => setIsLogModalOpen(false)} logs={battleState?.battleLog} logRef={battleLogRef} />
+      <FloorInfoPopup data={selectedFloorData} onClose={() => setSelectedFloorData(null)} onAttack={handleAttack} onFarm={handleFarm} />
     </div>
   );
 };
