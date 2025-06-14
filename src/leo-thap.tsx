@@ -348,15 +348,46 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
     setBattleState(null);
   };
 
+  const handleRetreat = () => {
+    setGameState('floor_selection');
+    setBattleState(null);
+    setAutoAttack(false);
+  };
+
   return (
     <div className="fixed inset-0 z-40 bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
       <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
-        <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)"><img src={closeIconUrl} alt="Close" className="w-6 h-6" /></button>
-        <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30 text-center">
-            <h1 className="text-2xl font-bold tracking-wider">Tower of Valor</h1>
-            {gameState !== 'floor_selection' && <div className="text-lg font-semibold mt-1 opacity-80">Floor {battleFloor}</div>}
-        </div>
+        {/* === START: MODIFIED HEADER === */}
+        {gameState === 'floor_selection' ? (
+            <>
+                {/* Header for map view */}
+                <button onClick={onClose} className="absolute top-4 right-4 z-20 transition-opacity hover:opacity-80" aria-label="Đóng" title="Đóng Tháp (Esc)"><img src={closeIconUrl} alt="Close" className="w-6 h-6" /></button>
+                <div className="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-4 border-b border-purple-500/30 text-center">
+                    <h1 className="text-2xl font-bold tracking-wider">Tower of Valor</h1>
+                </div>
+            </>
+        ) : gameState === 'fighting' ? (
+            <>
+                {/* Compact Header for battle view */}
+                <div className="p-2 border-b border-purple-500/30 flex items-center justify-start bg-gray-900/70 backdrop-blur-sm relative">
+                    <button 
+                        onClick={handleRetreat} 
+                        className="bg-gray-700/80 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm flex items-center shadow-md">
+                        <span className="mr-2 text-base">🗺️</span>
+                        Return to Map
+                    </button>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold text-purple-300 tracking-wider">
+                        Floor {battleFloor}
+                    </div>
+                </div>
+            </>
+        ) : (
+             // No header for Victory/Defeat screens for a more immersive result page
+             null
+        )}
+        {/* === END: MODIFIED HEADER === */}
+
         
         {gameState !== 'floor_selection' && (
             <div className="p-4 bg-black/20 animate-fade-in"><div className="flex justify-around items-center text-sm md:text-base">
@@ -403,7 +434,7 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
            )}
         </div>
         
-        {gameState !== 'floor_selection' && (
+        {gameState === 'fighting' && (
             <div className="bg-gray-900 p-4 border-t border-purple-500/30 flex justify-between items-center animate-fade-in">
                 <button onClick={() => setIsLogModalOpen(true)} className="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors disabled:opacity-50" disabled={!battleState}>📜 View Log</button>
                 <label className="flex items-center space-x-2 cursor-pointer"><span className="text-sm font-medium">Auto Attack</span><div className="relative">
