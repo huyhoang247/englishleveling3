@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// Component chứa các style cho animation, giúp code gọn gàng
+// Component chứa các style cho animation
 const GameStyles = () => (
   <style>{`
     @keyframes shake {
@@ -12,37 +12,57 @@ const GameStyles = () => (
       animation: shake 0.5s ease-in-out;
     }
     
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fade-in-up {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .animate-fade-in {
-      animation: fade-in 0.2s ease-out;
-    }
-    .animate-fade-in-up {
-      animation: fade-in-up 0.3s ease-out;
-    }
+    .animate-fade-in { animation: fade-in 0.2s ease-out; }
+    .animate-fade-in-up { animation: fade-in-up 0.3s ease-out; }
   `}</style>
 );
+
+// --- Helper Components ---
+
+const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
+  <div className={`w-full ${bgColorClass} rounded-full h-3 shadow-inner`}>
+    <div className={`${colorClass} h-3 rounded-full transition-all duration-500 ease-out flex items-center justify-center`} style={{ width: `${(current / max) * 100}%` }}>
+    </div>
+    <div className="text-xs font-bold text-white text-shadow-sm text-center -mt-3.5">
+        {current} / {max}
+    </div>
+  </div>
+);
+
+const LogMessage = ({ log }) => {
+  const getColor = () => {
+    if (log.includes('dealt')) return 'text-red-400';
+    if (log.includes('gained')) return 'text-yellow-400';
+    if (log.includes('defeated!')) return 'text-green-400';
+    return 'text-gray-300';
+  };
+  return <div className={`animate-fade-in-up ${getColor()}`}>{log}</div>;
+};
+
+// COMPONENT MỚI: Dành cho Người chơi và Quái vật
+const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, healthBarColor, isHit }) => (
+    <div className={`flex flex-col items-center p-4 space-y-3 w-36 transition-transform duration-300 ${isHit ? 'animate-shake' : ''}`}>
+        <h3 className="text-lg font-bold truncate">{name}</h3>
+        <div className={`text-6xl ${avatarClass}`}>{avatar}</div>
+        <div className="w-full">
+            <HealthBar current={currentHealth} max={maxHealth} colorClass={healthBarColor} bgColorClass="bg-gray-700/50"/>
+        </div>
+    </div>
+);
+
 
 const TowerExplorerGame = () => {
   const [currentFloor, setCurrentFloor] = useState(1);
   const [playerStats, setPlayerStats] = useState({
     health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0
   });
-  const [gameState, setGameState] = useState('playing'); // 'playing', 'fighting', 'victory', 'defeat'
+  const [gameState, setGameState] = useState('playing');
   const [battleState, setBattleState] = useState(null);
   const [rewards, setRewards] = useState([]);
   const [autoNext, setAutoNext] = useState(false);
@@ -51,50 +71,41 @@ const TowerExplorerGame = () => {
   
   const battleLogRef = useRef(null);
 
-  // Tự động cuộn battle log xuống dưới khi có log mới hoặc khi modal được mở
   useEffect(() => {
     if (battleLogRef.current) {
       battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
     }
   }, [battleState?.battleLog, isLogModalOpen]);
 
-  // Hook để đóng modal bằng phím Escape
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setIsLogModalOpen(false);
-      }
+      if (event.key === 'Escape') setIsLogModalOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Tạo dữ liệu quái vật cho mỗi tầng
   const generateMonster = (floor) => {
     const baseHealth = 30 + floor * 15;
     const baseAttack = 8 + floor * 3;
     const monsters = [
-      { name: 'Goblin Warrior', emoji: '👹', color: 'text-green-400' },
-      { name: 'Orc Berserker', emoji: '👺', color: 'text-red-400' },
-      { name: 'Dark Knight', emoji: '🗡️', color: 'text-purple-400' },
-      { name: 'Fire Demon', emoji: '🔥', color: 'text-orange-400' },
-      { name: 'Ice Golem', emoji: '❄️', color: 'text-blue-400' },
-      { name: 'Shadow Beast', emoji: '👤', color: 'text-gray-400' }
+      { name: 'Goblin', emoji: '👹', color: 'text-green-400' },
+      { name: 'Orc', emoji: '👺', color: 'text-red-400' },
+      { name: 'Knight', emoji: '🗡️', color: 'text-purple-400' },
+      { name: 'Demon', emoji: '🔥', color: 'text-orange-400' },
+      { name: 'Golem', emoji: '❄️', color: 'text-blue-400' },
+      { name: 'Shadow', emoji: '👤', color: 'text-gray-400' }
     ];
     const monster = monsters[Math.floor(Math.random() * monsters.length)];
     return { ...monster, health: baseHealth, maxHealth: baseHealth, attack: baseAttack, floor: floor };
   };
 
-  // Tạo phần thưởng cho tầng
   const generateRewards = (floor) => {
     const baseCoins = 50 + floor * 25;
     const baseGems = Math.floor(floor / 3) + 1;
     return { coins: baseCoins + Math.floor(Math.random() * 50), gems: baseGems + (Math.random() < 0.3 ? 1 : 0) };
   };
 
-  // Bắt đầu chiến đấu
   const startBattle = () => {
     const monster = generateMonster(currentFloor);
     setBattleState({
@@ -104,14 +115,13 @@ const TowerExplorerGame = () => {
     setGameState('fighting');
   };
 
-  // Tấn công quái vật
   const attackMonster = () => {
     if (!battleState || battleState.turn !== 'player') return;
 
     const damage = Math.max(1, playerStats.attack - Math.floor(Math.random() * 5));
     const newMonsterHealth = Math.max(0, battleState.monsterHealth - damage);
     
-    setAnimationState({ ...animationState, monsterHit: true });
+    setAnimationState({ playerHit: false, monsterHit: true });
     setTimeout(() => setAnimationState(prev => ({ ...prev, monsterHit: false })), 500);
     let newLog = [...battleState.battleLog, `You dealt ${damage} damage!`];
     
@@ -121,9 +131,7 @@ const TowerExplorerGame = () => {
       setPlayerStats(prev => ({ ...prev, coins: prev.coins + floorRewards.coins, gems: prev.gems + floorRewards.gems }));
       newLog.push(`${battleState.monster.name} defeated!`);
       newLog.push(`You gained ${floorRewards.coins} coins and ${floorRewards.gems} gems.`);
-      
       setBattleState(prev => ({ ...prev, monsterHealth: 0, battleLog: newLog }));
-      
       setTimeout(() => {
         setGameState('victory');
         if (autoNext) setTimeout(() => nextFloor(), 2000);
@@ -137,7 +145,7 @@ const TowerExplorerGame = () => {
       const monsterDamage = Math.max(1, battleState.monster.attack - playerStats.defense + Math.floor(Math.random() * 3));
       const newPlayerHealth = Math.max(0, battleState.playerHealth - monsterDamage);
       
-      setAnimationState(prev => ({ ...prev, playerHit: true }));
+      setAnimationState({ playerHit: true, monsterHit: false });
       setTimeout(() => setAnimationState(prev => ({ ...prev, playerHit: false })), 500);
       newLog.push(`${battleState.monster.name} dealt ${monsterDamage} damage!`);
       
@@ -150,68 +158,31 @@ const TowerExplorerGame = () => {
     }, 1000);
   };
   
-  // Lên tầng tiếp theo
   const nextFloor = () => {
     setCurrentFloor(prev => prev + 1);
     setGameState('playing');
-    // Không reset battleState để người dùng có thể xem lại log
     setRewards([]);
     setPlayerStats(prev => ({ ...prev, health: Math.min(prev.maxHealth, prev.health + Math.ceil(prev.maxHealth * 0.1)) }));
   };
   
-  // Reset game
   const resetGame = () => {
     setCurrentFloor(1);
     setPlayerStats({ health: 100, maxHealth: 100, attack: 25, defense: 10, coins: 0, gems: 0 });
     setGameState('playing');
-    // Không reset battleState để người dùng có thể xem lại log của trận thua
     setRewards([]);
   };
 
-  // --- Helper Components ---
-  const HealthBar = ({ current, max, colorClass, bgColorClass }) => (
-    <div className={`w-full ${bgColorClass} rounded-full h-4 shadow-inner`}>
-      <div className={`${colorClass} h-4 rounded-full transition-all duration-500 ease-out flex items-center justify-center`} style={{ width: `${(current / max) * 100}%` }}>
-        <span className="text-xs font-bold text-white text-shadow-sm">{current} / {max}</span>
-      </div>
-    </div>
-  );
-  
-  const LogMessage = ({ log }) => {
-    const getColor = () => {
-        if (log.includes('dealt')) return 'text-red-400';
-        if (log.includes('gained')) return 'text-yellow-400';
-        if (log.includes('defeated!')) return 'text-green-400';
-        return 'text-gray-300';
-    };
-    return <div className={`animate-fade-in-up ${getColor()}`}>{log}</div>;
-  };
-
   const BattleLogModal = () => (
-    <div 
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in"
-      onClick={() => setIsLogModalOpen(false)}
-    >
-      <div
-        className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up"
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={() => setIsLogModalOpen(false)}>
+      <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl w-full max-w-lg p-6 animate-fade-in-up" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-200">Battle Log</h3>
-          <button onClick={() => setIsLogModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
-            <span className="text-2xl">×</span>
-          </button>
+          <button onClick={() => setIsLogModalOpen(false)} className="text-gray-400 hover:text-white transition-colors"><span className="text-2xl">×</span></button>
         </div>
         <div ref={battleLogRef} className="text-sm space-y-2 h-80 overflow-y-auto pr-2 bg-black/20 p-4 rounded-md">
-          {battleState?.battleLog.length > 0 ? (
-            battleState.battleLog.map((log, index) => <LogMessage key={index} log={log} />)
-          ) : (
-            <p className="text-gray-400">No battle has occurred yet.</p>
-          )}
+          {battleState?.battleLog.length > 0 ? battleState.battleLog.map((log, index) => <LogMessage key={index} log={log} />) : <p className="text-gray-400">No battle has occurred yet.</p>}
         </div>
-        <button onClick={() => setIsLogModalOpen(false)} className="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-            Close
-        </button>
+        <button onClick={() => setIsLogModalOpen(false)} className="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Close</button>
       </div>
     </div>
   );
@@ -227,23 +198,18 @@ const TowerExplorerGame = () => {
         </div>
         
         <div className="p-4 bg-black/20">
-            <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-lg">Your Stats</h3>
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1" title="Coins"><span className="text-yellow-400">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
-                    <div className="flex items-center space-x-1" title="Gems"><span className="text-purple-400">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
-                </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="flex flex-col items-center justify-center" title="Health"><span className="text-2xl mb-1">❤️</span><span className="font-semibold">{battleState ? battleState.playerHealth : playerStats.health}/{playerStats.maxHealth}</span></div>
-                <div className="flex flex-col items-center justify-center" title="Attack"><span className="text-2xl mb-1">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
-                <div className="flex flex-col items-center justify-center" title="Defense"><span className="text-2xl mb-1">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
+            <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2" title="Health"><span className="text-xl">❤️</span><span className="font-semibold">{playerStats.health}/{playerStats.maxHealth}</span></div>
+                <div className="flex items-center space-x-2" title="Attack"><span className="text-xl">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
+                <div className="flex items-center space-x-2" title="Defense"><span className="text-xl">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
+                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
+                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
             </div>
         </div>
         
-        <div className="h-96 relative flex flex-col items-center justify-between p-6 bg-gradient-to-b from-gray-800 to-gray-900">
+        <div className="h-80 relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900">
            {gameState === 'playing' && (
-            <div className="text-center text-white flex flex-col justify-center items-center h-full">
+            <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4 animate-pulse">🚪</div>
               <h2 className="text-2xl font-bold mb-2">The Gate Awaits</h2>
               <p className="text-gray-400 mb-8">A new challenge lies beyond this door.</p>
@@ -252,26 +218,38 @@ const TowerExplorerGame = () => {
               </button>
             </div>
           )}
+
           {gameState === 'fighting' && battleState && (
-            <>
-              <div className={`w-full text-center ${animationState.monsterHit ? 'animate-shake' : ''}`}>
-                <div className={`text-6xl mb-2 ${battleState.monster.color}`}>{battleState.monster.emoji}</div>
-                <h3 className="text-xl font-bold">{battleState.monster.name}</h3>
-                <p className="text-sm text-gray-400">ATK: {battleState.monster.attack}</p>
-                <div className="mt-2 px-4"><HealthBar current={battleState.monsterHealth} max={battleState.monster.maxHealth} colorClass="bg-gradient-to-r from-red-600 to-red-400" bgColorClass="bg-red-900/50" /></div>
-              </div>
-              <div className="text-4xl text-gray-500 my-4">⚔️</div>
-              <div className={`w-full text-center ${animationState.playerHit ? 'animate-shake' : ''}`}>
-                <div className="w-20 h-20 bg-blue-900/50 rounded-full mx-auto mb-2 flex items-center justify-center border-2 border-blue-400"><div className="text-4xl">🦸</div></div>
-                <h3 className="text-xl font-bold">You</h3>
-                <div className="mt-2 px-4"><HealthBar current={battleState.playerHealth} max={playerStats.maxHealth} colorClass="bg-gradient-to-r from-green-600 to-green-400" bgColorClass="bg-green-900/50" /></div>
-                 {battleState.turn === 'player' && battleState.monsterHealth > 0 && (<button onClick={attackMonster} className="mt-6 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300">Attack!</button>)}
-                 {battleState.turn === 'monster' && ( <div className="mt-6 text-yellow-400 font-semibold italic">Monster is attacking...</div> )}
-              </div>
-            </>
+            <div className="w-full h-full flex flex-col justify-between animate-fade-in">
+                <div className="flex justify-between items-start">
+                    <CombatantView 
+                        name="You"
+                        avatar="🦸"
+                        currentHealth={battleState.playerHealth}
+                        maxHealth={playerStats.maxHealth}
+                        healthBarColor="bg-gradient-to-r from-green-500 to-green-400"
+                        isHit={animationState.playerHit}
+                    />
+                    <div className="text-4xl text-gray-500 pt-12">⚔️</div>
+                    <CombatantView 
+                        name={battleState.monster.name}
+                        avatar={battleState.monster.emoji}
+                        avatarClass={battleState.monster.color}
+                        currentHealth={battleState.monsterHealth}
+                        maxHealth={battleState.monster.maxHealth}
+                        healthBarColor="bg-gradient-to-r from-red-500 to-red-400"
+                        isHit={animationState.monsterHit}
+                    />
+                </div>
+                <div className="text-center">
+                    {battleState.turn === 'player' && battleState.monsterHealth > 0 && (<button onClick={attackMonster} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-red-500/20 transform hover:scale-105 transition-all duration-300">Attack!</button>)}
+                    {battleState.turn === 'monster' && ( <div className="text-yellow-400 font-semibold italic h-12 flex items-center justify-center">Monster is attacking...</div> )}
+                </div>
+            </div>
           )}
+
           {gameState === 'victory' && (
-            <div className="text-center text-white flex flex-col justify-center items-center h-full">
+            <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4">🏆</div>
               <h2 className="text-3xl font-bold mb-4 text-yellow-300">VICTORY!</h2>
               <div className="bg-black/30 rounded-lg p-4 mb-6 w-full max-w-xs">
@@ -287,7 +265,7 @@ const TowerExplorerGame = () => {
             </div>
           )}
           {gameState === 'defeat' && (
-            <div className="text-center text-white flex flex-col justify-center items-center h-full">
+            <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
               <div className="text-7xl mb-4">💀</div>
               <h2 className="text-3xl font-bold mb-4 text-red-500">DEFEATED</h2>
               <p className="text-gray-400 mb-8">Your journey ended on Floor {currentFloor}.</p>
