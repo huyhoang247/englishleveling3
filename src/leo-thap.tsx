@@ -63,7 +63,7 @@ const CombatantView = ({ name, avatar, avatarClass, currentHealth, maxHealth, he
     </div>
 );
 
-// === START: PHIÊN BẢN CẬP NHẬT CỦA FloorSelectionScreen ===
+// === START: PHIÊN BẢN CẬP NHẬT CỦA FloorSelectionScreen (Không có Shadow) ===
 const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -93,23 +93,21 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
     return 'locked';
   };
   
-  // Cập nhật hàm getStatusInfo để trả về màu cho shadow và hover
+  // Cập nhật hàm getStatusInfo để trả về các class bổ sung
   const getStatusInfo = (status) => {
     switch (status) {
       case 'completed': return { 
         icon: '✅', label: 'Farm', textColor: 'text-green-300', 
-        shadowColor: 'shadow-green-600/20', 
-        hoverEffect: 'hover:shadow-green-500/40 hover:border-green-500/50' 
+        extraClasses: 'hover:border-green-500/70' // Thay đổi màu viền khi hover
       };
       case 'current': return { 
         icon: '⚔️', label: 'Challenge', textColor: 'text-yellow-300', 
-        shadowColor: 'shadow-yellow-500/30 animate-pulse', 
-        hoverEffect: 'hover:shadow-yellow-400/50 hover:border-yellow-400/60' 
+        // Viền vàng để nổi bật và hiệu ứng pulse
+        extraClasses: 'border-yellow-400/80 animate-pulse hover:border-yellow-300'
       };
       default: return { 
         icon: '🔒', label: 'Locked', textColor: 'text-gray-500', 
-        shadowColor: 'shadow-gray-900/20', 
-        hoverEffect: 'cursor-not-allowed'
+        extraClasses: 'cursor-not-allowed opacity-60' // Làm mờ đi và không cho click
       };
     }
   };
@@ -119,24 +117,28 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
         <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto p-4 flex-grow hide-scrollbar">
             {floorsToDisplay.map(floor => {
                 const status = getFloorStatus(floor);
-                const { icon, label, textColor, shadowColor, hoverEffect } = getStatusInfo(status);
+                const { icon, label, textColor, extraClasses } = getStatusInfo(status);
                 const isLocked = status === 'locked';
                 
                 return (
                     <button
                         key={floor} id={`floor-${floor}`} onClick={() => !isLocked && onSelectFloor(floor)} disabled={isLocked}
-                        // Cập nhật toàn bộ className để có hiệu ứng kính
+                        // Cập nhật className: Không shadow, border đen, bg trong suốt
                         className={`
                             w-full flex items-center justify-between p-4 rounded-lg 
                             transform transition-all duration-300
                             
-                            bg-black/80 backdrop-blur-sm
+                            // Nền đen với 80% opacity
+                            bg-black/80
                             
-                            border-2 border-black border-t-white/10
+                            // Viền dày 2px, màu đen tuyền (không opacity)
+                            border-2 border-black
 
-                            shadow-xl ${shadowColor}
-
-                            hover:scale-105 ${hoverEffect}
+                            // Hiệu ứng phóng to khi hover
+                            hover:scale-105
+                            
+                            // Thêm các class đặc biệt cho từng trạng thái
+                            ${extraClasses}
                         `}
                     >
                         <div className="flex items-center">
