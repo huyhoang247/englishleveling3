@@ -93,7 +93,7 @@ const TowerExplorerGame = () => {
     if (autoAttack && gameState === 'fighting' && battleState?.turn === 'player' && battleState.monsterHealth > 0) {
       const attackTimeout = setTimeout(() => {
         attackMonster();
-      }, AUTO_ATTACK_DELAY / 2); // Tự động tấn công nhanh hơn 1 chút so với 1 vòng đầy đủ
+      }, AUTO_ATTACK_DELAY / 2); 
       return () => clearTimeout(attackTimeout);
     }
   }, [autoAttack, gameState, battleState]);
@@ -128,25 +128,20 @@ const TowerExplorerGame = () => {
     setGameState('fighting');
   };
 
-  // THAY ĐỔI: TÁI CẤU TRÚC HOÀN TOÀN HÀM TẤN CÔNG ĐỂ TẠO NHỊP ĐỘ
   const attackMonster = () => {
     if (!battleState || battleState.turn !== 'player') return;
 
-    // --- Lượt của người chơi ---
-    setBattleState(prev => ({ ...prev, turn: 'attacking' })); // Chuyển sang trạng thái trung gian để tránh double-click
+    setBattleState(prev => ({ ...prev, turn: 'attacking' })); 
     const damage = Math.max(1, playerStats.attack - Math.floor(Math.random() * 5));
     const newMonsterHealth = Math.max(0, battleState.monsterHealth - damage);
     
-    // 1. Hiệu ứng tấn công ngay lập tức
     setAnimationState({ playerHit: false, monsterHit: true });
     setTimeout(() => setAnimationState(prev => ({ ...prev, monsterHit: false })), 500);
 
-    // 2. Delay một chút rồi mới cập nhật HP và log (Impact Delay)
     setTimeout(() => {
       let newLog = [...battleState.battleLog, `You dealt ${damage} damage!`];
       setBattleState(prev => ({ ...prev, monsterHealth: newMonsterHealth, battleLog: newLog }));
 
-      // 3. Kiểm tra quái vật đã bị hạ gục chưa
       if (newMonsterHealth <= 0) {
         const floorRewards = generateRewards(currentFloor);
         setRewards(floorRewards);
@@ -158,19 +153,15 @@ const TowerExplorerGame = () => {
         return;
       }
       
-      // 4. Chuyển sang lượt quái vật sau một khoảng trễ (Action Delay)
       setBattleState(prev => ({...prev, turn: 'monster'}));
 
       setTimeout(() => {
-        // --- Lượt của quái vật ---
         const monsterDamage = Math.max(1, battleState.monster.attack - playerStats.defense + Math.floor(Math.random() * 3));
         const newPlayerHealth = Math.max(0, battleState.playerHealth - monsterDamage);
 
-        // 5. Hiệu ứng quái vật tấn công
         setAnimationState({ playerHit: true, monsterHit: false });
         setTimeout(() => setAnimationState(prev => ({ ...prev, playerHit: false })), 500);
         
-        // 6. Delay một chút rồi mới cập nhật HP người chơi và log (Impact Delay)
         setTimeout(() => {
           let monsterAttackLog = [...battleState.battleLog, `You dealt ${damage} damage!`, `${battleState.monster.name} dealt ${monsterDamage} damage!`];
           
@@ -178,7 +169,6 @@ const TowerExplorerGame = () => {
             setBattleState(prev => ({ ...prev, playerHealth: 0, battleLog: [...monsterAttackLog, "You have been defeated!"] }));
             setGameState('defeat');
           } else {
-            // 7. Kết thúc lượt, trả quyền điều khiển về cho người chơi
             setBattleState(prev => ({ ...prev, playerHealth: newPlayerHealth, battleLog: monsterAttackLog, turn: 'player' }));
           }
         }, IMPACT_DELAY);
@@ -250,12 +240,11 @@ const TowerExplorerGame = () => {
 
           {gameState === 'fighting' && battleState && (
             <div className="w-full h-full flex flex-col justify-between animate-fade-in">
-                <div className="text-center mb-2 animate-fade-in">
+                {/* THAY ĐỔI: Đơn giản hóa chỉ báo lượt và ổn định layout */}
+                <div className="text-center mb-2 animate-fade-in h-[28px] flex items-center justify-center">
                     {battleState.monsterHealth > 0 ? (
-                        <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
-                            {battleState.turn === 'player' && "Your Turn"}
-                            {battleState.turn === 'monster' && `${battleState.monster.name}'s Turn`}
-                            {battleState.turn === 'attacking' && "Attacking..."}
+                        <h4 className={`text-xl font-bold transition-colors duration-300 ${battleState.turn === 'monster' ? 'text-red-400' : 'text-green-400'}`}>
+                            {battleState.turn === 'monster' ? `${battleState.monster.name}'s Turn` : "Your Turn"}
                         </h4>
                     ) : (
                         <h4 className="text-xl font-bold text-yellow-400">Battle Over!</h4>
