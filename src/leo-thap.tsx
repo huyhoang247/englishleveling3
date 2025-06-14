@@ -104,10 +104,21 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
                         className={`w-full flex items-center justify-between p-4 rounded-lg border ${borderColor} ${bgColor} transition-all duration-200 transform hover:scale-105`}
                     >
                         <div className="flex items-center">
-                            <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>
+                            {/* Chỉ hiển thị icon lớn cho tầng hiện tại và tầng bị khóa */}
+                            {status !== 'completed' && (
+                                <span className={`text-2xl mr-4 ${isLocked ? 'opacity-50' : ''}`}>{icon}</span>
+                            )}
                             <div>
                                 <h3 className={`font-bold text-lg text-left ${textColor}`}>Floor {floor}</h3>
-                                {status === 'completed' && <p className="text-xs text-green-400/80">Re-enter for rewards</p>}
+                                {/* Hiển thị tick nhỏ và chữ Cleared cho tầng đã hoàn thành */}
+                                {status === 'completed' && (
+                                    <div className="flex items-center mt-1 text-xs text-green-400/80">
+                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Cleared</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <span className={`font-semibold px-3 py-1 rounded-full text-sm ${textColor}`}>{label}</span>
