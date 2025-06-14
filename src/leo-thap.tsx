@@ -387,17 +387,10 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
              null
         )}
         {/* === END: MODIFIED HEADER === */}
-
         
-        {gameState !== 'floor_selection' && (
-            <div className="p-4 bg-black/20 animate-fade-in"><div className="flex justify-around items-center text-sm md:text-base">
-                <div className="flex items-center space-x-2" title="Health"><span className="text-lg">❤️</span><span className="font-semibold">{battleState?.playerHealth ?? playerStats.health}/{playerStats.maxHealth}</span></div>
-                <div className="flex items-center space-x-2" title="Attack"><span className="text-lg">⚔️</span><span className="font-semibold">{playerStats.attack}</span></div>
-                <div className="flex items-center space-x-2" title="Defense"><span className="text-lg">🛡️</span><span className="font-semibold">{playerStats.defense}</span></div>
-                <div className="flex items-center space-x-2" title="Coins"><span className="text-yellow-400 text-lg">💰</span><span className="font-semibold">{playerStats.coins}</span></div>
-                <div className="flex items-center space-x-2" title="Gems"><span className="text-purple-400 text-lg">💎</span><span className="font-semibold">{playerStats.gems}</span></div>
-            </div></div>
-        )}
+        {/* === START: STATS BAR REMOVED === */}
+        {/* The player stats bar that was here has been removed. */}
+        {/* === END: STATS BAR REMOVED === */}
         
         <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900 overflow-hidden">
            {gameState === 'floor_selection' && <FloorSelectionScreen highestFloorCleared={highestFloorCleared} onSelectFloor={handleSelectFloor} />}
