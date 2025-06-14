@@ -92,8 +92,8 @@ const FloorSelectionScreen = ({ highestFloorCleared, onSelectFloor }) => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center p-4 animate-fade-in">
-        <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto pr-2 flex-grow">
+    <div className="w-full h-full flex flex-col items-center animate-fade-in">
+        <div ref={scrollRef} className="w-full max-w-md space-y-3 overflow-y-auto p-4 flex-grow">
             {floorsToDisplay.map(floor => {
                 const status = getFloorStatus(floor);
                 const { icon, label, bgColor, textColor, borderColor } = getStatusInfo(status);
