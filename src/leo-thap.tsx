@@ -221,9 +221,9 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
   );
 
   return (
-    <div className="w-full h-full bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
+    // <<<< THAY ĐỔI: Sử dụng `fixed inset-0` để component chiếm toàn bộ vùng an toàn của màn hình >>>>
+    <div className="fixed inset-0 z-40 bg-gray-800/50 backdrop-blur-sm text-gray-100 font-sans animate-fade-in">
       <GameStyles />
-      {/* <<<< THAY ĐỔI 1: Gỡ bỏ `overflow-hidden` >>>> */}
       <div className="w-full h-full bg-gray-900/80 backdrop-blur-lg flex flex-col relative animate-fade-in-up">
         
         <button
@@ -250,7 +250,6 @@ const TowerExplorerGame = ({ onClose }: TowerExplorerGameProps) => {
             </div>
         </div>
         
-        {/* <<<< THAY ĐỔI 2: Thêm `min-h-0` >>>> */}
         <div className="flex-grow min-h-0 relative flex flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-800 to-gray-900 overflow-y-auto">
            {gameState === 'playing' && (
             <div className="text-center text-white flex flex-col justify-center items-center h-full animate-fade-in">
