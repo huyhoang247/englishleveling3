@@ -644,9 +644,9 @@ const Blacksmith = ({ onClose }) => {
                   return (
                     <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden will-change-transform ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
                       {isEquipment && item.level > 0 && (
-                          <div className="absolute top-0 right-0 flex items-center justify-center w-4 h-4 bg-black/70 rounded-bl-lg z-20 border-b border-l border-white/10">
-                              <span className="text-white font-bold text-[10px] -translate-y-px">
-                                {item.level}
+                          <div className="absolute top-0 right-0 flex items-center justify-center bg-black/50 px-1 rounded-bl-md z-20 border-b border-l border-white/10">
+                              <span className="text-white font-bold text-[8px] opacity-70 leading-none py-0.5">
+                                Lv.{item.level}
                               </span>
                           </div>
                       )}
