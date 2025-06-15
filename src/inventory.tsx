@@ -210,8 +210,10 @@ const InventoryItem = memo(({ item, onItemClick }: { item: any, onItemClick: (it
       </div>
       
       {isEquipment && item.level !== undefined && (
-          <div className="absolute top-0.5 right-1 text-white text-[10px] font-bold z-20 text-outline">
-              Lv.{item.level}
+          <div className="absolute top-0 left-0 flex items-center justify-center w-5 h-5 bg-black/70 rounded-bl-md rounded-br-md z-20 border-b border-r border-white/10">
+              <span className="text-white font-bold text-xs -translate-y-px">
+                {item.level}
+              </span>
           </div>
       )}
 
@@ -466,7 +468,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
         .is-scrolling .group .group-hover\\:scale-110{transform:none!important}
         .inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}
         .inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}
-        .text-outline { text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
       `}</style>
       
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
