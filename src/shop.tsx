@@ -397,7 +397,8 @@ const GameShopUI = ({ onClose }) => {
             <div 
                 className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]">
             </div>
-            <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
+            {/* ===== FIX APPLIED HERE: Added pb-24 for bottom padding ===== */}
+            <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24">
                 {/* --- Main Content --- */}
                 <main>
                     {/* Header: Title and User Wallet */}
