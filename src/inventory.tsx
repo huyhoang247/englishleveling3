@@ -210,9 +210,9 @@ const InventoryItem = memo(({ item, onItemClick }: { item: any, onItemClick: (it
       </div>
       
       {isEquipment && item.level !== undefined && (
-          <div className="absolute top-0 right-0 flex items-center justify-center w-4 h-4 bg-black/70 rounded-bl-lg z-20 border-b border-l border-white/10">
-              <span className="text-white font-bold text-[10px] -translate-y-px">
-                {item.level}
+          <div className="absolute top-0 right-0 flex items-center justify-center bg-black/50 px-1.5 py-0.5 rounded-bl-lg z-20 border-b border-l border-white/10">
+              <span className="text-white font-bold text-[10px] -translate-y-px opacity-70">
+                Lv.{item.level}
               </span>
           </div>
       )}
