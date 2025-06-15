@@ -231,11 +231,10 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
           <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ${animation ? 'opacity-0' : 'opacity-100'} z-40`} onClick={onClose}></div>
           
-          {/* CẬP NHẬT: Chia layout modal thành 3 phần (header, content, footer) bằng flexbox để content có thể cuộn độc lập */}
           <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] transition-all duration-300 ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 flex flex-col`}>
             
             {/* ---- PHẦN 1: HEADER (CỐ ĐỊNH) ---- */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 border-b border-gray-700/50 pb-4">
               <div className="flex justify-between items-start mb-4">
                 <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3>
                 <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
@@ -254,38 +253,37 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
                   </div>
                 </div>
               </div>
+
+              {/* CẬP NHẬT: Thanh Tab được chuyển lên đây, là một phần của header cố định */}
+              {hasSkills && (
+                  <nav className="flex -mb-[18px] space-x-4 px-1">
+                      <button
+                          onClick={() => setActiveModalTab('info')}
+                          className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                              activeModalTab === 'info'
+                                  ? 'border-yellow-400 text-yellow-300'
+                                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                          }`}
+                      >
+                          Thông Tin
+                      </button>
+                      <button
+                          onClick={() => setActiveModalTab('skills')}
+                          className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                              activeModalTab === 'skills'
+                                  ? 'border-yellow-400 text-yellow-300'
+                                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                          }`}
+                      >
+                          Kỹ Năng
+                      </button>
+                  </nav>
+              )}
             </div>
 
-            {/* ---- PHẦN 2: CONTENT (CÓ THỂ CUỘN) ---- */}
-            <div className="flex-1 min-h-[200px] overflow-y-auto pr-2 -mr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-              {hasSkills && (
-                <div className="w-full border-y border-gray-700/60 my-4">
-                    <nav className="flex -mb-px space-x-4 px-1">
-                        <button
-                            onClick={() => setActiveModalTab('info')}
-                            className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                                activeModalTab === 'info'
-                                    ? 'border-yellow-400 text-yellow-300'
-                                    : 'border-transparent text-gray-500 hover:text-gray-300'
-                            }`}
-                        >
-                            Thông Tin
-                        </button>
-                        <button
-                            onClick={() => setActiveModalTab('skills')}
-                            className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                                activeModalTab === 'skills'
-                                    ? 'border-yellow-400 text-yellow-300'
-                                    : 'border-transparent text-gray-500 hover:text-gray-300'
-                            }`}
-                        >
-                            Kỹ Năng
-                        </button>
-                    </nav>
-                </div>
-              )}
-              
-              <div className="modal-tab-content pt-1 pb-4">
+            {/* ---- PHẦN 2: CONTENT (CÓ THỂ CUỘN VÀ ẨN THANH CUỘN) ---- */}
+            <div className="flex-1 min-h-[200px] overflow-y-auto scrollbar-hidden">
+              <div className="modal-tab-content pt-4 pb-2">
                 {(!hasSkills || activeModalTab === 'info') ? (
                     <>
                         <p className="text-gray-300 leading-relaxed text-sm mb-4">{item.description}</p>
@@ -588,16 +586,17 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
         .is-scrolling .group:hover{transform:none!important;filter:none!important}
         .is-scrolling .group .group-hover\\:opacity-100{opacity:0!important}
         .is-scrolling .group .group-hover\\:scale-110{transform:none!important}
-        .inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}
-        .inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}
         @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); }
+        /* CẬP NHẬT: Thêm class để ẩn thanh cuộn mà vẫn cuộn được */
+        .scrollbar-hidden::-webkit-scrollbar { display: none; }
+        .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
       
       {/* 2. MAIN CONTENT - Tự động co giãn (flex-1) và có thanh cuộn riêng */}
-      <main ref={gridRef} className={`flex-1 overflow-y-auto inventory-grid-scrollbar-hidden ${scrollingClass}`}>
+      <main ref={gridRef} className={`flex-1 overflow-y-auto scrollbar-hidden ${scrollingClass}`}>
         {activeTab === 'inventory' ? (
             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 pr-1 pb-4">
               {filteredInventory.map((item: any) => (
