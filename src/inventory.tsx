@@ -123,7 +123,7 @@ const formatStatName = (stat: string) => {
 const renderItemStats = (item: any) => {
     if (!item.stats) return null;
     return (
-      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 bg-black/20 p-3 rounded-lg border border-gray-700/50 text-sm">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 bg-black/20 p-3 rounded-lg border border-gray-700/50 text-sm">
         {Object.entries(item.stats).map(([stat, value]) => (
           <div key={stat} className="flex justify-between items-center">
             <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
@@ -134,7 +134,7 @@ const renderItemStats = (item: any) => {
     );
 };
 
-// --- CẬP NHẬT: COMPONENT HIỂN THỊ KỸ NĂNG CỦA VẬT PHẨM VỚI LOGIC KHÓA/MỞ KHÓA ---
+// --- CẬP NHẬT: COMPONENT HIỂN THỊ KỸ NĂNG CỦA VẬT PHẨM VỚI THIẾT KẾ TAB MỚI ---
 const getUnlockedSkillCount = (rarity: string) => {
     switch(rarity) {
         case 'D': return 1;
@@ -149,31 +149,51 @@ const getUnlockedSkillCount = (rarity: string) => {
 
 const renderItemSkills = (item: any) => {
     if (!item.skills || item.skills.length === 0) return null;
-    
+
     const unlockedCount = getUnlockedSkillCount(item.rarity);
     const unlockRanks = ['D', 'B', 'A', 'S', 'SR'];
 
     return (
-        <div className="mt-5 border-t border-gray-700/50 pt-5">
-            <h4 className="text-base font-bold text-yellow-300 mb-3">Kỹ Năng Bị Động</h4>
-            <div className="space-y-3">
-                {item.skills.map((skill: any, index: number) => {
-                    const isLocked = index >= unlockedCount;
-                    const requiredRank = unlockRanks[index];
+        <div className="space-y-2.5">
+            {item.skills.map((skill: any, index: number) => {
+                const isLocked = index >= unlockedCount;
+                const requiredRank = unlockRanks[index];
 
-                    return (
-                        <div key={index} className={`flex items-start gap-3 bg-black/20 p-3 rounded-lg border transition-all ${isLocked ? 'border-gray-800/70 opacity-50' : 'border-gray-700/50 hover:border-gray-600'}`}>
-                            <div className={`flex-shrink-0 w-10 h-10 bg-gray-900/80 rounded-md flex items-center justify-center text-xl ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
-                                {isLocked ? '🔒' : skill.icon}
-                            </div>
-                            <div className="flex-1">
-                                <h5 className={`font-semibold ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>{isLocked ? `Kỹ Năng Bị Khóa` : skill.name}</h5>
-                                <p className="text-xs text-gray-400 mt-1">{isLocked ? `Mở khóa ở Hạng ${requiredRank}` : skill.description}</p>
-                            </div>
+                return (
+                    <div
+                        key={index}
+                        className={`flex items-center gap-3 bg-black/20 p-2.5 rounded-lg border transition-all duration-200 ${
+                            isLocked
+                                ? 'border-gray-800/70 opacity-60'
+                                : 'border-gray-700/50'
+                        }`}
+                    >
+                        <div className={`relative flex-shrink-0 w-10 h-10 bg-gray-900/80 rounded-md flex items-center justify-center text-xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
+                            {skill.icon}
+                            {isLocked && (
+                                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                                    <span className="text-lg">🔒</span>
+                                </div>
+                            )}
                         </div>
-                    );
-                })}
-            </div>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-baseline">
+                                <h5 className={`font-semibold text-sm ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>
+                                    {skill.name}
+                                </h5>
+                                {isLocked && (
+                                    <span className="text-xs text-yellow-500/80 font-medium bg-black/30 px-1.5 py-0.5 rounded">
+                                        Hạng {requiredRank}
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                                {skill.description}
+                            </p>
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 };
@@ -193,50 +213,98 @@ const ItemTooltip = memo(({ item, isEquipped }: { item: any, isEquipped?: boolea
 ));
 
 const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, context }: { item: any, isOpen: boolean, onClose: () => void, animation: boolean, onEquip: (item: any) => void, onUnequip: (item: any) => void, context: 'inventory' | 'profile' | null }) => {
+    const [activeModalTab, setActiveModalTab] = useState<'info' | 'skills'>('info');
+
+    useEffect(() => {
+        if (isOpen) {
+            setActiveModalTab('info');
+        }
+    }, [item, isOpen]);
+
     if (!isOpen || !item) return null;
     
     const isEquippable = equipmentSlotTypes.includes(item.type);
     const isEquipped = context === 'profile';
+    const hasSkills = item.skills && item.skills.length > 0;
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
-        <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ${animation ? 'opacity-0' : 'opacity-100'} z-40`} onClick={onClose}></div>
-        <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transition-all duration-300 ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}>
-          <div className="flex justify-between items-start mb-4 border-b border-gray-700/50 pb-4">
-            <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3>
-            <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl bg-black/30 rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}>
-              {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2" /> : <div className="text-2xl sm:text-3xl relative z-0">{item.icon}</div>}
+          <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ${animation ? 'opacity-0' : 'opacity-100'} z-40`} onClick={onClose}></div>
+          <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transition-all duration-300 ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}>
+            
+            <div className="flex justify-between items-start mb-4">
+              <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3>
+              <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center mb-2 gap-2 flex-wrap">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} bg-gray-800/70 border border-gray-700 capitalize`}>{getRarityDisplayName(item.rarity)}</span>
-                <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
-                {item.level !== undefined && <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">Level: {item.level}</span>}
-                {item.quantity > 1 && <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>}
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-4 border-b border-gray-700/50 pb-4">
+              <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl bg-black/30 rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}>
+                {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2" /> : <div className="text-2xl sm:text-3xl relative z-0">{item.icon}</div>}
               </div>
-              <p className="text-gray-300 leading-relaxed text-xs">{item.description}</p>
+              <div className="flex-1">
+                <div className="flex items-center mb-2 gap-2 flex-wrap">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} bg-gray-800/70 border border-gray-700 capitalize`}>{getRarityDisplayName(item.rarity)}</span>
+                  <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
+                  {item.level !== undefined && <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">Level: {item.level}</span>}
+                  {item.quantity > 1 && <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>}
+                </div>
+              </div>
             </div>
-          </div>
-          {renderItemStats(item)}
-          {renderItemSkills(item)}
-          {item.type !== 'currency' && (
-            <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
-              {isEquippable && (
-                isEquipped ? 
-                <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Gỡ bỏ</button>
-                :
-                <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Trang bị</button>
+
+            {hasSkills && (
+              <div className="w-full border-b border-gray-700/60 mb-4">
+                  <nav className="flex -mb-px space-x-4">
+                      <button
+                          onClick={() => setActiveModalTab('info')}
+                          className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                              activeModalTab === 'info'
+                                  ? 'border-yellow-400 text-yellow-300'
+                                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                          }`}
+                      >
+                          Thông Tin Chi Tiết
+                      </button>
+                      <button
+                          onClick={() => setActiveModalTab('skills')}
+                          className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                              activeModalTab === 'skills'
+                                  ? 'border-yellow-400 text-yellow-300'
+                                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                          }`}
+                      >
+                          Kỹ Năng
+                      </button>
+                  </nav>
+              </div>
+            )}
+            
+            <div className="min-h-[150px] modal-tab-content">
+              {(!hasSkills || activeModalTab === 'info') ? (
+                  <>
+                      <p className="text-gray-300 leading-relaxed text-sm mb-4">{item.description}</p>
+                      {renderItemStats(item)}
+                  </>
+              ) : (
+                  renderItemSkills(item)
               )}
-              <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Bỏ</button>
             </div>
-          )}
+
+            {item.type !== 'currency' && (
+              <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
+                {isEquippable && (
+                  isEquipped ? 
+                  <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Gỡ bỏ</button>
+                  :
+                  <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Trang bị</button>
+                )}
+                <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Bỏ</button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
     );
 };
+
 
 const InventoryItem = memo(({ item, onItemClick }: { item: any, onItemClick: (item: any) => void }) => {
   const glowClass = getRarityGlowClass(item.rarity);
@@ -513,6 +581,8 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
         .is-scrolling .group .group-hover\\:scale-110{transform:none!important}
         .inventory-grid-scrollbar-hidden::-webkit-scrollbar{display:none}
         .inventory-grid-scrollbar-hidden{-ms-overflow-style:none;scrollbar-width:none}
+        @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); }
       `}</style>
       
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
@@ -577,4 +647,3 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
     </div>
   );
 }
-// --- END OF FILE inventory.tsx ---
