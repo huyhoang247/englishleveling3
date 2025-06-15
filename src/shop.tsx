@@ -92,23 +92,121 @@ const sampleItems = [
         description: 'Thanh kiếm được rèn từ vảy của rồng lửa cổ đại, có khả năng thiêu đốt mọi kẻ thù.',
     },
     {
+        id: 5,
+        name: 'Búa Sét Thần Thor',
+        type: 'Vũ khí',
+        rarity: 'Huyền thoại',
+        price: 3250,
+        image: 'https://placehold.co/600x600/1a1a2e/ffd700?text=🔨',
+        description: 'Triệu hồi sức mạnh của sấm sét để tiêu diệt kẻ thù và làm choáng các mục tiêu xung quanh.'
+    },
+    {
+        id: 9,
+        name: 'Dao Găm Bóng Đêm',
+        type: 'Vũ khí',
+        rarity: 'Hiếm',
+        price: 950,
+        image: 'https://placehold.co/600x600/1a1a2e/483d8b?text=🔪',
+        description: 'Tẩm độc, gây sát thương theo thời gian và làm chậm kẻ địch.'
+    },
+    {
+        id: 10,
+        name: 'Trường Thương Băng Giá',
+        type: 'Vũ khí',
+        rarity: 'Sử thi',
+        price: 1850,
+        image: 'https://placehold.co/600x600/1a1a2e/00ffff?text=🔱',
+        description: 'Mỗi đòn đánh có tỉ lệ làm đóng băng mục tiêu trong thoáng chốc.'
+    },
+    {
+        id: 11,
+        name: 'Cung Tên Tinh Linh',
+        type: 'Vũ khí',
+        rarity: 'Sử thi',
+        price: 2100,
+        image: 'https://placehold.co/600x600/1a1a2e/98fb98?text=🏹',
+        description: 'Bắn ra những mũi tên ánh sáng có khả năng xuyên qua nhiều mục tiêu.'
+    },
+    {
+        id: 12,
+        name: 'Rìu Chiến Nham Thạch',
+        type: 'Vũ khí',
+        rarity: 'Huyền thoại',
+        price: 3100,
+        image: 'https://placehold.co/600x600/1a1a2e/dc143c?text=🪓',
+        description: 'Vũ khí cực nặng, tạo ra một vùng dung nham gây sát thương diện rộng khi bổ xuống đất.'
+    },
+    {
+        id: 13,
+        name: 'Song Kiếm Gió Lốc',
+        type: 'Vũ khí',
+        rarity: 'Sử thi',
+        price: 2350,
+        image: 'https://placehold.co/600x600/1a1a2e/afeeee?text=⚔️',
+        description: 'Tăng tốc độ di chuyển và tốc độ đánh của người sở hữu.'
+    },
+    {
+        id: 14,
+        name: 'Quyền Trượng Mặt Trăng',
+        type: 'Vũ khí',
+        rarity: 'Hiếm',
+        price: 1350,
+        image: 'https://placehold.co/600x600/1a1a2e/e6e6fa?text=🌙',
+        description: 'Tích tụ năng lượng ánh trăng để bắn ra một luồng sát thương phép mạnh mẽ.'
+    },
+    {
+        id: 15,
+        name: 'Nỏ Liên Châu',
+        type: 'Vũ khí',
+        rarity: 'Hiếm',
+        price: 1100,
+        image: 'https://placehold.co/600x600/1a1a2e/8b4513?text=🏹',
+        description: 'Có khả năng bắn ra 3 mũi tên cùng một lúc với độ chính xác cao.'
+    },
+    {
+        id: 16,
+        name: 'Đoản Đao Cổ Xưa',
+        type: 'Vũ khí',
+        rarity: 'Phổ thông',
+        price: 450,
+        image: 'https://placehold.co/600x600/1a1a2e/a9a9a9?text=🗡️',
+        description: 'Một vũ khí đáng tin cậy cho những nhà thám hiểm mới bắt đầu.'
+    },
+    {
+        id: 17,
+        name: 'Gậy Phép Thuật Sơ Cấp',
+        type: 'Vũ khí',
+        rarity: 'Phổ thông',
+        price: 400,
+        image: 'https://placehold.co/600x600/1a1a2e/deb887?text=🪄',
+        description: 'Dành cho các pháp sư tập sự, bắn ra những quả cầu năng lượng nhỏ.'
+    },
+    {
+        id: 18,
+        name: 'Đại Đao Hủy Diệt',
+        type: 'Vũ khí',
+        rarity: 'Huyền thoại',
+        price: 3500,
+        image: 'https://placehold.co/600x600/1a1a2e/4b0082?text=🔪',
+        description: 'Càng ít máu, sát thương của đại đao càng trở nên khủng khiếp.'
+    },
+    {
         id: 2,
         name: 'Giáp Thiên Thần',
         type: 'Trang bị',
         rarity: 'Sử thi',
         price: 1820,
         image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️',
-        description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.',
-        featured: true, // Item này sẽ được làm nổi bật
+        description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.'
     },
     {
-        id: 3,
-        name: 'Ngọc Tái Sinh',
-        type: 'Vật phẩm',
-        rarity: 'Hiếm',
-        price: 975,
-        image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎',
-        description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.'
+        id: 6,
+        name: 'Khiên Bất Diệt',
+        type: 'Trang bị',
+        rarity: 'Sử thi',
+        price: 2000,
+        image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️',
+        description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.'
     },
     {
         id: 4,
@@ -120,22 +218,13 @@ const sampleItems = [
         description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.'
     },
     {
-        id: 5,
-        name: 'Búa Sét Thần Thor',
-        type: 'Vũ khí',
-        rarity: 'Huyền thoại',
-        price: 3250,
-        image: 'https://placehold.co/600x600/1a1a2e/ffd700?text=🔨',
-        description: 'Triệu hồi sức mạnh của sấm sét để tiêu diệt kẻ thù và làm choáng các mục tiêu xung quanh.'
-    },
-    {
-        id: 6,
-        name: 'Khiên Bất Diệt',
-        type: 'Trang bị',
-        rarity: 'Sử thi',
-        price: 2000,
-        image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️',
-        description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.'
+        id: 3,
+        name: 'Ngọc Tái Sinh',
+        type: 'Vật phẩm',
+        rarity: 'Hiếm',
+        price: 975,
+        image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎',
+        description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.'
     },
     {
         id: 7,
@@ -197,42 +286,9 @@ const ShopItemCard = ({ item, onSelect }) => {
     );
 };
 
-
-// --- Component Vật phẩm Nổi bật ---
-const FeaturedItem = ({ item, onSelect }) => {
-    if (!item) return null;
-    const config = rarityConfig[item.rarity] || rarityConfig['Phổ thông'];
-    return (
-        <div 
-            onClick={() => onSelect(item)}
-            className={`relative grid grid-cols-1 md:grid-cols-2 gap-6 items-center bg-slate-800/50 rounded-xl p-6 md:p-8 border border-slate-700 shadow-2xl shadow-${config.shadow} cursor-pointer`}>
-            {/* Left Side: Image */}
-            <div className="flex items-center justify-center">
-                   <img src={item.image} alt={item.name} className="w-full max-w-xs md:max-w-sm rounded-lg object-contain drop-shadow-2xl" />
-            </div>
-            {/* Right Side: Details */}
-            <div className="flex flex-col text-center md:text-left">
-                <span className={`font-bold text-sm uppercase tracking-widest text-${config.color}`}>Vật phẩm nổi bật</span>
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white my-2">{item.name}</h2>
-                <p className="text-slate-300 mb-6 text-sm md:text-base">{item.description}</p>
-                   <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
-                        <div className="flex items-center space-x-2 bg-slate-900/50 px-4 py-2 rounded-lg">
-                            <Gem className={`w-6 h-6 text-${config.color}`} />
-                            <span className="text-2xl font-bold text-white">{item.price}</span>
-                        </div>
-                        <button className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:from-cyan-400 hover:to-blue-400 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                            Xem chi tiết
-                        </button>
-                    </div>
-            </div>
-        </div>
-    );
-};
-
 // --- Component Thanh Tabs Danh mục (Thay thế cho Sidebar) ---
 const CategoryTabs = ({ activeCategory, setActiveCategory }) => {
     const categories = [
-        { name: 'Nổi Bật', icon: Star },
         { name: 'Vũ khí', icon: Swords },
         { name: 'Trang bị', icon: Shield },
         { name: 'Trang phục', icon: Sparkles },
@@ -316,14 +372,10 @@ const ItemDetailModal = ({ item, onClose }) => {
 
 // --- Component Chính Của Cửa Hàng ---
 const GameShopUI = ({ onClose }) => {
-    const [activeCategory, setActiveCategory] = useState('Nổi Bật');
+    const [activeCategory, setActiveCategory] = useState('Vũ khí');
     const [selectedItem, setSelectedItem] = useState(null);
 
-    const featuredItem = sampleItems.find(item => item.featured);
-    const gridItems = sampleItems.filter(item => {
-        if (activeCategory === 'Nổi Bật') return true;
-        return item.type === activeCategory;
-    });
+    const gridItems = sampleItems.filter(item => item.type === activeCategory);
     
     const handleSelectItem = (item) => {
         setSelectedItem(item);
@@ -369,13 +421,6 @@ const GameShopUI = ({ onClose }) => {
 
                     {/* Category Tabs */}
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-                    
-                    {/* Featured Item Section */}
-                    {activeCategory === 'Nổi Bật' && featuredItem && (
-                        <section className="mb-10">
-                            <FeaturedItem item={featuredItem} onSelect={handleSelectItem} />
-                        </section>
-                    )}
 
                     {/* Items Grid */}
                     <section>
