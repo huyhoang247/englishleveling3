@@ -41,29 +41,28 @@ const getHydratedInventory = () => {
       console.warn(`Item with id ${playerItem.id} not found in database.`);
       return null;
     }
+    // Logic gỡ trang bị, nếu có 5 vũ khí cùng loại lv1 thì cứ để 5 ô riêng
+    const isEquipment = equipmentSlotTypes.includes(baseItem.type);
+    if (isEquipment && playerItem.quantity > 1) {
+        const items = [];
+        for (let i = 0; i < playerItem.quantity; i++) {
+            items.push({
+                ...baseItem,
+                ...playerItem,
+                quantity: 1, // Mỗi trang bị là một vật phẩm riêng lẻ
+                instanceId: `${playerItem.instanceId}_${i}`, // Tạo instanceId duy nhất
+                stats: playerItem.stats ? { ...baseItem.stats, ...playerItem.stats } : baseItem.stats,
+            });
+        }
+        return items;
+    }
+    
     return {
       ...baseItem,
       ...playerItem,
       stats: playerItem.stats ? { ...baseItem.stats, ...playerItem.stats } : baseItem.stats,
     };
-  }).filter(item => item !== null); 
-};
-
-const groupInventoryItems = (items: any[]) => {
-    const grouped = new Map();
-    items.forEach(item => {
-        if (!item) return;
-        const key = item.name.split(' (')[0]; 
-        const { instanceId, quantity, stats, level, currentExp, requiredExp, description } = item;
-        const variant = { id: instanceId, quantity, stats, level, currentExp, requiredExp, description };
-        if (!grouped.has(key)) {
-            const { name, ...baseProps } = item;
-            grouped.set(key, { ...baseProps, name: key, variants: [variant] });
-        } else {
-            grouped.get(key).variants.push(variant);
-        }
-    });
-    return Array.from(grouped.values());
+  }).flat().filter(item => item !== null); 
 };
 
 const getRarityDisplayName = (rarity: string) => {
@@ -142,10 +141,9 @@ const ItemTooltip = memo(({ item, isEquipped }: { item: any, isEquipped?: boolea
     <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-950 rounded-md border border-gray-700 shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
       <div className={`font-bold text-sm mb-0.5 ${getRarityTextColor(item.rarity)}`}>{item.name}</div>
       <div className="text-gray-500 capitalize text-xs mb-1">{getRarityDisplayName(item.rarity)} • {item.type} {isEquipped && <span className="text-green-400">(Đã trang bị)</span>}</div>
-      {item.variants && item.variants.length > 1 && <div className="text-yellow-400 text-xs mb-1">{item.variants.length} loại khác nhau</div>}
       <div className="text-gray-300 text-xs leading-relaxed">
-        { (item.variants?.[0]?.description || item.description || '').slice(0, 70) }
-        { (item.variants?.[0]?.description || item.description || '').length > 70 ? '...' : '' }
+        { (item.description || '').slice(0, 70) }
+        { (item.description || '').length > 70 ? '...' : '' }
       </div>
     </div>
 ));
@@ -195,53 +193,35 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
     );
 };
 
-const VariantSelectionModal = ({ itemGroup, isOpen, onClose, onSelectVariant }) => {
-    if (!isOpen || !itemGroup) return null;
-    return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-        <div className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-sm p-5">
-          <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
-             <h3 className={`text-xl font-bold ${getRarityTextColor(itemGroup.rarity)}`}>Chọn biến thể: {itemGroup.name}</h3>
-             <button onClick={onClose} className="text-gray-500 hover:text-white"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
-          </div>
-          <ul className="space-y-2 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {itemGroup.variants.map((variant, index) => (
-              <li key={variant.id || index} onClick={() => onSelectVariant(variant)} className="flex items-center justify-between p-3 bg-gray-800/70 rounded-lg cursor-pointer hover:bg-gray-700/90 border border-gray-700 hover:border-blue-500 transition-all duration-200">
-                <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 flex items-center justify-center text-3xl bg-black/30 rounded-md border-2 ${getRarityColor(itemGroup.rarity)}`}>{itemGroup.icon.startsWith('http') ? <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-1" /> : itemGroup.icon}</div>
-                    <div>
-                        <div className="font-semibold text-white">{variant.level ? `Level ${variant.level}` : itemGroup.name}</div>
-                        <div className="text-xs text-gray-400">Sát thương: {variant.stats?.damage || 'N/A'}</div>
-                    </div>
-                </div>
-                <div className="text-right"><span className="font-bold text-lg text-gray-200">x{variant.quantity}</span></div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-};
-
-const InventoryItem = memo(({ itemGroup, onItemClick }: { itemGroup: any, onItemClick: (item: any) => void }) => {
-  const totalQuantity = itemGroup.variants.reduce((sum, v) => sum + v.quantity, 0);
-  const glowClass = getRarityGlowClass(itemGroup.rarity);
+const InventoryItem = memo(({ item, onItemClick }: { item: any, onItemClick: (item: any) => void }) => {
+  const glowClass = getRarityGlowClass(item.rarity);
+  const isEquipment = equipmentSlotTypes.includes(item.type);
 
   return (
     <div 
-      className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(itemGroup.rarity)} rounded-lg border-2 ${getRarityColor(itemGroup.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg overflow-hidden will-change-transform ${glowClass}`} 
-      onClick={() => onItemClick(itemGroup)}
+      className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg overflow-hidden will-change-transform ${glowClass}`} 
+      onClick={() => onItemClick(item)}
     >
-      {/* Icon và số lượng được đặt ở z-10 để nổi lên trên lớp ::before (hào quang) */}
       <div className="relative z-10 flex items-center justify-center w-full h-full">
-        {itemGroup.icon.startsWith('http') ? 
-          <img src={itemGroup.icon} alt={itemGroup.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-200" /> : 
-          <div className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-200">{itemGroup.icon}</div>
+        {item.icon.startsWith('http') ? 
+          <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-200" /> : 
+          <div className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-200">{item.icon}</div>
         }
       </div>
-      {totalQuantity > 1 && itemGroup.type !== 'currency' && (<div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-20 border border-white/10">x{totalQuantity}</div>)}
-      <ItemTooltip item={itemGroup} />
+      
+      {isEquipment && item.level !== undefined && (
+          <div className="absolute top-0.5 right-1 bg-black/70 text-yellow-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md z-20 border border-white/10">
+              Lv{item.level}
+          </div>
+      )}
+
+      {!isEquipment && item.quantity > 1 && item.type !== 'currency' && (
+          <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-20 border border-white/10">
+              x{item.quantity}
+          </div>
+      )}
+
+      <ItemTooltip item={item} />
     </div>
   );
 });
@@ -346,21 +326,18 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       weapon: null, helmet: null, armor: null, gloves: null, boots: null, skin: null
   });
 
-  const [selectedItemGroup, setSelectedItemGroup] = useState(null);
-  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState<any | null>(null);
   const [modalContext, setModalContext] = useState<'inventory' | 'profile' | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [animation, setAnimation] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   
-  const groupedInventory = useMemo(() => groupInventoryItems(inventory), [inventory]);
   const filteredInventory = useMemo(() => {
-    if (activeFilter === 'all') return groupedInventory;
-    return groupedInventory.filter(item => getItemCategory(item.type) === activeFilter);
-  }, [groupedInventory, activeFilter]);
+    if (activeFilter === 'all') return inventory;
+    return inventory.filter(item => getItemCategory(item.type) === activeFilter);
+  }, [inventory, activeFilter]);
   
-  const occupiedSlots = groupedInventory.length;
+  const occupiedSlots = inventory.length;
 
   let totalInventorySlots = 50; 
   if (occupiedSlots >= 81) totalInventorySlots = 100;
@@ -411,25 +388,13 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
     }, 200);
   }, []);
   
-  const closeVariantModal = useCallback(() => {
-      setIsVariantModalOpen(false);
-      setSelectedItemGroup(null);
-  }, []);
-
   const openDetailModal = useCallback((item, context: 'inventory' | 'profile') => {
       setSelectedDetailItem(item);
       setModalContext(context);
   }, []);
 
-  const handleInventoryItemClick = useCallback((itemGroup) => {
-    if (itemGroup.variants.length === 1) {
-      const singleItem = { ...itemGroup, ...itemGroup.variants[0] };
-      delete singleItem.variants;
-      openDetailModal(singleItem, 'inventory');
-    } else {
-      setSelectedItemGroup(itemGroup);
-      setIsVariantModalOpen(true);
-    }
+  const handleInventoryItemClick = useCallback((item) => {
+    openDetailModal(item, 'inventory');
   }, [openDetailModal]);
 
   const handleProfileSlotClick = useCallback((item, slotType) => {
@@ -438,15 +403,6 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       }
   }, [openDetailModal]);
   
-  const handleSelectVariant = useCallback((variant) => {
-    if (selectedItemGroup) {
-        const combinedItem = { ...selectedItemGroup, ...variant };
-        delete combinedItem.variants;
-        openDetailModal(combinedItem, 'inventory');
-        closeVariantModal();
-    }
-  }, [selectedItemGroup, closeVariantModal, openDetailModal]);
-
   const handleEquip = useCallback((itemToEquip) => {
       const slot = itemToEquip.type;
       if (!equipmentSlotTypes.includes(slot)) return;
@@ -513,14 +469,13 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
       `}</style>
       
       <ItemModal item={selectedDetailItem} isOpen={isDetailModalOpen} onClose={closeDetailModal} animation={animation} onEquip={handleEquip} onUnequip={handleUnequip} context={modalContext} />
-      <VariantSelectionModal itemGroup={selectedItemGroup} isOpen={isVariantModalOpen} onClose={closeVariantModal} onSelectVariant={handleSelectVariant}/>
       
       {/* 2. MAIN CONTENT - Tự động co giãn (flex-1) và có thanh cuộn riêng */}
       <main ref={gridRef} className={`flex-1 overflow-y-auto inventory-grid-scrollbar-hidden ${scrollingClass}`}>
         {activeTab === 'inventory' ? (
             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 gap-3 pr-1 pb-4">
-              {filteredInventory.map((itemGroup: any) => (
-                  <InventoryItem key={itemGroup.name} itemGroup={itemGroup} onItemClick={handleInventoryItemClick} />
+              {filteredInventory.map((item: any) => (
+                  <InventoryItem key={item.instanceId} item={item} onItemClick={handleInventoryItemClick} />
               ))}
               
               {Array.from({ length: Math.max(0, totalInventorySlots - filteredInventory.length) }).map((_, i) => (
