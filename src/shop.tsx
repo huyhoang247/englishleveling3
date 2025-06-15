@@ -79,6 +79,16 @@ const Tag = (props) => (
     </Icon>
 );
 
+const Gift = (props) => (
+    <Icon {...props}>
+        <rect x="3" y="8" width="18" height="4" rx="1"></rect>
+        <path d="M12 8v13"></path>
+        <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path>
+        <path d="M7.5 8a2.5 2.5 0 0 1 0-5A2.5 2.5 0 0 1 12 5.5V8"></path>
+        <path d="M16.5 8a2.5 2.5 0 0 0 0-5A2.5 2.5 0 0 0 12 5.5V8"></path>
+    </Icon>
+);
+
 
 // --- Dữ liệu mẫu cho cửa hàng ---
 const sampleItems = [
@@ -247,10 +257,10 @@ const sampleItems = [
 ];
 
 const rarityConfig = {
-    'Huyền thoại': { color: 'amber-400', shadow: 'amber-400/50' },
-    'Sử thi': { color: 'purple-500', shadow: 'purple-500/50' },
-    'Hiếm': { color: 'sky-400', shadow: 'sky-400/50' },
-    'Phổ thông': { color: 'gray-400', shadow: 'gray-400/50' },
+    'Huyền thoại': { color: 'amber-400', glow: '251, 191, 36' }, // #fbb_f_5_2_4
+    'Sử thi': { color: 'purple-500', glow: '168, 85, 247' }, // #a855f7
+    'Hiếm': { color: 'sky-400', glow: '56, 189, 248' }, // #3_8_b_df_8
+    'Phổ thông': { color: 'gray-400', glow: '156, 163, 175' }, // #9_ca_3_af
 };
 
 // --- Component Thẻ Vật phẩm trong Grid ---
@@ -324,47 +334,90 @@ const ItemDetailModal = ({ item, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4 animate-fade-in">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-4xl grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8 p-6 md:p-8 relative animate-scale-up">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <div 
+                className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 p-6 relative animate-scale-up overflow-hidden"
+                style={{ '--glow-color': config.glow }}
+            >
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-96 bg-glow -z-10 opacity-60"></div>
+                <button 
+                    onClick={onClose} 
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-20 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/80"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
                 
-                {/* Cột hình ảnh (2/5 width) */}
-                <div className="md:col-span-2 flex flex-col items-center justify-center">
-                    <img src={item.image} alt={item.name} className={`w-full h-auto max-h-[450px] object-contain rounded-lg drop-shadow-[0_0_35px_rgba(var(--shadow-color),0.5)]`} style={{ '--shadow-color': `var(--color-${config.color})` }}/>
+                {/* Cột hình ảnh */}
+                <div className="flex items-center justify-center">
+                    <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-full max-w-sm h-auto object-contain rounded-lg drop-shadow-[0_0_25px_rgba(255,255,255,0.1)] animate-float"
+                    />
                 </div>
 
-                {/* Cột thông tin (3/5 width) */}
-                <div className="md:col-span-3 flex flex-col">
-                    <span className={`text-sm font-bold uppercase tracking-wider text-${config.color}`}>{item.type}</span>
-                    <h2 className="text-4xl lg:text-5xl font-extrabold text-white my-1">{item.name}</h2>
-                    <span className={`text-lg font-bold mb-4 text-${config.color}`}>{item.rarity}</span>
+                {/* Cột thông tin */}
+                <div className="flex flex-col text-center md:text-left z-10">
+                    <h2 className={`text-3xl lg:text-4xl font-extrabold text-white my-1 text-shadow-glow`}>{item.name}</h2>
                     
-                    <p className="text-gray-300 mb-6 flex-grow">{item.description}</p>
-                    
-                    <div className="bg-slate-800/50 p-4 rounded-lg mb-6 border border-slate-700">
-                        <p className="text-sm text-gray-400">Giá vật phẩm</p>
-                        <div className="flex items-center space-x-3 mt-1">
-                            <Gem className={`w-8 h-8 text-${config.color}`} />
-                            <span className="text-3xl font-bold text-white">{item.price}</span>
+                    <hr className="border-slate-700/80 my-4" />
+
+                    {/* Thuộc tính */}
+                    <div className="mb-4">
+                        <h4 className="text-xs uppercase font-bold text-slate-400 mb-2">Thuộc tính</h4>
+                        <div className="flex gap-3 justify-center md:justify-start">
+                           <div className="flex items-center gap-2 bg-slate-800/70 px-3 py-1.5 rounded-lg border border-slate-700">
+                                <Tag className="w-4 h-4 text-slate-300" />
+                                <span className="text-sm text-slate-200 font-medium">{item.type}</span>
+                           </div>
+                           <div className="flex items-center gap-2 bg-slate-800/70 px-3 py-1.5 rounded-lg border border-slate-700">
+                                <Star className={`w-4 h-4 text-${config.color}`} />
+                                <span className={`text-sm text-${config.color} font-bold`}>{item.rarity}</span>
+                           </div>
                         </div>
                     </div>
+                    
+                    {/* Mô tả */}
+                    <div className="mb-6 flex-grow">
+                        <h4 className="text-xs uppercase font-bold text-slate-400 mb-2">Mô tả</h4>
+                        <p className="text-slate-300 text-sm leading-relaxed">{item.description}</p>
+                    </div>
 
-                    <div className="flex items-stretch gap-4">
-                        <button className={`flex-1 bg-gradient-to-r from-${config.color} to-cyan-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg`}>
-                            MUA NGAY
-                        </button>
-                        <button className="bg-slate-700 text-white font-bold p-3 rounded-lg hover:bg-slate-600 transition-colors duration-300">
-                            TẶNG
-                        </button>
+                    <hr className="border-slate-700/80 my-4" />
+
+                    {/* Khu vực mua */}
+                    <div className="flex items-center justify-between gap-4 mt-auto">
+                        <div className="flex items-center space-x-2">
+                            <Gem className={`w-7 h-7 text-${config.color}`} />
+                            <span className="text-3xl font-bold text-white">{item.price}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <button className="p-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors duration-300" title="Tặng quà">
+                                <Gift className="w-5 h-5"/>
+                            </button>
+                            <button className={`flex-1 bg-gradient-to-r from-${config.color} to-cyan-400 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg`}>
+                                MUA
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             <style jsx>{`
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes scale-up { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+                @keyframes float {
+                    0% { transform: translateY(0px); }
+                    50% { transform: translateY(-8px); }
+                    100% { transform: translateY(0px); }
+                }
                 .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
-                .animate-scale-up { animation: scale-up 0.3s ease-out forwards; }
+                .animate-scale-up { animation: scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+                .animate-float { animation: float 4s ease-in-out infinite; }
+                .bg-glow {
+                    background-image: radial-gradient(circle at 50% 50%, rgba(var(--glow-color), 0.25) 0%, transparent 70%);
+                }
+                .text-shadow-glow {
+                    text-shadow: 0 0 15px rgba(var(--glow-color), 0.3);
+                }
             `}</style>
         </div>
     );
