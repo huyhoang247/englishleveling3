@@ -229,8 +229,8 @@ const FeaturedItem = ({ item, onSelect }) => {
     );
 };
 
-// --- Component Sidebar ---
-const Sidebar = ({ activeCategory, setActiveCategory }) => {
+// --- Component Thanh Tabs Danh mục (Thay thế cho Sidebar) ---
+const CategoryTabs = ({ activeCategory, setActiveCategory }) => {
     const categories = [
         { name: 'Nổi Bật', icon: Star },
         { name: 'Vũ khí', icon: Swords },
@@ -241,15 +241,15 @@ const Sidebar = ({ activeCategory, setActiveCategory }) => {
     ];
     
     return (
-        <nav className="flex flex-col space-y-2">
+        <nav className="flex flex-wrap gap-2 mb-8">
             {categories.map(({ name, icon: Icon }) => (
                 <button
                     key={name}
                     onClick={() => setActiveCategory(name)}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5 ${
                         activeCategory === name 
-                        ? 'bg-cyan-500/20 text-cyan-300' 
-                        : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                        ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/20' 
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                     }`}
                 >
                     <Icon className="w-5 h-5" />
@@ -259,6 +259,7 @@ const Sidebar = ({ activeCategory, setActiveCategory }) => {
         </nav>
     );
 };
+
 
 // --- Component Chi tiết Vật phẩm (Modal) ---
 const ItemDetailModal = ({ item, onClose }) => {
@@ -344,17 +345,12 @@ const GameShopUI = ({ onClose }) => {
             <div 
                 className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]">
             </div>
-            <div className="relative flex flex-col lg:flex-row max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
-                {/* --- Sidebar --- */}
-                <aside className="w-full lg:w-56 lg:pr-8 mb-8 lg:mb-0 flex-shrink-0">
-                    <h1 className="text-2xl font-bold text-white mb-6">Cửa Hàng</h1>
-                    <Sidebar activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-                </aside>
-
+            <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
                 {/* --- Main Content --- */}
-                <main className="flex-1">
-                    {/* Header */}
-                    <header className="flex flex-col sm:flex-row justify-end items-center mb-8">
+                <main>
+                    {/* Header: Title and User Wallet */}
+                    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                        <h1 className="text-3xl font-bold text-white">Cửa Hàng</h1>
                         <div className="flex items-center gap-4 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
                             <div className="flex items-center gap-2">
                                 <Coins className="w-6 h-6 text-yellow-400" />
@@ -370,6 +366,9 @@ const GameShopUI = ({ onClose }) => {
                             </button>
                         </div>
                     </header>
+
+                    {/* Category Tabs */}
+                    <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                     
                     {/* Featured Item Section */}
                     {activeCategory === 'Nổi Bật' && featuredItem && (
@@ -381,7 +380,7 @@ const GameShopUI = ({ onClose }) => {
                     {/* Items Grid */}
                     <section>
                             <h2 className="text-2xl font-bold text-white mb-4">{activeCategory}</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                                 {gridItems.map(item => (
                                     <ShopItemCard key={item.id} item={item} onSelect={handleSelectItem} />
                                 ))}
