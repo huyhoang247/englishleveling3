@@ -86,6 +86,7 @@ export const itemDatabase = new Map<number, ItemDefinition>([
     [42, { id: 42, name: 'Kiếm gỗ (+1)', type: 'weapon', rarity: 'E', description: 'Một thanh kiếm gỗ đã được nâng cấp nhẹ.', stats: { damage: 7, durability: 25 }, icon: itemAssets.kiemGo, maxLevel: 10 }],
     [76, { id: 76, name: 'Sacrificial Sword', type: 'weapon', rarity: 'B', description: 'Thanh kiếm mang sức mạnh hiến tế, tăng cường sát thương và tỉ lệ chí mạng.', stats: { damage: 28, durability: 90, critChance: 0.10 }, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2009_26_47%20PM.png', maxLevel: 30 }],
     [77, { id: 77, name: 'Leviathan Axe', type: 'weapon', rarity: 'A', description: 'Chiếc rìu được rèn từ vảy của Leviathan, mang sức mạnh của băng giá và đại dương sâu thẳm, có thể làm chậm kẻ địch.', stats: { damage: 42, strength: 20, durability: 140, coldDamage: 18, slowEffect: 0.20 }, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2008_56_07%20PM.png', maxLevel: 40 }],
+    [78, { id: 78, name: 'Chaos Staff', type: 'weapon', rarity: 'D', description: 'Cây trượng hỗn loạn với sức mạnh không thể đoán trước.', stats: { magicDamage: 14, durability: 55 }, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2015%2C%202025%2C%2011_20_02%20AM.png', maxLevel: 20 }],
 ]);
 
 // --- END OF FILE src/data/item-database.ts ---
