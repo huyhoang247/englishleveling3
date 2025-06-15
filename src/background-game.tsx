@@ -20,6 +20,7 @@ import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
+import Shop from './shop.tsx';
 
 
 // ==================================================================
@@ -143,6 +144,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
   const [isTowerGameOpen, setIsTowerGameOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
 
   const GROUND_LEVEL_PERCENT = 45;
 
@@ -352,6 +354,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
+        setIsShopOpen(false);
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -412,7 +415,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Renders the character, now with a static position
   const renderCharacter = () => {
     // Combined condition to check if any overlay is open
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen;
     // Condition to pause animations
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -447,6 +450,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsLuckyGameOpen(false);
             setIsBlacksmithOpen(false);
             setIsTowerGameOpen(false);
+            setIsShopOpen(false);
         } else {
             showNavBar();
         }
@@ -467,6 +471,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsLuckyGameOpen(false);
              setIsBlacksmithOpen(false);
              setIsTowerGameOpen(false);
+             setIsShopOpen(false);
          } else {
              showNavBar();
          }
@@ -487,6 +492,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
+        setIsShopOpen(false);
       } else {
         showNavBar();
       }
@@ -507,6 +513,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
+        setIsShopOpen(false);
       } else {
         showNavBar();
       }
@@ -527,6 +534,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
+        setIsShopOpen(false);
       } else {
         showNavBar();
       }
@@ -547,6 +555,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsTowerGameOpen(false);
+        setIsShopOpen(false);
       } else {
         showNavBar();
       }
@@ -567,6 +576,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
+        setIsShopOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+
+  const toggleShop = () => {
+    if (isLoading) return;
+    setIsShopOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        // Close other overlays
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
       } else {
         showNavBar();
       }
@@ -595,7 +626,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
@@ -688,7 +719,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                   icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
                   label: "",
                   special: true,
-                  centered: true
+                  centered: true,
+                  onClick: toggleShop
                 },
                 {
                   icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />,
@@ -813,6 +845,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị màn hình Leo Tháp!</div>}>
                 {isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}
+            </ErrorBoundary>
+        </div>
+
+        {/* Overlay for Shop */}
+        <div className="absolute inset-0 w-full h-full" style={{ display: isShopOpen ? 'block' : 'none' }}>
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Cửa hàng!</div>}>
+                {isShopOpen && <Shop onClose={toggleShop} />}
             </ErrorBoundary>
         </div>
 
