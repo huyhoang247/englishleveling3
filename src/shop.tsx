@@ -268,7 +268,7 @@ const ShopItemCard = ({ item, onSelect }) => {
     const config = rarityConfig[item.rarity] || rarityConfig['Phổ thông'];
     return (
         <div 
-            className="group relative overflow-hidden rounded-lg bg-slate-800/60 border border-slate-700 transition-all duration-300 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer"
+            className="group relative overflow-hidden rounded-lg bg-slate-800/60 border border-slate-700 transition-all duration-300 hover:bg-black hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer"
             onClick={() => onSelect(item)}
         >
             {/* Rarity Glow Effect */}
