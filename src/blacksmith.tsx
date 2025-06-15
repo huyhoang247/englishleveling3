@@ -143,11 +143,34 @@ const ItemTooltip = ({ item }: { item: EnrichedPlayerItem }) => (
 );
 // --- END: VISUAL HELPER FUNCTIONS ---
 
+// --- START: NEW DATA HYDRATION LOGIC TO UNSTACK EQUIPMENT ---
+const getUnstackedInventory = () => {
+    const equipmentTypes = ['weapon', 'armor', 'accessory'];
+    return playerInventoryData.flatMap(playerItem => {
+        const baseItem = itemDatabase.get(playerItem.id);
+        if (!baseItem) return [];
+
+        const isEquipment = equipmentTypes.includes(baseItem.type);
+        if (isEquipment && playerItem.quantity > 1) {
+            // Unstack equipment into individual items
+            return Array.from({ length: playerItem.quantity }, (_, i) => ({
+                ...playerItem,
+                quantity: 1,
+                // Create a unique instanceId for each unstacked item
+                instanceId: Number(`${playerItem.instanceId}${i}`), 
+            }));
+        }
+        // Return other items as they are, inside an array for flatMap
+        return [playerItem]; 
+    });
+};
+// --- END: NEW DATA HYDRATION LOGIC ---
 
 // Main Component
 const Blacksmith = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState('craft');
-  const [playerInventory, setPlayerInventory] = useState<PlayerItem[]>(playerInventoryData);
+  // Initialize state with unstacked inventory
+  const [playerInventory, setPlayerInventory] = useState<PlayerItem[]>(getUnstackedInventory);
   const [upgradeWeaponSlot, setUpgradeWeaponSlot] = useState<PlayerItem | null>(null);
   const [upgradeMaterialSlot, setUpgradeMaterialSlot] = useState<PlayerItem | null>(null);
   const [skillWeaponSlot, setSkillWeaponSlot] = useState<PlayerItem | null>(null);
@@ -195,9 +218,6 @@ const Blacksmith = ({ onClose }) => {
 
   const enrichPlayerItem = useCallback((playerItem: PlayerItem | null): EnrichedPlayerItem | null => {
     if (!playerItem) return null;
-    // For overridden items (like crafted items with new rarity), we need to handle it.
-    // However, enrichPlayerItem is mostly for display, and inventory logic handles the actual data.
-    // We get the base definition and then apply player data over it.
     const definition = itemDatabase.get(playerItem.id);
     if (!definition) return null;
     return { ...definition, ...playerItem };
@@ -215,7 +235,6 @@ const Blacksmith = ({ onClose }) => {
         if (!itemDef) return prev;
         const isStackable = ['material', 'potion', 'currency', 'misc', 'piece'].includes(itemDef.type);
 
-        // For crafted items, they are unique instances, so we don't stack them.
         if (isStackable && Object.keys(overrides).length === 0) {
             const existingStackIndex = prev.findIndex(i => i.id === itemId && i.level === overrides.level);
             if (existingStackIndex > -1) {
@@ -230,7 +249,7 @@ const Blacksmith = ({ onClose }) => {
             instanceId: newInstanceId, 
             id: itemId, 
             quantity, 
-            ...overrides // This applies the new rank for crafted items
+            ...overrides 
         };
         return [...prev, newItem];
     });
@@ -240,21 +259,35 @@ const Blacksmith = ({ onClose }) => {
       setPlayerInventory(prev => {
           const itemIndex = prev.findIndex(i => i.instanceId === instanceId);
           if (itemIndex === -1) return prev;
+
           const newInventory = [...prev];
           const currentItem = newInventory[itemIndex];
-          currentItem.quantity += quantityChange;
-          return currentItem.quantity <= 0 ? newInventory.filter(i => i.instanceId !== instanceId) : newInventory;
+          
+          if (currentItem.quantity + quantityChange <= 0) {
+              return newInventory.filter(i => i.instanceId !== instanceId);
+          } else {
+              currentItem.quantity += quantityChange;
+              return newInventory;
+          }
       });
   }, []);
   
   const returnItemToInventory = useCallback((itemToReturn: PlayerItem) => {
     if (!itemToReturn) return;
     setPlayerInventory(prev => {
-      const existing = prev.find(i => i.instanceId === itemToReturn.instanceId);
-      if (existing) {
-        existing.quantity += itemToReturn.quantity;
-        return [...prev];
+      // Since equipment is unstacked, we just add it back.
+      // For stackable items, we find and merge.
+      const itemDef = itemDatabase.get(itemToReturn.id);
+      const isStackable = itemDef && ['material', 'potion', 'currency', 'misc', 'piece'].includes(itemDef.type);
+
+      if (isStackable) {
+          const existing = prev.find(i => i.id === itemToReturn.id);
+          if (existing) {
+              existing.quantity += itemToReturn.quantity;
+              return [...prev];
+          }
       }
+      // If not stackable, or if it's the first one, just add it back to the array
       return [...prev, itemToReturn];
     })
   }, []);
@@ -269,18 +302,30 @@ const Blacksmith = ({ onClose }) => {
   const handleItemClick = (itemToMove: EnrichedPlayerItem) => {
     if (isProcessing) return;
     const playerItem: PlayerItem = { id: itemToMove.id, instanceId: itemToMove.instanceId, quantity: itemToMove.quantity, level: itemToMove.level, currentExp: itemToMove.currentExp, requiredExp: itemToMove.requiredExp, stats: itemToMove.stats, rarity: itemToMove.rarity };
-
+    
+    // Because inventory is now unstacked for equipment, playerItem.quantity will be 1 for them.
+    // The logic below works correctly with this assumption.
+    const quantityToMove = 1; // We always move 1 at a time for UI interactions.
+    
     if (activeTab === 'upgrade') {
       if (['weapon', 'armor', 'accessory'].includes(itemToMove.type)) {
-        if (!upgradeWeaponSlot) { setUpgradeWeaponSlot(playerItem); updateItemInInventory(playerItem.instanceId, -playerItem.quantity); } else showAlert('Đã có trang bị trong ô nâng cấp!', 'warning');
-      } else if (itemToMove.id === 17) { if (!upgradeMaterialSlot) { const materialStack = { ...playerItem, quantity: 1 }; setUpgradeMaterialSlot(materialStack); updateItemInInventory(playerItem.instanceId, -1); } else showAlert('Đã có Đá Cường Hoá trong ô!', 'warning');
+        if (!upgradeWeaponSlot) { 
+          setUpgradeWeaponSlot(playerItem); 
+          updateItemInInventory(playerItem.instanceId, -playerItem.quantity); // quantity is 1
+        } else showAlert('Đã có trang bị trong ô nâng cấp!', 'warning');
+      } else if (itemToMove.id === 17) { 
+        if (!upgradeMaterialSlot) { 
+          const materialStack = { ...playerItem, quantity: quantityToMove }; 
+          setUpgradeMaterialSlot(materialStack); 
+          updateItemInInventory(playerItem.instanceId, -quantityToMove); 
+        } else showAlert('Đã có Đá Cường Hoá trong ô!', 'warning');
       } else showAlert('Vật phẩm này không thể dùng để nâng cấp.', 'warning');
     } else if (activeTab === 'craft') {
         if (itemToMove.type === 'piece') {
             if (!craftingPieceSlot) {
-                const pieceItem = { ...playerItem, quantity: 1 };
+                const pieceItem = { ...playerItem, quantity: quantityToMove };
                 setCraftingPieceSlot(pieceItem);
-                updateItemInInventory(playerItem.instanceId, -1);
+                updateItemInInventory(playerItem.instanceId, -quantityToMove);
             } else {
                 showAlert('Đã có mảnh ghép trong ô rèn!', 'warning');
             }
@@ -288,14 +333,21 @@ const Blacksmith = ({ onClose }) => {
             showAlert('Chỉ có thể đặt Mảnh Ghép vào ô này.', 'warning');
         }
     } else if (activeTab === 'skills') {
-      if (['weapon', 'armor', 'accessory'].includes(itemToMove.type)) { if (!skillWeaponSlot) { setSkillWeaponSlot(playerItem); updateItemInInventory(playerItem.instanceId, -playerItem.quantity); } else showAlert('Đã có trang bị trong ô.', 'warning');
-      } else if (itemToMove.type === 'skill_book') { if (!skillBookSlot) { setSkillBookSlot(itemToMove); } else showAlert('Đã có sách kỹ năng trong ô.', 'warning');
+      if (['weapon', 'armor', 'accessory'].includes(itemToMove.type)) { 
+        if (!skillWeaponSlot) { 
+          setSkillWeaponSlot(playerItem); 
+          updateItemInInventory(playerItem.instanceId, -playerItem.quantity); 
+        } else showAlert('Đã có trang bị trong ô.', 'warning');
+      } else if (itemToMove.type === 'skill_book') { 
+        if (!skillBookSlot) { 
+          setSkillBookSlot(itemToMove); 
+        } else showAlert('Đã có sách kỹ năng trong ô.', 'warning');
       } else showAlert('Vật phẩm này không thể đặt vào lò học kỹ năng.', 'warning');
     }
   };
   
   const handleUpgradeWeaponSlotClick = () => { if (isProcessing || !upgradeWeaponSlot) return; returnItemToInventory(upgradeWeaponSlot); setUpgradeWeaponSlot(null); };
-  const handleUpgradeMaterialSlotClick = () => { if (isProcessing || !upgradeMaterialSlot) return; const originalStack = playerInventory.find(i => i.id === 17); if(originalStack) { updateItemInInventory(originalStack.instanceId, 1); } else { addNewItemToInventory(17, 1); } setUpgradeMaterialSlot(null); };
+  const handleUpgradeMaterialSlotClick = () => { if (isProcessing || !upgradeMaterialSlot) return; returnItemToInventory(upgradeMaterialSlot); setUpgradeMaterialSlot(null); };
   const handleSkillWeaponSlotClick = () => { if (isProcessing || !skillWeaponSlot) return; returnItemToInventory(skillWeaponSlot); setSkillWeaponSlot(null); };
   const handleSkillBookSlotClick = () => { if (isProcessing || !skillBookSlot) return; setSkillBookSlot(null); };
   const handleCraftingPieceSlotClick = () => { if (isProcessing || !craftingPieceSlot) return; returnItemToInventory(craftingPieceSlot); setCraftingPieceSlot(null); };
@@ -309,15 +361,14 @@ const Blacksmith = ({ onClose }) => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     let success = Math.random() * 100 <= upgradeChance;
     if (success) {
-      const newLevel = (originalItem.level || 1) + 1;
-      addNewItemToInventory(originalItem.id, 1, { ...originalItem, level: newLevel, instanceId: 0 });
+      const newLevel = (originalItem.level || 0) + 1; // Start from 0 if no level
+      addNewItemToInventory(originalItem.id, 1, { ...originalItem, level: newLevel, instanceId: 0 }); // instanceId will be regenerated
       const upgradedItemDef = itemDatabase.get(originalItem.id);
       showAlert(`Nâng cấp thành công! ${upgradedItemDef?.name} đã lên Lv.${newLevel}!`, 'success');
     } else { returnItemToInventory(originalItem); showAlert('Nâng cấp thất bại! Đá Cường Hoá đã bị mất, nhưng trang bị được bảo toàn.', 'error'); }
     setIsProcessing(false);
   };
   
-  // --- START: NEW CRAFTING LOGIC ---
   const activeCraftingRecipe = useMemo(() => {
     if (!craftingPieceSlot) return null;
     return CRAFTING_RECIPES_DEFINITION.find(r => r.type === 'piece_based' && r.pieceId === craftingPieceSlot.id);
@@ -344,61 +395,44 @@ const Blacksmith = ({ onClose }) => {
         return;
     }
     setIsProcessing(true);
+    returnItemToInventory(craftingPieceSlot); // Return the piece first
+    setCraftingPieceSlot(null);
+
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Consume materials
-    let inventoryCopy = [...playerInventory];
+    updateItemInInventory(craftingPieceSlot.instanceId, -1);
     for (const mat of activeCraftingRecipe.materialsRequired) {
         let quantityToConsume = mat.quantity;
-        for (let i = 0; i < inventoryCopy.length; i++) {
-            if (inventoryCopy[i].id === mat.id) {
-                const consumed = Math.min(quantityToConsume, inventoryCopy[i].quantity);
-                inventoryCopy[i].quantity -= consumed;
-                quantityToConsume -= consumed;
-                if (quantityToConsume === 0) break;
-            }
+        const stacks = playerInventory.filter(i => i.id === mat.id);
+        for(const stack of stacks) {
+            const consumed = Math.min(quantityToConsume, stack.quantity);
+            updateItemInInventory(stack.instanceId, -consumed);
+            quantityToConsume -= consumed;
+            if (quantityToConsume <= 0) break;
         }
     }
-    setPlayerInventory(inventoryCopy.filter(i => i.quantity > 0));
 
-    // --- START: UPDATED CRAFTING OUTPUT LOGIC ---
     let craftedItemDef;
-    
-    // Check if it's the weapon piece recipe
     if (activeCraftingRecipe.pieceId === 47) { 
-        // 1. Get a random weapon template from the pre-filtered list
         const randomWeaponTemplate = allWeapons[Math.floor(Math.random() * allWeapons.length)];
-        
-        // 2. Determine its rank based on probability
         const newRank = getRandomRankByProbability();
-
-        // 3. Add the weapon to inventory with the new rank as an override
-        addNewItemToInventory(randomWeaponTemplate.id, 1, { rarity: newRank });
-        
-        // Create a temporary definition for the alert message
+        addNewItemToInventory(randomWeaponTemplate.id, 1, { rarity: newRank, level: 1 });
         craftedItemDef = { ...randomWeaponTemplate, rarity: newRank };
-
     } else { 
-        // For all other recipes (e.g., armor), use the original logic
         const outputId = activeCraftingRecipe.outputPool[Math.floor(Math.random() * activeCraftingRecipe.outputPool.length)];
-        addNewItemToInventory(outputId, 1);
+        addNewItemToInventory(outputId, 1, { level: 1 });
         craftedItemDef = itemDatabase.get(outputId);
     }
     
-    setCraftingPieceSlot(null);
-    // Update the alert to show the rank
     const rankName = getRarityDisplayName(craftedItemDef.rarity);
     showAlert(`Rèn thành công! Bạn nhận được [${rankName}] ${craftedItemDef?.name}!`, 'success');
     setIsProcessing(false);
-    // --- END: UPDATED CRAFTING OUTPUT LOGIC ---
   };
-  // --- END: NEW CRAFTING LOGIC ---
 
 
-  const handleLearnSkill = async () => { if (!skillWeaponSlot || !skillBookSlot) return; showAlert('Học kỹ năng thành công!', 'success'); /* Logic chi tiết ở đây */ };
+  const handleLearnSkill = async () => { if (!skillWeaponSlot || !skillBookSlot) return; showAlert('Học kỹ năng thành công!', 'success'); };
   const handleClearSlots = () => { if (isProcessing) return; handleUpgradeWeaponSlotClick(); handleUpgradeMaterialSlotClick(); handleSkillWeaponSlotClick(); handleSkillBookSlotClick(); handleCraftingPieceSlotClick(); };
-
-  // --- Sub-Components defined inside Blacksmith ---
 
   const ForgingSlot = ({ item, slotType, onClick, isEmpty, labelOverride }) => {
     const enrichedItem = item && item.id >= 9001 ? item : enrichPlayerItem(item);
@@ -424,7 +458,6 @@ const Blacksmith = ({ onClose }) => {
     );
   };
   
-  // *** NEW COMPONENT: Compact slot for Upgrade Material ***
   const ForgingSlotCompact = ({ item, onClick, isEmpty, labelOverride, slotType = 'material' }) => {
     const enrichedItem = enrichPlayerItem(item);
     const style = {
@@ -526,18 +559,14 @@ const Blacksmith = ({ onClose }) => {
         </div>
         <div className="grid lg:grid-cols-2 gap-y-4 gap-x-8 flex-grow overflow-y-auto hide-scrollbar mt-4 min-h-0 content-start">
           
-          {/* *** UPDATED JSX BLOCK FOR UPGRADE TAB *** */}
           {activeTab === 'upgrade' && (
             <div className="flex flex-col"> 
                 <div className="mb-4 p-4 sm:p-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-yellow-500/30 backdrop-blur-sm">
                     <div className="flex items-center justify-center gap-2 sm:gap-4">
-                        {/* 1. Ô Trang bị (Chính - Lớn) */}
                         <div className="w-28 h-32 sm:w-32 flex-shrink-0">
                            <ForgingSlot item={upgradeWeaponSlot} slotType="weapon" onClick={handleUpgradeWeaponSlotClick} isEmpty={!upgradeWeaponSlot} />
                         </div>
-                        {/* 2. Mũi tên chỉ dẫn */}
                         <div className="text-2xl sm:text-3xl font-light text-gray-500">+</div>
-                        {/* 3. Ô Đá Cường Hóa (Phụ - Nhỏ) */}
                         <div className="flex items-center">
                             <ForgingSlotCompact item={upgradeMaterialSlot} onClick={handleUpgradeMaterialSlotClick} isEmpty={!upgradeMaterialSlot} labelOverride="Đá Cường Hóa" slotType="material"/>
                         </div>
@@ -614,7 +643,7 @@ const Blacksmith = ({ onClose }) => {
                   const isEquipment = ['weapon', 'armor', 'accessory'].includes(item.type);
                   return (
                     <div key={item.instanceId} className={`group relative w-full aspect-square bg-gradient-to-br ${getRarityGradient(item.rarity)} rounded-lg border-2 ${getRarityColor(item.rarity)} flex items-center justify-center cursor-pointer hover:brightness-125 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg ${getRarityGlow(item.rarity)} overflow-hidden will-change-transform ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => !isProcessing && handleItemClick(item)}>
-                      {isEquipment && item.level !== undefined && (
+                      {isEquipment && item.level > 0 && (
                           <div className="absolute top-0 right-0 flex items-center justify-center w-4 h-4 bg-black/70 rounded-bl-lg z-20 border-b border-l border-white/10">
                               <span className="text-white font-bold text-[10px] -translate-y-px">
                                 {item.level}
