@@ -1,4 +1,3 @@
---- START OF FILE item-database (1).gfddts.txt ---
 
 // --- START OF FILE src/data/item-database.ts ---
 
@@ -229,6 +228,4 @@ export const itemDatabase = new Map<number, ItemDefinition>([
     [78, { id: 78, name: 'Chaos Staff', type: 'weapon', rarity: 'D', description: 'Cây trượng hỗn loạn với sức mạnh không thể đoán trước.', stats: { magicDamage: 14, durability: 55 }, icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/inventory/ChatGPT%20Image%20Jun%2015%2C%202025%2C%2011_20_02%20AM.png', maxLevel: 20, skills: [] }], // Cần thêm 5 skill
 ]);
 
-// --- END OF FILE src/data/item-database.ts ---
 
---- END OF FILE item-database (1).gfddts.txt ---
