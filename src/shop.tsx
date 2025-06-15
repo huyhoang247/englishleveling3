@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const closeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png';
+
 // --- SVG Icon Components (thay thế cho lucide-react) ---
 const Icon = ({ children, ...props }) => (
     <svg
@@ -312,7 +314,7 @@ const ItemDetailModal = ({ item, onClose }) => {
 };
 
 // --- Component Chính Của Cửa Hàng ---
-const GameShopUI = () => {
+const GameShopUI = ({ onClose }) => {
     const [activeCategory, setActiveCategory] = useState('Nổi Bật');
     const [selectedItem, setSelectedItem] = useState(null);
 
@@ -331,7 +333,14 @@ const GameShopUI = () => {
     };
 
     return (
-        <div className="w-full min-h-screen bg-slate-900 font-sans text-white">
+        <div className="relative w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
+            <button
+                onClick={onClose}
+                className="absolute top-4 right-4 lg:top-6 lg:right-6 z-[60] p-2 rounded-full bg-black/40 hover:bg-black/70 transition-colors"
+                aria-label="Đóng cửa hàng"
+            >
+                <img src={closeIconUrl} alt="Close" className="w-7 h-7" />
+            </button>
             <div 
                 className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]">
             </div>
@@ -397,6 +406,6 @@ const GameShopUI = () => {
 };
 
 // --- App Component Wrapper ---
-export default function App() {
-    return <GameShopUI />;
+export default function App({ onClose }) {
+    return <GameShopUI onClose={onClose} />;
 }
