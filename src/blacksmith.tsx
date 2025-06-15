@@ -19,8 +19,9 @@ const CRAFTING_RECIPES_DEFINITION = [
     type: 'piece_based',
     pieceId: 47, // Mảnh ghép vũ khí
     materialsRequired: [{ id: 44, quantity: 20 }, { id: 43, quantity: 10 }], // Gỗ, Sắt
-    outputPool: [1, 13], // Kiếm gỗ (E), Cung gỗ (E)
-    description: 'Rèn một vũ khí Cấp E ngẫu nhiên từ nguyên liệu.'
+    // outputPool không còn được dùng cho công thức này, nhưng để lại không ảnh hưởng
+    outputPool: [], 
+    description: 'Rèn một vũ khí ngẫu nhiên với Rank ngẫu nhiên từ nguyên liệu.'
   },
   {
     type: 'piece_based',
@@ -53,6 +54,22 @@ const SKILL_BOOKS = [
 ];
 
 const RANK_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
+
+// MỚI: Hàm lấy Rank ngẫu nhiên dựa trên xác suất
+const getRandomRankByProbability = (): ItemRank => {
+  const rand = Math.random() * 100; // Số ngẫu nhiên từ 0 đến 100
+
+  if (rand < 60) return 'E';  // 60%
+  if (rand < 80) return 'D';  // 20% (60 + 20)
+  if (rand < 90) return 'B';  // 10% (80 + 10)
+  if (rand < 95) return 'A';  // 5%  (90 + 5)
+  if (rand < 97) return 'S';  // 2%  (95 + 2)
+  if (rand < 98) return 'SR'; // 1%  (97 + 1)
+  
+  // 2% còn lại sẽ ra rank thấp nhất là 'E' để đảm bảo luôn có kết quả
+  return 'E';
+};
+
 
 const getNextRank = (currentRank: ItemRank): ItemRank => {
   const currentIndex = RANK_ORDER.indexOf(currentRank);
@@ -140,6 +157,11 @@ const Blacksmith = ({ onClose }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [upgradeChance, setUpgradeChance] = useState(0);
 
+  // MỚI: Lấy và lưu trữ danh sách tất cả vũ khí để chọn ngẫu nhiên
+  const allWeapons = useMemo(() => {
+    return [...itemDatabase.values()].filter(item => item.type === 'weapon');
+  }, []);
+
   // --- START: TỐI ƯU SCROLL (GIẢM LAG KHI CUỘN) ---
   const inventoryGridRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<number | null>(null);
@@ -173,6 +195,9 @@ const Blacksmith = ({ onClose }) => {
 
   const enrichPlayerItem = useCallback((playerItem: PlayerItem | null): EnrichedPlayerItem | null => {
     if (!playerItem) return null;
+    // For overridden items (like crafted items with new rarity), we need to handle it.
+    // However, enrichPlayerItem is mostly for display, and inventory logic handles the actual data.
+    // We get the base definition and then apply player data over it.
     const definition = itemDatabase.get(playerItem.id);
     if (!definition) return null;
     return { ...definition, ...playerItem };
@@ -189,7 +214,9 @@ const Blacksmith = ({ onClose }) => {
         const itemDef = itemDatabase.get(itemId);
         if (!itemDef) return prev;
         const isStackable = ['material', 'potion', 'currency', 'misc', 'piece'].includes(itemDef.type);
-        if (isStackable) {
+
+        // For crafted items, they are unique instances, so we don't stack them.
+        if (isStackable && Object.keys(overrides).length === 0) {
             const existingStackIndex = prev.findIndex(i => i.id === itemId && i.level === overrides.level);
             if (existingStackIndex > -1) {
                 const newInventory = [...prev];
@@ -197,9 +224,13 @@ const Blacksmith = ({ onClose }) => {
                 return newInventory;
             }
         }
+        
         const newInstanceId = Math.max(0, ...prev.map(i => i.instanceId), ...SKILL_BOOKS.map(b => b.instanceId)) + 1;
         const newItem: PlayerItem = {
-            instanceId: newInstanceId, id: itemId, quantity, ...overrides
+            instanceId: newInstanceId, 
+            id: itemId, 
+            quantity, 
+            ...overrides // This applies the new rank for crafted items
         };
         return [...prev, newItem];
     });
@@ -237,7 +268,7 @@ const Blacksmith = ({ onClose }) => {
 
   const handleItemClick = (itemToMove: EnrichedPlayerItem) => {
     if (isProcessing) return;
-    const playerItem: PlayerItem = { id: itemToMove.id, instanceId: itemToMove.instanceId, quantity: itemToMove.quantity, level: itemToMove.level, currentExp: itemToMove.currentExp, requiredExp: itemToMove.requiredExp, stats: itemToMove.stats };
+    const playerItem: PlayerItem = { id: itemToMove.id, instanceId: itemToMove.instanceId, quantity: itemToMove.quantity, level: itemToMove.level, currentExp: itemToMove.currentExp, requiredExp: itemToMove.requiredExp, stats: itemToMove.stats, rarity: itemToMove.rarity };
 
     if (activeTab === 'upgrade') {
       if (['weapon', 'armor', 'accessory'].includes(itemToMove.type)) {
@@ -330,14 +361,36 @@ const Blacksmith = ({ onClose }) => {
     }
     setPlayerInventory(inventoryCopy.filter(i => i.quantity > 0));
 
-    // Get output
-    const outputId = activeCraftingRecipe.outputPool[Math.floor(Math.random() * activeCraftingRecipe.outputPool.length)];
-    addNewItemToInventory(outputId, 1);
-    const craftedItemDef = itemDatabase.get(outputId);
+    // --- START: UPDATED CRAFTING OUTPUT LOGIC ---
+    let craftedItemDef;
+    
+    // Check if it's the weapon piece recipe
+    if (activeCraftingRecipe.pieceId === 47) { 
+        // 1. Get a random weapon template from the pre-filtered list
+        const randomWeaponTemplate = allWeapons[Math.floor(Math.random() * allWeapons.length)];
+        
+        // 2. Determine its rank based on probability
+        const newRank = getRandomRankByProbability();
+
+        // 3. Add the weapon to inventory with the new rank as an override
+        addNewItemToInventory(randomWeaponTemplate.id, 1, { rarity: newRank });
+        
+        // Create a temporary definition for the alert message
+        craftedItemDef = { ...randomWeaponTemplate, rarity: newRank };
+
+    } else { 
+        // For all other recipes (e.g., armor), use the original logic
+        const outputId = activeCraftingRecipe.outputPool[Math.floor(Math.random() * activeCraftingRecipe.outputPool.length)];
+        addNewItemToInventory(outputId, 1);
+        craftedItemDef = itemDatabase.get(outputId);
+    }
     
     setCraftingPieceSlot(null);
-    showAlert(`Rèn thành công! Bạn đã tạo ra ${craftedItemDef?.name}!`, 'success');
+    // Update the alert to show the rank
+    const rankName = getRarityDisplayName(craftedItemDef.rarity);
+    showAlert(`Rèn thành công! Bạn nhận được [${rankName}] ${craftedItemDef?.name}!`, 'success');
     setIsProcessing(false);
+    // --- END: UPDATED CRAFTING OUTPUT LOGIC ---
   };
   // --- END: NEW CRAFTING LOGIC ---
 
