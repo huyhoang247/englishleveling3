@@ -162,27 +162,25 @@ const renderItemSkills = (item: any) => {
                 return (
                     <div
                         key={index}
-                        className={`flex items-center gap-3 bg-black/20 p-2.5 rounded-lg border transition-all duration-200 ${
+                        // MODIFIED: Removed global opacity to match image style. Styling is now per-element.
+                        className={`flex items-center gap-3 bg-black/30 p-3 rounded-lg border transition-all duration-200 ${
                             isLocked
-                                ? 'border-gray-800/70 opacity-60'
+                                ? 'border-gray-800/70' // Slightly different border for locked
                                 : 'border-gray-700/50'
                         }`}
                     >
-                        <div className={`relative flex-shrink-0 w-10 h-10 bg-gray-900/80 rounded-md flex items-center justify-center text-xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
-                            {skill.icon}
-                            {isLocked && (
-                                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                                    <span className="text-lg">🔒</span>
-                                </div>
-                            )}
+                        {/* MODIFIED: Icon is replaced by a lock, not overlaid, to match image. */}
+                        <div className={`relative flex-shrink-0 w-12 h-12 bg-gray-900/80 rounded-md flex items-center justify-center text-2xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
+                           {isLocked ? '🔒' : skill.icon}
                         </div>
                         <div className="flex-1">
-                            <div className="flex justify-between items-baseline">
+                            <div className="flex justify-between items-center">
                                 <h5 className={`font-semibold text-sm ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>
                                     {skill.name}
                                 </h5>
                                 {isLocked && (
-                                    <span className="text-xs text-yellow-500/80 font-medium bg-black/30 px-1.5 py-0.5 rounded">
+                                    // MODIFIED: Tag style updated to match image
+                                    <span className="text-xs text-yellow-300 font-medium bg-black/40 px-2 py-1 rounded-md border border-yellow-700/40">
                                         Hạng {requiredRank}
                                     </span>
                                 )}
