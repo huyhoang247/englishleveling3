@@ -181,7 +181,7 @@ const renderItemSkills = (item: any) => {
                                 {isLocked && (
                                     // MODIFIED: Tag style updated to match image
                                     <span className="text-xs text-yellow-300 font-medium bg-black/40 px-2 py-1 rounded-md border border-yellow-700/40">
-                                        Hạng {requiredRank}
+                                        {requiredRank} Rank
                                     </span>
                                 )}
                             </div>
