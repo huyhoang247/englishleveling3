@@ -154,7 +154,7 @@ const renderItemSkills = (item: any) => {
     const unlockRanks = ['D', 'B', 'A', 'S', 'SR'];
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
             {item.skills.map((skill: any, index: number) => {
                 const isLocked = index >= unlockedCount;
                 const requiredRank = unlockRanks[index];
@@ -162,28 +162,32 @@ const renderItemSkills = (item: any) => {
                 return (
                     <div
                         key={index}
-                        className={`flex items-center gap-2.5 bg-black/20 p-2 rounded-lg border transition-all duration-200 ${
+                        className={`flex items-center gap-3 bg-black/20 p-2.5 rounded-lg border transition-all duration-200 ${
                             isLocked
                                 ? 'border-gray-800/70 opacity-60'
                                 : 'border-gray-700/50'
                         }`}
                     >
-                        <div className={`relative flex-shrink-0 w-9 h-9 bg-gray-900/80 rounded-md flex items-center justify-center text-lg border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
+                        <div className={`relative flex-shrink-0 w-10 h-10 bg-gray-900/80 rounded-md flex items-center justify-center text-xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
                             {skill.icon}
-                            {isLocked && <div className="absolute inset-0 bg-black/70 flex items-center justify-center"><span className="text-base">🔒</span></div>}
+                            {isLocked && (
+                                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                                    <span className="text-lg">🔒</span>
+                                </div>
+                            )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1">
                             <div className="flex justify-between items-baseline">
-                                <h5 className={`font-semibold text-sm truncate ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>
+                                <h5 className={`font-semibold text-sm ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>
                                     {skill.name}
                                 </h5>
                                 {isLocked && (
-                                    <span className="text-xs text-yellow-500/80 font-medium bg-black/30 px-1.5 py-0.5 rounded ml-2 flex-shrink-0">
+                                    <span className="text-xs text-yellow-500/80 font-medium bg-black/30 px-1.5 py-0.5 rounded">
                                         Hạng {requiredRank}
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-400 mt-0">
+                            <p className="text-xs text-gray-400 mt-0.5">
                                 {skill.description}
                             </p>
                         </div>
@@ -250,6 +254,7 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
                 </div>
               </div>
 
+              {/* CẬP NHẬT: Thanh Tab được chuyển lên đây, là một phần của header cố định */}
               {hasSkills && (
                   <nav className="flex -mb-[18px] space-x-4 px-1">
                       <button
@@ -277,8 +282,8 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
             </div>
 
             {/* ---- PHẦN 2: CONTENT (CÓ THỂ CUỘN VÀ ẨN THANH CUỘN) ---- */}
-            <div className="flex-1 min-h-[150px] overflow-y-auto scrollbar-hidden">
-              <div className="modal-tab-content pt-4 pb-2 pr-1">
+            <div className="flex-1 min-h-[200px] overflow-y-auto scrollbar-hidden">
+              <div className="modal-tab-content pt-4 pb-2">
                 {(!hasSkills || activeModalTab === 'info') ? (
                     <>
                         <p className="text-gray-300 leading-relaxed text-sm mb-4">{item.description}</p>
