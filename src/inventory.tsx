@@ -134,6 +134,50 @@ const renderItemStats = (item: any) => {
     );
 };
 
+// --- CẬP NHẬT: COMPONENT HIỂN THỊ KỸ NĂNG CỦA VẬT PHẨM VỚI LOGIC KHÓA/MỞ KHÓA ---
+const getUnlockedSkillCount = (rarity: string) => {
+    switch(rarity) {
+        case 'D': return 1;
+        case 'B': return 2;
+        case 'A': return 3;
+        case 'S': return 4;
+        case 'SR': return 5;
+        case 'SSR': return 5; // Giả sử SSR cũng có 5 skill
+        default: return 0; // Rank E hoặc các loại khác
+    }
+};
+
+const renderItemSkills = (item: any) => {
+    if (!item.skills || item.skills.length === 0) return null;
+    
+    const unlockedCount = getUnlockedSkillCount(item.rarity);
+    const unlockRanks = ['D', 'B', 'A', 'S', 'SR'];
+
+    return (
+        <div className="mt-5 border-t border-gray-700/50 pt-5">
+            <h4 className="text-base font-bold text-yellow-300 mb-3">Kỹ Năng Bị Động</h4>
+            <div className="space-y-3">
+                {item.skills.map((skill: any, index: number) => {
+                    const isLocked = index >= unlockedCount;
+                    const requiredRank = unlockRanks[index];
+
+                    return (
+                        <div key={index} className={`flex items-start gap-3 bg-black/20 p-3 rounded-lg border transition-all ${isLocked ? 'border-gray-800/70 opacity-50' : 'border-gray-700/50 hover:border-gray-600'}`}>
+                            <div className={`flex-shrink-0 w-10 h-10 bg-gray-900/80 rounded-md flex items-center justify-center text-xl ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
+                                {isLocked ? '🔒' : skill.icon}
+                            </div>
+                            <div className="flex-1">
+                                <h5 className={`font-semibold ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>{isLocked ? `Kỹ Năng Bị Khóa` : skill.name}</h5>
+                                <p className="text-xs text-gray-400 mt-1">{isLocked ? `Mở khóa ở Hạng ${requiredRank}` : skill.description}</p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 
 // --- START: CÁC COMPONENT CON ĐƯỢC TÁCH RA NGOÀI VÀ TỐI ƯU ---
 
@@ -177,7 +221,8 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
             </div>
           </div>
           {renderItemStats(item)}
-           {item.type !== 'currency' && (
+          {renderItemSkills(item)}
+          {item.type !== 'currency' && (
             <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
               {isEquippable && (
                 isEquipped ? 
