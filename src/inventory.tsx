@@ -230,67 +230,76 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
           <div className={`fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ${animation ? 'opacity-0' : 'opacity-100'} z-40`} onClick={onClose}></div>
-          <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transition-all duration-300 ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`}>
+          
+          {/* CẬP NHẬT: Chia layout modal thành 3 phần (header, content, footer) bằng flexbox để content có thể cuộn độc lập */}
+          <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] transition-all duration-300 ${animation ? 'opacity-0 scale-90' : 'opacity-100 scale-100'} z-50 flex flex-col`}>
             
-            <div className="flex justify-between items-start mb-4">
-              <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3>
-              <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 mb-4 border-b border-gray-700/50 pb-4">
-              <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl bg-black/30 rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}>
-                {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2" /> : <div className="text-2xl sm:text-3xl relative z-0">{item.icon}</div>}
+            {/* ---- PHẦN 1: HEADER (CỐ ĐỊNH) ---- */}
+            <div className="flex-shrink-0">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3>
+                <button onClick={onClose} className="relative z-50 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close Icon" className="w-5 h-5" /></button>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center mb-2 gap-2 flex-wrap">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} bg-gray-800/70 border border-gray-700 capitalize`}>{getRarityDisplayName(item.rarity)}</span>
-                  <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
-                  {item.level !== undefined && <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">Level: {item.level}</span>}
-                  {item.quantity > 1 && <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>}
+
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl bg-black/30 rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}>
+                  {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-2" /> : <div className="text-2xl sm:text-3xl relative z-0">{item.icon}</div>}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center mb-2 gap-2 flex-wrap">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} bg-gray-800/70 border border-gray-700 capitalize`}>{getRarityDisplayName(item.rarity)}</span>
+                    <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
+                    {item.level !== undefined && <span className="bg-blue-800/50 text-blue-300 px-2 py-0.5 rounded-full border border-blue-700/50 text-xs font-semibold">Level: {item.level}</span>}
+                    {item.quantity > 1 && <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-gray-100 text-[9px] font-semibold px-1 py-0.5 rounded shadow-md z-10 border border-white/10">x{item.quantity}</div>}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {hasSkills && (
-              <div className="w-full border-b border-gray-700/60 mb-4">
-                  <nav className="flex -mb-px space-x-4">
-                      <button
-                          onClick={() => setActiveModalTab('info')}
-                          className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                              activeModalTab === 'info'
-                                  ? 'border-yellow-400 text-yellow-300'
-                                  : 'border-transparent text-gray-500 hover:text-gray-300'
-                          }`}
-                      >
-                          Thông Tin Chi Tiết
-                      </button>
-                      <button
-                          onClick={() => setActiveModalTab('skills')}
-                          className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                              activeModalTab === 'skills'
-                                  ? 'border-yellow-400 text-yellow-300'
-                                  : 'border-transparent text-gray-500 hover:text-gray-300'
-                          }`}
-                      >
-                          Kỹ Năng
-                      </button>
-                  </nav>
-              </div>
-            )}
-            
-            <div className="min-h-[150px] modal-tab-content">
-              {(!hasSkills || activeModalTab === 'info') ? (
-                  <>
-                      <p className="text-gray-300 leading-relaxed text-sm mb-4">{item.description}</p>
-                      {renderItemStats(item)}
-                  </>
-              ) : (
-                  renderItemSkills(item)
+            {/* ---- PHẦN 2: CONTENT (CÓ THỂ CUỘN) ---- */}
+            <div className="flex-1 min-h-[200px] overflow-y-auto pr-2 -mr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              {hasSkills && (
+                <div className="w-full border-y border-gray-700/60 my-4">
+                    <nav className="flex -mb-px space-x-4 px-1">
+                        <button
+                            onClick={() => setActiveModalTab('info')}
+                            className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                                activeModalTab === 'info'
+                                    ? 'border-yellow-400 text-yellow-300'
+                                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                            }`}
+                        >
+                            Thông Tin
+                        </button>
+                        <button
+                            onClick={() => setActiveModalTab('skills')}
+                            className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                                activeModalTab === 'skills'
+                                    ? 'border-yellow-400 text-yellow-300'
+                                    : 'border-transparent text-gray-500 hover:text-gray-300'
+                            }`}
+                        >
+                            Kỹ Năng
+                        </button>
+                    </nav>
+                </div>
               )}
+              
+              <div className="modal-tab-content pt-1 pb-4">
+                {(!hasSkills || activeModalTab === 'info') ? (
+                    <>
+                        <p className="text-gray-300 leading-relaxed text-sm mb-4">{item.description}</p>
+                        {renderItemStats(item)}
+                    </>
+                ) : (
+                    renderItemSkills(item)
+                )}
+              </div>
             </div>
 
+            {/* ---- PHẦN 3: FOOTER (CỐ ĐỊNH) ---- */}
             {item.type !== 'currency' && (
-              <div className="mt-6 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
+              <div className="flex-shrink-0 mt-auto flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
                 {isEquippable && (
                   isEquipped ? 
                   <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Gỡ bỏ</button>
