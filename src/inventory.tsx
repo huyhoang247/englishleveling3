@@ -1,3 +1,5 @@
+// --- START OF FILE inventory.tsx (31).txt ---
+
 // --- START OF FILE inventory.tsx (22).txt ---
 
 // --- START OF FILE inventory.tsx ---
@@ -295,14 +297,16 @@ const ItemModal = ({ item, isOpen, onClose, animation, onEquip, onUnequip, conte
 
             {/* ---- PHẦN 3: FOOTER (CỐ ĐỊNH) ---- */}
             {item.type !== 'currency' && (
-              <div className="flex-shrink-0 mt-auto flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 border-t border-gray-700/50 pt-5">
+              // CẬP NHẬT: Thiết kế lại các nút hành động để gọn gàng, tinh tế và luôn nằm trên một hàng.
+              <div className="flex-shrink-0 mt-auto flex space-x-3 border-t border-gray-700/50 pt-4">
                 {isEquippable && (
                   isEquipped ? 
-                  <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Gỡ bỏ</button>
+                  <button onClick={() => onUnequip(item)} className={'flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Gỡ bỏ</button>
                   :
-                  <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Trang bị</button>
+                  <button onClick={() => onEquip(item)} className={'flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg text-sm'}>Trang bị</button>
                 )}
-                <button className="px-4 py-2.5 bg-red-700/80 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors duration-200 text-sm">Bỏ</button>
+                {/* THAY ĐỔI: Nút "Bỏ" thành "Phân rã" với thiết kế phụ, tinh tế hơn */}
+                <button className="flex-1 px-4 py-2 bg-gray-800/70 hover:bg-red-900/60 border border-gray-700 hover:border-red-700 rounded-lg text-gray-300 hover:text-red-300 font-semibold transition-colors duration-200 text-sm">Phân rã</button>
               </div>
             )}
           </div>
