@@ -90,7 +90,6 @@ const sampleItems = [
         price: 2950,
         image: 'https://placehold.co/600x600/1a1a2e/ff6347?text=⚔️',
         description: 'Thanh kiếm được rèn từ vảy của rồng lửa cổ đại, có khả năng thiêu đốt mọi kẻ thù.',
-        featured: true, // Item này sẽ được làm nổi bật
     },
     {
         id: 2,
@@ -336,7 +335,7 @@ const GameShopUI = ({ onClose }) => {
         <div className="relative w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
             <button
                 onClick={onClose}
-                className="absolute top-4 right-4 lg:top-6 lg:right-6 z-[60] p-2 rounded-full bg-black/40 hover:bg-black/70 transition-colors"
+                className="absolute top-4 right-4 lg:top-6 lg:right-6 z-[60]"
                 aria-label="Đóng cửa hàng"
             >
                 <img src={closeIconUrl} alt="Close" className="w-7 h-7" />
