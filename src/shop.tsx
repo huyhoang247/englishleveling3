@@ -98,7 +98,8 @@ const sampleItems = [
         rarity: 'Sử thi',
         price: 1820,
         image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️',
-        description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.'
+        description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.',
+        featured: true, // Item này sẽ được làm nổi bật
     },
     {
         id: 3,
@@ -338,7 +339,7 @@ const GameShopUI = ({ onClose }) => {
                 className="absolute top-4 right-4 lg:top-6 lg:right-6 z-[60]"
                 aria-label="Đóng cửa hàng"
             >
-                <img src={closeIconUrl} alt="Close" className="w-7 h-7" />
+                <img src={closeIconUrl} alt="Close" className="w-5 h-5" />
             </button>
             <div 
                 className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]">
