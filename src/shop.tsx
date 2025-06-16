@@ -19,12 +19,12 @@ const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><
 
 // --- Dữ liệu tĩnh cho các loại vật phẩm khác ---
 const sampleItemsNonWeapons = [
-    { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'Sử thi', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' },
-    { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'Sử thi', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
-    { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'Sử thi', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' },
-    { id: 1003, name: 'Ngọc Tái Sinh', type: 'Vật phẩm', rarity: 'Hiếm', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' },
-    { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'Phổ thông', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
-    { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'Hiếm', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
+    { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'Sử thi', price: 1820, image: 'https://placehold.co/300x300/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' },
+    { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'Sử thi', price: 2000, image: 'https://placehold.co/300x300/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
+    { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'Sử thi', price: 2200, image: 'https://placehold.co/300x300/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' },
+    { id: 1003, name: 'Ngọc Tái Sinh', type: 'Vật phẩm', rarity: 'Hiếm', price: 975, image: 'https://placehold.co/300x300/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' },
+    { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'Phổ thông', price: 500, image: 'https://placehold.co/300x300/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
+    { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'Hiếm', price: 750, image: 'https://placehold.co/300x300/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
 ];
 
 // --- Cấu hình màu sắc & giá cho các cấp độ hiếm ---
@@ -73,7 +73,7 @@ const generateDailyShopWeapons = () => {
 
         const imageUrl = trimmedIcon.startsWith('http')
             ? trimmedIcon // Use the trimmed URL directly
-            : `https://placehold.co/600x600/1a1a2e/ffffff?text=${encodeURIComponent(trimmedIcon || '❓')}`;
+            : `https://placehold.co/300x300/1a1a2e/ffffff?text=${encodeURIComponent(trimmedIcon || '❓')}`;
 
         return {
             id: weapon.id,
