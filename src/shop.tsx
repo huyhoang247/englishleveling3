@@ -290,7 +290,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
 
                     <section>
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex justify-between items-center mb-4 pr-2">
                             <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
                             {activeCategory === 'Vũ khí' && <ShopCountdown />}
                         </div>
