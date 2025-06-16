@@ -1,6 +1,6 @@
 // --- START OF FILE item-database.ts (UPDATED) ---
 
-import { itemAssets } from '../game-assets';
+import { itemAssets } from '../game-assets.ts';
 
 // THAY ĐỔI: Định nghĩa kiểu ItemRank mới để sử dụng trong toàn bộ hệ thống.
 export type ItemRank = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
