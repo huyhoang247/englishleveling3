@@ -59,6 +59,7 @@ const shuffleArray = (array: any[]) => {
     return array;
 };
 
+// SỬA LỖI Ở HÀM DƯỚI ĐÂY
 const generateDailyShopWeapons = () => {
     const allWeapons = Array.from(itemDatabase.values()).filter(item => item.type === 'weapon');
     const selectedWeapons = shuffleArray(allWeapons).slice(0, 10);
@@ -66,10 +67,13 @@ const generateDailyShopWeapons = () => {
     return selectedWeapons.map(weapon => {
         const randomRank = SHOP_WEAPON_RANKS[Math.floor(Math.random() * SHOP_WEAPON_RANKS.length)];
         const price = SHOP_WEAPON_PRICES[randomRank] || 100;
+        
+        // Trim the icon string to handle potential whitespace issues
+        const trimmedIcon = weapon.icon ? weapon.icon.trim() : '';
 
-        const imageUrl = weapon.icon && weapon.icon.startsWith('http')
-            ? weapon.icon
-            : `https://placehold.co/600x600/1a1a2e/ffffff?text=${encodeURIComponent(weapon.icon || '❓')}`;
+        const imageUrl = trimmedIcon.startsWith('http')
+            ? trimmedIcon // Use the trimmed URL directly
+            : `https://placehold.co/600x600/1a1a2e/ffffff?text=${encodeURIComponent(trimmedIcon || '❓')}`;
 
         return {
             id: weapon.id,
@@ -82,6 +86,7 @@ const generateDailyShopWeapons = () => {
         };
     });
 };
+
 
 const getShopItems = () => {
     try {
