@@ -29,18 +29,18 @@ const sampleItemsNonWeapons = [
 
 // --- Cấu hình màu sắc & giá cho các cấp độ hiếm ---
 const rarityConfig = {
-    'SSR': { color: 'red-500', shadow: 'red-500/50' },
-    'SR': { color: 'rose-400', shadow: 'rose-400/50' },
-    'S': { color: 'amber-400', shadow: 'amber-400/50' },
-    'A': { color: 'purple-500', shadow: 'purple-500/50' },
-    'B': { color: 'sky-400', shadow: 'sky-400/50' },
-    'D': { color: 'green-400', shadow: 'green-400/50' },
-    'E': { color: 'gray-400', shadow: 'gray-400/50' },
+    'SSR': { color: 'red-500', shadow: 'red-500/50', gradient: 'from-red-800/80 via-orange-900/30 to-black' },
+    'SR': { color: 'rose-400', shadow: 'rose-400/50', gradient: 'from-red-800/80 via-orange-900/30 to-black' },
+    'S': { color: 'amber-400', shadow: 'amber-400/50', gradient: 'from-yellow-800/70 via-black/40 to-gray-900' },
+    'A': { color: 'purple-500', shadow: 'purple-500/50', gradient: 'from-purple-800/80 via-black/30 to-gray-900' },
+    'B': { color: 'sky-400', shadow: 'sky-400/50', gradient: 'from-blue-800/80 to-gray-900' },
+    'D': { color: 'green-400', shadow: 'green-400/50', gradient: 'from-green-900/70 to-gray-900' },
+    'E': { color: 'gray-400', shadow: 'gray-400/50', gradient: 'from-gray-800/95 to-gray-900/95' },
     // Giữ lại rank cũ để các vật phẩm khác không bị lỗi
-    'Huyền thoại': { color: 'amber-400', shadow: 'amber-400/50' },
-    'Sử thi': { color: 'purple-500', shadow: 'purple-500/50' },
-    'Hiếm': { color: 'sky-400', shadow: 'sky-400/50' },
-    'Phổ thông': { color: 'gray-400', shadow: 'gray-400/50' },
+    'Huyền thoại': { color: 'amber-400', shadow: 'amber-400/50', gradient: 'from-yellow-800/70 via-black/40 to-gray-900' },
+    'Sử thi': { color: 'purple-500', shadow: 'purple-500/50', gradient: 'from-purple-800/80 via-black/30 to-gray-900' },
+    'Hiếm': { color: 'sky-400', shadow: 'sky-400/50', gradient: 'from-blue-800/80 to-gray-900' },
+    'Phổ thông': { color: 'gray-400', shadow: 'gray-400/50', gradient: 'from-gray-800/95 to-gray-900/95' },
 };
 
 const SHOP_WEAPON_RANKS: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
@@ -59,7 +59,6 @@ const shuffleArray = (array: any[]) => {
     return array;
 };
 
-// SỬA LỖI Ở HÀM DƯỚI ĐÂY
 const generateDailyShopWeapons = () => {
     const allWeapons = Array.from(itemDatabase.values()).filter(item => item.type === 'weapon');
     const selectedWeapons = shuffleArray(allWeapons).slice(0, 10);
@@ -68,11 +67,10 @@ const generateDailyShopWeapons = () => {
         const randomRank = SHOP_WEAPON_RANKS[Math.floor(Math.random() * SHOP_WEAPON_RANKS.length)];
         const price = SHOP_WEAPON_PRICES[randomRank] || 100;
         
-        // Trim the icon string to handle potential whitespace issues
         const trimmedIcon = weapon.icon ? weapon.icon.trim() : '';
 
         const imageUrl = trimmedIcon.startsWith('http')
-            ? trimmedIcon // Use the trimmed URL directly
+            ? trimmedIcon
             : `https://placehold.co/600x600/1a1a2e/ffffff?text=${encodeURIComponent(trimmedIcon || '❓')}`;
 
         return {
@@ -83,6 +81,9 @@ const generateDailyShopWeapons = () => {
             price: price,
             image: imageUrl,
             description: weapon.description,
+            // Thêm stats và skills để hiển thị trong modal chi tiết mới
+            stats: weapon.stats,
+            skills: weapon.skills,
         };
     });
 };
@@ -170,33 +171,125 @@ const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: s
     );
 };
 
-// --- Component Chi tiết Vật phẩm (Modal) ---
+// --- START: CÁC HÀM HỖ TRỢ RENDER MODAL (TỪ INVENTORY) ---
+const formatStatName = (stat: string) => {
+    const translations: { [key: string]: string } = { damage: 'Sát thương', health: 'Máu', durability: 'Độ bền', healing: 'Hồi máu', defense: 'Phòng thủ', energyRestore: 'Hồi năng lượng', magicBoost: 'Tăng phép', intelligence: 'Trí tuệ', resurrection: 'Hồi sinh', fireDamage: 'Sát thương lửa', strength: 'Sức mạnh', attackSpeed: 'Tốc độ tấn công', manaRegen: 'Hồi mana', range: 'Tầm xa', poisonDamage: 'Sát thương độc', duration: 'Thời gian', magicResist: 'Kháng phép', manaRestore: 'Hồi mana', speed: 'Tốc độ', cleanse: 'Thanh tẩy', strengthBoost: 'Tăng sức mạnh', luck: 'May mắn' };
+    return translations[stat] || stat.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+};
+
+const renderItemStats = (item: any) => {
+    if (!item.stats) return null;
+    return (
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 bg-black/20 p-3 rounded-lg border border-gray-700/50 text-sm">
+        {Object.entries(item.stats).map(([stat, value]) => (
+          <div key={stat} className="flex justify-between items-center">
+            <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
+            <span className={'font-semibold text-gray-300'}>{stat.includes('Percent') || stat === 'magicBoost' ? `+${value}%` : value}</span>
+          </div>
+        ))}
+      </div>
+    );
+};
+
+const getUnlockedSkillCount = (rarity: string) => {
+    switch(rarity) {
+        case 'D': return 1; case 'B': return 2; case 'A': return 3; case 'S': return 4; case 'SR': return 5; case 'SSR': return 5;
+        default: return 0;
+    }
+};
+
+const renderItemSkills = (item: any) => {
+    if (!item.skills || item.skills.length === 0) return null;
+    const unlockedCount = getUnlockedSkillCount(item.rarity);
+    const unlockRanks = ['D', 'B', 'A', 'S', 'SR'];
+    return (
+        <div className="space-y-2.5">
+            {item.skills.map((skill: any, index: number) => {
+                const isLocked = index >= unlockedCount;
+                const requiredRank = unlockRanks[index];
+                return (
+                    <div key={index} className={`flex items-center gap-3 bg-black/30 p-3 rounded-lg border transition-all duration-200 ${isLocked ? 'border-gray-800/70' : 'border-gray-700/50'}`}>
+                        <div className={`relative flex-shrink-0 w-12 h-12 bg-gray-900/80 rounded-md flex items-center justify-center text-2xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}>
+                           {isLocked ? '🔒' : skill.icon}
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-center">
+                                <h5 className={`font-semibold text-sm ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>{skill.name}</h5>
+                                {isLocked && (<span className="text-xs text-yellow-300 font-medium bg-black/40 px-2 py-1 rounded-md border border-yellow-700/40">{requiredRank} Rank</span>)}
+                            </div>
+                            <p className="text-xs text-gray-400 mt-0.5">{skill.description}</p>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+// --- END: CÁC HÀM HỖ TRỢ ---
+
+
+// --- Component Chi tiết Vật phẩm (Modal) - Thiết kế lại ---
 const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => void }) => {
+    const [activeModalTab, setActiveModalTab] = useState<'info' | 'skills'>('info');
+    
+    useEffect(() => {
+        if (item) setActiveModalTab('info');
+    }, [item]);
+
     if (!item) return null;
+    
     const config = rarityConfig[item.rarity as keyof typeof rarityConfig] || rarityConfig['E'];
+    const hasSkills = item.skills && item.skills.length > 0;
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4 animate-fade-in">
-            <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-4xl grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8 p-6 md:p-8 relative animate-scale-up">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-                <div className="md:col-span-2 flex flex-col items-center justify-center">
-                    <img src={item.image} alt={item.name} className={`w-full h-auto max-h-[450px] object-contain rounded-lg drop-shadow-[0_0_35px_rgba(var(--shadow-color),0.5)]`} style={{ '--shadow-color': `var(--color-${config.color})` } as React.CSSProperties} />
+            <div className={`relative bg-gradient-to-br ${config.gradient} p-5 rounded-xl border-2 border-${config.color} shadow-2xl w-full max-w-md max-h-[90vh] transition-all duration-300 animate-scale-up z-50 flex flex-col`}>
+                
+                {/* Header */}
+                <div className="flex-shrink-0 border-b border-gray-700/50 pb-4">
+                    <div className="flex justify-between items-start mb-4">
+                        <h3 className={`text-2xl font-bold text-${config.color}`}>{item.name}</h3>
+                        <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors text-xl -mt-1 -mr-1">
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                        <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center bg-black/30 rounded-lg border-2 border-${config.color} shadow-inner flex-shrink-0 relative overflow-hidden mx-auto sm:mx-0`}>
+                            <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center mb-2 gap-2 flex-wrap">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold text-${config.color} bg-gray-800/70 border border-gray-700 capitalize`}>{item.rarity} Rank</span>
+                                <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span>
+                            </div>
+                            <p className="text-gray-300 leading-relaxed text-sm ">{item.description}</p>
+                        </div>
+                    </div>
+                    {hasSkills && (
+                        <nav className="flex -mb-[18px] space-x-4 px-1">
+                            <button onClick={() => setActiveModalTab('info')} className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${activeModalTab === 'info' ? `border-cyan-400 text-cyan-300` : 'border-transparent text-gray-500 hover:text-gray-300'}`}>Thông Tin</button>
+                            <button onClick={() => setActiveModalTab('skills')} className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${activeModalTab === 'skills' ? `border-cyan-400 text-cyan-300` : 'border-transparent text-gray-500 hover:text-gray-300'}`}>Kỹ Năng</button>
+                        </nav>
+                    )}
                 </div>
-                <div className="md:col-span-3 flex flex-col">
-                    <span className={`text-sm font-bold uppercase tracking-wider text-${config.color}`}>{item.type}</span>
-                    <h2 className="text-4xl lg:text-5xl font-extrabold text-white my-1">{item.name}</h2>
-                    <span className={`text-lg font-bold mb-4 text-${config.color}`}>{item.rarity}</span>
-                    <p className="text-gray-300 mb-6 flex-grow">{item.description}</p>
-                    <div className="bg-slate-800/50 p-4 rounded-lg mb-6 border border-slate-700">
+
+                {/* Content */}
+                <div className="flex-1 min-h-[150px] overflow-y-auto scrollbar-hidden">
+                    <div className="modal-tab-content pt-4 pb-2">
+                        {(!hasSkills || activeModalTab === 'info') ? renderItemStats(item) : renderItemSkills(item)}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex-shrink-0 mt-auto flex flex-col gap-4 border-t border-gray-700/50 pt-4">
+                    <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
                         <p className="text-sm text-gray-400">Giá vật phẩm</p>
                         <div className="flex items-center space-x-3 mt-1">
                             <Gem className={`w-8 h-8 text-${config.color}`} />
                             <span className="text-3xl font-bold text-white">{item.price.toLocaleString()}</span>
                         </div>
                     </div>
-                    <div className="flex items-stretch gap-4">
+                    <div className="flex items-stretch gap-3">
                         <button className={`flex-1 bg-gradient-to-r from-${config.color} to-cyan-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg`}>MUA NGAY</button>
                         <button className="bg-slate-700 text-white font-bold p-3 rounded-lg hover:bg-slate-600 transition-colors duration-300">TẶNG</button>
                     </div>
@@ -205,8 +298,12 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
             <style jsx>{`
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes scale-up { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-                .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
-                .animate-scale-up { animation: scale-up 0.3s ease-out forwards; }
+                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+                .animate-scale-up { animation: scale-up 0.2s ease-out forwards; }
+                .scrollbar-hidden::-webkit-scrollbar { display: none; }
+                .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+                @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); }
             `}</style>
         </div>
     );
