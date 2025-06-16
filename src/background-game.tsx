@@ -18,7 +18,7 @@ import Inventory from './inventory.tsx';
 import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
-import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
+import { uiAssets, lottieAssets, allImageUrls } from './game-assets';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 
@@ -26,7 +26,7 @@ import Shop from './shop.tsx';
 // ==================================================================
 // TÀI NGUYÊN TẬP TRUNG ĐÃ ĐƯỢC CHUYỂN SANG 'game-assets.ts'
 // ==================================================================
-const towerIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png';
+// const towerIconUrl = '...'; // <-- ĐÃ XÓA VÀ CHUYỂN SANG game-assets.ts
 
 
 // ==================================================================
@@ -709,7 +709,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
                 {
-                  icon: <img src={towerIconUrl} alt="Leo Tháp Icon" className="w-full h-full object-contain" />,
+                  icon: <img src={uiAssets.towerIcon} alt="Leo Tháp Icon" className="w-full h-full object-contain" />,
                   label: "",
                   special: true,
                   centered: true,
@@ -859,3 +859,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+// --- END OF FILE background-game.tsx ---
