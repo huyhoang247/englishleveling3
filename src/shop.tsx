@@ -67,7 +67,8 @@ const renderItemStats = (item: any) => {
         {Object.entries(item.stats).map(([stat, value]) => (
           <div key={stat} className="flex justify-between items-center">
             <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
-            <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') || stat === 'lifeSteal' ? `${(Number(value) * 100).toFixed(0)}%` : `+${value}`}</span>
+            {/* THAY ĐỔI Ở ĐÂY: Đã xóa `+` trước value */}
+            <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') || stat === 'lifeSteal' ? `${(Number(value) * 100).toFixed(0)}%` : value}</span>
           </div>
         ))}
       </div>
