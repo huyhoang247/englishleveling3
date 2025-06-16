@@ -18,7 +18,7 @@ import Inventory from './inventory.tsx';
 import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
-import { uiAssets, lottieAssets, allImageUrls } from './game-assets';
+import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 
