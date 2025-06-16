@@ -272,10 +272,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
             <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24">
                 <main>
                     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                        <div className="flex flex-col gap-2">
-                            <h1 className="text-3xl font-bold text-white">Cửa Hàng</h1>
-                            <ShopCountdown />
-                        </div>
+                        <h1 className="text-3xl font-bold text-white">Cửa Hàng</h1>
                         <div className="flex items-center gap-4 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
                             <div className="flex items-center gap-2">
                                 <Coins className="w-6 h-6 text-yellow-400" />
@@ -293,7 +290,10 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
 
                     <section>
-                        <h2 className="text-2xl font-bold text-white mb-4">{activeCategory}</h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
+                            {activeCategory === 'Vũ khí' && <ShopCountdown />}
+                        </div>
                         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                             {gridItems.map(item => (
                                 <ShopItemCard key={`${item.id}-${item.name}-${item.rarity}`} item={item} onSelect={handleSelectItem} />
