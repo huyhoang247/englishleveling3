@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { itemDatabase, ItemRank, ItemDefinition } from './item-database'; // Giả sử tệp item-database.ts ở cùng cấp
+import { itemDatabase, ItemRank, ItemDefinition } from '../inventory/item-database.ts'; // Giả sử tệp item-database.ts ở cùng cấp
 
 const closeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png';
 
