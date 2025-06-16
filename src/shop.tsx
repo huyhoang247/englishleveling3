@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { itemDatabase, ItemRank, ItemDefinition } from './inventory/item-database.ts';
+import { itemDatabase, ItemRank } from './inventory/item-database.ts';
 import { uiAssets } from './game-assets.ts';
 
 // --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX ---
@@ -67,7 +67,7 @@ const renderItemStats = (item: any) => {
         {Object.entries(item.stats).map(([stat, value]) => (
           <div key={stat} className="flex justify-between items-center">
             <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
-            <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') ? `${(Number(value) * 100).toFixed(0)}%` : `+${value}`}</span>
+            <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') || stat === 'lifeSteal' ? `${(Number(value) * 100).toFixed(0)}%` : `+${value}`}</span>
           </div>
         ))}
       </div>
@@ -117,14 +117,21 @@ const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d
 const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon> );
 
 // --- Dữ liệu tĩnh cho các loại vật phẩm khác ---
-const sampleItemsNonWeapons = [ /* ... Dữ liệu không đổi ... */ ];
+const sampleItemsNonWeapons = [
+    { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'Sử thi', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' },
+    { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'Sử thi', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
+    { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'Sử thi', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' },
+    { id: 1003, name: 'Ngọc Tái Sinh', type: 'Vật phẩm', rarity: 'Hiếm', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' },
+    { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'Phổ thông', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
+    { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'Hiếm', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
+];
+
 
 // --- Cấu hình màu sắc & giá cho các cấp độ hiếm ---
-const rarityConfig = { // Giữ lại để dùng cho button MUA NGAY và thẻ vật phẩm
-    'SSR': { color: 'rose-500', shadow: 'rose-500/50' }, 'SR': { color: 'red-500', shadow: 'red-500/50' },
-    'S': { color: 'yellow-400', shadow: 'yellow-400/50' }, 'A': { color: 'purple-500', shadow: 'purple-500/50' },
-    'B': { color: 'blue-500', shadow: 'blue-500/50' }, 'D': { color: 'green-500', shadow: 'green-500/50' },
-    'E': { color: 'gray-500', shadow: 'gray-500/50' },
+const rarityConfigTailwind = { // Giữ lại để dùng cho button MUA NGAY và thẻ vật phẩm cũ
+    'SR': { color: 'red-500' }, 'S': { color: 'yellow-400' },
+    'A': { color: 'purple-500' }, 'B': { color: 'blue-500' },
+    'D': { color: 'green-500' }, 'E': { color: 'gray-500' },
 };
 
 const SHOP_WEAPON_RANKS: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
@@ -132,6 +139,7 @@ const SHOP_WEAPON_PRICES: { [key in ItemRank]?: number } = { 'E': 100, 'D': 500,
 
 // --- Logic Tạo và Quản lý Vật phẩm Cửa hàng Hàng ngày ---
 const shuffleArray = (array: any[]) => { let currentIndex = array.length, randomIndex; while (currentIndex !== 0) { randomIndex = Math.floor(Math.random() * currentIndex); currentIndex--; [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]; } return array; };
+
 const generateDailyShopWeapons = () => {
     const allWeapons = Array.from(itemDatabase.values()).filter(item => item.type === 'weapon');
     const selectedWeapons = shuffleArray(allWeapons).slice(0, 10);
@@ -143,11 +151,30 @@ const generateDailyShopWeapons = () => {
         return { id: weapon.id, name: weapon.name, type: 'Vũ khí', rarity: randomRank, price: price, image: imageUrl, description: weapon.description, };
     });
 };
-const getShopItems = () => { try { const storedData = localStorage.getItem('dailyShopData'); const storedTimestamp = localStorage.getItem('dailyShopTimestamp'); const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); if (storedData && storedTimestamp && parseInt(storedTimestamp, 10) === today) { return JSON.parse(storedData); } else { const newItems = generateDailyShopWeapons(); localStorage.setItem('dailyShopData', JSON.stringify(newItems)); localStorage.setItem('dailyShopTimestamp', today.toString()); return newItems; } } catch (error) { console.error("Could not access localStorage. Generating temporary shop data.", error); return generateDailyShopWeapons(); } };
+
+const getShopItems = () => {
+    try {
+        const storedData = localStorage.getItem('dailyShopData');
+        const storedTimestamp = localStorage.getItem('dailyShopTimestamp');
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        if (storedData && storedTimestamp && parseInt(storedTimestamp, 10) === today) {
+            return JSON.parse(storedData);
+        } else {
+            const newItems = generateDailyShopWeapons();
+            localStorage.setItem('dailyShopData', JSON.stringify(newItems));
+            localStorage.setItem('dailyShopTimestamp', today.toString());
+            return newItems;
+        }
+    } catch (error) {
+        console.error("Could not access localStorage. Generating temporary shop data.", error);
+        return generateDailyShopWeapons();
+    }
+};
 
 // --- Component Thẻ Vật phẩm ---
 const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => void }) => {
-    // Sửa lại để dùng getRarityTextColor và getRarityColor cho nhất quán
     const rarityTextColor = getRarityTextColor(item.rarity);
     const rarityBorderColor = getRarityColor(item.rarity);
 
@@ -169,7 +196,9 @@ const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => 
                         <Gem className={`w-4 h-4 ${rarityTextColor}`} />
                         <span className="text-lg font-bold text-white">{item.price.toLocaleString()}</span>
                     </div>
-                    <button className="text-xs font-semibold text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">CHI TIẾT</button>
+                    <button className="text-xs font-semibold text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                        CHI TIẾT
+                    </button>
                 </div>
             </div>
         </div>
@@ -177,7 +206,31 @@ const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => 
 };
 
 // --- Component Thanh Tabs Danh mục ---
-const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => { /* ... Không đổi ... */ };
+const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => {
+    const categories = [
+        { name: 'Vũ khí', icon: Swords }, { name: 'Trang bị', icon: Shield },
+        { name: 'Trang phục', icon: Sparkles }, { name: 'Vật phẩm', icon: Tag },
+        { name: 'Rương', icon: ShoppingCart },
+    ];
+    
+    return (
+        <nav className="flex flex-wrap gap-2 mb-8">
+            {categories.map(({ name, icon: IconComponent }) => (
+                <button
+                    key={name} onClick={() => setActiveCategory(name)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5 ${
+                        activeCategory === name 
+                        ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/20' 
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+                    }`}
+                >
+                    <IconComponent className="w-5 h-5" />
+                    <span>{name}</span>
+                </button>
+            ))}
+        </nav>
+    );
+};
 
 
 // --- START: MODAL CHI TIẾT VẬT PHẨM ĐƯỢC THIẾT KẾ LẠI ---
@@ -185,14 +238,13 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
     const [activeModalTab, setActiveModalTab] = useState<'info' | 'skills'>('info');
 
     useEffect(() => {
-        // Reset tab về 'info' mỗi khi mở modal mới
         if (item) setActiveModalTab('info');
     }, [item]);
 
     if (!item) return null;
 
     const hasSkills = item.skills && item.skills.length > 0;
-    const config = rarityConfig[item.rarity as keyof typeof rarityConfig] || rarityConfig['E'];
+    const config = rarityConfigTailwind[item.rarity as keyof typeof rarityConfigTailwind] || rarityConfigTailwind['E'];
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
@@ -267,7 +319,38 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
 
 
 // --- Component Đồng hồ đếm ngược ---
-const ShopCountdown = () => { /* ... Không đổi ... */ };
+const ShopCountdown = () => {
+    const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' });
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const now = new Date();
+            const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+            const difference = tomorrow.getTime() - now.getTime();
+            if (difference > 0) {
+                const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((difference / 1000 / 60) % 60);
+                const seconds = Math.floor((difference / 1000) % 60);
+                setTimeLeft({
+                    hours: hours.toString().padStart(2, '0'),
+                    minutes: minutes.toString().padStart(2, '0'),
+                    seconds: seconds.toString().padStart(2, '0'),
+                });
+            }
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+            <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '2s' }}/>
+            <span>Làm mới sau:</span>
+            <span className="font-mono font-bold text-slate-200 tracking-wider">
+                {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
+            </span>
+        </div>
+    );
+};
 
 // --- Component Chính Của Cửa Hàng ---
 const GameShopUI = ({ onClose }: { onClose: () => void }) => {
@@ -284,12 +367,10 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
     
     // CẬP NHẬT: Hàm này sẽ lấy dữ liệu đầy đủ từ database để truyền vào modal
     const handleSelectItem = (shopItem: any) => {
-        // Tìm vật phẩm gốc trong database bằng ID
         const baseItem = itemDatabase.get(shopItem.id);
         
         if (!baseItem) {
             console.error(`Vật phẩm với ID ${shopItem.id} không tìm thấy trong database.`);
-            // Nếu không tìm thấy, vẫn hiển thị thông tin cơ bản từ cửa hàng
             setSelectedItem(shopItem);
             return;
         }
@@ -297,8 +378,8 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
         // Kết hợp thông tin đầy đủ (stats, skills) từ database
         // với thông tin từ cửa hàng (price, rarity ngẫu nhiên)
         const detailedItem = {
-            ...baseItem,  // stats, skills, description gốc, icon emoji, ...
-            ...shopItem, // Ghi đè bằng name, price, rarity, image URL từ cửa hàng
+            ...baseItem,
+            ...shopItem,
         };
 
         setSelectedItem(detailedItem);
@@ -317,7 +398,16 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
                     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                         <h1 className="text-3xl font-bold text-white">Cửa Hàng</h1>
                         <div className="flex items-center gap-4 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                            {/* ... Phần header không đổi ... */}
+                            <div className="flex items-center gap-2">
+                                <Coins className="w-6 h-6 text-yellow-400" />
+                                <span className="font-bold text-lg">15,280</span>
+                            </div>
+                            <div className="w-px h-6 bg-slate-600"></div>
+                            <div className="flex items-center gap-2">
+                                <Gem className="w-6 h-6 text-cyan-400" />
+                                <span className="font-bold text-lg">3,250</span>
+                            </div>
+                            <button className="ml-2 bg-yellow-500 text-slate-900 font-bold text-sm px-3 py-1.5 rounded-md hover:bg-yellow-400 transition-colors">NẠP</button>
                         </div>
                     </header>
 
