@@ -319,10 +319,10 @@ const ChestUI: React.FC<ChestUIProps> = ({
 const CHEST_DATA = [
     {
         id: 'legendary_chest',
-        headerTitle: "Rương Sự Kiện",
-        mainTitle: "Rương Báu Huyền Thoại",
+        headerTitle: "Basic Vocabulary",
+        mainTitle: "",
         imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png",
-        infoText: <>Có thể nhận trang bị <span className="highlight-purple">Sử thi hạng S</span></>,
+        infoText: <>3.000 Vocabulary words</>,
         pityLine1: '',
         pityLine2: '',
         price1: 320,
