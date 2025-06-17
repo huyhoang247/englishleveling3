@@ -55,16 +55,62 @@ const GlobalStyles = () => (
         }
 
         .chest-header { padding: 10px 20px; background-color: #4e342e; font-size: 1rem; font-weight: 700; color: #d7ccc8; border-bottom: 2px solid #5d4037; text-align: center; }
-        .chest-body { background-color: #ff9a42; padding: 20px; border-top: 8px solid #d15c0a; position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; }
-        .chest-title { font-size: clamp(1.5rem, 5vw, 2rem); color: white; font-weight: 900; text-shadow: 2px 2px 0px #8c420b; margin-top: 0; margin-bottom: 15px; text-align: center; }
+        
+        /* === THAY ĐỔI CHÍNH Ở ĐÂY === */
+        .chest-body { 
+            background: linear-gradient(170deg, #43335b, #2c2240); /* Gradient tím-xanh đậm thay cho màu cam */
+            padding: 20px; 
+            border-top: 8px solid #8c6b41; /* Viền trên màu vàng đồng */
+            position: relative; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            overflow: hidden; /* Cần để chứa pseudo-element */
+        }
+        
+        /* Thêm hiệu ứng lấp lánh nhẹ nhàng */
+        .chest-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.3)"/><circle cx="80" cy="25" r="0.5" fill="rgba(255,255,255,0.3)"/><circle cx="30" cy="70" r="1.5" fill="rgba(255,255,255,0.2)"/><circle cx="60" cy="90" r="0.8" fill="rgba(255,255,255,0.3)"/></svg>');
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .chest-body > * {
+             position: relative; /* Đảm bảo nội dung nổi trên lớp hiệu ứng */
+             z-index: 1;
+        }
+        /* ============================ */
+
+
+        .chest-title { font-size: clamp(1.5rem, 5vw, 2rem); color: white; font-weight: 900; text-shadow: 2px 2px 0px #21182f; margin-top: 0; margin-bottom: 15px; text-align: center; }
         .help-icon { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(0, 0, 0, 0.2); border: 2px solid white; color: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; z-index: 2; }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.4); }
         
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 15px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
-        .info-bubble { flex: 2; background-color: #6a2e35; color: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #a1887f; font-size: 0.9rem; text-align: left; }
-        .pity-timer { text-align: center; color: #d15c0a; font-weight: 700; font-size: 0.9rem; margin: 2px 0; }
-        .highlight-purple { color: #8e24aa; font-weight: bold; }
+        
+        /* Thay đổi bong bóng thông tin để có hiệu ứng kính mờ */
+        .info-bubble { 
+            flex: 2; 
+            background-color: rgba(255, 255, 255, 0.1); /* Nền mờ */
+            backdrop-filter: blur(4px);
+            color: white; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Viền mờ */
+            font-size: 0.9rem; 
+            text-align: left; 
+        }
+
+        .pity-timer { text-align: center; color: #c5b8d9; font-weight: 700; font-size: 0.9rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .highlight-purple { color: #f0abfc; font-weight: bold; }
         
         /* --- THIẾT KẾ NÚT MỚI --- */
         .action-button-group { display: flex; gap: 10px; width: 100%; }
@@ -75,13 +121,12 @@ const GlobalStyles = () => (
             border: none;
             cursor: pointer;
             transition: transform 0.1s ease, box-shadow 0.1s ease;
-            color: #3e2723;
-            font-weight: 700; /* Tăng độ đậm */
+            color: #ffffff; /* Đổi màu chữ trên nút thành trắng */
+            font-weight: 700;
             font-size: 0.95rem;
-            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.2);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); /* Đổi bóng chữ cho dễ đọc hơn */
             box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
             
-            /* Dàn layout cho nội dung bên trong nút */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -89,9 +134,9 @@ const GlobalStyles = () => (
         }
         .chest-button:active {
             transform: translateY(2px);
-            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25); /* Hiệu ứng lún xuống */
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25);
         }
-        .btn-get-1 { background: linear-gradient(to top, #f59e0b, #fcd34d); }
+        .btn-get-1 { background: linear-gradient(to top, #c026d3, #e879f9); } /* Gradient màu hồng/tím */
         .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         
         .button-price {
