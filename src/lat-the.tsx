@@ -92,11 +92,9 @@ const GlobalStyles = () => (
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 15px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
         
-        /* === TỐI ƯU HIỆU NĂNG CHO INFO BUBBLE === */
         .info-bubble { 
             flex: 2; 
-            background-color: rgba(30, 20, 45, 0.8); /* Thay nền kính mờ bằng màu bán trong suốt, đặc hơn để dễ đọc */
-            /* backdrop-filter: blur(4px); */ /* Đã loại bỏ để tối ưu hiệu năng */
+            background-color: rgba(30, 20, 45, 0.8);
             color: white; 
             padding: 10px 15px; 
             border-radius: 8px; 
@@ -139,7 +137,7 @@ const GlobalStyles = () => (
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 6px; /* Tăng khoảng cách một chút cho icon */
             font-size: 0.85rem;
             color: white;
             font-weight: 600;
@@ -149,13 +147,19 @@ const GlobalStyles = () => (
             text-shadow: none;
         }
 
-        /* === TỐI ƯU HIỆU NĂNG CHO OVERLAY === */
+        /* === THÊM STYLE CHO ICON MỚI === */
+        .price-icon {
+            width: 16px;
+            height: 16px;
+        }
+        /* ================================ */
+
+        /* --- Overlay & Card styles (đã tối ưu) --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
         .card-opening-overlay { 
             position: fixed; 
             top: 0; left: 0; right: 0; bottom: 0; 
-            background-color: rgba(10, 10, 20, 0.95); /* Tăng nhẹ độ mờ để che nền tốt hơn */
-            /* backdrop-filter: blur(8px); */ /* Đã loại bỏ để tối ưu hiệu năng */
+            background-color: rgba(10, 10, 20, 0.95);
             z-index: 1000; 
             display: flex; justify-content: center; align-items: center; 
             animation: fade-in-overlay 0.5s ease; 
@@ -165,12 +169,10 @@ const GlobalStyles = () => (
         .overlay-footer { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
             padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; 
-            background: rgba(10, 21, 46, 0.8); /* Tăng độ mờ để che nền tốt hơn */
-            /* backdrop-filter: blur(10px); */ /* Đã loại bỏ để tối ưu hiệu năng */
+            background: rgba(10, 21, 46, 0.8);
             border-top: 1px solid rgba(255, 255, 255, 0.1); 
             z-index: 1010; 
         }
-        /* ======================================= */
 
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
@@ -358,13 +360,17 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     <button className="chest-button btn-get-1" onClick={onOpen1}>
                         <span>x1</span>
                         <span className="button-price">
-                            <span role="img" aria-label="gem">🟣</span> {price1}
+                             {/* === THAY ĐỔI TỪ EMOJI SANG IMG === */}
+                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
+                            {price1}
                         </span>
                     </button>
                     <button className="chest-button btn-get-10" onClick={onOpen10}>
                         <span>x4</span>
                         <span className="button-price">
-                            <span role="img" aria-label="gem">🟣</span> {price10}
+                             {/* === THAY ĐỔI TỪ EMOJI SANG IMG === */}
+                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
+                            {price10}
                         </span>
                     </button>
                 </div>
