@@ -282,7 +282,7 @@ const CHEST_DATA = [
         id: 'legendary_chest',
         headerTitle: "Rương Sự Kiện",
         mainTitle: "Rương Báu Huyền Thoại",
-        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/b/b3/S_Grade_Supplies_x10.png/revision/latest/scale-to-width-down/1000?cb=20230612142247",
+        imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png",
         infoText: <>Có thể nhận trang bị <span className="highlight-purple">Sử thi hạng S</span></>,
         pityLine1: <>Nhận <span className="highlight-purple">Sử thi</span> trong 10 lần mở</>,
         pityLine2: <>Nhận <span className="highlight-purple">S-Sử thi</span> trong 50 lần mở</>,
