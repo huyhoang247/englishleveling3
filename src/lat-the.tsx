@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật layout cho 4 thẻ) =======================
+// === 1. CSS STYLES (Đã cập nhật để tương thích với thanh điều hướng) ===
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -65,13 +65,29 @@ const GlobalStyles = () => (
         
         /* --- Lớp Overlay Mở Thẻ --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
-        .card-opening-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(10, 10, 20, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow-y: auto; }
-        .overlay-content { width: 100%; max-width: 900px; padding: 60px 15px 20px 15px; box-sizing: border-box; }
+        .card-opening-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(10, 10, 20, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* THAY ĐỔI: Căn trên cùng */
+            animation: fade-in-overlay 0.5s ease;
+            overflow-y: auto;
+            padding: 80px 15px 100px 15px; /* THAY ĐỔI: Thêm padding trên và dưới */
+            box-sizing: border-box; /* THAY ĐỔI: Đảm bảo padding hoạt động đúng */
+        }
+        .overlay-content { width: 100%; max-width: 900px; }
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
 
         /* --- Nút bấm bên trong overlay --- */
-        .action-btn { padding: 12px 25px; font-size: 16px; font-weight: 500; border: 2px solid #e94560; background-color: transparent; color: #e94560; cursor: pointer; border-radius: 8px; transition: all 0.3s ease; text-transform: uppercase; margin-top: 20px; min-width: 150px; }
+        .action-btn { padding: 12px 25px; font-size: 16px; font-weight: 500; border: 2px solid #e94560; background-color: transparent; color: #e94560; cursor: pointer; border-radius: 8px; transition: all 0.3s ease; text-transform: uppercase; margin-top: 30px; min-width: 150px; }
         .action-btn:hover { background-color: #e94560; color: #16213e; }
         .action-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background-color: transparent; }
 
@@ -89,15 +105,14 @@ const GlobalStyles = () => (
         .rarity-common { border-color: #bdc3c7; background-color: #7f8c8d; } .rarity-rare { border-color: #3498db; background-color: #2980b9; } .rarity-epic { border-color: #9b59b6; background-color: #8e44ad; } .rarity-legendary { border-color: #f1c40f; background-color: #f39c12; }
         .card-front.rarity-common { border-color: #bdc3c7; } .card-front.rarity-rare { border-color: #3498db; } .card-front.rarity-epic { border-color: #9b59b6; } .card-front.rarity-legendary { border-color: #f1c40f; }
         
-        /* === NEW Grid Layout for 4 Cards (2x2) === */
         .four-card-grid-container {
             width: 100%;
-            max-width: 550px; /* Giới hạn chiều rộng để lưới 2x2 đẹp hơn trên màn hình lớn */
+            max-width: 550px;
             display: grid;
             gap: 15px;
             justify-content: center;
             margin: 0 auto;
-            grid-template-columns: repeat(2, 1fr); /* Luôn là 2 cột */
+            grid-template-columns: repeat(2, 1fr);
         }
         
         /* --- Animation --- */
@@ -119,7 +134,7 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Đã cập nhật sang x4) ========================
+// === 3. CÁC COMPONENT CON (Không thay đổi logic) ========================
 // ========================================================================
 const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Sử Thi' ? 'reveal-epic' : 'reveal-legendary') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
 
@@ -161,11 +176,10 @@ const SingleCardOpener = () => {
     );
 };
 
-// --- Component Mở 4 Thẻ ---
 const FourCardsOpener = () => {
     const [cards, setCards] = useState([]);
     const [flippedIndices, setFlippedIndices] = useState(new Set());
-    const [phase, setPhase] = useState('DEALING'); // Giai đoạn: 'DEALING', 'FLIPPING', 'REVEALED'
+    const [phase, setPhase] = useState('DEALING');
     
     const startNewRound = useCallback(() => {
         setPhase('DEALING');
@@ -173,17 +187,17 @@ const FourCardsOpener = () => {
         setCards([]);
         
         setTimeout(() => {
-            const newCards = Array.from({ length: 4 }, generateRandomCard); // Thay đổi: 4 thẻ
+            const newCards = Array.from({ length: 4 }, generateRandomCard);
             setCards(newCards);
             
-            const dealAnimationTime = 500 + 80 * 4; // Thay đổi: tính toán cho 4 thẻ
+            const dealAnimationTime = 500 + 80 * 4;
             const pauseBeforeFlip = 500;
 
             setTimeout(() => {
                 setPhase('FLIPPING');
                 
                 const flipCardSequentially = (index) => {
-                    if (index >= 4) { // Thay đổi: điều kiện dừng cho 4 thẻ
+                    if (index >= 4) {
                         setTimeout(() => setPhase('REVEALED'), 800);
                         return;
                     }
@@ -210,7 +224,7 @@ const FourCardsOpener = () => {
             case 'FLIPPING':
                 return { text: 'Đang lật...', disabled: true };
             case 'REVEALED':
-                return { text: 'Mở Lại x4', disabled: false }; // Thay đổi: text nút bấm
+                return { text: 'Mở Lại x4', disabled: false };
             default:
                 return { text: '', disabled: true };
         }
@@ -220,7 +234,7 @@ const FourCardsOpener = () => {
 
     return (
         <div style={{ textAlign: 'center' }}>
-            <div className="four-card-grid-container"> {/* Thay đổi: class CSS */}
+            <div className="four-card-grid-container">
                 {cards.map((card, index) => (
                     <div
                         key={card.id}
@@ -231,7 +245,7 @@ const FourCardsOpener = () => {
                     </div>
                 ))}
             </div>
-            <div style={{ marginTop: '30px', height: '50px' }}>
+            <div style={{ height: '50px' }}>
                 <button onClick={startNewRound} className="action-btn" disabled={buttonProps.disabled}>
                     {buttonProps.text}
                 </button>
@@ -241,16 +255,16 @@ const FourCardsOpener = () => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Đã cập nhật sang x4) =====================
+// === 4. COMPONENT CHÍNH (APP) (Không thay đổi logic) ====================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
-    const [showFourOverlay, setShowFourOverlay] = useState(false); // Thay đổi
+    const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [singleKey, setSingleKey] = useState(Date.now());
-    const [fourKey, setFourKey] = useState(Date.now()); // Thay đổi
+    const [fourKey, setFourKey] = useState(Date.now());
 
     const openSingle = () => { setSingleKey(Date.now()); setShowSingleOverlay(true); };
-    const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); }; // Thay đổi
+    const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); };
     
     return (
         <>
@@ -259,7 +273,7 @@ function App() {
                 <h1 className="main-title">Mở Thẻ Tướng</h1>
                 <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button className="open-button" onClick={openSingle}>Mở x1</button>
-                    <button className="open-button" onClick={openFour}>Mở x4</button>  {/* Thay đổi */}
+                    <button className="open-button" onClick={openFour}>Mở x4</button>
                 </div>
             </div>
 
@@ -272,11 +286,11 @@ function App() {
                 </div>
             )}
 
-            {showFourOverlay && ( /* Thay đổi */
+            {showFourOverlay && (
                 <div className="card-opening-overlay">
                     <button className="overlay-close-btn" onClick={() => setShowFourOverlay(false)}>X</button>
                     <div className="overlay-content">
-                        <FourCardsOpener key={fourKey} /> {/* Thay đổi */}
+                        <FourCardsOpener key={fourKey} />
                     </div>
                 </div>
             )}
