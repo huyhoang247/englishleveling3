@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã sửa đổi) ========================================
+// === 1. CSS STYLES (Đã sửa đổi hoàn toàn để khớp với UI mới) ===========
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
         /* --- Cài đặt chung & Nền --- */
         body {
-            background-image: url('https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=2070&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            /* SỬA ĐỔI: Thay đổi nền để phù hợp với giao diện game */
+            background-color: #343a40;
+            background-image: radial-gradient(circle at center, #495057, #212529);
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -19,172 +18,240 @@ const GlobalStyles = () => (
 
         #root {
             width: 100%;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        /* --- Màn hình chính --- */
-        .main-screen {
+        /* --- GIAO DIỆN RƯƠNG BÁU MỚI --- */
+        .chest-ui-container {
+            width: 100%;
+            max-width: 850px;
+            background-color: #3e2723; /* Nền tối của toàn bộ box */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 2px solid #5d4037;
+        }
+
+        .chest-header {
+            padding: 10px 20px;
+            background-color: #4e342e;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #d7ccc8;
+            border-bottom: 2px solid #5d4037;
+        }
+
+        .chest-body {
+            background-color: #ff9a42;
+            padding: 20px;
+            border: 8px solid #d15c0a;
+            border-top: none;
+            position: relative;
+        }
+
+        .chest-title {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            color: white;
+            font-weight: 900;
+            text-shadow: 3px 3px 0px #8c420b;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        
+        .help-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 2px solid white;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        .help-icon:hover {
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .chest-content-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chest-left-column {
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chest-right-column {
+            flex: 1;
+            min-width: 280px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
-            padding: 0 20px;
         }
 
-        .main-title {
-            font-size: clamp(2.5rem, 10vw, 4rem);
-            color: white;
-            text-shadow: 0 0 15px rgba(233, 69, 96, 0.8), 0 0 25px rgba(233, 69, 96, 0.6);
+        .chest-image {
+            width: 100%;
+            max-width: 250px;
+            height: auto;
+            margin-bottom: 15px;
         }
 
-        .open-button {
-            padding: 15px 40px;
-            font-size: clamp(16px, 4vw, 20px);
+        .pity-timer {
+            color: #d15c0a;
             font-weight: 700;
-            border: 3px solid #e94560;
-            background-color: transparent;
-            color: #e94560;
-            cursor: pointer;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            backdrop-filter: blur(5px);
+            font-size: 1rem;
+            margin: 2px 0;
         }
 
-        .open-button:hover {
-            background-color: #e94560;
-            color: #16213e;
-            box-shadow: 0 0 20px #e94560;
-            transform: translateY(-5px);
+        .highlight-purple {
+            color: #8e24aa;
+            font-weight: bold;
+        }
+
+        .info-bubble {
+            background-color: #6a2e35;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid #a1887f;
+            font-size: 1rem;
+            position: relative;
+            width: fit-content;
         }
         
-        /* --- Lớp Overlay Mở Thẻ --- */
-        @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
+        /* Mũi tên trỏ vào rương */
+        .info-bubble::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -24px;
+            transform: translateY(-50%);
+            border-width: 12px;
+            border-style: solid;
+            border-color: transparent #a1887f transparent transparent;
+        }
+        .info-bubble::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -20px;
+            transform: translateY(-50%);
+            border-width: 10px;
+            border-style: solid;
+            border-color: transparent #6a2e35 transparent transparent;
+        }
         
-        .card-opening-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(10, 10, 20, 0.9);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
+        @media (max-width: 680px) {
+            .info-bubble { margin-top: 20px; }
+            .info-bubble::before, .info-bubble::after {
+                left: 50%;
+                top: -24px;
+                transform: translateX(-50%);
+                border-color: transparent transparent #a1887f transparent;
+            }
+            .info-bubble::after {
+                top: -20px;
+                border-color: transparent transparent #6a2e35 transparent;
+            }
+        }
+
+
+        .action-button-group {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            gap: 15px;
+            width: 90%;
+            max-width: 250px;
+        }
+
+        .chest-button {
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            color: #3e2723;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+        }
+        .chest-button:active {
+            transform: translateY(3px);
+            border-bottom-width: 2px;
+        }
+
+        .btn-get-1 {
+            background: linear-gradient(to top, #f9a825, #fdd835);
+            border-bottom: 5px solid #c88719;
+        }
+        .btn-get-1:active { border-bottom-color: #f9a825; }
+
+        .btn-get-10 {
+            background: linear-gradient(to top, #66bb6a, #a5d6a7);
+            border-bottom: 5px solid #4a9d4e;
+        }
+        .btn-get-10:active { border-bottom-color: #66bb6a; }
+
+        .button-price {
+            display: flex;
             align-items: center;
-            animation: fade-in-overlay 0.5s ease;
-            overflow: hidden; 
-            padding: 20px 15px;
-            box-sizing: border-box;
+            justify-content: center;
+            gap: 5px;
+            font-size: 1rem;
+            color: #424242;
+            font-weight: 600;
         }
         
+        /* --- Lớp Overlay Mở Thẻ (giữ nguyên) --- */
+        @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
+        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; z-index: 1011; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
-
-        /* === Thiết kế Footer và Nút bấm mới === */
-        .overlay-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(10, 21, 46, 0.5);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1010;
-        }
-
-        .footer-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: rgba(255, 255, 255, 0.8);
-            padding: 8px 25px;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-        }
-
-        .footer-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: white;
-            color: white;
-        }
-
-        .footer-btn.primary {
-            border-color: #e94560;
-            color: #e94560;
-        }
-
-        .footer-btn.primary:hover {
-            background-color: #e94560;
-            color: #16213e;
-        }
-
-        .footer-btn:disabled {
-            color: rgba(255, 255, 255, 0.4);
-            border-color: rgba(255, 255, 255, 0.2);
-            cursor: not-allowed;
-            background-color: transparent;
-        }
+        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.5); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
+        .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
+        .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
+        .footer-btn.primary { border-color: #e94560; color: #e94560; }
+        .footer-btn.primary:hover { background-color: #e94560; color: #16213e; }
+        .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         
-        /* --- Thiết kế Thẻ Bài CO GIÃN --- */
+        /* --- Thiết kế Thẻ Bài CO GIÃN (giữ nguyên) --- */
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
-        .card-inner { 
-            position: relative; 
-            width: 100%; 
-            height: 100%; 
-            transition: transform 0.8s; 
-            transform-style: preserve-3d;
-            will-change: transform;
-        }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; will-change: transform; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
+        .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.18); }
+        .card-image-in-card { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         
-        .card-front {
-            transform: rotateY(180deg);
-            padding: 6px; 
-            box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.18); 
-        }
-        .card-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px; 
-        }
-        
-        .four-card-grid-container {
-            width: 100%;
-            max-width: 550px;
-            display: grid;
-            gap: 15px;
-            justify-content: center;
-            margin: 0 auto;
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
-        /* --- Animation --- */
+        /* --- Animation (giữ nguyên) --- */
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
-        
-        /* SỬA ĐỔI: Đã xóa animation cho thẻ huyền thoại */
     `}
     </style>
 );
@@ -197,10 +264,9 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Sửa đổi Component Card) =======================
+// === 3. CÁC COMPONENT CON (Không thay đổi logic) =======================
 // ========================================================================
 const Card = ({ cardData, isFlipped }) => {
-    // SỬA ĐỔI: Đã xóa logic (useState, useEffect) cho hiệu ứng reveal
     const { name, image } = cardData;
 
     return (
@@ -208,7 +274,8 @@ const Card = ({ cardData, isFlipped }) => {
             <div className="card-inner">
                 <div className="card-face card-back">?</div>
                 <div className="card-face card-front">
-                    <img src={image} alt={name} className="card-image" />
+                    {/* Sửa tên class để tránh xung đột */}
+                    <img src={image} alt={name} className="card-image-in-card" />
                 </div>
             </div>
         </div>
@@ -308,6 +375,7 @@ const FourCardsOpener = ({ onClose }) => {
             case 'FLIPPING':
                 return { text: 'Đang lật...', disabled: true };
             case 'REVEALED':
+                // Chú ý: Nút này sẽ mở lại 4 thẻ
                 return { text: 'Mở Lại x4', disabled: false };
             default:
                 return { text: '', disabled: true };
@@ -345,7 +413,7 @@ const FourCardsOpener = ({ onClose }) => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Không thay đổi) ==========================
+// === 4. COMPONENT CHÍNH (APP) (Sửa đổi JSX) ============================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -354,22 +422,65 @@ function App() {
     const [fourKey, setFourKey] = useState(Date.now());
 
     const openSingle = () => { setSingleKey(Date.now()); setShowSingleOverlay(true); };
+    // LƯU Ý: Nút "Mở 10 lần" trên giao diện sẽ gọi hàm này (mở 4 thẻ).
+    // Bạn có thể sửa đổi logic trong FourCardsOpener để mở 10 thẻ nếu muốn.
     const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); };
     
     const closeSingle = () => setShowSingleOverlay(false);
     const closeFour = () => setShowFourOverlay(false);
 
+    // URL hình ảnh rương. Bạn có thể thay thế bằng ảnh của bạn.
+    const chestImageUrl = "https://static.wikia.nocookie.net/survivorio/images/b/b3/S_Grade_Supplies_x10.png";
+
     return (
         <>
             <GlobalStyles />
-            <div className="main-screen">
-                <h1 className="main-title">Mở Thẻ Tướng</h1>
-                <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button className="open-button" onClick={openSingle}>Mở x1</button>
-                    <button className="open-button" onClick={openFour}>Mở x4</button>
-                </div>
+            {/* SỬA ĐỔI: Thay thế hoàn toàn giao diện màn hình chính */}
+            <div className="chest-ui-container">
+                <header className="chest-header">
+                    Rương Sự Kiện
+                </header>
+                <main className="chest-body">
+                    <button className="help-icon">?</button>
+                    <h1 className="chest-title">Rương Báu Huyền Thoại</h1>
+                    <div className="chest-content-grid">
+                        
+                        <div className="chest-left-column">
+                            <img src={chestImageUrl} alt="Rương Báu" className="chest-image"/>
+                            <p className="pity-timer">
+                                Nhận <span className="highlight-purple">Sử thi</span> trong 1 lần mở
+                            </p>
+                            <p className="pity-timer">
+                                Nhận <span className="highlight-purple">S-Sử thi</span> trong 51 lần mở
+                            </p>
+                        </div>
+
+                        <div className="chest-right-column">
+                            <div className="info-bubble">
+                                Có thể nhận trang bị <span className="highlight-purple">Sử thi hạng S</span>
+                            </div>
+                            <div className="action-button-group">
+                                <button className="chest-button btn-get-1" onClick={openSingle}>
+                                    <span>Mở 1 lần</span>
+                                    <span className="button-price">
+                                        <span role="img" aria-label="gem">🟣</span> 320
+                                    </span>
+                                </button>
+                                
+                                <button className="chest-button btn-get-10" onClick={openFour}>
+                                    <span>Mở 10 lần</span>
+                                    <span className="button-price">
+                                      <span role="img" aria-label="gem">🟣</span> 2980
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </main>
             </div>
 
+            {/* Phần Overlay không thay đổi */}
             {showSingleOverlay && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
