@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật để tương thích với thanh điều hướng) ===
+// === 1. CSS STYLES (ĐÃ CẬP NHẬT HIỆU ỨNG MỚI) ==========================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -28,60 +28,14 @@ const GlobalStyles = () => (
         }
 
         /* --- Màn hình chính --- */
-        .main-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            padding: 0 20px;
-        }
-
-        .main-title {
-            font-size: clamp(2.5rem, 10vw, 4rem);
-            color: white;
-            text-shadow: 0 0 15px rgba(233, 69, 96, 0.8), 0 0 25px rgba(233, 69, 96, 0.6);
-        }
-
-        .open-button {
-            padding: 15px 40px;
-            font-size: clamp(16px, 4vw, 20px);
-            font-weight: 700;
-            border: 3px solid #e94560;
-            background-color: transparent;
-            color: #e94560;
-            cursor: pointer;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            backdrop-filter: blur(5px);
-        }
-
-        .open-button:hover {
-            background-color: #e94560;
-            color: #16213e;
-            box-shadow: 0 0 20px #e94560;
-            transform: translateY(-5px);
-        }
+        .main-screen { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 0 20px; }
+        .main-title { font-size: clamp(2.5rem, 10vw, 4rem); color: white; text-shadow: 0 0 15px rgba(233, 69, 96, 0.8), 0 0 25px rgba(233, 69, 96, 0.6); }
+        .open-button { padding: 15px 40px; font-size: clamp(16px, 4vw, 20px); font-weight: 700; border: 3px solid #e94560; background-color: transparent; color: #e94560; cursor: pointer; border-radius: 50px; transition: all 0.3s ease; text-transform: uppercase; backdrop-filter: blur(5px); }
+        .open-button:hover { background-color: #e94560; color: #16213e; box-shadow: 0 0 20px #e94560; transform: translateY(-5px); }
         
         /* --- Lớp Overlay Mở Thẻ --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
-        .card-opening-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(10, 10, 20, 0.9);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* THAY ĐỔI: Căn trên cùng */
-            animation: fade-in-overlay 0.5s ease;
-            overflow-y: auto;
-            padding: 80px 15px 100px 15px; /* THAY ĐỔI: Thêm padding trên và dưới */
-            box-sizing: border-box; /* THAY ĐỔI: Đảm bảo padding hoạt động đúng */
-        }
+        .card-opening-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(10, 10, 20, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; justify-content: center; align-items: flex-start; animation: fade-in-overlay 0.5s ease; overflow-y: auto; padding: 80px 15px 100px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
@@ -93,11 +47,11 @@ const GlobalStyles = () => (
 
         /* --- Thiết kế Thẻ Bài CO GIÃN --- */
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s, box-shadow 0.3s; transform-style: preserve-3d; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
-        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; }
+        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; position: relative; } /* Thêm position relative */
         .card-image { width: 100%; height: 60%; object-fit: cover; clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%); }
         .card-info { padding: 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; }
         .card-name { font-size: clamp(0.8rem, 4vw, 1.2rem); font-weight: 700; margin: 0; line-height: 1.2; }
@@ -105,23 +59,60 @@ const GlobalStyles = () => (
         .rarity-common { border-color: #bdc3c7; background-color: #7f8c8d; } .rarity-rare { border-color: #3498db; background-color: #2980b9; } .rarity-epic { border-color: #9b59b6; background-color: #8e44ad; } .rarity-legendary { border-color: #f1c40f; background-color: #f39c12; }
         .card-front.rarity-common { border-color: #bdc3c7; } .card-front.rarity-rare { border-color: #3498db; } .card-front.rarity-epic { border-color: #9b59b6; } .card-front.rarity-legendary { border-color: #f1c40f; }
         
-        .four-card-grid-container {
-            width: 100%;
-            max-width: 550px;
-            display: grid;
-            gap: 15px;
-            justify-content: center;
-            margin: 0 auto;
-            grid-template-columns: repeat(2, 1fr);
-        }
+        .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         
         /* --- Animation --- */
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
-        @keyframes epic-glow { 0% { box-shadow: 0 0 15px 5px rgba(155, 89, 182, 0); } 50% { box-shadow: 0 0 30px 10px rgba(155, 89, 182, 0.8); } 100% { box-shadow: 0 0 15px 5px rgba(155, 89, 182, 0); } }
-        @keyframes legendary-glow { 0% { box-shadow: 0 0 20px 7px rgba(241, 196, 15, 0); transform: scale(1); } 50% { box-shadow: 0 0 40px 15px rgba(241, 196, 15, 1); transform: scale(1.05); } 100% { box-shadow: 0 0 20px 7px rgba(241, 196, 15, 0); transform: scale(1); } }
-        .card-container.flipped.reveal-epic .card-inner { animation: epic-glow 1.5s ease-in-out; }
-        .card-container.flipped.reveal-legendary .card-inner { animation: legendary-glow 1.5s ease-in-out; }
+        
+        /* === HIỆU ỨNG MỚI: Ánh Kim Lấp Lánh (Shimmer Effect) === */
+        @keyframes shimmer-effect {
+            from { transform: translateX(-150%) skewX(-30deg); }
+            to { transform: translateX(150%) skewX(-30deg); }
+        }
+        
+        @keyframes reveal-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 var(--glow-color); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); box-shadow: 0 0 20px 5px var(--glow-color); }
+        }
+
+        /* Lớp phủ tạo vệt sáng */
+        .card-front::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: translateX(-150%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .card-front.shimmer-legendary::after {
+             background: linear-gradient(90deg, transparent, rgba(243, 229, 171, 0.5), transparent);
+        }
+        .card-front.shimmer-epic::after {
+             background: linear-gradient(90deg, transparent, rgba(215, 189, 226, 0.5), transparent);
+        }
+
+        /* Kích hoạt animation */
+        .card-front.has-shimmer::after {
+            animation: shimmer-effect 1s ease-in-out;
+        }
+
+        .card-container.reveal-rarity .card-inner {
+            --glow-color: rgba(255, 255, 255, 0.2);
+            animation: reveal-pulse 1s forwards;
+        }
+        .card-container.reveal-rarity.rarity-epic .card-inner {
+            --glow-color: rgba(155, 89, 182, 0.7);
+        }
+        .card-container.reveal-rarity.rarity-legendary .card-inner {
+            --glow-color: rgba(241, 196, 15, 0.7);
+        }
     `}
     </style>
 );
@@ -134,9 +125,51 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Không thay đổi logic) ========================
+// === 3. CÁC COMPONENT CON (Đã cập nhật logic hiệu ứng trong Card) ======
 // ========================================================================
-const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Sử Thi' ? 'reveal-epic' : 'reveal-legendary') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
+const Card = ({ cardData, isFlipped }) => {
+    const [isRevealed, setIsRevealed] = useState(false);
+    const { name, image, rarity } = cardData;
+
+    useEffect(() => {
+        // Reset reveal state when card is flipped back
+        if (!isFlipped) {
+            setIsRevealed(false);
+            return;
+        }
+
+        // Trigger reveal effect after flip animation starts
+        if (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại') {
+            const timer = setTimeout(() => setIsRevealed(true), 600); // Trigger effect slightly before flip finishes
+            return () => clearTimeout(timer);
+        }
+    }, [isFlipped, rarity.name]);
+
+    const isHighRarity = rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại';
+    const revealClass = isRevealed ? 'reveal-rarity' : '';
+    const rarityClass = isHighRarity ? (rarity.name === 'Sử Thi' ? 'rarity-epic' : 'rarity-legendary') : '';
+    
+    const shimmerClass = isRevealed 
+        ? (rarity.name === 'Sử Thi' ? 'shimmer-epic' 
+            : rarity.name === 'Huyền Thoại' ? 'shimmer-legendary' 
+            : '') 
+        : '';
+        
+    return (
+        <div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass} ${rarityClass}`}>
+            <div className="card-inner">
+                <div className="card-face card-back">?</div>
+                <div className={`card-face card-front ${rarity.colorClass} ${isRevealed ? 'has-shimmer' : ''} ${shimmerClass}`}>
+                    <img src={image} alt={name} className="card-image" />
+                    <div className="card-info">
+                        <h3 className="card-name">{name}</h3>
+                        <span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const SingleCardOpener = () => {
     const [card, setCard] = useState(generateRandomCard());
@@ -255,7 +288,7 @@ const FourCardsOpener = () => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Không thay đổi logic) ====================
+// === 4. COMPONENT CHÍNH (APP) (Không thay đổi) ==========================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
