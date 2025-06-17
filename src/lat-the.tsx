@@ -149,18 +149,34 @@ const GlobalStyles = () => (
             height: 100%; 
             transition: transform 0.8s; 
             transform-style: preserve-3d;
-            will-change: transform; /* SỬA ĐỔI: Tối ưu hóa hiệu năng animation */
+            will-change: transform;
         }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
-        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; }
-        .card-image { width: 100%; height: 60%; object-fit: cover; clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%); }
-        .card-info { padding: 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; }
-        .card-name { font-size: clamp(0.8rem, 4vw, 1.2rem); font-weight: 700; margin: 0; line-height: 1.2; }
-        .card-rarity { font-size: clamp(0.6rem, 3vw, 0.85rem); font-weight: 500; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; margin-top: 5px; align-self: center; }
-        .rarity-common { border-color: #bdc3c7; background-color: #7f8c8d; } .rarity-rare { border-color: #3498db; background-color: #2980b9; } .rarity-epic { border-color: #9b59b6; background-color: #8e44ad; } .rarity-legendary { border-color: #f1c40f; background-color: #f39c12; }
-        .card-front.rarity-common { border-color: #bdc3c7; } .card-front.rarity-rare { border-color: #3498db; } .card-front.rarity-epic { border-color: #9b59b6; } .card-front.rarity-legendary { border-color: #f1c40f; }
+        
+        /* SỬA ĐỔI MẶT TRƯỚC CỦA THẺ */
+        .card-front { 
+            transform: rotateY(180deg); 
+            background-color: #2c3e50; 
+            border-style: solid; 
+            border-width: 4px; 
+        }
+        .card-image { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        
+        /* Các màu viền vẫn được giữ lại */
+        .rarity-common { border-color: #bdc3c7; } 
+        .rarity-rare { border-color: #3498db; } 
+        .rarity-epic { border-color: #9b59b6; } 
+        .rarity-legendary { border-color: #f1c40f; }
+        .card-front.rarity-common { border-color: #bdc3c7; } 
+        .card-front.rarity-rare { border-color: #3498db; } 
+        .card-front.rarity-epic { border-color: #9b59b6; } 
+        .card-front.rarity-legendary { border-color: #f1c40f; }
         
         .four-card-grid-container {
             width: 100%;
@@ -197,9 +213,34 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Không thay đổi) ==============================
+// === 3. CÁC COMPONENT CON (Sửa đổi Component Card) =======================
 // ========================================================================
-const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Huyền Thoại' ? 'reveal-legendary' : 'reveal-epic') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
+const Card = ({ cardData, isFlipped }) => { 
+    const [isRevealed, setIsRevealed] = useState(false); 
+    const { name, image, rarity } = cardData; 
+    
+    useEffect(() => { 
+        if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { 
+            const timer = setTimeout(() => setIsRevealed(true), 800); 
+            return () => clearTimeout(timer); 
+        } 
+        setIsRevealed(false); 
+    }, [isFlipped, rarity.name]); 
+    
+    const revealClass = isRevealed ? (rarity.name === 'Huyền Thoại' ? 'reveal-legendary' : 'reveal-epic') : ''; 
+    
+    return (
+        <div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}>
+            <div className="card-inner">
+                <div className="card-face card-back">?</div>
+                {/* SỬA ĐỔI JSX: Chỉ hiển thị ảnh với viền màu */}
+                <div className={`card-face card-front ${rarity.colorClass}`}>
+                    <img src={image} alt={name} className="card-image" />
+                </div>
+            </div>
+        </div>
+    ); 
+};
 
 const SingleCardOpener = ({ onClose }) => {
     const [card, setCard] = useState(generateRandomCard());
