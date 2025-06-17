@@ -155,28 +155,21 @@ const GlobalStyles = () => (
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
         
-        /* SỬA ĐỔI MẶT TRƯỚC CỦA THẺ */
-        .card-front { 
-            transform: rotateY(180deg); 
-            background-color: #2c3e50; 
-            border-style: solid; 
-            border-width: 4px; 
+        /* SỬA ĐỔI: MẶT TRƯỚC VỚI HIỆU ỨNG KÍNH MỜ */
+        .card-front {
+            transform: rotateY(180deg);
+            padding: 6px; 
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.18); 
         }
-        .card-image { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px; 
         }
-        
-        /* Các màu viền vẫn được giữ lại */
-        .rarity-common { border-color: #bdc3c7; } 
-        .rarity-rare { border-color: #3498db; } 
-        .rarity-epic { border-color: #9b59b6; } 
-        .rarity-legendary { border-color: #f1c40f; }
-        .card-front.rarity-common { border-color: #bdc3c7; } 
-        .card-front.rarity-rare { border-color: #3498db; } 
-        .card-front.rarity-epic { border-color: #9b59b6; } 
-        .card-front.rarity-legendary { border-color: #f1c40f; }
         
         .four-card-grid-container {
             width: 100%;
@@ -192,6 +185,7 @@ const GlobalStyles = () => (
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
         
+        /* Animation cho thẻ Huyền Thoại vẫn được giữ lại để tạo điểm nhấn */
         @keyframes legendary-reveal {
             0% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
             50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); }
@@ -233,14 +227,15 @@ const Card = ({ cardData, isFlipped }) => {
         <div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}>
             <div className="card-inner">
                 <div className="card-face card-back">?</div>
-                {/* SỬA ĐỔI JSX: Chỉ hiển thị ảnh với viền màu */}
-                <div className={`card-face card-front ${rarity.colorClass}`}>
+                {/* SỬA ĐỔI JSX: Xóa bỏ class màu động */}
+                <div className="card-face card-front">
                     <img src={image} alt={name} className="card-image" />
                 </div>
             </div>
         </div>
     ); 
 };
+
 
 const SingleCardOpener = ({ onClose }) => {
     const [card, setCard] = useState(generateRandomCard());
