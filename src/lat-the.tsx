@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật hiệu ứng mới cho thẻ hiếm) ============
+// === 1. CSS STYLES (Đã cập nhật thêm style cho nút đóng) ==============
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -87,9 +87,15 @@ const GlobalStyles = () => (
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
 
         /* --- Nút bấm bên trong overlay --- */
-        .action-btn { padding: 12px 25px; font-size: 16px; font-weight: 500; border: 2px solid #e94560; background-color: transparent; color: #e94560; cursor: pointer; border-radius: 8px; transition: all 0.3s ease; text-transform: uppercase; margin-top: 30px; min-width: 150px; }
-        .action-btn:hover { background-color: #e94560; color: #16213e; }
-        .action-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background-color: transparent; }
+        .action-buttons-container { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .action-btn { padding: 12px 25px; font-size: 16px; font-weight: 500; border: 2px solid; background-color: transparent; cursor: pointer; border-radius: 8px; transition: all 0.3s ease; text-transform: uppercase; min-width: 150px; }
+        
+        .primary-action-btn { border-color: #e94560; color: #e94560; }
+        .primary-action-btn:hover { background-color: #e94560; color: #16213e; }
+        .primary-action-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background-color: transparent; }
+
+        .secondary-action-btn { border-color: #aaa; color: #aaa; }
+        .secondary-action-btn:hover { background-color: #aaa; color: #16213e; }
 
         /* --- Thiết kế Thẻ Bài CO GIÃN --- */
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
@@ -119,66 +125,14 @@ const GlobalStyles = () => (
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
         
-        /* === HIỆU ỨNG MỚI CHO THẺ HIẾM === */
+        @keyframes sheen-effect { 0% { transform: translateX(-150%) skewX(-25deg); opacity: 0.3; } 100% { transform: translateX(150%) skewX(-25deg); opacity: 0.8; } }
+        @keyframes legendary-reveal { 0% { transform: rotateY(180deg) scale(1); filter: brightness(1); } 50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); } 100% { transform: rotateY(180deg) scale(1); filter: brightness(1); } }
         
-        /* 1. Keyframe cho hiệu ứng quét sáng (sheen) */
-        @keyframes sheen-effect {
-            0% { transform: translateX(-150%) skewX(-25deg); opacity: 0.3; }
-            100% { transform: translateX(150%) skewX(-25deg); opacity: 0.8; }
-        }
-
-        /* 2. Keyframe cho hiệu ứng Huyền Thoại (kết hợp nảy và hào quang) */
-        @keyframes legendary-reveal {
-            0% {
-                transform: rotateY(180deg) scale(1);
-                filter: brightness(1);
-            }
-            50% {
-                transform: rotateY(180deg) scale(1.07);
-                filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7));
-            }
-            100% {
-                transform: rotateY(180deg) scale(1);
-                filter: brightness(1);
-            }
-        }
+        .card-front::after { content: ''; position: absolute; top: -50%; left: -25%; width: 50%; height: 200%; background: linear-gradient( to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100% ); transform: translateX(-150%) skewX(-25deg); opacity: 0; pointer-events: none; }
         
-        /* 3. Tạo lớp giả ::after cho hiệu ứng quét sáng trên mặt trước thẻ */
-        .card-front::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -25%;
-            width: 50%;
-            height: 200%;
-            background: linear-gradient(
-                to right,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.3) 50%,
-                rgba(255, 255, 255, 0) 100%
-            );
-            transform: translateX(-150%) skewX(-25deg);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* 4. Áp dụng hiệu ứng khi thẻ được tiết lộ */
-        
-        /* Hiệu ứng cho thẻ Sử Thi: chỉ có quét sáng */
-        .card-container.flipped.reveal-epic .card-front::after {
-            animation: sheen-effect 1s ease-in-out;
-            animation-delay: 0.2s;
-        }
-        
-        /* Hiệu ứng cho thẻ Huyền Thoại: có cả hiệu ứng nảy và quét sáng */
-        .card-container.flipped.reveal-legendary .card-inner {
-            animation: legendary-reveal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .card-container.flipped.reveal-legendary .card-front::after {
-            animation: sheen-effect 1.2s ease-in-out;
-            animation-delay: 0.3s;
-        }
+        .card-container.flipped.reveal-epic .card-front::after { animation: sheen-effect 1s ease-in-out; animation-delay: 0.2s; }
+        .card-container.flipped.reveal-legendary .card-inner { animation: legendary-reveal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-container.flipped.reveal-legendary .card-front::after { animation: sheen-effect 1.2s ease-in-out; animation-delay: 0.3s; }
     `}
     </style>
 );
@@ -191,11 +145,11 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Không thay đổi logic) ========================
+// === 3. CÁC COMPONENT CON (Cập nhật để nhận prop `onClose`) ============
 // ========================================================================
 const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Sử Thi' ? 'reveal-epic' : 'reveal-legendary') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
 
-const SingleCardOpener = () => {
+const SingleCardOpener = ({ onClose }) => {
     const [card, setCard] = useState(generateRandomCard());
     const [isFlipped, setIsFlipped] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
@@ -224,16 +178,20 @@ const SingleCardOpener = () => {
             <div style={{display: 'inline-block', maxWidth: '250px', width: '60vw'}}>
                 <Card cardData={card} isFlipped={isFlipped} />
             </div>
-            <div style={{ marginTop: '20px' }}>
-                <button onClick={handleOpenAgain} className="action-btn" disabled={isProcessing}>
+            {/* THAY ĐỔI: Thêm container cho các nút bấm */}
+            <div className="action-buttons-container">
+                <button onClick={handleOpenAgain} className="action-btn primary-action-btn" disabled={isProcessing}>
                     {isProcessing ? 'Đang mở...' : 'Mở Lại'}
+                </button>
+                <button onClick={onClose} className="action-btn secondary-action-btn">
+                    Đóng
                 </button>
             </div>
         </div>
     );
 };
 
-const FourCardsOpener = () => {
+const FourCardsOpener = ({ onClose }) => {
     const [cards, setCards] = useState([]);
     const [flippedIndices, setFlippedIndices] = useState(new Set());
     const [phase, setPhase] = useState('DEALING');
@@ -302,9 +260,13 @@ const FourCardsOpener = () => {
                     </div>
                 ))}
             </div>
-            <div style={{ height: '50px' }}>
-                <button onClick={startNewRound} className="action-btn" disabled={buttonProps.disabled}>
+            {/* THAY ĐỔI: Thêm container cho các nút bấm */}
+            <div className="action-buttons-container">
+                <button onClick={startNewRound} className="action-btn primary-action-btn" disabled={buttonProps.disabled}>
                     {buttonProps.text}
+                </button>
+                 <button onClick={onClose} className="action-btn secondary-action-btn">
+                    Đóng
                 </button>
             </div>
         </div>
@@ -312,7 +274,7 @@ const FourCardsOpener = () => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Không thay đổi logic) ====================
+// === 4. COMPONENT CHÍNH (APP) (Cập nhật để truyền prop `onClose`) ======
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -323,6 +285,9 @@ function App() {
     const openSingle = () => { setSingleKey(Date.now()); setShowSingleOverlay(true); };
     const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); };
     
+    const closeSingle = () => setShowSingleOverlay(false);
+    const closeFour = () => setShowFourOverlay(false);
+
     return (
         <>
             <GlobalStyles />
@@ -336,18 +301,20 @@ function App() {
 
             {showSingleOverlay && (
                 <div className="card-opening-overlay">
-                    <button className="overlay-close-btn" onClick={() => setShowSingleOverlay(false)}>X</button>
+                    <button className="overlay-close-btn" onClick={closeSingle}>X</button>
                     <div className="overlay-content">
-                        <SingleCardOpener key={singleKey} />
+                        {/* THAY ĐỔI: Truyền hàm closeSingle vào prop onClose */}
+                        <SingleCardOpener key={singleKey} onClose={closeSingle} />
                     </div>
                 </div>
             )}
 
             {showFourOverlay && (
                 <div className="card-opening-overlay">
-                    <button className="overlay-close-btn" onClick={() => setShowFourOverlay(false)}>X</button>
+                    <button className="overlay-close-btn" onClick={closeFour}>X</button>
                     <div className="overlay-content">
-                        <FourCardsOpener key={fourKey} />
+                        {/* THAY ĐỔI: Truyền hàm closeFour vào prop onClose */}
+                        <FourCardsOpener key={fourKey} onClose={closeFour} />
                     </div>
                 </div>
             )}
