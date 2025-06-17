@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã sửa lỗi hiển thị footer) ========================
+// === 1. CSS STYLES (Đã sửa đổi) ========================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -66,7 +66,6 @@ const GlobalStyles = () => (
         /* --- Lớp Overlay Mở Thẻ --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
         
-        /* === SỬA LỖI: Thay thế width/height bằng top/right/bottom/left === */
         .card-opening-overlay {
             position: fixed;
             top: 0;
@@ -78,14 +77,16 @@ const GlobalStyles = () => (
             z-index: 1000;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            /* SỬA ĐỔI: Căn giữa nội dung, loại bỏ scroll */
+            align-items: center;
             animation: fade-in-overlay 0.5s ease;
-            overflow-y: auto;
-            padding: 80px 15px 120px 15px; /* Tăng padding dưới để không bị footer che */
+            overflow: hidden; 
+            padding: 20px 15px;
             box-sizing: border-box;
         }
         
         .overlay-content { width: 100%; max-width: 900px; }
+        /* SỬA ĐỔI: Nút X không còn cần thiết nhưng vẫn giữ style để phòng trường hợp muốn thêm lại */
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; z-index: 1011; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
 
@@ -170,7 +171,6 @@ const GlobalStyles = () => (
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
         
-        /* === Xóa bỏ hiệu ứng kính, chỉ giữ lại hiệu ứng nảy cho Legendary === */
         @keyframes legendary-reveal {
             0% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
             50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); }
@@ -325,7 +325,7 @@ const FourCardsOpener = ({ onClose }) => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Không thay đổi logic) ====================
+// === 4. COMPONENT CHÍNH (APP) (Đã sửa đổi JSX) ==========================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -352,7 +352,7 @@ function App() {
 
             {showSingleOverlay && (
                 <div className="card-opening-overlay">
-                    <button className="overlay-close-btn" onClick={closeSingle}>X</button>
+                    {/* SỬA ĐỔI: Đã xóa nút X */}
                     <div className="overlay-content">
                         <SingleCardOpener key={singleKey} onClose={closeSingle} />
                     </div>
@@ -361,7 +361,7 @@ function App() {
 
             {showFourOverlay && (
                 <div className="card-opening-overlay">
-                    <button className="overlay-close-btn" onClick={closeFour}>X</button>
+                    {/* SỬA ĐỔI: Đã xóa nút X */}
                     <div className="overlay-content">
                         <FourCardsOpener key={fourKey} onClose={closeFour} />
                     </div>
