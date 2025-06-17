@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã sửa đổi) ========================================
+// === 1. CSS STYLES (Đã cập nhật đầy đủ) ===============================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -77,7 +77,6 @@ const GlobalStyles = () => (
             z-index: 1000;
             display: flex;
             justify-content: center;
-            /* SỬA ĐỔI: Căn giữa nội dung, loại bỏ scroll */
             align-items: center;
             animation: fade-in-overlay 0.5s ease;
             overflow: hidden; 
@@ -86,10 +85,7 @@ const GlobalStyles = () => (
         }
         
         .overlay-content { width: 100%; max-width: 900px; }
-        /* SỬA ĐỔI: Nút X không còn cần thiết nhưng vẫn giữ style để phòng trường hợp muốn thêm lại */
-        .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; z-index: 1011; }
-        .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
-
+        
         /* === Thiết kế Footer và Nút bấm mới === */
         .overlay-footer {
             position: fixed;
@@ -149,13 +145,31 @@ const GlobalStyles = () => (
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
-        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; }
+        
+        .card-front { 
+            transform: rotateY(180deg); 
+            background-color: rgba(44, 62, 80, 0.85); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            border-style: solid; 
+            border-width: 4px; 
+        }
+        
         .card-image { width: 100%; height: 60%; object-fit: cover; clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%); }
         .card-info { padding: 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; }
         .card-name { font-size: clamp(0.8rem, 4vw, 1.2rem); font-weight: 700; margin: 0; line-height: 1.2; }
         .card-rarity { font-size: clamp(0.6rem, 3vw, 0.85rem); font-weight: 500; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; margin-top: 5px; align-self: center; }
-        .rarity-common { border-color: #bdc3c7; background-color: #7f8c8d; } .rarity-rare { border-color: #3498db; background-color: #2980b9; } .rarity-epic { border-color: #9b59b6; background-color: #8e44ad; } .rarity-legendary { border-color: #f1c40f; background-color: #f39c12; }
-        .card-front.rarity-common { border-color: #bdc3c7; } .card-front.rarity-rare { border-color: #3498db; } .card-front.rarity-epic { border-color: #9b59b6; } .card-front.rarity-legendary { border-color: #f1c40f; }
+        
+        .rarity-common { background-color: rgba(127, 140, 141, 0.75); } 
+        .rarity-rare { background-color: rgba(41, 128, 185, 0.75); } 
+        .rarity-epic { background-color: rgba(142, 68, 173, 0.75); } 
+        .rarity-legendary { background-color: rgba(243, 156, 18, 0.75); }
+        
+        .card-front.rarity-common { border-color: rgba(189, 195, 199, 0.8); } 
+        .card-front.rarity-rare { border-color: rgba(52, 152, 219, 0.8); } 
+        .card-front.rarity-epic { border-color: rgba(155, 89, 182, 0.8); } 
+        .card-front.rarity-legendary { border-color: rgba(241, 196, 15, 0.8); }
         
         .four-card-grid-container {
             width: 100%;
@@ -325,7 +339,7 @@ const FourCardsOpener = ({ onClose }) => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Đã sửa đổi JSX) ==========================
+// === 4. COMPONENT CHÍNH (APP) (Không thay đổi logic) ====================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -352,7 +366,6 @@ function App() {
 
             {showSingleOverlay && (
                 <div className="card-opening-overlay">
-                    {/* SỬA ĐỔI: Đã xóa nút X */}
                     <div className="overlay-content">
                         <SingleCardOpener key={singleKey} onClose={closeSingle} />
                     </div>
@@ -361,7 +374,6 @@ function App() {
 
             {showFourOverlay && (
                 <div className="card-opening-overlay">
-                    {/* SỬA ĐỔI: Đã xóa nút X */}
                     <div className="overlay-content">
                         <FourCardsOpener key={fourKey} onClose={closeFour} />
                     </div>
