@@ -297,13 +297,13 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
                     <button className="chest-button btn-get-1" onClick={onOpen1}>
-                        <span>Mở 1 lần</span>
+                        <span>x1</span>
                         <span className="button-price">
                             <span role="img" aria-label="gem">🟣</span> {price1}
                         </span>
                     </button>
                     <button className="chest-button btn-get-10" onClick={onOpen10}>
-                        <span>Mở 10 lần</span>
+                        <span>x4</span>
                         <span className="button-price">
                             <span role="img" aria-label="gem">🟣</span> {price10}
                         </span>
