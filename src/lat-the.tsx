@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật để tương thích với thanh điều hướng) ===
+// === 1. CSS STYLES (Đã cập nhật hiệu ứng mới cho thẻ hiếm) ============
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -76,11 +76,11 @@ const GlobalStyles = () => (
             z-index: 1000;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* THAY ĐỔI: Căn trên cùng */
+            align-items: flex-start;
             animation: fade-in-overlay 0.5s ease;
             overflow-y: auto;
-            padding: 80px 15px 100px 15px; /* THAY ĐỔI: Thêm padding trên và dưới */
-            box-sizing: border-box; /* THAY ĐỔI: Đảm bảo padding hoạt động đúng */
+            padding: 80px 15px 100px 15px;
+            box-sizing: border-box;
         }
         .overlay-content { width: 100%; max-width: 900px; }
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; }
@@ -97,7 +97,7 @@ const GlobalStyles = () => (
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
-        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; }
+        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; position: relative; overflow: hidden; }
         .card-image { width: 100%; height: 60%; object-fit: cover; clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%); }
         .card-info { padding: 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; }
         .card-name { font-size: clamp(0.8rem, 4vw, 1.2rem); font-weight: 700; margin: 0; line-height: 1.2; }
@@ -118,10 +118,67 @@ const GlobalStyles = () => (
         /* --- Animation --- */
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
-        @keyframes epic-glow { 0% { box-shadow: 0 0 15px 5px rgba(155, 89, 182, 0); } 50% { box-shadow: 0 0 30px 10px rgba(155, 89, 182, 0.8); } 100% { box-shadow: 0 0 15px 5px rgba(155, 89, 182, 0); } }
-        @keyframes legendary-glow { 0% { box-shadow: 0 0 20px 7px rgba(241, 196, 15, 0); transform: scale(1); } 50% { box-shadow: 0 0 40px 15px rgba(241, 196, 15, 1); transform: scale(1.05); } 100% { box-shadow: 0 0 20px 7px rgba(241, 196, 15, 0); transform: scale(1); } }
-        .card-container.flipped.reveal-epic .card-inner { animation: epic-glow 1.5s ease-in-out; }
-        .card-container.flipped.reveal-legendary .card-inner { animation: legendary-glow 1.5s ease-in-out; }
+        
+        /* === HIỆU ỨNG MỚI CHO THẺ HIẾM === */
+        
+        /* 1. Keyframe cho hiệu ứng quét sáng (sheen) */
+        @keyframes sheen-effect {
+            0% { transform: translateX(-150%) skewX(-25deg); opacity: 0.3; }
+            100% { transform: translateX(150%) skewX(-25deg); opacity: 0.8; }
+        }
+
+        /* 2. Keyframe cho hiệu ứng Huyền Thoại (kết hợp nảy và hào quang) */
+        @keyframes legendary-reveal {
+            0% {
+                transform: rotateY(180deg) scale(1);
+                filter: brightness(1);
+            }
+            50% {
+                transform: rotateY(180deg) scale(1.07);
+                filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7));
+            }
+            100% {
+                transform: rotateY(180deg) scale(1);
+                filter: brightness(1);
+            }
+        }
+        
+        /* 3. Tạo lớp giả ::after cho hiệu ứng quét sáng trên mặt trước thẻ */
+        .card-front::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -25%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: translateX(-150%) skewX(-25deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 4. Áp dụng hiệu ứng khi thẻ được tiết lộ */
+        
+        /* Hiệu ứng cho thẻ Sử Thi: chỉ có quét sáng */
+        .card-container.flipped.reveal-epic .card-front::after {
+            animation: sheen-effect 1s ease-in-out;
+            animation-delay: 0.2s;
+        }
+        
+        /* Hiệu ứng cho thẻ Huyền Thoại: có cả hiệu ứng nảy và quét sáng */
+        .card-container.flipped.reveal-legendary .card-inner {
+            animation: legendary-reveal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card-container.flipped.reveal-legendary .card-front::after {
+            animation: sheen-effect 1.2s ease-in-out;
+            animation-delay: 0.3s;
+        }
     `}
     </style>
 );
