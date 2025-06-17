@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Không thay đổi) =====================================
+// === 1. CSS STYLES (Đã cập nhật layout cho 4 thẻ) =======================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -88,8 +88,17 @@ const GlobalStyles = () => (
         .card-rarity { font-size: clamp(0.6rem, 3vw, 0.85rem); font-weight: 500; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; margin-top: 5px; align-self: center; }
         .rarity-common { border-color: #bdc3c7; background-color: #7f8c8d; } .rarity-rare { border-color: #3498db; background-color: #2980b9; } .rarity-epic { border-color: #9b59b6; background-color: #8e44ad; } .rarity-legendary { border-color: #f1c40f; background-color: #f39c12; }
         .card-front.rarity-common { border-color: #bdc3c7; } .card-front.rarity-rare { border-color: #3498db; } .card-front.rarity-epic { border-color: #9b59b6; } .card-front.rarity-legendary { border-color: #f1c40f; }
-        .card-grid-container { width: 100%; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
-        @media (min-width: 640px) { .card-grid-container { grid-template-columns: repeat(3, 1fr); } }
+        
+        /* === NEW Grid Layout for 4 Cards (2x2) === */
+        .four-card-grid-container {
+            width: 100%;
+            max-width: 550px; /* Giới hạn chiều rộng để lưới 2x2 đẹp hơn trên màn hình lớn */
+            display: grid;
+            gap: 15px;
+            justify-content: center;
+            margin: 0 auto;
+            grid-template-columns: repeat(2, 1fr); /* Luôn là 2 cột */
+        }
         
         /* --- Animation --- */
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -110,7 +119,7 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (ĐÃ SỬA LỖI LẬT THẺ) =========================
+// === 3. CÁC COMPONENT CON (Đã cập nhật sang x4) ========================
 // ========================================================================
 const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Sử Thi' ? 'reveal-epic' : 'reveal-legendary') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
 
@@ -120,7 +129,7 @@ const SingleCardOpener = () => {
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
-        const initialDelay = 500;  
+        const initialDelay = 500; 
         const flipDuration = 800;
         const flipTimer = setTimeout(() => setIsFlipped(true), initialDelay);
         const processTimer = setTimeout(() => setIsProcessing(false), initialDelay + flipDuration);
@@ -152,8 +161,8 @@ const SingleCardOpener = () => {
     );
 };
 
-// --- Component Mở 6 Thẻ - PHIÊN BẢN ĐÃ SỬA LỖI LẬT THẺ ---
-const SixCardsOpener = () => {
+// --- Component Mở 4 Thẻ ---
+const FourCardsOpener = () => {
     const [cards, setCards] = useState([]);
     const [flippedIndices, setFlippedIndices] = useState(new Set());
     const [phase, setPhase] = useState('DEALING'); // Giai đoạn: 'DEALING', 'FLIPPING', 'REVEALED'
@@ -163,35 +172,26 @@ const SixCardsOpener = () => {
         setFlippedIndices(new Set());
         setCards([]);
         
-        // Bắt đầu tạo và chia bài
         setTimeout(() => {
-            const newCards = Array.from({ length: 6 }, generateRandomCard);
+            const newCards = Array.from({ length: 4 }, generateRandomCard); // Thay đổi: 4 thẻ
             setCards(newCards);
             
-            const dealAnimationTime = 500 + 80 * 6;
+            const dealAnimationTime = 500 + 80 * 4; // Thay đổi: tính toán cho 4 thẻ
             const pauseBeforeFlip = 500;
 
-            // Sau khi chia bài xong, tự động bắt đầu lật
             setTimeout(() => {
                 setPhase('FLIPPING');
                 
-                // *** BẮT ĐẦU CHUỖI LẬT THẺ ĐỆ QUY ***
                 const flipCardSequentially = (index) => {
-                    // Điều kiện dừng: nếu đã lật hết thẻ
-                    if (index >= 6) {
-                        // Đợi animation lật thẻ cuối cùng hoàn tất
+                    if (index >= 4) { // Thay đổi: điều kiện dừng cho 4 thẻ
                         setTimeout(() => setPhase('REVEALED'), 800);
                         return;
                     }
                     
-                    // Lật thẻ hiện tại
                     setFlippedIndices(prev => new Set(prev).add(index));
-                    
-                    // Đặt hẹn giờ để lật thẻ tiếp theo
                     setTimeout(() => flipCardSequentially(index + 1), 200);
                 };
                 
-                // Bắt đầu lật từ thẻ đầu tiên (index = 0)
                 flipCardSequentially(0);
 
             }, dealAnimationTime + pauseBeforeFlip);
@@ -210,7 +210,7 @@ const SixCardsOpener = () => {
             case 'FLIPPING':
                 return { text: 'Đang lật...', disabled: true };
             case 'REVEALED':
-                return { text: 'Mở Lại x6', disabled: false };
+                return { text: 'Mở Lại x4', disabled: false }; // Thay đổi: text nút bấm
             default:
                 return { text: '', disabled: true };
         }
@@ -220,7 +220,7 @@ const SixCardsOpener = () => {
 
     return (
         <div style={{ textAlign: 'center' }}>
-            <div className="card-grid-container">
+            <div className="four-card-grid-container"> {/* Thay đổi: class CSS */}
                 {cards.map((card, index) => (
                     <div
                         key={card.id}
@@ -241,16 +241,16 @@ const SixCardsOpener = () => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Không thay đổi) ==========================
+// === 4. COMPONENT CHÍNH (APP) (Đã cập nhật sang x4) =====================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
-    const [showSixOverlay, setShowSixOverlay] = useState(false);
+    const [showFourOverlay, setShowFourOverlay] = useState(false); // Thay đổi
     const [singleKey, setSingleKey] = useState(Date.now());
-    const [sixKey, setSixKey] = useState(Date.now());
+    const [fourKey, setFourKey] = useState(Date.now()); // Thay đổi
 
     const openSingle = () => { setSingleKey(Date.now()); setShowSingleOverlay(true); };
-    const openSix = () => { setSixKey(Date.now()); setShowSixOverlay(true); };
+    const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); }; // Thay đổi
     
     return (
         <>
@@ -259,7 +259,7 @@ function App() {
                 <h1 className="main-title">Mở Thẻ Tướng</h1>
                 <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <button className="open-button" onClick={openSingle}>Mở x1</button>
-                    <button className="open-button" onClick={openSix}>Mở x6</button> 
+                    <button className="open-button" onClick={openFour}>Mở x4</button>  {/* Thay đổi */}
                 </div>
             </div>
 
@@ -272,11 +272,11 @@ function App() {
                 </div>
             )}
 
-            {showSixOverlay && (
+            {showFourOverlay && ( /* Thay đổi */
                 <div className="card-opening-overlay">
-                    <button className="overlay-close-btn" onClick={() => setShowSixOverlay(false)}>X</button>
+                    <button className="overlay-close-btn" onClick={() => setShowFourOverlay(false)}>X</button>
                     <div className="overlay-content">
-                        <SixCardsOpener key={sixKey} />
+                        <FourCardsOpener key={fourKey} /> {/* Thay đổi */}
                     </div>
                 </div>
             )}
