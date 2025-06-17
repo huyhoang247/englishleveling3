@@ -60,11 +60,34 @@ const GlobalStyles = () => (
         .help-icon { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(0, 0, 0, 0.2); border: 2px solid white; color: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; z-index: 2; }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.4); }
         
-        .chest-image { width: 100%; max-width: 200px; height: auto; margin-bottom: 15px; }
+        /* Bố cục mới: hàng chứa ảnh và thông tin */
+        .chest-visual-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .chest-image {
+            width: 100%;
+            max-width: 140px; /* Thu nhỏ icon */
+            height: auto;
+            flex-shrink: 0;
+        }
+        .info-bubble {
+            background-color: #6a2e35;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #a1887f;
+            font-size: 0.9rem;
+            text-align: left; /* Căn lề trái cho text */
+            flex-grow: 1;
+        }
+
         .pity-timer { text-align: center; color: #d15c0a; font-weight: 700; font-size: 0.9rem; margin: 2px 0; }
         .highlight-purple { color: #8e24aa; font-weight: bold; }
-        
-        .info-bubble { background-color: #6a2e35; color: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #a1887f; font-size: 0.9rem; margin-bottom: 20px; text-align: center; }
         
         .action-button-group { display: flex; gap: 15px; width: 100%; }
         .chest-button { flex: 1; padding: 10px; border-radius: 12px; border: none; cursor: pointer; transition: transform 0.1s ease; color: #3e2723; font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 1px rgba(255,255,255,0.3); }
@@ -256,10 +279,12 @@ const ChestUI: React.FC<ChestUIProps> = ({
             <main className="chest-body">
                 <button className="help-icon">?</button>
                 <h1 className="chest-title">{mainTitle}</h1>
-                <img src={imageUrl} alt={mainTitle} className="chest-image" />
-                <div className="info-bubble">{infoText}</div>
-                <p className="pity-timer">{pityLine1}</p>
-                <p className="pity-timer">{pityLine2}</p>
+                <div className="chest-visual-row">
+                    <img src={imageUrl} alt={mainTitle} className="chest-image" />
+                    <div className="info-bubble">{infoText}</div>
+                </div>
+                {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
+                {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
                     <button className="chest-button btn-get-1" onClick={onOpen1}>
                         <span>Mở 1 lần</span>
@@ -284,8 +309,8 @@ const CHEST_DATA = [
         mainTitle: "Rương Báu Huyền Thoại",
         imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png",
         infoText: <>Có thể nhận trang bị <span className="highlight-purple">Sử thi hạng S</span></>,
-        pityLine1: <>Nhận <span className="highlight-purple">Sử thi</span> trong 10 lần mở</>,
-        pityLine2: <>Nhận <span className="highlight-purple">S-Sử thi</span> trong 50 lần mở</>,
+        pityLine1: '',
+        pityLine2: '',
         price1: 320,
         price10: 2980,
     },
