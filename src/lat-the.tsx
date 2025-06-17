@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Cập nhật footer và loại bỏ hiệu ứng kính) =========
+// === 1. CSS STYLES (Đã sửa lỗi hiển thị footer) ========================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -65,12 +65,14 @@ const GlobalStyles = () => (
         
         /* --- Lớp Overlay Mở Thẻ --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* === SỬA LỖI: Thay thế width/height bằng top/right/bottom/left === */
         .card-opening-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            right: 0;
+            bottom: 0;
             background-color: rgba(10, 10, 20, 0.9);
             backdrop-filter: blur(8px);
             z-index: 1000;
@@ -82,11 +84,12 @@ const GlobalStyles = () => (
             padding: 80px 15px 120px 15px; /* Tăng padding dưới để không bị footer che */
             box-sizing: border-box;
         }
+        
         .overlay-content { width: 100%; max-width: 900px; }
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; z-index: 1011; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
 
-        /* === THAY ĐỔI: Thiết kế Footer và Nút bấm mới === */
+        /* === Thiết kế Footer và Nút bấm mới === */
         .overlay-footer {
             position: fixed;
             bottom: 0;
@@ -167,7 +170,7 @@ const GlobalStyles = () => (
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
         
-        /* === THAY ĐỔI: Xóa bỏ hiệu ứng kính, chỉ giữ lại hiệu ứng nảy cho Legendary === */
+        /* === Xóa bỏ hiệu ứng kính, chỉ giữ lại hiệu ứng nảy cho Legendary === */
         @keyframes legendary-reveal {
             0% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
             50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); }
@@ -189,7 +192,7 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Cập nhật JSX cho footer) =====================
+// === 3. CÁC COMPONENT CON (Không thay đổi) ==============================
 // ========================================================================
 const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Huyền Thoại' ? 'reveal-legendary' : 'reveal-epic') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
 
@@ -225,7 +228,6 @@ const SingleCardOpener = ({ onClose }) => {
                 </div>
             </div>
             
-            {/* THAY ĐỔI: Nút bấm được đặt trong footer cố định */}
             <div className="overlay-footer">
                 <button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>
                     {isProcessing ? 'Đang mở...' : 'Mở Lại'}
@@ -310,7 +312,6 @@ const FourCardsOpener = ({ onClose }) => {
                 </div>
             </div>
 
-            {/* THAY ĐỔI: Nút bấm được đặt trong footer cố định */}
             <div className="overlay-footer">
                 <button onClick={startNewRound} className="footer-btn primary" disabled={buttonProps.disabled}>
                     {buttonProps.text}
