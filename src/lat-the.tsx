@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import DungeonBackground from './background-voca.tsx'; // <<< THÊM: Import background mới
 
 // ========================================================================
 // === 1. CSS STYLES ======================================================
@@ -8,8 +7,8 @@ const GlobalStyles = () => (
     <style>{`
         /* --- Cài đặt chung & Nền --- */
         body {
-            /* THAY ĐỔI: Gỡ bỏ background cũ, thay bằng màu nền dự phòng */
-            background-color: #0f0f23;
+            background-color: #0a0a14; /* Màu nền đen xanh đậm */
+            background-image: radial-gradient(circle at center, #16213e, #0a0a14); /* Gradient từ xanh đậm ra đen */
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -25,9 +24,6 @@ const GlobalStyles = () => (
             align-items: center;
             padding: 40px 20px;
             box-sizing: border-box;
-            /* THÊM: Cần thiết để các overlay hoạt động chính xác */
-            position: relative; 
-            z-index: 1;
         }
         
         /* Container để chứa nhiều rương */
@@ -363,9 +359,6 @@ function App() {
 
     return (
         <>
-            {/* THAY ĐỔI: Chèn background mới vào đây */}
-            <DungeonBackground isPaused={false} />
-
             <GlobalStyles />
             
             <div className="chest-gallery-container">
