@@ -155,7 +155,6 @@ const GlobalStyles = () => (
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
         
-        /* SỬA ĐỔI: MẶT TRƯỚC VỚI HIỆU ỨNG KÍNH MỜ */
         .card-front {
             transform: rotateY(180deg);
             padding: 6px; 
@@ -185,16 +184,7 @@ const GlobalStyles = () => (
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
         
-        /* Animation cho thẻ Huyền Thoại vẫn được giữ lại để tạo điểm nhấn */
-        @keyframes legendary-reveal {
-            0% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
-            50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); }
-            100% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
-        }
-        
-        .card-container.flipped.reveal-legendary .card-inner {
-            animation: legendary-reveal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        /* SỬA ĐỔI: Đã xóa animation cho thẻ huyền thoại */
     `}
     </style>
 );
@@ -209,31 +199,20 @@ const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor
 // ========================================================================
 // === 3. CÁC COMPONENT CON (Sửa đổi Component Card) =======================
 // ========================================================================
-const Card = ({ cardData, isFlipped }) => { 
-    const [isRevealed, setIsRevealed] = useState(false); 
-    const { name, image, rarity } = cardData; 
-    
-    useEffect(() => { 
-        if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { 
-            const timer = setTimeout(() => setIsRevealed(true), 800); 
-            return () => clearTimeout(timer); 
-        } 
-        setIsRevealed(false); 
-    }, [isFlipped, rarity.name]); 
-    
-    const revealClass = isRevealed ? (rarity.name === 'Huyền Thoại' ? 'reveal-legendary' : 'reveal-epic') : ''; 
-    
+const Card = ({ cardData, isFlipped }) => {
+    // SỬA ĐỔI: Đã xóa logic (useState, useEffect) cho hiệu ứng reveal
+    const { name, image } = cardData;
+
     return (
-        <div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}>
+        <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
             <div className="card-inner">
                 <div className="card-face card-back">?</div>
-                {/* SỬA ĐỔI JSX: Xóa bỏ class màu động */}
                 <div className="card-face card-front">
                     <img src={image} alt={name} className="card-image" />
                 </div>
             </div>
         </div>
-    ); 
+    );
 };
 
 
