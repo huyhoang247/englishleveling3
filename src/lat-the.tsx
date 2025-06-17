@@ -77,7 +77,6 @@ const GlobalStyles = () => (
             z-index: 1000;
             display: flex;
             justify-content: center;
-            /* SỬA ĐỔI: Căn giữa nội dung, loại bỏ scroll */
             align-items: center;
             animation: fade-in-overlay 0.5s ease;
             overflow: hidden; 
@@ -86,7 +85,6 @@ const GlobalStyles = () => (
         }
         
         .overlay-content { width: 100%; max-width: 900px; }
-        /* SỬA ĐỔI: Nút X không còn cần thiết nhưng vẫn giữ style để phòng trường hợp muốn thêm lại */
         .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; z-index: 1011; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
 
@@ -145,7 +143,14 @@ const GlobalStyles = () => (
         
         /* --- Thiết kế Thẻ Bài CO GIÃN --- */
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; }
+        .card-inner { 
+            position: relative; 
+            width: 100%; 
+            height: 100%; 
+            transition: transform 0.8s; 
+            transform-style: preserve-3d;
+            will-change: transform; /* SỬA ĐỔI: Tối ưu hóa hiệu năng animation */
+        }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
@@ -325,7 +330,7 @@ const FourCardsOpener = ({ onClose }) => {
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Đã sửa đổi JSX) ==========================
+// === 4. COMPONENT CHÍNH (APP) (Không thay đổi) ==========================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -352,7 +357,6 @@ function App() {
 
             {showSingleOverlay && (
                 <div className="card-opening-overlay">
-                    {/* SỬA ĐỔI: Đã xóa nút X */}
                     <div className="overlay-content">
                         <SingleCardOpener key={singleKey} onClose={closeSingle} />
                     </div>
@@ -361,7 +365,6 @@ function App() {
 
             {showFourOverlay && (
                 <div className="card-opening-overlay">
-                    {/* SỬA ĐỔI: Đã xóa nút X */}
                     <div className="overlay-content">
                         <FourCardsOpener key={fourKey} onClose={closeFour} />
                     </div>
