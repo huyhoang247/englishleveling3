@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật thêm style cho nút đóng) ==============
+// === 1. CSS STYLES (Cập nhật footer và loại bỏ hiệu ứng kính) =========
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -79,31 +79,73 @@ const GlobalStyles = () => (
             align-items: flex-start;
             animation: fade-in-overlay 0.5s ease;
             overflow-y: auto;
-            padding: 80px 15px 100px 15px;
+            padding: 80px 15px 120px 15px; /* Tăng padding dưới để không bị footer che */
             box-sizing: border-box;
         }
         .overlay-content { width: 100%; max-width: 900px; }
-        .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; }
+        .overlay-close-btn { position: absolute; top: 20px; right: 20px; background: none; border: 2px solid #aaa; color: #aaa; font-size: 24px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: all 0.3s ease; z-index: 1011; }
         .overlay-close-btn:hover { background: #e94560; color: white; border-color: #e94560; transform: rotate(90deg); }
 
-        /* --- Nút bấm bên trong overlay --- */
-        .action-buttons-container { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
-        .action-btn { padding: 12px 25px; font-size: 16px; font-weight: 500; border: 2px solid; background-color: transparent; cursor: pointer; border-radius: 8px; transition: all 0.3s ease; text-transform: uppercase; min-width: 150px; }
+        /* === THAY ĐỔI: Thiết kế Footer và Nút bấm mới === */
+        .overlay-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            background: rgba(10, 21, 46, 0.5);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1010;
+        }
+
+        .footer-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 8px 25px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .footer-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+        }
+
+        .footer-btn.primary {
+            border-color: #e94560;
+            color: #e94560;
+        }
+
+        .footer-btn.primary:hover {
+            background-color: #e94560;
+            color: #16213e;
+        }
+
+        .footer-btn:disabled {
+            color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            background-color: transparent;
+        }
         
-        .primary-action-btn { border-color: #e94560; color: #e94560; }
-        .primary-action-btn:hover { background-color: #e94560; color: #16213e; }
-        .primary-action-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; background-color: transparent; }
-
-        .secondary-action-btn { border-color: #aaa; color: #aaa; }
-        .secondary-action-btn:hover { background-color: #aaa; color: #16213e; }
-
         /* --- Thiết kế Thẻ Bài CO GIÃN --- */
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
         .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
-        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; position: relative; overflow: hidden; }
+        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; }
         .card-image { width: 100%; height: 60%; object-fit: cover; clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%); }
         .card-info { padding: 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; }
         .card-name { font-size: clamp(0.8rem, 4vw, 1.2rem); font-weight: 700; margin: 0; line-height: 1.2; }
@@ -125,14 +167,16 @@ const GlobalStyles = () => (
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
         
-        @keyframes sheen-effect { 0% { transform: translateX(-150%) skewX(-25deg); opacity: 0.3; } 100% { transform: translateX(150%) skewX(-25deg); opacity: 0.8; } }
-        @keyframes legendary-reveal { 0% { transform: rotateY(180deg) scale(1); filter: brightness(1); } 50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); } 100% { transform: rotateY(180deg) scale(1); filter: brightness(1); } }
+        /* === THAY ĐỔI: Xóa bỏ hiệu ứng kính, chỉ giữ lại hiệu ứng nảy cho Legendary === */
+        @keyframes legendary-reveal {
+            0% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
+            50% { transform: rotateY(180deg) scale(1.07); filter: brightness(1.3) drop-shadow(0 0 15px rgba(241, 196, 15, 0.7)); }
+            100% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
+        }
         
-        .card-front::after { content: ''; position: absolute; top: -50%; left: -25%; width: 50%; height: 200%; background: linear-gradient( to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100% ); transform: translateX(-150%) skewX(-25deg); opacity: 0; pointer-events: none; }
-        
-        .card-container.flipped.reveal-epic .card-front::after { animation: sheen-effect 1s ease-in-out; animation-delay: 0.2s; }
-        .card-container.flipped.reveal-legendary .card-inner { animation: legendary-reveal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .card-container.flipped.reveal-legendary .card-front::after { animation: sheen-effect 1.2s ease-in-out; animation-delay: 0.3s; }
+        .card-container.flipped.reveal-legendary .card-inner {
+            animation: legendary-reveal 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
     `}
     </style>
 );
@@ -145,9 +189,9 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Cập nhật để nhận prop `onClose`) ============
+// === 3. CÁC COMPONENT CON (Cập nhật JSX cho footer) =====================
 // ========================================================================
-const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Sử Thi' ? 'reveal-epic' : 'reveal-legendary') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
+const Card = ({ cardData, isFlipped }) => { const [isRevealed, setIsRevealed] = useState(false); const { name, image, rarity } = cardData; useEffect(() => { if (isFlipped && (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại')) { const timer = setTimeout(() => setIsRevealed(true), 800); return () => clearTimeout(timer); } setIsRevealed(false); }, [isFlipped, rarity.name]); const revealClass = isRevealed ? (rarity.name === 'Huyền Thoại' ? 'reveal-legendary' : 'reveal-epic') : ''; return (<div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass}`}><div className="card-inner"><div className="card-face card-back">?</div><div className={`card-face card-front ${rarity.colorClass}`}><img src={image} alt={name} className="card-image" /><div className="card-info"><h3 className="card-name">{name}</h3><span className={`card-rarity ${rarity.colorClass}`}>{rarity.name}</span></div></div></div></div>); };
 
 const SingleCardOpener = ({ onClose }) => {
     const [card, setCard] = useState(generateRandomCard());
@@ -174,20 +218,23 @@ const SingleCardOpener = ({ onClose }) => {
     };
 
     return (
-        <div style={{ textAlign: 'center' }}>
-            <div style={{display: 'inline-block', maxWidth: '250px', width: '60vw'}}>
-                <Card cardData={card} isFlipped={isFlipped} />
+        <>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px'}}>
+                    <Card cardData={card} isFlipped={isFlipped} />
+                </div>
             </div>
-            {/* THAY ĐỔI: Thêm container cho các nút bấm */}
-            <div className="action-buttons-container">
-                <button onClick={handleOpenAgain} className="action-btn primary-action-btn" disabled={isProcessing}>
+            
+            {/* THAY ĐỔI: Nút bấm được đặt trong footer cố định */}
+            <div className="overlay-footer">
+                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>
                     {isProcessing ? 'Đang mở...' : 'Mở Lại'}
                 </button>
-                <button onClick={onClose} className="action-btn secondary-action-btn">
+                <button onClick={onClose} className="footer-btn">
                     Đóng
                 </button>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -248,33 +295,36 @@ const FourCardsOpener = ({ onClose }) => {
     const buttonProps = getButtonProps();
 
     return (
-        <div style={{ textAlign: 'center' }}>
-            <div className="four-card-grid-container">
-                {cards.map((card, index) => (
-                    <div
-                        key={card.id}
-                        className={`card-wrapper ${cards.length > 0 ? 'dealt-in' : ''}`}
-                        style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}
-                    >
-                        <Card cardData={card} isFlipped={flippedIndices.has(index)} />
-                    </div>
-                ))}
+        <>
+            <div style={{ textAlign: 'center' }}>
+                <div className="four-card-grid-container">
+                    {cards.map((card, index) => (
+                        <div
+                            key={card.id}
+                            className={`card-wrapper ${cards.length > 0 ? 'dealt-in' : ''}`}
+                            style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}
+                        >
+                            <Card cardData={card} isFlipped={flippedIndices.has(index)} />
+                        </div>
+                    ))}
+                </div>
             </div>
-            {/* THAY ĐỔI: Thêm container cho các nút bấm */}
-            <div className="action-buttons-container">
-                <button onClick={startNewRound} className="action-btn primary-action-btn" disabled={buttonProps.disabled}>
+
+            {/* THAY ĐỔI: Nút bấm được đặt trong footer cố định */}
+            <div className="overlay-footer">
+                <button onClick={startNewRound} className="footer-btn primary" disabled={buttonProps.disabled}>
                     {buttonProps.text}
                 </button>
-                 <button onClick={onClose} className="action-btn secondary-action-btn">
+                 <button onClick={onClose} className="footer-btn">
                     Đóng
                 </button>
             </div>
-        </div>
+        </>
     );
 };
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (Cập nhật để truyền prop `onClose`) ======
+// === 4. COMPONENT CHÍNH (APP) (Không thay đổi logic) ====================
 // ========================================================================
 function App() {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -303,7 +353,6 @@ function App() {
                 <div className="card-opening-overlay">
                     <button className="overlay-close-btn" onClick={closeSingle}>X</button>
                     <div className="overlay-content">
-                        {/* THAY ĐỔI: Truyền hàm closeSingle vào prop onClose */}
                         <SingleCardOpener key={singleKey} onClose={closeSingle} />
                     </div>
                 </div>
@@ -313,7 +362,6 @@ function App() {
                 <div className="card-opening-overlay">
                     <button className="overlay-close-btn" onClick={closeFour}>X</button>
                     <div className="overlay-content">
-                        {/* THAY ĐỔI: Truyền hàm closeFour vào prop onClose */}
                         <FourCardsOpener key={fourKey} onClose={closeFour} />
                     </div>
                 </div>
