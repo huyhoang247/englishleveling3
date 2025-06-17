@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (Thiết kế cho giao diện danh sách nhỏ gọn) ============
+// === 1. CSS STYLES ======================================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -19,118 +19,63 @@ const GlobalStyles = () => (
             width: 100%;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 40px 20px;
             box-sizing: border-box;
         }
         
-        /* --- GIAO DIỆN DANH SÁCH RƯƠNG GỌN GÀNG --- */
-        .compact-chest-gallery {
-            width: 100%;
-            max-width: 600px;
+        /* Container để chứa nhiều rương */
+        .chest-gallery-container {
             display: flex;
-            flex-direction: column;
-            gap: 15px; /* Khoảng cách giữa các rương */
-        }
-        
-        .chest-row {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            border-radius: 12px;
-            background-color: rgba(40, 30, 50, 0.4); /* Nền mờ */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-        .chest-row:hover {
-            background-color: rgba(50, 40, 60, 0.6);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .chest-row__icon {
-            width: 80px;
-            height: 80px;
-            flex-shrink: 0; /* Không cho icon bị co lại */
-            border-radius: 8px;
-            object-fit: contain; /* Hiển thị toàn bộ ảnh không bị cắt xén */
-            background-color: rgba(0, 0, 0, 0.2);
-        }
-
-        .chest-row__details {
-            flex-grow: 1; /* Lấp đầy không gian còn lại */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Đẩy thông tin lên trên, nút bấm xuống dưới */
-            min-width: 0; /* Fix lỗi flexbox cho text overflow */
-        }
-        
-        .chest-row__info-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin: 0 0 5px 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .chest-row__info-desc {
-            font-size: 0.85rem;
-            color: #d1c4e9; /* Màu tím nhạt */
-            margin: 0;
-            line-height: 1.4;
-        }
-        
-        .highlight-pity {
-            color: #ffcc80; /* Màu vàng cam nhạt */
-            font-weight: 500;
-        }
-        
-        .chest-row__actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px; /* Khoảng cách giữa info và buttons */
-        }
-        
-        .compact-chest-button {
-            flex: 1; /* Hai nút có chiều rộng bằng nhau */
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 700;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-wrap: wrap;
             justify-content: center;
+            gap: 40px;
+            width: 100%;
         }
-        
-        .btn-compact-1 {
-            background: linear-gradient(to top, #f9a825, #fdd835);
-            color: #5d4037;
-        }
-        .btn-compact-1:hover { box-shadow: 0 0 10px #fdd835; }
 
-        .btn-compact-10 {
-            background: linear-gradient(to top, #66bb6a, #a5d6a7);
-            color: #1b5e20;
-        }
-        .btn-compact-10:hover { box-shadow: 0 0 10px #a5d6a7; }
-        
-        .button-price {
+        /* --- GIAO DIỆN RƯƠNG BÁU --- */
+        .chest-ui-container {
+            width: 100%;
+            max-width: 420px; /* Kích thước nhỏ gọn hơn */
+            min-width: 300px;
+            background-color: #3e2723;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 2px solid #5d4037;
             display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            opacity: 0.8;
-            margin-top: 2px;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .chest-ui-container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
         }
 
-        /* --- Overlay & Card styles (Giữ nguyên không đổi) --- */
+        .chest-header { padding: 10px 20px; background-color: #4e342e; font-size: 1rem; font-weight: 700; color: #d7ccc8; border-bottom: 2px solid #5d4037; text-align: center; }
+        .chest-body { background-color: #ff9a42; padding: 20px; border-top: 8px solid #d15c0a; position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; }
+        .chest-title { font-size: clamp(1.5rem, 5vw, 2rem); color: white; font-weight: 900; text-shadow: 2px 2px 0px #8c420b; margin-top: 0; margin-bottom: 15px; text-align: center; }
+        .help-icon { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(0, 0, 0, 0.2); border: 2px solid white; color: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; z-index: 2; }
+        .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.4); }
+        
+        .chest-image { width: 100%; max-width: 200px; height: auto; margin-bottom: 15px; }
+        .pity-timer { text-align: center; color: #d15c0a; font-weight: 700; font-size: 0.9rem; margin: 2px 0; }
+        .highlight-purple { color: #8e24aa; font-weight: bold; }
+        
+        .info-bubble { background-color: #6a2e35; color: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #a1887f; font-size: 0.9rem; margin-bottom: 20px; text-align: center; }
+        
+        .action-button-group { display: flex; gap: 15px; width: 100%; }
+        .chest-button { flex: 1; padding: 10px; border-radius: 12px; border: none; cursor: pointer; transition: transform 0.1s ease; color: #3e2723; font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 1px rgba(255,255,255,0.3); }
+        .chest-button:active { transform: translateY(3px); border-bottom-width: 2px; }
+        .btn-get-1 { background: linear-gradient(to top, #f9a825, #fdd835); border-bottom: 5px solid #c88719; }
+        .btn-get-1:active { border-bottom-color: #f9a825; }
+        .btn-get-10 { background: linear-gradient(to top, #66bb6a, #a5d6a7); border-bottom: 5px solid #4a9d4e; }
+        .btn-get-10:active { border-bottom-color: #66bb6a; }
+        .button-price { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.9rem; color: #424242; font-weight: 600; margin-top: 5px; }
+        
+        /* --- Overlay & Card styles --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
@@ -155,7 +100,7 @@ const GlobalStyles = () => (
 );
 
 // ========================================================================
-// === 2. DỮ LIỆU & HÀM HỖ TRỢ (Không đổi) =================================
+// === 2. DỮ LIỆU & HÀM HỖ TRỢ ============================================
 // ========================================================================
 const RARITIES = { COMMON: { name: 'Thường', colorClass: 'rarity-common', probability: 0.6 }, RARE: { name: 'Hiếm', colorClass: 'rarity-rare', probability: 0.25 }, EPIC: { name: 'Sử Thi', colorClass: 'rarity-epic', probability: 0.12 }, LEGENDARY: { name: 'Huyền Thoại', colorClass: 'rarity-legendary', probability: 0.03 }};
 const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg' }, { name: 'Ahri', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg' }, { name: 'Yasuo', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Yasuo_0.jpg' }, { name: 'Jinx', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Jinx_0.jpg' }, { name: 'Lux', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Lux_0.jpg' }, { name: 'Garen', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Garen_0.jpg' }, { name: 'Zed', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Zed_0.jpg' }, { name: 'Irelia', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Irelia_0.jpg' }, { name: 'Kai\'Sa', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Kaisa_0.jpg' }, { name: 'Lee Sin', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/LeeSin_0.jpg' }];
@@ -165,8 +110,7 @@ const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor
 // === 3. CÁC COMPONENT CON ================================================
 // ========================================================================
 
-// --- Card Opener Components (Giữ nguyên không đổi) ---
-const Card = ({ cardData, isFlipped }: { cardData: any; isFlipped: boolean }) => {
+const Card = ({ cardData, isFlipped }: { cardData: any, isFlipped: boolean }) => {
     const { name, image } = cardData;
     return (
         <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
@@ -179,8 +123,9 @@ const Card = ({ cardData, isFlipped }: { cardData: any; isFlipped: boolean }) =>
         </div>
     );
 };
+
 const SingleCardOpener = ({ onClose }: { onClose: () => void }) => {
-    const [card, setCard] = useState(() => generateRandomCard());
+    const [card, setCard] = useState(generateRandomCard());
     const [isFlipped, setIsFlipped] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
 
@@ -219,6 +164,7 @@ const SingleCardOpener = ({ onClose }: { onClose: () => void }) => {
         </>
     );
 };
+
 const FourCardsOpener = ({ onClose }: { onClose: () => void }) => {
     const [cards, setCards] = useState<any[]>([]);
     const [flippedIndices, setFlippedIndices] = useState(new Set());
@@ -285,74 +231,76 @@ const FourCardsOpener = ({ onClose }: { onClose: () => void }) => {
     );
 };
 
-// --- COMPONENT RƯƠNG GỌN GÀNG ---
-interface CompactChestProps {
-    title: string;
+// --- COMPONENT RƯƠNG TÁI SỬ DỤNG ---
+interface ChestUIProps {
+    headerTitle: string;
+    mainTitle: string;
     imageUrl: string;
-    description: React.ReactNode;
+    infoText: React.ReactNode;
+    pityLine1: React.ReactNode;
+    pityLine2: React.ReactNode;
     price1: number;
     price10: number;
     onOpen1: () => void;
     onOpen10: () => void;
 }
 
-const CompactChestUI: React.FC<CompactChestProps> = ({
-    title, imageUrl, description, price1, price10, onOpen1, onOpen10
+const ChestUI: React.FC<ChestUIProps> = ({
+    headerTitle, mainTitle, imageUrl, infoText,
+    pityLine1, pityLine2, price1, price10,
+    onOpen1, onOpen10
 }) => {
     return (
-        <div className="chest-row">
-            <img src={imageUrl} alt={title} className="chest-row__icon" />
-            <div className="chest-row__details">
-                <div className="chest-row__info">
-                    <h3 className="chest-row__info-title">{title}</h3>
-                    <p className="chest-row__info-desc">{description}</p>
-                </div>
-                <div className="chest-row__actions">
-                    <button className="compact-chest-button btn-compact-1" onClick={onOpen1}>
-                        Mở 1
-                        <span className="button-price">
-                            <span role="img" aria-label="gem">🟣</span> {price1}
-                        </span>
+        <div className="chest-ui-container">
+            <header className="chest-header">{headerTitle}</header>
+            <main className="chest-body">
+                <button className="help-icon">?</button>
+                <h1 className="chest-title">{mainTitle}</h1>
+                <img src={imageUrl} alt={mainTitle} className="chest-image" />
+                <div className="info-bubble">{infoText}</div>
+                <p className="pity-timer">{pityLine1}</p>
+                <p className="pity-timer">{pityLine2}</p>
+                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                    <button className="chest-button btn-get-1" onClick={onOpen1}>
+                        <span>Mở 1 lần</span>
+                        <span className="button-price"><span role="img" aria-label="gem">🟣</span> {price1}</span>
                     </button>
-                    <button className="compact-chest-button btn-compact-10" onClick={onOpen10}>
-                        Mở 10
-                        <span className="button-price">
-                            <span role="img" aria-label="gem">🟣</span> {price10}
-                        </span>
+                    <button className="chest-button btn-get-10" onClick={onOpen10}>
+                        <span>Mở 10 lần</span>
+                        <span className="button-price"><span role="img" aria-label="gem">🟣</span> {price10}</span>
                     </button>
                 </div>
-            </div>
+            </main>
         </div>
     );
 };
+
 
 // --- "DATABASE" CỦA CÁC RƯƠNG ---
 const CHEST_DATA = [
     {
         id: 'legendary_chest',
-        title: "Rương Báu Huyền Thoại",
-        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/b/b3/S_Grade_Supplies_x10.png/revision/latest?cb=20230612142247",
-        description: <>Chắc chắn nhận <span className="highlight-pity">S-Sử Thi</span> trong 50 lần mở.</>,
+        headerTitle: "Rương Sự Kiện",
+        mainTitle: "Rương Báu Huyền Thoại",
+        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/b/b3/S_Grade_Supplies_x10.png/revision/latest/scale-to-width-down/1000?cb=20230612142247",
+        infoText: <>Có thể nhận trang bị <span className="highlight-purple">Sử thi hạng S</span></>,
+        pityLine1: <>Nhận <span className="highlight-purple">Sử thi</span> trong 10 lần mở</>,
+        pityLine2: <>Nhận <span className="highlight-purple">S-Sử thi</span> trong 50 lần mở</>,
         price1: 320,
         price10: 2980,
     },
     {
         id: 'tech_chest',
-        title: "Rương Công Nghệ",
-        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/c/c5/Epic_Parts_Crate_x10.png/revision/latest?cb=20221102144342",
-        description: <>Tăng tỉ lệ nhận trang bị Công nghệ. Bảo hiểm <span className="highlight-pity">Sử Thi</span> mỗi 30 lần.</>,
+        headerTitle: "Rương Giới Hạn",
+        mainTitle: "Rương Công Nghệ",
+        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/c/c5/Epic_Parts_Crate_x10.png/revision/latest/scale-to-width-down/1000?cb=20221102144342",
+        infoText: <>Tăng tỉ lệ nhận <span className="highlight-purple">Trang bị Công nghệ</span></>,
+        pityLine1: <>Nhận <span className="highlight-purple">Hiếm</span> trong 5 lần mở</>,
+        pityLine2: <>Nhận <span className="highlight-purple">Sử thi</span> trong 30 lần mở</>,
         price1: 150,
         price10: 1350,
     },
-    {
-        id: 'army_chest',
-        title: "Rương Quân Nhu EDF",
-        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/a/a2/Army_Crate_x10.png/revision/latest?cb=20220816140510",
-        description: <>Rương cơ bản. Chắc chắn nhận <span className="highlight-pity">Hiếm</span> trong 10 lần mở.</>,
-        price1: 80,
-        price10: 720,
-    },
-    // Bạn có thể thêm rương mới tại đây một cách dễ dàng!
+    // ĐỂ THÊM RƯƠNG MỚI, CHỈ CẦN SAO CHÉP VÀ DÁN MỘT OBJECT TƯƠNG TỰ VÀO ĐÂY
 ];
 
 // ========================================================================
@@ -364,6 +312,7 @@ function App() {
     const [singleKey, setSingleKey] = useState(Date.now());
     const [fourKey, setFourKey] = useState(Date.now());
 
+    // Các hàm này có thể dùng cho bất kỳ rương nào
     const openSingle = () => { setSingleKey(Date.now()); setShowSingleOverlay(true); };
     const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); };
     const closeSingle = () => setShowSingleOverlay(false);
@@ -373,13 +322,13 @@ function App() {
         <>
             <GlobalStyles />
             
-            <div className="compact-chest-gallery">
+            <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => (
-                    <CompactChestUI
+                    <ChestUI
                         key={chest.id}
-                        {...chest}
-                        onOpen1={openSingle}
-                        onOpen10={openFour}
+                        {...chest} // Truyền tất cả dữ liệu từ object chest vào component
+                        onOpen1={openSingle} // Gắn hàm mở 1 thẻ
+                        onOpen10={openFour}  // Gắn hàm mở nhiều thẻ (hiện là 4)
                     />
                 ))}
             </div>
