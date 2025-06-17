@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (ĐÃ CẬP NHẬT HIỆU ỨNG MỚI) ==========================
+// === 1. CSS STYLES (Không thay đổi) =====================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -51,68 +51,27 @@ const GlobalStyles = () => (
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
-        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; position: relative; } /* Thêm position relative */
+        .card-front { transform: rotateY(180deg); background-color: #2c3e50; color: white; display: flex; flex-direction: column; border-style: solid; border-width: 4px; position: relative; }
         .card-image { width: 100%; height: 60%; object-fit: cover; clip-path: polygon(0 0, 100% 0, 100% 85%, 0% 100%); }
         .card-info { padding: 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; }
         .card-name { font-size: clamp(0.8rem, 4vw, 1.2rem); font-weight: 700; margin: 0; line-height: 1.2; }
         .card-rarity { font-size: clamp(0.6rem, 3vw, 0.85rem); font-weight: 500; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; margin-top: 5px; align-self: center; }
         .rarity-common { border-color: #bdc3c7; background-color: #7f8c8d; } .rarity-rare { border-color: #3498db; background-color: #2980b9; } .rarity-epic { border-color: #9b59b6; background-color: #8e44ad; } .rarity-legendary { border-color: #f1c40f; background-color: #f39c12; }
         .card-front.rarity-common { border-color: #bdc3c7; } .card-front.rarity-rare { border-color: #3498db; } .card-front.rarity-epic { border-color: #9b59b6; } .card-front.rarity-legendary { border-color: #f1c40f; }
-        
         .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         
         /* --- Animation --- */
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
-        
-        /* === HIỆU ỨNG MỚI: Ánh Kim Lấp Lánh (Shimmer Effect) === */
-        @keyframes shimmer-effect {
-            from { transform: translateX(-150%) skewX(-30deg); }
-            to { transform: translateX(150%) skewX(-30deg); }
-        }
-        
-        @keyframes reveal-pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 var(--glow-color); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); box-shadow: 0 0 20px 5px var(--glow-color); }
-        }
-
-        /* Lớp phủ tạo vệt sáng */
-        .card-front::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transform: translateX(-150%);
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .card-front.shimmer-legendary::after {
-             background: linear-gradient(90deg, transparent, rgba(243, 229, 171, 0.5), transparent);
-        }
-        .card-front.shimmer-epic::after {
-             background: linear-gradient(90deg, transparent, rgba(215, 189, 226, 0.5), transparent);
-        }
-
-        /* Kích hoạt animation */
-        .card-front.has-shimmer::after {
-            animation: shimmer-effect 1s ease-in-out;
-        }
-
-        .card-container.reveal-rarity .card-inner {
-            --glow-color: rgba(255, 255, 255, 0.2);
-            animation: reveal-pulse 1s forwards;
-        }
-        .card-container.reveal-rarity.rarity-epic .card-inner {
-            --glow-color: rgba(155, 89, 182, 0.7);
-        }
-        .card-container.reveal-rarity.rarity-legendary .card-inner {
-            --glow-color: rgba(241, 196, 15, 0.7);
-        }
+        @keyframes shimmer-effect { from { transform: translateX(-150%) skewX(-30deg); } to { transform: translateX(150%) skewX(-30deg); } }
+        @keyframes reveal-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 var(--glow-color); } 50% { transform: scale(1.05); } 100% { transform: scale(1); box-shadow: 0 0 20px 5px var(--glow-color); } }
+        .card-front::after { content: ''; position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent); transform: translateX(-150%); z-index: 1; pointer-events: none; }
+        .card-front.shimmer-legendary::after { background: linear-gradient(90deg, transparent, rgba(243, 229, 171, 0.5), transparent); }
+        .card-front.shimmer-epic::after { background: linear-gradient(90deg, transparent, rgba(215, 189, 226, 0.5), transparent); }
+        .card-front.has-shimmer::after { animation: shimmer-effect 1s ease-in-out; }
+        .card-container.reveal-rarity .card-inner { --glow-color: rgba(255, 255, 255, 0.2); animation: reveal-pulse 1s forwards; }
+        .card-container.reveal-rarity.rarity-epic .card-inner { --glow-color: rgba(155, 89, 182, 0.7); }
+        .card-container.reveal-rarity.rarity-legendary .card-inner { --glow-color: rgba(241, 196, 15, 0.7); }
     `}
     </style>
 );
@@ -125,22 +84,19 @@ const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegen
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (Đã cập nhật logic hiệu ứng trong Card) ======
+// === 3. CÁC COMPONENT CON (Đã sửa lỗi thời gian) ========================
 // ========================================================================
 const Card = ({ cardData, isFlipped }) => {
     const [isRevealed, setIsRevealed] = useState(false);
     const { name, image, rarity } = cardData;
 
     useEffect(() => {
-        // Reset reveal state when card is flipped back
         if (!isFlipped) {
             setIsRevealed(false);
             return;
         }
-
-        // Trigger reveal effect after flip animation starts
         if (rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại') {
-            const timer = setTimeout(() => setIsRevealed(true), 600); // Trigger effect slightly before flip finishes
+            const timer = setTimeout(() => setIsRevealed(true), 600);
             return () => clearTimeout(timer);
         }
     }, [isFlipped, rarity.name]);
@@ -148,12 +104,7 @@ const Card = ({ cardData, isFlipped }) => {
     const isHighRarity = rarity.name === 'Sử Thi' || rarity.name === 'Huyền Thoại';
     const revealClass = isRevealed ? 'reveal-rarity' : '';
     const rarityClass = isHighRarity ? (rarity.name === 'Sử Thi' ? 'rarity-epic' : 'rarity-legendary') : '';
-    
-    const shimmerClass = isRevealed 
-        ? (rarity.name === 'Sử Thi' ? 'shimmer-epic' 
-            : rarity.name === 'Huyền Thoại' ? 'shimmer-legendary' 
-            : '') 
-        : '';
+    const shimmerClass = isRevealed ? (rarity.name === 'Sử Thi' ? 'shimmer-epic' : rarity.name === 'Huyền Thoại' ? 'shimmer-legendary' : '') : '';
         
     return (
         <div className={`card-container ${isFlipped ? 'flipped' : ''} ${revealClass} ${rarityClass}`}>
@@ -228,19 +179,12 @@ const FourCardsOpener = () => {
 
             setTimeout(() => {
                 setPhase('FLIPPING');
-                
                 const flipCardSequentially = (index) => {
-                    if (index >= 4) {
-                        setTimeout(() => setPhase('REVEALED'), 800);
-                        return;
-                    }
-                    
+                    if (index >= 4) { return; }
                     setFlippedIndices(prev => new Set(prev).add(index));
-                    setTimeout(() => flipCardSequentially(index + 1), 200);
+                    setTimeout(() => flipCardSequentially(index + 1), 250); // Tăng nhẹ thời gian lật cho mượt hơn
                 };
-                
                 flipCardSequentially(0);
-
             }, dealAnimationTime + pauseBeforeFlip);
             
         }, 300);
@@ -249,6 +193,25 @@ const FourCardsOpener = () => {
     useEffect(() => {
         startNewRound();
     }, [startNewRound]);
+
+    // *** SỬA LỖI: Dùng useEffect để theo dõi khi nào lật xong ***
+    useEffect(() => {
+        // Nếu không phải đang trong giai đoạn lật hoặc chưa đủ thẻ, thì không làm gì
+        if (phase !== 'FLIPPING' || flippedIndices.size < 4) {
+            return;
+        }
+
+        // Khi đã có đủ 4 thẻ trong set, nghĩa là thẻ cuối cùng đã bắt đầu lật.
+        // Chờ cho animation của thẻ cuối cùng kết thúc.
+        const timer = setTimeout(() => {
+            setPhase('REVEALED');
+        }, 800); // 800ms là thời gian lật thẻ trong CSS
+
+        // Cleanup function để tránh lỗi
+        return () => clearTimeout(timer);
+        
+    }, [flippedIndices, phase]);
+
 
     const getButtonProps = () => {
         switch (phase) {
