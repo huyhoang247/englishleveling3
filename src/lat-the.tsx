@@ -60,43 +60,54 @@ const GlobalStyles = () => (
         .help-icon { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(0, 0, 0, 0.2); border: 2px solid white; color: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; z-index: 2; }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.4); }
         
-        /* Bố cục mới: hàng chứa ảnh và thông tin */
-        .chest-visual-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-
-        .chest-image {
-            flex: 1; /* Chiếm 1 phần không gian */
-            min-width: 0; /* Cần thiết để flexbox co lại đúng cách */
-            height: auto;
-        }
-        .info-bubble {
-            flex: 2; /* Chiếm 2 phần không gian */
-            background-color: #6a2e35;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 2px solid #a1887f;
-            font-size: 0.9rem;
-            text-align: left;
-        }
-
+        .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 15px; }
+        .chest-image { flex: 1; min-width: 0; height: auto; }
+        .info-bubble { flex: 2; background-color: #6a2e35; color: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #a1887f; font-size: 0.9rem; text-align: left; }
         .pity-timer { text-align: center; color: #d15c0a; font-weight: 700; font-size: 0.9rem; margin: 2px 0; }
         .highlight-purple { color: #8e24aa; font-weight: bold; }
         
-        .action-button-group { display: flex; gap: 15px; width: 100%; }
-        .chest-button { flex: 1; padding: 10px; border-radius: 12px; border: none; cursor: pointer; transition: transform 0.1s ease; color: #3e2723; font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 1px rgba(255,255,255,0.3); }
-        .chest-button:active { transform: translateY(3px); border-bottom-width: 2px; }
-        .btn-get-1 { background: linear-gradient(to top, #f9a825, #fdd835); border-bottom: 5px solid #c88719; }
-        .btn-get-1:active { border-bottom-color: #f9a825; }
-        .btn-get-10 { background: linear-gradient(to top, #66bb6a, #a5d6a7); border-bottom: 5px solid #4a9d4e; }
-        .btn-get-10:active { border-bottom-color: #66bb6a; }
-        .button-price { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.9rem; color: #424242; font-weight: 600; margin-top: 5px; }
+        /* --- THIẾT KẾ NÚT MỚI --- */
+        .action-button-group { display: flex; gap: 10px; width: 100%; }
+        .chest-button {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            color: #3e2723;
+            font-weight: 700; /* Tăng độ đậm */
+            font-size: 0.95rem;
+            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
+            
+            /* Dàn layout cho nội dung bên trong nút */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .chest-button:active {
+            transform: translateY(2px);
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25); /* Hiệu ứng lún xuống */
+        }
+        .btn-get-1 { background: linear-gradient(to top, #f59e0b, #fcd34d); }
+        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         
+        .button-price {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            color: white;
+            font-weight: 600;
+            background-color: rgba(0,0,0,0.2);
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-shadow: none;
+        }
+
         /* --- Overlay & Card styles --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
@@ -287,11 +298,15 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
                     <button className="chest-button btn-get-1" onClick={onOpen1}>
                         <span>Mở 1 lần</span>
-                        <span className="button-price"><span role="img" aria-label="gem">🟣</span> {price1}</span>
+                        <span className="button-price">
+                            <span role="img" aria-label="gem">🟣</span> {price1}
+                        </span>
                     </button>
                     <button className="chest-button btn-get-10" onClick={onOpen10}>
                         <span>Mở 10 lần</span>
-                        <span className="button-price"><span role="img" aria-label="gem">🟣</span> {price10}</span>
+                        <span className="button-price">
+                            <span role="img" aria-label="gem">🟣</span> {price10}
+                        </span>
                     </button>
                 </div>
             </main>
