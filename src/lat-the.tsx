@@ -70,20 +70,19 @@ const GlobalStyles = () => (
         }
 
         .chest-image {
-            width: 100%;
-            max-width: 140px; /* Thu nhỏ icon */
+            flex: 1; /* Chiếm 1 phần không gian */
+            min-width: 0; /* Cần thiết để flexbox co lại đúng cách */
             height: auto;
-            flex-shrink: 0;
         }
         .info-bubble {
+            flex: 2; /* Chiếm 2 phần không gian */
             background-color: #6a2e35;
             color: white;
             padding: 10px 15px;
             border-radius: 8px;
             border: 2px solid #a1887f;
             font-size: 0.9rem;
-            text-align: left; /* Căn lề trái cho text */
-            flex-grow: 1;
+            text-align: left;
         }
 
         .pity-timer { text-align: center; color: #d15c0a; font-weight: 700; font-size: 0.9rem; margin: 2px 0; }
