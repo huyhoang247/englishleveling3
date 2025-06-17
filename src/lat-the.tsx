@@ -7,8 +7,8 @@ const GlobalStyles = () => (
     <style>{`
         /* --- Cài đặt chung & Nền --- */
         body {
-            background-color: #0a0a14; /* Màu nền đen xanh đậm */
-            background-image: radial-gradient(circle at center, #16213e, #0a0a14); /* Gradient từ xanh đậm ra đen */
+            background-color: #0a0a14;
+            background-image: radial-gradient(circle at center, #16213e, #0a0a14);
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -38,7 +38,7 @@ const GlobalStyles = () => (
         /* --- GIAO DIỆN RƯƠNG BÁU --- */
         .chest-ui-container {
             width: 100%;
-            max-width: 420px; /* Kích thước nhỏ gọn hơn */
+            max-width: 420px;
             min-width: 300px;
             background-color: #3e2723;
             border-radius: 12px;
@@ -56,20 +56,18 @@ const GlobalStyles = () => (
 
         .chest-header { padding: 10px 20px; background-color: #4e342e; font-size: 1rem; font-weight: 700; color: #d7ccc8; border-bottom: 2px solid #5d4037; text-align: center; }
         
-        /* === THAY ĐỔI CHÍNH Ở ĐÂY === */
         .chest-body { 
-            background: linear-gradient(170deg, #43335b, #2c2240); /* Gradient tím-xanh đậm thay cho màu cam */
+            background: linear-gradient(170deg, #43335b, #2c2240);
             padding: 20px; 
-            border-top: 8px solid #8c6b41; /* Viền trên màu vàng đồng */
+            border-top: 8px solid #8c6b41;
             position: relative; 
             flex-grow: 1; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            overflow: hidden; /* Cần để chứa pseudo-element */
+            overflow: hidden;
         }
         
-        /* Thêm hiệu ứng lấp lánh nhẹ nhàng */
         .chest-body::before {
             content: '';
             position: absolute;
@@ -83,11 +81,9 @@ const GlobalStyles = () => (
         }
         
         .chest-body > * {
-             position: relative; /* Đảm bảo nội dung nổi trên lớp hiệu ứng */
+             position: relative;
              z-index: 1;
         }
-        /* ============================ */
-
 
         .chest-title { font-size: clamp(1.5rem, 5vw, 2rem); color: white; font-weight: 900; text-shadow: 2px 2px 0px #21182f; margin-top: 0; margin-bottom: 15px; text-align: center; }
         .help-icon { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(0, 0, 0, 0.2); border: 2px solid white; color: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; z-index: 2; }
@@ -96,15 +92,15 @@ const GlobalStyles = () => (
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 15px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
         
-        /* Thay đổi bong bóng thông tin để có hiệu ứng kính mờ */
+        /* === TỐI ƯU HIỆU NĂNG CHO INFO BUBBLE === */
         .info-bubble { 
             flex: 2; 
-            background-color: rgba(255, 255, 255, 0.1); /* Nền mờ */
-            backdrop-filter: blur(4px);
+            background-color: rgba(30, 20, 45, 0.8); /* Thay nền kính mờ bằng màu bán trong suốt, đặc hơn để dễ đọc */
+            /* backdrop-filter: blur(4px); */ /* Đã loại bỏ để tối ưu hiệu năng */
             color: white; 
             padding: 10px 15px; 
             border-radius: 8px; 
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Viền mờ */
+            border: 1px solid rgba(255, 255, 255, 0.2);
             font-size: 0.9rem; 
             text-align: left; 
         }
@@ -121,10 +117,10 @@ const GlobalStyles = () => (
             border: none;
             cursor: pointer;
             transition: transform 0.1s ease, box-shadow 0.1s ease;
-            color: #ffffff; /* Đổi màu chữ trên nút thành trắng */
+            color: #ffffff;
             font-weight: 700;
             font-size: 0.95rem;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); /* Đổi bóng chữ cho dễ đọc hơn */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
             box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
             
             display: flex;
@@ -136,7 +132,7 @@ const GlobalStyles = () => (
             transform: translateY(2px);
             box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25);
         }
-        .btn-get-1 { background: linear-gradient(to top, #c026d3, #e879f9); } /* Gradient màu hồng/tím */
+        .btn-get-1 { background: linear-gradient(to top, #c026d3, #e879f9); }
         .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         
         .button-price {
@@ -153,11 +149,29 @@ const GlobalStyles = () => (
             text-shadow: none;
         }
 
-        /* --- Overlay & Card styles --- */
+        /* === TỐI ƯU HIỆU NĂNG CHO OVERLAY === */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
-        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
+        .card-opening-overlay { 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background-color: rgba(10, 10, 20, 0.95); /* Tăng nhẹ độ mờ để che nền tốt hơn */
+            /* backdrop-filter: blur(8px); */ /* Đã loại bỏ để tối ưu hiệu năng */
+            z-index: 1000; 
+            display: flex; justify-content: center; align-items: center; 
+            animation: fade-in-overlay 0.5s ease; 
+            overflow: hidden; padding: 20px 15px; box-sizing: border-box; 
+        }
         .overlay-content { width: 100%; max-width: 900px; }
-        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.5); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
+        .overlay-footer { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; 
+            background: rgba(10, 21, 46, 0.8); /* Tăng độ mờ để che nền tốt hơn */
+            /* backdrop-filter: blur(10px); */ /* Đã loại bỏ để tối ưu hiệu năng */
+            border-top: 1px solid rgba(255, 255, 255, 0.1); 
+            z-index: 1010; 
+        }
+        /* ======================================= */
+
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
         .footer-btn.primary { border-color: #e94560; color: #e94560; }
