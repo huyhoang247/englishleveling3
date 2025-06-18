@@ -129,10 +129,9 @@ const GameStyles = () => (
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.1rem; /* Tăng kích thước chữ */
-      font-weight: 900; /* Làm chữ đậm hơn, giống Nunito Black */
+      font-size: 1rem; /* Giảm kích thước chữ */
+      font-weight: 900; 
       color: white;
-      /* Thay đổi shadow để tạo hiệu ứng nổi bật, cứng cáp như trong ảnh */
       text-shadow: 0px 2px 0px rgba(0, 0, 0, 0.35);
     }
     /* === KẾT THÚC THAY ĐỔI KIỂU CHỮ === */
@@ -166,7 +165,7 @@ const GameStyles = () => (
       .puzzle-icon { font-size: 1.2rem; width: 24px; height: 24px; }
       .xp-progress-container { height: 18px; }
       .xp-text { 
-        font-size: 0.9rem; /* Điều chỉnh lại kích thước cho màn hình nhỏ */
+        font-size: 0.85rem; /* Điều chỉnh lại kích thước cho màn hình nhỏ */
       }
     }
 
