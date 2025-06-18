@@ -54,8 +54,8 @@ const GameStyles = () => (
     
     .hex-level-badge {
       position: relative;
-      width: 40px;
-      height: 45px;
+      width: 34px; /* ĐÃ THAY ĐỔI: từ 40px */
+      height: 38px; /* ĐÃ THAY ĐỔI: từ 45px */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -103,11 +103,10 @@ const GameStyles = () => (
     }
     
     .hex-level-badge .level-number {
-      font-size: 1.2rem;
+      font-size: 1rem; /* ĐÃ THAY ĐỔI: từ 1.2rem */
       font-weight: 900;
       color: white;
       line-height: 1;
-      /* ĐÃ XÓA text-shadow */
     }
 
     /* ==== KẾT THÚC THIẾT KẾ HUY HIỆU ==== */
