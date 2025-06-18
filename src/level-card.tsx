@@ -54,8 +54,8 @@ const GameStyles = () => (
     
     .hex-level-badge {
       position: relative;
-      width: 48px;
-      height: 54px;
+      width: 40px; /* ĐÃ THAY ĐỔI: từ 48px */
+      height: 45px; /* ĐÃ THAY ĐỔI: từ 54px */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -106,7 +106,7 @@ const GameStyles = () => (
     }
     
     .hex-level-badge .level-number {
-      font-size: 1.5rem;
+      font-size: 1.2rem; /* ĐÃ THAY ĐỔI: từ 1.5rem */
       font-weight: 900;
       color: white;
       line-height: 1;
