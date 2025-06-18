@@ -1,6 +1,6 @@
 import React from 'react';
 
-// DỮ LIỆU MẪU (Đã xóa thuộc tính 'stars')
+// DỮ LIỆU MẪU
 const sampleCharacters = [
   { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', cost: 0, classIcon: '🍃', xp: 3, xpMax: 5, },
   { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, classIcon: '💭', xp: 5, xpMax: 5, },
@@ -73,7 +73,6 @@ const GameStyles = () => (
 
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
     .cost-badge { background-color: #007bff; width: 30px; height: 34px; display: flex; justify-content: center; align-items: center; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); font-weight: 900; font-size: 1.1rem; color: white; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
-    /* ==== CSS CHO SAO ĐÃ ĐƯỢC XÓA ==== */
     .class-icon { background-color: #f0f0f0; border: 2px solid #ccc; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
     .character-image-container { margin: 8px 0; background-color: #cddfff; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
     .character-image { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -84,18 +83,9 @@ const GameStyles = () => (
     .xp-bar {
       display: flex;
       align-items: center;
-      gap: 8px;
     }
-
-    .puzzle-icon {
-      font-size: 1.5rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      flex-shrink: 0;
-    }
+    
+    /* ==== CSS CHO PUZZLE ICON ĐÃ ĐƯỢC XÓA ==== */
 
     .xp-progress-container {
       flex-grow: 1;
@@ -130,7 +120,6 @@ const GameStyles = () => (
     }
     
     /* ==== PHẦN RESPONSIVE ==== */
-
     @media (max-width: 900px) {
       .character-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -138,25 +127,16 @@ const GameStyles = () => (
     }
 
     @media (max-width: 600px) {
-      .app-container {
-        padding: 12px;
-      }
-      .main-title {
-        font-size: 2rem;
-        margin-bottom: 12px;
-      }
-      .character-grid {
-        gap: 12px;
-      }
+      .app-container { padding: 12px; }
+      .main-title { font-size: 2rem; margin-bottom: 12px; }
+      .character-grid { gap: 12px; }
       .character-card { padding: 6px; border-radius: 12px; }
       .character-name { font-size: 1.2rem; }
       .cost-badge { transform: scale(0.9); }
       .class-icon { transform: scale(0.9); }
-      .puzzle-icon { font-size: 1.2rem; width: 24px; height: 24px; }
+      /* CSS responsive cho puzzle icon đã được xóa */
       .xp-progress-container { height: 18px; }
-      .xp-text { 
-        font-size: 0.8rem;
-      }
+      .xp-text { font-size: 0.8rem; }
     }
 
     @media (max-width: 360px) {
@@ -167,23 +147,18 @@ const GameStyles = () => (
   `}</style>
 );
 
-// ==== COMPONENT CON ĐÃ ĐƯỢC XÓA ====
 
 const CharacterCard = ({ character }: { character: any }) => {
-  // Đã xóa 'stars' khỏi danh sách destructuring
   const { name, image, cost, classIcon, xp, xpMax } = character;
   
   const xpPercentage = (xp / xpMax) * 100;
 
   return (
     <div className="character-card">
-      {/* ==== PHẦN HEADER ĐÃ ĐƯỢC CẬP NHẬT ==== */}
       <div className="card-header">
         <div className="cost-badge">{cost}</div>
-        {/* Component StarRating đã được xóa từ đây */}
         <div className="class-icon">{classIcon}</div>
       </div>
-      {/* ======================================= */}
       <div className="character-image-container">
         <img src={image} alt={name} className="character-image" />
       </div>
@@ -191,8 +166,9 @@ const CharacterCard = ({ character }: { character: any }) => {
         <h3 className="character-name">{name}</h3>
       </div>
       <div className="card-footer">
+        {/* ==== PHẦN HTML ĐÃ ĐƯỢC CẬP NHẬT ==== */}
         <div className="xp-bar">
-          <span className="puzzle-icon">🧩</span>
+          {/* Biểu tượng puzzle đã được xóa */}
           <div className="xp-progress-container">
             <div 
               className="xp-progress-fill" 
@@ -201,6 +177,7 @@ const CharacterCard = ({ character }: { character: any }) => {
             <span className="xp-text">{`${xp}/${xpMax}`}</span>
           </div>
         </div>
+        {/* ==================================== */}
       </div>
     </div>
   );
