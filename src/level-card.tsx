@@ -64,15 +64,12 @@ const GameStyles = () => (
       display: flex;
       flex-direction: column;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px #3c5d9a;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: box-shadow 0.3s ease;
       cursor: pointer;
-      position: relative; /* <<< THÊM: Cần thiết để z-index hoạt động */
     }
 
     .character-card:hover {
-      transform: translateY(-8px) scale(1.03);
       box-shadow: 0 15px 30px rgba(255, 193, 7, 0.3), 0 0 0 3px #ffc107;
-      z-index: 10; /* <<< THÊM: Đưa thẻ lên trên các thẻ khác khi hover */
     }
 
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
