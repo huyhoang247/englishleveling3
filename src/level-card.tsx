@@ -6,7 +6,6 @@ const sampleCharacters = [
   { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', level: 15, classIcon: '💭', xp: 9, xpMax: 10, },
   { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', level: 8, classIcon: '🍃', xp: 2, xpMax: 10, },
   { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', level: 42, classIcon: '👊', xp: 1, xpMax: 5, },
-  // ĐÃ CẬP NHẬT: Kakka đã đủ kinh nghiệm để lên cấp
   { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', level: 9, classIcon: '👊', xp: 5, xpMax: 5, },
 ];
 
@@ -89,7 +88,6 @@ const GameStyles = () => (
     }
     
     .class-icon, .level-up-icon {
-      /* Căn chỉnh các icon nhất quán */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -99,14 +97,28 @@ const GameStyles = () => (
       background-color: #f0f0f0; 
       border: 2px solid #ccc; 
       border-radius: 50%; 
-      width: 35px; /* THAY ĐỔI: Kích thước nhất quán */
-      height: 35px; /* THAY ĐỔI: Kích thước nhất quán */
-      font-size: 1.4rem; /* THAY ĐỔI: Điều chỉnh cho kích thước mới */
+      width: 35px;
+      height: 35px;
+      font-size: 1.4rem;
     }
     /* === KẾT THÚC CSS CHO ICON LÊN CẤP === */
     
-    .character-image-container { margin: 8px 0; background-color: #cddfff; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
-    .character-image { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .character-image-container { 
+      margin: 8px 0; 
+      background-color: #cddfff; 
+      border-radius: 12px; 
+      overflow: hidden; 
+      aspect-ratio: 2 / 3; /* THAY ĐỔI: Tỷ lệ khung hình thành 2:3 */
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    .character-image { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: contain; /* Đảm bảo ảnh vừa vặn, không bị méo */
+      display: block; 
+    }
     
     .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
     .xp-bar { display: flex; align-items: center; }
@@ -179,7 +191,6 @@ const CharacterCard = ({ character, onLevelUp }: { character: any; onLevelUp: (i
 
 // COMPONENT CHÍNH ĐÃ CẬP NHẬT
 function App() {
-  // Chuyển danh sách nhân vật vào State để quản lý
   const [characters, setCharacters] = useState(() => {
     const initialList = [];
     for (let i = 0; i < 12; i++) {
@@ -188,12 +199,10 @@ function App() {
     return initialList;
   });
 
-  // Hàm xử lý logic lên cấp
   const handleLevelUp = (characterId: number) => {
     setCharacters(prevCharacters =>
       prevCharacters.map(char => {
         if (char.id === characterId && char.xp >= char.xpMax) {
-          // Tăng level và reset XP về 0
           return { ...char, level: char.level + 1, xp: 0 };
         }
         return char;
@@ -209,9 +218,9 @@ function App() {
         <div className="character-grid">
           {characters.map((char) => (
             <CharacterCard
-              key={char.id} // Sử dụng ID duy nhất làm key
+              key={char.id}
               character={char}
-              onLevelUp={handleLevelUp} // Truyền hàm xử lý xuống component con
+              onLevelUp={handleLevelUp}
             />
           ))}
         </div>
