@@ -3,8 +3,8 @@ import React from 'react';
 // DỮ LIỆU MẪU
 const sampleCharacters = [
   { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', cost: 0, classIcon: '🍃', xp: 3, xpMax: 5, },
-  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, classIcon: '💭', xp: 5, xpMax: 5, },
-  { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', cost: 0, classIcon: '🍃', xp: 0, xpMax: 5, },
+  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, classIcon: '💭', xp: 9, xpMax: 10, },
+  { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', cost: 0, classIcon: '🍃', xp: 2, xpMax: 10, },
   { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', cost: 0, classIcon: '👊', xp: 1, xpMax: 5, },
   { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', cost: 0, classIcon: '👊', xp: 4, xpMax: 5, },
 ];
@@ -80,28 +80,36 @@ const GameStyles = () => (
     .character-name { color: white; font-size: 1.5rem; font-weight: 900; margin: 0; text-transform: capitalize; }
     .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
     
+    /* ==== BẮT ĐẦU PHẦN THIẾT KẾ EXP BAR CÓ CHIỀU SÂU ==== */
+    
     .xp-bar {
       display: flex;
       align-items: center;
     }
-    
-    /* ==== CSS CHO PUZZLE ICON ĐÃ ĐƯỢC XÓA ==== */
 
     .xp-progress-container {
       flex-grow: 1;
-      height: 22px;
-      background-color: #333;
-      border-radius: 11px;
+      height: 24px; /* Tăng nhẹ chiều cao để hiệu ứng đẹp hơn */
+      background-color: #222; /* Màu nền tối hơn */
+      /* Bo góc vừa phải, không quá tròn */
+      border-radius: 8px; 
       position: relative;
       overflow: hidden;
-      border: 1px solid #555;
+      /* TẠO HIỆU ỨNG LÕM VÀO VỚI BÓNG ĐỔ BÊN TRONG */
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
     }
 
     .xp-progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-      border-radius: 11px;
+      /* Bo góc khớp với container */
+      border-radius: 8px; 
       transition: width 0.5s ease-in-out;
+      /* TẠO HIỆU ỨNG 3D VỚI GRADIENT PHỨC TẠP */
+      /* Lớp trên là highlight trắng mờ, lớp dưới là màu chính */
+      background-image: 
+        linear-gradient(to bottom, rgba(255,255,255,0.25), transparent 60%),
+        linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      box-shadow: 0 0 5px rgba(0, 242, 254, 0.4); /* Thêm glow nhẹ */
     }
 
     .xp-text {
@@ -116,9 +124,11 @@ const GameStyles = () => (
       font-size: 0.9rem;
       font-weight: 900; 
       color: white;
-      text-shadow: 0px 2px 0px rgba(0, 0, 0, 0.35);
+      text-shadow: 0px 2px 0px rgba(0, 0, 0, 0.45);
     }
     
+    /* ==== KẾT THÚC PHẦN THIẾT KẾ EXP BAR ==== */
+
     /* ==== PHẦN RESPONSIVE ==== */
     @media (max-width: 900px) {
       .character-grid {
@@ -134,8 +144,7 @@ const GameStyles = () => (
       .character-name { font-size: 1.2rem; }
       .cost-badge { transform: scale(0.9); }
       .class-icon { transform: scale(0.9); }
-      /* CSS responsive cho puzzle icon đã được xóa */
-      .xp-progress-container { height: 18px; }
+      .xp-progress-container { height: 20px; } /* Điều chỉnh lại chiều cao */
       .xp-text { font-size: 0.8rem; }
     }
 
@@ -166,18 +175,15 @@ const CharacterCard = ({ character }: { character: any }) => {
         <h3 className="character-name">{name}</h3>
       </div>
       <div className="card-footer">
-        {/* ==== PHẦN HTML ĐÃ ĐƯỢC CẬP NHẬT ==== */}
         <div className="xp-bar">
-          {/* Biểu tượng puzzle đã được xóa */}
           <div className="xp-progress-container">
             <div 
               className="xp-progress-fill" 
               style={{ width: `${xpPercentage}%` }}
             ></div>
-            <span className="xp-text">{`${xp}/${xpMax}`}</span>
+            <span className="xp-text">{xpMax > 0 ? `${xp}/${xpMax}` : 'MAX'}</span>
           </div>
         </div>
-        {/* ==================================== */}
       </div>
     </div>
   );
