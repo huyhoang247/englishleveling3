@@ -54,8 +54,8 @@ const GameStyles = () => (
     
     .hex-level-badge {
       position: relative;
-      width: 40px; /* ĐÃ THAY ĐỔI: từ 48px */
-      height: 45px; /* ĐÃ THAY ĐỔI: từ 54px */
+      width: 40px;
+      height: 45px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -69,7 +69,7 @@ const GameStyles = () => (
       left: 0;
       width: 100%;
       height: 100%;
-      background: #0d4e6e; /* Màu viền ngoài cùng, rất tối */
+      background: #111; /* ĐÃ THAY ĐỔI: Màu viền ngoài cùng, rất tối */
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 1;
     }
@@ -82,7 +82,7 @@ const GameStyles = () => (
       left: 2px;
       width: calc(100% - 4px);
       height: calc(100% - 4px);
-      background: #006b8e; /* Màu tối hơn màu chính để làm cạnh vát */
+      background: #666; /* ĐÃ THAY ĐỔI: Màu đen nhạt để làm cạnh vát */
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 2;
     }
@@ -97,29 +97,29 @@ const GameStyles = () => (
       align-items: center;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 3;
-      /* Stack nhiều gradient: lớp trên là highlight, lớp dưới là màu nền */
+      /* ĐÃ THAY ĐỔI: Stack gradient đen với highlight mờ */
       background:
         /* Highlight trắng mờ ở góc trên trái */
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6), transparent 40%),
-        /* Gradient xanh chính */
-        linear-gradient(180deg, #00d4ff, #0099cc);
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 40%),
+        /* Gradient đen/xám chính */
+        linear-gradient(180deg, #3a3a3a, #1f1f1f);
     }
     
     .hex-level-badge .level-number {
-      font-size: 1.2rem; /* ĐÃ THAY ĐỔI: từ 1.5rem */
+      font-size: 1.2rem;
       font-weight: 900;
       color: white;
       line-height: 1;
-      /* Dùng text-shadow để tạo viền dày cho chữ */
+      /* ĐÃ THAY ĐỔI: Dùng text-shadow đen để tạo viền cho chữ */
       text-shadow: 
-        2px 2px 0 #184b63, 
-        -2px 2px 0 #184b63, 
-        2px -2px 0 #184b63, 
-        -2px -2px 0 #184b63,
-        2px 0px 0 #184b63,
-        -2px 0px 0 #184b63,
-        0px 2px 0 #184b63,
-        0px -2px 0 #184b63;
+        2px 2px 0 #000, 
+        -2px 2px 0 #000, 
+        2px -2px 0 #000, 
+        -2px -2px 0 #000,
+        2px 0px 0 #000,
+        -2px 0px 0 #000,
+        0px 2px 0 #000,
+        0px -2px 0 #000;
     }
 
     /* ==== KẾT THÚC THIẾT KẾ HUY HIỆU ==== */
