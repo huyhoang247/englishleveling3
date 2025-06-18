@@ -2,11 +2,11 @@ import React from 'react';
 
 // DỮ LIỆU MẪU
 const sampleCharacters = [
-  { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', cost: 0, stars: 5, classIcon: '🍃', xp: 0, xpMax: 5, typeIcon: '🗡️', },
-  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, stars: 5, classIcon: '💭', xp: 0, xpMax: 5, typeIcon: '💧', },
-  { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', cost: 0, stars: 5, classIcon: '🍃', xp: 0, xpMax: 5, typeIcon: '🗡️', },
-  { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', cost: 0, stars: 4, classIcon: '👊', xp: 0, xpMax: 5, typeIcon: '🗡️', },
-  { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', cost: 0, stars: 5, classIcon: '👊', xp: 0, xpMax: 5, typeIcon: '💧', },
+  { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', cost: 0, stars: 5, classIcon: '🍃', xp: 0, xpMax: 5, },
+  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, stars: 5, classIcon: '💭', xp: 0, xpMax: 5, },
+  { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', cost: 0, stars: 5, classIcon: '🍃', xp: 0, xpMax: 5, },
+  { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', cost: 0, stars: 4, classIcon: '👊', xp: 0, xpMax: 5, },
+  { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', cost: 0, stars: 5, classIcon: '👊', xp: 0, xpMax: 5, },
 ];
 
 // LOGIC TẠO LƯỚI
@@ -84,7 +84,7 @@ const GameStyles = () => (
     .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
     .xp-bar { display: flex; justify-content: space-between; align-items: center; }
     
-    .puzzle-icon, .type-icon { font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
+    .puzzle-icon { font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
     .xp-text { font-size: 1.2rem; font-weight: 700; color: white; }
 
     /* ==== PHẦN RESPONSIVE ==== */
@@ -111,7 +111,7 @@ const GameStyles = () => (
       .star-rating { font-size: 1rem; }
       .cost-badge { transform: scale(0.9); }
       .class-icon { transform: scale(0.9); }
-      .puzzle-icon, .type-icon { font-size: 1.2rem; width: 24px; height: 24px; }
+      .puzzle-icon { font-size: 1.2rem; width: 24px; height: 24px; }
       .xp-text { font-size: 1rem; }
     }
 
@@ -133,7 +133,7 @@ const StarRating = ({ rating }: { rating: number }) => {
 };
 
 const CharacterCard = ({ character }: { character: any }) => {
-  const { name, image, cost, stars, classIcon, xp, xpMax, typeIcon } = character;
+  const { name, image, cost, stars, classIcon, xp, xpMax } = character;
   return (
     <div className="character-card">
       <div className="card-header">
@@ -151,7 +151,6 @@ const CharacterCard = ({ character }: { character: any }) => {
         <div className="xp-bar">
           <span className="puzzle-icon">🧩</span>
           <span className="xp-text">{`${xp}/${xpMax}`}</span>
-          <span className="type-icon">{typeIcon}</span>
         </div>
       </div>
     </div>
