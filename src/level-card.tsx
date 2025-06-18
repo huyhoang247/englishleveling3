@@ -1,6 +1,6 @@
 import React from 'react';
 
-// DỮ LIỆU MẪU (CẬP NHẬT 'level' VỚI SỐ LỚN HƠN)
+// DỮ LIỆU MẪU
 const sampleCharacters = [
   { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', level: 27, classIcon: '🍃', xp: 3, xpMax: 5, },
   { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', level: 15, classIcon: '💭', xp: 9, xpMax: 10, },
@@ -27,9 +27,7 @@ const GameStyles = () => (
       color: white;
       box-sizing: border-box;
     }
-    *, *:before, *:after {
-      box-sizing: inherit;
-    }
+    *, *:before, *:after { box-sizing: inherit; }
 
     .app-container { padding: 20px; max-width: 1020px; margin: 0 auto; }
     .main-title { text-align: center; font-size: 2.5rem; font-weight: 900; color: #ffc107; text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); margin-bottom: 20px; }
@@ -50,76 +48,43 @@ const GameStyles = () => (
 
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
 
-    /* ==== BẮT ĐẦU THIẾT KẾ HUY HIỆU LEVEL 3D HÌNH LỤC GIÁC ==== */
+    /* ==== BẮT ĐẦU THIẾT KẾ HUY HIỆU LEVEL TINH GỌN ==== */
     
-    .hex-level-badge {
+    .level-badge {
       position: relative;
-      width: 48px;
-      height: 54px;
+      width: 42px; /* Nhỏ hơn */
+      height: 46px; /* Nhỏ hơn */
       display: flex;
       justify-content: center;
       align-items: center;
-    }
-
-    /* Lớp Nền ngoài cùng (viền tối dày) */
-    .hex-level-badge::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #0d4e6e; /* Màu viền ngoài cùng, rất tối */
+      /* Mặt chính của huy hiệu */
+      background: linear-gradient(160deg, #1ee7ff 10%, #00a5d4 90%); /* Gradient mới, sống động hơn */
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-      z-index: 1;
-    }
-    
-    /* Lớp Bevel (tạo độ dày, nằm trên lớp nền) */
-    .hex-level-badge::before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: calc(100% - 4px);
-      height: calc(100% - 4px);
-      background: #006b8e; /* Màu tối hơn màu chính để làm cạnh vát */
-      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      /* Hiệu ứng chiều sâu tinh tế bằng bóng đổ bên trong */
+      box-shadow: inset 0px 2px 2px rgba(0, 0, 0, 0.25);
       z-index: 2;
     }
-    
-    /* Mặt chính của huy hiệu */
-    .hex-level-badge .badge-face {
-      position: relative;
-      width: calc(100% - 8px);
-      height: calc(100% - 8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+
+    /* Lớp nền tối để tạo viền */
+    .level-badge::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      background: #083c5a; /* Màu nền tối, hài hòa */
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-      z-index: 3;
-      /* Stack nhiều gradient: lớp trên là highlight, lớp dưới là màu nền */
-      background:
-        /* Highlight trắng mờ ở góc trên trái */
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6), transparent 40%),
-        /* Gradient xanh chính */
-        linear-gradient(180deg, #00d4ff, #0099cc);
+      z-index: 1; /* Nằm sau mặt chính */
     }
     
-    .hex-level-badge .level-number {
-      font-size: 1.5rem;
+    .level-badge .level-number {
+      font-size: 1.3rem; /* Nhỏ hơn */
       font-weight: 900;
       color: white;
       line-height: 1;
-      /* Dùng text-shadow để tạo viền dày cho chữ */
-      text-shadow: 
-        2px 2px 0 #184b63, 
-        -2px 2px 0 #184b63, 
-        2px -2px 0 #184b63, 
-        -2px -2px 0 #184b63,
-        2px 0px 0 #184b63,
-        -2px 0px 0 #184b63,
-        0px 2px 0 #184b63,
-        0px -2px 0 #184b63;
+      /* Viền chữ gọn gàng hơn */
+      text-shadow: 1px 1px 0px #083c5a;
     }
 
     /* ==== KẾT THÚC THIẾT KẾ HUY HIỆU ==== */
@@ -140,7 +105,7 @@ const GameStyles = () => (
       .main-title { font-size: 2rem; margin-bottom: 12px; }
       .character-grid { gap: 12px; }
       .character-card { padding: 6px; border-radius: 12px; }
-      .hex-level-badge { transform: scale(0.85); } /* Thu nhỏ huy hiệu */
+      .level-badge { transform: scale(0.9); }
       .class-icon { transform: scale(0.9); }
       .xp-progress-container { height: 20px; }
       .xp-text { font-size: 0.8rem; }
@@ -150,11 +115,9 @@ const GameStyles = () => (
 );
 
 // COMPONENT HUY HIỆU LEVEL MỚI
-const HexLevelBadge = ({ level }: { level: number }) => (
-  <div className="hex-level-badge">
-    <div className="badge-face">
-      <span className="level-number">{level}</span>
-    </div>
+const LevelBadge = ({ level }: { level: number }) => (
+  <div className="level-badge">
+    <span className="level-number">{level}</span>
   </div>
 );
 
@@ -165,7 +128,7 @@ const CharacterCard = ({ character }: { character: any }) => {
   return (
     <div className="character-card">
       <div className="card-header">
-        <HexLevelBadge level={level} />
+        <LevelBadge level={level} />
         <div className="class-icon">{classIcon}</div>
       </div>
       <div className="character-image-container">
