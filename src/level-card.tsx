@@ -1,12 +1,12 @@
 import React from 'react';
 
-// DỮ LIỆU MẪU
+// DỮ LIỆU MẪU (ĐÃ CẬP NHẬT ĐỂ HIỂN THỊ THANH EXP TỐT HƠN)
 const sampleCharacters = [
-  { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', cost: 0, stars: 5, classIcon: '🍃', xp: 0, xpMax: 5, },
-  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, stars: 5, classIcon: '💭', xp: 0, xpMax: 5, },
+  { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', cost: 0, stars: 5, classIcon: '🍃', xp: 3, xpMax: 5, },
+  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', cost: 0, stars: 5, classIcon: '💭', xp: 5, xpMax: 5, },
   { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', cost: 0, stars: 5, classIcon: '🍃', xp: 0, xpMax: 5, },
-  { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', cost: 0, stars: 4, classIcon: '👊', xp: 0, xpMax: 5, },
-  { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', cost: 0, stars: 5, classIcon: '👊', xp: 0, xpMax: 5, },
+  { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', cost: 0, stars: 4, classIcon: '👊', xp: 1, xpMax: 5, },
+  { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', cost: 0, stars: 5, classIcon: '👊', xp: 4, xpMax: 5, },
 ];
 
 // LOGIC TẠO LƯỚI
@@ -82,10 +82,59 @@ const GameStyles = () => (
     .card-info { background-color: black; border-radius: 8px; padding: 8px 10px; text-align: center; }
     .character-name { color: white; font-size: 1.5rem; font-weight: 900; margin: 0; text-transform: capitalize; }
     .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
-    .xp-bar { display: flex; justify-content: space-between; align-items: center; }
     
-    .puzzle-icon { font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
-    .xp-text { font-size: 1.2rem; font-weight: 700; color: white; }
+    /* ==== PHẦN THAY ĐỔI CHO EXP BAR ==== */
+    
+    .xp-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px; /* Khoảng cách giữa icon và thanh bar */
+    }
+
+    .puzzle-icon {
+      font-size: 1.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0; /* Không cho icon bị co lại */
+    }
+
+    .xp-progress-container {
+      flex-grow: 1; /* Để thanh bar chiếm hết không gian còn lại */
+      height: 22px;
+      background-color: #333; /* Màu nền của thanh bar */
+      border-radius: 11px;
+      position: relative;
+      overflow: hidden; /* Ẩn phần thừa của thanh fill */
+      border: 1px solid #555;
+    }
+
+    .xp-progress-fill {
+      height: 100%;
+      /* Gradient đẹp mắt cho thanh fill */
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      border-radius: 11px;
+      transition: width 0.5s ease-in-out; /* Hiệu ứng chuyển động mượt mà */
+    }
+
+    .xp-text {
+      position: absolute; /* Đặt text nằm trên thanh bar */
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Giúp text dễ đọc */
+    }
+    
+    /* ==== KẾT THÚC PHẦN THAY ĐỔI ==== */
 
     /* ==== PHẦN RESPONSIVE ==== */
 
@@ -112,7 +161,8 @@ const GameStyles = () => (
       .cost-badge { transform: scale(0.9); }
       .class-icon { transform: scale(0.9); }
       .puzzle-icon { font-size: 1.2rem; width: 24px; height: 24px; }
-      .xp-text { font-size: 1rem; }
+      .xp-progress-container { height: 18px; }
+      .xp-text { font-size: 0.8rem; }
     }
 
     @media (max-width: 360px) {
@@ -134,6 +184,10 @@ const StarRating = ({ rating }: { rating: number }) => {
 
 const CharacterCard = ({ character }: { character: any }) => {
   const { name, image, cost, stars, classIcon, xp, xpMax } = character;
+  
+  // Tính toán phần trăm EXP để đặt chiều rộng cho thanh fill
+  const xpPercentage = (xp / xpMax) * 100;
+
   return (
     <div className="character-card">
       <div className="card-header">
@@ -147,12 +201,20 @@ const CharacterCard = ({ character }: { character: any }) => {
       <div className="card-info">
         <h3 className="character-name">{name}</h3>
       </div>
+      {/* ==== PHẦN THAY ĐỔI CẤU TRÚC HTML CHO EXP BAR ==== */}
       <div className="card-footer">
         <div className="xp-bar">
           <span className="puzzle-icon">🧩</span>
-          <span className="xp-text">{`${xp}/${xpMax}`}</span>
+          <div className="xp-progress-container">
+            <div 
+              className="xp-progress-fill" 
+              style={{ width: `${xpPercentage}%` }}
+            ></div>
+            <span className="xp-text">{`${xp}/${xpMax}`}</span>
+          </div>
         </div>
       </div>
+      {/* ==== KẾT THÚC PHẦN THAY ĐỔI ==== */}
     </div>
   );
 };
