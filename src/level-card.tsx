@@ -129,7 +129,7 @@ const GameStyles = () => (
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1rem; /* Giảm kích thước chữ */
+      font-size: 0.9rem; /* Giảm kích thước chữ thêm */
       font-weight: 900; 
       color: white;
       text-shadow: 0px 2px 0px rgba(0, 0, 0, 0.35);
@@ -165,7 +165,7 @@ const GameStyles = () => (
       .puzzle-icon { font-size: 1.2rem; width: 24px; height: 24px; }
       .xp-progress-container { height: 18px; }
       .xp-text { 
-        font-size: 0.85rem; /* Điều chỉnh lại kích thước cho màn hình nhỏ */
+        font-size: 0.8rem; /* Điều chỉnh lại kích thước cho màn hình nhỏ */
       }
     }
 
