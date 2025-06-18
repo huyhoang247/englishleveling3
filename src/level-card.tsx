@@ -62,15 +62,12 @@ const GameStyles = () => (
       display: flex;
       flex-direction: column;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px #3c5d9a;
-      /* Chỉ transition cho transform và box-shadow */
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       cursor: pointer;
     }
 
     .character-card:hover {
-      /* Hiệu ứng nhấc thẻ lên nhẹ nhàng */
       transform: translateY(-4px);
-      /* Tăng bóng đổ để tạo chiều sâu */
       box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
     }
 
@@ -82,11 +79,9 @@ const GameStyles = () => (
     .class-icon { background-color: #f0f0f0; border: 2px solid #ccc; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
     .character-image-container { margin: 8px 0; background-color: #cddfff; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
     .character-image { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .card-info { background-color: black; border-radius: 8px; padding: 5px 10px; position: relative; text-align: center; margin-bottom: 5px; }
+    .card-info { background-color: black; border-radius: 8px; padding: 8px 10px; text-align: center; }
     .character-name { color: white; font-size: 1.5rem; font-weight: 900; margin: 0; text-transform: capitalize; }
-    .slot-icons { position: absolute; left: 10px; bottom: -15px; display: flex; gap: 4px; }
-    .slot-icon { background-color: #333; border: 1px solid #555; color: #888; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; border-radius: 4px; font-size: 1.5rem; font-weight: bold; }
-    .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: auto; }
+    .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
     .xp-bar { display: flex; justify-content: space-between; align-items: center; }
     
     .puzzle-icon, .type-icon { font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; }
@@ -118,7 +113,6 @@ const GameStyles = () => (
       .class-icon { transform: scale(0.9); }
       .puzzle-icon, .type-icon { font-size: 1.2rem; width: 24px; height: 24px; }
       .xp-text { font-size: 1rem; }
-      .slot-icons { bottom: -12px; transform: scale(0.9); }
     }
 
     @media (max-width: 360px) {
@@ -151,10 +145,6 @@ const CharacterCard = ({ character }: { character: any }) => {
         <img src={image} alt={name} className="character-image" />
       </div>
       <div className="card-info">
-        <div className="slot-icons">
-          <div className="slot-icon">+</div>
-          <div className="slot-icon">+</div>
-        </div>
         <h3 className="character-name">{name}</h3>
       </div>
       <div className="card-footer">
