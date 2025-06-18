@@ -25,17 +25,16 @@ const GameStyles = () => (
       font-family: 'Nunito', sans-serif;
       background-color: #1a2a4c;
       color: white;
-      box-sizing: border-box; /* Giúp việc tính toán padding và border dễ dàng hơn */
+      box-sizing: border-box;
     }
     *, *:before, *:after {
       box-sizing: inherit;
     }
 
     .app-container {
-      /* Padding mặc định cho màn hình lớn, đồng bộ với gap của grid */
       padding: 20px;
-      max-width: 1020px; /* Thêm max-width để căn giữa đẹp hơn */
-      margin: 0 auto; /* Căn giữa toàn bộ container */
+      max-width: 1020px;
+      margin: 0 auto;
     }
 
     .main-title {
@@ -52,7 +51,6 @@ const GameStyles = () => (
     .character-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      /* Gap mặc định cho màn hình lớn */
       gap: 20px;
     }
 
@@ -64,12 +62,18 @@ const GameStyles = () => (
       display: flex;
       flex-direction: column;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px #3c5d9a;
-      transition: box-shadow 0.3s ease;
+      /* Thêm transition để hiệu ứng mượt mà */
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
       cursor: pointer;
     }
 
     .character-card:hover {
-      box-shadow: 0 15px 30px rgba(255, 193, 7, 0.3), 0 0 0 3px #ffc107;
+      /* Hiệu ứng nhấc thẻ lên */
+      transform: translateY(-8px);
+      /* Thay đổi màu viền sang vàng */
+      border-color: #ffc107;
+      /* Thêm bóng đổ tỏa sáng màu vàng */
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 193, 7, 0.5);
     }
 
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
@@ -100,7 +104,7 @@ const GameStyles = () => (
 
     @media (max-width: 600px) {
       .app-container {
-        padding: 12px; /* Đồng bộ padding với gap của grid */
+        padding: 12px;
       }
       .main-title {
         font-size: 2rem;
