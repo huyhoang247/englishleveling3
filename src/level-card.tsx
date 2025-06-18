@@ -62,17 +62,15 @@ const GameStyles = () => (
       display: flex;
       flex-direction: column;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 2px #3c5d9a;
-      /* Thêm transition để hiệu ứng mượt mà */
-      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      /* Chỉ transition cho transform và box-shadow */
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       cursor: pointer;
     }
 
     .character-card:hover {
-      /* Hiệu ứng nhấc thẻ lên nhẹ nhàng hơn */
+      /* Hiệu ứng nhấc thẻ lên nhẹ nhàng */
       transform: translateY(-4px);
-      /* Thay đổi màu viền sang đen */
-      border-color: #000000;
-      /* Tăng nhẹ bóng đổ và loại bỏ vầng sáng */
+      /* Tăng bóng đổ để tạo chiều sâu */
       box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
     }
 
