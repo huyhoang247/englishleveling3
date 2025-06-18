@@ -3,7 +3,8 @@ import React from 'react';
 // DỮ LIỆU MẪU (CẬP NHẬT 'level' VỚI SỐ LỚN HƠN)
 const sampleCharacters = [
   { id: 1, name: 'Sarub', image: 'https://i.ibb.co/pPzR5dJ/sarub.png', level: 27, classIcon: '🍃', xp: 3, xpMax: 5, },
-  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', level: 15, classIcon: '💭', xp: 9, xpMax: 10, },
+  // ĐÃ CẬP NHẬT Jellible ĐỂ SẴN SÀNG LÊN CẤP
+  { id: 2, name: 'Jellible', image: 'https://i.ibb.co/VvzV1Y0/jellible.png', level: 15, classIcon: '💭', xp: 10, xpMax: 10, },
   { id: 3, name: 'Cactu', image: 'https://i.ibb.co/3sX8xRz/cactu.png', level: 8, classIcon: '🍃', xp: 2, xpMax: 10, },
   { id: 4, name: 'Nutmee', image: 'https://i.ibb.co/0V8k1q7/nutmee.png', level: 42, classIcon: '👊', xp: 1, xpMax: 5, },
   { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', level: 9, classIcon: '👊', xp: 4, xpMax: 5, },
@@ -61,57 +62,71 @@ const GameStyles = () => (
       align-items: center;
     }
 
-    /* Lớp Nền ngoài cùng (viền tối dày) */
     .hex-level-badge::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: #111;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 1;
     }
     
-    /* Lớp Bevel (tạo độ dày, nằm trên lớp nền) */
     .hex-level-badge::before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: calc(100% - 4px);
-      height: calc(100% - 4px);
+      content: ''; position: absolute; top: 2px; left: 2px; width: calc(100% - 4px); height: calc(100% - 4px);
       background: #666;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 2;
     }
     
-    /* Mặt chính của huy hiệu */
     .hex-level-badge .badge-face {
-      position: relative;
-      width: calc(100% - 8px);
-      height: calc(100% - 8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      position: relative; width: calc(100% - 8px); height: calc(100% - 8px);
+      display: flex; justify-content: center; align-items: center;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 3;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 40%),
-        linear-gradient(180deg, #3a3a3a, #1f1f1f);
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 40%), linear-gradient(180deg, #3a3a3a, #1f1f1f);
     }
     
     .hex-level-badge .level-number {
-      font-size: 1rem; /* ĐÃ THAY ĐỔI: từ 1.2rem */
-      font-weight: 900;
-      color: white;
-      line-height: 1;
+      font-size: 1rem; font-weight: 900; color: white; line-height: 1;
     }
 
     /* ==== KẾT THÚC THIẾT KẾ HUY HIỆU ==== */
     
     .class-icon { background-color: #f0f0f0; border: 2px solid #ccc; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+
+    /* ==== BẮT ĐẦU THIẾT KẾ NÚT LÊN CẤP ==== */
+    @keyframes levelUpGlow {
+      0%, 100% {
+        box-shadow: 0 0 8px #ffeb3b, inset 0 0 5px rgba(255,255,255,0.4);
+      }
+      50% {
+        box-shadow: 0 0 16px 3px #ffc107, inset 0 0 5px rgba(255,255,255,0.4);
+      }
+    }
+
+    .level-up-button {
+      width: 34px; /* Kích thước tương đồng huy hiệu */
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #c77700;
+      background: linear-gradient(180deg, #ffeb3b, #f57c00);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: levelUpGlow 2s infinite ease-in-out;
+    }
+
+    .level-up-button:hover {
+      transform: scale(1.1);
+      animation-play-state: paused; /* Tạm dừng animation khi hover để hiệu ứng scale rõ hơn */
+      box-shadow: 0 0 18px 5px #ffc107, inset 0 0 8px rgba(255,255,255,0.5);
+    }
+    /* ==== KẾT THÚC THIẾT KẾ NÚT LÊN CẤP ==== */
+
     .character-image-container { margin: 8px 0; background-color: #cddfff; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
     .character-image { width: 100%; height: 100%; object-fit: contain; display: block; }
     
@@ -127,7 +142,7 @@ const GameStyles = () => (
       .main-title { font-size: 2rem; margin-bottom: 12px; }
       .character-grid { gap: 12px; }
       .character-card { padding: 6px; border-radius: 12px; }
-      .hex-level-badge { transform: scale(0.85); } /* Thu nhỏ huy hiệu */
+      .hex-level-badge, .level-up-button { transform: scale(0.85); } /* Thu nhỏ cả huy hiệu và nút */
       .class-icon { transform: scale(0.9); }
       .xp-progress-container { height: 20px; }
       .xp-text { font-size: 0.8rem; }
@@ -136,7 +151,7 @@ const GameStyles = () => (
   `}</style>
 );
 
-// COMPONENT HUY HIỆU LEVEL MỚI
+// COMPONENT HUY HIỆU LEVEL
 const HexLevelBadge = ({ level }: { level: number }) => (
   <div className="hex-level-badge">
     <div className="badge-face">
@@ -145,15 +160,33 @@ const HexLevelBadge = ({ level }: { level: number }) => (
   </div>
 );
 
+// COMPONENT NÚT LÊN CẤP MỚI
+const LevelUpButton = ({ onClick }: { onClick: () => void }) => (
+  <button className="level-up-button" title="Lên cấp!" onClick={onClick}>
+    ↑
+  </button>
+);
+
 const CharacterCard = ({ character }: { character: any }) => {
   const { name, image, level, classIcon, xp, xpMax } = character;
   const xpPercentage = (xp / xpMax) * 100;
+  const isReadyToLevelUp = xpMax > 0 && xp >= xpMax;
+
+  const handleLevelUpClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Ngăn sự kiện click lan ra thẻ character-card
+    alert(`Nhân vật ${name} đã sẵn sàng Lên Cấp!`);
+    // Trong ứng dụng thực tế, bạn sẽ gọi một hàm để xử lý logic lên cấp ở đây
+  };
 
   return (
     <div className="character-card">
       <div className="card-header">
         <HexLevelBadge level={level} />
-        <div className="class-icon">{classIcon}</div>
+        {isReadyToLevelUp ? (
+          <LevelUpButton onClick={handleLevelUpClick} />
+        ) : (
+          <div className="class-icon">{classIcon}</div>
+        )}
       </div>
       <div className="character-image-container">
         <img src={image} alt={name} className="character-image" />
