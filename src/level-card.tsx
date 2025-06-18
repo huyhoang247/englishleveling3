@@ -76,11 +76,16 @@ const GameStyles = () => (
     .class-icon { background-color: #f0f0f0; border: 2px solid #ccc; border-radius: 50%; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
     .character-image-container { margin: 8px 0; background-color: #cddfff; border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
     .character-image { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .card-info { background-color: black; border-radius: 8px; padding: 8px 10px; text-align: center; }
-    .character-name { color: white; font-size: 1.5rem; font-weight: 900; margin: 0; text-transform: capitalize; }
-    .card-footer { background-color: black; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
     
-    /* ==== BẮT ĐẦU PHẦN THIẾT KẾ EXP BAR CÓ CHIỀU SÂU ==== */
+    /* ==== CSS CHO TÊN NHÂN VẬT ĐÃ ĐƯỢC XÓA ==== */
+    
+    .card-footer { 
+      background-color: black; 
+      border-radius: 8px; 
+      padding: 8px 10px; 
+      /* Thêm margin-top để tạo khoảng cách sau khi xóa tên */
+      margin-top: 8px; 
+    }
     
     .xp-bar {
       display: flex;
@@ -89,27 +94,22 @@ const GameStyles = () => (
 
     .xp-progress-container {
       flex-grow: 1;
-      height: 24px; /* Tăng nhẹ chiều cao để hiệu ứng đẹp hơn */
-      background-color: #222; /* Màu nền tối hơn */
-      /* Bo góc vừa phải, không quá tròn */
+      height: 24px;
+      background-color: #222;
       border-radius: 8px; 
       position: relative;
       overflow: hidden;
-      /* TẠO HIỆU ỨNG LÕM VÀO VỚI BÓNG ĐỔ BÊN TRONG */
       box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
     }
 
     .xp-progress-fill {
       height: 100%;
-      /* Bo góc khớp với container */
       border-radius: 8px; 
       transition: width 0.5s ease-in-out;
-      /* TẠO HIỆU ỨNG 3D VỚI GRADIENT PHỨC TẠP */
-      /* Lớp trên là highlight trắng mờ, lớp dưới là màu chính */
       background-image: 
         linear-gradient(to bottom, rgba(255,255,255,0.25), transparent 60%),
         linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-      box-shadow: 0 0 5px rgba(0, 242, 254, 0.4); /* Thêm glow nhẹ */
+      box-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
     }
 
     .xp-text {
@@ -127,8 +127,6 @@ const GameStyles = () => (
       text-shadow: 0px 2px 0px rgba(0, 0, 0, 0.45);
     }
     
-    /* ==== KẾT THÚC PHẦN THIẾT KẾ EXP BAR ==== */
-
     /* ==== PHẦN RESPONSIVE ==== */
     @media (max-width: 900px) {
       .character-grid {
@@ -141,10 +139,9 @@ const GameStyles = () => (
       .main-title { font-size: 2rem; margin-bottom: 12px; }
       .character-grid { gap: 12px; }
       .character-card { padding: 6px; border-radius: 12px; }
-      .character-name { font-size: 1.2rem; }
       .cost-badge { transform: scale(0.9); }
       .class-icon { transform: scale(0.9); }
-      .xp-progress-container { height: 20px; } /* Điều chỉnh lại chiều cao */
+      .xp-progress-container { height: 20px; }
       .xp-text { font-size: 0.8rem; }
     }
 
@@ -171,9 +168,9 @@ const CharacterCard = ({ character }: { character: any }) => {
       <div className="character-image-container">
         <img src={image} alt={name} className="character-image" />
       </div>
-      <div className="card-info">
-        <h3 className="character-name">{name}</h3>
-      </div>
+      
+      {/* ==== PHẦN HIỂN THỊ TÊN NHÂN VẬT ĐÃ ĐƯỢC XÓA ==== */}
+
       <div className="card-footer">
         <div className="xp-bar">
           <div className="xp-progress-container">
