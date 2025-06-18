@@ -69,7 +69,7 @@ const GameStyles = () => (
       left: 0;
       width: 100%;
       height: 100%;
-      background: #111; /* ĐÃ THAY ĐỔI: Màu viền ngoài cùng, rất tối */
+      background: #111;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 1;
     }
@@ -82,7 +82,7 @@ const GameStyles = () => (
       left: 2px;
       width: calc(100% - 4px);
       height: calc(100% - 4px);
-      background: #666; /* ĐÃ THAY ĐỔI: Màu đen nhạt để làm cạnh vát */
+      background: #666;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 2;
     }
@@ -97,11 +97,8 @@ const GameStyles = () => (
       align-items: center;
       clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
       z-index: 3;
-      /* ĐÃ THAY ĐỔI: Stack gradient đen với highlight mờ */
       background:
-        /* Highlight trắng mờ ở góc trên trái */
         radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 40%),
-        /* Gradient đen/xám chính */
         linear-gradient(180deg, #3a3a3a, #1f1f1f);
     }
     
@@ -110,16 +107,7 @@ const GameStyles = () => (
       font-weight: 900;
       color: white;
       line-height: 1;
-      /* ĐÃ THAY ĐỔI: Dùng text-shadow đen để tạo viền cho chữ */
-      text-shadow: 
-        2px 2px 0 #000, 
-        -2px 2px 0 #000, 
-        2px -2px 0 #000, 
-        -2px -2px 0 #000,
-        2px 0px 0 #000,
-        -2px 0px 0 #000,
-        0px 2px 0 #000,
-        0px -2px 0 #000;
+      /* ĐÃ XÓA text-shadow */
     }
 
     /* ==== KẾT THÚC THIẾT KẾ HUY HIỆU ==== */
