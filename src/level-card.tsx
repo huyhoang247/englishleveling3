@@ -68,12 +68,12 @@ const GameStyles = () => (
     }
 
     .character-card:hover {
-      /* Hiệu ứng nhấc thẻ lên */
-      transform: translateY(-8px);
-      /* Thay đổi màu viền sang vàng */
-      border-color: #ffc107;
-      /* Thêm bóng đổ tỏa sáng màu vàng */
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 193, 7, 0.5);
+      /* Hiệu ứng nhấc thẻ lên nhẹ nhàng hơn */
+      transform: translateY(-4px);
+      /* Thay đổi màu viền sang đen */
+      border-color: #000000;
+      /* Tăng nhẹ bóng đổ và loại bỏ vầng sáng */
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
     }
 
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
