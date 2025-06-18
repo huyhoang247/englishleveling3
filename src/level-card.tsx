@@ -9,7 +9,7 @@ const sampleCharacters = [
   { id: 5, name: 'Kakka', image: 'https://i.ibb.co/6PqjXfG/kakka.png', level: 9, classIcon: '👊', xp: 5, xpMax: 5, },
 ];
 
-// Component để nhúng CSS - PHIÊN BẢN HOÀN CHỈNH
+// Component để nhúng CSS - PHIÊN BẢN TÍM HUYỀN ẢO
 const GameStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
@@ -126,16 +126,17 @@ const GameStyles = () => (
     .xp-progress-fill { height: 100%; border-radius: 8px; transition: width 0.5s ease-in-out; background-image: linear-gradient(to bottom, rgba(255,255,255,0.25), transparent 60%), linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 0 5px rgba(0, 242, 254, 0.4); }
     .xp-text { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; font-weight: 900; color: white; text-shadow: 0px 2px 0px rgba(0, 0, 0, 0.45); }
     
-    /* ==== BẮT ĐẦU: CSS CHO THANH XP KHI ĐẦY ==== */
-    @keyframes pulse-green-glow {
-      0% { box-shadow: 0 0 5px rgba(129, 219, 90, 0.5); }
-      50% { box-shadow: 0 0 12px 3px rgba(129, 219, 90, 0.8); }
-      100% { box-shadow: 0 0 5px rgba(129, 219, 90, 0.5); }
+    /* ==== BẮT ĐẦU: CSS CHO THANH XP KHI ĐẦY (PHIÊN BẢN TÍM HUYỀN ẢO) ==== */
+    @keyframes pulse-magic-glow {
+      0% { box-shadow: 0 0 6px rgba(224, 38, 255, 0.6); }
+      50% { box-shadow: 0 0 14px 4px rgba(224, 38, 255, 0.9); }
+      100% { box-shadow: 0 0 6px rgba(224, 38, 255, 0.6); }
     }
 
     .xp-progress-fill.is-ready {
-      background-image: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent 60%), linear-gradient(90deg, #a8e063 0%, #56ab2f 100%);
-      animation: pulse-green-glow 2s infinite ease-in-out;
+      background-image: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent 60%),
+                        linear-gradient(90deg, #DA22FF 0%, #9733EE 100%);
+      animation: pulse-magic-glow 2.2s infinite ease-in-out;
     }
     /* ==== KẾT THÚC: CSS CHO THANH XP KHI ĐẦY ==== */
 
@@ -169,7 +170,7 @@ const CharacterCard = ({ character, onLevelUp }: { character: any; onLevelUp: (i
   const xpPercentage = xpMax > 0 ? (xp / xpMax) * 100 : 100;
   const isReadyToLevelUp = xpMax > 0 && xp >= xpMax;
 
-  // CHỈNH SỬA: Thêm class `is-ready` khi đủ XP
+  // Thêm class `is-ready` một cách có điều kiện khi đủ XP
   const progressFillClasses = `xp-progress-fill ${isReadyToLevelUp ? 'is-ready' : ''}`;
 
   return (
@@ -196,7 +197,6 @@ const CharacterCard = ({ character, onLevelUp }: { character: any; onLevelUp: (i
       <div className="card-footer">
         <div className="xp-bar">
           <div className="xp-progress-container">
-            {/* CHỈNH SỬA: Sử dụng biến class đã tạo ở trên */}
             <div className={progressFillClasses} style={{ width: `${xpPercentage}%` }}></div>
             <span className="xp-text">{xpMax > 0 ? `${xp}/${xpMax}` : 'MAX'}</span>
           </div>
@@ -220,7 +220,6 @@ function App() {
     setCharacters(prevCharacters =>
       prevCharacters.map(char => {
         if (char.id === characterId && char.xp >= char.xpMax) {
-          // THAY ĐỔI: Khi lên cấp, XP sẽ reset về 0
           return { ...char, level: char.level + 1, xp: 0 };
         }
         return char;
