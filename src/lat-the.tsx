@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES ======================================================
+// === 1. CSS STYLES (ĐÃ NÂNG CẤP) =======================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -26,17 +26,17 @@ const GlobalStyles = () => (
             box-sizing: border-box;
         }
 
-        /* === THAY ĐỔI: NÚT ĐÓNG TOÀN MÀN HÌNH (ĐÃ TINH CHỈNH) === */
+        /* --- Nút đóng toàn màn hình (Giữ nguyên) --- */
         .vocab-screen-close-btn {
             position: fixed;
-            top: 15px; /* MODIFIED: Sát góc hơn */
-            right: 15px; /* MODIFIED: Sát góc hơn */
+            top: 25px;
+            right: 25px;
             width: 44px;
             height: 44px;
-            background: transparent; /* Xóa nền để tinh tế hơn */
-            border: none; /* Xóa viền */
+            background: transparent;
+            border: none;
             cursor: pointer;
-            z-index: 2000; /* Sẽ được ẩn/hiện bằng logic React */
+            z-index: 2000;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -44,13 +44,13 @@ const GlobalStyles = () => (
             opacity: 0.9;
         }
         .vocab-screen-close-btn:hover {
-            transform: scale(1.15); /* Hiệu ứng đơn giản khi hover */
+            transform: scale(1.15);
             opacity: 1;
         }
         .vocab-screen-close-btn img {
             width: 28px;
             height: 28px;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); /* Thêm bóng đổ cho icon */
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
         }
         
         /* Container để chứa nhiều rương */
@@ -58,35 +58,60 @@ const GlobalStyles = () => (
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 40px;
+            gap: 30px; /* Giảm khoảng cách để gọn hơn */
             width: 100%;
         }
 
-        /* --- GIAO DIỆN RƯƠNG BÁU --- */
+        /* === GIAO DIỆN RƯƠNG BÁU (NÂNG CẤP) === */
         .chest-ui-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 380px; /* Giảm kích thước tối đa */
             min-width: 300px;
-            background-color: #3e2723;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background-color: #1a1f36; /* Màu nền mới, lạnh và hiện đại hơn */
+            border-radius: 16px; /* Bo góc mềm mại hơn */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2);
             overflow: hidden;
-            border: 2px solid #5d4037;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative; /* Cần cho viền gradient */
+            border: none; /* Bỏ viền cũ */
         }
+        /* Viền gradient tinh tế */
+        .chest-ui-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px; /* Độ dày của viền */
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3));
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        
         .chest-ui-container:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            transform: translateY(-8px); /* Giảm hiệu ứng hover */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3);
         }
 
-        .chest-header { padding: 10px 20px; background-color: #4e342e; font-size: 1rem; font-weight: 700; color: #d7ccc8; border-bottom: 2px solid #5d4037; text-align: center; }
+        .chest-header { 
+            padding: 12px 20px; 
+            background-color: rgba(42, 49, 78, 0.7); /* Màu nền header mới */
+            font-size: 0.9rem; /* Chỉnh nhỏ lại */
+            font-weight: 600; 
+            color: #c7d2fe; /* Màu chữ mới */
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         
         .chest-body { 
             background: linear-gradient(170deg, #43335b, #2c2240);
-            padding: 20px; 
-            border-top: 8px solid #8c6b41;
+            padding: 25px 20px 20px 20px; /* Tăng padding trên để thoáng hơn */
             position: relative; 
             flex-grow: 1; 
             display: flex; 
@@ -98,12 +123,9 @@ const GlobalStyles = () => (
         .chest-body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.3)"/><circle cx="80" cy="25" r="0.5" fill="rgba(255,255,255,0.3)"/><circle cx="30" cy="70" r="1.5" fill="rgba(255,255,255,0.2)"/><circle cx="60" cy="90" r="0.8" fill="rgba(255,255,255,0.3)"/></svg>');
-            opacity: 0.15;
+            opacity: 0.1; /* Giảm độ đậm của hiệu ứng sao */
             z-index: 0;
         }
         
@@ -112,83 +134,75 @@ const GlobalStyles = () => (
              z-index: 1;
         }
 
-        .chest-title { font-size: clamp(1.5rem, 5vw, 2rem); color: white; font-weight: 900; text-shadow: 2px 2px 0px #21182f; margin-top: 0; margin-bottom: 15px; text-align: center; }
-        .help-icon { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(0, 0, 0, 0.2); border: 2px solid white; color: white; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s ease; z-index: 2; }
-        .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.4); }
+        .chest-title { 
+            font-size: clamp(1.4rem, 4vw, 1.75rem); /* Giảm kích thước font */
+            color: white; 
+            font-weight: 900; 
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); /* Bóng đổ nhẹ hơn */
+            margin-top: 0; 
+            margin-bottom: 20px; 
+            text-align: center; 
+        }
         
-        .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 15px; }
+        .help-icon { 
+            position: absolute; top: 15px; right: 15px; width: 24px; height: 24px; /* Kích thước nhỏ hơn */
+            border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
+            border: 1px solid rgba(255,255,255,0.5); /* Viền mỏng hơn */
+            color: white; font-size: 16px; font-weight: bold; 
+            cursor: pointer; display: flex; justify-content: center; align-items: center; 
+            transition: all 0.2s ease; z-index: 2; 
+        }
+        .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
+        
+        .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
         
         .info-bubble { 
             flex: 2; 
-            background-color: rgba(30, 20, 45, 0.8);
-            color: white; 
+            background-color: rgba(10, 10, 20, 0.6); /* Nền tinh chỉnh */
+            color: #d1d5db; /* Màu chữ dịu hơn */
             padding: 10px 15px; 
             border-radius: 8px; 
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 0.9rem; 
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Viền tinh chỉnh */
+            font-size: 0.85rem; /* Chỉnh nhỏ lại */
             text-align: left; 
         }
 
-        .pity-timer { text-align: center; color: #c5b8d9; font-weight: 700; font-size: 0.9rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .highlight-purple { color: #f0abfc; font-weight: bold; }
+        .pity-timer { text-align: center; color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .highlight-purple { color: #d8b4fe; font-weight: bold; } /* Màu tím sáng hơn */
         
-        /* --- THIẾT KẾ NÚT MỚI --- */
+        /* --- THIẾT KẾ NÚT MỚI (NÂNG CẤP) --- */
         .action-button-group { display: flex; gap: 10px; width: 100%; }
         .chest-button {
-            flex: 1;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
+            flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
             transition: transform 0.1s ease, box-shadow 0.1s ease;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 0.95rem;
+            color: #ffffff; font-weight: 700; font-size: 0.95rem;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
-            
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); /* Giảm độ sâu của bóng */
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .chest-button:active {
             transform: translateY(2px);
-            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25);
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25);
         }
-        .btn-get-1 { background: linear-gradient(to top, #c026d3, #e879f9); }
-        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
+        .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); } /* Gradient tím mới */
+        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); } /* Giữ nguyên màu xanh */
         
         .button-price {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px; /* Tăng khoảng cách một chút cho icon */
-            font-size: 0.85rem;
-            color: white;
-            font-weight: 600;
-            background-color: rgba(0,0,0,0.2);
-            padding: 3px 8px;
-            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            font-size: 0.85rem; color: white; font-weight: 600;
+            background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px;
             text-shadow: none;
         }
 
-        /* === THÊM STYLE CHO ICON MỚI === */
-        .price-icon {
-            width: 16px;
-            height: 16px;
-        }
-        /* ================================ */
+        .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay & Card styles (đã tối ưu) --- */
+        /* --- Overlay & Card styles (Giữ nguyên, đã tối ưu) --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
         .card-opening-overlay { 
-            position: fixed; 
-            top: 0; left: 0; right: 0; bottom: 0; 
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
             background-color: rgba(10, 10, 20, 0.95);
-            z-index: 1000; 
-            display: flex; justify-content: center; align-items: center; 
+            z-index: 1000; display: flex; justify-content: center; align-items: center; 
             animation: fade-in-overlay 0.5s ease; 
             overflow: hidden; padding: 20px 15px; box-sizing: border-box; 
         }
@@ -203,14 +217,14 @@ const GlobalStyles = () => (
 
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
-        .footer-btn.primary { border-color: #e94560; color: #e94560; }
-        .footer-btn.primary:hover { background-color: #e94560; color: #16213e; }
+        .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
+        .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
         .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
         .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; will-change: transform; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
-        .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #e94560; text-shadow: 0 0 10px #e94560; }
+        .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
         .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.18); }
         .card-image-in-card { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
         .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
@@ -221,14 +235,14 @@ const GlobalStyles = () => (
 );
 
 // ========================================================================
-// === 2. DỮ LIỆU & HÀM HỖ TRỢ ============================================
+// === 2. DỮ LIỆU & HÀM HỖ TRỢ (KHÔNG ĐỔI) =================================
 // ========================================================================
 const RARITIES = { COMMON: { name: 'Thường', colorClass: 'rarity-common', probability: 0.6 }, RARE: { name: 'Hiếm', colorClass: 'rarity-rare', probability: 0.25 }, EPIC: { name: 'Sử Thi', colorClass: 'rarity-epic', probability: 0.12 }, LEGENDARY: { name: 'Huyền Thoại', colorClass: 'rarity-legendary', probability: 0.03 }};
 const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg' }, { name: 'Ahri', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg' }, { name: 'Yasuo', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Yasuo_0.jpg' }, { name: 'Jinx', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Jinx_0.jpg' }, { name: 'Lux', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Lux_0.jpg' }, { name: 'Garen', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Garen_0.jpg' }, { name: 'Zed', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Zed_0.jpg' }, { name: 'Irelia', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Irelia_0.jpg' }, { name: 'Kai\'Sa', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Kaisa_0.jpg' }, { name: 'Lee Sin', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/LeeSin_0.jpg' }];
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON ================================================
+// === 3. CÁC COMPONENT CON (KHÔNG ĐỔI) ===================================
 // ========================================================================
 
 const Card = ({ cardData, isFlipped }: { cardData: any, isFlipped: boolean }) => {
@@ -352,7 +366,7 @@ const FourCardsOpener = ({ onClose }: { onClose: () => void }) => {
     );
 };
 
-// --- COMPONENT RƯƠNG TÁI SỬ DỤNG ---
+// --- COMPONENT RƯƠNG TÁI SỬ DỤNG (KHÔNG ĐỔI) ---
 interface ChestUIProps {
     headerTitle: string;
     mainTitle: string;
@@ -387,7 +401,6 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     <button className="chest-button btn-get-1" onClick={onOpen1}>
                         <span>x1</span>
                         <span className="button-price">
-                             {/* === THAY ĐỔI TỪ EMOJI SANG IMG === */}
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
                             {price1}
                         </span>
@@ -395,7 +408,6 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     <button className="chest-button btn-get-10" onClick={onOpen10}>
                         <span>x4</span>
                         <span className="button-price">
-                             {/* === THAY ĐỔI TỪ EMOJI SANG IMG === */}
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
                             {price10}
                         </span>
@@ -407,12 +419,12 @@ const ChestUI: React.FC<ChestUIProps> = ({
 };
 
 
-// --- "DATABASE" CỦA CÁC RƯƠNG ---
+// --- "DATABASE" CỦA CÁC RƯƠNG (KHÔNG ĐỔI) ---
 const CHEST_DATA = [
     {
         id: 'legendary_chest',
         headerTitle: "Basic Vocabulary",
-        mainTitle: "\u00A0", /* MODIFIED: Thêm khoảng trắng không ngắt dòng để giữ chiều cao cho tiêu đề */
+        mainTitle: "",
         imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png",
         infoText: <>3.000 Vocabulary words</>,
         pityLine1: '',
@@ -435,7 +447,7 @@ const CHEST_DATA = [
 ];
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) ===========================================
+// === 4. COMPONENT CHÍNH (APP) (KHÔNG ĐỔI) ===============================
 // ========================================================================
 interface VocabularyChestScreenProps {
     onClose: () => void;
@@ -457,7 +469,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose }
         <>
             <GlobalStyles />
             
-            {/* THAY ĐỔI: Nút đóng chỉ hiển thị khi không có overlay nào đang mở */}
             {!showSingleOverlay && !showFourOverlay && (
                 <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
@@ -468,14 +479,13 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose }
                 {CHEST_DATA.map((chest) => (
                     <ChestUI
                         key={chest.id}
-                        {...chest} // Truyền tất cả dữ liệu từ object chest vào component
-                        onOpen1={openSingle} // Gắn hàm mở 1 thẻ
-                        onOpen10={openFour}  // Gắn hàm mở nhiều thẻ (hiện là 4)
+                        {...chest}
+                        onOpen1={openSingle}
+                        onOpen10={openFour}
                     />
                 ))}
             </div>
 
-            {/* Phần Overlay không thay đổi, sẽ được kích hoạt bởi bất kỳ rương nào */}
             {showSingleOverlay && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
