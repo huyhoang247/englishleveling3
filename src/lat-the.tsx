@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (ĐÃ NÂNG CẤP) =======================================
+// === 1. CSS STYLES (ĐÃ NÂNG CẤP ĐỂ SCROLL & THÊM HIGHLIGHT) =============
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -12,17 +12,18 @@ const GlobalStyles = () => (
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
             margin: 0;
-            min-height: 100vh;
+            height: 100vh; /* Quan trọng cho layout scroll */
+            overflow: hidden; /* Tránh scroll toàn trang */
         }
 
         #root {
             width: 100%;
-            min-height: 100vh;
+            height: 100vh; /* Chiếm toàn bộ chiều cao */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 40px 20px;
+            padding: 20px;
             box-sizing: border-box;
         }
 
@@ -43,150 +44,115 @@ const GlobalStyles = () => (
             transition: transform 0.2s ease, opacity 0.2s ease;
             opacity: 0.9;
         }
-        .vocab-screen-close-btn:hover {
-            transform: scale(1.15);
-            opacity: 1;
-        }
+        .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
         .vocab-screen-close-btn img {
             width: 28px;
             height: 28px;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
         }
         
-        /* Container để chứa nhiều rương */
+        /* === NÂNG CẤP: CONTAINER RƯƠNG CÓ THỂ CUỘN === */
         .chest-gallery-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 30px; /* Giảm khoảng cách để gọn hơn */
+            gap: 30px;
             width: 100%;
+            max-width: 1300px; /* Giới hạn chiều rộng tối đa trên màn hình lớn */
+            overflow-y: auto; /* Thêm thanh cuộn khi cần */
+            padding: 20px;
+            max-height: calc(100vh - 40px); /* Đảm bảo không tràn ra ngoài #root */
+            box-sizing: border-box;
+        }
+        /* Tùy chỉnh thanh cuộn cho đẹp hơn (trên trình duyệt Webkit) */
+        .chest-gallery-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chest-gallery-container::-webkit-scrollbar-track {
+            background: rgba(10, 10, 20, 0.5);
+            border-radius: 4px;
+        }
+        .chest-gallery-container::-webkit-scrollbar-thumb {
+            background-color: #4a5588;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        .chest-gallery-container::-webkit-scrollbar-thumb:hover {
+            background-color: #6366f1;
         }
 
-        /* === GIAO DIỆN RƯƠNG BÁU (NÂNG CẤP) === */
+        /* === GIAO DIỆN RƯƠNG BÁU (Giữ nguyên từ lần nâng cấp trước) === */
         .chest-ui-container {
-            width: 100%;
-            max-width: 380px; /* Giảm kích thước tối đa */
-            min-width: 300px;
-            background-color: #1a1f36; /* Màu nền mới, lạnh và hiện đại hơn */
-            border-radius: 16px; /* Bo góc mềm mại hơn */
+            width: 100%; max-width: 380px; min-width: 300px;
+            background-color: #1a1f36; border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            overflow: hidden; display: flex; flex-direction: column;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative; /* Cần cho viền gradient */
-            border: none; /* Bỏ viền cũ */
+            position: relative; border: none;
         }
-        /* Viền gradient tinh tế */
         .chest-ui-container::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 1px; /* Độ dày của viền */
+            content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px;
             background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3));
-            -webkit-mask: 
-                linear-gradient(#fff 0 0) content-box, 
-                linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
         }
-        
         .chest-ui-container:hover {
-            transform: translateY(-8px); /* Giảm hiệu ứng hover */
+            transform: translateY(-8px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3);
         }
-
         .chest-header { 
-            padding: 12px 20px; 
-            background-color: rgba(42, 49, 78, 0.7); /* Màu nền header mới */
-            font-size: 0.9rem; /* Chỉnh nhỏ lại */
-            font-weight: 600; 
-            color: #c7d2fe; /* Màu chữ mới */
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 12px 20px; background-color: rgba(42, 49, 78, 0.7);
+            font-size: 0.9rem; font-weight: 600; color: #c7d2fe;
+            text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        
         .chest-body { 
             background: linear-gradient(170deg, #43335b, #2c2240);
-            padding: 25px 20px 20px 20px; /* Tăng padding trên để thoáng hơn */
-            position: relative; 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            overflow: hidden;
+            padding: 25px 20px 20px 20px; position: relative; flex-grow: 1; 
+            display: flex; flex-direction: column; align-items: center; overflow: hidden;
         }
-        
         .chest-body::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.3)"/><circle cx="80" cy="25" r="0.5" fill="rgba(255,255,255,0.3)"/><circle cx="30" cy="70" r="1.5" fill="rgba(255,255,255,0.2)"/><circle cx="60" cy="90" r="0.8" fill="rgba(255,255,255,0.3)"/></svg>');
-            opacity: 0.1; /* Giảm độ đậm của hiệu ứng sao */
-            z-index: 0;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0;
         }
-        
-        .chest-body > * {
-             position: relative;
-             z-index: 1;
-        }
-
+        .chest-body > * { position: relative; z-index: 1; }
         .chest-title { 
-            font-size: clamp(1.4rem, 4vw, 1.75rem); /* Giảm kích thước font */
-            color: white; 
-            font-weight: 900; 
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); /* Bóng đổ nhẹ hơn */
-            margin-top: 0; 
-            margin-bottom: 20px; 
-            text-align: center; 
+            font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
         }
-        
         .help-icon { 
-            position: absolute; top: 15px; right: 15px; width: 24px; height: 24px; /* Kích thước nhỏ hơn */
+            position: absolute; top: 15px; right: 15px; width: 24px; height: 24px;
             border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
-            border: 1px solid rgba(255,255,255,0.5); /* Viền mỏng hơn */
-            color: white; font-size: 16px; font-weight: bold; 
-            cursor: pointer; display: flex; justify-content: center; align-items: center; 
-            transition: all 0.2s ease; z-index: 2; 
+            border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 16px; 
+            font-weight: bold; cursor: pointer; display: flex; justify-content: center; 
+            align-items: center; transition: all 0.2s ease; z-index: 2; 
         }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
-        
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
-        
         .info-bubble { 
-            flex: 2; 
-            background-color: rgba(10, 10, 20, 0.6); /* Nền tinh chỉnh */
-            color: #d1d5db; /* Màu chữ dịu hơn */
-            padding: 10px 15px; 
-            border-radius: 8px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Viền tinh chỉnh */
-            font-size: 0.85rem; /* Chỉnh nhỏ lại */
-            text-align: left; 
+            flex: 2; background-color: rgba(10, 10, 20, 0.6); color: #d1d5db;
+            padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem; text-align: left; 
         }
-
         .pity-timer { text-align: center; color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .highlight-purple { color: #d8b4fe; font-weight: bold; } /* Màu tím sáng hơn */
+        /* === THÊM CÁC LỚP HIGHLIGHT MỚI === */
+        .highlight-purple { color: #d8b4fe; font-weight: bold; }
+        .highlight-yellow { color: #facc15; font-weight: bold; }
+        .highlight-red { color: #f87171; font-weight: bold; }
         
-        /* --- THIẾT KẾ NÚT MỚI (NÂNG CẤP) --- */
         .action-button-group { display: flex; gap: 10px; width: 100%; }
         .chest-button {
             flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            color: #ffffff; font-weight: 700; font-size: 0.95rem;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); /* Giảm độ sâu của bóng */
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: transform 0.1s ease, box-shadow 0.1s ease; color: #ffffff; 
+            font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; 
+            justify-content: center; gap: 8px;
         }
-        .chest-button:active {
-            transform: translateY(2px);
-            box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25);
-        }
-        .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); } /* Gradient tím mới */
-        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); } /* Giữ nguyên màu xanh */
+        .chest-button:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
+        .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
+        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
+        .btn-free { background: linear-gradient(to top, #0e7490, #22d3ee); } /* Style cho nút miễn phí */
         
         .button-price {
             display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -194,27 +160,13 @@ const GlobalStyles = () => (
             background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px;
             text-shadow: none;
         }
-
         .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay & Card styles (Giữ nguyên, đã tối ưu) --- */
+        /* --- Overlay & Card styles (Không đổi) --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
-        .card-opening-overlay { 
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-            background-color: rgba(10, 10, 20, 0.95);
-            z-index: 1000; display: flex; justify-content: center; align-items: center; 
-            animation: fade-in-overlay 0.5s ease; 
-            overflow: hidden; padding: 20px 15px; box-sizing: border-box; 
-        }
+        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
-        .overlay-footer { 
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; 
-            background: rgba(10, 21, 46, 0.8);
-            border-top: 1px solid rgba(255, 255, 255, 0.1); 
-            z-index: 1010; 
-        }
-
+        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
         .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
@@ -235,138 +187,21 @@ const GlobalStyles = () => (
 );
 
 // ========================================================================
-// === 2. DỮ LIỆU & HÀM HỖ TRỢ (KHÔNG ĐỔI) =================================
+// === 2. DỮ LIỆU & HÀM HỖ TRỢ (Không đổi) ================================
 // ========================================================================
 const RARITIES = { COMMON: { name: 'Thường', colorClass: 'rarity-common', probability: 0.6 }, RARE: { name: 'Hiếm', colorClass: 'rarity-rare', probability: 0.25 }, EPIC: { name: 'Sử Thi', colorClass: 'rarity-epic', probability: 0.12 }, LEGENDARY: { name: 'Huyền Thoại', colorClass: 'rarity-legendary', probability: 0.03 }};
 const CHAMPIONS_POOL = [ { name: 'Aatrox', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg' }, { name: 'Ahri', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg' }, { name: 'Yasuo', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Yasuo_0.jpg' }, { name: 'Jinx', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Jinx_0.jpg' }, { name: 'Lux', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Lux_0.jpg' }, { name: 'Garen', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Garen_0.jpg' }, { name: 'Zed', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Zed_0.jpg' }, { name: 'Irelia', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Irelia_0.jpg' }, { name: 'Kai\'Sa', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Kaisa_0.jpg' }, { name: 'Lee Sin', image: 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/LeeSin_0.jpg' }];
 const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor(Math.random() * CHAMPIONS_POOL.length)]; let randomRarity = RARITIES.COMMON; const rand = Math.random(); let cumulativeProbability = 0; for (const key in RARITIES) { cumulativeProbability += RARITIES[key].probability; if (rand <= cumulativeProbability) { randomRarity = RARITIES[key]; break; } } return { ...randomChamp, rarity: randomRarity, id: Math.random() }; };
 
 // ========================================================================
-// === 3. CÁC COMPONENT CON (KHÔNG ĐỔI) ===================================
+// === 3. CÁC COMPONENT CON (COMPONENT ChestUI ĐƯỢC NÂNG CẤP) =============
 // ========================================================================
 
-const Card = ({ cardData, isFlipped }: { cardData: any, isFlipped: boolean }) => {
-    const { name, image } = cardData;
-    return (
-        <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
-            <div className="card-inner">
-                <div className="card-face card-back">?</div>
-                <div className="card-face card-front">
-                    <img src={image} alt={name} className="card-image-in-card" />
-                </div>
-            </div>
-        </div>
-    );
-};
+const Card = ({ cardData, isFlipped }: { cardData: any, isFlipped: boolean }) => { /* ... không đổi ... */ return (<div className={`card-container ${isFlipped ? 'flipped' : ''}`}><div className="card-inner"><div className="card-face card-back">?</div><div className="card-face card-front"><img src={cardData.image} alt={cardData.name} className="card-image-in-card" /></div></div></div>); };
+const SingleCardOpener = ({ onClose }: { onClose: () => void }) => { /* ... không đổi ... */ const [card, setCard] = useState(generateRandomCard()); const [isFlipped, setIsFlipped] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1=setTimeout(()=>setIsFlipped(true),500); const t2=setTimeout(()=>setIsProcessing(false),1300); return ()=>{clearTimeout(t1);clearTimeout(t2);}; }, []); const openAgain = () => { if(isProcessing)return; setIsProcessing(true);setIsFlipped(false);setTimeout(()=>setCard(generateRandomCard()),400);setTimeout(()=>{setIsFlipped(true);setTimeout(()=>setIsProcessing(false),800);},600);}; return (<><div style={{ textAlign: 'center' }}><div style={{display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px'}}><Card cardData={card} isFlipped={isFlipped} /></div></div><div className="overlay-footer"><button onClick={openAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing?'Đang mở...':'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
+const FourCardsOpener = ({ onClose }: { onClose: () => void }) => { /* ... không đổi ... */ const [cards, setCards] = useState<any[]>([]); const [flippedIndices, setFlippedIndices] = useState(new Set()); const [phase, setPhase] = useState('DEALING'); const startNewRound = useCallback(() => { setPhase('DEALING'); setFlippedIndices(new Set()); setCards([]); setTimeout(() => { const newCards=Array.from({length:4},generateRandomCard); setCards(newCards); const totalTime=1000+80*4; setTimeout(() => { setPhase('FLIPPING'); const flip = (i:number) => {if(i>=4){setTimeout(()=>setPhase('REVEALED'),800);return;} setFlippedIndices(p=>new Set(p).add(i)); setTimeout(()=>flip(i+1),200);}; flip(0); }, totalTime); }, 300); }, []); useEffect(() => { startNewRound(); }, [startNewRound]); const btnProps = (() => { switch(phase){case 'DEALING': return {text:'Đang chia bài...',disabled:true}; case 'FLIPPING': return {text:'Đang lật...',disabled:true}; case 'REVEALED': return {text:'Mở Lại x4',disabled:false}; default: return {text:'',disabled:true}; }})(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper ${cards.length>0?'dealt-in':''}`} style={{animationDelay:`${index*80}ms`,opacity:0}}><Card cardData={card} isFlipped={flippedIndices.has(index)} /></div>))}</div></div><div className="overlay-footer"><button onClick={startNewRound} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
 
-const SingleCardOpener = ({ onClose }: { onClose: () => void }) => {
-    const [card, setCard] = useState(generateRandomCard());
-    const [isFlipped, setIsFlipped] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(true);
-
-    useEffect(() => {
-        const initialDelay = 500; 
-        const flipDuration = 800;
-        const flipTimer = setTimeout(() => setIsFlipped(true), initialDelay);
-        const processTimer = setTimeout(() => setIsProcessing(false), initialDelay + flipDuration);
-        return () => { clearTimeout(flipTimer); clearTimeout(processTimer); };
-    }, []);
-
-    const handleOpenAgain = () => {
-        if (isProcessing) return;
-        setIsProcessing(true);
-        setIsFlipped(false);
-        setTimeout(() => setCard(generateRandomCard()), 400);
-        setTimeout(() => {
-            setIsFlipped(true);
-            setTimeout(() => setIsProcessing(false), 800);
-        }, 600);
-    };
-
-    return (
-        <>
-            <div style={{ textAlign: 'center' }}>
-                <div style={{display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px'}}>
-                    <Card cardData={card} isFlipped={isFlipped} />
-                </div>
-            </div>
-            <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>
-                    {isProcessing ? 'Đang mở...' : 'Mở Lại'}
-                </button>
-                <button onClick={onClose} className="footer-btn">Đóng</button>
-            </div>
-        </>
-    );
-};
-
-const FourCardsOpener = ({ onClose }: { onClose: () => void }) => {
-    const [cards, setCards] = useState<any[]>([]);
-    const [flippedIndices, setFlippedIndices] = useState(new Set());
-    const [phase, setPhase] = useState('DEALING');
-    
-    const startNewRound = useCallback(() => {
-        setPhase('DEALING');
-        setFlippedIndices(new Set());
-        setCards([]);
-        
-        setTimeout(() => {
-            const newCards = Array.from({ length: 4 }, generateRandomCard);
-            setCards(newCards);
-            
-            const dealAnimationTime = 500 + 80 * 4;
-            const pauseBeforeFlip = 500;
-
-            setTimeout(() => {
-                setPhase('FLIPPING');
-                const flipCardSequentially = (index: number) => {
-                    if (index >= 4) {
-                        setTimeout(() => setPhase('REVEALED'), 800);
-                        return;
-                    }
-                    setFlippedIndices(prev => new Set(prev).add(index));
-                    setTimeout(() => flipCardSequentially(index + 1), 200);
-                };
-                flipCardSequentially(0);
-            }, dealAnimationTime + pauseBeforeFlip);
-        }, 300);
-    }, []);
-
-    useEffect(() => {
-        startNewRound();
-    }, [startNewRound]);
-
-    const getButtonProps = () => {
-        switch (phase) {
-            case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
-            case 'FLIPPING': return { text: 'Đang lật...', disabled: true };
-            case 'REVEALED': return { text: 'Mở Lại x4', disabled: false };
-            default: return { text: '', disabled: true };
-        }
-    };
-    
-    const buttonProps = getButtonProps();
-
-    return (
-        <>
-            <div style={{ textAlign: 'center' }}>
-                <div className="four-card-grid-container">
-                    {cards.map((card, index) => (
-                        <div key={card.id} className={`card-wrapper ${cards.length > 0 ? 'dealt-in' : ''}`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
-                            <Card cardData={card} isFlipped={flippedIndices.has(index)} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="overlay-footer">
-                <button onClick={startNewRound} className="footer-btn primary" disabled={buttonProps.disabled}>{buttonProps.text}</button>
-                <button onClick={onClose} className="footer-btn">Đóng</button>
-            </div>
-        </>
-    );
-};
-
-// --- COMPONENT RƯƠNG TÁI SỬ DỤNG (KHÔNG ĐỔI) ---
+// === COMPONENT RƯƠNG TÁI SỬ DỤNG (NÂNG CẤP) ===
 interface ChestUIProps {
     headerTitle: string;
     mainTitle: string;
@@ -374,8 +209,8 @@ interface ChestUIProps {
     infoText: React.ReactNode;
     pityLine1: React.ReactNode;
     pityLine2: React.ReactNode;
-    price1: number;
-    price10: number;
+    price1: number | string; // Có thể là số hoặc chuỗi (vd: "Miễn Phí")
+    price10: number | null;  // Có thể là số hoặc null (để ẩn nút)
     onOpen1: () => void;
     onOpen10: () => void;
 }
@@ -385,6 +220,8 @@ const ChestUI: React.FC<ChestUIProps> = ({
     pityLine1, pityLine2, price1, price10,
     onOpen1, onOpen10
 }) => {
+    const isFree = typeof price1 === 'string';
+
     return (
         <div className="chest-ui-container">
             <header className="chest-header">{headerTitle}</header>
@@ -398,20 +235,26 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
                 {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
-                    <button className="chest-button btn-get-1" onClick={onOpen1}>
-                        <span>x1</span>
-                        <span className="button-price">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
-                            {price1}
-                        </span>
+                    <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1}>
+                        <span>{isFree ? 'Mở' : 'Mở x1'}</span>
+                        {typeof price1 === 'number' && (
+                           <span className="button-price">
+                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
+                                {price1}
+                            </span>
+                        )}
+                         {isFree && <span className="button-price">{price1}</span>}
                     </button>
-                    <button className="chest-button btn-get-10" onClick={onOpen10}>
-                        <span>x4</span>
-                        <span className="button-price">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
-                            {price10}
-                        </span>
-                    </button>
+                    {/* Chỉ hiển thị nút mở 10 nếu price10 có giá trị */}
+                    {price10 !== null && (
+                        <button className="chest-button btn-get-10" onClick={onOpen10}>
+                            <span>Mở x4</span>
+                            <span className="button-price">
+                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
+                                {price10}
+                            </span>
+                        </button>
+                    )}
                 </div>
             </main>
         </div>
@@ -419,14 +262,25 @@ const ChestUI: React.FC<ChestUIProps> = ({
 };
 
 
-// --- "DATABASE" CỦA CÁC RƯƠNG (KHÔNG ĐỔI) ---
+// === "DATABASE" CỦA CÁC RƯƠNG (ĐÃ THÊM RƯƠNG MỚI) ===
 const CHEST_DATA = [
+    {
+        id: 'daily_chest',
+        headerTitle: "Phúc Lợi Hàng Ngày",
+        mainTitle: "Rương Miễn Phí",
+        imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png/revision/latest?cb=20171228004133",
+        infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>,
+        pityLine1: '',
+        pityLine2: '',
+        price1: "Miễn Phí",
+        price10: null, // null để ẩn nút mở x10
+    },
     {
         id: 'legendary_chest',
         headerTitle: "Basic Vocabulary",
-        mainTitle: "",
+        mainTitle: "Rương Từ Vựng",
         imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png",
-        infoText: <>3.000 Vocabulary words</>,
+        infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>,
         pityLine1: '',
         pityLine2: '',
         price1: 320,
@@ -443,11 +297,32 @@ const CHEST_DATA = [
         price1: 150,
         price10: 1350,
     },
-    // ĐỂ THÊM RƯƠNG MỚI, CHỈ CẦN SAO CHÉP VÀ DÁN MỘT OBJECT TƯƠNG TỰ VÀO ĐÂY
+    {
+        id: 'ancient_chest',
+        headerTitle: "Rương Sự Kiện",
+        mainTitle: "Rương Cổ Vật",
+        imageUrl: "https://static.wikia.nocookie.net/minecraftdungeons/images/9/93/Gilded_Obsidian_Chest.png/revision/latest?cb=20230601222415",
+        infoText: <>Chứa các vật phẩm từ nền văn minh đã mất. Tăng tỉ lệ nhận <span className="highlight-yellow">Trang bị Cổ Đại</span>.</>,
+        pityLine1: <>Chắc chắn nhận <span className="highlight-yellow">Sử Thi</span> trong 50 lần mở.</>,
+        pityLine2: '',
+        price1: 280,
+        price10: 2500,
+    },
+     {
+        id: 'ultimate_chest',
+        headerTitle: "Tuyệt Phẩm S-Grade",
+        mainTitle: "Rương Tối Thượng",
+        imageUrl: "https://static.wikia.nocookie.net/survivorio/images/a/a2/S_Grade_Supplies_Crate_x10.png/revision/latest?cb=20221102144410",
+        infoText: <>Cơ hội sở hữu các vật phẩm <span className="highlight-red">S-Grade</span> cực hiếm với sức mạnh vượt trội.</>,
+        pityLine1: <>Chắc chắn nhận 1 <span className="highlight-red">Trang bị S-Grade</span> sau 80 lần mở.</>,
+        pityLine2: <><span className="highlight-purple">Tăng mạnh</span> tỉ lệ nhận vật phẩm Sử thi & Huyền thoại.</>,
+        price1: 500,
+        price10: 4800,
+    },
 ];
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (KHÔNG ĐỔI) ===============================
+// === 4. COMPONENT CHÍNH (APP) (Không đổi) ===============================
 // ========================================================================
 interface VocabularyChestScreenProps {
     onClose: () => void;
@@ -459,7 +334,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose }
     const [singleKey, setSingleKey] = useState(Date.now());
     const [fourKey, setFourKey] = useState(Date.now());
 
-    // Các hàm này có thể dùng cho bất kỳ rương nào
     const openSingle = () => { setSingleKey(Date.now()); setShowSingleOverlay(true); };
     const openFour = () => { setFourKey(Date.now()); setShowFourOverlay(true); };
     const closeSingle = () => setShowSingleOverlay(false);
