@@ -26,31 +26,31 @@ const GlobalStyles = () => (
             box-sizing: border-box;
         }
 
-        /* === THÊM: NÚT ĐÓNG TOÀN MÀN HÌNH === */
+        /* === THAY ĐỔI: NÚT ĐÓNG TOÀN MÀN HÌNH (ĐÃ TINH CHỈNH) === */
         .vocab-screen-close-btn {
             position: fixed;
             top: 25px;
             right: 25px;
             width: 44px;
             height: 44px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.5);
-            border-radius: 50%;
+            background: transparent; /* Xóa nền để tinh tế hơn */
+            border: none; /* Xóa viền */
             cursor: pointer;
-            z-index: 2000; /* Cao hơn overlay mở thẻ */
+            z-index: 2000; /* Sẽ được ẩn/hiện bằng logic React */
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            opacity: 0.9;
         }
         .vocab-screen-close-btn:hover {
-            transform: scale(1.1) rotate(90deg);
-            background: rgba(233, 69, 96, 0.8);
-            border-color: white;
+            transform: scale(1.15); /* Hiệu ứng đơn giản khi hover */
+            opacity: 1;
         }
         .vocab-screen-close-btn img {
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); /* Thêm bóng đổ cho icon */
         }
         
         /* Container để chứa nhiều rương */
@@ -457,9 +457,12 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose }
         <>
             <GlobalStyles />
             
-            <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
-            </button>
+            {/* THAY ĐỔI: Nút đóng chỉ hiển thị khi không có overlay nào đang mở */}
+            {!showSingleOverlay && !showFourOverlay && (
+                <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
+                </button>
+            )}
 
             <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => (
