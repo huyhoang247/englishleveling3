@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 // ========================================================================
-// === 1. CSS STYLES (ĐÃ NÂNG CẤP ĐỂ THÊM HEADER) ========================
+// === 1. CSS STYLES (ĐÃ SỬA LỖI ICON BỊ MÉO) ============================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -27,7 +27,7 @@ const GlobalStyles = () => (
             box-sizing: border-box;
         }
         
-        /* === THAY ĐỔI: HEADER CỐ ĐỊNH MỚI === */
+        /* === HEADER CỐ ĐỊNH === */
         .main-header {
             position: fixed;
             top: 0;
@@ -54,9 +54,8 @@ const GlobalStyles = () => (
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
-        /* === THAY ĐỔI: Nút đóng được tích hợp vào header, xóa position: fixed === */
+        /* === Nút đóng được tích hợp vào header === */
         .vocab-screen-close-btn {
-            /* Đã xóa: position, top, right, z-index */
             width: 44px;
             height: 44px;
             background: transparent;
@@ -67,18 +66,19 @@ const GlobalStyles = () => (
             align-items: center;
             transition: transform 0.2s ease, opacity 0.2s ease;
             opacity: 0.9;
-            /* Thêm margin âm để tăng vùng click mà không ảnh hưởng layout */
             margin: -10px; 
             padding: 10px;
         }
         .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
+        
+        /* === SỬA LỖI: Chỉnh lại kích thước icon cho đúng === */
         .vocab-screen-close-btn img {
-            width: 28px;
-            height: 28px;
+            width: 24px;  /* Sửa từ 28px để vừa với padding */
+            height: 24px; /* Sửa từ 28px để vừa với padding */
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
         }
         
-        /* === THAY ĐỔI: CONTAINER RƯƠNG ĐƯỢC ĐẨY XUỐNG VÀ TÍNH TOÁN LẠI CHIỀU CAO === */
+        /* === CONTAINER RƯƠNG ĐƯỢC ĐẨY XUỐNG VÀ TÍNH TOÁN LẠI CHIỀU CAO === */
         .chest-gallery-container {
             display: flex;
             flex-wrap: wrap;
@@ -88,8 +88,6 @@ const GlobalStyles = () => (
             max-width: 1300px;
             overflow-y: auto;
             padding: 20px;
-            /* Header cao khoảng 61px (padding + border), root padding 20px (top/bottom) */
-            /* => 100vh - header - padding_top - padding_bottom = 100vh - 61 - 20 - 20 = 100vh - 101px */
             max-height: calc(100vh - 101px);
             box-sizing: border-box;
             margin-top: 61px; /* Đẩy container xuống dưới header */
@@ -215,9 +213,9 @@ const generateRandomCard = () => { const randomChamp = CHAMPIONS_POOL[Math.floor
 // === 3. CÁC COMPONENT CON (Không đổi) ===================================
 // ========================================================================
 
-const Card = ({ cardData, isFlipped }: { cardData: any, isFlipped: boolean }) => { /* ... không đổi ... */ return (<div className={`card-container ${isFlipped ? 'flipped' : ''}`}><div className="card-inner"><div className="card-face card-back">?</div><div className="card-face card-front"><img src={cardData.image} alt={cardData.name} className="card-image-in-card" /></div></div></div>); };
-const SingleCardOpener = ({ onClose }: { onClose: () => void }) => { /* ... không đổi ... */ const [card, setCard] = useState(generateRandomCard()); const [isFlipped, setIsFlipped] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1=setTimeout(()=>setIsFlipped(true),500); const t2=setTimeout(()=>setIsProcessing(false),1300); return ()=>{clearTimeout(t1);clearTimeout(t2);}; }, []); const openAgain = () => { if(isProcessing)return; setIsProcessing(true);setIsFlipped(false);setTimeout(()=>setCard(generateRandomCard()),400);setTimeout(()=>{setIsFlipped(true);setTimeout(()=>setIsProcessing(false),800);},600);}; return (<><div style={{ textAlign: 'center' }}><div style={{display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px'}}><Card cardData={card} isFlipped={isFlipped} /></div></div><div className="overlay-footer"><button onClick={openAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing?'Đang mở...':'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
-const FourCardsOpener = ({ onClose }: { onClose: () => void }) => { /* ... không đổi ... */ const [cards, setCards] = useState<any[]>([]); const [flippedIndices, setFlippedIndices] = useState(new Set()); const [phase, setPhase] = useState('DEALING'); const startNewRound = useCallback(() => { setPhase('DEALING'); setFlippedIndices(new Set()); setCards([]); setTimeout(() => { const newCards=Array.from({length:4},generateRandomCard); setCards(newCards); const totalTime=1000+80*4; setTimeout(() => { setPhase('FLIPPING'); const flip = (i:number) => {if(i>=4){setTimeout(()=>setPhase('REVEALED'),800);return;} setFlippedIndices(p=>new Set(p).add(i)); setTimeout(()=>flip(i+1),200);}; flip(0); }, totalTime); }, 300); }, []); useEffect(() => { startNewRound(); }, [startNewRound]); const btnProps = (() => { switch(phase){case 'DEALING': return {text:'Đang chia bài...',disabled:true}; case 'FLIPPING': return {text:'Đang lật...',disabled:true}; case 'REVEALED': return {text:'Mở Lại x4',disabled:false}; default: return {text:'',disabled:true}; }})(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper ${cards.length>0?'dealt-in':''}`} style={{animationDelay:`${index*80}ms`,opacity:0}}><Card cardData={card} isFlipped={flippedIndices.has(index)} /></div>))}</div></div><div className="overlay-footer"><button onClick={startNewRound} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
+const Card = ({ cardData, isFlipped }: { cardData: any, isFlipped: boolean }) => { return (<div className={`card-container ${isFlipped ? 'flipped' : ''}`}><div className="card-inner"><div className="card-face card-back">?</div><div className="card-face card-front"><img src={cardData.image} alt={cardData.name} className="card-image-in-card" /></div></div></div>); };
+const SingleCardOpener = ({ onClose }: { onClose: () => void }) => { const [card, setCard] = useState(generateRandomCard()); const [isFlipped, setIsFlipped] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1=setTimeout(()=>setIsFlipped(true),500); const t2=setTimeout(()=>setIsProcessing(false),1300); return ()=>{clearTimeout(t1);clearTimeout(t2);}; }, []); const openAgain = () => { if(isProcessing)return; setIsProcessing(true);setIsFlipped(false);setTimeout(()=>setCard(generateRandomCard()),400);setTimeout(()=>{setIsFlipped(true);setTimeout(()=>setIsProcessing(false),800);},600);}; return (<><div style={{ textAlign: 'center' }}><div style={{display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px'}}><Card cardData={card} isFlipped={isFlipped} /></div></div><div className="overlay-footer"><button onClick={openAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing?'Đang mở...':'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
+const FourCardsOpener = ({ onClose }: { onClose: () => void }) => { const [cards, setCards] = useState<any[]>([]); const [flippedIndices, setFlippedIndices] = useState(new Set()); const [phase, setPhase] = useState('DEALING'); const startNewRound = useCallback(() => { setPhase('DEALING'); setFlippedIndices(new Set()); setCards([]); setTimeout(() => { const newCards=Array.from({length:4},generateRandomCard); setCards(newCards); const totalTime=1000+80*4; setTimeout(() => { setPhase('FLIPPING'); const flip = (i:number) => {if(i>=4){setTimeout(()=>setPhase('REVEALED'),800);return;} setFlippedIndices(p=>new Set(p).add(i)); setTimeout(()=>flip(i+1),200);}; flip(0); }, totalTime); }, 300); }, []); useEffect(() => { startNewRound(); }, [startNewRound]); const btnProps = (() => { switch(phase){case 'DEALING': return {text:'Đang chia bài...',disabled:true}; case 'FLIPPING': return {text:'Đang lật...',disabled:true}; case 'REVEALED': return {text:'Mở Lại x4',disabled:false}; default: return {text:'',disabled:true}; }})(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper ${cards.length>0?'dealt-in':''}`} style={{animationDelay:`${index*80}ms`,opacity:0}}><Card cardData={card} isFlipped={flippedIndices.has(index)} /></div>))}</div></div><div className="overlay-footer"><button onClick={startNewRound} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
 
 interface ChestUIProps {
     headerTitle: string;
@@ -285,7 +283,7 @@ const CHEST_DATA = [
 ];
 
 // ========================================================================
-// === 4. COMPONENT CHÍNH (APP) (ĐÃ THÊM HEADER VÀO JSX) ==================
+// === 4. COMPONENT CHÍNH (APP) (Không đổi) ===============================
 // ========================================================================
 interface VocabularyChestScreenProps {
     onClose: () => void;
@@ -306,8 +304,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose }
         <>
             <GlobalStyles />
             
-            {/* === THAY ĐỔI: Thêm Header và chuyển nút đóng vào trong === */}
-            {/* Header sẽ ẩn đi khi có overlay để người dùng tập trung */}
             {!showSingleOverlay && !showFourOverlay && (
                 <header className="main-header">
                     <h1 className="header-title">Chọn Rương</h1>
