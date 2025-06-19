@@ -29,8 +29,8 @@ const GlobalStyles = () => (
         /* === THAY ĐỔI: NÚT ĐÓNG TOÀN MÀN HÌNH (ĐÃ TINH CHỈNH) === */
         .vocab-screen-close-btn {
             position: fixed;
-            top: 25px;
-            right: 25px;
+            top: 15px; /* MODIFIED: Sát góc hơn */
+            right: 15px; /* MODIFIED: Sát góc hơn */
             width: 44px;
             height: 44px;
             background: transparent; /* Xóa nền để tinh tế hơn */
@@ -412,7 +412,7 @@ const CHEST_DATA = [
     {
         id: 'legendary_chest',
         headerTitle: "Basic Vocabulary",
-        mainTitle: "",
+        mainTitle: "\u00A0", /* MODIFIED: Thêm khoảng trắng không ngắt dòng để giữ chiều cao cho tiêu đề */
         imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png",
         infoText: <>3.000 Vocabulary words</>,
         pityLine1: '',
