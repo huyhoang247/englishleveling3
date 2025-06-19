@@ -25,6 +25,33 @@ const GlobalStyles = () => (
             padding: 40px 20px;
             box-sizing: border-box;
         }
+
+        /* === THÊM: NÚT ĐÓNG TOÀN MÀN HÌNH === */
+        .vocab-screen-close-btn {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 44px;
+            height: 44px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 2000; /* Cao hơn overlay mở thẻ */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        .vocab-screen-close-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: rgba(233, 69, 96, 0.8);
+            border-color: white;
+        }
+        .vocab-screen-close-btn img {
+            width: 22px;
+            height: 22px;
+        }
         
         /* Container để chứa nhiều rương */
         .chest-gallery-container {
@@ -410,7 +437,11 @@ const CHEST_DATA = [
 // ========================================================================
 // === 4. COMPONENT CHÍNH (APP) ===========================================
 // ========================================================================
-function App() {
+interface VocabularyChestScreenProps {
+    onClose: () => void;
+}
+
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose }) => {
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [singleKey, setSingleKey] = useState(Date.now());
@@ -426,6 +457,10 @@ function App() {
         <>
             <GlobalStyles />
             
+            <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
+            </button>
+
             <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => (
                     <ChestUI
@@ -456,4 +491,4 @@ function App() {
     );
 }
 
-export default App;
+export default VocabularyChestScreen;
