@@ -21,6 +21,7 @@ import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
+import VocabularyChestScreen from './lat-the.tsx';
 
 
 // ==================================================================
@@ -145,6 +146,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
   const [isTowerGameOpen, setIsTowerGameOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
 
   const GROUND_LEVEL_PERCENT = 45;
 
@@ -355,6 +357,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -415,7 +418,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // Renders the character, now with a static position
   const renderCharacter = () => {
     // Combined condition to check if any overlay is open
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
     // Condition to pause animations
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -451,6 +454,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsBlacksmithOpen(false);
             setIsTowerGameOpen(false);
             setIsShopOpen(false);
+            setIsVocabularyChestOpen(false);
         } else {
             showNavBar();
         }
@@ -472,6 +476,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsBlacksmithOpen(false);
              setIsTowerGameOpen(false);
              setIsShopOpen(false);
+             setIsVocabularyChestOpen(false);
          } else {
              showNavBar();
          }
@@ -493,6 +498,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
       } else {
         showNavBar();
       }
@@ -514,6 +520,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
       } else {
         showNavBar();
       }
@@ -535,6 +542,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
       } else {
         showNavBar();
       }
@@ -556,6 +564,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
       } else {
         showNavBar();
       }
@@ -577,6 +586,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
       } else {
         showNavBar();
       }
@@ -598,6 +608,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
+        setIsVocabularyChestOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+
+  const toggleVocabularyChest = () => {
+    if (isLoading) return;
+    setIsVocabularyChestOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        // Close other overlays
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
+        setIsShopOpen(false);
       } else {
         showNavBar();
       }
@@ -626,7 +659,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   }
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
@@ -745,6 +778,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
                 {
+                  icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />,
+                  label: "",
+                  special: true,
+                  centered: true,
+                  onClick: toggleVocabularyChest
+                },
+                {
                   icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />,
                   label: "",
                   special: true,
@@ -852,6 +892,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full" style={{ display: isShopOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Cửa hàng!</div>}>
                 {isShopOpen && <Shop onClose={toggleShop} />}
+            </ErrorBoundary>
+        </div>
+
+        {/* Overlay for Vocabulary Chest */}
+        <div className="absolute inset-0 w-full h-full" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
+            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Rương Từ Vựng!</div>}>
+                {isVocabularyChestOpen && <VocabularyChestScreen onClose={toggleVocabularyChest} />}
             </ErrorBoundary>
         </div>
 
