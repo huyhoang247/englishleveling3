@@ -226,7 +226,7 @@ const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
                 fontSize: '1rem',
                 fontWeight: 500,
                 textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-            }}>Đang tải tài nguyên...</p>
+            }}>Loading...</p>
         </div>
     );
 };
