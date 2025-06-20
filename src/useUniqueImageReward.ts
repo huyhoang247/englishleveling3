@@ -1,25 +1,32 @@
-// src/hooks/useUniqueImageReward.ts (ví dụ về đường dẫn)
+// src/hooks/useUniqueImageReward.ts
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../firebase'; // Đảm bảo đường dẫn này đúng
+// Giả sử firebase.js và image-url.ts nằm ở thư mục src
+import { db } from '../firebase'; 
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { defaultImageUrls } from '../image-url'; // Đảm bảo đường dẫn này đúng
+import { defaultImageUrls } from '../image-url';
 
-// Định nghĩa kiểu dữ liệu cho phần thưởng
+// Định nghĩa kiểu dữ liệu cho phần thưởng hình ảnh để tái sử dụng
 export interface ImageReward {
-  id: number; // 1-based ID
+  id: number; // ID dựa trên index + 1 (1-based)
   url: string;
 }
 
+/**
+ * Custom Hook để quản lý việc lấy phần thưởng hình ảnh duy nhất cho người dùng.
+ * Tự động đồng bộ với Firestore.
+ * @param currentUserId - ID của người dùng hiện tại, hoặc null nếu chưa đăng nhập.
+ * @returns {object} Trạng thái và các hàm để tương tác.
+ */
 export const useUniqueImageReward = (currentUserId: string | null) => {
   const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Hàm fetch dữ liệu từ Firestore
+  // Hàm để lấy danh sách các hình ảnh đã mở từ Firestore
   const fetchOpenedImages = useCallback(async () => {
     if (!currentUserId) {
-      // Nếu không có user, coi như tất cả hình ảnh đều có sẵn
+      // Nếu không có người dùng, coi như tất cả hình ảnh đều có sẵn để trải nghiệm
       const allIndices = defaultImageUrls.map((_, index) => index);
       setAvailableImageIndices(allIndices);
       setIsLoading(false);
@@ -32,27 +39,33 @@ export const useUniqueImageReward = (currentUserId: string | null) => {
 
     try {
       const userDocSnap = await getDoc(userDocRef);
-      let openedImageIds: number[] = []; // 1-based IDs
+      let openedImageIds: number[] = []; // ID là 1-based
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
         if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
+          // Lọc để đảm bảo chỉ có số hợp lệ
           openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number' && id > 0);
         }
       } else {
-        // Tạo document nếu chưa có
+        // Nếu user document chưa tồn tại, tự động tạo mới
         await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
       }
 
+      // Chuyển đổi ID (1-based) đã mở thành indices (0-based)
       const openedImageIndices = openedImageIds.map(id => id - 1);
+      
+      // Tạo danh sách tất cả các indices (0-based)
       const allIndices = defaultImageUrls.map((_, index) => index);
+      
+      // Lọc ra những indices còn lại (chưa được mở)
       const remainingIndices = allIndices.filter(index => !openedImageIndices.includes(index));
       
       setAvailableImageIndices(remainingIndices);
     } catch (err) {
       console.error("Error fetching/creating user image data:", err);
       setError("Không thể tải dữ liệu hình ảnh. Vui lòng thử lại.");
-      // Fallback: cho phép chơi với tất cả hình ảnh nếu có lỗi
+      // Cung cấp fallback: cho phép chơi với tất cả hình ảnh nếu có lỗi
       const allIndices = defaultImageUrls.map((_, index) => index);
       setAvailableImageIndices(allIndices);
     } finally {
@@ -60,66 +73,80 @@ export const useUniqueImageReward = (currentUserId: string | null) => {
     }
   }, [currentUserId]);
 
+  // useEffect để chạy hàm fetch khi component mount hoặc userId thay đổi
   useEffect(() => {
     fetchOpenedImages();
   }, [fetchOpenedImages]);
 
-  // Hàm lưu ID hình ảnh đã mở vào Firestore
-  const addOpenedImageToFirestore = async (imageIds: number[]) => {
+  // Hàm để lưu các ID hình ảnh mới được mở vào Firestore
+  const addOpenedImageIdsToFirestore = async (imageIds: number[]) => {
     if (!currentUserId || imageIds.length === 0) return;
     const userDocRef = doc(db, 'users', currentUserId);
     try {
+      // Sử dụng arrayUnion để thêm các ID mới vào mảng một cách an toàn
       await updateDoc(userDocRef, {
         openedImageIds: arrayUnion(...imageIds)
       });
     } catch (error) {
       console.error("Error updating opened images in Firestore:", error);
-      // Có thể thêm logic retry hoặc thông báo lỗi ở đây
+      // Có thể thêm logic retry hoặc thông báo lỗi cho người dùng ở đây
     }
   };
 
-  // Hàm chính để lấy phần thưởng
+  /**
+   * Lấy một số lượng phần thưởng hình ảnh ngẫu nhiên và duy nhất từ danh sách có sẵn.
+   * @param count - Số lượng phần thưởng cần lấy.
+   * @returns {ImageReward[]} Mảng các đối tượng phần thưởng.
+   */
   const getNextRewards = useCallback((count: number): ImageReward[] => {
     if (availableImageIndices.length === 0) {
-      console.log("Hết hình ảnh để mở!");
+      console.warn("Không còn hình ảnh nào để mở.");
       return [];
     }
 
     const rewards: ImageReward[] = [];
+    // Tạo bản sao để không làm thay đổi state gốc trong lúc xử lý
     let currentAvailableIndices = [...availableImageIndices];
     
+    // Đảm bảo không lấy nhiều hơn số lượng có sẵn
     const numToPick = Math.min(count, currentAvailableIndices.length);
 
     for (let i = 0; i < numToPick; i++) {
-        const randomIndex = Math.floor(Math.random() * currentAvailableIndices.length);
-        const selectedImageIndex = currentAvailableIndices[randomIndex];
+        // Chọn ngẫu nhiên một index từ danh sách còn lại
+        const randomIndexInAvailableList = Math.floor(Math.random() * currentAvailableIndices.length);
+        const selectedImageIndex = currentAvailableIndices[randomIndexInAvailableList];
         
         rewards.push({
-            id: selectedImageIndex + 1, // 1-based ID
+            id: selectedImageIndex + 1, // Chuyển thành ID (1-based)
             url: defaultImageUrls[selectedImageIndex]
         });
 
-        // Xóa index đã chọn để không bị trùng lặp trong một lần gọi
-        currentAvailableIndices.splice(randomIndex, 1);
+        // Xóa index đã chọn khỏi danh sách tạm thời để không bị trùng
+        currentAvailableIndices.splice(randomIndexInAvailableList, 1);
     }
 
+    // Sau khi đã chọn xong, cập nhật state và Firestore
     if (rewards.length > 0) {
         const newOpenedIds = rewards.map(r => r.id);
+        
         // Cập nhật state ngay lập tức để UI phản hồi nhanh
-        setAvailableImageIndices(prev => prev.filter(index => !newOpenedIds.includes(index + 1)));
+        const remainingIndices = availableImageIndices.filter(index => !newOpenedIds.includes(index + 1));
+        setAvailableImageIndices(remainingIndices);
+
         // Gửi cập nhật lên Firestore ở chế độ nền
-        addOpenedImageToFirestore(newOpenedIds);
+        addOpenedImageIdsToFirestore(newOpenedIds);
     }
 
     return rewards;
-  }, [availableImageIndices, currentUserId]);
+  }, [availableImageIndices, currentUserId]); // Thêm currentUserId vào dependencies
 
+  // Trả về các giá trị và hàm cần thiết cho component
   return {
     isLoading,
     error,
     availableCount: availableImageIndices.length,
     totalCount: defaultImageUrls.length,
     getNextRewards,
-    refetch: fetchOpenedImages, // Cung cấp hàm để tải lại dữ liệu nếu cần
+    refetch: fetchOpenedImages, // Cung cấp hàm để tải lại nếu cần
   };
 };
