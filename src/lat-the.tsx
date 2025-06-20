@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { defaultImageUrls } from './image-url.ts'; // Điều chỉnh đường dẫn nếu cần
 
 // ========================================================================
-// === 1. CSS STYLES ======================================================
+// === 1. CSS STYLES (ĐÃ TỐI ƯU HÓA) =======================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -167,7 +167,12 @@ const GlobalStyles = () => (
         /* --- Overlay, Card & Loading Styles --- */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* OPTIMIZATION: Added keyframe for flipping */
+        
+        /* OPTIMIZATION: Keyframes cho animation mượt mà bằng CSS */
+        @keyframes deal-in {
+            from { opacity: 0; transform: translateY(40px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         @keyframes flip-in {
             from { transform: rotateY(0deg); }
             to { transform: rotateY(180deg); }
@@ -182,39 +187,53 @@ const GlobalStyles = () => (
         .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
         .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         
-        /* OPTIMIZATION: Card animation logic moved to pure CSS */
-        .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
+        /* OPTIMIZATION: Logic animation được điều khiển bằng class `.animate` duy nhất */
+        .card-wrapper {
+            opacity: 0; /* Bắt đầu ẩn */
+            animation-fill-mode: forwards;
+        }
+        .card-wrapper.animate {
+            /* Animation chia bài sẽ chạy khi có class .animate */
+            animation-name: deal-in;
+            animation-duration: 0.4s;
+            animation-timing-function: ease-out;
+            animation-delay: var(--deal-in-delay);
+        }
+        .card-wrapper.animate .card-inner {
+            /* Animation lật bài cũng chạy khi có class .animate, nhưng với độ trễ khác */
+            animation-name: flip-in;
+            animation-duration: 0.6s;
+            animation-timing-function: ease-in-out;
+            animation-fill-mode: forwards;
+            animation-delay: var(--flip-in-delay);
+        }
+        
+        .card-container { 
+            width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block;
+            will-change: transform; /* Gợi ý cho trình duyệt tối ưu */
+        }
         .card-inner { 
             position: relative; width: 100%; height: 100%; 
-            transform-style: preserve-3d; will-change: transform; 
+            transform-style: preserve-3d; 
+            will-change: transform; /* Gợi ý cho trình duyệt tối ưu */
         }
-        .card-container.is-flipping .card-inner {
-            animation-name: flip-in;
-            animation-duration: 0.8s;
-            animation-fill-mode: forwards; /* Giữ trạng thái lật */
-            animation-timing-function: ease-in-out;
-        }
+
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
         .card-front {
-            transform: rotateY(180deg);
-            padding: 6px;
-            box-sizing: border-box;
-            /* OPTIMIZATION: Removed backdrop-filter (major performance bottleneck). Replaced with a simple transparent background. */
+            transform: rotateY(180deg); padding: 6px; box-sizing: border-box;
             background: rgba(42, 49, 78, 0.85); 
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
         .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
-        @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
     `}
     </style>
 );
 
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON ==============================================
+// === 2. CÁC COMPONENT CON (ĐÃ TỐI ƯU HÓA) ================================
 // ========================================================================
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
@@ -256,10 +275,10 @@ const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
 
 interface ImageCard { id: number; url: string; }
 
-// OPTIMIZATION: Wrapped in React.memo and props updated for CSS animation
-const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
-    <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
-        <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}>
+// OPTIMIZATION: Component được đơn giản hóa, không cần state từ props
+const Card = memo(({ cardData }: { cardData: ImageCard }) => (
+    <div className="card-container">
+        <div className="card-inner">
             <div className="card-face card-back">?</div>
             <div className="card-face card-front">
                 <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
@@ -268,15 +287,15 @@ const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, i
     </div>
 ));
 
+
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
+    // SingleCardOpener dùng JS-driven animation vẫn ổn vì nó đơn giản
     const [isFlipping, setIsFlipping] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
-        // Start flipping after a short delay
         const t1 = setTimeout(() => setIsFlipping(true), 300);
-        // Enable buttons after flip animation is complete (800ms animation)
-        const t2 = setTimeout(() => setIsProcessing(false), 300 + 800);
+        const t2 = setTimeout(() => setIsProcessing(false), 300 + 800); // Animation 800ms
         return () => { clearTimeout(t1); clearTimeout(t2); };
     }, [card]);
 
@@ -284,15 +303,20 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
         if (isProcessing) return;
         setIsProcessing(true);
         setIsFlipping(false);
-        // Wait for card to visually flip back (though it happens instantly in DOM) before calling parent
         setTimeout(() => { onOpenAgain(); }, 300);
     }
 
+    // Cần thêm class `.is-flipping` vào card-container để CSS gốc hoạt động
+    const singleCardFlipCSS = `.single-card-anim.is-flipping .card-inner { animation: flip-in 0.8s ease-in-out forwards; }`;
+    
     return (
         <>
+            <style>{singleCardFlipCSS}</style>
             <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px' }}>
-                    <Card cardData={card} isFlipping={isFlipping} flipDelay={0} />
+                    <div className={`single-card-anim ${isFlipping ? 'is-flipping' : ''}`}>
+                         <Card cardData={card} />
+                    </div>
                 </div>
             </div>
             <div className="overlay-footer">
@@ -305,67 +329,77 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
-// OPTIMIZATION: Logic rewritten to use CSS animations instead of sequential state updates
+// OPTIMIZATION: Tái cấu trúc hoàn toàn để sử dụng CSS animation
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
-    const [startFlipping, setStartFlipping] = useState(false);
-    const [phase, setPhase] = useState('DEALING');
-
-    const startRound = useCallback(() => {
-        setPhase('DEALING');
-        setStartFlipping(false);
-
-        // Wait for deal-in animation to finish
-        const totalDealTime = 500 + 80 * cards.length; 
-        setTimeout(() => {
-            setPhase('FLIPPING');
-            setStartFlipping(true); // Trigger animations for all cards at once
-
-            // Calculate when the last card will finish flipping to enable buttons
-            const flipDuration = 800; // From CSS
-            const lastCardDelay = 200 * (cards.length - 1); // From inline style
-            const totalFlipTime = flipDuration + lastCardDelay;
-
-            setTimeout(() => setPhase('REVEALED'), totalFlipTime);
-        }, totalDealTime);
-    }, [cards]);
+    const [isAnimationFinished, setIsAnimationFinished] = useState(false);
 
     useEffect(() => {
-        if (cards.length > 0) {
-            startRound();
-        }
-    }, [cards, startRound]);
+        setIsAnimationFinished(false);
+
+        // Các hằng số thời gian (nên khớp với CSS)
+        const DEAL_DURATION = 400;      // Thời gian chia 1 lá
+        const DEAL_STAGGER = 100;      // Độ trễ giữa các lần chia
+        const FLIP_START_DELAY = 300;  // Thời gian chờ sau khi chia xong lá đầu tiên mới bắt đầu lật
+        const FLIP_DURATION = 600;       // Thời gian lật 1 lá
+        const FLIP_STAGGER = 150;      // Độ trễ giữa các lần lật
+
+        const lastCardIndex = Math.max(0, cards.length - 1);
+        const lastFlipStartTime = FLIP_START_DELAY + (lastCardIndex * FLIP_STAGGER);
+        const totalAnimationTime = lastFlipStartTime + FLIP_DURATION;
+
+        // Một timer duy nhất để biết khi nào toàn bộ animation kết thúc
+        const animationEndTimer = setTimeout(() => {
+            setIsAnimationFinished(true);
+        }, totalAnimationTime);
+
+        // Kích hoạt animation bằng cách thêm class sau một tick render
+        const activationTimer = setTimeout(() => {
+            document.querySelectorAll('.card-wrapper').forEach(el => el.classList.add('animate'));
+        }, 10);
+
+        return () => {
+            clearTimeout(animationEndTimer);
+            clearTimeout(activationTimer);
+        };
+    }, [cards]);
 
     const handleOpenAgain = () => {
-        if (phase !== 'REVEALED') return;
+        if (!isAnimationFinished) return;
         onOpenAgain();
     };
-
-    const btnProps = (() => {
-        switch (phase) {
-            case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
-            case 'FLIPPING': return { text: 'Đang lật...', disabled: true };
-            case 'REVEALED': return { text: 'Mở Lại x4', disabled: false };
-            default: return { text: '', disabled: true };
-        }
-    })();
 
     return (
         <>
             <div style={{ textAlign: 'center' }}>
                 <div className="four-card-grid-container">
-                    {cards.map((card, index) => (
-                        <div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
-                            <Card 
-                                cardData={card} 
-                                isFlipping={startFlipping} 
-                                flipDelay={index * 200} // Staggered delay for each card
-                            />
-                        </div>
-                    ))}
+                    {cards.map((card, index) => {
+                        const dealDelay = index * 100; // trễ 100ms mỗi lá
+                        const flipDelay = 300 + (index * 150); // bắt đầu lật sau 300ms, trễ 150ms mỗi lá
+                        
+                        return (
+                            <div
+                                key={`${card.id}-${Math.random()}`} // Key cần duy nhất để trigger re-render
+                                className="card-wrapper"
+                                style={{
+                                    // @ts-ignore - Truyền biến vào CSS
+                                    '--deal-in-delay': `${dealDelay}ms`,
+                                    '--flip-in-delay': `${flipDelay}ms`,
+                                }}
+                            >
+                                <Card cardData={card} />
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
             <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button>
+                <button 
+                    onClick={handleOpenAgain} 
+                    className="footer-btn primary" 
+                    disabled={!isAnimationFinished}
+                >
+                    {isAnimationFinished ? 'Mở Lại x4' : 'Đang mở...'}
+                </button>
                 <button onClick={onClose} className="footer-btn">Đóng</button>
             </div>
         </>
