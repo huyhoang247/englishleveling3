@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 // NEW: Import hook và các type cần thiết
-import { useUniqueImageReward, ImageReward } from './hooks/useUniqueImageReward'; // Sửa đường dẫn nếu cần
+import { useUniqueImageReward, ImageReward } from './useUniqueImageReward.ts'; // Sửa đường dẫn nếu cần
 
 // ========================================================================
 // === 1. CSS STYLES (Không đổi) ==========================================
