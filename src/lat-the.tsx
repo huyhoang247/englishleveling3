@@ -1,3 +1,5 @@
+// --- START OF FILE lat-the.tsx (ĐÃ HỢP NHẤT) ---
+
 import React, { useState, useEffect, useCallback } from 'react';
 
 // NEW: Import các tài nguyên cần thiết từ treasure.tsx
@@ -9,6 +11,7 @@ import { defaultImageUrls } from './image-url.ts'; // Điều chỉnh đường 
 // === 1. CSS STYLES (Không đổi) ==========================================
 // ========================================================================
 const GlobalStyles = () => (
+    // ... (Giữ nguyên toàn bộ phần style của bạn) ...
     <style>{`
         /* --- Cài đặt chung & Nền --- */
         body {
@@ -213,15 +216,17 @@ interface ImageCard {
 }
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON (Đã sửa đổi) =================================
+// === 2. CÁC COMPONENT CON (ĐÃ SỬA ĐỔI) =================================
 // ========================================================================
 
+// CHANGED: Card component giờ nhận dữ liệu thẻ mới
 const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => { 
     return (
         <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
             <div className="card-inner">
                 <div className="card-face card-back">?</div>
                 <div className="card-face card-front">
+                    {/* Sử dụng cardData.url thay vì cardData.image */}
                     <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
                 </div>
             </div>
@@ -229,22 +234,23 @@ const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean
     ); 
 };
 
+// CHANGED: SingleCardOpener giờ nhận thẻ từ props, không tự tạo nữa
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
         const t1 = setTimeout(() => setIsFlipped(true), 500);
-        const t2 = setTimeout(() => setIsProcessing(false), 1300);
+        const t2 = setTimeout(() => setIsProcessing(false), 1300); // Thời gian chờ lật thẻ
         return () => { clearTimeout(t1); clearTimeout(t2); };
-    }, [card]);
+    }, [card]); // Chạy lại animation khi thẻ thay đổi
 
     const handleOpenAgain = () => {
         if (isProcessing) return;
         setIsProcessing(true);
         setIsFlipped(false);
         setTimeout(() => {
-            onOpenAgain();
+            onOpenAgain(); // Gọi hàm từ cha để lấy thẻ mới
         }, 600);
     }
 
@@ -265,6 +271,7 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
+// CHANGED: FourCardsOpener giờ nhận mảng thẻ từ props
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
     const [flippedIndices, setFlippedIndices] = useState<Set<number>>(new Set());
     const [phase, setPhase] = useState('DEALING');
@@ -272,6 +279,7 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     const startRound = useCallback(() => {
         setPhase('DEALING');
         setFlippedIndices(new Set());
+        // Delay để người dùng thấy animation reset
         setTimeout(() => {
             const totalDealTime = 1000 + 80 * cards.length;
             setTimeout(() => {
@@ -297,7 +305,7 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
 
     const handleOpenAgain = () => {
         if (phase !== 'REVEALED') return;
-        onOpenAgain();
+        onOpenAgain(); // Gọi hàm từ cha để lấy 4 thẻ mới
     };
 
     const btnProps = (() => {
@@ -327,6 +335,7 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
         </>
     );
 };
+
 
 // ... (Component ChestUI và CHEST_DATA giữ nguyên) ...
 interface ChestUIProps {
@@ -395,9 +404,10 @@ const CHEST_DATA = [
 ];
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (Đã nâng cấp logic) ============================
+// === 3. COMPONENT CHÍNH (ĐÃ NÂNG CẤP LOGIC) ============================
 // ========================================================================
 
+// NEW: Cập nhật props cho component chính
 interface VocabularyChestScreenProps {
     onClose: () => void;
     currentUserId: string | null;
@@ -406,13 +416,16 @@ interface VocabularyChestScreenProps {
 }
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
+    // MOVED: State và logic từ treasure.tsx được chuyển vào đây
     const [isLoading, setIsLoading] = useState(true);
     const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
+
+    // State quản lý popup và dữ liệu thẻ
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
 
-    // MOVED: useEffect để lấy dữ liệu từ Firestore (ĐÃ SỬA LỖI ĐỒNG BỘ)
+    // MOVED: useEffect để lấy dữ liệu từ Firestore
     useEffect(() => {
         const fetchOpenedImages = async () => {
             if (!currentUserId) {
@@ -426,14 +439,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             const userDocRef = doc(db, 'users', currentUserId);
             try {
                 const userDocSnap = await getDoc(userDocRef);
-                let openedImageIds: number[] = []; // ID là 1-based
-
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    // FIX: Thêm lại logic lọc dữ liệu quan trọng để đảm bảo chỉ lấy ID hợp lệ
-                    if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
-                        openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number' && id > 0);
-                    }
+                let openedImageIds: number[] = [];
+                if (userDocSnap.exists() && userDocSnap.data()?.openedImageIds) {
+                    openedImageIds = userDocSnap.data().openedImageIds;
                 } else {
                    await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
                 }
@@ -441,9 +449,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 const openedIndices = openedImageIds.map(id => id - 1);
                 const allIndices = defaultImageUrls.map((_, index) => index);
                 const remainingIndices = allIndices.filter(index => !openedIndices.includes(index));
-                
                 setAvailableImageIndices(remainingIndices);
-
             } catch (error) {
                 console.error("Error fetching user data:", error);
                 setAvailableImageIndices(defaultImageUrls.map((_, index) => index));
@@ -455,6 +461,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         fetchOpenedImages();
     }, [currentUserId]);
 
+    // MOVED: Hàm cập nhật Firestore
     const addOpenedImagesToFirestore = async (imageIds: number[]) => {
         if (!currentUserId || imageIds.length === 0) return;
         const userDocRef = doc(db, 'users', currentUserId);
@@ -468,16 +475,14 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
+    // NEW: Hàm xử lý logic mở thẻ
     const handleOpenCards = (count: 1 | 4) => {
-        if (isLoading || !currentUserId) {
-            alert(`Dữ liệu người dùng chưa sẵn sàng, vui lòng thử lại.`);
-            return;
-        }
-        if (availableImageIndices.length < count) {
+        if (isLoading || availableImageIndices.length < count) {
             alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
             return;
         }
 
+        // Tạo một bản sao để thao tác, tránh thay đổi state trực tiếp
         let remainingIndices = [...availableImageIndices];
         const selectedCards: ImageCard[] = [];
         const selectedIds: number[] = [];
@@ -492,13 +497,16 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             });
             selectedIds.push(originalImageIndex + 1);
 
+            // Xóa index đã chọn khỏi pool để không bị trùng
             remainingIndices.splice(randomIndexInPool, 1);
         }
 
+        // Cập nhật state và firestore
         setAvailableImageIndices(remainingIndices);
         addOpenedImagesToFirestore(selectedIds);
         setCardsForPopup(selectedCards);
 
+        // Hiển thị popup tương ứng
         if (count === 1) {
             setShowSingleOverlay(true);
         } else {
@@ -506,18 +514,20 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
+    // NEW: Hàm đóng popup và trao thưởng
     const handleCloseOverlay = (openedCount: number) => {
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
-        setCardsForPopup([]);
+        setCardsForPopup([]); // Reset dữ liệu thẻ
         
+        // Trao thưởng (ví dụ: 10 coin, 1 gem mỗi thẻ)
         onCoinReward(10 * openedCount);
         onGemReward(1 * openedCount);
         console.log(`Bạn nhận được ${10 * openedCount} coin và ${1 * openedCount} gem!`);
     };
 
     if (isLoading) {
-        return <div style={{color: 'white', fontSize: '1.5rem', position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}>Đang tải dữ liệu rương...</div>;
+        return <div style={{color: 'white', fontSize: '1.5rem'}}>Đang tải dữ liệu rương...</div>;
     }
 
     return (
@@ -526,6 +536,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             
             {!showSingleOverlay && !showFourOverlay && (
                 <header className="main-header">
+                    {/* NEW: Hiển thị số lượng ảnh còn lại */}
                     <h1 className="header-title">Chọn Rương ({`Còn ${availableImageIndices.length} ảnh`})</h1>
                     <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
@@ -539,6 +550,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         key={chest.id}
                         {...chest}
                         onOpen1={() => handleOpenCards(1)}
+                        // Mở 4 thẻ cho nút "Mở x10" cũ
                         onOpen10={() => handleOpenCards(4)} 
                     />
                 ))}
