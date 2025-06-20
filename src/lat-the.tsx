@@ -1,4 +1,4 @@
-// lat-the.tsx (Optimized & Refined Animation Logic)
+// lat-the.tsx (Optimized Version)
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
@@ -170,7 +170,7 @@ const GlobalStyles = () => (
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* REFINED: Keyframe được tinh chỉnh để mượt mà hơn */
+        /* OPTIMIZATION: Thêm keyframe cho hiệu ứng lật thẻ. Điều này cho phép CSS xử lý hoàn toàn hoạt ảnh. */
         @keyframes flip-in {
             from {
                 transform: rotateY(0deg);
@@ -189,6 +189,7 @@ const GlobalStyles = () => (
         .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
         .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         
+        /* OPTIMIZATION: Logic hoạt ảnh của thẻ được chuyển sang CSS thuần. */
         .card-container {
             width: 100%;
             aspect-ratio: 5 / 7;
@@ -200,13 +201,13 @@ const GlobalStyles = () => (
             width: 100%;
             height: 100%;
             transform-style: preserve-3d;
-            will-change: transform;
+            will-change: transform; /* Báo cho trình duyệt biết thuộc tính này sẽ thay đổi, giúp tối ưu. */
         }
         .card-container.is-flipping .card-inner {
             animation-name: flip-in;
-            animation-duration: 0.7s; /* REFINED: Điều chỉnh thời gian */
-            animation-fill-mode: forwards;
-            animation-timing-function: ease-in-out; /* REFINED: Chuẩn cho cảm giác lật tự nhiên */
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards; /* Giữ trạng thái cuối cùng của animation (thẻ lật ngửa) */
+            animation-timing-function: ease-in-out;
         }
         
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
@@ -215,20 +216,19 @@ const GlobalStyles = () => (
             transform: rotateY(180deg);
             padding: 6px;
             box-sizing: border-box;
+            /* OPTIMIZATION: Loại bỏ backdrop-filter (nguyên nhân chính gây lag). Thay bằng nền bán trong suốt đơn giản, nhẹ hơn rất nhiều. */
             background: rgba(42, 49, 78, 0.85); 
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
         .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         
-        /* REFINED: Keyframe được tinh chỉnh để mượt mà hơn */
         @keyframes deal-in { 
-            from { opacity: 0; transform: translateY(60px) scale(0.7); } 
+            from { opacity: 0; transform: translateY(50px) scale(0.8); } 
             to { opacity: 1; transform: translateY(0) scale(1); } 
         }
         .card-wrapper.dealt-in { 
-            /* REFINED: Dùng cubic-bezier để có hiệu ứng "nảy" nhẹ, tự nhiên hơn khi kết thúc */
-            animation: deal-in 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
+            animation: deal-in 0.5s ease-out forwards; 
         }
     `}
     </style>
@@ -278,6 +278,8 @@ const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
 
 interface ImageCard { id: number; url: string; }
 
+// OPTIMIZATION: Bọc trong React.memo và cập nhật props để hỗ trợ hoạt ảnh CSS
+// `flipDelay` được truyền vào để CSS có thể tạo hiệu ứng lật nối tiếp nhau mà không cần JS can thiệp.
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
     <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
         <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}>
@@ -294,7 +296,9 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
+        // Bắt đầu lật sau một khoảng trễ ngắn để người dùng kịp nhìn thấy thẻ
         const t1 = setTimeout(() => setIsFlipping(true), 300);
+        // Cho phép nhấn nút sau khi animation lật thẻ hoàn tất (300ms trễ + 800ms animation)
         const t2 = setTimeout(() => setIsProcessing(false), 300 + 800);
         return () => { clearTimeout(t1); clearTimeout(t2); };
     }, [card]);
@@ -303,6 +307,7 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
         if (isProcessing) return;
         setIsProcessing(true);
         setIsFlipping(false);
+        // Chờ một chút để người dùng cảm thấy có sự "reset" trước khi gọi hàm mở lại
         setTimeout(() => { onOpenAgain(); }, 300);
     }
 
@@ -323,120 +328,75 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
-// REFINED: Toàn bộ component được viết lại cho logic animation mượt mà, tự nhiên hơn
+// OPTIMIZATION: Logic được viết lại hoàn toàn để sử dụng hoạt ảnh CSS thay vì cập nhật state tuần tự.
+// Component chỉ quản lý 3 giai đoạn chính: DEALING, FLIPPING, REVEALED.
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
-    // Phase quản lý trạng thái TỔNG QUÁT của animation:
-    // DEALING: Các thẻ đang được "chia" vào vị trí.
-    // SETTLED: Các thẻ đã yên vị, tạo một nhịp nghỉ ngắn.
-    // FLIPPING: Các thẻ đang trong quá trình lật.
-    // REVEALED: Tất cả các thẻ đã được lật xong, cho phép tương tác.
-    const [phase, setPhase] = useState<'DEALING' | 'SETTLED' | 'FLIPPING' | 'REVEALED'>('DEALING');
-    
-    useEffect(() => {
-        // Reset lại trạng thái khi có bộ bài mới được truyền vào
+    const [startFlipping, setStartFlipping] = useState(false);
+    const [phase, setPhase] = useState('DEALING'); // 'DEALING', 'FLIPPING', 'REVEALED'
+
+    const startRound = useCallback(() => {
         setPhase('DEALING');
+        setStartFlipping(false);
 
-        // --- Logic điều khiển luồng animation ---
+        // Chờ cho animation chia bài (deal-in) hoàn tất
+        const totalDealTime = 500 + 80 * (cards.length - 1); // 500ms là duration, 80ms là delay mỗi thẻ
+        
+        setTimeout(() => {
+            setPhase('FLIPPING');
+            setStartFlipping(true); // Kích hoạt animation lật cho tất cả các thẻ cùng lúc
 
-        // 1. Tính toán khi nào animation "chia bài" kết thúc
-        const dealAnimationDuration = 600; // 0.6s từ CSS
-        const lastCardDealDelay = 80 * (cards.length - 1); // Delay của thẻ cuối cùng
-        const totalDealTime = dealAnimationDuration + lastCardDealDelay;
+            // Tính toán khi nào thẻ cuối cùng sẽ lật xong để cho phép nhấn nút
+            const flipDuration = 800; // Lấy từ CSS animation-duration
+            const lastCardDelay = 200 * (cards.length - 1); // Lấy từ flipDelay truyền vào Card
+            const totalFlipTime = flipDuration + lastCardDelay;
 
-        const dealTimer = setTimeout(() => {
-            // Sau khi chia bài xong, chuyển sang trạng thái "Yên vị" (SETTLED)
-            setPhase('SETTLED');
+            setTimeout(() => setPhase('REVEALED'), totalFlipTime);
         }, totalDealTime);
-
-        return () => {
-            clearTimeout(dealTimer);
-        };
-    }, [cards]); // Chỉ chạy lại khi `cards` thay đổi
+    }, [cards.length]);
 
     useEffect(() => {
-        // Logic này sẽ được kích hoạt KHI và CHỈ KHI phase chuyển thành 'SETTLED'
-        if (phase === 'SETTLED') {
-            // 2. TẠO NHỊP NGHỈ: Chờ một chút (ví dụ: 250ms) để người dùng cảm nhận các lá bài đã "hạ cánh"
-            const settleDuration = 250; 
-            const settleTimer = setTimeout(() => {
-                // Hết nhịp nghỉ, bắt đầu lật bài
-                setPhase('FLIPPING');
-            }, settleDuration);
-            return () => clearTimeout(settleTimer);
+        if (cards.length > 0) {
+            startRound();
         }
-        
-        // Logic này kích hoạt KHI phase chuyển thành 'FLIPPING'
-        if (phase === 'FLIPPING') {
-            // 3. Tính toán khi nào animation "lật bài" kết thúc
-            const flipAnimationDuration = 700; // 0.7s từ CSS
-            const lastCardFlipDelay = 200 * (cards.length - 1); // Delay lật của thẻ cuối cùng
-            const totalFlipTime = flipAnimationDuration + lastCardFlipDelay;
-
-            const flipTimer = setTimeout(() => {
-                // Sau khi lật xong, chuyển sang trạng thái cuối cùng "Đã lật" (REVEALED)
-                setPhase('REVEALED');
-            }, totalFlipTime);
-            return () => clearTimeout(flipTimer);
-        }
-
-    }, [phase, cards.length]); // Chạy lại khi `phase` thay đổi
+    }, [cards, startRound]);
 
     const handleOpenAgain = () => {
-        // Chỉ cho phép mở lại khi tất cả animation đã hoàn tất
         if (phase !== 'REVEALED') return;
         onOpenAgain();
     };
 
-    const getButtonProps = () => {
+    const btnProps = (() => {
         switch (phase) {
-            case 'DEALING':
-                return { text: 'Đang chia bài...', disabled: true };
-            case 'SETTLED':
-            case 'FLIPPING':
-                return { text: 'Đang lật...', disabled: true };
-            case 'REVEALED':
-                return { text: 'Mở Lại x4', disabled: false };
-            default:
-                return { text: '', disabled: true };
+            case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
+            case 'FLIPPING': return { text: 'Đang lật...', disabled: true };
+            case 'REVEALED': return { text: 'Mở Lại x4', disabled: false };
+            default: return { text: '', disabled: true };
         }
-    };
-    const btnProps = getButtonProps();
+    })();
 
     return (
         <>
             <div style={{ textAlign: 'center' }}>
                 <div className="four-card-grid-container">
                     {cards.map((card, index) => (
-                        <div 
-                            key={card.id} 
-                            className="card-wrapper dealt-in" 
-                            style={{ 
-                                animationDelay: `${index * 80}ms`, 
-                                opacity: 0 // Bắt đầu ẩn, animation sẽ làm nó hiện ra
-                            }}
-                        >
+                        // opacity: 0 và animation-fill-mode: forwards sẽ giúp thẻ ẩn đi cho đến khi animation `deal-in` bắt đầu
+                        <div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
                             <Card 
                                 cardData={card} 
-                                // Chỉ thêm class 'is-flipping' khi đang ở phase FLIPPING hoặc REVEALED
-                                isFlipping={phase === 'FLIPPING' || phase === 'REVEALED'} 
-                                flipDelay={index * 200}
+                                isFlipping={startFlipping} 
+                                flipDelay={index * 200} // Tạo độ trễ nối tiếp cho hiệu ứng lật
                             />
                         </div>
                     ))}
                 </div>
             </div>
             <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>
-                    {btnProps.text}
-                </button>
-                <button onClick={onClose} className="footer-btn" disabled={phase !== 'REVEALED'}>
-                    Đóng
-                </button>
+                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button>
+                <button onClick={onClose} className="footer-btn">Đóng</button>
             </div>
         </>
     );
 };
-
 
 interface ChestUIProps { headerTitle: string; mainTitle: string; imageUrl: string; infoText: React.ReactNode; pityLine1: React.ReactNode; pityLine2: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; }
 
