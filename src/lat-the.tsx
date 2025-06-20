@@ -1,5 +1,3 @@
-// --- START OF FILE lat-the.tsx ---
-
 import React, { useState, useEffect, useCallback } from 'react';
 
 // Import các tài nguyên cần thiết
@@ -28,7 +26,7 @@ const GlobalStyles = () => (
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Sẽ bị ghi đè bởi padding-top */
+            justify-content: center;
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
@@ -61,45 +59,24 @@ const GlobalStyles = () => (
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
-        /* === Nút đóng được tích hợp vào header === */
         .vocab-screen-close-btn {
-            width: 44px;
-            height: 44px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s ease, opacity 0.2s ease;
-            opacity: 0.9;
-            margin: -10px; 
-            padding: 10px;
+            width: 44px; height: 44px; background: transparent; border: none;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.9;
+            margin: -10px; padding: 10px;
         }
         .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
-        
         .vocab-screen-close-btn img {
-            width: 24px;
-            height: 24px;
+            width: 24px; height: 24px;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
         }
         
-        /* === CONTAINER RƯƠNG ĐƯỢC ĐẨY XUỐNG VÀ TÍNH TOÁN LẠI CHIỀU CAO === */
+        /* === CONTAINER RƯƠNG === */
         .chest-gallery-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            width: 100%;
-            max-width: 1300px;
-            overflow-y: auto;
-            padding: 20px;
-            max-height: calc(100vh - 101px);
-            box-sizing: border-box;
-            margin-top: 61px; /* Đẩy container xuống dưới header */
-        }
-        .chest-gallery-container.is-opening {
-            cursor: wait; /* Thêm con trỏ chờ khi đang tải ảnh */
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 30px; width: 100%; max-width: 1300px; overflow-y: auto;
+            padding: 20px; max-height: calc(100vh - 101px); box-sizing: border-box;
+            margin-top: 61px;
         }
 
         /* Tùy chỉnh thanh cuộn */
@@ -169,16 +146,12 @@ const GlobalStyles = () => (
         .action-button-group { display: flex; gap: 10px; width: 100%; }
         .chest-button {
             flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.2s ease; color: #ffffff; 
+            transition: transform 0.1s ease, box-shadow 0.1s ease; color: #ffffff; 
             font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
             box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; 
             justify-content: center; gap: 8px;
         }
-        .chest-button:disabled {
-            opacity: 0.6;
-            cursor: wait;
-        }
-        .chest-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
+        .chest-button:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
         .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
         .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         .btn-free { background: linear-gradient(to top, #0e7490, #22d3ee); }
@@ -191,9 +164,11 @@ const GlobalStyles = () => (
         }
         .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay & Card styles --- */
-        @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
-        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
+        /* --- Overlay, Card & Loading Styles --- */
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
         .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
@@ -219,10 +194,44 @@ const GlobalStyles = () => (
 // === 2. CÁC COMPONENT CON ==============================================
 // ========================================================================
 
-interface ImageCard {
-    id: number;
-    url: string;
-}
+const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
+    if (!isVisible) return null;
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 2000,
+            animation: 'fade-in 0.3s ease-out'
+        }}>
+            <div style={{
+                width: '50px',
+                height: '50px',
+                border: '5px solid rgba(255, 255, 255, 0.2)',
+                borderTopColor: '#a78bfa',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+            }}></div>
+            <p style={{
+                color: '#e0e0e0',
+                marginTop: '20px',
+                fontSize: '1rem',
+                fontWeight: 500,
+                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+            }}>Đang tải tài nguyên...</p>
+        </div>
+    );
+};
+
+interface ImageCard { id: number; url: string; }
 
 const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => (
     <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
@@ -249,9 +258,7 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
         if (isProcessing) return;
         setIsProcessing(true);
         setIsFlipped(false);
-        setTimeout(() => {
-            onOpenAgain();
-        }, 600);
+        setTimeout(() => { onOpenAgain(); }, 600);
     }
 
     return (
@@ -334,25 +341,9 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     );
 };
 
-interface ChestUIProps {
-    headerTitle: string;
-    mainTitle: string;
-    imageUrl: string;
-    infoText: React.ReactNode;
-    pityLine1: React.ReactNode;
-    pityLine2: React.ReactNode;
-    price1: number | string;
-    price10: number | null;
-    onOpen1: () => void;
-    onOpen10: () => void;
-    isOpening: boolean;
-}
+interface ChestUIProps { headerTitle: string; mainTitle: string; imageUrl: string; infoText: React.ReactNode; pityLine1: React.ReactNode; pityLine2: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; }
 
-const ChestUI: React.FC<ChestUIProps> = ({
-    headerTitle, mainTitle, imageUrl, infoText,
-    pityLine1, pityLine2, price1, price10,
-    onOpen1, onOpen10, isOpening
-}) => {
+const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, imageUrl, infoText, pityLine1, pityLine2, price1, price10, onOpen1, onOpen10 }) => {
     const isFree = typeof price1 === 'string';
     return (
         <div className="chest-ui-container">
@@ -367,25 +358,23 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
                 {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
-                    <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1} disabled={isOpening}>
-                        <span>{isOpening ? 'Đang tải...' : (isFree ? 'Mở' : 'Mở x1')}</span>
-                        {!isOpening && typeof price1 === 'number' && (
+                    <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1}>
+                        <span>{isFree ? 'Mở' : 'Mở x1'}</span>
+                        {typeof price1 === 'number' && (
                            <span className="button-price">
                                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
                                 {price1}
                             </span>
                         )}
-                         {!isOpening && isFree && <span className="button-price">{price1}</span>}
+                         {isFree && <span className="button-price">{price1}</span>}
                     </button>
                     {price10 !== null && (
-                        <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isOpening}>
-                            <span>{isOpening ? 'Đang tải...' : 'Mở x4'}</span>
-                            {!isOpening && (
-                                <span className="button-price">
-                                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
-                                    {price10}
-                                </span>
-                            )}
+                        <button className="chest-button btn-get-10" onClick={onOpen10}>
+                            <span>Mở x4</span>
+                            <span className="button-price">
+                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
+                                {price10}
+                            </span>
                         </button>
                     )}
                 </div>
@@ -395,23 +384,18 @@ const ChestUI: React.FC<ChestUIProps> = ({
 };
 
 const CHEST_DATA = [
-    { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null, },
-    { id: 'legendary_chest', headerTitle: "Basic Vocabulary", mainTitle: "Rương Từ Vựng", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980, },
-    { id: 'tech_chest', headerTitle: "Rương Giới Hạn", mainTitle: "Rương Công Nghệ", imageUrl: "https://static.wikia.nocookie.net/survivorio/images/c/c5/Epic_Parts_Crate_x10.png", infoText: <>Tăng tỉ lệ nhận <span className="highlight-purple">Trang bị Công nghệ</span></>, pityLine1: <>Nhận <span className="highlight-purple">Hiếm</span> trong 5 lần mở</>, pityLine2: <>Nhận <span className="highlight-purple">Sử thi</span> trong 30 lần mở</>, price1: 150, price10: 1350, },
-    { id: 'ancient_chest', headerTitle: "Rương Sự Kiện", mainTitle: "Rương Cổ Vật", imageUrl: "https://static.wikia.nocookie.net/minecraftdungeons/images/9/93/Gilded_Obsidian_Chest.png", infoText: <>Chứa các vật phẩm từ nền văn minh đã mất. Tăng tỉ lệ nhận <span className="highlight-yellow">Trang bị Cổ Đại</span>.</>, pityLine1: <>Chắc chắn nhận <span className="highlight-yellow">Sử Thi</span> trong 50 lần mở.</>, pityLine2: '', price1: 280, price10: 2500, },
-    { id: 'ultimate_chest', headerTitle: "Tuyệt Phẩm S-Grade", mainTitle: "Rương Tối Thượng", imageUrl: "https://static.wikia.nocookie.net/survivorio/images/a/a2/S_Grade_Supplies_Crate_x10.png", infoText: <>Cơ hội sở hữu các vật phẩm <span className="highlight-red">S-Grade</span> cực hiếm với sức mạnh vượt trội.</>, pityLine1: <>Chắc chắn nhận 1 <span className="highlight-red">Trang bị S-Grade</span> sau 80 lần mở.</>, pityLine2: <><span className="highlight-purple">Tăng mạnh</span> tỉ lệ nhận vật phẩm Sử thi & Huyền thoại.</>, price1: 500, price10: 4800, },
+    { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null },
+    { id: 'legendary_chest', headerTitle: "Basic Vocabulary", mainTitle: "Rương Từ Vựng", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'tech_chest', headerTitle: "Rương Giới Hạn", mainTitle: "Rương Công Nghệ", imageUrl: "https://static.wikia.nocookie.net/survivorio/images/c/c5/Epic_Parts_Crate_x10.png", infoText: <>Tăng tỉ lệ nhận <span className="highlight-purple">Trang bị Công nghệ</span></>, pityLine1: <>Nhận <span className="highlight-purple">Hiếm</span> trong 5 lần mở</>, pityLine2: <>Nhận <span className="highlight-purple">Sử thi</span> trong 30 lần mở</>, price1: 150, price10: 1350 },
+    { id: 'ancient_chest', headerTitle: "Rương Sự Kiện", mainTitle: "Rương Cổ Vật", imageUrl: "https://static.wikia.nocookie.net/minecraftdungeons/images/9/93/Gilded_Obsidian_Chest.png", infoText: <>Chứa các vật phẩm từ nền văn minh đã mất. Tăng tỉ lệ nhận <span className="highlight-yellow">Trang bị Cổ Đại</span>.</>, pityLine1: <>Chắc chắn nhận <span className="highlight-yellow">Sử Thi</span> trong 50 lần mở.</>, pityLine2: '', price1: 280, price10: 2500 },
+    { id: 'ultimate_chest', headerTitle: "Tuyệt Phẩm S-Grade", mainTitle: "Rương Tối Thượng", imageUrl: "https://static.wikia.nocookie.net/survivorio/images/a/a2/S_Grade_Supplies_Crate_x10.png", infoText: <>Cơ hội sở hữu các vật phẩm <span className="highlight-red">S-Grade</span> cực hiếm với sức mạnh vượt trội.</>, pityLine1: <>Chắc chắn nhận 1 <span className="highlight-red">Trang bị S-Grade</span> sau 80 lần mở.</>, pityLine2: <><span className="highlight-purple">Tăng mạnh</span> tỉ lệ nhận vật phẩm Sử thi & Huyền thoại.</>, price1: 500, price10: 4800 },
 ];
 
 // ========================================================================
 // === 3. COMPONENT CHÍNH =================================================
 // ========================================================================
 
-interface VocabularyChestScreenProps {
-    onClose: () => void;
-    currentUserId: string | null;
-    onCoinReward: (amount: number) => void;
-    onGemReward: (amount: number) => void;
-}
+interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -424,21 +408,15 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     useEffect(() => {
         const fetchOpenedImages = async () => {
             if (!currentUserId) {
-                console.log("User not logged in. Initializing with all images.");
                 setAvailableImageIndices(defaultImageUrls.map((_, index) => index));
-                setIsLoading(false);
-                return;
+                setIsLoading(false); return;
             }
             setIsLoading(true);
             const userDocRef = doc(db, 'users', currentUserId);
             try {
                 const userDocSnap = await getDoc(userDocRef);
-                let openedImageIds: number[] = [];
-                if (userDocSnap.exists() && userDocSnap.data()?.openedImageIds) {
-                    openedImageIds = userDocSnap.data().openedImageIds;
-                } else {
-                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
-                }
+                let openedImageIds: number[] = userDocSnap.exists() && userDocSnap.data()?.openedImageIds ? userDocSnap.data().openedImageIds : [];
+                if (!userDocSnap.exists()) { await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); }
                 const openedIndices = openedImageIds.map(id => id - 1);
                 const allIndices = defaultImageUrls.map((_, index) => index);
                 const remainingIndices = allIndices.filter(index => !openedIndices.includes(index));
@@ -457,10 +435,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         if (!currentUserId || imageIds.length === 0) return;
         const userDocRef = doc(db, 'users', currentUserId);
         try {
-            await updateDoc(userDocRef, {
-                openedImageIds: arrayUnion(...imageIds)
-            });
-            console.log(`Image IDs [${imageIds.join(', ')}] added to Firestore.`);
+            await updateDoc(userDocRef, { openedImageIds: arrayUnion(...imageIds) });
         } catch (error) {
             console.error("Error updating opened images in Firestore:", error);
         }
@@ -468,7 +443,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     
     const handleOpenCards = async (count: 1 | 4) => {
         if (isLoading || isOpening || availableImageIndices.length < count) {
-            if (availableImageIndices.length < count) {
+            if (!isOpening && availableImageIndices.length < count) {
                 alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
             }
             return;
@@ -484,11 +459,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         for (let i = 0; i < count; i++) {
             const randomIndexInPool = Math.floor(Math.random() * remainingIndices.length);
             const originalImageIndex = remainingIndices[randomIndexInPool];
-            
-            const cardData = {
-                id: originalImageIndex + 1,
-                url: defaultImageUrls[originalImageIndex],
-            };
+            const cardData = { id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] };
             selectedCards.push(cardData);
             selectedIds.push(cardData.id);
             imageUrlsToPreload.push(cardData.url);
@@ -496,22 +467,20 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
 
         try {
-            console.log('Bắt đầu tải trước hình ảnh...');
-            const preloadPromises = imageUrlsToPreload.map(src => {
-                return new Promise<void>((resolve, reject) => {
-                    const img = new Image();
-                    img.src = src;
-                    img.onload = () => resolve();
-                    img.onerror = (err) => reject(err);
-                });
-            });
+            const preloadPromises = imageUrlsToPreload.map(src => new Promise<void>((resolve, reject) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => resolve();
+                img.onerror = reject;
+            }));
             
             await Promise.all(preloadPromises);
-            console.log('Tất cả hình ảnh đã được tải trước thành công!');
 
             setAvailableImageIndices(remainingIndices);
             addOpenedImagesToFirestore(selectedIds);
             setCardsForPopup(selectedCards);
+            
+            setIsOpening(false);
 
             if (count === 1) {
                 setShowSingleOverlay(true);
@@ -529,22 +498,18 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
         setCardsForPopup([]);
-        setIsOpening(false);
-        
         onCoinReward(10 * openedCount);
         onGemReward(1 * openedCount);
-        console.log(`Bạn nhận được ${10 * openedCount} coin và ${1 * openedCount} gem!`);
     };
 
     if (isLoading) {
-        return <div style={{color: 'white', fontSize: '1.5rem'}}>Đang tải dữ liệu rương...</div>;
+        return <LoadingOverlay isVisible={true} />;
     }
-
-    const containerClassName = `chest-gallery-container ${isOpening ? 'is-opening' : ''}`;
 
     return (
         <>
             <GlobalStyles />
+            <LoadingOverlay isVisible={isOpening} />
             
             {!showSingleOverlay && !showFourOverlay && (
                 <header className="main-header">
@@ -555,14 +520,13 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 </header>
             )}
 
-            <div className={containerClassName}>
+            <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => (
                     <ChestUI
                         key={chest.id}
                         {...chest}
                         onOpen1={() => handleOpenCards(1)}
                         onOpen10={() => handleOpenCards(4)}
-                        isOpening={isOpening}
                     />
                 ))}
             </div>
@@ -594,5 +558,3 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
-
-// --- END OF FILE lat-the.tsx ---
