@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (UPDATED & FIXED) ---
+// --- START OF FILE background-game.tsx (ĐÃ SỬA) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -898,7 +898,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         {/* Overlay for Vocabulary Chest */}
         <div className="absolute inset-0 w-full h-full" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Rương Từ Vựng!</div>}>
-                {isVocabularyChestOpen && <VocabularyChestScreen onClose={toggleVocabularyChest} />}
+                {isVocabularyChestOpen && (
+                    <VocabularyChestScreen 
+                        onClose={toggleVocabularyChest} 
+                        currentUserId={currentUser ? currentUser.uid : null}
+                        onCoinReward={startCoinCountAnimation}
+                        onGemReward={handleGemReward}
+                    />
+                )}
             </ErrorBoundary>
         </div>
 
