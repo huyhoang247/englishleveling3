@@ -1,17 +1,16 @@
-// --- START OF FILE lat-the.tsx (ĐÃ SỬA) ---
+// --- START OF FILE lat-the.tsx ---
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-// NEW: Import các tài nguyên cần thiết từ treasure.tsx
+// Import các tài nguyên cần thiết
 import { db } from './firebase.js'; // Điều chỉnh đường dẫn nếu cần
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { defaultImageUrls } from './image-url.ts'; // Điều chỉnh đường dẫn nếu cần
 
 // ========================================================================
-// === 1. CSS STYLES (Không đổi) ==========================================
+// === 1. CSS STYLES ======================================================
 // ========================================================================
 const GlobalStyles = () => (
-    // ... (Giữ nguyên toàn bộ phần style của bạn) ...
     <style>{`
         /* --- Cài đặt chung & Nền --- */
         body {
@@ -99,14 +98,17 @@ const GlobalStyles = () => (
             box-sizing: border-box;
             margin-top: 61px; /* Đẩy container xuống dưới header */
         }
+        .chest-gallery-container.is-opening {
+            cursor: wait; /* Thêm con trỏ chờ khi đang tải ảnh */
+        }
 
-        /* Tùy chỉnh thanh cuộn (giữ nguyên) */
+        /* Tùy chỉnh thanh cuộn */
         .chest-gallery-container::-webkit-scrollbar { width: 8px; }
         .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
         .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
         .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
 
-        /* === GIAO DIỆN RƯƠNG BÁU (Không đổi) === */
+        /* === GIAO DIỆN RƯƠNG BÁU === */
         .chest-ui-container {
             width: 100%; max-width: 380px; min-width: 300px;
             background-color: #1a1f36; border-radius: 16px;
@@ -167,12 +169,16 @@ const GlobalStyles = () => (
         .action-button-group { display: flex; gap: 10px; width: 100%; }
         .chest-button {
             flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.1s ease; color: #ffffff; 
+            transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.2s ease; color: #ffffff; 
             font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
             box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; 
             justify-content: center; gap: 8px;
         }
-        .chest-button:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
+        .chest-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        .chest-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
         .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
         .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         .btn-free { background: linear-gradient(to top, #0e7490, #22d3ee); }
@@ -185,7 +191,7 @@ const GlobalStyles = () => (
         }
         .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay & Card styles (Không đổi) --- */
+        /* --- Overlay & Card styles --- */
         @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
@@ -201,7 +207,7 @@ const GlobalStyles = () => (
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
         .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.18); }
-        .card-image-in-card { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
@@ -209,48 +215,42 @@ const GlobalStyles = () => (
     </style>
 );
 
-// NEW: Định nghĩa kiểu dữ liệu cho thẻ hình ảnh
+// ========================================================================
+// === 2. CÁC COMPONENT CON ==============================================
+// ========================================================================
+
 interface ImageCard {
-    id: number; // ID (1-based) để lưu vào Firestore
-    url: string;  // URL của hình ảnh
+    id: number;
+    url: string;
 }
 
-// ========================================================================
-// === 2. CÁC COMPONENT CON (ĐÃ SỬA ĐỔI) =================================
-// ========================================================================
-
-// CHANGED: Card component giờ nhận dữ liệu thẻ mới
-const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => { 
-    return (
-        <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
-            <div className="card-inner">
-                <div className="card-face card-back">?</div>
-                <div className="card-face card-front">
-                    {/* Sử dụng cardData.url thay vì cardData.image */}
-                    <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
-                </div>
+const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => (
+    <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
+        <div className="card-inner">
+            <div className="card-face card-back">?</div>
+            <div className="card-face card-front">
+                <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
             </div>
         </div>
-    ); 
-};
+    </div>
+);
 
-// CHANGED: SingleCardOpener giờ nhận thẻ từ props, không tự tạo nữa
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
         const t1 = setTimeout(() => setIsFlipped(true), 500);
-        const t2 = setTimeout(() => setIsProcessing(false), 1300); // Thời gian chờ lật thẻ
+        const t2 = setTimeout(() => setIsProcessing(false), 1300);
         return () => { clearTimeout(t1); clearTimeout(t2); };
-    }, [card]); // Chạy lại animation khi thẻ thay đổi
+    }, [card]);
 
     const handleOpenAgain = () => {
         if (isProcessing) return;
         setIsProcessing(true);
         setIsFlipped(false);
         setTimeout(() => {
-            onOpenAgain(); // Gọi hàm từ cha để lấy thẻ mới
+            onOpenAgain();
         }, 600);
     }
 
@@ -271,7 +271,6 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
-// CHANGED: FourCardsOpener giờ nhận mảng thẻ từ props
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
     const [flippedIndices, setFlippedIndices] = useState<Set<number>>(new Set());
     const [phase, setPhase] = useState('DEALING');
@@ -279,7 +278,6 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     const startRound = useCallback(() => {
         setPhase('DEALING');
         setFlippedIndices(new Set());
-        // Delay để người dùng thấy animation reset
         setTimeout(() => {
             const totalDealTime = 1000 + 80 * cards.length;
             setTimeout(() => {
@@ -305,7 +303,7 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
 
     const handleOpenAgain = () => {
         if (phase !== 'REVEALED') return;
-        onOpenAgain(); // Gọi hàm từ cha để lấy 4 thẻ mới
+        onOpenAgain();
     };
 
     const btnProps = (() => {
@@ -336,8 +334,6 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     );
 };
 
-
-// ... (Component ChestUI và CHEST_DATA giữ nguyên) ...
 interface ChestUIProps {
     headerTitle: string;
     mainTitle: string;
@@ -349,12 +345,13 @@ interface ChestUIProps {
     price10: number | null;
     onOpen1: () => void;
     onOpen10: () => void;
+    isOpening: boolean;
 }
 
 const ChestUI: React.FC<ChestUIProps> = ({
     headerTitle, mainTitle, imageUrl, infoText,
     pityLine1, pityLine2, price1, price10,
-    onOpen1, onOpen10
+    onOpen1, onOpen10, isOpening
 }) => {
     const isFree = typeof price1 === 'string';
     return (
@@ -370,23 +367,25 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
                 {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
-                    <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1}>
-                        <span>{isFree ? 'Mở' : 'Mở x1'}</span>
-                        {typeof price1 === 'number' && (
+                    <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1} disabled={isOpening}>
+                        <span>{isOpening ? 'Đang tải...' : (isFree ? 'Mở' : 'Mở x1')}</span>
+                        {!isOpening && typeof price1 === 'number' && (
                            <span className="button-price">
                                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
                                 {price1}
                             </span>
                         )}
-                         {isFree && <span className="button-price">{price1}</span>}
+                         {!isOpening && isFree && <span className="button-price">{price1}</span>}
                     </button>
                     {price10 !== null && (
-                        <button className="chest-button btn-get-10" onClick={onOpen10}>
-                            <span>Mở x4</span>
-                            <span className="button-price">
-                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
-                                {price10}
-                            </span>
+                        <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isOpening}>
+                            <span>{isOpening ? 'Đang tải...' : 'Mở x4'}</span>
+                            {!isOpening && (
+                                <span className="button-price">
+                                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
+                                    {price10}
+                                </span>
+                            )}
                         </button>
                     )}
                 </div>
@@ -404,10 +403,9 @@ const CHEST_DATA = [
 ];
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (ĐÃ NÂNG CẤP LOGIC) ============================
+// === 3. COMPONENT CHÍNH =================================================
 // ========================================================================
 
-// NEW: Cập nhật props cho component chính
 interface VocabularyChestScreenProps {
     onClose: () => void;
     currentUserId: string | null;
@@ -416,16 +414,13 @@ interface VocabularyChestScreenProps {
 }
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
-    // MOVED: State và logic từ treasure.tsx được chuyển vào đây
     const [isLoading, setIsLoading] = useState(true);
     const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
-
-    // State quản lý popup và dữ liệu thẻ
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
+    const [isOpening, setIsOpening] = useState(false);
 
-    // MOVED: useEffect để lấy dữ liệu từ Firestore
     useEffect(() => {
         const fetchOpenedImages = async () => {
             if (!currentUserId) {
@@ -434,7 +429,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 setIsLoading(false);
                 return;
             }
-
             setIsLoading(true);
             const userDocRef = doc(db, 'users', currentUserId);
             try {
@@ -445,7 +439,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 } else {
                    await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
                 }
-
                 const openedIndices = openedImageIds.map(id => id - 1);
                 const allIndices = defaultImageUrls.map((_, index) => index);
                 const remainingIndices = allIndices.filter(index => !openedIndices.includes(index));
@@ -457,11 +450,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 setIsLoading(false);
             }
         };
-
         fetchOpenedImages();
     }, [currentUserId]);
 
-    // MOVED: Hàm cập nhật Firestore
     const addOpenedImagesToFirestore = async (imageIds: number[]) => {
         if (!currentUserId || imageIds.length === 0) return;
         const userDocRef = doc(db, 'users', currentUserId);
@@ -475,52 +466,71 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    // NEW: Hàm xử lý logic mở thẻ
-    const handleOpenCards = (count: 1 | 4) => {
-        if (isLoading || availableImageIndices.length < count) {
-            alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
+    const handleOpenCards = async (count: 1 | 4) => {
+        if (isLoading || isOpening || availableImageIndices.length < count) {
+            if (availableImageIndices.length < count) {
+                alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
+            }
             return;
         }
 
-        // Tạo một bản sao để thao tác, tránh thay đổi state trực tiếp
+        setIsOpening(true);
+
         let remainingIndices = [...availableImageIndices];
         const selectedCards: ImageCard[] = [];
         const selectedIds: number[] = [];
+        const imageUrlsToPreload: string[] = [];
 
         for (let i = 0; i < count; i++) {
             const randomIndexInPool = Math.floor(Math.random() * remainingIndices.length);
             const originalImageIndex = remainingIndices[randomIndexInPool];
             
-            selectedCards.push({
+            const cardData = {
                 id: originalImageIndex + 1,
                 url: defaultImageUrls[originalImageIndex],
-            });
-            selectedIds.push(originalImageIndex + 1);
-
-            // Xóa index đã chọn khỏi pool để không bị trùng
+            };
+            selectedCards.push(cardData);
+            selectedIds.push(cardData.id);
+            imageUrlsToPreload.push(cardData.url);
             remainingIndices.splice(randomIndexInPool, 1);
         }
 
-        // Cập nhật state và firestore
-        setAvailableImageIndices(remainingIndices);
-        addOpenedImagesToFirestore(selectedIds);
-        setCardsForPopup(selectedCards);
+        try {
+            console.log('Bắt đầu tải trước hình ảnh...');
+            const preloadPromises = imageUrlsToPreload.map(src => {
+                return new Promise<void>((resolve, reject) => {
+                    const img = new Image();
+                    img.src = src;
+                    img.onload = () => resolve();
+                    img.onerror = (err) => reject(err);
+                });
+            });
+            
+            await Promise.all(preloadPromises);
+            console.log('Tất cả hình ảnh đã được tải trước thành công!');
 
-        // Hiển thị popup tương ứng
-        if (count === 1) {
-            setShowSingleOverlay(true);
-        } else {
-            setShowFourOverlay(true);
-        }
+            setAvailableImageIndices(remainingIndices);
+            addOpenedImagesToFirestore(selectedIds);
+            setCardsForPopup(selectedCards);
+
+            if (count === 1) {
+                setShowSingleOverlay(true);
+            } else {
+                setShowFourOverlay(true);
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải trước hình ảnh:", error);
+            alert("Đã có lỗi xảy ra khi tải tài nguyên, vui lòng thử lại.");
+            setIsOpening(false);
+        } 
     };
     
-    // NEW: Hàm đóng popup và trao thưởng
     const handleCloseOverlay = (openedCount: number) => {
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
-        setCardsForPopup([]); // Reset dữ liệu thẻ
+        setCardsForPopup([]);
+        setIsOpening(false);
         
-        // Trao thưởng (ví dụ: 10 coin, 1 gem mỗi thẻ)
         onCoinReward(10 * openedCount);
         onGemReward(1 * openedCount);
         console.log(`Bạn nhận được ${10 * openedCount} coin và ${1 * openedCount} gem!`);
@@ -530,13 +540,14 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         return <div style={{color: 'white', fontSize: '1.5rem'}}>Đang tải dữ liệu rương...</div>;
     }
 
+    const containerClassName = `chest-gallery-container ${isOpening ? 'is-opening' : ''}`;
+
     return (
         <>
             <GlobalStyles />
             
             {!showSingleOverlay && !showFourOverlay && (
                 <header className="main-header">
-                    {/* NEW: Hiển thị số lượng ảnh còn lại */}
                     <h1 className="header-title">Chọn Rương ({`Còn ${availableImageIndices.length} ảnh`})</h1>
                     <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
@@ -544,14 +555,14 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 </header>
             )}
 
-            <div className="chest-gallery-container">
+            <div className={containerClassName}>
                 {CHEST_DATA.map((chest) => (
                     <ChestUI
                         key={chest.id}
                         {...chest}
                         onOpen1={() => handleOpenCards(1)}
-                        // Mở 4 thẻ cho nút "Mở x10" cũ
-                        onOpen10={() => handleOpenCards(4)} 
+                        onOpen10={() => handleOpenCards(4)}
+                        isOpening={isOpening}
                     />
                 ))}
             </div>
@@ -583,4 +594,5 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
+
 // --- END OF FILE lat-the.tsx ---
