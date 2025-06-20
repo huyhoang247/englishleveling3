@@ -1,588 +1,525 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+// Import the image URLs list
+import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
 
-// NEW: Import các tài nguyên cần thiết từ treasure.tsx
-import { db } from './firebase.js'; // Điều chỉnh đường dẫn nếu cần
+// NEW: Import treasure assets
+import { treasureAssets } from './game-assets.ts'; // Adjust path if necessary
+
+// Import db from your firebase.js file
+import { db } from './firebase.js'; // Adjust the path if necessary
+
+// Import necessary Firestore functions
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { defaultImageUrls } from './image-url.ts'; // Điều chỉnh đường dẫn nếu cần
+import { User } from 'firebase/auth'; // Import User type
 
-// ========================================================================
-// === 1. CSS STYLES (Không đổi) ==========================================
-// ========================================================================
-const GlobalStyles = () => (
-    <style>{`
-        /* --- Cài đặt chung & Nền --- */
-        body {
-            background-color: #0a0a14;
-            background-image: radial-gradient(circle at center, #16213e, #0a0a14);
-            color: #e0e0e0;
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
+// Import the new popup component
+import RevealedImagePopup from './treasure-image-popup.tsx'; // Adjust the path if necessary
 
-        #root {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Sẽ bị ghi đè bởi padding-top */
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        
-        /* === HEADER CỐ ĐỊNH === */
-        .main-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 12px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: rgba(16, 22, 46, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
-            box-sizing: border-box;
-            transition: opacity 0.3s ease;
-        }
 
-        .header-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #e0e0e0;
-            margin: 0;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
+// --- SVG Icon Components ---
+// These icons are used in the card popup or other parts of the component, so they are kept here or in a shared file.
 
-        /* === Nút đóng được tích hợp vào header === */
-        .vocab-screen-close-btn {
-            width: 44px;
-            height: 44px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s ease, opacity 0.2s ease;
-            opacity: 0.9;
-            margin: -10px; 
-            padding: 10px;
-        }
-        .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
-        
-        .vocab-screen-close-btn img {
-            width: 24px;
-            height: 24px;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
-        }
-        
-        /* === CONTAINER RƯƠNG ĐƯỢC ĐẨY XUỐNG VÀ TÍNH TOÁN LẠI CHIỀU CAO === */
-        .chest-gallery-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            width: 100%;
-            max-width: 1300px;
-            overflow-y: auto;
-            padding: 20px;
-            max-height: calc(100vh - 101px);
-            box-sizing: border-box;
-            margin-top: 61px; /* Đẩy container xuống dưới header */
-        }
-
-        /* Tùy chỉnh thanh cuộn (giữ nguyên) */
-        .chest-gallery-container::-webkit-scrollbar { width: 8px; }
-        .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
-        .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
-        .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
-
-        /* === GIAO DIỆN RƯƠNG BÁU (Không đổi) === */
-        .chest-ui-container {
-            width: 100%; max-width: 380px; min-width: 300px;
-            background-color: #1a1f36; border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2);
-            overflow: hidden; display: flex; flex-direction: column;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative; border: none;
-        }
-        .chest-ui-container::before {
-            content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px;
-            background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
-        }
-        .chest-ui-container:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3);
-        }
-        .chest-header { 
-            padding: 12px 20px; background-color: rgba(42, 49, 78, 0.7);
-            font-size: 0.9rem; font-weight: 600; color: #c7d2fe;
-            text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .chest-body { 
-            background: linear-gradient(170deg, #43335b, #2c2240);
-            padding: 25px 20px 20px 20px; position: relative; flex-grow: 1; 
-            display: flex; flex-direction: column; align-items: center; overflow: hidden;
-        }
-        .chest-body::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0;
-        }
-        .chest-body > * { position: relative; z-index: 1; }
-        .chest-title { 
-            font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
-        }
-        .help-icon { 
-            position: absolute; top: 15px; right: 15px; width: 24px; height: 24px;
-            border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
-            border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 16px; 
-            font-weight: bold; cursor: pointer; display: flex; justify-content: center; 
-            align-items: center; transition: all 0.2s ease; z-index: 2; 
-        }
-        .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
-        .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
-        .chest-image { flex: 1; min-width: 0; height: auto; }
-        .info-bubble { 
-            flex: 2; background-color: rgba(10, 10, 20, 0.6); color: #d1d5db;
-            padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.85rem; text-align: left; 
-        }
-        .pity-timer { text-align: center; color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .highlight-purple { color: #d8b4fe; font-weight: bold; }
-        .highlight-yellow { color: #facc15; font-weight: bold; }
-        .highlight-red { color: #f87171; font-weight: bold; }
-        
-        .action-button-group { display: flex; gap: 10px; width: 100%; }
-        .chest-button {
-            flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.1s ease; color: #ffffff; 
-            font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; 
-            justify-content: center; gap: 8px;
-        }
-        .chest-button:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
-        .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
-        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
-        .btn-free { background: linear-gradient(to top, #0e7490, #22d3ee); }
-        
-        .button-price {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            font-size: 0.85rem; color: white; font-weight: 600;
-            background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px;
-            text-shadow: none;
-        }
-        .price-icon { width: 16px; height: 16px; }
-
-        /* --- Overlay & Card styles (Không đổi) --- */
-        @keyframes fade-in-overlay { from { opacity: 0; } to { opacity: 1; } }
-        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in-overlay 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
-        .overlay-content { width: 100%; max-width: 900px; }
-        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
-        .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
-        .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
-        .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
-        .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
-        .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
-        .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; will-change: transform; }
-        .card-container.flipped .card-inner { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
-        .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
-        .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.18); }
-        .card-image-in-card { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
-        .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
-        @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
-    `}
-    </style>
+// Star Icon SVG
+const StarIcon = ({ size = 24, color = 'currentColor', fill = 'none', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={fill === 'currentColor' ? color : fill} // Use color prop for fill if fill is 'currentColor'
+    stroke={color} // Use color prop for stroke
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`} // Add a base class if needed + user className
+    {...props}
+  >
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
 );
 
-// NEW: Định nghĩa kiểu dữ liệu cho thẻ hình ảnh
-interface ImageCard {
-    id: number; // ID (1-based) để lưu vào Firestore
-    url: string;  // URL của hình ảnh
+// Sword Icon SVG
+const SwordIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
+    <line x1="13" x2="19" y1="19" y2="13" />
+    <line x1="16" x2="20" y1="16" y2="20" />
+    <line x1="19" x2="21" y1="21" y2="19" />
+  </svg>
+);
+
+// Shield Icon SVG
+const ShieldIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+// Crown Icon SVG
+const CrownIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm18 16H4" />
+    <path d="M12 4a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2z" />
+    <path d="M5 20a1 1 0 0 1 1-1h12a1 0 0 1 1 1v0a1 0 0 1-1 1H6a1 0 0 1-1-1v0z" />
+  </svg>
+);
+
+
+// Key Icon Component
+const KeyIcon = () => (
+  <img
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/key.png"
+    alt="Key Icon"
+    className="w-4 h-4 object-contain"
+  />
+);
+
+
+// Define interface for component props
+interface TreasureChestProps {
+  initialChests?: number; // Initial number of chests (no longer used for opening logic)
+  keyCount?: number; // Number of keys collected
+  onKeyCollect?: (amount: number) => void; // Callback for when a key is collected (used for unlocking chests)
+  onCoinReward: (amount: number) => void; // Callback function to add coins
+  onGemReward: (amount: number) => void; // Callback function to add gems
+  isGamePaused?: boolean; // Indicates if the game is paused (e.g., game over, stats fullscreen)
+  isStatsFullscreen?: boolean; // Indicates if stats are in fullscreen
+  currentUserId: string | null; // Pass the current user ID as a prop (can be null if not logged in)
 }
 
-// ========================================================================
-// === 2. CÁC COMPONENT CON (Không đổi) =================================
-// ========================================================================
+// Define interface for card data (keeping this for potential future use or if other rewards are still cards)
+interface Card {
+  id: number;
+  name: string;
+  rarity: "common" | "rare" | "epic" | "legendary";
+  icon: React.ReactNode; // Use React.ReactNode for SVG components
+  color: string;
+  background: string;
+}
 
-const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => { 
-    return (
-        <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
-            <div className="card-inner">
-                <div className="card-face card-back">?</div>
-                <div className="card-face card-front">
-                    <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
-                </div>
-            </div>
-        </div>
-    ); 
+// Define interface for the revealed image data - KEPT HERE as TreasureChest manages this state
+interface RevealedImage {
+    id: number; // Using index + 1 as ID (1-based)
+    url: string;
+}
+
+
+// Helper function to get rarity color (still needed if card rewards are kept)
+const getRarityColor = (rarity: Card['rarity']) => {
+  switch(rarity) {
+    case "common": return "text-gray-200";
+    case "rare": return "text-blue-400";
+    case "epic": return "text-purple-400";
+    case "legendary": return "text-amber-400";
+    default: return "text-white";
+  }
 };
 
-const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
-    const [isFlipped, setIsFlipped] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(true);
 
-    useEffect(() => {
-        const t1 = setTimeout(() => setIsFlipped(true), 500);
-        const t2 = setTimeout(() => setIsProcessing(false), 1300); // Thời gian chờ lật thẻ
-        return () => { clearTimeout(t1); clearTimeout(t2); };
-    }, [card]); // Chạy lại animation khi thẻ thay đổi
+// Removed initialChests from props default value as it's no longer used for opening logic
+export default function TreasureChest({ keyCount = 0, onKeyCollect, onCoinReward, onGemReward, isGamePaused = false, isStatsFullscreen = false, currentUserId }: TreasureChestProps) {
+  // States for chest and popup
+  const [isChestOpen, setIsChestOpen] = useState(false);
+  // State to hold the revealed image data (ID and URL) - MANAGED HERE
+  const [revealedImage, setRevealedImage] = useState<RevealedImage | null>(null);
+  const [showShine, setShowShine] = useState(false);
+  const [chestShake, setChestShake] = useState(false);
+  // Removed chestsRemaining state as it's no longer used for opening logic
+  // const [chestsRemaining, setChestsRemaining] = useState(initialChests);
+  // State to hold pending coin reward - MANAGED HERE
+  const [pendingCoinReward, setPendingCoinReward] = useState(0);
+  // State to hold pending gem reward - MANAGED HERE
+  const [pendingGemReward, setPendingGemReward] = useState(0);
 
-    const handleOpenAgain = () => {
-        if (isProcessing) return;
-        setIsProcessing(true);
-        setIsFlipped(false);
-        setTimeout(() => {
-            onOpenAgain(); // Gọi hàm từ cha để lấy thẻ mới
-        }, 600);
+  // State to manage the list of available image indices (0-based)
+  const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
+  // State to track if data is being loaded from Firestore
+  const [isLoading, setIsLoading] = useState(true);
+
+  // --- Firestore Interaction ---
+  // Effect to fetch opened image IDs (1-based) from Firestore on component mount or user change
+  useEffect(() => {
+      const fetchOpenedImages = async () => {
+          // If no user is logged in, initialize with all images and stop loading
+          if (!currentUserId) {
+              console.log("User not logged in, cannot fetch opened images. Initializing with all images.");
+              setIsLoading(false);
+              // Initialize with all indices (0 to length-1)
+              const initialIndices = defaultImageUrls.map((_, index) => index);
+              setAvailableImageIndices(initialIndices);
+              return;
+          }
+
+          setIsLoading(true);
+          const userDocRef = doc(db, 'users', currentUserId);
+
+          try {
+              const userDocSnap = await getDoc(userDocRef);
+
+              let openedImageIds: number[] = []; // These are 1-based IDs
+              if (userDocSnap.exists()) {
+                  const userData = userDocSnap.data();
+                  // Ensure openedImageIds is treated as an array of numbers (1-based)
+                  if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
+                      // Filter to ensure only valid numbers (greater than 0) are included
+                      openedImageIds = userData.openedImageIds.filter(id => typeof id === 'number' && id > 0);
+                  }
+              } else {
+                  // If user document doesn't exist, create it with an empty array.
+                  console.warn(`User document for ${currentUserId} not found during fetch. Creating...`);
+                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); // Use merge: true
+              }
+
+              // Convert openedImageIds (1-based) to openedImageIndices (0-based)
+              const openedImageIndices = openedImageIds.map(id => id - 1).filter(index => index >= 0 && index < defaultImageUrls.length);
+
+              // Filter out the opened image indices from the full list of indices (0-based)
+              const allIndices = defaultImageUrls.map((_, index) => index);
+              const remainingIndices = allIndices.filter(index => !openedImageIndices.includes(index));
+              setAvailableImageIndices(remainingIndices);
+
+          } catch (error) {
+              console.error("Error fetching opened images:", error);
+              // In case of error, initialize with all images to allow some functionality
+              const initialIndices = defaultImageUrls.map((_, index) => index);
+              setAvailableImageIndices(initialIndices);
+          } finally {
+              setIsLoading(false);
+          }
+      };
+
+      fetchOpenedImages();
+
+  }, [currentUserId, db]); // Re-run effect if currentUserId or db instance changes
+
+  // Function to add a revealed image ID (1-based) to Firestore
+  const addOpenedImageToFirestore = async (imageId: number) => {
+      if (!currentUserId) {
+          console.log("User not logged in, cannot save opened image.");
+          return;
+      }
+      // Ensure the imageId is valid (greater than 0)
+      if (imageId <= 0) {
+          console.error("Invalid image ID for saving:", imageId);
+          return;
+      }
+
+      const userDocRef = doc(db, 'users', currentUserId);
+
+      try {
+          // Use arrayUnion to add the imageId (1-based) to the openedImageIds array
+          await updateDoc(userDocRef, {
+              openedImageIds: arrayUnion(imageId)
+          });
+          console.log(`Image ID ${imageId} added to Firestore for user ${currentUserId}`);
+      } catch (error) {
+          console.error("Error adding opened image to Firestore:", error);
+      }
+  };
+  // --- End Firestore Interaction ---
+
+
+  // State for chest coin effect
+  const [isChestCoinEffectActive, setIsChestCoinEffectActive] = useState(false);
+  // Timer for chest coin effect
+  const chestCoinEffectTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Function to open the chest
+  const openChest = () => {
+    // Prevent opening chest if game is paused, already open, not enough keys, or no images left
+    // Also prevent if data is still loading, or user is not logged in
+    // Removed chestsRemaining <= 0 condition
+    if (isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading || !currentUserId) {
+        if (isLoading) {
+             console.log("Đang tải dữ liệu...");
+        } else if (!currentUserId) {
+             console.log("Vui lòng đăng nhập để mở rương!");
+        } else if (keyCount < 1) {
+            console.log("Không đủ chìa khóa để mở rương!"); // Log or show a message to the user
+        } else if (availableImageIndices.length === 0) {
+             console.log("Đã mở hết tất cả hình ảnh!"); // Log or show a message if all images are revealed
+        }
+        return;
     }
 
-    return (
-        <>
-            <div style={{ textAlign: 'center' }}>
-                <div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px' }}>
-                    <Card cardData={card} isFlipped={isFlipped} />
+    setChestShake(true);
+    setTimeout(() => {
+      setChestShake(false);
+      setIsChestOpen(true); // This will start the opening animation
+      setShowShine(true); // This layers the particle effects on top
+      // Removed Decrease chests remaining logic
+      // setChestsRemaining(prev => prev - 1);
+      if (onKeyCollect) {
+          onKeyCollect(1); // Signal that 1 key was used (e.g., to decrease key count in parent)
+      }
+
+      // Wait for the opening animation to play out before showing the reward
+      setTimeout(() => {
+        // --- Image Selection Logic ---
+        // Select a random index (0-based) from the available indices
+        const randomIndex = Math.floor(Math.random() * availableImageIndices.length);
+        const selectedImageIndex = availableImageIndices[randomIndex];
+        const selectedImageUrl = defaultImageUrls[selectedImageIndex];
+
+        // Store the revealed image data (ID is index + 1)
+        setRevealedImage({ id: selectedImageIndex + 1, url: selectedImageUrl });
+
+        // Remove the selected index from the available indices state immediately
+        setAvailableImageIndices(prevIndices =>
+            prevIndices.filter(index => index !== selectedImageIndex)
+        );
+
+        // --- Save the opened image ID (1-based) to Firestore ---
+        addOpenedImageToFirestore(selectedImageIndex + 1);
+        // --- End Save to Firestore ---
+
+        // --- Reward Logic (Example: Still give a small coin/gem reward with each image) ---
+        // You can adjust or remove this if opening a chest only gives an image
+        let coinReward = 10; // Example: Always give 10 coins per image
+        let gemReward = 1; // Example: Always give 1 gem per image
+        setPendingCoinReward(coinReward);
+        setPendingGemReward(gemReward);
+        // --- End Reward Logic ---
+
+
+        // --- Trigger Coin Collection Effect near Chest ---
+        // Clear any existing chest coin effect timer
+        if (chestCoinEffectTimerRef.current) {
+            clearTimeout(chestCoinEffectTimerRef.current);
+        }
+        // Activate the chest coin effect
+        setIsChestCoinEffectActive(true);
+        // Set a timer to deactivate the chest coin effect after a duration
+        chestCoinEffectTimerRef.current = setTimeout(() => {
+            setIsChestCoinEffectActive(false);
+        }, 800); // Effect duration
+        // --- END Trigger Coin Collection Effect near Chest ---
+
+      }, 2000); // Delay before showing the revealed item (image). Let Lottie play.
+    }, 600); // Duration of shake animation
+  };
+
+  // Function to handle closing the popup and collecting rewards
+  const handleClosePopup = () => {
+    setIsChestOpen(false);
+    setRevealedImage(null); // Reset the revealed image state
+    setShowShine(false);
+    if (pendingCoinReward > 0) {
+        // Call the parent's function to add coins
+        onCoinReward(pendingCoinReward);
+        setPendingCoinReward(0); // Reset pending reward after giving it to the parent
+    }
+     // Call the parent's function to add gems if there's a pending reward
+    if (pendingGemReward > 0) {
+        onGemReward(pendingGemReward);
+        setPendingGemReward(0); // Reset pending gem reward
+    }
+  };
+
+  // Effect to clear chest coin effect timer on unmount
+  useEffect(() => {
+      return () => {
+          if (chestCoinEffectTimerRef.current) {
+              clearTimeout(chestCoinEffectTimerRef.current);
+          }
+      };
+  }, []); // Empty dependency array means this effect runs only on mount and unmount
+
+
+  // CSS Animations (only chest/card related) - KEPT HERE as they are chest-specific
+  const chestAnimations = `
+    @keyframes float-card { 0% { transform: translateY(0px) rotate(0deg); filter: brightness(1); } 25% { transform: translateY(-15px) rotate(2deg); filter: brightness(1.2); } 50% { transform: translateY(-20px) rotate(0deg); filter: brightness(1.3); } 75% { transform: translateY(-15px) rotate(-2deg); filter: brightness(1.2); } 100% { translateY(0px) rotate(0deg); filter: brightness(1); } }
+    @keyframes chest-shake { 0% { transform: translateX(0) rotate(0deg); } 10% { transform: translateX(-4px) rotate(-3deg); } 20% { transform: translateX(4px) rotate(3deg); } 30% { transform: translateX(-4px) rotate(-3deg); } 40% { transform: translateX(4px) rotate(3deg); } 50% { transform: translateX(-4px) rotate(-2deg); } 60% { transform: translateX(4px) rotate(2deg); } }
+    @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } }
+    @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+    @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes ray-rotate { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
+    @keyframes shine { 0% { transform: translateX(-200px) rotate(45deg); } 100% { transform: translateX(400px) rotate(45deg); } }
+    @keyframes gold-particle { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 50% { opacity: 0.7; } 100% { transform: translate( calc(-50% + var(--random-x)), calc(-50% + var(--random-y)) ) scale(0); opacity: 0; } }
+    @keyframes lid-open { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(-100%) rotate(60deg); } } /* This animation might not be used directly with Lottie */
+    .animate-float-card { animation: float-card 3s ease-in-out infinite; }
+    .animate-chest-shake { animation: chest-shake 0.6s ease-in-out; }
+    .animate-twinkle { animation: twinkle 5s ease-in-out infinite; }
+    .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+    .animate-spin-slow { animation: spin-slow 10s linear infinite; }
+    .animate-ray-rotate { animation: ray-rotate 2s ease-in-out infinite; }
+    .animate-shine { animation: shine 2s linear infinite; }
+    .animate-gold-particle { animation: gold-particle 1.5s ease-out forwards; }
+    .animate-lid-open { animation: lid-open 0.5s ease-out forwards; }
+  `;
+
+
+  // Render the treasure chest and related UI
+  // HIDE chest when stats are in fullscreen
+  if (isStatsFullscreen) {
+      return null; // Don't render anything if stats are fullscreen
+  }
+
+  // Show loading indicator while fetching data
+  if (isLoading) {
+      return (
+          <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20 text-white">
+              Đang tải dữ liệu rương...
+          </div>
+      );
+  }
+
+  // Define a consistent margin value for spacing above and below the chest
+  const verticalSpacing = 'mb-6'; // Use mb-6 for space below the image count
+  const verticalSpacingTop = 'mt-6'; // Use mt-6 for space above the keys
+
+  return (
+    <>
+      {/* Add chest-specific CSS animations */}
+      <style>{chestAnimations}</style>
+
+      {/* Container for the image count, chest, and keys */}
+      {/* Position this container, and its children will be laid out inside */}
+      <div className="absolute bottom-32 flex flex-col items-center justify-center w-full z-20"> {/* Main container */}
+
+        {/* Display available images count - Positioned above the chest */}
+        {/* Use margin-bottom to create space below this element */}
+        <div className={`${verticalSpacing} bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative`}>
+             <span className="text-blue-200 font-bold text-xs">Hình ảnh còn lại: {availableImageIndices.length}</span>
+        </div>
+
+
+        {/* Treasure chest button */}
+        <button // Changed from div to button for accessibility and disabled state
+          className={`cursor-pointer transition-all duration-300 relative ${!currentUserId || isGamePaused || isChestOpen || keyCount < 1 || availableImageIndices.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} // Added disabled styling and conditions, Removed chestsRemaining <= 0
+          disabled={
+            isGamePaused
+            || isChestOpen
+            || keyCount < 1
+            || availableImageIndices.length === 0 // Use availableImageIndices.length
+            || isLoading
+            || !currentUserId // Disable if no user ID
+          }
+          onClick={openChest}
+          // Updated aria-label to reflect dependency on keys and available images
+          aria-label={availableImageIndices.length > 0 && keyCount > 0 ? "Mở rương báu" : availableImageIndices.length === 0 ? "Hết hình ảnh" : "Không đủ chìa khóa"}
+          role="button"
+          // Updated tabIndex condition
+          tabIndex={!isGamePaused && keyCount >= 1 && availableImageIndices.length > 0 && !isLoading && currentUserId ? 0 : -1}
+        >
+          <div className="relative w-40 h-40 flex items-center justify-center">
+            {/* Static chest image - always visible, but scales up when open */}
+            <img
+                src={treasureAssets.chestClosed}
+                alt="Treasure Chest"
+                className={`w-32 h-32 object-contain transition-all duration-300 transform-gpu
+                    ${chestShake ? 'animate-chest-shake' : ''}
+                    ${isChestOpen ? 'scale-110' : 'scale-100'}`} // <<< THIS LINE WAS CHANGED: Removed opacity-0 so the chest stays visible
+            />
+
+            {/* Lottie animation for opening - only renders and plays when opening */}
+            {isChestOpen && (
+                <div className="absolute inset-0 pointer-events-none">
+                    <DotLottieReact
+                        src="https://lottie.host/1f7c7b86-a416-494a-a63e-10878a87319c/x7MAb2mDgC.lottie"
+                        loop={false}
+                        autoplay
+                        className="w-full h-full"
+                    />
                 </div>
-            </div>
-            <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>
-                    {isProcessing ? 'Đang mở...' : 'Mở Lại'}
-                </button>
-                <button onClick={onClose} className="footer-btn">Đóng</button>
-            </div>
-        </>
-    );
-};
+            )}
 
-const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
-    const [flippedIndices, setFlippedIndices] = useState<Set<number>>(new Set());
-    const [phase, setPhase] = useState('DEALING');
-
-    const startRound = useCallback(() => {
-        setPhase('DEALING');
-        setFlippedIndices(new Set());
-        setTimeout(() => {
-            const totalDealTime = 1000 + 80 * cards.length;
-            setTimeout(() => {
-                setPhase('FLIPPING');
-                const flip = (i: number) => {
-                    if (i >= cards.length) {
-                        setTimeout(() => setPhase('REVEALED'), 800);
-                        return;
-                    }
-                    setFlippedIndices(p => new Set(p).add(i));
-                    setTimeout(() => flip(i + 1), 200);
-                };
-                flip(0);
-            }, totalDealTime);
-        }, 300);
-    }, [cards]);
-
-    useEffect(() => {
-        if (cards.length > 0) {
-            startRound();
-        }
-    }, [cards, startRound]);
-
-    const handleOpenAgain = () => {
-        if (phase !== 'REVEALED') return;
-        onOpenAgain();
-    };
-
-    const btnProps = (() => {
-        switch (phase) {
-            case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
-            case 'FLIPPING': return { text: 'Đang lật...', disabled: true };
-            case 'REVEALED': return { text: 'Mở Lại x4', disabled: false };
-            default: return { text: '', disabled: true };
-        }
-    })();
-
-    return (
-        <>
-            <div style={{ textAlign: 'center' }}>
-                <div className="four-card-grid-container">
-                    {cards.map((card, index) => (
-                        <div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
-                            <Card cardData={card} isFlipped={flippedIndices.has(index)} />
-                        </div>
+            {/* The existing shine effect (only gold particles) is layered on top during the animation */}
+            {showShine && (
+                <div className="absolute inset-0 flex justify-center items-center overflow-hidden pointer-events-none">
+                    {/* The large circle and star-like rays have been removed as requested. */}
+                    {/* Only the small gold particles remain for a subtle effect. */}
+                    {[...Array(20)].map((_, i) => (
+                        <div key={`particle-${i}`} className="absolute w-2 h-2 bg-yellow-300 rounded-full animate-gold-particle" style={{ left: '50%', top: '50%', animationDelay: `${i * 0.05}s`, '--random-x': `${Math.random() * 200 - 100}px`, '--random-y': `${Math.random() * 200 - 100}px` }}></div>
                     ))}
                 </div>
-            </div>
-            <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button>
-                <button onClick={onClose} className="footer-btn">Đóng</button>
-            </div>
-        </>
-    );
-};
-
-interface ChestUIProps {
-    headerTitle: string;
-    mainTitle: string;
-    imageUrl: string;
-    infoText: React.ReactNode;
-    pityLine1: React.ReactNode;
-    pityLine2: React.ReactNode;
-    price1: number | string;
-    price10: number | null;
-    onOpen1: () => void;
-    onOpen10: () => void;
-}
-
-const ChestUI: React.FC<ChestUIProps> = ({
-    headerTitle, mainTitle, imageUrl, infoText,
-    pityLine1, pityLine2, price1, price10,
-    onOpen1, onOpen10
-}) => {
-    const isFree = typeof price1 === 'string';
-    return (
-        <div className="chest-ui-container">
-            <header className="chest-header">{headerTitle}</header>
-            <main className="chest-body">
-                <button className="help-icon">?</button>
-                <h1 className="chest-title">{mainTitle}</h1>
-                <div className="chest-visual-row">
-                    <img src={imageUrl} alt={mainTitle} className="chest-image" />
-                    <div className="info-bubble">{infoText}</div>
-                </div>
-                {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
-                {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
-                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
-                    <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1}>
-                        <span>{isFree ? 'Mở' : 'Mở x1'}</span>
-                        {typeof price1 === 'number' && (
-                           <span className="button-price">
-                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
-                                {price1}
-                            </span>
-                        )}
-                         {isFree && <span className="button-price">{price1}</span>}
-                    </button>
-                    {price10 !== null && (
-                        <button className="chest-button btn-get-10" onClick={onOpen10}>
-                            <span>Mở x4</span>
-                            <span className="button-price">
-                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />
-                                {price10}
-                            </span>
-                        </button>
-                    )}
-                </div>
-            </main>
+            )}
         </div>
-    );
-};
 
-const CHEST_DATA = [
-    { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png/revision/latest?cb=20171228004133", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null, },
-    { id: 'legendary_chest', headerTitle: "Basic Vocabulary", mainTitle: "Rương Từ Vựng", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980, },
-    { id: 'tech_chest', headerTitle: "Rương Giới Hạn", mainTitle: "Rương Công Nghệ", imageUrl: "https://static.wikia.nocookie.net/survivorio/images/c/c5/Epic_Parts_Crate_x10.png/revision/latest/scale-to-width-down/1000?cb=20221102144342", infoText: <>Tăng tỉ lệ nhận <span className="highlight-purple">Trang bị Công nghệ</span></>, pityLine1: <>Nhận <span className="highlight-purple">Hiếm</span> trong 5 lần mở</>, pityLine2: <>Nhận <span className="highlight-purple">Sử thi</span> trong 30 lần mở</>, price1: 150, price10: 1350, },
-    { id: 'ancient_chest', headerTitle: "Rương Sự Kiện", mainTitle: "Rương Cổ Vật", imageUrl: "https://static.wikia.nocookie.net/minecraftdungeons/images/9/93/Gilded_Obsidian_Chest.png/revision/latest?cb=20230601222415", infoText: <>Chứa các vật phẩm từ nền văn minh đã mất. Tăng tỉ lệ nhận <span className="highlight-yellow">Trang bị Cổ Đại</span>.</>, pityLine1: <>Chắc chắn nhận <span className="highlight-yellow">Sử Thi</span> trong 50 lần mở.</>, pityLine2: '', price1: 280, price10: 2500, },
-    { id: 'ultimate_chest', headerTitle: "Tuyệt Phẩm S-Grade", mainTitle: "Rương Tối Thượng", imageUrl: "https://static.wikia.nocookie.net/survivorio/images/a/a2/S_Grade_Supplies_Crate_x10.png/revision/latest?cb=20221102144410", infoText: <>Cơ hội sở hữu các vật phẩm <span className="highlight-red">S-Grade</span> cực hiếm với sức mạnh vượt trội.</>, pityLine1: <>Chắc chắn nhận 1 <span className="highlight-red">Trang bị S-Grade</span> sau 80 lần mở.</>, pityLine2: <><span className="highlight-purple">Tăng mạnh</span> tỉ lệ nhận vật phẩm Sử thi & Huyền thoại.</>, price1: 500, price10: 4800, },
-];
 
-// ========================================================================
-// === 3. COMPONENT CHÍNH (ĐÃ NÂNG CẤP LOGIC) ============================
-// ========================================================================
+          {/* --- Coin Collection Effect Lottie near Chest --- */}
+          {/* Position this absolutely relative to the chest button */}
+          {isChestCoinEffectActive && (
+              <div
+                  className="absolute w-16 h-16 pointer-events-none z-50" // Adjust size and z-index as needed
+                  style={{
+                      // Position relative to the center-top of the chest container
+                      top: '20%', // Adjust vertical position
+                      left: '50%', // Center horizontally
+                      transform: 'translate(-50%, -50%)', // Ensure perfect centering
+                  }}
+              >
+                  <DotLottieReact
+                      src="https://lottie.host/07b8de00-e2ad-4d17-af12-9cbb13149269/vjmhfykbUL.lottie" // Lottie URL provided by user
+                      loop={false} // Play once
+                      autoplay
+                      className="w-full h-full"
+                  />
+              </div>
+          )}
 
-interface VocabularyChestScreenProps {
-    onClose: () => void;
-    currentUserId: string | null;
-    onCoinReward: (amount: number) => void;
-    onGemReward: (amount: number) => void;
+
+        </button>
+
+        {/* Display keys count - Positioned below the chest */}
+        {/* Use margin-top to create space above this element */}
+        <div className={`${verticalSpacingTop} flex space-x-3 items-center justify-center`}>
+          {/* Keys */}
+          <div className="bg-black bg-opacity-60 px-2 py-1 rounded-lg border border-gray-700 shadow-lg flex items-center space-x-1 relative">
+            {keyCount > 0 && (
+              <div className="absolute inset-0 bg-green-500/10 rounded-lg animate-pulse-slow"></div>
+            )}
+            <KeyIcon /> {/* Kept KeyIcon here */}
+            <span className="text-green-200 font-bold text-xs">{keyCount}</span>
+             {keyCount > 0 && (<div className="absolute -inset-0.5 bg-green-500/20 rounded-lg blur-sm -z-10"></div>)}
+          </div>
+        </div>
+      </div>
+
+      {/* Use the new RevealedImagePopup component */}
+      <RevealedImagePopup
+          revealedImage={revealedImage}
+          pendingCoinReward={pendingCoinReward}
+          pendingGemReward={pendingGemReward}
+          onClose={handleClosePopup} // Pass the handler function
+      />
+    </>
+  );
 }
-
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
-    const [showSingleOverlay, setShowSingleOverlay] = useState(false);
-    const [showFourOverlay, setShowFourOverlay] = useState(false);
-    const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
-
-    // ======[ BẮT ĐẦU SỬA LỖI ]======
-    // MOVED & FIXED: useEffect để lấy dữ liệu từ Firestore một cách chính xác
-    useEffect(() => {
-        const fetchOpenedImages = async () => {
-            if (!currentUserId) {
-                console.log("User not logged in. Initializing with all images.");
-                setAvailableImageIndices(defaultImageUrls.map((_, index) => index));
-                setIsLoading(false);
-                return;
-            }
-
-            setIsLoading(true);
-            const userDocRef = doc(db, 'users', currentUserId);
-            try {
-                const userDocSnap = await getDoc(userDocRef);
-                let openedImageIds: number[] = []; // 1-based IDs from Firestore
-
-                // SỬ DỤNG LOGIC AN TOÀN GIỐNG HỆT treasure.tsx
-                if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    // Kiểm tra xem trường có tồn tại và là một mảng không
-                    if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
-                        openedImageIds = userData.openedImageIds;
-                    }
-                } else {
-                    // Nếu tài liệu người dùng chưa có, tạo nó với mảng rỗng
-                    console.warn(`User document for ${currentUserId} not found. Creating it.`);
-                    await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
-                }
-
-                // Bây giờ logic tính toán sẽ đúng
-                const openedIndices = openedImageIds.map(id => id - 1); // convert 1-based ID to 0-based index
-                const allIndices = defaultImageUrls.map((_, index) => index);
-                const remainingIndices = allIndices.filter(index => !openedIndices.includes(index));
-                setAvailableImageIndices(remainingIndices);
-
-            } catch (error) {
-                console.error("Error fetching user data in lat-the.tsx:", error);
-                // Fallback: Nếu lỗi, vẫn cho người dùng chơi với tất cả ảnh
-                setAvailableImageIndices(defaultImageUrls.map((_, index) => index));
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchOpenedImages();
-    }, [currentUserId]);
-    // ======[ KẾT THÚC SỬA LỖI ]======
-
-    // MOVED: Hàm cập nhật Firestore
-    const addOpenedImagesToFirestore = async (imageIds: number[]) => {
-        if (!currentUserId || imageIds.length === 0) return;
-        const userDocRef = doc(db, 'users', currentUserId);
-        try {
-            await updateDoc(userDocRef, {
-                openedImageIds: arrayUnion(...imageIds)
-            });
-            console.log(`Image IDs [${imageIds.join(', ')}] added to Firestore.`);
-        } catch (error) {
-            console.error("Error updating opened images in Firestore:", error);
-        }
-    };
-    
-    // NEW: Hàm xử lý logic mở thẻ
-    const handleOpenCards = (count: 1 | 4) => {
-        if (isLoading) {
-            alert("Đang tải dữ liệu, vui lòng thử lại sau giây lát.");
-            return;
-        }
-        if (availableImageIndices.length < count) {
-            alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
-            return;
-        }
-
-        let remainingIndices = [...availableImageIndices];
-        const selectedCards: ImageCard[] = [];
-        const selectedIds: number[] = [];
-
-        for (let i = 0; i < count; i++) {
-            const randomIndexInPool = Math.floor(Math.random() * remainingIndices.length);
-            const originalImageIndex = remainingIndices[randomIndexInPool];
-            
-            selectedCards.push({
-                id: originalImageIndex + 1,
-                url: defaultImageUrls[originalImageIndex],
-            });
-            selectedIds.push(originalImageIndex + 1);
-            remainingIndices.splice(randomIndexInPool, 1);
-        }
-
-        setAvailableImageIndices(remainingIndices);
-        addOpenedImagesToFirestore(selectedIds);
-        setCardsForPopup(selectedCards);
-
-        if (count === 1) {
-            setShowSingleOverlay(true);
-        } else {
-            setShowFourOverlay(true);
-        }
-    };
-    
-    // NEW: Hàm đóng popup và trao thưởng
-    const handleCloseOverlay = (openedCount: number) => {
-        setShowSingleOverlay(false);
-        setShowFourOverlay(false);
-        setCardsForPopup([]);
-        
-        onCoinReward(10 * openedCount);
-        onGemReward(1 * openedCount);
-        console.log(`Bạn nhận được ${10 * openedCount} coin và ${1 * openedCount} gem!`);
-    };
-
-    if (isLoading) {
-        return <div style={{color: 'white', fontSize: '1.5rem', textAlign: 'center'}}>Đang tải dữ liệu rương...</div>;
-    }
-
-    // Chỉ hiển thị rương "Rương Từ Vựng" và "Rương Miễn Phí"
-    const relevantChests = CHEST_DATA.filter(chest => chest.id === 'legendary_chest' || chest.id === 'daily_chest');
-
-    return (
-        <>
-            <GlobalStyles />
-            
-            {!showSingleOverlay && !showFourOverlay && (
-                <header className="main-header">
-                    <h1 className="header-title">Chọn Rương ({`Còn ${availableImageIndices.length} ảnh`})</h1>
-                    <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
-                        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
-                    </button>
-                </header>
-            )}
-
-            <div className="chest-gallery-container">
-                {relevantChests.map((chest) => (
-                    <ChestUI
-                        key={chest.id}
-                        {...chest}
-                        onOpen1={() => {
-                            if (chest.id === 'legendary_chest') handleOpenCards(1);
-                            // Thêm logic cho rương miễn phí nếu cần
-                        }}
-                        onOpen10={() => {
-                            if (chest.id === 'legendary_chest') handleOpenCards(4);
-                        }} 
-                    />
-                ))}
-            </div>
-
-            {showSingleOverlay && cardsForPopup.length > 0 && (
-                <div className="card-opening-overlay">
-                    <div className="overlay-content">
-                        <SingleCardOpener 
-                            card={cardsForPopup[0]} 
-                            onClose={() => handleCloseOverlay(1)}
-                            onOpenAgain={() => handleOpenCards(1)}
-                        />
-                    </div>
-                </div>
-            )}
-            {showFourOverlay && cardsForPopup.length > 0 && (
-                <div className="card-opening-overlay">
-                    <div className="overlay-content">
-                        <FourCardsOpener 
-                            cards={cardsForPopup} 
-                            onClose={() => handleCloseOverlay(4)}
-                            onOpenAgain={() => handleOpenCards(4)}
-                        />
-                    </div>
-                </div>
-            )}
-        </>
-    );
-}
-
-export default VocabularyChestScreen;
