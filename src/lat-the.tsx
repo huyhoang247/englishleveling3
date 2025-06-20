@@ -1,6 +1,4 @@
-// --- START OF FILE lat-the.tsx (ĐÃ SỬA LỖI ĐỒNG BỘ) ---
-
-import React, 'useState', 'useEffect', 'useCallback' from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // NEW: Import các tài nguyên cần thiết từ treasure.tsx
 import { db } from './firebase.js'; // Điều chỉnh đường dẫn nếu cần
@@ -215,10 +213,9 @@ interface ImageCard {
 }
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON (Không đổi) ===================================
+// === 2. CÁC COMPONENT CON (Không đổi) =================================
 // ========================================================================
 
-// CHANGED: Card component giờ nhận dữ liệu thẻ mới
 const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => { 
     return (
         <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
@@ -232,7 +229,6 @@ const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean
     ); 
 };
 
-// CHANGED: SingleCardOpener giờ nhận thẻ từ props, không tự tạo nữa
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
@@ -269,7 +265,6 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
-// CHANGED: FourCardsOpener giờ nhận mảng thẻ từ props
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
     const [flippedIndices, setFlippedIndices] = useState<Set<number>>(new Set());
     const [phase, setPhase] = useState('DEALING');
@@ -333,8 +328,6 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     );
 };
 
-
-// ... (Component ChestUI và CHEST_DATA giữ nguyên) ...
 interface ChestUIProps {
     headerTitle: string;
     mainTitle: string;
@@ -418,47 +411,56 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
 
-    // === BẮT ĐẦU PHẦN SỬA ĐỔI QUAN TRỌNG ===
+    // ======[ BẮT ĐẦU SỬA LỖI ]======
+    // MOVED & FIXED: useEffect để lấy dữ liệu từ Firestore một cách chính xác
     useEffect(() => {
         const fetchOpenedImages = async () => {
+            if (!currentUserId) {
+                console.log("User not logged in. Initializing with all images.");
+                setAvailableImageIndices(defaultImageUrls.map((_, index) => index));
+                setIsLoading(false);
+                return;
+            }
+
             setIsLoading(true);
-            // Thêm '!' để TypeScript hiểu rằng currentUserId không thể null ở đây
-            const userDocRef = doc(db, 'users', currentUserId!); 
+            const userDocRef = doc(db, 'users', currentUserId);
             try {
                 const userDocSnap = await getDoc(userDocRef);
-                let openedImageIds: number[] = [];
-                if (userDocSnap.exists() && userDocSnap.data()?.openedImageIds) {
-                    openedImageIds = userDocSnap.data().openedImageIds;
-                } else if (!userDocSnap.exists()) {
-                   // Nếu người dùng chưa có document, tạo mới để tránh lỗi sau này
-                   await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
+                let openedImageIds: number[] = []; // 1-based IDs from Firestore
+
+                // SỬ DỤNG LOGIC AN TOÀN GIỐNG HỆT treasure.tsx
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    // Kiểm tra xem trường có tồn tại và là một mảng không
+                    if (userData?.openedImageIds && Array.isArray(userData.openedImageIds)) {
+                        openedImageIds = userData.openedImageIds;
+                    }
+                } else {
+                    // Nếu tài liệu người dùng chưa có, tạo nó với mảng rỗng
+                    console.warn(`User document for ${currentUserId} not found. Creating it.`);
+                    await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
                 }
 
-                const openedIndices = openedImageIds.map(id => id - 1);
+                // Bây giờ logic tính toán sẽ đúng
+                const openedIndices = openedImageIds.map(id => id - 1); // convert 1-based ID to 0-based index
                 const allIndices = defaultImageUrls.map((_, index) => index);
                 const remainingIndices = allIndices.filter(index => !openedIndices.includes(index));
                 setAvailableImageIndices(remainingIndices);
+
             } catch (error) {
-                console.error("Error fetching user data:", error);
-                // Trường hợp lỗi, set mảng rỗng để tránh hiển thị sai
-                setAvailableImageIndices([]);
+                console.error("Error fetching user data in lat-the.tsx:", error);
+                // Fallback: Nếu lỗi, vẫn cho người dùng chơi với tất cả ảnh
+                setAvailableImageIndices(defaultImageUrls.map((_, index) => index));
             } finally {
                 setIsLoading(false);
             }
         };
 
-        // Chỉ thực hiện lấy dữ liệu khi `currentUserId` đã có giá trị (không phải null/undefined)
-        if (currentUserId) {
-            fetchOpenedImages();
-        } else {
-            // Xử lý trường hợp chưa có ID người dùng (ví dụ: đang đăng nhập)
-            // Ngăn việc hiển thị sai số lượng ảnh tổng
-            setIsLoading(false); 
-            setAvailableImageIndices([]); // Set về rỗng để số lượng hiển thị là 0
-        }
+        fetchOpenedImages();
     }, [currentUserId]);
-    // === KẾT THÚC PHẦN SỬA ĐỔI ===
+    // ======[ KẾT THÚC SỬA LỖI ]======
 
+    // MOVED: Hàm cập nhật Firestore
     const addOpenedImagesToFirestore = async (imageIds: number[]) => {
         if (!currentUserId || imageIds.length === 0) return;
         const userDocRef = doc(db, 'users', currentUserId);
@@ -472,8 +474,13 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
+    // NEW: Hàm xử lý logic mở thẻ
     const handleOpenCards = (count: 1 | 4) => {
-        if (isLoading || availableImageIndices.length < count) {
+        if (isLoading) {
+            alert("Đang tải dữ liệu, vui lòng thử lại sau giây lát.");
+            return;
+        }
+        if (availableImageIndices.length < count) {
             alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
             return;
         }
@@ -505,6 +512,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
+    // NEW: Hàm đóng popup và trao thưởng
     const handleCloseOverlay = (openedCount: number) => {
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
@@ -516,8 +524,11 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     };
 
     if (isLoading) {
-        return <div style={{color: 'white', fontSize: '1.5rem'}}>Đang tải dữ liệu rương...</div>;
+        return <div style={{color: 'white', fontSize: '1.5rem', textAlign: 'center'}}>Đang tải dữ liệu rương...</div>;
     }
+
+    // Chỉ hiển thị rương "Rương Từ Vựng" và "Rương Miễn Phí"
+    const relevantChests = CHEST_DATA.filter(chest => chest.id === 'legendary_chest' || chest.id === 'daily_chest');
 
     return (
         <>
@@ -533,16 +544,18 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             )}
 
             <div className="chest-gallery-container">
-                {CHEST_DATA.map((chest) => (
-                    // Chỉ hiển thị rương từ vựng trong màn hình này
-                    chest.id === 'legendary_chest' && (
-                        <ChestUI
-                            key={chest.id}
-                            {...chest}
-                            onOpen1={() => handleOpenCards(1)}
-                            onOpen10={() => handleOpenCards(4)} 
-                        />
-                    )
+                {relevantChests.map((chest) => (
+                    <ChestUI
+                        key={chest.id}
+                        {...chest}
+                        onOpen1={() => {
+                            if (chest.id === 'legendary_chest') handleOpenCards(1);
+                            // Thêm logic cho rương miễn phí nếu cần
+                        }}
+                        onOpen10={() => {
+                            if (chest.id === 'legendary_chest') handleOpenCards(4);
+                        }} 
+                    />
                 ))}
             </div>
 
