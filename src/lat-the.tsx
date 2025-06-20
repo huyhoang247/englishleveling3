@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 
 // Import các tài nguyên cần thiết
 import { db } from './firebase.js'; // Điều chỉnh đường dẫn nếu cần
@@ -167,6 +167,11 @@ const GlobalStyles = () => (
         /* --- Overlay, Card & Loading Styles --- */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        /* OPTIMIZATION: Added keyframe for flipping */
+        @keyframes flip-in {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(180deg); }
+        }
         
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
@@ -176,12 +181,29 @@ const GlobalStyles = () => (
         .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
         .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
         .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
+        
+        /* OPTIMIZATION: Card animation logic moved to pure CSS */
         .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; will-change: transform; }
-        .card-container.flipped .card-inner { transform: rotateY(180deg); }
+        .card-inner { 
+            position: relative; width: 100%; height: 100%; 
+            transform-style: preserve-3d; will-change: transform; 
+        }
+        .card-container.is-flipping .card-inner {
+            animation-name: flip-in;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards; /* Giữ trạng thái lật */
+            animation-timing-function: ease-in-out;
+        }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
-        .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.18); }
+        .card-front {
+            transform: rotateY(180deg);
+            padding: 6px;
+            box-sizing: border-box;
+            /* OPTIMIZATION: Removed backdrop-filter (major performance bottleneck). Replaced with a simple transparent background. */
+            background: rgba(42, 49, 78, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
         .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -189,6 +211,7 @@ const GlobalStyles = () => (
     `}
     </style>
 );
+
 
 // ========================================================================
 // === 2. CÁC COMPONENT CON ==============================================
@@ -233,39 +256,43 @@ const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
 
 interface ImageCard { id: number; url: string; }
 
-const Card = ({ cardData, isFlipped }: { cardData: ImageCard, isFlipped: boolean }) => (
-    <div className={`card-container ${isFlipped ? 'flipped' : ''}`}>
-        <div className="card-inner">
+// OPTIMIZATION: Wrapped in React.memo and props updated for CSS animation
+const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
+    <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
+        <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}>
             <div className="card-face card-back">?</div>
             <div className="card-face card-front">
                 <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
             </div>
         </div>
     </div>
-);
+));
 
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
-    const [isFlipped, setIsFlipped] = useState(false);
+    const [isFlipping, setIsFlipping] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
-        const t1 = setTimeout(() => setIsFlipped(true), 500);
-        const t2 = setTimeout(() => setIsProcessing(false), 1300);
+        // Start flipping after a short delay
+        const t1 = setTimeout(() => setIsFlipping(true), 300);
+        // Enable buttons after flip animation is complete (800ms animation)
+        const t2 = setTimeout(() => setIsProcessing(false), 300 + 800);
         return () => { clearTimeout(t1); clearTimeout(t2); };
     }, [card]);
 
     const handleOpenAgain = () => {
         if (isProcessing) return;
         setIsProcessing(true);
-        setIsFlipped(false);
-        setTimeout(() => { onOpenAgain(); }, 600);
+        setIsFlipping(false);
+        // Wait for card to visually flip back (though it happens instantly in DOM) before calling parent
+        setTimeout(() => { onOpenAgain(); }, 300);
     }
 
     return (
         <>
             <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px' }}>
-                    <Card cardData={card} isFlipped={isFlipped} />
+                    <Card cardData={card} isFlipping={isFlipping} flipDelay={0} />
                 </div>
             </div>
             <div className="overlay-footer">
@@ -278,28 +305,28 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
+// OPTIMIZATION: Logic rewritten to use CSS animations instead of sequential state updates
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
-    const [flippedIndices, setFlippedIndices] = useState<Set<number>>(new Set());
+    const [startFlipping, setStartFlipping] = useState(false);
     const [phase, setPhase] = useState('DEALING');
 
     const startRound = useCallback(() => {
         setPhase('DEALING');
-        setFlippedIndices(new Set());
+        setStartFlipping(false);
+
+        // Wait for deal-in animation to finish
+        const totalDealTime = 500 + 80 * cards.length; 
         setTimeout(() => {
-            const totalDealTime = 1000 + 80 * cards.length;
-            setTimeout(() => {
-                setPhase('FLIPPING');
-                const flip = (i: number) => {
-                    if (i >= cards.length) {
-                        setTimeout(() => setPhase('REVEALED'), 800);
-                        return;
-                    }
-                    setFlippedIndices(p => new Set(p).add(i));
-                    setTimeout(() => flip(i + 1), 200);
-                };
-                flip(0);
-            }, totalDealTime);
-        }, 300);
+            setPhase('FLIPPING');
+            setStartFlipping(true); // Trigger animations for all cards at once
+
+            // Calculate when the last card will finish flipping to enable buttons
+            const flipDuration = 800; // From CSS
+            const lastCardDelay = 200 * (cards.length - 1); // From inline style
+            const totalFlipTime = flipDuration + lastCardDelay;
+
+            setTimeout(() => setPhase('REVEALED'), totalFlipTime);
+        }, totalDealTime);
     }, [cards]);
 
     useEffect(() => {
@@ -328,7 +355,11 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
                 <div className="four-card-grid-container">
                     {cards.map((card, index) => (
                         <div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
-                            <Card cardData={card} isFlipped={flippedIndices.has(index)} />
+                            <Card 
+                                cardData={card} 
+                                isFlipping={startFlipping} 
+                                flipDelay={index * 200} // Staggered delay for each card
+                            />
                         </div>
                     ))}
                 </div>
