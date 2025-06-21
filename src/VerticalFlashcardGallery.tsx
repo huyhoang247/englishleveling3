@@ -1,4 +1,3 @@
---- START OF FILE VerticalFlashcardGallery.tsx ---
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
