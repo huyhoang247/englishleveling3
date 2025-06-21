@@ -1,3 +1,5 @@
+--- START OF FILE VerticalFlashcardGallery.tsx ---
+
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
@@ -13,7 +15,7 @@ interface Playlist {
   id: string;
   name: string;
   cardIds: number[];
-  isPinned?: boolean; // THÊM THUỘC TÍNH GHIM
+  isPinned?: boolean;
 }
 interface VerticalFlashcardGalleryProps {
   hideNavBar: () => void;
@@ -35,12 +37,18 @@ interface VocabularyData {
   synonyms: string[];
   antonyms: string[];
 }
+// Tối ưu: Loại bỏ isFavorite khỏi đây, vì nó là trạng thái động của user, không phải data gốc của card.
 interface Flashcard {
   id: number;
   imageUrl: StyledImageUrls;
-  isFavorite: boolean;
   vocabulary: VocabularyData;
 }
+// Giao diện cho card sẽ hiển thị trên gallery (kết hợp data gốc và trạng thái động)
+interface DisplayCard {
+    card: Flashcard;
+    isFavorite: boolean;
+}
+
 const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
   const urls: string[] = [];
   for (let i = 1; i <= count; i++) {
@@ -82,16 +90,22 @@ const vocabularyData: VocabularyData[] = [
   ...initialVocabularyData,
   ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
 ];
-const ALL_POSSIBLE_FLASHCARDS: Flashcard[] = Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
-    const vocab = vocabularyData[i] || { word: `Word ${i + 1}`, meaning: `Meaning ${i + 1}`, example: `Example ${i + 1}`, phrases:[], popularity: 'Thấp', synonyms:[], antonyms:[] };
-    const imageUrls: StyledImageUrls = {
-        default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${i + 1}`,
-        anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${i + 1}`,
-        comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${i + 1}`,
-        realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
-    };
-    return { id: i + 1, imageUrl: imageUrls, isFavorite: false, vocabulary: vocab };
-});
+
+// --- TỐI ƯU 1: Chuyển mảng dữ liệu gốc thành Map để tra cứu O(1) ---
+const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
+    Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
+        const vocab = vocabularyData[i] || { word: `Word ${i + 1}`, meaning: `Meaning ${i + 1}`, example: `Example ${i + 1}`, phrases:[], popularity: 'Thấp', synonyms:[], antonyms:[] };
+        const imageUrls: StyledImageUrls = {
+            default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${i + 1}`,
+            anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${i + 1}`,
+            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${i + 1}`,
+            realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
+        };
+        const card: Flashcard = { id: i + 1, imageUrl: imageUrls, vocabulary: vocab };
+        return [i + 1, card]; // Key là id, value là object card
+    })
+);
+
 const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1",
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
@@ -111,25 +125,26 @@ const animations = `
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
 `;
 
-
-// OPTIMIZATION 3: Tách FlashcardItem ra component riêng và memoize nó.
+// Tách FlashcardItem ra component riêng và memoize nó.
+// --- TỐI ƯU 3: Cập nhật props cho FlashcardItem để React.memo hoạt động ---
 interface FlashcardItemProps {
   card: Flashcard;
+  isFavorite: boolean; // Truyền isFavorite như một prop riêng
   visualStyle: string;
   onImageClick: (card: Flashcard) => void;
   onFavoriteClick: (id: number) => void;
   getImageUrlForStyle: (card: Flashcard, style: string) => string;
 }
 
-const FlashcardItem = memo(({ card, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
+const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
   return (
     <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
       <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
-        <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${card.isFavorite ? 'scale-110' : 'scale-100'}`}
+        <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${isFavorite ? 'scale-110' : 'scale-100'}`}
                 onClick={() => onFavoriteClick(card.id)}
-                aria-label={card.isFavorite ? "Quản lý trong Playlist" : "Thêm vào Playlist"}>
-            <img src={card.isFavorite ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png" : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"} alt={card.isFavorite ? "Favorite icon" : "Unfavorite icon"} className={`h-4 w-4 transition-all duration-300 ${card.isFavorite ? 'opacity-100' : 'opacity-75'}`} />
+                aria-label={isFavorite ? "Quản lý trong Playlist" : "Thêm vào Playlist"}>
+            <img src={isFavorite ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png" : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"} alt={isFavorite ? "Favorite icon" : "Unfavorite icon"} className={`h-4 w-4 transition-all duration-300 ${isFavorite ? 'opacity-100' : 'opacity-75'}`} />
         </button>
       </div>
       <div className="w-full">
@@ -175,7 +190,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
   const [playlistSearch, setPlaylistSearch] = useState('');
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
-  const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false); // STATE MỚI CHO LOADING
+  const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false);
 
   // --- Derived State ---
   const allFavoriteCardIds = useMemo(() => {
@@ -191,11 +206,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
-        // onSnapshot sẽ tự động cập nhật playlists khi có thay đổi trên Firestore
-        // nên chúng ta không cần thêm các playlist ví dụ mỗi lần snapshot chạy
         setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
       } else {
-        // Nếu user chưa có data, có thể tạo ví dụ tại đây
          const examplePlaylists: Playlist[] = [
           {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
           {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
@@ -211,44 +223,43 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return () => unsubscribe();
   }, [currentUser]);
 
-  // --- Logic lọc và phân trang ---
-  const filteredFlashcardsByTab = useMemo(() => {
-    const getCardWithFavoriteStatus = (id: number): Flashcard | undefined => {
-      const card = ALL_POSSIBLE_FLASHCARDS.find(c => c.id === id);
-      if (!card) return undefined;
-      return {
-        ...card,
-        isFavorite: allFavoriteCardIds.has(id)
-      };
+  // --- TỐI ƯU 2: Sửa logic tính toán, sử dụng ALL_CARDS_MAP để tăng tốc độ ---
+  const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
+    const getDisplayCard = (id: number): DisplayCard | undefined => {
+        const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
+        if (!card) return undefined;
+        return {
+            card, // Giữ nguyên tham chiếu đến object card gốc
+            isFavorite: allFavoriteCardIds.has(id) // Lấy trạng thái favorite
+        };
     };
 
+    let cardIdsToShow: number[] = [];
+
     if (activeTab === 'collection') {
-      return [...openedImageIds].reverse()
-        .map(id => getCardWithFavoriteStatus(id))
-        .filter((card): card is Flashcard => card !== undefined);
+        cardIdsToShow = [...openedImageIds].reverse();
+    } else if (activeTab === 'favorite') {
+        if (selectedPlaylistId === 'all') {
+            // Hiển thị tất cả card yêu thích, sắp xếp theo ID để ổn định
+            cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
+        } else {
+            const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
+            // Sắp xếp ID trong playlist để có thứ tự ổn định
+            cardIdsToShow = selectedPlaylist ? [...selectedPlaylist.cardIds].sort((a,b) => b-a) : [];
+        }
     }
+    
+    // Chỉ một lần map duy nhất, mỗi lần map là một phép tra cứu O(1)
+    return cardIdsToShow
+        .map(id => getDisplayCard(id))
+        .filter((item): item is DisplayCard => item !== undefined);
 
-    if (activeTab === 'favorite') {
-      const allFavorites = [...allFavoriteCardIds]
-        .map(id => getCardWithFavoriteStatus(id))
-        .filter((card): card is Flashcard => card !== undefined);
-
-      if (selectedPlaylistId === 'all') {
-        return allFavorites;
-      }
-      const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
-      if (selectedPlaylist) {
-        const playlistCardIds = new Set(selectedPlaylist.cardIds);
-        return allFavorites.filter(card => playlistCardIds.has(card.id));
-      }
-      return [];
-    }
-    return [];
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  // --- TỐI ƯU 4: Cập nhật biến này vì cấu trúc dữ liệu đã thay đổi
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
@@ -543,10 +554,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
                   <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {flashcardsForCurrentPage.map((card) => (
+                    {/* --- TỐI ƯU 5: Cập nhật cách truyền props cho FlashcardItem --- */}
+                    {flashcardsForCurrentPage.map(({ card, isFavorite }) => (
                       <FlashcardItem
                         key={card.id}
                         card={card}
+                        isFavorite={isFavorite}
                         visualStyle={visualStyle}
                         onImageClick={openVocabDetail}
                         onFavoriteClick={handleFavoriteClick}
