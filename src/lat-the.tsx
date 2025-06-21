@@ -460,7 +460,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
-    const [isOpening, setIsOpening] = useState(false);
+    const [isOpening, setIsOpening] = useState(false); // OPTIMIZATION: Đổi tên từ isLoading sang isOpening để rõ ràng hơn
 
     useEffect(() => {
         const fetchOpenedImages = async () => {
@@ -498,6 +498,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
+    // OPTIMIZATION: Hàm mở thẻ được làm lại để preload ảnh
     const handleOpenCards = async (count: 1 | 4) => {
         if (isLoading || isOpening || availableImageIndices.length < count) {
             if (!isOpening && availableImageIndices.length < count) {
@@ -524,20 +525,22 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
 
         try {
+            // Tải trước tất cả các ảnh sẽ được hiển thị
             const preloadPromises = imageUrlsToPreload.map(src => new Promise<void>((resolve, reject) => {
                 const img = new Image();
                 img.src = src;
                 img.onload = () => resolve();
-                img.onerror = reject;
+                img.onerror = reject; // Xử lý lỗi nếu ảnh không tải được
             }));
             
             await Promise.all(preloadPromises);
 
+            // Chỉ sau khi ảnh đã tải xong, chúng ta mới cập nhật state và hiển thị overlay
             setAvailableImageIndices(remainingIndices);
             addOpenedImagesToFirestore(selectedIds);
             setCardsForPopup(selectedCards);
             
-            setIsOpening(false);
+            setIsOpening(false); // Tắt màn hình loading
 
             if (count === 1) {
                 setShowSingleOverlay(true);
@@ -547,7 +550,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         } catch (error) {
             console.error("Lỗi khi tải trước hình ảnh:", error);
             alert("Đã có lỗi xảy ra khi tải tài nguyên, vui lòng thử lại.");
-            setIsOpening(false);
+            setIsOpening(false); // Tắt màn hình loading nếu có lỗi
         } 
     };
     
@@ -583,7 +586,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         key={chest.id}
                         {...chest}
                         onOpen1={() => handleOpenCards(1)}
-                        onOpen10={() => handleOpenCards(4)}
+                        onOpen10={() => handleOpenCards(4)} // Giả sử mở 4 thẻ cho nút x10 để khớp với FourCardsOpener
                     />
                 ))}
             </div>
