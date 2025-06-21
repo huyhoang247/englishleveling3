@@ -1,4 +1,7 @@
+// --- START OF FILE inventory.tsx ---
+
 import { useState, useEffect, useCallback, memo, useRef, useMemo } from 'react';
+import ProfileTab from './ProfileTab.tsx'; 
 import { uiAssets } from './game-assets.ts'; 
 import { itemDatabase } from './inventory/item-database.ts'; 
 import { playerInventoryData } from './inventory/player-inventory-data.ts'; 
@@ -344,49 +347,6 @@ const InventoryItem = memo(({ item, onItemClick }: { item: any, onItemClick: (it
   );
 });
 
-const EquipmentSlot = memo(({ slotType, item, onSlotClick }: { slotType: string, item: any, onSlotClick: (item: any, slotType: string) => void }) => {
-    const rarity = item ? item.rarity : 'E';
-    const glowClass = item ? getRarityGlowClass(rarity) : '';
-    
-    return (
-        <div 
-            className={`group relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br ${item ? getRarityGradient(rarity) : 'from-gray-900/60 to-gray-800/40'} rounded-lg border-2 ${item ? getRarityColor(rarity) : 'border-gray-700/60'} flex items-center justify-center cursor-pointer hover:brightness-125 transition-all duration-200 shadow-lg ${item ? '' : 'shadow-inner'} overflow-hidden ${glowClass}`}
-            onClick={() => onSlotClick(item, slotType)}
-        >
-            {item ? (
-                <>
-                    <div className="relative z-10 flex items-center justify-center w-full h-full">
-                        {item.icon.startsWith('http') ? <img src={item.icon} alt={item.name} className="w-full h-full object-contain p-1.5" /> : <div className="text-3xl">{item.icon}</div>}
-                    </div>
-                    <ItemTooltip item={item} isEquipped={true} />
-                </>
-            ) : (
-                (() => {
-                    const placeholder = getSlotPlaceholderIcon(slotType);
-                    if (placeholder.startsWith('http')) {
-                        return <img src={placeholder} alt={`${slotType} slot`} className="w-10 h-10 opacity-60" />;
-                    }
-                    return <span className="text-4xl text-gray-600 opacity-60">{placeholder}</span>;
-                })()
-            )}
-        </div>
-    );
-});
-
-const StatsPanel = memo(({ stats }: { stats: any }) => (
-    <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-700/70 w-full">
-        <h3 className="text-lg font-bold text-yellow-300 mb-4 text-center">Chỉ Số Nhân Vật</h3>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            {Object.entries(stats).map(([stat, value]) => (
-                <div key={stat} className="flex justify-between items-baseline">
-                    <span className="text-gray-400 capitalize">{formatStatName(stat)}:</span>
-                    <span className="font-semibold text-gray-200">{typeof value === 'number' ? value.toFixed(1) : value}</span>
-                </div>
-            ))}
-        </div>
-    </div>
-));
-
 // --- START: COMPONENT TAB LỌC MỚI ---
 type FilterType = 'all' | 'equipment' | 'material' | 'other';
 
@@ -606,38 +566,11 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
               ))}
             </div>
         ) : (
-            // Thay đổi: Sử dụng flexbox để căn giữa và giới hạn chiều rộng, tạo cảm giác gọn gàng, tinh tế hơn.
-            <div className="flex justify-center items-start pt-4 sm:pt-8 w-full">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-2 sm:gap-x-4 md:gap-x-8 w-full max-w-4xl">
-                    
-                    {/* CỘT TRÁI: Vũ khí, Găng tay, Giày */}
-                    <div className="flex flex-col items-center justify-start gap-y-6">
-                        {['weapon', 'gloves', 'boots'].map(slotType => (
-                            <EquipmentSlot key={slotType} slotType={slotType} item={equippedItems[slotType]} onSlotClick={handleProfileSlotClick} />
-                        ))}
-                    </div>
-
-                    {/* CỘT GIỮA: Mô hình nhân vật và Bảng chỉ số chi tiết */}
-                    <div className="flex flex-col items-center gap-y-6 w-full max-w-sm">
-                        {/* Khu vực hiển thị nhân vật được làm nổi bật hơn */}
-                        <div className="relative w-40 h-40 sm:w-56 sm:h-56 flex items-center justify-center">
-                            {/* Thêm hiệu ứng nền tinh tế để nhân vật nổi bật */}
-                            <div className="absolute inset-0 bg-yellow-500/5 rounded-full blur-2xl"></div>
-                            <span className="text-8xl sm:text-9xl drop-shadow-lg relative" style={{ transform: 'scaleX(-1)' }}>🐻</span>
-                        </div>
-                        
-                        {/* Tái sử dụng StatsPanel để hiển thị đầy đủ và đẹp mắt */}
-                        <StatsPanel stats={totalPlayerStats} />
-                    </div>
-
-                    {/* CỘT PHẢI: Mũ, Áo, Skin/Phụ kiện */}
-                    <div className="flex flex-col items-center justify-start gap-y-6">
-                        {['helmet', 'armor', 'skin'].map(slotType => (
-                            <EquipmentSlot key={slotType} slotType={slotType} item={equippedItems[slotType]} onSlotClick={handleProfileSlotClick} />
-                        ))}
-                    </div>
-                </div>
-            </div>
+            <ProfileTab
+                equippedItems={equippedItems}
+                totalPlayerStats={totalPlayerStats}
+                onSlotClick={handleProfileSlotClick}
+            />
         )}
       </main>
 
@@ -648,3 +581,4 @@ export default function InventoryManager({ onClose }: InventoryManagerProps) {
     </div>
   );
 }
+// --- END OF FILE inventory.tsx ---
