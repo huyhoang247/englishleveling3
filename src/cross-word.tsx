@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// --- UTILITY FUNCTIONS & LEVEL DATA (No changes) ---
+// --- UTILITY FUNCTIONS (Không thay đổi) ---
 
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
@@ -54,7 +54,7 @@ const generateCrosswordLayout = (words) => {
       }
     }
     if (!wordPlaced) {
-      console.warn("Could not place remaining words:", sortedWords);
+      // Không thể đặt từ nào nữa, đây là điều bình thường.
       break;
     }
   }
@@ -93,28 +93,125 @@ const normalizeCoords = (placedWords) => {
     return placedWords.map(pWord => ({ ...pWord, start: [pWord.start[0] - minY, pWord.start[1] - minX] }));
 };
 
-const rawLevels = [
-  {
-    id: 1,
-    letters: ["R", "A", "R", "E"],
-    gridWords: ["RARE", "EAR"],
-    allWords: ["RARE", "REAR", "EAR", "ERA", "ARE"],
-  },
-  {
-    id: 2,
-    letters: ["S", "T", "A", "E"],
-    gridWords: ["SEAT", "EAST", "ATE", "TEA"],
-    allWords: ["SEAT", "EAST", "SET", "SEA", "EAT", "TEA", "SAT", "ATE"],
-  },
-  {
-    id: 3,
-    letters: ["L", "O", "P", "E", "S"],
-    gridWords: ["SLOPE", "POLES", "LOSE"],
-    allWords: ["SLOPE", "POLES", "LOSE", "OPES", "POSE", "SOLE", "SLOP"],
-  }
-];
+// Helper function to create a frequency map of characters
+const getFrequencyMap = (arrOrStr) => {
+    const map = new Map();
+    for (const char of arrOrStr) {
+        map.set(char, (map.get(char) || 0) + 1);
+    }
+    return map;
+}
 
-// --- COMPONENTS (GameBoard and Cell are unchanged) ---
+// --- START: LOGIC TỰ ĐỘNG TẠO LEVEL ---
+
+const wordList = [
+  "Insurance", "Argument", "Influence", "Release", "Capacity", "Senate", "Massive",
+  "Stick", "District", "Budget", "Measure", "Cross", "Central", "Proud", "Core",
+  "County", "Species", "Conditions", "Touch", "Mass", "Platform", "Straight",
+  "Serious", "Encourage", "Due", "Memory", "Secretary", "Cold", "Instance",
+  "Foundation", "Separate", "Map", "Ice", "Statement", "Rich", "Previous",
+  "Necessary", "Engineering", "Heat", "Collection", "Labor", "Flow", "Floor",
+  "Variety", "Math", "Session", "Nuclear", "Roll", "Museum", "Limited",
+  "Constant", "Temperature", "Description", "Transition", "Chair", "Pattern",
+  "Demand", "Hate", "Classroom", "Army", "Spring", "Senior", "Wind", "Award",
+  "Clinical", "Trouble", "Grade", "Station", "Moments", "Wave", "Block",
+  "Compared", "Strength", "Phase", "Secret", "Highest", "Leaving", "Obvious",
+  "Terrible", "Motion", "Window", "Assume", "Cycle", "Suddenly", "Western",
+  "Broken", "Define", "Spiritual", "Concerns", "Random", "Moon", "Dangerous",
+  "Trees", "Trip", "Curious", "Heavy", "Fly", "Noticed", "March"
+].map(w => w.toUpperCase()); // Chuyển tất cả sang chữ hoa để nhất quán
+
+
+/**
+ * Tìm tất cả các từ trong danh sách đầy đủ có thể được tạo thành từ các chữ cái của seedWord.
+ */
+const findPossibleWords = (seedWord, fullWordList) => {
+  const seedFreq = getFrequencyMap(seedWord);
+  const possibleWords = [];
+
+  for (const candidateWord of fullWordList) {
+    if (candidateWord.length < 3) continue; // Bỏ qua các từ quá ngắn
+    const candidateFreq = getFrequencyMap(candidateWord);
+    let canBeFormed = true;
+    for (const [char, count] of candidateFreq.entries()) {
+      if (!seedFreq.has(char) || seedFreq.get(char) < count) {
+        canBeFormed = false;
+        break;
+      }
+    }
+    if (canBeFormed) {
+      possibleWords.push(candidateWord);
+    }
+  }
+  return possibleWords;
+};
+
+/**
+ * Tự động tạo các cấp độ từ một danh sách từ lớn.
+ */
+export const generateLevelsFromWordList = (sourceWords) => {
+  const levels = [];
+  const usedWords = new Set();
+
+  // Các hằng số để tinh chỉnh việc tạo level
+  const MIN_SEED_WORD_LENGTH = 7;
+  const MIN_WORDS_IN_LEVEL_GROUP = 5;
+  const NUM_CANDIDATES_FOR_GRID = 7;
+  const MIN_PLACED_GRID_WORDS = 3;
+
+  const sortedSourceWords = [...sourceWords].sort((a, b) => b.length - a.length);
+
+  for (const seedWord of sortedSourceWords) {
+    if (usedWords.has(seedWord) || seedWord.length < MIN_SEED_WORD_LENGTH) {
+      continue;
+    }
+
+    const possibleWords = findPossibleWords(seedWord, sourceWords);
+
+    if (possibleWords.length < MIN_WORDS_IN_LEVEL_GROUP) {
+      continue;
+    }
+
+    const gridWordCandidates = [...possibleWords]
+      .sort((a, b) => b.length - a.length)
+      .slice(0, NUM_CANDIDATES_FOR_GRID);
+      
+    const placedWordsLayout = generateCrosswordLayout(gridWordCandidates);
+
+    if (placedWordsLayout.length >= MIN_PLACED_GRID_WORDS) {
+      const gridWords = placedWordsLayout.map(p => p.word);
+      
+      const newLevel = {
+        id: levels.length + 1,
+        letters: seedWord.split(''),
+        gridWords: gridWords,
+        allWords: [...new Set(possibleWords)],
+      };
+      
+      levels.push(newLevel);
+      console.log(`Tạo thành công Level ${newLevel.id} từ từ gốc "${seedWord}". Bao gồm ${possibleWords.length} từ.`);
+
+      possibleWords.forEach(word => usedWords.add(word));
+    }
+  }
+
+  if (levels.length === 0) {
+      console.warn("Không thể tạo bất kỳ level nào từ danh sách từ. Trả về một level mặc định.");
+      return [{
+        id: 1,
+        letters: ["E", "X", "A", "M", "P", "L", "E"],
+        gridWords: ["EXAMPLE", "MAPLE", "LAME"],
+        allWords: ["EXAMPLE", "MAPLE", "LAME", "MEAL", "MALE", "PALM", "LAMP"],
+      }];
+  }
+
+  return levels;
+};
+
+// --- END: LOGIC TỰ ĐỘNG TẠO LEVEL ---
+
+
+// --- COMPONENTS (Không thay đổi) ---
 const Cell = ({ char, revealed, isTarget }) => {
   const baseClasses = "w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-500";
   const revealedClasses = "bg-white text-gray-800 transform scale-105 shadow-lg";
@@ -185,8 +282,6 @@ const GameBoard = ({ level, foundWords }) => {
     );
 };
 
-
-// --- UPDATED WordInputControl with dual-line display ---
 const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   const [currentWord, setCurrentWord] = useState('');
 
@@ -208,29 +303,24 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
 
   return (
     <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
-      {/* Answer Display Bar */}
       <div 
         className={`w-full h-20 bg-white rounded-lg shadow-inner flex flex-col items-center justify-center px-4 transition-colors
         ${isShaking ? 'animate-shake bg-red-100' : ''}`}
       >
         {currentWord ? (
           <>
-            {/* Uppercase Display */}
             <span className="text-3xl font-bold tracking-[0.2em] text-gray-800 uppercase">
               {currentWord}
             </span>
-            {/* Lowercase Display */}
             <span className="text-base font-semibold tracking-wider text-gray-500">
               {currentWord.toLowerCase()}
             </span>
           </>
         ) : (
-          // Placeholder when empty
           <span className="text-gray-400 text-xl">...</span>
         )}
       </div>
 
-      {/* Letter Keyboard Row */}
       <div className="flex items-center justify-center gap-2 w-full">
         {letters.map((letter) => (
           <button
@@ -243,7 +333,6 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
         ))}
       </div>
 
-      {/* Action Buttons Row */}
       <div className="flex items-center justify-center gap-3 w-full pt-2">
          <button
           onClick={handleBackspace}
@@ -264,8 +353,6 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   );
 };
 
-
-// --- Toast Notification (No changes) ---
 const Toast = ({ message, show, type }) => {
     const baseClasses = "fixed bottom-5 right-5 px-6 py-3 rounded-lg text-white shadow-xl transition-transform duration-300 z-50";
     const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
@@ -278,17 +365,12 @@ const Toast = ({ message, show, type }) => {
     );
 };
 
-// Helper function to create a frequency map of characters
-const getFrequencyMap = (arrOrStr) => {
-    const map = new Map();
-    for (const char of arrOrStr) {
-        map.set(char, (map.get(char) || 0) + 1);
-    }
-    return map;
-}
 
-// --- Main App Component (No logic changes needed for this feature) ---
+// --- Main App Component (Đã được cập nhật để sử dụng level generator) ---
 export default function App() {
+  // Tự động tạo các cấp độ từ wordList chỉ một lần khi component được tải
+  const rawLevels = useMemo(() => generateLevelsFromWordList(wordList), []);
+
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
@@ -299,15 +381,17 @@ export default function App() {
     if (!currentRawLevel) return null;
     const generatedGrid = generateCrosswordLayout(currentRawLevel.gridWords);
     return { ...currentRawLevel, words: generatedGrid };
-  }, [currentLevelIndex]);
+  }, [currentLevelIndex, rawLevels]); // Thêm rawLevels vào dependency
   
   const keyboardLetters = useMemo(() => {
     if (!level) return [];
+    // Sử dụng `level.letters` từ level được tạo
     return [...new Set(level.letters)].sort();
   }, [level]);
 
   const levelLetterFreq = useMemo(() => {
     if (!level) return new Map();
+    // Sử dụng `level.letters` từ level được tạo
     return getFrequencyMap(level.letters);
   }, [level]);
 
@@ -381,7 +465,7 @@ export default function App() {
   if (!level) {
     return (
       <div className="min-h-screen bg-gray-800 flex items-center justify-center">
-        <h1 className="text-4xl font-bold text-white">Loading Levels...</h1>
+        <h1 className="text-4xl font-bold text-white">Đang tạo các màn chơi...</h1>
       </div>
     );
   }
@@ -401,6 +485,10 @@ export default function App() {
       `}</style>
 
       <div className="w-full max-w-sm mx-auto bg-white/20 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-5">
+        <header className='text-center mb-2'>
+            <h1 className='text-2xl font-bold text-white'>Ô Chữ Vui Vẻ</h1>
+            <p className='text-sm text-white/80'>Màn {level.id} / {rawLevels.length}</p>
+        </header>
         <main>
           {allGridWordsFound && (
               <div className="text-center mb-3 animate-pulse">
