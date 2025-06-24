@@ -93,16 +93,6 @@ const normalizeCoords = (placedWords) => {
     return placedWords.map(pWord => ({ ...pWord, start: [pWord.start[0] - minY, pWord.start[1] - minX] }));
 };
 
-const shuffleArray = (array) => {
-  let currentIndex = array.length, randomIndex;
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-  }
-  return array;
-};
-
 const rawLevels = [
   {
     id: 1,
@@ -196,21 +186,20 @@ const GameBoard = ({ level, foundWords }) => {
 };
 
 
-// --- NEW, MINIMAL & ELEGANT WordInputControl ---
-const WordInputControl = ({ letters, onWordSubmit }) => {
+// --- UPDATED WordInputControl with isShaking prop ---
+const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   const [currentWord, setCurrentWord] = useState('');
 
   const handleLetterClick = (letter: string) => {
-    // Prevent overly long words
     if (currentWord.length > 10) return;
     setCurrentWord(prev => prev + letter);
   };
 
   const handleSubmit = () => {
+    if (isShaking) return; // Prevent submitting while shaking
     if (currentWord.length > 1) {
-      onWordSubmit(currentWord);
+      onWordSubmit(currentWord, () => setCurrentWord(''));
     }
-    setCurrentWord(''); // Clear word after submit
   };
   
   const handleBackspace = () => {
@@ -220,7 +209,10 @@ const WordInputControl = ({ letters, onWordSubmit }) => {
   return (
     <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
       {/* Answer Display Bar */}
-      <div className="w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4">
+      <div 
+        className={`w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 transition-colors
+        ${isShaking ? 'animate-shake bg-red-100' : ''}`}
+      >
         <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase h-full flex items-center">
           {currentWord || <span className="text-gray-400 text-xl tracking-normal normal-case">...</span>}
         </span>
@@ -274,11 +266,12 @@ const Toast = ({ message, show, type }) => {
     );
 };
 
-// --- Main App Component (Updated to remove shuffle logic) ---
+// --- Main App Component with SHAKE LOGIC ---
 export default function App() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [isShaking, setIsShaking] = useState(false); // New state for shake effect
 
   const level = useMemo(() => {
     const currentRawLevel = rawLevels[currentLevelIndex];
@@ -287,7 +280,6 @@ export default function App() {
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex]);
   
-  // Now we only need the letters from the level, shuffling is done visually if needed but not required for logic
   const letters = level ? level.letters : [];
 
   useEffect(() => {
@@ -301,7 +293,7 @@ export default function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration);
   };
   
-  const handleWordSubmit = useCallback((word) => {
+  const handleWordSubmit = useCallback((word, clearInputCallback) => {
     if (!word || !level) return;
     const submittedWordUpper = word.toUpperCase();
 
@@ -317,8 +309,14 @@ export default function App() {
         }
     }
 
+    const triggerShake = () => {
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 600); // Duration of the shake animation
+    };
+
     if (!canBeFormed) {
         showToast("Không đủ chữ cái để tạo từ này!", "error");
+        triggerShake();
         return;
     }
     
@@ -329,8 +327,13 @@ export default function App() {
         const isGridWord = level.words.some(w => w.word === submittedWordUpper);
         showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ hợp lệ!`, "success");
     } else {
-      showToast("Sai rồi, thử lại nhé!", "error");
+      // THIS IS THE CORE CHANGE: Trigger shake instead of a toast
+      triggerShake();
     }
+    
+    // Clear the input in the child component
+    clearInputCallback();
+
   }, [level, foundWords]);
 
   const allGridWordsFound = useMemo(() => {
@@ -361,6 +364,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-blue-500 font-sans text-gray-800 flex flex-col items-center justify-center p-4">
+      {/* This style block injects the keyframes animation for the shake effect */}
+      <style>{`
+        @keyframes shake {
+          10%, 90% { transform: translateX(-1px); }
+          20%, 80% { transform: translateX(2px); }
+          30%, 50%, 70% { transform: translateX(-4px); }
+          40%, 60% { transform: translateX(4px); }
+        }
+        .animate-shake {
+          animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+        }
+      `}</style>
+
       <div className="w-full max-w-sm mx-auto bg-white/20 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-5">
         <main>
           {allGridWordsFound && (
@@ -372,6 +388,7 @@ export default function App() {
           <WordInputControl 
             letters={letters} 
             onWordSubmit={handleWordSubmit}
+            isShaking={isShaking}
           />
         </main>
         <footer className="mt-6 flex justify-center items-center space-x-4">
