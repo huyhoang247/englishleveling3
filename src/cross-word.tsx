@@ -70,12 +70,10 @@ const canPlaceWord = (grid, word, start, dir) => {
     const isIntersection = grid.has(key) && grid.get(key) === word[i];
     if (grid.has(key) && !isIntersection) return false;
     if (!isIntersection) {
-      // Check for adjacency. A new letter cannot be placed directly next to an existing one unless it's an intersection.
       const neighbors = dir === 'h' ? [`${currentY - 1},${currentX}`, `${currentY + 1},${currentX}`] : [`${currentY},${currentX - 1}`, `${currentY},${currentX + 1}`];
       if (neighbors.some(nKey => grid.has(nKey))) return false;
     }
   }
-  // Check for letters immediately before and after the word's intended placement
   const beforeY = dir === 'v' ? y - 1 : y;
   const beforeX = dir === 'h' ? x - 1 : x;
   if(grid.has(`${beforeY},${beforeX}`)) return false;
@@ -211,88 +209,96 @@ const GameBoard = ({ level, foundWords }) => {
     );
 };
 
-// 3. Letter Grid Component
-const LetterGrid = ({ letters, onWordSubmit, onShuffle }) => {
-  const [selectedIndices, setSelectedIndices] = useState([]);
-  const [currentWord, setCurrentWord] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
+// 3. Word Input Control Component (Replaces LetterGrid)
+const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
+  const [selection, setSelection] = useState<{ letter: string; originalIndex: number }[]>([]);
 
-  // Determine grid columns based on the number of letters for responsive layout
-  const gridCols = letters.length <= 4 ? 2 : (letters.length <= 6 ? 3 : 3);
+  const currentWord = useMemo(() => selection.map(s => s.letter).join(''), [selection]);
+  const selectedIndices = useMemo(() => new Set(selection.map(s => s.originalIndex)), [selection]);
+
+  const handleLetterClick = (letter, index) => {
+    if (selectedIndices.has(index)) return;
+    setSelection(prev => [...prev, { letter, originalIndex: index }]);
+  };
+
+  const handleBackspace = () => {
+    setSelection(prev => prev.slice(0, -1));
+  };
+
+  const handleSubmit = () => {
+    if (currentWord.length > 0) {
+      onWordSubmit(currentWord);
+    }
+    setSelection([]);
+  };
+
+  const handleShuffleClick = () => {
+    onShuffle();
+    setSelection([]);
+  };
+
+  const gridCols = letters.length <= 4 ? 2 : (letters.length <= 6 ? 3 : 4);
   const gridClass = `grid-cols-${gridCols}`;
 
-  // Handle pointer down (start of drag)
-  const handlePointerDown = (index) => {
-    setIsDragging(true);
-    setSelectedIndices([index]);
-    setCurrentWord(letters[index]);
-  };
-
-  // Handle pointer enter (dragging over new letter)
-  const handlePointerEnter = (index) => {
-    if (isDragging && !selectedIndices.includes(index)) {
-      const newIndices = [...selectedIndices, index];
-      setSelectedIndices(newIndices);
-      setCurrentWord(newIndices.map(i => letters[i]).join(''));
-    }
-  };
-
-  // Handle pointer up (end of drag) or mouse leave (if dragging outside grid)
-  const handlePointerUp = () => {
-    if (isDragging) {
-      if (currentWord) onWordSubmit(currentWord);
-      setIsDragging(false);
-      setSelectedIndices([]);
-      setCurrentWord('');
-    }
-  };
-
   return (
-    <div 
-      className="flex flex-col items-center justify-center mt-8 space-y-6 select-none"
-      onPointerUp={handlePointerUp}
-      onMouseLeave={handlePointerUp} 
-    >
-      <div className="flex items-center justify-center w-full h-12 bg-gray-100 rounded-lg shadow-inner">
-        <span className="text-3xl font-bold tracking-widest text-gray-700">{currentWord}</span>
+    <div className="flex flex-col items-center mt-6 select-none space-y-5">
+      {/* Answer Display Bar */}
+      <div className="w-full h-16 bg-white rounded-xl shadow-inner flex items-center justify-center px-4">
+        <span className="text-3xl sm:text-4xl font-bold tracking-[0.2em] text-gray-800 uppercase">{currentWord}</span>
       </div>
-      <div className={`grid ${gridClass} gap-3`}>
+
+      {/* Letter Tiles Grid */}
+      <div className={`grid ${gridClass} gap-3 w-full max-w-xs mx-auto`}>
         {letters.map((letter, index) => {
-          const isSelected = selectedIndices.includes(index);
+          const isSelected = selectedIndices.has(index);
           return (
-            <div
-              key={index}
-              className={`w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center text-4xl font-bold text-white bg-blue-500 rounded-lg cursor-pointer shadow-lg transition-all duration-150 ${isSelected ? 'transform scale-110 bg-yellow-500' : 'hover:bg-blue-600'}`}
-              onPointerDown={() => handlePointerDown(index)}
-              onPointerEnter={() => handlePointerEnter(index)}
-            >
-              {letter}
+            <div key={index} className="aspect-square">
+              <button
+                onClick={() => handleLetterClick(letter, index)}
+                className={`w-full h-full flex items-center justify-center text-4xl font-bold text-white bg-blue-500 rounded-xl shadow-lg transition-all duration-200 ease-in-out hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-yellow-300 ${isSelected ? 'invisible' : 'visible'}`}
+              >
+                {letter}
+              </button>
             </div>
           );
         })}
       </div>
-      <div className="flex justify-center w-full">
-          <button 
-            className="flex items-center justify-center p-3 bg-gray-200 rounded-full cursor-pointer shadow-md hover:bg-gray-300"
-            onClick={onShuffle}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className="bi bi-shuffle text-gray-600" viewBox="0 0 16 16">
-                <path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/>
-                <path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/>
-            </svg>
-            <span className="ml-2 font-semibold text-gray-700">Trộn chữ</span>
-          </button>
+
+      {/* Action Buttons */}
+      <div className="flex justify-center items-center w-full space-x-3 pt-2">
+        <button
+          onClick={handleShuffleClick}
+          className="flex items-center justify-center px-4 py-3 bg-gray-200 rounded-full shadow-md hover:bg-gray-300 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-shuffle text-gray-700" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
+          <span className="ml-2 font-semibold text-gray-700">Trộn chữ</span>
+        </button>
+         <button
+            onClick={handleBackspace}
+            className="flex items-center justify-center w-12 h-12 bg-yellow-500 rounded-full shadow-md hover:bg-yellow-600 transition-colors text-white"
+            aria-label="Xoá ký tự cuối"
+        >
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-backspace-fill" viewBox="0 0 16 16"><path d="M15.683 3a2 2 0 0 0-2-2h-7.08a2 2 0 0 0-1.519.698L.241 7.35a1 1 0 0 0 0 1.302l4.843 5.65A2 2 0 0 0 6.603 15h7.08a2 2 0 0 0 2-2V3zM5.829 5.854a.5.5 0 1 1 .707-.708l2.147 2.147 2.146-2.147a.5.5 0 1 1 .707.708L9.39 8l2.146 2.146a.5.5 0 0 1-.707.708L8.683 8.707l-2.147 2.147a.5.5 0 0 1-.707-.708L7.976 8 5.829 5.854z"/></svg>
+        </button>
+        <button
+            onClick={handleSubmit}
+            className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-full shadow-md hover:bg-green-600 transition-colors text-white"
+            aria-label="Kiểm tra từ"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-check-lg" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022z"/></svg>
+        </button>
       </div>
     </div>
   );
 };
+
 
 // 4. Toast Notification
 const Toast = ({ message, show, type }) => {
     const baseClasses = "fixed bottom-5 right-5 px-6 py-3 rounded-lg text-white shadow-xl transition-transform duration-300 z-50";
     const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
     const showClasses = "transform translate-y-0 opacity-100";
-    const hideClasses = "transform translate-y-10 opacity-0";
+    const hideClasses = "transform translate-y-10 opacity-0 pointer-events-none";
     return (
         <div className={`${baseClasses} ${typeClasses[type]} ${show ? showClasses : hideClasses}`}>
             {message}
@@ -311,7 +317,6 @@ export default function App() {
   const level = useMemo(() => {
     const currentRawLevel = rawLevels[currentLevelIndex];
     if (!currentRawLevel) return null;
-    // Generate crossword layout for the grid words
     const generatedGrid = generateCrosswordLayout(currentRawLevel.gridWords);
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex]);
@@ -322,8 +327,8 @@ export default function App() {
   // Effect to reset game state when level changes
   useEffect(() => {
     if (level) {
-      setFoundWords([]); // Clear found words for new level
-      setShuffledLetters(shuffleArray([...level.letters])); // Reshuffle letters for new level
+      setFoundWords([]);
+      setShuffledLetters(shuffleArray([...level.letters]));
     }
   }, [level]);
 
@@ -336,7 +341,7 @@ export default function App() {
   // Callback for when a word is submitted
   const handleWordSubmit = useCallback((word) => {
     if (!word || !level) return;
-    const submittedWordUpper = word.toUpperCase(); // Normalize to uppercase
+    const submittedWordUpper = word.toUpperCase();
 
     if (foundWords.includes(submittedWordUpper)) {
       showToast("Đã tìm thấy từ này rồi!", "info");
@@ -344,7 +349,8 @@ export default function App() {
       setFoundWords(prev => [...prev, submittedWordUpper]);
       showToast("Chính xác!", "success");
     } else if (level.allWords.includes(submittedWordUpper)) {
-      showToast(`"${submittedWordUpper}" là một từ đúng! (Bonus)`, "success");
+        setFoundWords(prev => [...prev, submittedWordUpper]);
+        showToast(`"${submittedWordUpper}" là một từ đúng!`, "success");
     } else {
       showToast("Sai rồi, thử lại nhé!", "error");
     }
@@ -389,24 +395,20 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-400 to-indigo-500 font-sans text-gray-800 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto bg-white/30 backdrop-blur-md rounded-2xl shadow-2xl p-4 sm:p-6">
-        <header className="text-center mb-4">
-          <h1 className="text-4xl font-bold text-white tracking-wider">Ô Chữ Vui Vẻ</h1>
-          <p className="text-white/80">Màn {level.id} - Tìm {level.words.length} từ trong lưới</p>
-        </header>
         <main>
           <GameBoard level={level} foundWords={foundWords} />
           {allWordsFound && (
               <div className="text-center my-4 animate-pulse">
-                <p className="text-2xl font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải được ô chữ! 🎉</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải được ô chữ! 🎉</p>
               </div>
           )}
-          <LetterGrid 
+          <WordInputControl 
             letters={shuffledLetters} 
             onWordSubmit={handleWordSubmit}
             onShuffle={handleShuffle}
           />
         </main>
-        <footer className="mt-8 flex justify-center items-center space-x-4">
+        <footer className="mt-6 flex justify-center items-center space-x-4">
             <button onClick={resetLevel} className="px-6 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-colors">Làm mới</button>
             <button 
                 onClick={goToNextLevel} 
