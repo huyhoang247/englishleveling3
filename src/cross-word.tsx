@@ -48,7 +48,7 @@ const normalizeCoords = (placedWords) => {
 
 /**
  * [MỚI] Chấm điểm một vị trí đặt từ tiềm năng.
- * Điểm cao hơn cho các vị trí tạo ra nhiều kết nối.
+ * Điểm cao hơn cho các vị trí tạo ra nhiều kết nối và giúp ô chữ dày đặc hơn.
  */
 const calculatePlacementScore = (grid, word, start, dir) => {
     let score = 0;
@@ -68,7 +68,8 @@ const calculatePlacementScore = (grid, word, start, dir) => {
             ? [`${currentY - 1},${currentX}`, `${currentY + 1},${currentX}`] 
             : [`${currentY},${currentX - 1}`, `${currentY},${currentX + 1}`];
         
-        if (neighbors.some(nKey => grid.has(nKey))) {
+        // Chỉ cộng điểm kề nếu ô đó không phải là giao điểm
+        if (!grid.has(`${currentY},${currentX}`) && neighbors.some(nKey => grid.has(nKey))) {
             score += 1;
         }
     }
@@ -85,7 +86,7 @@ const generateCrosswordLayout = (words) => {
   const placedWords = [];
   const grid = new Map();
 
-  // Đặt từ đầu tiên
+  // Đặt từ đầu tiên (thường là từ dài nhất) làm mỏ neo
   const firstWord = sortedWords.shift();
   if (!firstWord) return [];
   const firstWordStart = [0, 0];
@@ -414,6 +415,7 @@ export default function App() {
   const level = useMemo(() => {
     const currentRawLevel = rawLevels[currentLevelIndex];
     if (!currentRawLevel) return null;
+    // Sử dụng logic tạo grid mới nhất ngay tại đây
     const generatedGrid = generateCrosswordLayout(currentRawLevel.gridWords);
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex, rawLevels]);
