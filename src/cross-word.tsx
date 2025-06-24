@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// --- UTILITY FUNCTIONS FOR AUTO-GENERATING GRID LAYOUT ---
+// --- UTILITY FUNCTIONS (No changes from previous version) ---
 
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
@@ -103,8 +103,7 @@ const shuffleArray = (array) => {
   return array;
 };
 
-
-// --- LEVEL DATA (SIMPLIFIED FOR AUTO-GENERATION) ---
+// --- LEVEL DATA (No changes) ---
 const rawLevels = [
   {
     id: 1,
@@ -126,12 +125,10 @@ const rawLevels = [
   }
 ];
 
+// --- COMPONENTS (GameBoard and Cell are unchanged) ---
 
-// --- COMPONENTS ---
-
-// 1. Grid Cell Component
 const Cell = ({ char, revealed, isTarget }) => {
-  const baseClasses = "w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-500";
+  const baseClasses = "w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-500";
   const revealedClasses = "bg-white text-gray-800 transform scale-105 shadow-lg";
   const hiddenClasses = "bg-blue-400 bg-opacity-50 shadow-inner";
   const notTargetClasses = "bg-transparent border-0";
@@ -143,20 +140,14 @@ const Cell = ({ char, revealed, isTarget }) => {
   );
 };
 
-// 2. Game Board Component
 const GameBoard = ({ level, foundWords }) => {
     const gridDimensions = useMemo(() => {
         let maxX = 0, maxY = 0;
         if (!level || !level.words) return { width: 0, height: 0 };
         level.words.forEach(({ word, start, dir }) => {
             const [y, x] = start;
-            if (dir === 'h') {
-                maxY = Math.max(maxY, y + 1);
-                maxX = Math.max(maxX, x + word.length);
-            } else {
-                maxY = Math.max(maxY, y + word.length);
-                maxX = Math.max(maxX, x + 1);
-            }
+            if (dir === 'h') { maxY = Math.max(maxY, y + 1); maxX = Math.max(maxX, x + word.length); } 
+            else { maxY = Math.max(maxY, y + word.length); maxX = Math.max(maxX, x + 1); }
         });
         return { width: maxX, height: maxY };
     }, [level]);
@@ -169,11 +160,8 @@ const GameBoard = ({ level, foundWords }) => {
             for (let i = 0; i < word.length; i++) {
                 const key = `${y},${x}`;
                 const existingCell = map.get(key);
-                if (existingCell) {
-                    existingCell.words.push(word);
-                } else {
-                    map.set(key, { char: word[i], words: [word] });
-                }
+                if (existingCell) { existingCell.words.push(word); } 
+                else { map.set(key, { char: word[i], words: [word] }); }
                 if (dir === 'h') x++; else y++;
             }
         });
@@ -197,10 +185,10 @@ const GameBoard = ({ level, foundWords }) => {
     }
 
     return (
-        <div className="p-4 flex justify-center items-center">
-            <div className="grid gap-1.5">
+        <div className="flex justify-center items-center">
+            <div className="grid gap-1">
                 {grid.map((row, y) => (
-                    <div key={y} className="flex gap-1.5">
+                    <div key={y} className="flex gap-1">
                         {row.map((cell) => <Cell key={cell.key} {...cell} />)}
                     </div>
                 ))}
@@ -209,28 +197,28 @@ const GameBoard = ({ level, foundWords }) => {
     );
 };
 
-// 3. Word Input Control Component (Replaces LetterGrid)
+// --- NEW AND IMPROVED WordInputControl Component ---
 const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
   const [selection, setSelection] = useState<{ letter: string; originalIndex: number }[]>([]);
 
   const currentWord = useMemo(() => selection.map(s => s.letter).join(''), [selection]);
   const selectedIndices = useMemo(() => new Set(selection.map(s => s.originalIndex)), [selection]);
 
-  const handleLetterClick = (letter, index) => {
+  const handleLetterClick = (letter: string, index: number) => {
     if (selectedIndices.has(index)) return;
     setSelection(prev => [...prev, { letter, originalIndex: index }]);
   };
 
-  const handleBackspace = () => {
-    setSelection(prev => prev.slice(0, -1));
-  };
-
   const handleSubmit = () => {
-    if (currentWord.length > 0) {
+    if (currentWord.length > 1) { // Only submit if word has 2+ letters
       onWordSubmit(currentWord);
     }
-    setSelection([]);
+    setSelection([]); // Clear selection after submit
   };
+  
+  const handleClear = () => {
+    setSelection([]);
+  }
 
   const handleShuffleClick = () => {
     onShuffle();
@@ -241,59 +229,61 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
   const gridClass = `grid-cols-${gridCols}`;
 
   return (
-    <div className="flex flex-col items-center mt-6 select-none space-y-5">
-      {/* Answer Display Bar */}
-      <div className="w-full h-16 bg-white rounded-xl shadow-inner flex items-center justify-center px-4">
-        <span className="text-3xl sm:text-4xl font-bold tracking-[0.2em] text-gray-800 uppercase">{currentWord}</span>
+    <div className="flex flex-col items-center mt-4 select-none space-y-4">
+      {/* Answer Bar - Click to Submit */}
+      <div 
+        onClick={handleSubmit}
+        className="w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 cursor-pointer hover:bg-gray-100 transition"
+      >
+        <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase">
+          {currentWord || <span className="text-gray-400 text-xl tracking-normal">Chọn chữ...</span>}
+        </span>
       </div>
 
       {/* Letter Tiles Grid */}
-      <div className={`grid ${gridClass} gap-3 w-full max-w-xs mx-auto`}>
+      <div className={`grid ${gridClass} gap-2 w-full max-w-[200px] mx-auto`}>
         {letters.map((letter, index) => {
           const isSelected = selectedIndices.has(index);
           return (
-            <div key={index} className="aspect-square">
-              <button
-                onClick={() => handleLetterClick(letter, index)}
-                className={`w-full h-full flex items-center justify-center text-4xl font-bold text-white bg-blue-500 rounded-xl shadow-lg transition-all duration-200 ease-in-out hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-yellow-300 ${isSelected ? 'invisible' : 'visible'}`}
-              >
-                {letter}
-              </button>
-            </div>
+            <button
+              key={index}
+              onClick={() => handleLetterClick(letter, index)}
+              disabled={isSelected}
+              className={`
+                w-full aspect-square flex items-center justify-center text-3xl font-bold text-white rounded-lg shadow-md transition-all duration-200 ease-in-out
+                ${isSelected 
+                  ? 'bg-yellow-500 scale-95 cursor-not-allowed' 
+                  : 'bg-blue-500 hover:bg-blue-600 active:scale-95'
+                }`
+              }
+            >
+              {letter}
+            </button>
           );
         })}
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-center items-center w-full space-x-3 pt-2">
+      <div className="flex justify-center items-center w-full space-x-4 pt-2">
         <button
           onClick={handleShuffleClick}
-          className="flex items-center justify-center px-4 py-3 bg-gray-200 rounded-full shadow-md hover:bg-gray-300 transition-colors"
+          className="flex items-center justify-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-shuffle text-gray-700" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
-          <span className="ml-2 font-semibold text-gray-700">Trộn chữ</span>
-        </button>
-         <button
-            onClick={handleBackspace}
-            className="flex items-center justify-center w-12 h-12 bg-yellow-500 rounded-full shadow-md hover:bg-yellow-600 transition-colors text-white"
-            aria-label="Xoá ký tự cuối"
-        >
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-backspace-fill" viewBox="0 0 16 16"><path d="M15.683 3a2 2 0 0 0-2-2h-7.08a2 2 0 0 0-1.519.698L.241 7.35a1 1 0 0 0 0 1.302l4.843 5.65A2 2 0 0 0 6.603 15h7.08a2 2 0 0 0 2-2V3zM5.829 5.854a.5.5 0 1 1 .707-.708l2.147 2.147 2.146-2.147a.5.5 0 1 1 .707.708L9.39 8l2.146 2.146a.5.5 0 0 1-.707.708L8.683 8.707l-2.147 2.147a.5.5 0 0 1-.707-.708L7.976 8 5.829 5.854z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-gray-600" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
+          <span className="ml-2 font-semibold text-gray-700 text-sm">Trộn chữ</span>
         </button>
         <button
-            onClick={handleSubmit}
-            className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-full shadow-md hover:bg-green-600 transition-colors text-white"
-            aria-label="Kiểm tra từ"
+            onClick={handleClear}
+            className="px-5 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors font-semibold text-red-500 text-sm"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-check-lg" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022z"/></svg>
+            Xóa
         </button>
       </div>
     </div>
   );
 };
 
-
-// 4. Toast Notification
+// --- Toast Notification (No changes) ---
 const Toast = ({ message, show, type }) => {
     const baseClasses = "fixed bottom-5 right-5 px-6 py-3 rounded-lg text-white shadow-xl transition-transform duration-300 z-50";
     const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
@@ -306,14 +296,12 @@ const Toast = ({ message, show, type }) => {
     );
 };
 
-
-// Main App Component
+// --- Main App Component (Logic is mostly the same, simplified layout) ---
 export default function App() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
-  // Memoize level data including the generated crossword layout
   const level = useMemo(() => {
     const currentRawLevel = rawLevels[currentLevelIndex];
     if (!currentRawLevel) return null;
@@ -321,10 +309,8 @@ export default function App() {
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex]);
   
-  // State for shuffled letters, initialized with current level's letters
   const [shuffledLetters, setShuffledLetters] = useState(level ? shuffleArray([...level.letters]) : []);
 
-  // Effect to reset game state when level changes
   useEffect(() => {
     if (level) {
       setFoundWords([]);
@@ -332,42 +318,35 @@ export default function App() {
     }
   }, [level]);
 
-  // Function to show toast notifications
   const showToast = (message, type = 'info', duration = 2000) => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration);
   };
   
-  // Callback for when a word is submitted
   const handleWordSubmit = useCallback((word) => {
     if (!word || !level) return;
     const submittedWordUpper = word.toUpperCase();
 
     if (foundWords.includes(submittedWordUpper)) {
       showToast("Đã tìm thấy từ này rồi!", "info");
-    } else if (level.words.some(w => w.word === submittedWordUpper)) {
-      setFoundWords(prev => [...prev, submittedWordUpper]);
-      showToast("Chính xác!", "success");
     } else if (level.allWords.includes(submittedWordUpper)) {
         setFoundWords(prev => [...prev, submittedWordUpper]);
-        showToast(`"${submittedWordUpper}" là một từ đúng!`, "success");
+        const isGridWord = level.words.some(w => w.word === submittedWordUpper);
+        showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ hợp lệ!`, "success");
     } else {
       showToast("Sai rồi, thử lại nhé!", "error");
     }
   }, [level, foundWords]);
 
-  // Callback to shuffle the letters
   const handleShuffle = () => {
     setShuffledLetters(shuffleArray([...shuffledLetters]));
   };
   
-  // Check if all grid words have been found
-  const allWordsFound = useMemo(() => {
+  const allGridWordsFound = useMemo(() => {
     if (!level || !level.words) return false;
     return level.words.every(w => foundWords.includes(w.word));
   }, [level, foundWords]);
 
-  // Go to the next level
   const goToNextLevel = () => {
     if (currentLevelIndex < rawLevels.length - 1) {
         setCurrentLevelIndex(prev => prev + 1);
@@ -376,13 +355,11 @@ export default function App() {
     }
   };
   
-  // Reset the current level
   const resetLevel = () => {
     setFoundWords([]);
     showToast("Đã làm mới màn chơi!", "info");
   }
   
-  // Loading state if level data is not ready
   if (!level) {
     return (
       <div className="min-h-screen bg-gray-800 flex items-center justify-center">
@@ -391,29 +368,28 @@ export default function App() {
     );
   }
 
-  // Main game rendering
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-400 to-indigo-500 font-sans text-gray-800 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md mx-auto bg-white/30 backdrop-blur-md rounded-2xl shadow-2xl p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-blue-500 font-sans text-gray-800 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm mx-auto bg-white/20 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-5">
         <main>
-          <GameBoard level={level} foundWords={foundWords} />
-          {allWordsFound && (
-              <div className="text-center my-4 animate-pulse">
-                <p className="text-xl sm:text-2xl font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải được ô chữ! 🎉</p>
+          {allGridWordsFound && (
+              <div className="text-center mb-3 animate-pulse">
+                <p className="text-lg font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải xong ô chữ! 🎉</p>
               </div>
           )}
+          <GameBoard level={level} foundWords={foundWords} />
           <WordInputControl 
             letters={shuffledLetters} 
             onWordSubmit={handleWordSubmit}
             onShuffle={handleShuffle}
           />
         </main>
-        <footer className="mt-6 flex justify-center items-center space-x-4">
-            <button onClick={resetLevel} className="px-6 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-colors">Làm mới</button>
+        <footer className="mt-4 flex justify-center items-center space-x-4">
+            <button onClick={resetLevel} className="px-5 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-colors text-sm">Làm mới</button>
             <button 
                 onClick={goToNextLevel} 
-                disabled={!allWordsFound}
-                className="px-6 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={!allGridWordsFound}
+                className="px-5 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
             >
                 Màn tiếp
             </button>
