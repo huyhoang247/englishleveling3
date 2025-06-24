@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// --- UTILITY FUNCTIONS (No changes from previous version) ---
+// --- UTILITY FUNCTIONS & LEVEL DATA (No changes from previous version) ---
 
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
@@ -103,7 +103,6 @@ const shuffleArray = (array) => {
   return array;
 };
 
-// --- LEVEL DATA (No changes) ---
 const rawLevels = [
   {
     id: 1,
@@ -197,7 +196,7 @@ const GameBoard = ({ level, foundWords }) => {
     );
 };
 
-// --- NEW AND IMPROVED WordInputControl Component ---
+// --- NEW COMPACT WordInputControl Component ---
 const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
   const [selection, setSelection] = useState<{ letter: string; originalIndex: number }[]>([]);
 
@@ -210,10 +209,10 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
   };
 
   const handleSubmit = () => {
-    if (currentWord.length > 1) { // Only submit if word has 2+ letters
+    if (currentWord.length > 1) {
       onWordSubmit(currentWord);
     }
-    setSelection([]); // Clear selection after submit
+    setSelection([]);
   };
   
   const handleClear = () => {
@@ -225,23 +224,30 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
     setSelection([]);
   };
 
-  const gridCols = letters.length <= 4 ? 2 : (letters.length <= 6 ? 3 : 4);
-  const gridClass = `grid-cols-${gridCols}`;
-
   return (
-    <div className="flex flex-col items-center mt-4 select-none space-y-4">
+    <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
       {/* Answer Bar - Click to Submit */}
       <div 
         onClick={handleSubmit}
         className="w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 cursor-pointer hover:bg-gray-100 transition"
       >
         <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase">
-          {currentWord || <span className="text-gray-400 text-xl tracking-normal">Chọn chữ...</span>}
+          {currentWord || <span className="text-gray-400 text-xl tracking-normal">Chọn & Gửi</span>}
         </span>
       </div>
 
-      {/* Letter Tiles Grid */}
-      <div className={`grid ${gridClass} gap-2 w-full max-w-[200px] mx-auto`}>
+      {/* --- Integrated Control Row --- */}
+      <div className="flex items-center justify-center gap-2 w-full">
+        {/* Shuffle Button */}
+        <button
+          onClick={handleShuffleClick}
+          aria-label="Trộn chữ"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full shadow-md hover:bg-gray-300 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-gray-600" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
+        </button>
+
+        {/* Letter Buttons */}
         {letters.map((letter, index) => {
           const isSelected = selectedIndices.has(index);
           return (
@@ -250,9 +256,9 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
               onClick={() => handleLetterClick(letter, index)}
               disabled={isSelected}
               className={`
-                w-full aspect-square flex items-center justify-center text-3xl font-bold text-white rounded-lg shadow-md transition-all duration-200 ease-in-out
+                w-12 h-12 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-white rounded-lg shadow-md transition-all duration-200 ease-in-out
                 ${isSelected 
-                  ? 'bg-yellow-500 scale-95 cursor-not-allowed' 
+                  ? 'bg-yellow-500 scale-90 cursor-not-allowed' 
                   : 'bg-blue-500 hover:bg-blue-600 active:scale-95'
                 }`
               }
@@ -261,22 +267,14 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
             </button>
           );
         })}
-      </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-center items-center w-full space-x-4 pt-2">
+        {/* Clear Button */}
         <button
-          onClick={handleShuffleClick}
-          className="flex items-center justify-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors"
+          onClick={handleClear}
+          aria-label="Xóa lựa chọn"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-red-500 rounded-full shadow-md hover:bg-red-600 transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-gray-600" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
-          <span className="ml-2 font-semibold text-gray-700 text-sm">Trộn chữ</span>
-        </button>
-        <button
-            onClick={handleClear}
-            className="px-5 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors font-semibold text-red-500 text-sm"
-        >
-            Xóa
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-white" viewBox="0 0 16 16"><path d="M5.829 5.854a.5.5 0 1 1 .707-.708l2.147 2.147 2.146-2.147a.5.5 0 1 1 .707.708L9.39 8l2.146 2.146a.5.5 0 0 1-.707.708L8.683 8.707l-2.147 2.147a.5.5 0 0 1-.707-.708L7.976 8 5.829 5.854Z"/><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12ZM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2Z"/></svg>
         </button>
       </div>
     </div>
@@ -384,7 +382,8 @@ export default function App() {
             onShuffle={handleShuffle}
           />
         </main>
-        <footer className="mt-4 flex justify-center items-center space-x-4">
+        {/* Footer buttons can be removed if you want an even more minimal UI */}
+        <footer className="mt-6 flex justify-center items-center space-x-4">
             <button onClick={resetLevel} className="px-5 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-colors text-sm">Làm mới</button>
             <button 
                 onClick={goToNextLevel} 
