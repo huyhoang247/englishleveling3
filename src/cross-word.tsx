@@ -43,6 +43,11 @@ const normalizeCoords = (placedWords) => {
 
 
 // --- START: LOGIC TẠO Ô CHỮ THÔNG MINH V3 (FINAL) ---
+
+/**
+ * [MỚI] Tìm từ "mỏ neo" tốt nhất dựa trên khả năng kết nối.
+ * Từ tốt nhất là từ có nhiều ký tự chung với các từ khác nhất.
+ */
 const findBestAnchor = (words) => {
     let bestAnchor = '';
     let maxConnections = -1;
@@ -55,6 +60,7 @@ const findBestAnchor = (words) => {
             for (const char of otherWord) {
                 if (anchorChars.has(char)) {
                     currentConnections++;
+                    // Chỉ cần một ký tự chung là đủ để tính là một "kết nối" tiềm năng
                     break; 
                 }
             }
@@ -64,6 +70,7 @@ const findBestAnchor = (words) => {
             bestAnchor = potentialAnchor;
         }
     }
+    // Nếu không tìm được, trả về từ dài nhất làm phương án dự phòng
     return bestAnchor || words.sort((a,b)=>b.length-a.length)[0];
 };
 
@@ -86,13 +93,18 @@ const calculatePlacementScore = (grid, word, start, dir) => {
     return score;
 };
 
+/**
+ * [NÂNG CẤP TRIỆT ĐỂ] Tạo layout ưu tiên sự dày đặc và số lượng từ.
+ */
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
   
   const placedWords = [];
   const grid = new Map();
+  // THAY ĐỔI LỚN: Không sắp xếp theo độ dài nữa, giữ nguyên danh sách từ
   const remainingWords = new Set(words);
 
+  // Bước 1: Tìm "mỏ neo" tốt nhất thay vì từ dài nhất
   const firstWord = findBestAnchor(words);
   if (!firstWord) return [];
 
@@ -107,6 +119,9 @@ const generateCrosswordLayout = (words) => {
     let bestFit = null;
     let bestScore = -1;
     let wordToPlace = null;
+
+    // Sắp xếp các từ còn lại theo độ dài để ưu tiên đặt các từ dài trước (nếu có thể)
+    // Điều này giúp lấp đầy không gian hiệu quả hơn sau khi đã có mỏ neo
     const sortedRemaining = [...remainingWords].sort((a,b) => b.length - a.length);
 
     for (const currentWord of sortedRemaining) {
@@ -148,9 +163,14 @@ const generateCrosswordLayout = (words) => {
     }
   }
 
+  if(remainingWords.size > 0){
+      console.warn("Could not place all words. Remaining:", [...remainingWords]);
+  }
+
   return normalizeCoords(placedWords);
 };
-// --- END: LOGIC TẠO Ô CHỮ ---
+
+// --- END: LOGIC TẠO Ô CHỮ THÔNG MINH V3 (FINAL) ---
 
 
 // --- LOGIC TỰ ĐỘNG TẠO LEVEL TỪ DANH SÁCH TỪ ---
@@ -176,7 +196,7 @@ const findPossibleWords = (seedWord, fullWordList) => {
   const seedFreq = getFrequencyMap(seedWord);
   const possibleWords = [];
   for (const candidateWord of fullWordList) {
-    if (candidateWord.length < 3 || candidateWord === seedWord) continue;
+    if (candidateWord.length < 3) continue;
     const candidateFreq = getFrequencyMap(candidateWord);
     let canBeFormed = true;
     for (const [char, count] of candidateFreq.entries()) {
@@ -189,20 +209,17 @@ const findPossibleWords = (seedWord, fullWordList) => {
       possibleWords.push(candidateWord);
     }
   }
-  // Thêm chính từ gốc vào danh sách
-  return [seedWord, ...possibleWords];
+  return possibleWords;
 };
 
 export const generateLevelsFromWordList = (sourceWords) => {
   const levels = [];
   const usedWords = new Set();
 
-  // === ĐIỀU CHỈNH QUY TẮC ĐỂ DỄ DÀNG TẠO LEVEL HƠN ===
   const MIN_SEED_WORD_LENGTH = 7;
-  const MIN_WORDS_IN_LEVEL_GROUP = 5; // Chỉ cần 5 từ là đủ tạo 1 level
-  const NUM_CANDIDATES_FOR_GRID = 15; // Lấy 15 từ để thử xếp
-  const MIN_PLACED_GRID_WORDS = 4;    // Chỉ cần xếp được 4 từ là thành công
-  // ===================================================
+  const MIN_WORDS_IN_LEVEL_GROUP = 7; // Tăng yêu cầu để có nhiều lựa chọn hơn
+  const NUM_CANDIDATES_FOR_GRID = 20; // Cung cấp một bể từ lớn
+  const MIN_PLACED_GRID_WORDS = 5;     // Yêu cầu đặt được nhiều từ hơn
 
   const sortedSourceWords = [...sourceWords].sort((a, b) => b.length - a.length);
 
@@ -227,8 +244,8 @@ export const generateLevelsFromWordList = (sourceWords) => {
         allWords: [...new Set(possibleWords)],
       };
       levels.push(newLevel);
-      // Đánh dấu tất cả các từ trong level này là đã được sử dụng
-      possibleWords.forEach(word => usedWords.add(word)); 
+      console.log(`Tạo thành công Level ${newLevel.id} từ từ gốc "${seedWord}". Bao gồm ${possibleWords.length} từ. Đã đặt ${gridWords.length} từ vào lưới.`);
+      possibleWords.forEach(word => usedWords.add(word));
     }
   }
 
@@ -242,7 +259,6 @@ export const generateLevelsFromWordList = (sourceWords) => {
       }];
   }
 
-  console.log(`Tạo thành công ${levels.length} màn chơi!`);
   return levels;
 };
 
@@ -305,6 +321,7 @@ const GameBoard = ({ level, foundWords }) => {
         grid.push(row);
     }
 
+    // Tự động điều chỉnh kích thước ô chữ cho vừa màn hình nhỏ
     const scale = useMemo(() => {
         const maxDim = Math.max(gridDimensions.width, gridDimensions.height);
         if (maxDim > 8) {
@@ -352,15 +369,20 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
         ${isShaking ? 'animate-shake bg-red-100' : ''}`}
       >
         {currentWord ? (
-          <span className="text-3xl font-bold tracking-[0.2em] text-gray-800 uppercase">
+          <>
+            <span className="text-3xl font-bold tracking-[0.2em] text-gray-800 uppercase">
               {currentWord}
-          </span>
+            </span>
+            <span className="text-base font-semibold tracking-wider text-gray-500 hidden">
+              {currentWord.toLowerCase()}
+            </span>
+          </>
         ) : (
           <span className="text-gray-400 text-xl">...</span>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+      <div className="flex items-center justify-center gap-2 w-full">
         {letters.map((letter, index) => (
           <button
             key={`${letter}-${index}`}
@@ -415,7 +437,6 @@ export default function App() {
   const [isShaking, setIsShaking] = useState(false);
 
   const level = useMemo(() => {
-    if (!rawLevels || rawLevels.length === 0) return null;
     const currentRawLevel = rawLevels[currentLevelIndex];
     if (!currentRawLevel) return null;
     return { ...currentRawLevel, words: generateCrosswordLayout(currentRawLevel.gridWords) };
@@ -423,8 +444,8 @@ export default function App() {
   
   const keyboardLetters = useMemo(() => {
     if (!level) return [];
-    // Shuffle the letters for a better experience
-    return [...new Set(level.letters)].sort(() => Math.random() - 0.5);
+    // Hiển thị các chữ cái không trùng lặp
+    return [...new Set(level.letters)];
   }, [level]);
 
   const levelLetterFreq = useMemo(() => {
@@ -435,7 +456,6 @@ export default function App() {
   useEffect(() => {
     if (level) {
       setFoundWords([]);
-      setCurrentWord('');
     }
   }, [level]);
 
@@ -472,7 +492,7 @@ export default function App() {
       showToast("Đã tìm thấy từ này rồi!", "info");
     } else if (level.allWords.includes(submittedWordUpper)) {
         setFoundWords(prev => [...prev, submittedWordUpper]);
-        const isGridWord = level.gridWords.includes(submittedWordUpper);
+        const isGridWord = level.words.some(w => w.word === submittedWordUpper);
         showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ hợp lệ!`, "success");
     } else {
       triggerShake();
@@ -482,8 +502,8 @@ export default function App() {
   }, [level, foundWords, levelLetterFreq]);
 
   const allGridWordsFound = useMemo(() => {
-    if (!level || !level.gridWords) return false;
-    return level.gridWords.every(w => foundWords.includes(w));
+    if (!level || !level.words) return false;
+    return level.words.every(w => foundWords.includes(w.word));
   }, [level, foundWords]);
 
   const goToNextLevel = () => {
@@ -501,9 +521,8 @@ export default function App() {
   
   if (!level) {
     return (
-      <div className="min-h-screen bg-gray-800 flex items-center justify-center p-4 text-center">
-        <h1 className="text-4xl font-bold text-white">Đang tạo màn chơi...</h1>
-        <p className="text-white/70 mt-2">Nếu quá trình này mất nhiều thời gian, có thể danh sách từ không đủ để tạo level.</p>
+      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+        <h1 className="text-4xl font-bold text-white">Đang tạo các màn chơi...</h1>
       </div>
     );
   }
