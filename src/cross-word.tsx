@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { defaultVocabulary } from './Wordlist'; // Nhập danh sách từ vựng
 
 // --- UTILITY FUNCTIONS ---
 const getFrequencyMap = (arrOrStr) => {
@@ -224,22 +225,10 @@ const generateCrosswordLayout = (words) => {
 
 // --- LOGIC TỰ ĐỘNG TẠO LEVEL TỪ DANH SÁCH TỪ ---
 
-const wordList = [
-  "Insurance", "Argument", "Influence", "Release", "Capacity", "Senate", "Massive",
-  "Stick", "District", "Budget", "Measure", "Cross", "Central", "Proud", "Core",
-  "County", "Species", "Conditions", "Touch", "Mass", "Platform", "Straight",
-  "Serious", "Encourage", "Due", "Memory", "Secretary", "Cold", "Instance",
-  "Foundation", "Separate", "Map", "Ice", "Statement", "Rich", "Previous",
-  "Necessary", "Engineering", "Heat", "Collection", "Labor", "Flow", "Floor",
-  "Variety", "Math", "Session", "Nuclear", "Roll", "Museum", "Limited",
-  "Constant", "Temperature", "Description", "Transition", "Chair", "Pattern",
-  "Demand", "Hate", "Classroom", "Army", "Spring", "Senior", "Wind", "Award",
-  "Clinical", "Trouble", "Grade", "Station", "Moments", "Wave", "Block",
-  "Compared", "Strength", "Phase", "Secret", "Highest", "Leaving", "Obvious",
-  "Terrible", "Motion", "Window", "Assume", "Cycle", "Suddenly", "Western",
-  "Broken", "Define", "Spiritual", "Concerns", "Random", "Moon", "Dangerous",
-  "Trees", "Trip", "Curious", "Heavy", "Fly", "Noticed", "March"
-].map(w => w.toUpperCase());
+// Lọc danh sách từ để chỉ giữ lại các từ chỉ chứa chữ cái, sau đó chuyển thành chữ hoa
+const wordList = defaultVocabulary
+  .filter(word => /^[A-Z]+$/i.test(word))
+  .map(w => w.toUpperCase());
 
 const findPossibleWords = (seedWord, fullWordList) => {
   const seedFreq = getFrequencyMap(seedWord);
