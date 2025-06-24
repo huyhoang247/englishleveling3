@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { defaultVocabulary } from './list-vocavulary.ts';
+import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ====================================================================
 // 1. VIẾT TOÀN BỘ CSS DƯỚI DẠNG MỘT CHUỖI (TEMPLATE LITERAL)
