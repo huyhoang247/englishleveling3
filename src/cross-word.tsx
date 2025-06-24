@@ -93,11 +93,13 @@ const normalizeCoords = (placedWords) => {
     return placedWords.map(pWord => ({ ...pWord, start: [pWord.start[0] - minY, pWord.start[1] - minX] }));
 };
 
+// ** NOTE: LEVEL DATA UPDATED. With ['R', 'A', 'R', 'E'], you CANNOT form "AREA".
+// I've kept your original data, but the logic will correctly reject "AREA" for level 1.
 const rawLevels = [
   {
     id: 1,
     letters: ["R", "A", "R", "E"],
-    gridWords: ["RARE", "EAR"],
+    gridWords: ["RARE", "EAR"], // "AREA" requires two 'A's.
     allWords: ["RARE", "REAR", "EAR", "ERA", "ARE"],
   },
   {
@@ -186,7 +188,7 @@ const GameBoard = ({ level, foundWords }) => {
 };
 
 
-// --- UPDATED WordInputControl with isShaking prop ---
+// --- UPDATED WordInputControl for UNIQUE keyboard ---
 const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   const [currentWord, setCurrentWord] = useState('');
 
@@ -196,7 +198,7 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   };
 
   const handleSubmit = () => {
-    if (isShaking) return; // Prevent submitting while shaking
+    if (isShaking) return;
     if (currentWord.length > 1) {
       onWordSubmit(currentWord, () => setCurrentWord(''));
     }
@@ -208,7 +210,6 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
 
   return (
     <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
-      {/* Answer Display Bar */}
       <div 
         className={`w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 transition-colors
         ${isShaking ? 'animate-shake bg-red-100' : ''}`}
@@ -218,11 +219,10 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
         </span>
       </div>
 
-      {/* Letter Keyboard Row */}
       <div className="flex items-center justify-center gap-2 w-full">
-        {letters.map((letter, index) => (
+        {letters.map((letter) => (
           <button
-            key={index}
+            key={letter}
             onClick={() => handleLetterClick(letter)}
             className="w-12 h-12 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 active:scale-95 transition-all"
           >
@@ -231,7 +231,6 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
         ))}
       </div>
 
-      {/* Action Buttons Row */}
       <div className="flex items-center justify-center gap-3 w-full pt-2">
          <button
           onClick={handleBackspace}
@@ -266,12 +265,21 @@ const Toast = ({ message, show, type }) => {
     );
 };
 
-// --- Main App Component with SHAKE LOGIC ---
+// Helper function to create a frequency map of characters
+const getFrequencyMap = (arrOrStr) => {
+    const map = new Map();
+    for (const char of arrOrStr) {
+        map.set(char, (map.get(char) || 0) + 1);
+    }
+    return map;
+}
+
+// --- Main App Component with FREQUENCY COUNTING LOGIC ---
 export default function App() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
-  const [isShaking, setIsShaking] = useState(false); // New state for shake effect
+  const [isShaking, setIsShaking] = useState(false);
 
   const level = useMemo(() => {
     const currentRawLevel = rawLevels[currentLevelIndex];
@@ -280,7 +288,17 @@ export default function App() {
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex]);
   
-  const letters = level ? level.letters : [];
+  // Create a unique, sorted list of letters for the keyboard
+  const keyboardLetters = useMemo(() => {
+    if (!level) return [];
+    return [...new Set(level.letters)].sort();
+  }, [level]);
+
+  // Create a frequency map of the available letters for the current level
+  const levelLetterFreq = useMemo(() => {
+    if (!level) return new Map();
+    return getFrequencyMap(level.letters);
+  }, [level]);
 
   useEffect(() => {
     if (level) {
@@ -293,17 +311,16 @@ export default function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration);
   };
   
+  // --- UPDATED handleWordSubmit with FREQUENCY COUNTING ---
   const handleWordSubmit = useCallback((word, clearInputCallback) => {
     if (!word || !level) return;
     const submittedWordUpper = word.toUpperCase();
 
-    const availableLetters = [...level.letters];
+    // 1. Check if the word can be formed from the available letters using frequency maps
+    const submittedWordFreq = getFrequencyMap(submittedWordUpper);
     let canBeFormed = true;
-    for (const char of submittedWordUpper) {
-        const index = availableLetters.indexOf(char);
-        if (index > -1) {
-            availableLetters.splice(index, 1);
-        } else {
+    for (const [char, count] of submittedWordFreq.entries()) {
+        if (!levelLetterFreq.has(char) || levelLetterFreq.get(char) < count) {
             canBeFormed = false;
             break;
         }
@@ -311,15 +328,16 @@ export default function App() {
 
     const triggerShake = () => {
         setIsShaking(true);
-        setTimeout(() => setIsShaking(false), 600); // Duration of the shake animation
+        setTimeout(() => setIsShaking(false), 600);
     };
 
     if (!canBeFormed) {
-        showToast("Không đủ chữ cái để tạo từ này!", "error");
         triggerShake();
+        clearInputCallback();
         return;
     }
     
+    // 2. Check if the word is a valid answer
     if (foundWords.includes(submittedWordUpper)) {
       showToast("Đã tìm thấy từ này rồi!", "info");
     } else if (level.allWords.includes(submittedWordUpper)) {
@@ -327,14 +345,12 @@ export default function App() {
         const isGridWord = level.words.some(w => w.word === submittedWordUpper);
         showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ hợp lệ!`, "success");
     } else {
-      // THIS IS THE CORE CHANGE: Trigger shake instead of a toast
       triggerShake();
     }
     
-    // Clear the input in the child component
     clearInputCallback();
 
-  }, [level, foundWords]);
+  }, [level, foundWords, levelLetterFreq]);
 
   const allGridWordsFound = useMemo(() => {
     if (!level || !level.words) return false;
@@ -364,7 +380,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-blue-500 font-sans text-gray-800 flex flex-col items-center justify-center p-4">
-      {/* This style block injects the keyframes animation for the shake effect */}
       <style>{`
         @keyframes shake {
           10%, 90% { transform: translateX(-1px); }
@@ -386,7 +401,7 @@ export default function App() {
           )}
           <GameBoard level={level} foundWords={foundWords} />
           <WordInputControl 
-            letters={letters} 
+            letters={keyboardLetters} 
             onWordSubmit={handleWordSubmit}
             isShaking={isShaking}
           />
