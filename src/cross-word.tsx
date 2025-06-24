@@ -11,23 +11,36 @@ const getFrequencyMap = (arrOrStr) => {
 
 const canPlaceWord = (grid, word, start, dir) => {
   const [y, x] = start;
+  // Kiểm tra xem từ có vừa vặn và có xung đột không
   for (let i = 0; i < word.length; i++) {
     const currentY = dir === 'v' ? y + i : y;
     const currentX = dir === 'h' ? x + i : x;
     const key = `${currentY},${currentX}`;
-    const isIntersection = grid.has(key) && grid.get(key) === word[i];
-    if (grid.has(key) && !isIntersection) return false;
-    if (!isIntersection) {
-      const neighbors = dir === 'h' ? [`${currentY - 1},${currentX}`, `${currentY + 1},${currentX}`] : [`${currentY},${currentX - 1}`, `${currentY},${currentX + 1}`];
-      if (neighbors.some(nKey => grid.has(nKey))) return false;
+    const gridChar = grid.get(key);
+
+    // Nếu có một ký tự ở đó, nó phải khớp (điểm giao)
+    if (gridChar && gridChar !== word[i]) {
+        return false;
+    }
+    // Nếu không có ký tự (ô trống), kiểm tra các ô liền kề không thuộc hướng đặt từ
+    if (!gridChar) {
+        const perpNeighbors = dir === 'h' 
+            ? [`${currentY - 1},${currentX}`, `${currentY + 1},${currentX}`] 
+            : [`${currentY},${currentX - 1}`, `${currentY},${currentX + 1}`];
+        if (perpNeighbors.some(nKey => grid.has(nKey))) {
+            return false;
+        }
     }
   }
+  // Kiểm tra ký tự ngay trước và ngay sau từ để đảm bảo chúng không nối liền với từ khác
   const beforeY = dir === 'v' ? y - 1 : y;
   const beforeX = dir === 'h' ? x - 1 : x;
   if(grid.has(`${beforeY},${beforeX}`)) return false;
+
   const afterY = dir === 'v' ? y + word.length : y;
   const afterX = dir === 'h' ? x + word.length : x;
   if(grid.has(`${afterY},${afterX}`)) return false;
+  
   return true;
 };
 
@@ -42,36 +55,33 @@ const normalizeCoords = (placedWords) => {
 };
 
 
-// --- START: LOGIC TẠO Ô CHỮ THÔNG MINH V3 (FINAL) ---
+// --- START: LOGIC TẠO Ô CHỮ THÔNG MINH V4 (Ưu tiên giao điểm) ---
 
 /**
- * [MỚI] Tìm từ "mỏ neo" tốt nhất dựa trên khả năng kết nối.
- * Từ tốt nhất là từ có nhiều ký tự chung với các từ khác nhất.
+ * Tính toán kích thước (bounding box) của một layout đã cho.
+ * @param {Array} placedWords - Mảng các từ đã được đặt.
+ * @returns {Object} - { width, height, area }
  */
-const findBestAnchor = (words) => {
-    let bestAnchor = '';
-    let maxConnections = -1;
+const getLayoutDimensions = (placedWords) => {
+    if (placedWords.length === 0) return { width: 0, height: 0, area: 0 };
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    placedWords.forEach(({ word, start, dir }) => {
+        const [y, x] = start;
+        minY = Math.min(minY, y);
+        minX = Math.min(minX, x);
+        if (dir === 'h') {
+            maxY = Math.max(maxY, y);
+            maxX = Math.max(maxX, x + word.length - 1);
+        } else { // 'v'
+            maxY = Math.max(maxY, y + word.length - 1);
+            maxX = Math.max(maxX, x);
+        }
+    });
 
-    for (const potentialAnchor of words) {
-        let currentConnections = 0;
-        const anchorChars = new Set(potentialAnchor.split(''));
-        for (const otherWord of words) {
-            if (potentialAnchor === otherWord) continue;
-            for (const char of otherWord) {
-                if (anchorChars.has(char)) {
-                    currentConnections++;
-                    // Chỉ cần một ký tự chung là đủ để tính là một "kết nối" tiềm năng
-                    break; 
-                }
-            }
-        }
-        if (currentConnections > maxConnections) {
-            maxConnections = currentConnections;
-            bestAnchor = potentialAnchor;
-        }
-    }
-    // Nếu không tìm được, trả về từ dài nhất làm phương án dự phòng
-    return bestAnchor || words.sort((a,b)=>b.length-a.length)[0];
+    const width = maxX - minX + 1;
+    const height = maxY - minY + 1;
+    return { width, height, area: width * height };
 };
 
 const calculatePlacementScore = (grid, word, start, dir) => {
@@ -80,48 +90,87 @@ const calculatePlacementScore = (grid, word, start, dir) => {
     for (let i = 0; i < word.length; i++) {
         const currentY = dir === 'v' ? y + i : y;
         const currentX = dir === 'h' ? x + i : x;
+        // Điểm cao cho việc tạo ra giao điểm
         if (grid.has(`${currentY},${currentX}`)) {
             score += 2; 
-        }
-        const neighbors = dir === 'h' 
-            ? [`${currentY - 1},${currentX}`, `${currentY + 1},${currentX}`] 
-            : [`${currentY},${currentX - 1}`, `${currentY},${currentX + 1}`];
-        if (!grid.has(`${currentY},${currentX}`) && neighbors.some(nKey => grid.has(nKey))) {
-            score += 1;
         }
     }
     return score;
 };
 
+
 /**
- * [NÂNG CẤP TRIỆT ĐỂ] Tạo layout ưu tiên sự dày đặc và số lượng từ.
+ * [NÂNG CẤP LỚN] Tạo layout ưu tiên sự dày đặc và giao điểm, bắt đầu bằng cặp từ tốt nhất.
+ * Lấy cảm hứng từ ví dụ của người dùng để tạo ra các lưới dày đặc hơn.
  */
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
-  
-  const placedWords = [];
-  const grid = new Map();
-  // THAY ĐỔI LỚN: Không sắp xếp theo độ dài nữa, giữ nguyên danh sách từ
-  const remainingWords = new Set(words);
-
-  // Bước 1: Tìm "mỏ neo" tốt nhất thay vì từ dài nhất
-  const firstWord = findBestAnchor(words);
-  if (!firstWord) return [];
-
-  placedWords.push({ word: firstWord, start: [0, 0], dir: 'h' });
-  for (let i = 0; i < firstWord.length; i++) {
-    grid.set(`${0},${i}`, firstWord[i]);
+  if (words.length === 1) {
+      return [{ word: words[0], start: [0, 0], dir: 'h' }];
   }
-  remainingWords.delete(firstWord);
 
-  let attempts = 0;
-  while (remainingWords.size > 0 && attempts < remainingWords.size) {
+  const sortedWords = [...words].sort((a, b) => b.length - a.length);
+  let bestInitialLayout = null;
+  let minArea = Infinity;
+
+  // Bước 1: Tìm "cặp hạt nhân" tốt nhất (cặp 2 từ giao nhau tạo ra layout nhỏ gọn nhất)
+  for (let i = 0; i < sortedWords.length; i++) {
+    for (let j = i + 1; j < sortedWords.length; j++) {
+      const wordA = sortedWords[i];
+      const wordB = sortedWords[j];
+
+      for (let charA_idx = 0; charA_idx < wordA.length; charA_idx++) {
+        for (let charB_idx = 0; charB_idx < wordB.length; charB_idx++) {
+          if (wordA[charA_idx] === wordB[charB_idx]) {
+            // Đã tìm thấy điểm giao. Đặt wordA ngang, wordB dọc.
+            const placedA = { word: wordA, start: [0, -charA_idx], dir: 'h' };
+            const placedB = { word: wordB, start: [-charB_idx, 0], dir: 'v' };
+            const tempLayout = [placedA, placedB];
+            const { area } = getLayoutDimensions(tempLayout);
+
+            if (area < minArea) {
+              minArea = area;
+              bestInitialLayout = {
+                placed: tempLayout,
+                remaining: new Set(sortedWords.filter(w => w !== wordA && w !== wordB))
+              };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Nếu không tìm thấy cặp nào giao nhau, quay về phương án cũ là đặt từ dài nhất
+  if (!bestInitialLayout) {
+      const firstWord = sortedWords[0];
+      bestInitialLayout = {
+          placed: [{ word: firstWord, start: [0, 0], dir: 'h' }],
+          remaining: new Set(sortedWords.slice(1))
+      };
+  }
+
+  const placedWords = bestInitialLayout.placed;
+  const remainingWords = bestInitialLayout.remaining;
+  const grid = new Map();
+  placedWords.forEach(pWord => {
+      for (let i = 0; i < pWord.word.length; i++) {
+          const key = pWord.dir === 'h' 
+              ? `${pWord.start[0]},${pWord.start[1] + i}` 
+              : `${pWord.start[0] + i},${pWord.start[1]}`;
+          grid.set(key, pWord.word[i]);
+      }
+  });
+
+
+  // Bước 2: Thêm các từ còn lại vào "hạt nhân" đã có
+  let placedThisRound = true;
+  while (remainingWords.size > 0 && placedThisRound) {
+    placedThisRound = false;
     let bestFit = null;
     let bestScore = -1;
     let wordToPlace = null;
 
-    // Sắp xếp các từ còn lại theo độ dài để ưu tiên đặt các từ dài trước (nếu có thể)
-    // Điều này giúp lấp đầy không gian hiệu quả hơn sau khi đã có mỏ neo
     const sortedRemaining = [...remainingWords].sort((a,b) => b.length - a.length);
 
     for (const currentWord of sortedRemaining) {
@@ -135,6 +184,7 @@ const generateCrosswordLayout = (words) => {
                 : [pWord.start[0] + k, pWord.start[1] - j];
 
               if (canPlaceWord(grid, currentWord, newStart, newDir)) {
+                // Ưu tiên các từ tạo ra nhiều giao điểm
                 const score = calculatePlacementScore(grid, currentWord, newStart, newDir);
                 if (score > bestScore) {
                   bestScore = score;
@@ -157,9 +207,7 @@ const generateCrosswordLayout = (words) => {
         grid.set(key, bestFit.word[l]);
       }
       remainingWords.delete(wordToPlace);
-      attempts = 0;
-    } else {
-      attempts++;
+      placedThisRound = true; // Báo hiệu đã đặt được từ, tiếp tục vòng lặp
     }
   }
 
@@ -167,10 +215,11 @@ const generateCrosswordLayout = (words) => {
       console.warn("Could not place all words. Remaining:", [...remainingWords]);
   }
 
+  // Cuối cùng, chuẩn hóa tọa độ để góc trên bên trái là (0,0)
   return normalizeCoords(placedWords);
 };
 
-// --- END: LOGIC TẠO Ô CHỮ THÔNG MINH V3 (FINAL) ---
+// --- END: LOGIC TẠO Ô CHỮ THÔNG MINH V4 ---
 
 
 // --- LOGIC TỰ ĐỘNG TẠO LEVEL TỪ DANH SÁCH TỪ ---
@@ -323,9 +372,12 @@ const GameBoard = ({ level, foundWords }) => {
 
     // Tự động điều chỉnh kích thước ô chữ cho vừa màn hình nhỏ
     const scale = useMemo(() => {
+        if (typeof window === 'undefined') return 1;
         const maxDim = Math.max(gridDimensions.width, gridDimensions.height);
-        if (maxDim > 8) {
-            return 8 / maxDim;
+        const containerWidth = Math.min(window.innerWidth * 0.9, 400); // 90% viewport or 400px
+        const cellSize = 44; // 11 * 4 (w-11 in tailwind)
+        if (maxDim * cellSize > containerWidth) {
+            return containerWidth / (maxDim * cellSize);
         }
         return 1;
     }, [gridDimensions]);
@@ -373,16 +425,13 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
             <span className="text-3xl font-bold tracking-[0.2em] text-gray-800 uppercase">
               {currentWord}
             </span>
-            <span className="text-base font-semibold tracking-wider text-gray-500 hidden">
-              {currentWord.toLowerCase()}
-            </span>
           </>
         ) : (
           <span className="text-gray-400 text-xl">...</span>
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-2 w-full">
+      <div className="flex items-center justify-center gap-2 w-full flex-wrap">
         {letters.map((letter, index) => (
           <button
             key={`${letter}-${index}`}
@@ -415,7 +464,7 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
 };
 
 const Toast = ({ message, show, type }) => {
-    const baseClasses = "fixed bottom-5 right-5 px-6 py-3 rounded-lg text-white shadow-xl transition-transform duration-300 z-50";
+    const baseClasses = "fixed bottom-5 right-5 px-6 py-3 rounded-lg text-white shadow-xl transition-all duration-300 z-50";
     const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
     const showClasses = "transform translate-y-0 opacity-100";
     const hideClasses = "transform translate-y-10 opacity-0 pointer-events-none";
@@ -492,7 +541,7 @@ export default function App() {
       showToast("Đã tìm thấy từ này rồi!", "info");
     } else if (level.allWords.includes(submittedWordUpper)) {
         setFoundWords(prev => [...prev, submittedWordUpper]);
-        const isGridWord = level.words.some(w => w.word === submittedWordUpper);
+        const isGridWord = level.gridWords.includes(submittedWordUpper);
         showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ hợp lệ!`, "success");
     } else {
       triggerShake();
@@ -502,8 +551,8 @@ export default function App() {
   }, [level, foundWords, levelLetterFreq]);
 
   const allGridWordsFound = useMemo(() => {
-    if (!level || !level.words) return false;
-    return level.words.every(w => foundWords.includes(w.word));
+    if (!level || !level.gridWords) return false;
+    return level.gridWords.every(w => foundWords.includes(w));
   }, [level, foundWords]);
 
   const goToNextLevel = () => {
@@ -521,14 +570,14 @@ export default function App() {
   
   if (!level) {
     return (
-      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-800 flex items-center justify-center text-center p-4">
         <h1 className="text-4xl font-bold text-white">Đang tạo các màn chơi...</h1>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-blue-500 font-sans text-gray-800 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-400 to-blue-500 font-sans text-gray-800 flex flex-col items-center justify-start p-4 pt-8">
       <style>{`
         @keyframes shake {
           10%, 90% { transform: translateX(-1px); }
@@ -548,7 +597,7 @@ export default function App() {
         </header>
         <main>
           {allGridWordsFound && (
-              <div className="text-center mb-3 animate-pulse">
+              <div className="text-center my-3 animate-pulse">
                 <p className="text-lg font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải xong ô chữ! 🎉</p>
               </div>
           )}
