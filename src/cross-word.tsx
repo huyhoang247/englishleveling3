@@ -13,7 +13,7 @@ const MASTER_WORD_LIST = [
 ];
 
 
-// --- LEVEL GENERATION LOGIC (Now lives inside the app) ---
+// --- LEVEL GENERATION LOGIC ---
 
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
@@ -182,7 +182,7 @@ const LoadingScreen = () => (
 );
 
 const Cell = ({ char, revealed, isTarget }) => {
-  const baseClasses = "w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-500";
+  const baseClasses = "w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-500";
   const revealedClasses = "bg-white text-gray-800 transform scale-105 shadow-lg";
   const hiddenClasses = "bg-blue-400 bg-opacity-50 shadow-inner";
   const notTargetClasses = "bg-transparent border-0";
@@ -190,21 +190,22 @@ const Cell = ({ char, revealed, isTarget }) => {
   return (<div className={`${baseClasses} ${revealed ? revealedClasses : hiddenClasses}`}>{revealed ? char : ''}</div>);
 };
 
-const GameBoard = ({ level, foundWords }) => {
+const GameBoard = ({ levelLayout, foundWords }) => {
     const gridDimensions = useMemo(() => {
         let maxX = 0, maxY = 0;
-        if (!level || !level.words) return { width: 0, height: 0 };
-        level.words.forEach(({ word, start, dir }) => {
+        if (!levelLayout) return { width: 0, height: 0 };
+        levelLayout.forEach(({ word, start, dir }) => {
             const [y, x] = start;
             if (dir === 'h') { maxY = Math.max(maxY, y + 1); maxX = Math.max(maxX, x + word.length); } 
             else { maxY = Math.max(maxY, y + word.length); maxX = Math.max(maxX, x + 1); }
         });
         return { width: maxX, height: maxY };
-    }, [level]);
+    }, [levelLayout]);
+
     const gridMap = useMemo(() => {
         const map = new Map();
-        if (!level || !level.words) return map;
-        level.words.forEach(({ word, start, dir }) => {
+        if (!levelLayout) return map;
+        levelLayout.forEach(({ word, start, dir }) => {
             let [y, x] = start;
             for (let i = 0; i < word.length; i++) {
                 const key = `${y},${x}`;
@@ -215,7 +216,8 @@ const GameBoard = ({ level, foundWords }) => {
             }
         });
         return map;
-    }, [level]);
+    }, [levelLayout]);
+
     const grid = [];
     for (let y = 0; y < gridDimensions.height; y++) {
         const row = [];
@@ -232,7 +234,7 @@ const GameBoard = ({ level, foundWords }) => {
         grid.push(row);
     }
     return (
-        <div className="flex justify-center items-center"><div className="grid gap-1">{grid.map((row, y) => (<div key={y} className="flex gap-1">{row.map((cell) => <Cell key={cell.key} {...cell} />)}</div>))}</div></div>
+        <div className="flex justify-center items-center mb-4"><div className="grid gap-1">{grid.map((row, y) => (<div key={y} className="flex gap-1">{row.map((cell) => <Cell key={cell.key} {...cell} />)}</div>))}</div></div>
     );
 };
 
@@ -242,7 +244,7 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   const handleSubmit = () => { if (!isShaking && currentWord.length > 1) onWordSubmit(currentWord, () => setCurrentWord('')); };
   const handleBackspace = () => setCurrentWord(prev => prev.slice(0, -1));
   return (
-    <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
+    <div className="flex flex-col items-center mt-4 select-none space-y-4 w-full">
       <div className={`w-full h-20 bg-white rounded-lg shadow-inner flex flex-col items-center justify-center px-4 transition-colors ${isShaking ? 'animate-shake bg-red-100' : ''}`}>
         {currentWord ? (
           <>
@@ -283,30 +285,19 @@ export default function App() {
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const [isShaking, setIsShaking] = useState(false);
 
-  // Effect to generate levels on initial app load
   useEffect(() => {
-    // Using setTimeout to prevent blocking the UI thread during initial render.
-    // This allows the "Loading..." screen to appear smoothly.
     setTimeout(() => {
-      console.log("Generating levels from master word list...");
-      const generated = generateLevels(MASTER_WORD_LIST, 5); // Generate 5 levels
+      const generated = generateLevels(MASTER_WORD_LIST, 10);
       setLevels(generated);
       setIsLoading(false);
-      console.log(`${generated.length} levels generated successfully.`);
     }, 100);
   }, []);
 
   const level = useMemo(() => levels[currentLevelIndex], [levels, currentLevelIndex]);
+  const levelLayout = useMemo(() => level ? generateCrosswordLayout(level.gridWords) : [], [level]);
   
-  const keyboardLetters = useMemo(() => {
-    if (!level) return [];
-    return [...new Set(level.letters)].sort();
-  }, [level]);
-
-  const levelLetterFreq = useMemo(() => {
-    if (!level) return new Map();
-    return getFrequencyMap(level.letters);
-  }, [level]);
+  const keyboardLetters = useMemo(() => level ? [...new Set(level.letters)].sort() : [], [level]);
+  const levelLetterFreq = useMemo(() => level ? getFrequencyMap(level.letters) : new Map(), [level]);
 
   useEffect(() => {
     if (level) setFoundWords([]);
@@ -333,16 +324,21 @@ export default function App() {
     if (foundWords.includes(submittedWordUpper)) showToast("Đã tìm thấy từ này rồi!", "info");
     else if (level.allWords.includes(submittedWordUpper)) {
         setFoundWords(prev => [...prev, submittedWordUpper]);
-        const isGridWord = level.words.some(w => w.word === submittedWordUpper);
-        showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ hợp lệ!`, "success");
+        const isGridWord = level.gridWords.includes(submittedWordUpper);
+        showToast(isGridWord ? "Chính xác!" : `"${submittedWordUpper}" là từ thưởng!`, "success");
     } else triggerShake();
     clearInputCallback();
   }, [level, foundWords, levelLetterFreq]);
 
+  const foundGridWordsCount = useMemo(() => {
+    if (!level) return 0;
+    return foundWords.filter(word => level.gridWords.includes(word)).length;
+  }, [foundWords, level]);
+
   const allGridWordsFound = useMemo(() => {
-    if (!level || !level.words) return false;
-    return level.words.every(w => foundWords.includes(w.word));
-  }, [level, foundWords]);
+    if (!level) return false;
+    return level.gridWords.length === foundGridWordsCount;
+  }, [level, foundGridWordsCount]);
 
   const goToNextLevel = () => {
     if (currentLevelIndex < levels.length - 1) setCurrentLevelIndex(prev => prev + 1);
@@ -359,8 +355,11 @@ export default function App() {
       <style>{`@keyframes shake { 10%, 90% { transform: translateX(-1px); } 20%, 80% { transform: translateX(2px); } 30%, 50%, 70% { transform: translateX(-4px); } 40%, 60% { transform: translateX(4px); } } .animate-shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; }`}</style>
       <div className="w-full max-w-sm mx-auto bg-white/20 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-5">
         <main>
-          {allGridWordsFound && (<div className="text-center mb-3 animate-pulse"><p className="text-lg font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải xong ô chữ! 🎉</p></div>)}
-          <GameBoard level={level} foundWords={foundWords} />
+          <div className='text-center mb-3 text-white font-semibold tracking-wider'>
+            <span>Tiến độ: {foundGridWordsCount} / {level.gridWords.length} từ</span>
+          </div>
+          <GameBoard levelLayout={levelLayout} foundWords={foundWords} />
+          {allGridWordsFound && (<div className="text-center my-3 animate-pulse"><p className="text-lg font-bold text-yellow-300">🎉 Chúc mừng, bạn đã giải xong ô chữ! 🎉</p></div>)}
           <WordInputControl letters={keyboardLetters} onWordSubmit={handleWordSubmit} isShaking={isShaking} />
         </main>
         <footer className="mt-6 flex justify-center items-center space-x-4">
