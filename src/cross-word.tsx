@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// --- UTILITY FUNCTIONS & LEVEL DATA (No changes from previous version) ---
+// --- UTILITY FUNCTIONS & LEVEL DATA (No changes) ---
 
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
@@ -107,8 +107,8 @@ const rawLevels = [
   {
     id: 1,
     letters: ["R", "A", "R", "E"],
-    gridWords: ["RARE", "AREA", "EAR"],
-    allWords: ["RARE", "AREA", "REAR", "EAR", "ERA", "ARE"],
+    gridWords: ["RARE", "EAR"], // "AREA" removed because it can't be formed
+    allWords: ["RARE", "REAR", "EAR", "ERA", "ARE"],
   },
   {
     id: 2,
@@ -125,7 +125,6 @@ const rawLevels = [
 ];
 
 // --- COMPONENTS (GameBoard and Cell are unchanged) ---
-
 const Cell = ({ char, revealed, isTarget }) => {
   const baseClasses = "w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-500";
   const revealedClasses = "bg-white text-gray-800 transform scale-105 shadow-lg";
@@ -196,32 +195,28 @@ const GameBoard = ({ level, foundWords }) => {
     );
 };
 
-// --- NEW COMPACT WordInputControl Component ---
+
+// --- REFINED WordInputControl with KEYBOARD LOGIC ---
 const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
-  const [selection, setSelection] = useState<{ letter: string; originalIndex: number }[]>([]);
+  const [currentWord, setCurrentWord] = useState('');
 
-  const currentWord = useMemo(() => selection.map(s => s.letter).join(''), [selection]);
-  const selectedIndices = useMemo(() => new Set(selection.map(s => s.originalIndex)), [selection]);
-
-  const handleLetterClick = (letter: string, index: number) => {
-    if (selectedIndices.has(index)) return;
-    setSelection(prev => [...prev, { letter, originalIndex: index }]);
+  const handleLetterClick = (letter: string) => {
+    setCurrentWord(prev => prev + letter);
   };
 
   const handleSubmit = () => {
     if (currentWord.length > 1) {
       onWordSubmit(currentWord);
     }
-    setSelection([]);
+    setCurrentWord(''); // Clear word after submit
   };
   
-  const handleClear = () => {
-    setSelection([]);
+  const handleBackspace = () => {
+    setCurrentWord(prev => prev.slice(0, -1));
   }
 
   const handleShuffleClick = () => {
     onShuffle();
-    setSelection([]);
   };
 
   return (
@@ -232,13 +227,12 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
         className="w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 cursor-pointer hover:bg-gray-100 transition"
       >
         <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase">
-          {currentWord || <span className="text-gray-400 text-xl tracking-normal">Chọn & Gửi</span>}
+          {currentWord || <span className="text-gray-400 text-xl tracking-normal">Nhấn để Gửi</span>}
         </span>
       </div>
 
-      {/* --- Integrated Control Row --- */}
+      {/* --- Integrated Control Row (Keyboard Style) --- */}
       <div className="flex items-center justify-center gap-2 w-full">
-        {/* Shuffle Button */}
         <button
           onClick={handleShuffleClick}
           aria-label="Trộn chữ"
@@ -247,39 +241,28 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-gray-600" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
         </button>
 
-        {/* Letter Buttons */}
-        {letters.map((letter, index) => {
-          const isSelected = selectedIndices.has(index);
-          return (
-            <button
-              key={index}
-              onClick={() => handleLetterClick(letter, index)}
-              disabled={isSelected}
-              className={`
-                w-12 h-12 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-white rounded-lg shadow-md transition-all duration-200 ease-in-out
-                ${isSelected 
-                  ? 'bg-yellow-500 scale-90 cursor-not-allowed' 
-                  : 'bg-blue-500 hover:bg-blue-600 active:scale-95'
-                }`
-              }
-            >
-              {letter}
-            </button>
-          );
-        })}
+        {letters.map((letter, index) => (
+          <button
+            key={index}
+            onClick={() => handleLetterClick(letter)}
+            className="w-12 h-12 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 active:scale-95 transition-all"
+          >
+            {letter}
+          </button>
+        ))}
 
-        {/* Clear Button */}
         <button
-          onClick={handleClear}
-          aria-label="Xóa lựa chọn"
+          onClick={handleBackspace}
+          aria-label="Xóa ký tự cuối"
           className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-red-500 rounded-full shadow-md hover:bg-red-600 transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-white" viewBox="0 0 16 16"><path d="M5.829 5.854a.5.5 0 1 1 .707-.708l2.147 2.147 2.146-2.147a.5.5 0 1 1 .707.708L9.39 8l2.146 2.146a.5.5 0 0 1-.707.708L8.683 8.707l-2.147 2.147a.5.5 0 0 1-.707-.708L7.976 8 5.829 5.854Z"/><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12ZM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2Z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-white" viewBox="0 0 16 16"><path d="M5.828 3a1 1 0 0 0-1.06-1.06L.293 6.44a1 1 0 0 0 0 1.414l4.475 4.474A1 1 0 0 0 5.828 11H13a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H5.828zm5.342 5.342a.5.5 0 1 1-.707.707L8.793 8.5l-1.667 1.667a.5.5 0 1 1-.707-.707L8.086 7.793 6.419 6.126a.5.5 0 1 1 .707-.707L8.793 7.086l1.667-1.667a.5.5 0 1 1 .707.707L9.5 7.793l1.67 1.67z"/></svg>
         </button>
       </div>
     </div>
   );
 };
+
 
 // --- Toast Notification (No changes) ---
 const Toast = ({ message, show, type }) => {
@@ -294,7 +277,7 @@ const Toast = ({ message, show, type }) => {
     );
 };
 
-// --- Main App Component (Logic is mostly the same, simplified layout) ---
+// --- Main App Component with UPDATED LOGIC ---
 export default function App() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
@@ -321,10 +304,30 @@ export default function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration);
   };
   
+  // --- UPDATED handleWordSubmit with VALIDATION ---
   const handleWordSubmit = useCallback((word) => {
     if (!word || !level) return;
     const submittedWordUpper = word.toUpperCase();
 
+    // 1. Check if the word can be formed from the available letters
+    const availableLetters = [...level.letters];
+    let canBeFormed = true;
+    for (const char of submittedWordUpper) {
+        const index = availableLetters.indexOf(char);
+        if (index > -1) {
+            availableLetters.splice(index, 1); // "Use" the letter
+        } else {
+            canBeFormed = false; // Letter not available
+            break;
+        }
+    }
+
+    if (!canBeFormed) {
+        showToast("Không đủ chữ cái để tạo từ này!", "error");
+        return;
+    }
+    
+    // 2. Check if the word is a valid answer
     if (foundWords.includes(submittedWordUpper)) {
       showToast("Đã tìm thấy từ này rồi!", "info");
     } else if (level.allWords.includes(submittedWordUpper)) {
@@ -382,7 +385,6 @@ export default function App() {
             onShuffle={handleShuffle}
           />
         </main>
-        {/* Footer buttons can be removed if you want an even more minimal UI */}
         <footer className="mt-6 flex justify-center items-center space-x-4">
             <button onClick={resetLevel} className="px-5 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 transition-colors text-sm">Làm mới</button>
             <button 
