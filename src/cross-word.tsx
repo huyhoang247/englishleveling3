@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { defaultVocabulary } from './list-vocabulary.ts'; // Nhập danh sách từ vựng
+import { defaultVocabulary } from './list-vocabulary.ts'; // Đảm bảo tên file import là chính xác
 
 // --- UTILITY FUNCTIONS ---
 const getFrequencyMap = (arrOrStr) => {
@@ -57,12 +57,6 @@ const normalizeCoords = (placedWords) => {
 
 
 // --- START: LOGIC TẠO Ô CHỮ THÔNG MINH V4 (Ưu tiên giao điểm) ---
-
-/**
- * Tính toán kích thước (bounding box) của một layout đã cho.
- * @param {Array} placedWords - Mảng các từ đã được đặt.
- * @returns {Object} - { width, height, area }
- */
 const getLayoutDimensions = (placedWords) => {
     if (placedWords.length === 0) return { width: 0, height: 0, area: 0 };
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -91,7 +85,6 @@ const calculatePlacementScore = (grid, word, start, dir) => {
     for (let i = 0; i < word.length; i++) {
         const currentY = dir === 'v' ? y + i : y;
         const currentX = dir === 'h' ? x + i : x;
-        // Điểm cao cho việc tạo ra giao điểm
         if (grid.has(`${currentY},${currentX}`)) {
             score += 2; 
         }
@@ -99,11 +92,6 @@ const calculatePlacementScore = (grid, word, start, dir) => {
     return score;
 };
 
-
-/**
- * [NÂNG CẤP LỚN] Tạo layout ưu tiên sự dày đặc và giao điểm, bắt đầu bằng cặp từ tốt nhất.
- * Lấy cảm hứng từ ví dụ của người dùng để tạo ra các lưới dày đặc hơn.
- */
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
   if (words.length === 1) {
@@ -114,7 +102,6 @@ const generateCrosswordLayout = (words) => {
   let bestInitialLayout = null;
   let minArea = Infinity;
 
-  // Bước 1: Tìm "cặp hạt nhân" tốt nhất (cặp 2 từ giao nhau tạo ra layout nhỏ gọn nhất)
   for (let i = 0; i < sortedWords.length; i++) {
     for (let j = i + 1; j < sortedWords.length; j++) {
       const wordA = sortedWords[i];
@@ -123,7 +110,6 @@ const generateCrosswordLayout = (words) => {
       for (let charA_idx = 0; charA_idx < wordA.length; charA_idx++) {
         for (let charB_idx = 0; charB_idx < wordB.length; charB_idx++) {
           if (wordA[charA_idx] === wordB[charB_idx]) {
-            // Đã tìm thấy điểm giao. Đặt wordA ngang, wordB dọc.
             const placedA = { word: wordA, start: [0, -charA_idx], dir: 'h' };
             const placedB = { word: wordB, start: [-charB_idx, 0], dir: 'v' };
             const tempLayout = [placedA, placedB];
@@ -142,7 +128,6 @@ const generateCrosswordLayout = (words) => {
     }
   }
 
-  // Nếu không tìm thấy cặp nào giao nhau, quay về phương án cũ là đặt từ dài nhất
   if (!bestInitialLayout) {
       const firstWord = sortedWords[0];
       bestInitialLayout = {
@@ -163,8 +148,6 @@ const generateCrosswordLayout = (words) => {
       }
   });
 
-
-  // Bước 2: Thêm các từ còn lại vào "hạt nhân" đã có
   let placedThisRound = true;
   while (remainingWords.size > 0 && placedThisRound) {
     placedThisRound = false;
@@ -185,7 +168,6 @@ const generateCrosswordLayout = (words) => {
                 : [pWord.start[0] + k, pWord.start[1] - j];
 
               if (canPlaceWord(grid, currentWord, newStart, newDir)) {
-                // Ưu tiên các từ tạo ra nhiều giao điểm
                 const score = calculatePlacementScore(grid, currentWord, newStart, newDir);
                 if (score > bestScore) {
                   bestScore = score;
@@ -208,7 +190,7 @@ const generateCrosswordLayout = (words) => {
         grid.set(key, bestFit.word[l]);
       }
       remainingWords.delete(wordToPlace);
-      placedThisRound = true; // Báo hiệu đã đặt được từ, tiếp tục vòng lặp
+      placedThisRound = true;
     }
   }
 
@@ -216,24 +198,25 @@ const generateCrosswordLayout = (words) => {
       console.warn("Could not place all words. Remaining:", [...remainingWords]);
   }
 
-  // Cuối cùng, chuẩn hóa tọa độ để góc trên bên trái là (0,0)
   return normalizeCoords(placedWords);
 };
-
 // --- END: LOGIC TẠO Ô CHỮ THÔNG MINH V4 ---
 
 
 // --- LOGIC TỰ ĐỘNG TẠO LEVEL TỪ DANH SÁCH TỪ ---
 
-// Lọc danh sách từ để chỉ giữ lại các từ chỉ chứa chữ cái, sau đó chuyển thành chữ hoa
 const wordList = defaultVocabulary
   .filter(word => /^[A-Z]+$/i.test(word))
   .map(w => w.toUpperCase());
 
-const findPossibleWords = (seedWord, fullWordList) => {
+// *** THAY ĐỔI 1: Hàm này giờ sẽ nhận vào `usedWords` để loại bỏ các từ đã dùng ***
+const findPossibleWords = (seedWord, fullWordList, usedWords) => {
   const seedFreq = getFrequencyMap(seedWord);
   const possibleWords = [];
   for (const candidateWord of fullWordList) {
+    // Bỏ qua nếu từ đã được sử dụng trong một level trước đó
+    if (usedWords.has(candidateWord)) continue;
+    
     if (candidateWord.length < 3) continue;
     const candidateFreq = getFrequencyMap(candidateWord);
     let canBeFormed = true;
@@ -252,19 +235,23 @@ const findPossibleWords = (seedWord, fullWordList) => {
 
 export const generateLevelsFromWordList = (sourceWords) => {
   const levels = [];
-  const usedWords = new Set();
+  const usedWords = new Set(); // Set này giờ sẽ chứa TẤT CẢ các từ đã dùng qua các level
 
   const MIN_SEED_WORD_LENGTH = 7;
-  const MIN_WORDS_IN_LEVEL_GROUP = 7; // Tăng yêu cầu để có nhiều lựa chọn hơn
-  const NUM_CANDIDATES_FOR_GRID = 20; // Cung cấp một bể từ lớn
-  const MIN_PLACED_GRID_WORDS = 5;     // Yêu cầu đặt được nhiều từ hơn
+  const MIN_WORDS_IN_LEVEL_GROUP = 7; 
+  const NUM_CANDIDATES_FOR_GRID = 20; 
+  const MIN_PLACED_GRID_WORDS = 5;
+  // *** THAY ĐỔI 2: Thêm hằng số giới hạn số từ trên lưới ***
+  const MAX_GRID_WORDS_PER_LEVEL = 7;
 
   const sortedSourceWords = [...sourceWords].sort((a, b) => b.length - a.length);
 
   for (const seedWord of sortedSourceWords) {
     if (usedWords.has(seedWord) || seedWord.length < MIN_SEED_WORD_LENGTH) continue;
 
-    const possibleWords = findPossibleWords(seedWord, sourceWords);
+    // *** THAY ĐỔI 3: Truyền `usedWords` vào để lọc từ ***
+    const possibleWords = findPossibleWords(seedWord, sourceWords, usedWords);
+    
     if (possibleWords.length < MIN_WORDS_IN_LEVEL_GROUP) continue;
 
     const gridWordCandidates = [...possibleWords]
@@ -274,15 +261,22 @@ export const generateLevelsFromWordList = (sourceWords) => {
     const placedWordsLayout = generateCrosswordLayout(gridWordCandidates);
 
     if (placedWordsLayout.length >= MIN_PLACED_GRID_WORDS) {
-      const gridWords = placedWordsLayout.map(p => p.word);
+      // *** THAY ĐỔI 4: Giới hạn số từ trên lưới xuống tối đa 7 từ, ưu tiên từ dài nhất ***
+      const finalGridWords = placedWordsLayout
+        .map(p => p.word)
+        .sort((a, b) => b.length - a.length)
+        .slice(0, MAX_GRID_WORDS_PER_LEVEL);
+
       const newLevel = {
         id: levels.length + 1,
         letters: seedWord.split(''),
-        gridWords: gridWords,
+        gridWords: finalGridWords, // Sử dụng danh sách từ đã được giới hạn
         allWords: [...new Set(possibleWords)],
       };
       levels.push(newLevel);
-      console.log(`Tạo thành công Level ${newLevel.id} từ từ gốc "${seedWord}". Bao gồm ${possibleWords.length} từ. Đã đặt ${gridWords.length} từ vào lưới.`);
+      console.log(`Tạo thành công Level ${newLevel.id} từ từ gốc "${seedWord}". Bao gồm ${possibleWords.length} từ. Đã đặt ${finalGridWords.length} từ vào lưới.`);
+      
+      // Thêm TẤT CẢ các từ của level này vào `usedWords` để không dùng lại ở các level sau
       possibleWords.forEach(word => usedWords.add(word));
     }
   }
@@ -359,12 +353,11 @@ const GameBoard = ({ level, foundWords }) => {
         grid.push(row);
     }
 
-    // Tự động điều chỉnh kích thước ô chữ cho vừa màn hình nhỏ
     const scale = useMemo(() => {
         if (typeof window === 'undefined') return 1;
         const maxDim = Math.max(gridDimensions.width, gridDimensions.height);
-        const containerWidth = Math.min(window.innerWidth * 0.9, 400); // 90% viewport or 400px
-        const cellSize = 44; // 11 * 4 (w-11 in tailwind)
+        const containerWidth = Math.min(window.innerWidth * 0.9, 400);
+        const cellSize = 44; 
         if (maxDim * cellSize > containerWidth) {
             return containerWidth / (maxDim * cellSize);
         }
@@ -482,7 +475,6 @@ export default function App() {
   
   const keyboardLetters = useMemo(() => {
     if (!level) return [];
-    // Hiển thị các chữ cái không trùng lặp
     return [...new Set(level.letters)];
   }, [level]);
 
