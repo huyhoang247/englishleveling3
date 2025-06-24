@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 // --- UTILITY FUNCTIONS ---
-
-// Helper function to create a frequency map of characters
 const getFrequencyMap = (arrOrStr) => {
     const map = new Map();
     for (const char of arrOrStr) {
@@ -44,12 +42,41 @@ const normalizeCoords = (placedWords) => {
 };
 
 
-// --- START: LOGIC TẠO Ô CHỮ THÔNG MINH ---
+// --- START: LOGIC TẠO Ô CHỮ THÔNG MINH V3 (FINAL) ---
+
+/**
+ * [MỚI] Tìm từ "mỏ neo" tốt nhất dựa trên khả năng kết nối.
+ * Từ tốt nhất là từ có nhiều ký tự chung với các từ khác nhất.
+ */
+const findBestAnchor = (words) => {
+    let bestAnchor = '';
+    let maxConnections = -1;
+
+    for (const potentialAnchor of words) {
+        let currentConnections = 0;
+        const anchorChars = new Set(potentialAnchor.split(''));
+        for (const otherWord of words) {
+            if (potentialAnchor === otherWord) continue;
+            for (const char of otherWord) {
+                if (anchorChars.has(char)) {
+                    currentConnections++;
+                    // Chỉ cần một ký tự chung là đủ để tính là một "kết nối" tiềm năng
+                    break; 
+                }
+            }
+        }
+        if (currentConnections > maxConnections) {
+            maxConnections = currentConnections;
+            bestAnchor = potentialAnchor;
+        }
+    }
+    // Nếu không tìm được, trả về từ dài nhất làm phương án dự phòng
+    return bestAnchor || words.sort((a,b)=>b.length-a.length)[0];
+};
 
 const calculatePlacementScore = (grid, word, start, dir) => {
     let score = 0;
     const [y, x] = start;
-
     for (let i = 0; i < word.length; i++) {
         const currentY = dir === 'v' ? y + i : y;
         const currentX = dir === 'h' ? x + i : x;
@@ -66,27 +93,38 @@ const calculatePlacementScore = (grid, word, start, dir) => {
     return score;
 };
 
+/**
+ * [NÂNG CẤP TRIỆT ĐỂ] Tạo layout ưu tiên sự dày đặc và số lượng từ.
+ */
 const generateCrosswordLayout = (words) => {
   if (!words || words.length === 0) return [];
-  const sortedWords = [...words].sort((a, b) => b.length - a.length);
+  
   const placedWords = [];
   const grid = new Map();
+  // THAY ĐỔI LỚN: Không sắp xếp theo độ dài nữa, giữ nguyên danh sách từ
+  const remainingWords = new Set(words);
 
-  const firstWord = sortedWords.shift();
+  // Bước 1: Tìm "mỏ neo" tốt nhất thay vì từ dài nhất
+  const firstWord = findBestAnchor(words);
   if (!firstWord) return [];
+
   placedWords.push({ word: firstWord, start: [0, 0], dir: 'h' });
   for (let i = 0; i < firstWord.length; i++) {
     grid.set(`${0},${i}`, firstWord[i]);
   }
+  remainingWords.delete(firstWord);
 
-  const remainingWords = new Set(sortedWords);
   let attempts = 0;
   while (remainingWords.size > 0 && attempts < remainingWords.size) {
     let bestFit = null;
     let bestScore = -1;
     let wordToPlace = null;
 
-    for (const currentWord of remainingWords) {
+    // Sắp xếp các từ còn lại theo độ dài để ưu tiên đặt các từ dài trước (nếu có thể)
+    // Điều này giúp lấp đầy không gian hiệu quả hơn sau khi đã có mỏ neo
+    const sortedRemaining = [...remainingWords].sort((a,b) => b.length - a.length);
+
+    for (const currentWord of sortedRemaining) {
       for (const pWord of placedWords) {
         for (let j = 0; j < currentWord.length; j++) {
           for (let k = 0; k < pWord.word.length; k++) {
@@ -132,7 +170,7 @@ const generateCrosswordLayout = (words) => {
   return normalizeCoords(placedWords);
 };
 
-// --- END: LOGIC TẠO Ô CHỮ THÔNG MINH ---
+// --- END: LOGIC TẠO Ô CHỮ THÔNG MINH V3 (FINAL) ---
 
 
 // --- LOGIC TỰ ĐỘNG TẠO LEVEL TỪ DANH SÁCH TỪ ---
@@ -179,12 +217,9 @@ export const generateLevelsFromWordList = (sourceWords) => {
   const usedWords = new Set();
 
   const MIN_SEED_WORD_LENGTH = 7;
-  const MIN_WORDS_IN_LEVEL_GROUP = 5;
-  // === LOGIC CẢI TIẾN TẠI ĐÂY ===
-  // Cung cấp một "bể" từ lớn hơn để thuật toán có nhiều lựa chọn tốt hơn
-  const NUM_CANDIDATES_FOR_GRID = 15;
-  const MIN_PLACED_GRID_WORDS = 4;
-  // ==============================
+  const MIN_WORDS_IN_LEVEL_GROUP = 7; // Tăng yêu cầu để có nhiều lựa chọn hơn
+  const NUM_CANDIDATES_FOR_GRID = 20; // Cung cấp một bể từ lớn
+  const MIN_PLACED_GRID_WORDS = 5;     // Yêu cầu đặt được nhiều từ hơn
 
   const sortedSourceWords = [...sourceWords].sort((a, b) => b.length - a.length);
 
@@ -219,8 +254,8 @@ export const generateLevelsFromWordList = (sourceWords) => {
       return [{
         id: 1,
         letters: ["S", "T", "R", "O", "N", "G", "E"],
-        gridWords: ["STRONG", "STORE", "GONE", "REST"],
-        allWords: ["STRONG", "STORE", "GONE", "REST", "SONG", "RENT", "TONG"],
+        gridWords: ["STRONG", "STORE", "GONE", "REST", "SONG", "RENT"],
+        allWords: ["STRONG", "STORE", "GONE", "REST", "SONG", "RENT", "TONGS", "ROSE"],
       }];
   }
 
@@ -286,9 +321,18 @@ const GameBoard = ({ level, foundWords }) => {
         grid.push(row);
     }
 
+    // Tự động điều chỉnh kích thước ô chữ cho vừa màn hình nhỏ
+    const scale = useMemo(() => {
+        const maxDim = Math.max(gridDimensions.width, gridDimensions.height);
+        if (maxDim > 8) {
+            return 8 / maxDim;
+        }
+        return 1;
+    }, [gridDimensions]);
+
     return (
         <div className="flex justify-center items-center py-4">
-            <div className="grid gap-1">
+            <div className="grid gap-1" style={{ transform: `scale(${scale})` }}>
                 {grid.map((row, y) => (
                     <div key={y} className="flex gap-1">
                         {row.map((cell) => <Cell key={cell.key} {...cell} />)}
@@ -400,7 +444,8 @@ export default function App() {
   
   const keyboardLetters = useMemo(() => {
     if (!level) return [];
-    return [...new Set(level.letters)].sort();
+    // Hiển thị các chữ cái không trùng lặp
+    return [...new Set(level.letters)];
   }, [level]);
 
   const levelLetterFreq = useMemo(() => {
