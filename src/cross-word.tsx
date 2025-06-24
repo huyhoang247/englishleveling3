@@ -93,13 +93,11 @@ const normalizeCoords = (placedWords) => {
     return placedWords.map(pWord => ({ ...pWord, start: [pWord.start[0] - minY, pWord.start[1] - minX] }));
 };
 
-// ** NOTE: LEVEL DATA UPDATED. With ['R', 'A', 'R', 'E'], you CANNOT form "AREA".
-// I've kept your original data, but the logic will correctly reject "AREA" for level 1.
 const rawLevels = [
   {
     id: 1,
     letters: ["R", "A", "R", "E"],
-    gridWords: ["RARE", "EAR"], // "AREA" requires two 'A's.
+    gridWords: ["RARE", "EAR"],
     allWords: ["RARE", "REAR", "EAR", "ERA", "ARE"],
   },
   {
@@ -188,7 +186,7 @@ const GameBoard = ({ level, foundWords }) => {
 };
 
 
-// --- UPDATED WordInputControl for UNIQUE keyboard ---
+// --- UPDATED WordInputControl with dual-line display ---
 const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
   const [currentWord, setCurrentWord] = useState('');
 
@@ -210,15 +208,29 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
 
   return (
     <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
+      {/* Answer Display Bar */}
       <div 
-        className={`w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 transition-colors
+        className={`w-full h-20 bg-white rounded-lg shadow-inner flex flex-col items-center justify-center px-4 transition-colors
         ${isShaking ? 'animate-shake bg-red-100' : ''}`}
       >
-        <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase h-full flex items-center">
-          {currentWord || <span className="text-gray-400 text-xl tracking-normal normal-case">...</span>}
-        </span>
+        {currentWord ? (
+          <>
+            {/* Uppercase Display */}
+            <span className="text-3xl font-bold tracking-[0.2em] text-gray-800 uppercase">
+              {currentWord}
+            </span>
+            {/* Lowercase Display */}
+            <span className="text-base font-semibold tracking-wider text-gray-500">
+              {currentWord.toLowerCase()}
+            </span>
+          </>
+        ) : (
+          // Placeholder when empty
+          <span className="text-gray-400 text-xl">...</span>
+        )}
       </div>
 
+      {/* Letter Keyboard Row */}
       <div className="flex items-center justify-center gap-2 w-full">
         {letters.map((letter) => (
           <button
@@ -231,6 +243,7 @@ const WordInputControl = ({ letters, onWordSubmit, isShaking }) => {
         ))}
       </div>
 
+      {/* Action Buttons Row */}
       <div className="flex items-center justify-center gap-3 w-full pt-2">
          <button
           onClick={handleBackspace}
@@ -274,7 +287,7 @@ const getFrequencyMap = (arrOrStr) => {
     return map;
 }
 
-// --- Main App Component with FREQUENCY COUNTING LOGIC ---
+// --- Main App Component (No logic changes needed for this feature) ---
 export default function App() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
@@ -288,13 +301,11 @@ export default function App() {
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex]);
   
-  // Create a unique, sorted list of letters for the keyboard
   const keyboardLetters = useMemo(() => {
     if (!level) return [];
     return [...new Set(level.letters)].sort();
   }, [level]);
 
-  // Create a frequency map of the available letters for the current level
   const levelLetterFreq = useMemo(() => {
     if (!level) return new Map();
     return getFrequencyMap(level.letters);
@@ -311,12 +322,10 @@ export default function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration);
   };
   
-  // --- UPDATED handleWordSubmit with FREQUENCY COUNTING ---
   const handleWordSubmit = useCallback((word, clearInputCallback) => {
     if (!word || !level) return;
     const submittedWordUpper = word.toUpperCase();
 
-    // 1. Check if the word can be formed from the available letters using frequency maps
     const submittedWordFreq = getFrequencyMap(submittedWordUpper);
     let canBeFormed = true;
     for (const [char, count] of submittedWordFreq.entries()) {
@@ -337,7 +346,6 @@ export default function App() {
         return;
     }
     
-    // 2. Check if the word is a valid answer
     if (foundWords.includes(submittedWordUpper)) {
       showToast("Đã tìm thấy từ này rồi!", "info");
     } else if (level.allWords.includes(submittedWordUpper)) {
