@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { defaultVocabulary } from './Wordlist'; // Nhập danh sách từ vựng
+import { defaultVocabulary } from './list-vocabulary.ts'; // Nhập danh sách từ vựng
 
 // --- UTILITY FUNCTIONS ---
 const getFrequencyMap = (arrOrStr) => {
