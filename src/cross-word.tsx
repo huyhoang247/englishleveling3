@@ -107,7 +107,7 @@ const rawLevels = [
   {
     id: 1,
     letters: ["R", "A", "R", "E"],
-    gridWords: ["RARE", "EAR"], // "AREA" removed because it can't be formed
+    gridWords: ["RARE", "EAR"],
     allWords: ["RARE", "REAR", "EAR", "ERA", "ARE"],
   },
   {
@@ -196,11 +196,13 @@ const GameBoard = ({ level, foundWords }) => {
 };
 
 
-// --- REFINED WordInputControl with KEYBOARD LOGIC ---
-const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
+// --- NEW, MINIMAL & ELEGANT WordInputControl ---
+const WordInputControl = ({ letters, onWordSubmit }) => {
   const [currentWord, setCurrentWord] = useState('');
 
   const handleLetterClick = (letter: string) => {
+    // Prevent overly long words
+    if (currentWord.length > 10) return;
     setCurrentWord(prev => prev + letter);
   };
 
@@ -215,32 +217,17 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
     setCurrentWord(prev => prev.slice(0, -1));
   }
 
-  const handleShuffleClick = () => {
-    onShuffle();
-  };
-
   return (
     <div className="flex flex-col items-center mt-6 select-none space-y-4 w-full">
-      {/* Answer Bar - Click to Submit */}
-      <div 
-        onClick={handleSubmit}
-        className="w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4 cursor-pointer hover:bg-gray-100 transition"
-      >
-        <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase">
-          {currentWord || <span className="text-gray-400 text-xl tracking-normal">Nhấn để Gửi</span>}
+      {/* Answer Display Bar */}
+      <div className="w-full h-14 bg-white rounded-lg shadow-inner flex items-center justify-center px-4">
+        <span className="text-3xl font-bold tracking-[0.2em] text-gray-700 uppercase h-full flex items-center">
+          {currentWord || <span className="text-gray-400 text-xl tracking-normal normal-case">...</span>}
         </span>
       </div>
 
-      {/* --- Integrated Control Row (Keyboard Style) --- */}
+      {/* Letter Keyboard Row */}
       <div className="flex items-center justify-center gap-2 w-full">
-        <button
-          onClick={handleShuffleClick}
-          aria-label="Trộn chữ"
-          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full shadow-md hover:bg-gray-300 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-gray-600" viewBox="0 0 16 16"><path fillRule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3h.5a.5.5 0 0 1 0 1H13c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.318 1.918C9.828 10.99 11.202 12 13 12h.5a.5.5 0 0 1 0 1H13c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 .5 11H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.318-1.918C4.172 5.01 2.798 4 1 4H.5a.5.5 0 0 1-.5-.5z"/><path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/></svg>
-        </button>
-
         {letters.map((letter, index) => (
           <button
             key={index}
@@ -250,13 +237,23 @@ const WordInputControl = ({ letters, onWordSubmit, onShuffle }) => {
             {letter}
           </button>
         ))}
+      </div>
 
-        <button
+      {/* Action Buttons Row */}
+      <div className="flex items-center justify-center gap-3 w-full pt-2">
+         <button
           onClick={handleBackspace}
           aria-label="Xóa ký tự cuối"
-          className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-red-500 rounded-full shadow-md hover:bg-red-600 transition-colors"
+          className="w-16 h-12 flex items-center justify-center bg-gray-200 rounded-lg shadow-md hover:bg-gray-300 transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="text-white" viewBox="0 0 16 16"><path d="M5.828 3a1 1 0 0 0-1.06-1.06L.293 6.44a1 1 0 0 0 0 1.414l4.475 4.474A1 1 0 0 0 5.828 11H13a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H5.828zm5.342 5.342a.5.5 0 1 1-.707.707L8.793 8.5l-1.667 1.667a.5.5 0 1 1-.707-.707L8.086 7.793 6.419 6.126a.5.5 0 1 1 .707-.707L8.793 7.086l1.667-1.667a.5.5 0 1 1 .707.707L9.5 7.793l1.67 1.67z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="text-gray-700" viewBox="0 0 16 16"><path d="M5.828 3a1 1 0 0 0-1.06-1.06L.293 6.44a1 1 0 0 0 0 1.414l4.475 4.474A1 1 0 0 0 5.828 11H13a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H5.828zm5.342 5.342a.5.5 0 1 1-.707.707L8.793 8.5l-1.667 1.667a.5.5 0 1 1-.707-.707L8.086 7.793 6.419 6.126a.5.5 0 1 1 .707-.707L8.793 7.086l1.667-1.667a.5.5 0 1 1 .707.707L9.5 7.793l1.67 1.67z"/></svg>
+        </button>
+        <button
+          onClick={handleSubmit}
+          aria-label="Gửi từ"
+          className="w-24 h-12 flex items-center justify-center bg-green-500 rounded-lg shadow-md hover:bg-green-600 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" className="text-white" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022z"/></svg>
         </button>
       </div>
     </div>
@@ -277,7 +274,7 @@ const Toast = ({ message, show, type }) => {
     );
 };
 
-// --- Main App Component with UPDATED LOGIC ---
+// --- Main App Component (Updated to remove shuffle logic) ---
 export default function App() {
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [foundWords, setFoundWords] = useState([]);
@@ -290,12 +287,12 @@ export default function App() {
     return { ...currentRawLevel, words: generatedGrid };
   }, [currentLevelIndex]);
   
-  const [shuffledLetters, setShuffledLetters] = useState(level ? shuffleArray([...level.letters]) : []);
+  // Now we only need the letters from the level, shuffling is done visually if needed but not required for logic
+  const letters = level ? level.letters : [];
 
   useEffect(() => {
     if (level) {
       setFoundWords([]);
-      setShuffledLetters(shuffleArray([...level.letters]));
     }
   }, [level]);
 
@@ -304,20 +301,18 @@ export default function App() {
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration);
   };
   
-  // --- UPDATED handleWordSubmit with VALIDATION ---
   const handleWordSubmit = useCallback((word) => {
     if (!word || !level) return;
     const submittedWordUpper = word.toUpperCase();
 
-    // 1. Check if the word can be formed from the available letters
     const availableLetters = [...level.letters];
     let canBeFormed = true;
     for (const char of submittedWordUpper) {
         const index = availableLetters.indexOf(char);
         if (index > -1) {
-            availableLetters.splice(index, 1); // "Use" the letter
+            availableLetters.splice(index, 1);
         } else {
-            canBeFormed = false; // Letter not available
+            canBeFormed = false;
             break;
         }
     }
@@ -327,7 +322,6 @@ export default function App() {
         return;
     }
     
-    // 2. Check if the word is a valid answer
     if (foundWords.includes(submittedWordUpper)) {
       showToast("Đã tìm thấy từ này rồi!", "info");
     } else if (level.allWords.includes(submittedWordUpper)) {
@@ -339,10 +333,6 @@ export default function App() {
     }
   }, [level, foundWords]);
 
-  const handleShuffle = () => {
-    setShuffledLetters(shuffleArray([...shuffledLetters]));
-  };
-  
   const allGridWordsFound = useMemo(() => {
     if (!level || !level.words) return false;
     return level.words.every(w => foundWords.includes(w.word));
@@ -380,9 +370,8 @@ export default function App() {
           )}
           <GameBoard level={level} foundWords={foundWords} />
           <WordInputControl 
-            letters={shuffledLetters} 
+            letters={letters} 
             onWordSubmit={handleWordSubmit}
-            onShuffle={handleShuffle}
           />
         </main>
         <footer className="mt-6 flex justify-center items-center space-x-4">
