@@ -1,4 +1,4 @@
-// lat-the.tsx (Optimized Version)
+// lat-the.tsx (Optimized Version - No-Wait)
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
@@ -170,7 +170,6 @@ const GlobalStyles = () => (
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* OPTIMIZATION: Thêm keyframe cho hiệu ứng lật thẻ. Điều này cho phép CSS xử lý hoàn toàn hoạt ảnh. */
         @keyframes flip-in {
             from {
                 transform: rotateY(0deg);
@@ -189,7 +188,6 @@ const GlobalStyles = () => (
         .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
         .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         
-        /* OPTIMIZATION: Logic hoạt ảnh của thẻ được chuyển sang CSS thuần. */
         .card-container {
             width: 100%;
             aspect-ratio: 5 / 7;
@@ -201,12 +199,12 @@ const GlobalStyles = () => (
             width: 100%;
             height: 100%;
             transform-style: preserve-3d;
-            will-change: transform; /* Báo cho trình duyệt biết thuộc tính này sẽ thay đổi, giúp tối ưu. */
+            will-change: transform;
         }
         .card-container.is-flipping .card-inner {
             animation-name: flip-in;
             animation-duration: 0.8s;
-            animation-fill-mode: forwards; /* Giữ trạng thái cuối cùng của animation (thẻ lật ngửa) */
+            animation-fill-mode: forwards;
             animation-timing-function: ease-in-out;
         }
         
@@ -216,7 +214,6 @@ const GlobalStyles = () => (
             transform: rotateY(180deg);
             padding: 6px;
             box-sizing: border-box;
-            /* OPTIMIZATION: Loại bỏ backdrop-filter (nguyên nhân chính gây lag). Thay bằng nền bán trong suốt đơn giản, nhẹ hơn rất nhiều. */
             background: rgba(42, 49, 78, 0.85); 
             border: 1px solid rgba(255, 255, 255, 0.18);
         }
@@ -239,6 +236,7 @@ const GlobalStyles = () => (
 // === 2. CÁC COMPONENT CON ==============================================
 // ========================================================================
 
+// LoadingOverlay vẫn được giữ lại vì nó cần cho lần tải dữ liệu đầu tiên
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
 
@@ -278,8 +276,6 @@ const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
 
 interface ImageCard { id: number; url: string; }
 
-// OPTIMIZATION: Bọc trong React.memo và cập nhật props để hỗ trợ hoạt ảnh CSS
-// `flipDelay` được truyền vào để CSS có thể tạo hiệu ứng lật nối tiếp nhau mà không cần JS can thiệp.
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
     <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
         <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}>
@@ -296,9 +292,7 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
-        // Bắt đầu lật sau một khoảng trễ ngắn để người dùng kịp nhìn thấy thẻ
         const t1 = setTimeout(() => setIsFlipping(true), 300);
-        // Cho phép nhấn nút sau khi animation lật thẻ hoàn tất (300ms trễ + 800ms animation)
         const t2 = setTimeout(() => setIsProcessing(false), 300 + 800);
         return () => { clearTimeout(t1); clearTimeout(t2); };
     }, [card]);
@@ -307,7 +301,6 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
         if (isProcessing) return;
         setIsProcessing(true);
         setIsFlipping(false);
-        // Chờ một chút để người dùng cảm thấy có sự "reset" trước khi gọi hàm mở lại
         setTimeout(() => { onOpenAgain(); }, 300);
     }
 
@@ -328,26 +321,22 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     );
 };
 
-// OPTIMIZATION: Logic được viết lại hoàn toàn để sử dụng hoạt ảnh CSS thay vì cập nhật state tuần tự.
-// Component chỉ quản lý 3 giai đoạn chính: DEALING, FLIPPING, REVEALED.
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
     const [startFlipping, setStartFlipping] = useState(false);
-    const [phase, setPhase] = useState('DEALING'); // 'DEALING', 'FLIPPING', 'REVEALED'
+    const [phase, setPhase] = useState('DEALING');
 
     const startRound = useCallback(() => {
         setPhase('DEALING');
         setStartFlipping(false);
 
-        // Chờ cho animation chia bài (deal-in) hoàn tất
-        const totalDealTime = 500 + 80 * (cards.length - 1); // 500ms là duration, 80ms là delay mỗi thẻ
+        const totalDealTime = 500 + 80 * (cards.length - 1);
         
         setTimeout(() => {
             setPhase('FLIPPING');
-            setStartFlipping(true); // Kích hoạt animation lật cho tất cả các thẻ cùng lúc
+            setStartFlipping(true);
 
-            // Tính toán khi nào thẻ cuối cùng sẽ lật xong để cho phép nhấn nút
-            const flipDuration = 800; // Lấy từ CSS animation-duration
-            const lastCardDelay = 200 * (cards.length - 1); // Lấy từ flipDelay truyền vào Card
+            const flipDuration = 800;
+            const lastCardDelay = 200 * (cards.length - 1);
             const totalFlipTime = flipDuration + lastCardDelay;
 
             setTimeout(() => setPhase('REVEALED'), totalFlipTime);
@@ -379,12 +368,11 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
             <div style={{ textAlign: 'center' }}>
                 <div className="four-card-grid-container">
                     {cards.map((card, index) => (
-                        // opacity: 0 và animation-fill-mode: forwards sẽ giúp thẻ ẩn đi cho đến khi animation `deal-in` bắt đầu
                         <div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
                             <Card 
                                 cardData={card} 
                                 isFlipping={startFlipping} 
-                                flipDelay={index * 200} // Tạo độ trễ nối tiếp cho hiệu ứng lật
+                                flipDelay={index * 200}
                             />
                         </div>
                     ))}
@@ -460,7 +448,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
-    const [isOpening, setIsOpening] = useState(false); // OPTIMIZATION: Đổi tên từ isLoading sang isOpening để rõ ràng hơn
+    // --- BỊ XÓA --- const [isOpening, setIsOpening] = useState(false);
 
     useEffect(() => {
         const fetchOpenedImages = async () => {
@@ -498,60 +486,41 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    // OPTIMIZATION: Hàm mở thẻ được làm lại để preload ảnh
-    const handleOpenCards = async (count: 1 | 4) => {
-        if (isLoading || isOpening || availableImageIndices.length < count) {
-            if (!isOpening && availableImageIndices.length < count) {
+    // +++ THAY ĐỔI +++: Hàm được làm lại để không còn `async` và không đợi preload
+    const handleOpenCards = (count: 1 | 4) => {
+        // +++ THAY ĐỔI +++: Điều kiện kiểm tra được đơn giản hóa
+        if (isLoading || availableImageIndices.length < count) {
+            if (availableImageIndices.length < count) {
                 alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
             }
             return;
         }
 
-        setIsOpening(true);
+        // --- BỊ XÓA --- setIsOpening(true);
 
         let remainingIndices = [...availableImageIndices];
         const selectedCards: ImageCard[] = [];
         const selectedIds: number[] = [];
-        const imageUrlsToPreload: string[] = [];
-
+        
         for (let i = 0; i < count; i++) {
             const randomIndexInPool = Math.floor(Math.random() * remainingIndices.length);
             const originalImageIndex = remainingIndices[randomIndexInPool];
             const cardData = { id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] };
             selectedCards.push(cardData);
             selectedIds.push(cardData.id);
-            imageUrlsToPreload.push(cardData.url);
             remainingIndices.splice(randomIndexInPool, 1);
         }
 
-        try {
-            // Tải trước tất cả các ảnh sẽ được hiển thị
-            const preloadPromises = imageUrlsToPreload.map(src => new Promise<void>((resolve, reject) => {
-                const img = new Image();
-                img.src = src;
-                img.onload = () => resolve();
-                img.onerror = reject; // Xử lý lỗi nếu ảnh không tải được
-            }));
+        // +++ THAY ĐỔI +++: Logic được thực thi ngay lập tức, không còn try/catch và preload
+        setAvailableImageIndices(remainingIndices);
+        addOpenedImagesToFirestore(selectedIds); // Cập nhật CSDL trong nền
+        setCardsForPopup(selectedCards);
             
-            await Promise.all(preloadPromises);
-
-            // Chỉ sau khi ảnh đã tải xong, chúng ta mới cập nhật state và hiển thị overlay
-            setAvailableImageIndices(remainingIndices);
-            addOpenedImagesToFirestore(selectedIds);
-            setCardsForPopup(selectedCards);
-            
-            setIsOpening(false); // Tắt màn hình loading
-
-            if (count === 1) {
-                setShowSingleOverlay(true);
-            } else {
-                setShowFourOverlay(true);
-            }
-        } catch (error) {
-            console.error("Lỗi khi tải trước hình ảnh:", error);
-            alert("Đã có lỗi xảy ra khi tải tài nguyên, vui lòng thử lại.");
-            setIsOpening(false); // Tắt màn hình loading nếu có lỗi
-        } 
+        if (count === 1) {
+            setShowSingleOverlay(true);
+        } else {
+            setShowFourOverlay(true);
+        }
     };
     
     const handleCloseOverlay = (openedCount: number) => {
@@ -569,7 +538,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     return (
         <>
             <GlobalStyles />
-            <LoadingOverlay isVisible={isOpening} />
+            {/* --- BỊ XÓA --- Dòng này đã được loại bỏ */}
+            {/* <LoadingOverlay isVisible={isOpening} /> */}
             
             {!showSingleOverlay && !showFourOverlay && (
                 <header className="main-header">
@@ -586,7 +556,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         key={chest.id}
                         {...chest}
                         onOpen1={() => handleOpenCards(1)}
-                        onOpen10={() => handleOpenCards(4)} // Giả sử mở 4 thẻ cho nút x10 để khớp với FourCardsOpener
+                        onOpen10={() => handleOpenCards(4)}
                     />
                 ))}
             </div>
