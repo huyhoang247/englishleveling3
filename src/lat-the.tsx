@@ -1,4 +1,4 @@
-// lat-the.tsx (Optimized Version - No-Wait)
+// lat-the.tsx (Optimized Version)
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
@@ -236,7 +236,6 @@ const GlobalStyles = () => (
 // === 2. CÁC COMPONENT CON ==============================================
 // ========================================================================
 
-// LoadingOverlay vẫn được giữ lại vì nó cần cho lần tải dữ liệu đầu tiên
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
 
@@ -443,12 +442,12 @@ const CHEST_DATA = [
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true); // Chỉ dùng cho lần tải dữ liệu ban đầu
     const [availableImageIndices, setAvailableImageIndices] = useState<number[]>([]);
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
-    // --- BỊ XÓA --- const [isOpening, setIsOpening] = useState(false);
+    const [isProcessingClick, setIsProcessingClick] = useState(false); // Ngăn người dùng nhấn liên tục
 
     useEffect(() => {
         const fetchOpenedImages = async () => {
@@ -486,22 +485,23 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    // +++ THAY ĐỔI +++: Hàm được làm lại để không còn `async` và không đợi preload
-    const handleOpenCards = (count: 1 | 4) => {
-        // +++ THAY ĐỔI +++: Điều kiện kiểm tra được đơn giản hóa
-        if (isLoading || availableImageIndices.length < count) {
-            if (availableImageIndices.length < count) {
+    // TỐI ƯU: Hàm mở thẻ được làm lại để không còn chờ tải ảnh
+    const handleOpenCards = async (count: 1 | 4) => {
+        // Ngăn người dùng nhấn liên tục hoặc khi không đủ ảnh
+        if (isProcessingClick || availableImageIndices.length < count) {
+            if (!isProcessingClick && availableImageIndices.length < count) {
                 alert(`Không đủ ảnh để mở. Còn lại: ${availableImageIndices.length}`);
             }
             return;
         }
 
-        // --- BỊ XÓA --- setIsOpening(true);
+        setIsProcessingClick(true);
 
+        // 1. CHUẨN BỊ DỮ LIỆU (Rất nhanh, chỉ là logic phía client)
         let remainingIndices = [...availableImageIndices];
         const selectedCards: ImageCard[] = [];
         const selectedIds: number[] = [];
-        
+
         for (let i = 0; i < count; i++) {
             const randomIndexInPool = Math.floor(Math.random() * remainingIndices.length);
             const originalImageIndex = remainingIndices[randomIndexInPool];
@@ -511,16 +511,22 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             remainingIndices.splice(randomIndexInPool, 1);
         }
 
-        // +++ THAY ĐỔI +++: Logic được thực thi ngay lập tức, không còn try/catch và preload
+        // 2. CẬP NHẬT DỮ LIỆU (Hành động ngầm, không chặn UI)
+        addOpenedImagesToFirestore(selectedIds);
         setAvailableImageIndices(remainingIndices);
-        addOpenedImagesToFirestore(selectedIds); // Cập nhật CSDL trong nền
+        
+        // 3. HIỂN THỊ GIAO DIỆN LẬT THẺ NGAY LẬP TỨC
+        // Không còn 'await' tải ảnh. Hiển thị ngay overlay với thẻ úp sấp.
         setCardsForPopup(selectedCards);
-            
+        
         if (count === 1) {
             setShowSingleOverlay(true);
         } else {
             setShowFourOverlay(true);
         }
+        
+        // Mở khóa nút sau một khoảng trễ ngắn để animation bắt đầu, tránh spam
+        setTimeout(() => setIsProcessingClick(false), 500); 
     };
     
     const handleCloseOverlay = (openedCount: number) => {
@@ -531,6 +537,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         onGemReward(1 * openedCount);
     };
 
+    // Chỉ hiển thị loading cho lần tải dữ liệu người dùng ban đầu
     if (isLoading) {
         return <LoadingOverlay isVisible={true} />;
     }
@@ -538,8 +545,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     return (
         <>
             <GlobalStyles />
-            {/* --- BỊ XÓA --- Dòng này đã được loại bỏ */}
-            {/* <LoadingOverlay isVisible={isOpening} /> */}
+            {/* LoadingOverlay không còn cần thiết cho việc mở thẻ nữa, giúp trải nghiệm tức thì */}
             
             {!showSingleOverlay && !showFourOverlay && (
                 <header className="main-header">
@@ -556,7 +562,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         key={chest.id}
                         {...chest}
                         onOpen1={() => handleOpenCards(1)}
-                        onOpen10={() => handleOpenCards(4)}
+                        onOpen10={() => handleOpenCards(4)} // Giả sử mở 4 thẻ cho nút x10
                     />
                 ))}
             </div>
