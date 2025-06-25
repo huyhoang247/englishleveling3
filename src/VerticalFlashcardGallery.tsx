@@ -1,15 +1,15 @@
+
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal.tsx';
+import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
-import { doc, getDoc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { SidebarLayout } from './sidebar-story.tsx';
 
-// --- Interfaces and Data (Không thay đổi) ---
+// --- Interfaces and Data ---
 interface Playlist {
   id: string;
   name: string;
@@ -36,17 +36,18 @@ interface VocabularyData {
   synonyms: string[];
   antonyms: string[];
 }
+// Tối ưu: Loại bỏ isFavorite khỏi đây, vì nó là trạng thái động của user, không phải data gốc của card.
 interface Flashcard {
   id: number;
   imageUrl: StyledImageUrls;
   vocabulary: VocabularyData;
 }
+// Giao diện cho card sẽ hiển thị trên gallery (kết hợp data gốc và trạng thái động)
 interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
 }
 
-// --- Dữ liệu tĩnh và hàm khởi tạo (Không thay đổi) ---
 const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
   const urls: string[] = [];
   for (let i = 1; i <= count; i++) {
@@ -89,6 +90,7 @@ const vocabularyData: VocabularyData[] = [
   ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
 ];
 
+// --- TỐI ƯU 1: Chuyển mảng dữ liệu gốc thành Map để tra cứu O(1) ---
 const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
     Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
         const vocab = vocabularyData[i] || { word: `Word ${i + 1}`, meaning: `Meaning ${i + 1}`, example: `Example ${i + 1}`, phrases:[], popularity: 'Thấp', synonyms:[], antonyms:[] };
@@ -99,7 +101,7 @@ const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
             realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
         };
         const card: Flashcard = { id: i + 1, imageUrl: imageUrls, vocabulary: vocab };
-        return [i + 1, card];
+        return [i + 1, card]; // Key là id, value là object card
     })
 );
 
@@ -121,14 +123,12 @@ const animations = `
   @keyframes comicPop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
 `;
-const scrollbarHide = `
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-  `;
 
+// Tách FlashcardItem ra component riêng và memoize nó.
+// --- TỐI ƯU 3: Cập nhật props cho FlashcardItem để React.memo hoạt động ---
 interface FlashcardItemProps {
   card: Flashcard;
-  isFavorite: boolean;
+  isFavorite: boolean; // Truyền isFavorite như một prop riêng
   visualStyle: string;
   onImageClick: (card: Flashcard) => void;
   onFavoriteClick: (id: number) => void;
@@ -181,7 +181,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all');
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null);
+  const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null); // Chấp nhận mảng
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
   const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
@@ -196,95 +198,72 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   // --- Effects ---
   useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      setOpenedImageIds([]);
-      setPlaylists([]);
-      return;
-    }
+    if (!currentUser) { setLoading(false); setOpenedImageIds([]); setPlaylists([]); return; }
     setLoading(true);
-
     const userDocRef = doc(db, 'users', currentUser.uid);
-    let unsubscribe = () => {};
-
-    const setupListener = async () => {
-      try {
-        const docSnap = await getDoc(userDocRef);
-        if (!docSnap.exists()) {
-          console.log("Creating initial document for new user...");
-          const examplePlaylists: Playlist[] = [
-            {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
-            {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
-            {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
-            {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
-            {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [370, 371, 372], isPinned: false},
-          ];
-          await setDoc(userDocRef, { openedImageIds: [], playlists: examplePlaylists });
-        }
-        unsubscribe = onSnapshot(userDocRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const userData = snapshot.data();
-            setOpenedImageIds(userData.openedImageIds || []);
-            setPlaylists(userData.playlists || []);
-          }
-          setLoading(false);
-        }, (error) => {
-            console.error("Error with onSnapshot listener:", error);
-            setLoading(false);
-        });
-      } catch (error) {
-        console.error("Error setting up user listener:", error);
-        setLoading(false);
+    const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
+        setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
+      } else {
+         const examplePlaylists: Playlist[] = [
+          {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
+          {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
+          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
+          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
+          {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [370, 371, 372], isPinned: false},
+        ];
+        setPlaylists(examplePlaylists);
+        setOpenedImageIds([]);
       }
-    };
-    setupListener();
-    return () => {
-      unsubscribe();
-    };
+      setLoading(false);
+    }, (error) => { setLoading(false); console.error("Error fetching user data:", error) });
+    return () => unsubscribe();
   }, [currentUser]);
 
+  // --- TỐI ƯU 2: Sửa logic tính toán, sử dụng ALL_CARDS_MAP để tăng tốc độ ---
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
-        const card = ALL_CARDS_MAP.get(id);
+        const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
         if (!card) return undefined;
-        return { card, isFavorite: allFavoriteCardIds.has(id) };
+        return {
+            card, // Giữ nguyên tham chiếu đến object card gốc
+            isFavorite: allFavoriteCardIds.has(id) // Lấy trạng thái favorite
+        };
     };
+
     let cardIdsToShow: number[] = [];
+
     if (activeTab === 'collection') {
         cardIdsToShow = [...openedImageIds].reverse();
     } else if (activeTab === 'favorite') {
         if (selectedPlaylistId === 'all') {
+            // Hiển thị tất cả card yêu thích, sắp xếp theo ID để ổn định
             cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
         } else {
             const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
+            // Sắp xếp ID trong playlist để có thứ tự ổn định
             cardIdsToShow = selectedPlaylist ? [...selectedPlaylist.cardIds].sort((a,b) => b-a) : [];
         }
     }
-    return cardIdsToShow.map(id => getDisplayCard(id)).filter((item): item is DisplayCard => item !== undefined);
+    
+    // Chỉ một lần map duy nhất, mỗi lần map là một phép tra cứu O(1)
+    return cardIdsToShow
+        .map(id => getDisplayCard(id))
+        .filter((item): item is DisplayCard => item !== undefined);
+
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
+  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  // --- TỐI ƯU 4: Cập nhật biến này vì cấu trúc dữ liệu đã thay đổi
+  const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
 
-  // --- Virtualization Logic ---
-  const columnCount = layoutMode === 'single' ? 1 : 2;
-  const rowCount = Math.ceil(filteredFlashcardsByTab.length / columnCount);
-  
-  const rowVirtualizer = useVirtualizer({
-    count: rowCount,
-    getScrollElement: () => mainContainerRef.current,
-    estimateSize: () => (layoutMode === 'single' ? 900 : 550), // Estimate row height (card + gap)
-    overscan: 5, // Render 5 extra items on each side for smoother scrolling
-  });
-
-  // Effect to scroll to top when filters change
-  useEffect(() => {
-    if (mainContainerRef.current) {
-        mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-    }
-  }, [activeTab, selectedPlaylistId]);
-
-  // --- Event Handlers ---
+  // --- Handlers ---
   const handleShowHome = () => setActiveScreen('home');
   const handleShowStats = () => setActiveScreen('stats');
   const handleShowRank = () => setActiveScreen('rank');
@@ -321,11 +300,66 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         default: return card.imageUrl.default;
     }
   }, []);
-  
+
+  const handlePageChange = (pageNumber: number) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
+    if (mainContainerRef.current) {
+      mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  };
+
+  const paginationItems = useMemo(() => {
+    const siblingCount = 1;
+    const totalPageNumbers = siblingCount + 5;
+
+    if (totalPageNumbers >= totalPages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+    const range = (start: number, end: number) => {
+      let length = end - start + 1;
+      return Array.from({ length }, (_, idx) => idx + start);
+    };
+
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      let leftItemCount = 3 + 2 * siblingCount;
+      let leftRange = range(1, leftItemCount);
+      return [...leftRange, '...', totalPages];
+    }
+
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      let rightItemCount = 3 + 2 * siblingCount;
+      let rightRange = range(totalPages - rightItemCount + 1, totalPages);
+      return [1, '...', ...rightRange];
+    }
+
+    if (shouldShowLeftDots && shouldShowRightDots) {
+      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
+      return [1, '...', ...middleRange, '...', totalPages];
+    }
+
+    return [];
+
+  }, [currentPage, totalPages]);
+
+  const scrollbarHide = `
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  `;
+
+  // --- LOGIC MỚI CHO VIỆC GHIM PLAYLIST ---
   const pinnedCount = useMemo(() => playlists.filter(p => p.isPinned).length, [playlists]);
 
   const handleTogglePin = useCallback(async (playlistId: string) => {
     if (!currentUser) return;
+
     const originalPlaylists = [...playlists];
     const newPlaylists = originalPlaylists.map(p => {
         if (p.id === playlistId) {
@@ -337,26 +371,31 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         }
         return p;
     });
+
     if (JSON.stringify(newPlaylists) === JSON.stringify(originalPlaylists)) {
-        return;
+        return; // Không có gì thay đổi
     }
+
     setIsUpdatingPlaylists(true);
-    setPlaylists(newPlaylists);
+    setPlaylists(newPlaylists); // Cập nhật UI trước (Optimistic Update)
+
     try {
         const userDocRef = doc(db, 'users', currentUser.uid);
         await updateDoc(userDocRef, { playlists: newPlaylists });
     } catch (error) {
         console.error("Lỗi khi ghim/bỏ ghim playlist:", error);
         alert("Đã xảy ra lỗi. Vui lòng thử lại.");
-        setPlaylists(originalPlaylists);
+        setPlaylists(originalPlaylists); // Hoàn tác lại nếu có lỗi
     } finally {
         setIsUpdatingPlaylists(false);
     }
   }, [playlists, pinnedCount, currentUser]);
 
+  // --- LOGIC MỚI ĐỂ HIỂN THỊ "PILL" ---
   const pillsToDisplay = useMemo(() => {
     const pinned = playlists.filter(p => p.isPinned);
     const selected = playlists.find(p => p.id === selectedPlaylistId);
+
     const displaySet = new Set<Playlist>();
     pinned.forEach(p => displaySet.add(p));
     if (selected && !displaySet.has(selected) && selectedPlaylistId !== 'all') {
@@ -365,19 +404,25 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return Array.from(displaySet).sort((a,b) => a.name.localeCompare(b.name));
   }, [playlists, selectedPlaylistId]);
 
+  // --- LOGIC MỚI ĐỂ XOÁ PLAYLIST ---
   const handleConfirmDelete = useCallback(async () => {
     if (!playlistToDelete || !currentUser) return;
+
     const originalPlaylists = [...playlists];
     const newPlaylists = originalPlaylists.filter(p => p.id !== playlistToDelete.id);
+
     setIsUpdatingPlaylists(true);
+
     try {
         const userDocRef = doc(db, 'users', currentUser.uid);
         await updateDoc(userDocRef, { playlists: newPlaylists });
+        
+        // Chỉ cập nhật state sau khi Firestore thành công
         setPlaylists(newPlaylists);
         if (selectedPlaylistId === playlistToDelete.id) {
             setSelectedPlaylistId('all');
         }
-        setPlaylistToDelete(null);
+        setPlaylistToDelete(null); // Đóng modal xác nhận
     } catch (error) {
         console.error("Lỗi khi xoá playlist:", error);
         alert("Đã xảy ra lỗi khi xoá playlist. Vui lòng thử lại.");
@@ -385,6 +430,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         setIsUpdatingPlaylists(false);
     }
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
+
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
@@ -403,7 +449,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900 scrollbar-hide">
+      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         <style>{animations}</style>
         <style>{scrollbarHide}</style>
 
@@ -428,79 +474,97 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </div>
 
               <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
-                <button onClick={() => { setActiveTab('collection'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                <button onClick={() => { setActiveTab('collection'); handlePageChange(1); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
                   <span>Collection</span>
                   <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
                 </button>
-                <button onClick={() => { setActiveTab('favorite'); setSelectedPlaylistId('all'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                <button onClick={() => { setActiveTab('favorite'); handlePageChange(1); setSelectedPlaylistId('all'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
                   <span>Favorite</span>
                   <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
                 </button>
               </div>
 
+              {/* GIAO DIỆN CHỌN PLAYLIST MỚI - CÓ GHIM VÀ TRUNCATE */}
               {activeTab === 'favorite' && (
                 <div className="px-4 mb-6">
                   <div className="w-full">
                     <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
                       Đang xem trong Playlist
                     </label>
+
                     <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                      {/* Nút "Tất cả" - Luôn hiển thị */}
                       <button
-                        onClick={() => { setSelectedPlaylistId('all'); }}
-                        className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${selectedPlaylistId === 'all' ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`}>
+                        onClick={() => { setSelectedPlaylistId('all'); handlePageChange(1); }}
+                        className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
+                          ${selectedPlaylistId === 'all'
+                            ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
+                          }
+                      >
                         <span>Tất cả</span>
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${selectedPlaylistId === 'all' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`}>{favoriteCount}</span>
+                        <span className={`px-2 py-0.5 text-xs rounded-full
+                          ${selectedPlaylistId === 'all' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                        }>
+                          {favoriteCount}
+                        </span>
                       </button>
+
+                      {/* Hiển thị các "pill" đã được tính toán */}
                       {pillsToDisplay.map(p => (
-                        <button key={p.id} onClick={() => { setSelectedPlaylistId(p.id); }} className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px] ${selectedPlaylistId === p.id ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`}>
+                        <button
+                          key={p.id}
+                          onClick={() => { setSelectedPlaylistId(p.id); handlePageChange(1); }}
+                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px]
+                            ${selectedPlaylistId === p.id
+                              ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
+                            }
+                        >
                           {p.isPinned && <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>}
                           <span className="truncate">{p.name}</span>
-                          <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`}>{p.cardIds.length}</span>
+                          <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full
+                            ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                          }>
+                            {p.cardIds.length}
+                          </span>
                         </button>
                       ))}
-                      <button onClick={() => setShowAllPlaylistsModal(true)} className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400" aria-label="Xem tất cả playlist">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                      </button>
+
+                      {/* Nút "Tất cả playlist" */}
+                       <button
+                          onClick={() => setShowAllPlaylistsModal(true)}
+                          className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+                          aria-label="Xem tất cả playlist"
+                        >
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                          </svg>
+                        </button>
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Virtualized Grid */}
-            <div className="min-h-0 pb-24">
+            <div className="min-h-0">
               <div className="w-full max-w-6xl mx-auto">
-                {filteredFlashcardsByTab.length > 0 ? (
-                  <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                      const isSingleColumn = layoutMode === 'single';
-                      const itemsInRow = isSingleColumn
-                        ? [filteredFlashcardsByTab[virtualRow.index]]
-                        : [
-                            filteredFlashcardsByTab[virtualRow.index * 2],
-                            filteredFlashcardsByTab[virtualRow.index * 2 + 1],
-                          ].filter(Boolean);
-
-                      return (
-                        <div key={virtualRow.key} ref={rowVirtualizer.measureElement} data-index={virtualRow.index} className="absolute top-0 left-0 w-full px-4" style={{ transform: `translateY(${virtualRow.start}px)` }}>
-                          <div className={`grid gap-4 ${isSingleColumn ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                            {itemsInRow.map(({ card, isFavorite }) => (
-                              <FlashcardItem
-                                key={card.id}
-                                card={card}
-                                isFavorite={isFavorite}
-                                visualStyle={visualStyle}
-                                onImageClick={openVocabDetail}
-                                onFavoriteClick={handleFavoriteClick}
-                                getImageUrlForStyle={getImageUrlForStyle}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                {flashcardsForCurrentPage.length > 0 ? (
+                  <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {/* --- TỐI ƯU 5: Cập nhật cách truyền props cho FlashcardItem --- */}
+                    {flashcardsForCurrentPage.map(({ card, isFavorite }) => (
+                      <FlashcardItem
+                        key={card.id}
+                        card={card}
+                        isFavorite={isFavorite}
+                        visualStyle={visualStyle}
+                        onImageClick={openVocabDetail}
+                        onFavoriteClick={handleFavoriteClick}
+                        getImageUrlForStyle={getImageUrlForStyle}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 text-center px-4">
@@ -509,9 +573,30 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     <p className="text-gray-500 dark:text-gray-400 max-w-md">{activeTab === 'collection' ? 'Hãy mở rương để nhận thêm flashcard mới!' : selectedPlaylistId === 'all' ? 'Nhấn vào biểu tượng trái tim để thêm từ vào mục yêu thích.' : 'Hãy thêm các từ yêu thích vào playlist này.'}</p>
                   </div>
                 )}
+
+                {totalPages > 1 && (
+                  <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
+                    <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
+                      {paginationItems.map((item, index) =>
+                        typeof item === 'string' ? (
+                          <span key={`ellipsis-${index}`} className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">...</span>
+                        ) : (
+                          <button
+                            key={item}
+                            onClick={() => handlePageChange(item)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === item ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+                    </nav>
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Modals and other UI */}
             {showSettings && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }} onClick={() => setShowSettings(false)}></div>
@@ -559,9 +644,16 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleImages={exampleImages} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
 
             {isPlaylistModalOpen && selectedCardForPlaylist && (
-              <AddToPlaylistModal isOpen={isPlaylistModalOpen} onClose={closePlaylistModal} cardIds={selectedCardForPlaylist} currentUser={currentUser} existingPlaylists={playlists} />
+              <AddToPlaylistModal
+                isOpen={isPlaylistModalOpen}
+                onClose={closePlaylistModal}
+                cardIds={selectedCardForPlaylist}
+                currentUser={currentUser}
+                existingPlaylists={playlists}
+              />
             )}
 
+            {/* MODAL CHỌN TẤT CẢ PLAYLIST VỚI CHỨC NĂNG GHIM VÀ XOÁ */}
             {showAllPlaylistsModal && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => { if (!playlistToDelete) setShowAllPlaylistsModal(false); }} style={{ animation: 'modalBackdropIn 0.3s' }}></div>
@@ -569,47 +661,97 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-xl flex flex-col max-h-[80vh] relative" style={{ animation: 'modalIn 0.3s' }}>
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                       <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Chọn một Playlist</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Ghim (<svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 inline-block -mt-1 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>) tối đa 2 playlist để luôn hiển thị.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Ghim (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 inline-block -mt-1 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                      ) tối đa 2 playlist để luôn hiển thị.</p>
                     </div>
+
                     <div className="p-4 flex-shrink-0">
                         <div className="relative">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
-                            <input type="text" placeholder="Tìm tên playlist..." value={playlistSearch} onChange={(e) => setPlaylistSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Tìm tên playlist..."
+                                value={playlistSearch}
+                                onChange={(e) => setPlaylistSearch(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
                         </div>
                     </div>
+
                     <div className="overflow-y-auto px-4 pb-4 flex-grow">
                       <ul className="space-y-1">
-                        {playlists.filter(p => p.name.toLowerCase().includes(playlistSearch.toLowerCase())).map(p => (
+                        {playlists
+                          .filter(p => p.name.toLowerCase().includes(playlistSearch.toLowerCase()))
+                          .map(p => (
                             <li key={p.id}>
-                              <div onClick={() => { setSelectedPlaylistId(p.id); setShowAllPlaylistsModal(false); setPlaylistSearch(''); }} className={`w-full flex items-center text-left p-3 rounded-lg transition-colors duration-200 group cursor-pointer ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-900/60' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}>
+                              <div
+                                onClick={() => {
+                                  setSelectedPlaylistId(p.id);
+                                  handlePageChange(1);
+                                  setShowAllPlaylistsModal(false);
+                                  setPlaylistSearch('');
+                                }}
+                                className={`w-full flex items-center text-left p-3 rounded-lg transition-colors duration-200 group cursor-pointer
+                                  ${selectedPlaylistId === p.id
+                                    ? 'bg-pink-100 dark:bg-pink-900/60'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`
+                                }
+                              >
                                 <div className="flex-grow pr-4">
                                   <p className={`font-medium truncate ${selectedPlaylistId === p.id ? 'text-pink-800 dark:text-pink-200' : 'text-gray-800 dark:text-gray-200'}`}>{p.name}</p>
                                   <span className={`text-xs ${selectedPlaylistId === p.id ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}>{p.cardIds.length} từ vựng</span>
                                 </div>
                                 <div className="flex items-center flex-shrink-0 space-x-1">
-                                    <button onClick={(e) => { e.stopPropagation(); handleTogglePin(p.id); }} disabled={(!p.isPinned && pinnedCount >= 2) || isUpdatingPlaylists} className="p-2 rounded-full transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed group-hover:bg-gray-200 dark:group-hover:bg-gray-700" aria-label={p.isPinned ? "Bỏ ghim playlist" : "Ghim playlist"}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-200 ${p.isPinned ? 'text-yellow-400 scale-110' : 'text-gray-400 dark:text-gray-500 group-hover:text-yellow-500'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleTogglePin(p.id); }}
+                                      disabled={(!p.isPinned && pinnedCount >= 2) || isUpdatingPlaylists}
+                                      className="p-2 rounded-full transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
+                                      aria-label={p.isPinned ? "Bỏ ghim playlist" : "Ghim playlist"}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-200 ${p.isPinned ? 'text-yellow-400 scale-110' : 'text-gray-400 dark:text-gray-500 group-hover:text-yellow-500'}`} viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); setPlaylistToDelete(p); }} disabled={isUpdatingPlaylists} className="p-2 rounded-full transition-colors duration-200 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 disabled:opacity-30 disabled:cursor-not-allowed" aria-label={`Xoá playlist ${p.name}`}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-red-500 transition-colors" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setPlaylistToDelete(p); }}
+                                        disabled={isUpdatingPlaylists}
+                                        className="p-2 rounded-full transition-colors duration-200 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        aria-label={`Xoá playlist ${p.name}`}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-red-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+                                        </svg>
                                     </button>
                                 </div>
                               </div>
                             </li>
-                        ))}
+                          ))}
                       </ul>
                     </div>
+
+                    {/* MODAL XÁC NHẬN XOÁ */}
                     {playlistToDelete && (
                         <div className="absolute inset-0 bg-gray-900/60 dark:bg-black/70 z-10 flex items-center justify-center p-4 rounded-2xl" style={{ animation: 'fadeIn 0.2s' }}>
                             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm text-center p-6" style={{ animation: 'scaleIn 0.2s' }}>
                                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50 mb-4">
-                                    <svg className="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                    <svg className="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
                                 </div>
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Xoá Playlist</h3>
-                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Bạn có chắc chắn muốn xoá playlist <strong className="font-semibold text-gray-800 dark:text-white">"{playlistToDelete.name}"</strong>? <br/>Hành động này không thể hoàn tác.</p>
+                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                    Bạn có chắc chắn muốn xoá playlist <strong className="font-semibold text-gray-800 dark:text-white">"{playlistToDelete.name}"</strong>? <br/>Hành động này không thể hoàn tác.
+                                </p>
                                 <div className="mt-6 flex justify-center space-x-4">
-                                    <button type="button" onClick={() => setPlaylistToDelete(null)} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">Huỷ</button>
-                                    <button type="button" onClick={handleConfirmDelete} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">{isUpdatingPlaylists ? 'Đang xoá...' : 'Xác nhận Xoá'}</button>
+                                    <button type="button" onClick={() => setPlaylistToDelete(null)} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        Huỷ
+                                    </button>
+                                    <button type="button" onClick={handleConfirmDelete} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {isUpdatingPlaylists ? 'Đang xoá...' : 'Xác nhận Xoá'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -618,6 +760,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </div>
               </>
             )}
+
           </>
         )}
 
