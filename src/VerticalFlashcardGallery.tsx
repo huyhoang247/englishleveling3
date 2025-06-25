@@ -142,7 +142,6 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
     <div
       id={`flashcard-${card.id}`}
       className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group"
-      // --- THÊM THUỘC TÍNH CSS NÀY ĐỂ TĂNG HIỆU SUẤT RENDER ---
       style={{ contentVisibility: 'auto' }}
     >
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
@@ -251,12 +250,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     };
   }, [currentUser]);
 
-  // --- HÀM CUỘN LÊN ĐẦU MỚI ---
   const scrollToTop = () => {
     mainContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // --- Dữ liệu để hiển thị, không còn phân trang ---
   const flashcardsToDisplay = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
         const card = ALL_CARDS_MAP.get(id);
@@ -281,15 +278,15 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const favoriteCount = allFavoriteCardIds.size;
 
   // --- LOGIC VIRTUALIZATION ĐÃ SỬA LỖI ---
-  const columnCount = layoutMode === 'single' ? 1 : 2;
+  const columnCount = useMemo(() => (layoutMode === 'single' ? 1 : 2), [layoutMode]);
+  
   const rowVirtualizer = useVirtualizer({
       count: Math.ceil(flashcardsToDisplay.length / columnCount),
-      getScrollElement: () => mainContainerRef.current,
+      getScrollElement: useCallback(() => mainContainerRef.current, []),
       estimateSize: () => (layoutMode === 'single' ? 750 + 16 : 450 + 16),
       overscan: 5,
   });
 
-  // --- LOGIC PRELOAD ẢNH MỚI, TƯƠNG THÍCH VỚI VIRTUALIZATION ---
   useEffect(() => {
     const virtualItems = rowVirtualizer.getVirtualItems();
     if (virtualItems.length === 0) {
@@ -444,7 +441,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           <>
             {/* Header and Tabs */}
             <div className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-              <div className="w-full max-w-6xl py-6 mx-auto">
+              <div className="w-full max-w-6xl pt-6 mx-auto">
                 <div className="flex justify-between items-center mb-4 px-4">
                   <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
                   <div className="flex items-center space-x-2">
@@ -475,7 +472,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </div>
 
                 {activeTab === 'favorite' && (
-                  <div className="px-4 mb-2">
+                  <div className="px-4 pb-2">
                     <div className="w-full">
                       <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                         <button
