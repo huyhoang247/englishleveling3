@@ -1,5 +1,4 @@
-import React, 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Helper function to shuffle an array
 const shuffleArray = <T extends any[]>(array: T): T => {
@@ -14,7 +13,6 @@ const shuffleArray = <T extends any[]>(array: T): T => {
 interface WordArrangementInputProps {
   word: string;
   onAnswerChange: (value: string) => void;
-  feedback: string;
   isCorrect: boolean | null;
   disabled: boolean;
 }
@@ -22,7 +20,6 @@ interface WordArrangementInputProps {
 const WordArrangementInput: React.FC<WordArrangementInputProps> = ({
   word,
   onAnswerChange,
-  feedback,
   isCorrect,
   disabled,
 }) => {
@@ -97,26 +94,26 @@ const WordArrangementInput: React.FC<WordArrangementInputProps> = ({
   return (
     <div className="w-full flex flex-col items-center space-y-8">
       {/* Khu vực hiển thị các ô chữ cái đã sắp xếp */}
-      <div className="flex justify-center gap-2 flex-wrap mb-4">
-        {arrangedLetters.map((char, index) => (
+      <div className="flex justify-center gap-2 flex-wrap mb-4 min-h-[3.5rem]">
+        {Array.from({ length: wordLength }).map((_, index) => (
           <div
             key={index}
-            className={`w-12 h-12 flex items-center justify-center border rounded-lg text-xl font-bold transition-all duration-200 ${getSquareStyle(char)} ${getSquareAnimation()}`}
-            onClick={() => handleAnswerClick(char!, index)}
+            className={`w-12 h-12 flex items-center justify-center border-2 rounded-lg text-xl font-bold transition-all duration-200 ${getSquareStyle(arrangedLetters[index])} ${getSquareAnimation()}`}
+            onClick={() => handleAnswerClick(arrangedLetters[index]!, index)}
           >
-            {char ? char.toUpperCase() : ''}
+            {arrangedLetters[index] ? arrangedLetters[index]?.toUpperCase() : ''}
           </div>
         ))}
       </div>
 
       {/* Ngân hàng các chữ cái chưa sắp xếp */}
-      <div className="flex justify-center gap-2 flex-wrap p-4 bg-gray-100/50 rounded-xl shadow-inner min-h-[4rem]">
+      <div className="flex justify-center gap-2 flex-wrap p-4 bg-gray-100/50 rounded-xl shadow-inner min-h-[4rem] w-full">
         {letterBank.map((char, index) => (
           <button
             key={`${char}-${index}`}
             onClick={() => handleBankClick(char, index)}
             disabled={disabled}
-            className="w-10 h-12 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all hover:scale-110 hover:-translate-y-1"
+            className="w-10 h-12 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow-md active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg transform transition-all hover:scale-110 hover:-translate-y-1"
           >
             {char.toUpperCase()}
           </button>
