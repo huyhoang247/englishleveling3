@@ -189,9 +189,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all');
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null);
-  // --- BỎ STATE PAGINATION ---
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
   const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
@@ -283,14 +280,13 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
 
-  // --- LOGIC VIRTUALIZATION MỚI ---
+  // --- LOGIC VIRTUALIZATION ĐÃ SỬA LỖI ---
+  const columnCount = layoutMode === 'single' ? 1 : 2;
   const rowVirtualizer = useVirtualizer({
-      count: flashcardsToDisplay.length,
+      count: Math.ceil(flashcardsToDisplay.length / columnCount),
       getScrollElement: () => mainContainerRef.current,
-      // Ước lượng chiều cao của mỗi item. Rất quan trọng để cuộn mượt!
-      // Giá trị này dựa trên tỉ lệ ảnh (1024x1536) và layout, cộng thêm padding/gap
-      estimateSize: () => (layoutMode === 'single' ? 750 + 16 : 450 + 16), // height + padding-bottom
-      overscan: 5, // Render trước 5 item để tránh thấy khoảng trắng khi cuộn
+      estimateSize: () => (layoutMode === 'single' ? 750 + 16 : 450 + 16),
+      overscan: 5,
   });
 
   // --- LOGIC PRELOAD ẢNH MỚI, TƯƠNG THÍCH VỚI VIRTUALIZATION ---
@@ -300,15 +296,25 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         setUrlsToPreload([]);
         return;
     }
-
-    const urls = virtualItems.map(virtualItem => {
-        const item = flashcardsToDisplay[virtualItem.index];
+    const urls = virtualItems
+      .flatMap(virtualRow => {
+        const itemsInRow = [];
+        for (let i = 0; i < columnCount; i++) {
+            const itemIndex = virtualRow.index * columnCount + i;
+            if (itemIndex < flashcardsToDisplay.length) {
+                itemsInRow.push(flashcardsToDisplay[itemIndex]);
+            }
+        }
+        return itemsInRow;
+      })
+      .map(item => {
         if (!item) return '';
         return getImageUrlForStyle(item.card, visualStyle);
-    }).filter(Boolean);
+      })
+      .filter(Boolean);
 
     setUrlsToPreload(urls);
-  }, [rowVirtualizer.getVirtualItems(), flashcardsToDisplay, visualStyle, getImageUrlForStyle]);
+  }, [rowVirtualizer.getVirtualItems(), flashcardsToDisplay, visualStyle, getImageUrlForStyle, columnCount]);
 
   const handleShowHome = () => setActiveScreen('home');
   const handleShowStats = () => setActiveScreen('stats');
@@ -437,100 +443,97 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         {activeScreen === 'home' && (
           <>
             {/* Header and Tabs */}
-            <div className="w-full max-w-6xl py-6 mx-auto">
-              <div className="flex justify-between items-center mb-4 px-4">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
-                <div className="flex items-center space-x-2">
-                  <button onClick={() => toggleSidebar?.()} className="relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800" aria-label="Toggle Sidebar">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400 transition-all duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                  </button>
-                  <div id="settings-button" className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} onMouseEnter={() => setIsSettingsHovered(true)} onMouseLeave={() => setIsSettingsHovered(false)} onClick={() => setShowSettings(!showSettings)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
+            <div className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+              <div className="w-full max-w-6xl py-6 mx-auto">
+                <div className="flex justify-between items-center mb-4 px-4">
+                  <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => toggleSidebar?.()} className="relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800" aria-label="Toggle Sidebar">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400 transition-all duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                      </svg>
+                    </button>
+                    <div id="settings-button" className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} onMouseEnter={() => setIsSettingsHovered(true)} onMouseLeave={() => setIsSettingsHovered(false)} onClick={() => setShowSettings(!showSettings)}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
-                <button onClick={() => { setActiveTab('collection'); scrollToTop(); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
-                  <span>Collection</span>
-                  <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
-                </button>
-                <button onClick={() => { setActiveTab('favorite'); setSelectedPlaylistId('all'); scrollToTop(); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
-                  <span>Favorite</span>
-                  <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
-                </button>
-              </div>
+                <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
+                  <button onClick={() => { setActiveTab('collection'); scrollToTop(); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
+                    <span>Collection</span>
+                    <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
+                  </button>
+                  <button onClick={() => { setActiveTab('favorite'); setSelectedPlaylistId('all'); scrollToTop(); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                    <span>Favorite</span>
+                    <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
+                  </button>
+                </div>
 
-              {activeTab === 'favorite' && (
-                <div className="px-4 mb-6">
-                  <div className="w-full">
-                    <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                      Đang xem trong Playlist
-                    </label>
-
-                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                      <button
-                        onClick={() => { setSelectedPlaylistId('all'); scrollToTop(); }}
-                        className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
-                          ${selectedPlaylistId === 'all'
-                            ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
-                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
-                          }
-                      >
-                        <span>Tất cả</span>
-                        <span className={`px-2 py-0.5 text-xs rounded-full
-                          ${selectedPlaylistId === 'all' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
-                        }>
-                          {favoriteCount}
-                        </span>
-                      </button>
-
-                      {pillsToDisplay.map(p => (
+                {activeTab === 'favorite' && (
+                  <div className="px-4 mb-2">
+                    <div className="w-full">
+                      <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                         <button
-                          key={p.id}
-                          onClick={() => { setSelectedPlaylistId(p.id); scrollToTop(); }}
-                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px]
-                            ${selectedPlaylistId === p.id
+                          onClick={() => { setSelectedPlaylistId('all'); scrollToTop(); }}
+                          className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
+                            ${selectedPlaylistId === 'all'
                               ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
                               : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
                             }
                         >
-                          {p.isPinned && <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>}
-                          <span className="truncate">{p.name}</span>
-                          <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full
-                            ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                          <span>Tất cả</span>
+                          <span className={`px-2 py-0.5 text-xs rounded-full
+                            ${selectedPlaylistId === 'all' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
                           }>
-                            {p.cardIds.length}
+                            {favoriteCount}
                           </span>
                         </button>
-                      ))}
 
-                       <button
-                          onClick={() => setShowAllPlaylistsModal(true)}
-                          className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
-                          aria-label="Xem tất cả playlist"
-                        >
-                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                          </svg>
-                        </button>
+                        {pillsToDisplay.map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => { setSelectedPlaylistId(p.id); scrollToTop(); }}
+                            className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px]
+                              ${selectedPlaylistId === p.id
+                                ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
+                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-pink-300 dark:hover:border-pink-600'}`
+                              }
+                          >
+                            {p.isPinned && <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>}
+                            <span className="truncate">{p.name}</span>
+                            <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full
+                              ${selectedPlaylistId === p.id ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200'}`
+                            }>
+                              {p.cardIds.length}
+                            </span>
+                          </button>
+                        ))}
+
+                         <button
+                            onClick={() => setShowAllPlaylistsModal(true)}
+                            className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+                            aria-label="Xem tất cả playlist"
+                          >
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                          </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* --- KHU VỰC HIỂN THỊ DANH SÁCH ĐÃ ĐƯỢC THAY THẾ BẰNG VIRTUALIZATION --- */}
+            {/* --- KHU VỰC HIỂN THỊ DANH SÁCH --- */}
             <div className="min-h-0">
               <div className="w-full max-w-6xl mx-auto px-4">
                 {flashcardsToDisplay.length > 0 ? (
-                  // Container ngoài cùng, có chiều cao động để tạo thanh cuộn
                   <div
                     style={{
                       height: `${rowVirtualizer.getTotalSize()}px`,
@@ -538,39 +541,39 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                       position: 'relative',
                     }}
                   >
-                    {/* Map qua các item ảo thay vì toàn bộ danh sách */}
-                    {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                      const item = flashcardsToDisplay[virtualItem.index];
-                      if (!item) return null; // An toàn nếu item không tồn tại
-
-                      const { card, isFavorite } = item;
-                      const isDouble = layoutMode === 'double';
-                      const isLeft = virtualItem.index % 2 === 0;
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const itemsInRow: DisplayCard[] = [];
+                      for (let i = 0; i < columnCount; i++) {
+                          const itemIndex = virtualRow.index * columnCount + i;
+                          if (itemIndex < flashcardsToDisplay.length) {
+                              itemsInRow.push(flashcardsToDisplay[itemIndex]);
+                          }
+                      }
 
                       return (
                         <div
-                          key={virtualItem.key}
-                          // Wrapper cho mỗi item, được định vị tuyệt đối
+                          key={virtualRow.key}
                           style={{
                             position: 'absolute',
                             top: 0,
-                            left: isDouble ? (isLeft ? '0%' : '50%') : '0%',
-                            width: isDouble ? '50%' : '100%',
-                            transform: `translateY(${virtualItem.start}px)`,
-                            // Tạo khoảng cách (gap) giữa các item trong layout 2 cột
-                            paddingLeft: isDouble && !isLeft ? '0.5rem' : '0',
-                            paddingRight: isDouble && isLeft ? '0.5rem' : '0',
-                            paddingBottom: '1rem' // gap-4 theo chiều dọc
+                            left: 0,
+                            width: '100%',
+                            transform: `translateY(${virtualRow.start}px)`,
                           }}
                         >
-                          <FlashcardItem
-                            card={card}
-                            isFavorite={isFavorite}
-                            visualStyle={visualStyle}
-                            onImageClick={openVocabDetail}
-                            onFavoriteClick={handleFavoriteClick}
-                            getImageUrlForStyle={getImageUrlForStyle}
-                          />
+                          <div className={`grid ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                            {itemsInRow.map(({ card, isFavorite }) => (
+                              <FlashcardItem
+                                key={card.id}
+                                card={card}
+                                isFavorite={isFavorite}
+                                visualStyle={visualStyle}
+                                onImageClick={openVocabDetail}
+                                onFavoriteClick={handleFavoriteClick}
+                                getImageUrlForStyle={getImageUrlForStyle}
+                              />
+                            ))}
+                          </div>
                         </div>
                       );
                     })}
