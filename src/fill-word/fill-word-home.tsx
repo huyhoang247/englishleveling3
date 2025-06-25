@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
+import VirtualKeyboard from './keyboard.tsx'; // Import bàn phím ảo
+import WordArrangementInput from './word-arrangement-input.tsx'; // Import component sắp xếp từ
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -101,17 +103,16 @@ export default function VocabularyGame() {
   const [user, setUser] = useState<User | null>(null);
   const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
 
-  // State mới để lưu danh sách các từ chưa dùng, đã được xáo trộn
+  // State mới để quản lý chế độ chơi
+  const [gameMode, setGameMode] = useState<'selecting' | 'typing' | 'arranging'>('selecting');
+
   const [shuffledUnusedWords, setShuffledUnusedWords] = useState<VocabularyItem[]>([]);
-  // State để theo dõi chỉ mục của từ hiện tại trong shuffledUnusedWords
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [score, setScore] = useState(0); // Score can still track correct answers if needed internally
-  // Sử dụng Set để quản lý các từ đã dùng hiệu quả hơn (cho mục đích lưu vào Firestore và kiểm tra nhanh)
   const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
@@ -121,9 +122,7 @@ export default function VocabularyGame() {
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
 
-  // Ref để theo dõi xem dữ liệu đã được tải và xử lý lần đầu chưa
   const isInitialLoadComplete = useRef(false);
-
 
   // Lắng nghe trạng thái xác thực người dùng
   useEffect(() => {
@@ -135,168 +134,123 @@ export default function VocabularyGame() {
 
   // Effect để tải dữ liệu từ Firestore khi user thay đổi
   useEffect(() => {
+    // ... (Giữ nguyên toàn bộ logic của useEffect này)
     const fetchUserData = async () => {
-      if (!user) {
-        console.log("No user logged in, cannot fetch data from user document.");
-        setLoading(false);
-        setVocabularyList([]);
-        setOpenedImageIds([]);
-        setCoins(0);
-        setUsedWords(new Set());
-        setShuffledUnusedWords([]); // Reset shuffled list
-        setCurrentWordIndex(0); // Reset index
-        setCurrentWord(null); // Reset current word
-        setGameOver(false); // Reset game over
-        setError("Vui lòng đăng nhập để chơi.");
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const userDocRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
-
-        let fetchedVocabulary: VocabularyItem[] = [];
-        let fetchedImageIds: number[] = [];
-        let fetchedCompletedWords: string[] = [];
-        let fetchedCoins = 0;
-
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-
-          if (userData && Array.isArray(userData.listVocabulary)) {
-            fetchedVocabulary = userData.listVocabulary.map((word: string) => ({
-              word: word,
-              hint: `Nghĩa của từ "${word}"`,
-            }));
-          } else {
-            setError("Không tìm thấy danh sách từ vựng trong tài khoản của bạn hoặc định dạng sai.");
-          }
-
-          if (userData && Array.isArray(userData.openedImageIds)) {
-             const areAllNumbers = userData.openedImageIds.every((id: any) => typeof id === 'number');
-             if(areAllNumbers) {
-                fetchedImageIds = userData.openedImageIds as number[];
-             } else {
-                 setError("Dữ liệu ảnh trong tài khoản của bạn có định dạng sai.");
-             }
-          } else {
-            // Không có openedImageIds là bình thường
-          }
-
-          if (userData && Array.isArray(userData['fill-word-1'])) {
-              fetchedCompletedWords = userData['fill-word-1'] as string[];
-          } else {
-              // Nếu không có trường 'fill-word-1' hoặc sai định dạng, khởi tạo rỗng
-          }
-
-          if (userData && typeof userData.coins === 'number') {
-            fetchedCoins = userData.coins;
-          } else {
-            // Mặc định là 0 nếu không có hoặc sai định dạng
-          }
-
-          // Kết hợp danh sách từ vựng với chỉ mục ảnh tương ứng
-          const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
-              // Tìm imageIndex tương ứng. Giả định index trong listVocabulary tương ứng với vị trí trong openedImageIds
-              // Cần cẩn trọng với giả định này. Nếu openedImageIds không có cùng độ dài hoặc không theo thứ tự, logic này sẽ sai.
-              // Một cách an toàn hơn là lưu imageId trực tiếp trong cấu trúc từ vựng nếu có thể.
-              // Hiện tại, giữ nguyên logic dựa trên index như code gốc.
-              const imageIndex = fetchedImageIds[index];
-              const adjustedIndex = imageIndex !== undefined ? imageIndex - 1 : undefined; // Giả định 1-based index từ Firestore
-              const isValidImageIndex = adjustedIndex !== undefined && adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length;
-
-              return {
-                  ...item,
-                  imageIndex: isValidImageIndex ? imageIndex : undefined // Lưu index gốc từ Firestore
-              };
-          });
-
-          setVocabularyList(vocabularyWithImages);
-          setOpenedImageIds(fetchedImageIds);
-          setCoins(fetchedCoins);
-          setUsedWords(new Set(fetchedCompletedWords));
-
-        } else {
-          console.log("User document does not exist.");
+        if (!user) {
+          console.log("No user logged in, cannot fetch data from user document.");
+          setLoading(false);
           setVocabularyList([]);
           setOpenedImageIds([]);
           setCoins(0);
           setUsedWords(new Set());
-          setShuffledUnusedWords([]); // Reset shuffled list
-          setCurrentWordIndex(0); // Reset index
-          setCurrentWord(null); // Reset current word
-          setGameOver(false); // Reset game over
-          setError("Không tìm thấy dữ liệu người dùng.");
+          setShuffledUnusedWords([]);
+          setCurrentWordIndex(0);
+          setCurrentWord(null);
+          setGameOver(false);
+          setError("Vui lòng đăng nhập để chơi.");
+          return;
         }
-
-        setLoading(false);
-
-      } catch (err: any) {
-        console.error("Error fetching user data from document:", err);
-        setError(`Không thể tải dữ liệu người dùng: ${err.message}`);
-        setLoading(false);
+  
+        try {
+          setLoading(true);
+          setError(null);
+  
+          const userDocRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+  
+          let fetchedVocabulary: VocabularyItem[] = [];
+          let fetchedImageIds: number[] = [];
+          let fetchedCompletedWords: string[] = [];
+          let fetchedCoins = 0;
+  
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+  
+            if (userData && Array.isArray(userData.listVocabulary)) {
+              fetchedVocabulary = userData.listVocabulary.map((word: string) => ({
+                word: word,
+                hint: `Nghĩa của từ "${word}"`,
+              }));
+            } else {
+              setError("Không tìm thấy danh sách từ vựng trong tài khoản của bạn hoặc định dạng sai.");
+            }
+  
+            if (userData && Array.isArray(userData.openedImageIds)) {
+               const areAllNumbers = userData.openedImageIds.every((id: any) => typeof id === 'number');
+               if(areAllNumbers) {
+                  fetchedImageIds = userData.openedImageIds as number[];
+               } else {
+                   setError("Dữ liệu ảnh trong tài khoản của bạn có định dạng sai.");
+               }
+            }
+  
+            if (userData && Array.isArray(userData['fill-word-1'])) {
+                fetchedCompletedWords = userData['fill-word-1'] as string[];
+            }
+  
+            if (userData && typeof userData.coins === 'number') {
+              fetchedCoins = userData.coins;
+            }
+  
+            const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
+                const imageIndex = fetchedImageIds[index];
+                const adjustedIndex = imageIndex !== undefined ? imageIndex - 1 : undefined;
+                const isValidImageIndex = adjustedIndex !== undefined && adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length;
+                return { ...item, imageIndex: isValidImageIndex ? imageIndex : undefined };
+            });
+  
+            setVocabularyList(vocabularyWithImages);
+            setOpenedImageIds(fetchedImageIds);
+            setCoins(fetchedCoins);
+            setUsedWords(new Set(fetchedCompletedWords));
+  
+          } else {
+            setError("Không tìm thấy dữ liệu người dùng.");
+          }
+  
+          setLoading(false);
+  
+        } catch (err: any) {
+          setError(`Không thể tải dữ liệu người dùng: ${err.message}`);
+          setLoading(false);
+        }
+      };
+  
+      if (user) {
+        fetchUserData();
+      } else {
+         setLoading(false);
+         setError("Vui lòng đăng nhập để chơi.");
       }
-    };
-
-    if (user) {
-      fetchUserData();
-    } else {
-       setLoading(false);
-       setVocabularyList([]);
-       setOpenedImageIds([]);
-       setCoins(0);
-       setUsedWords(new Set());
-       setShuffledUnusedWords([]); // Reset shuffled list
-       setCurrentWordIndex(0); // Reset index
-       setCurrentWord(null); // Reset current word
-       setGameOver(false); // Reset game over
-       setError("Vui lòng đăng nhập để chơi.");
-    }
-
   }, [user]);
 
-  // Effect để xử lý dữ liệu sau khi tải xong (vocabularyList và usedWords)
+  // Effect để xử lý dữ liệu sau khi tải xong
   useEffect(() => {
-      // Chỉ chạy logic này sau khi tải xong lần đầu và không có lỗi
-      if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
-          // Lọc ra các từ chưa được sử dụng
-          const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
-
-          if (unusedWords.length === 0) {
-              // Nếu không còn từ chưa dùng, game over ngay
-              setGameOver(true);
-              setCurrentWord(null);
-          } else {
-              // Xáo trộn danh sách các từ chưa dùng
-              const shuffled = shuffleArray(unusedWords);
-              setShuffledUnusedWords(shuffled);
-              // Bắt đầu với từ đầu tiên trong danh sách đã xáo trộn
-              setCurrentWord(shuffled[0]);
-              setCurrentWordIndex(0);
-              setGameOver(false); // Đảm bảo game không ở trạng thái over
-          }
-
-          // Đánh dấu là đã xử lý tải dữ liệu lần đầu
-          isInitialLoadComplete.current = true;
-
-      } else if (!loading && !error && vocabularyList.length === 0) {
-           // Trường hợp tải xong nhưng danh sách từ vựng rỗng
-           setCurrentWord(null);
-           setGameOver(false);
-           setShuffledUnusedWords([]);
-           setCurrentWordIndex(0);
-      }
-
-  }, [vocabularyList, loading, error, usedWords]); // Dependencies: vocabularyList, loading, error, usedWords
+    // ... (Giữ nguyên toàn bộ logic của useEffect này)
+    if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
+        const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
+        if (unusedWords.length === 0) {
+            setGameOver(true);
+            setCurrentWord(null);
+        } else {
+            const shuffled = shuffleArray(unusedWords);
+            setShuffledUnusedWords(shuffled);
+            setCurrentWord(shuffled[0]);
+            setCurrentWordIndex(0);
+            setGameOver(false);
+        }
+        isInitialLoadComplete.current = true;
+    } else if (!loading && !error && vocabularyList.length === 0) {
+         setCurrentWord(null);
+         setGameOver(false);
+         setShuffledUnusedWords([]);
+         setCurrentWordIndex(0);
+    }
+  }, [vocabularyList, loading, error, usedWords]);
 
   // Select the next word from the shuffled list
   const selectNextWord = () => {
-    // Kiểm tra xem còn từ nào trong danh sách đã xáo trộn không
     if (currentWordIndex < shuffledUnusedWords.length - 1) {
-      // Chuyển sang từ tiếp theo trong danh sách đã xáo trộn
       const nextIndex = currentWordIndex + 1;
       setCurrentWordIndex(nextIndex);
       setCurrentWord(shuffledUnusedWords[nextIndex]);
@@ -304,7 +258,6 @@ export default function VocabularyGame() {
       setFeedback('');
       setIsCorrect(null);
     } else {
-      // Nếu đã hết từ trong danh sách đã xáo trộn, kết thúc trò chơi
       setGameOver(true);
       setCurrentWord(null);
     }
@@ -317,56 +270,39 @@ export default function VocabularyGame() {
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setFeedback('Chính xác!');
       setIsCorrect(true);
-      setScore(score + 1);
 
       const newStreak = streak + 1;
       setStreak(newStreak);
       setStreakAnimation(true);
       setTimeout(() => setStreakAnimation(false), 1500);
 
-      // Cập nhật Set usedWords (cho mục đích kiểm tra và lưu)
       setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
-
       setShowConfetti(true);
 
-      // Lưu từ vựng đã trả lời đúng vào Firestore
       if (user && currentWord.word) {
         try {
           const userDocRef = doc(db, 'users', user.uid);
-          await updateDoc(userDocRef, {
-            'fill-word-1': arrayUnion(currentWord.word)
-          });
-          console.log(`Saved correctly answered word "${currentWord.word}" to Firestore field 'fill-word-1'.`);
+          await updateDoc(userDocRef, { 'fill-word-1': arrayUnion(currentWord.word) });
         } catch (firestoreError) {
           console.error("Error saving word to Firestore:", firestoreError);
         }
       }
 
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 2000);
-
-      // Chờ một chút trước khi chuyển sang từ tiếp theo
-      setTimeout(() => {
-         selectNextWord(); // Gọi hàm chọn từ tiếp theo từ danh sách đã xáo trộn
-      }, 1500);
+      setTimeout(() => setShowConfetti(false), 2000);
+      setTimeout(() => selectNextWord(), 1500);
 
     } else {
-      setFeedback(`Không đúng, hãy thử lại!`); // Có thể bỏ hiển thị từ đúng ở đây để tăng thử thách
+      setFeedback(`Không đúng, hãy thử lại!`);
       setIsCorrect(false);
       setStreak(0);
     }
   };
 
-  // Generate image URL based on the imageIndex from the vocabulary item
   const generateImageUrl = (imageIndex?: number) => {
      if (imageIndex !== undefined && typeof imageIndex === 'number') {
-         // Giả định imageIndex từ Firestore là 1-based, cần trừ 1 cho mảng 0-based
          const adjustedIndex = imageIndex - 1;
          if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) {
              return defaultImageUrls[adjustedIndex];
-         } else {
-             console.warn(`Adjusted image index ${adjustedIndex} (from Firestore ID ${imageIndex}) is out of bounds for defaultImageUrls array.`);
          }
      }
      return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`;
@@ -374,68 +310,75 @@ export default function VocabularyGame() {
 
   // Reset the game
   const resetGame = () => {
-    // Khi reset game, chúng ta không xóa dữ liệu trên Firestore
-    // Chỉ reset trạng thái trong component và tạo lại danh sách xáo trộn từ các từ chưa dùng ban đầu
-    setScore(0);
     setGameOver(false);
     setStreak(0);
     setUserInput('');
     setFeedback('');
     setIsCorrect(null);
+    setGameMode('selecting'); // Đưa về màn hình chọn chế độ
 
-    // Tạo lại danh sách các từ chưa dùng dựa trên trạng thái usedWords hiện tại
     const unusedWordsAfterReset = vocabularyList.filter(item => !usedWords.has(item.word));
-
     if (unusedWordsAfterReset.length === 0) {
-        // Nếu không còn từ nào để chơi lại (tất cả đã hoàn thành)
-        setGameOver(true); // Giữ trạng thái game over
+        setGameOver(true);
         setCurrentWord(null);
         setShuffledUnusedWords([]);
         setCurrentWordIndex(0);
     } else {
-        // Xáo trộn lại danh sách các từ chưa dùng còn lại
         const shuffled = shuffleArray(unusedWordsAfterReset);
         setShuffledUnusedWords(shuffled);
-        // Bắt đầu lại với từ đầu tiên trong danh sách mới đã xáo trộn
         setCurrentWord(shuffled[0]);
         setCurrentWordIndex(0);
-        setGameOver(false); // Đảm bảo game không ở trạng thái over
+        setGameOver(false);
     }
   };
 
 
-  // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">
-        Đang tải dữ liệu...
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   }
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">
-        {error}
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
   }
 
-  // Nếu không có từ vựng nào được tải (mảng rỗng)
   if (vocabularyList.length === 0 && !loading && !error) {
+      return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào trong danh sách của bạn.</div>;
+  }
+  
+  const gameProgress = vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0;
+  
+  // Hiển thị màn hình chọn chế độ
+  if (gameMode === 'selecting' && !gameOver) {
       return (
-          <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
-              Không có từ vựng nào trong danh sách của bạn.
+          <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans min-h-[500px] rounded-2xl">
+              <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Chọn chế độ chơi</h2>
+                  <p className="text-gray-600 mt-2">Thử thách bản thân theo cách bạn muốn!</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                  <button
+                      onClick={() => setGameMode('arranging')}
+                      className="p-6 bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-teal-400 transition-all duration-300 transform hover:-translate-y-1 group"
+                  >
+                      <div className="text-5xl mb-4 text-center">🎨</div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-1 group-hover:text-teal-600">Sắp xếp chữ cái</h3>
+                      <p className="text-sm text-gray-500">Sắp xếp các chữ cái bị xáo trộn để tạo thành từ đúng.</p>
+                  </button>
+                  <button
+                      onClick={() => setGameMode('typing')}
+                      className="p-6 bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-sky-400 transition-all duration-300 transform hover:-translate-y-1 group"
+                  >
+                      <div className="text-5xl mb-4 text-center">⌨️</div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-1 group-hover:text-sky-600">Nhập từ bàn phím</h3>
+                      <p className="text-sm text-gray-500">Sử dụng bàn phím ảo để nhập câu trả lời của bạn.</p>
+                  </button>
+              </div>
           </div>
       );
   }
 
-  // Calculate game progress percentage based on completed words
-  const gameProgress = vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0;
-
-
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
+    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8 shadow-xl font-sans">
       {showConfetti && <Confetti />}
 
       <div className="w-full flex flex-col items-center">
@@ -461,14 +404,15 @@ export default function VocabularyGame() {
           </div>
         ) : (
           <>
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl mb-4">
                 <div className="flex justify-between items-center mb-4">
-                  <div className="relative">
+                  <button onClick={() => setGameMode('selecting')} className="absolute top-4 left-4 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 text-xs transition-all z-10" title="Đổi chế độ chơi">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                  </button>
+                  <div className="relative ml-12">
                     <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                       <div className="flex items-center">
-                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
-                          {usedWords.size}
-                        </span>
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{usedWords.size}</span>
                         <span className="mx-0.5 text-white/70 text-xs">/</span>
                         <span className="text-xs text-white/50">{vocabularyList.length}</span>
                       </div>
@@ -479,8 +423,7 @@ export default function VocabularyGame() {
                     <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                   </div>
                 </div>
-
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6">
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-2">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
                       style={{ width: `${gameProgress}%` }}
@@ -492,49 +435,81 @@ export default function VocabularyGame() {
 
             {currentWord && (
               <div className="w-full space-y-6">
-                 {streak >= 1 && getStreakText(streak) !== "" && (
-                  <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                 {streak >= 3 && getStreakText(streak) !== "" && (
+                  <div className={`my-2 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
                     <div className="flex items-center justify-center">
-                       <img
-                         src={getStreakIconUrl(streak)}
-                         alt="Streak Icon"
-                         className="h-5 w-5 mr-2 text-white"
-                       />
+                       <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="h-5 w-5 mr-2 text-white" />
                       <span className="text-white font-medium">{getStreakText(streak)}</span>
                     </div>
                   </div>
                 )}
 
                 <div
-                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group mt-6"
+                  className="relative w-full h-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-102 group"
                   onClick={() => setShowImagePopup(true)}
                 >
-                  {currentWord.imageIndex !== undefined ? (
-                       <img
-                           src={generateImageUrl(currentWord.imageIndex)}
-                           alt={currentWord.word}
-                           className="w-full h-full object-contain"
-                       />
-                  ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-blue-900/80 flex flex-col items-center justify-center">
-                        <span className="text-white text-8xl font-bold mb-2">?</span>
-                        <span className="text-white text-lg opacity-80">Chạm để xem</span>
-                      </div>
-                  )}
+                  <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="w-full h-full object-contain" />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <p className="text-white text-center">Đoán từ này là gì?</p>
                   </div>
                 </div>
+                
+                <div className="min-h-[12rem] flex flex-col justify-center">
+                    {gameMode === 'typing' && (
+                        <WordSquaresInput
+                            word={currentWord.word}
+                            userInput={userInput}
+                            setUserInput={setUserInput}
+                            feedback={feedback}
+                            isCorrect={isCorrect}
+                            disabled={isCorrect === true}
+                        />
+                    )}
+                    {gameMode === 'arranging' && (
+                        <WordArrangementInput
+                            word={currentWord.word}
+                            onAnswerChange={setUserInput}
+                            isCorrect={isCorrect}
+                            disabled={isCorrect === true}
+                        />
+                    )}
+                </div>
 
-                <WordSquaresInput
-                  word={currentWord.word}
-                  userInput={userInput}
-                  setUserInput={setUserInput}
-                  checkAnswer={checkAnswer}
-                  feedback={feedback}
-                  isCorrect={isCorrect}
-                  disabled={isCorrect === true}
-                />
+                <div className="flex justify-center pt-4">
+                    <button
+                        onClick={checkAnswer}
+                        className={`px-8 py-3 w-full max-w-xs rounded-lg font-semibold text-base transition-all duration-200 shadow-md flex items-center justify-center
+                        ${userInput.length === (currentWord?.word?.length || 0) && isCorrect === null
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:-translate-y-0.5'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                        disabled={userInput.length !== (currentWord?.word?.length || 0) || isCorrect !== null}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        Kiểm tra
+                    </button>
+                </div>
+                
+                {gameMode === 'typing' && (
+                  <VirtualKeyboard
+                    userInput={userInput}
+                    setUserInput={setUserInput}
+                    wordLength={currentWord.word.length}
+                    disabled={isCorrect === true}
+                  />
+                )}
+                
+                {feedback && (
+                  <div className={`flex items-center justify-center p-3 rounded-lg shadow-sm mt-4 text-sm transition-all duration-200
+                    ${isCorrect
+                      ? 'bg-green-50 text-green-700 border border-green-100'
+                      : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    {isCorrect ?
+                      <div className="flex items-center"><span className="flex items-center justify-center bg-green-100 text-green-500 rounded-full w-6 h-6 mr-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></span><span className="font-medium">{feedback}</span></div> :
+                      <div className="flex items-center"><span className="flex items-center justify-center bg-red-100 text-red-500 rounded-full w-6 h-6 mr-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></span><span>{feedback}</span></div>
+                    }
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -544,20 +519,13 @@ export default function VocabularyGame() {
       {showImagePopup && currentWord && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
-            <button
-              onClick={() => setShowImagePopup(false)}
-              className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"
-            >
+            <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white/80 rounded-full p-2 shadow-md hover:shadow-lg transition-all z-20">
               <span className="text-xl font-bold">✕</span>
             </button>
             <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
-            <img
-              src={generateImageUrl(currentWord.imageIndex)}
-              alt={currentWord.word}
-              className="rounded-lg shadow-md max-w-full max-h-full object-contain"
-            />
+            <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-[70vh] object-contain mx-auto" />
             <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-              <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p>
+              <p className="font-medium text-gray-700 mb-1">Gợi ý:</p>
               <p className="text-gray-800">{currentWord.hint}</p>
             </div>
           </div>
