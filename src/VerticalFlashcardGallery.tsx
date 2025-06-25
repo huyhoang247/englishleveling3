@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
+// --- THÊM IMPORT MỚI ---
+import { useVirtualizer } from '@tanstack/react-virtual';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
@@ -137,7 +139,12 @@ interface FlashcardItemProps {
 
 const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
   return (
-    <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
+    <div
+      id={`flashcard-${card.id}`}
+      className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group"
+      // --- THÊM THUỘC TÍNH CSS NÀY ĐỂ TĂNG HIỆU SUẤT RENDER ---
+      style={{ contentVisibility: 'auto' }}
+    >
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
       <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
         <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${isFavorite ? 'scale-110' : 'scale-100'}`}
@@ -182,8 +189,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all');
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
+  // --- BỎ STATE PAGINATION ---
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
   const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
@@ -197,10 +205,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return new Set(playlists.flatMap(p => p.cardIds));
   }, [playlists]);
 
-  // --- Effects ---
-  // ==================================================================
-  // === LỖI ĐÃ ĐƯỢC SỬA Ở ĐÂY ==========================================
-  // ==================================================================
+  // --- Effects (Logic lấy dữ liệu user giữ nguyên) ---
   useEffect(() => {
     if (!currentUser) {
       setLoading(false);
@@ -211,14 +216,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     setLoading(true);
 
     const userDocRef = doc(db, 'users', currentUser.uid);
-    let unsubscribe = () => {}; // Khởi tạo hàm rỗng
+    let unsubscribe = () => {};
 
     const setupListener = async () => {
       try {
-        // 1. Dùng getDoc để kiểm tra một lần duy nhất
         const docSnap = await getDoc(userDocRef);
-
-        // 2. Nếu tài liệu chưa tồn tại, tạo nó với dữ liệu mẫu
         if (!docSnap.exists()) {
           console.log("Creating initial document for new user...");
           const examplePlaylists: Playlist[] = [
@@ -230,35 +232,35 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           ];
           await setDoc(userDocRef, { openedImageIds: [], playlists: examplePlaylists });
         }
-
-        // 3. Bây giờ tài liệu chắc chắn đã tồn tại, hãy gắn onSnapshot để lắng nghe các cập nhật
         unsubscribe = onSnapshot(userDocRef, (snapshot) => {
           if (snapshot.exists()) {
             const userData = snapshot.data();
             setOpenedImageIds(userData.openedImageIds || []);
             setPlaylists(userData.playlists || []);
           }
-          setLoading(false); // Đặt ở đây để đảm bảo UI chỉ hết loading sau khi có dữ liệu
+          setLoading(false);
         }, (error) => {
             console.error("Error with onSnapshot listener:", error);
             setLoading(false);
         });
-
       } catch (error) {
         console.error("Error setting up user listener:", error);
         setLoading(false);
       }
     };
-
     setupListener();
-
-    // Cleanup: Hủy đăng ký lắng nghe khi component bị unmount
     return () => {
       unsubscribe();
     };
   }, [currentUser]);
 
-  const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
+  // --- HÀM CUỘN LÊN ĐẦU MỚI ---
+  const scrollToTop = () => {
+    mainContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // --- Dữ liệu để hiển thị, không còn phân trang ---
+  const flashcardsToDisplay = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
         const card = ALL_CARDS_MAP.get(id);
         if (!card) return undefined;
@@ -278,12 +280,35 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return cardIdsToShow.map(id => getDisplayCard(id)).filter((item): item is DisplayCard => item !== undefined);
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
-  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
+
+  // --- LOGIC VIRTUALIZATION MỚI ---
+  const rowVirtualizer = useVirtualizer({
+      count: flashcardsToDisplay.length,
+      getScrollElement: () => mainContainerRef.current,
+      // Ước lượng chiều cao của mỗi item. Rất quan trọng để cuộn mượt!
+      // Giá trị này dựa trên tỉ lệ ảnh (1024x1536) và layout, cộng thêm padding/gap
+      estimateSize: () => (layoutMode === 'single' ? 750 + 16 : 450 + 16), // height + padding-bottom
+      overscan: 5, // Render trước 5 item để tránh thấy khoảng trắng khi cuộn
+  });
+
+  // --- LOGIC PRELOAD ẢNH MỚI, TƯƠNG THÍCH VỚI VIRTUALIZATION ---
+  useEffect(() => {
+    const virtualItems = rowVirtualizer.getVirtualItems();
+    if (virtualItems.length === 0) {
+        setUrlsToPreload([]);
+        return;
+    }
+
+    const urls = virtualItems.map(virtualItem => {
+        const item = flashcardsToDisplay[virtualItem.index];
+        if (!item) return '';
+        return getImageUrlForStyle(item.card, visualStyle);
+    }).filter(Boolean);
+
+    setUrlsToPreload(urls);
+  }, [rowVirtualizer.getVirtualItems(), flashcardsToDisplay, visualStyle, getImageUrlForStyle]);
 
   const handleShowHome = () => setActiveScreen('home');
   const handleShowStats = () => setActiveScreen('stats');
@@ -321,69 +346,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         default: return card.imageUrl.default;
     }
   }, []);
-
-  const handlePageChange = (pageNumber: number) => {
-    if (pageNumber < 1 || pageNumber > totalPages) return;
-    setCurrentPage(pageNumber);
-    if (mainContainerRef.current) {
-      mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-    }
-  };
-
-  const paginationItems = useMemo(() => {
-    const siblingCount = 1;
-    const totalPageNumbers = siblingCount + 5;
-
-    if (totalPageNumbers >= totalPages) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-    const shouldShowLeftDots = leftSiblingIndex > 2;
-    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-
-    const range = (start: number, end: number) => {
-      let length = end - start + 1;
-      return Array.from({ length }, (_, idx) => idx + start);
-    };
-
-    if (!shouldShowLeftDots && shouldShowRightDots) {
-      let leftItemCount = 3 + 2 * siblingCount;
-      let leftRange = range(1, leftItemCount);
-      return [...leftRange, '...', totalPages];
-    }
-    if (shouldShowLeftDots && !shouldShowRightDots) {
-      let rightItemCount = 3 + 2 * siblingCount;
-      let rightRange = range(totalPages - rightItemCount + 1, totalPages);
-      return [1, '...', ...rightRange];
-    }
-    if (shouldShowLeftDots && shouldShowRightDots) {
-      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
-      return [1, '...', ...middleRange, '...', totalPages];
-    }
-    return [];
-  }, [currentPage, totalPages]);
-
-  useEffect(() => {
-    const getUrlsFromPage = (pageNumber: number): string[] => {
-        if (pageNumber < 1 || pageNumber > totalPages) return [];
-        const pageStartIndex = (pageNumber - 1) * itemsPerPage;
-        const pageEndIndex = pageStartIndex + itemsPerPage;
-        return filteredFlashcardsByTab
-            .slice(pageStartIndex, pageEndIndex)
-            .map(({ card }) => getImageUrlForStyle(card, visualStyle));
-    };
-
-    const visiblePageNumbers = paginationItems.filter(
-        (item): item is number => typeof item === 'number'
-    );
-    const urlsToLoad = new Set<string>();
-    visiblePageNumbers.forEach(pageNumber => {
-        getUrlsFromPage(pageNumber).forEach(url => urlsToLoad.add(url));
-    });
-    setUrlsToPreload(Array.from(urlsToLoad));
-  }, [paginationItems, totalPages, filteredFlashcardsByTab, visualStyle, getImageUrlForStyle, itemsPerPage]);
 
   const pinnedCount = useMemo(() => playlists.filter(p => p.isPinned).length, [playlists]);
 
@@ -449,7 +411,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
-
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
@@ -467,7 +428,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
+      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900 scroll-smooth">
         <style>{animations}</style>
         <style>{scrollbarHide}</style>
 
@@ -494,12 +455,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </div>
 
               <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
-                <button onClick={() => { setActiveTab('collection'); handlePageChange(1); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                <button onClick={() => { setActiveTab('collection'); scrollToTop(); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
                   <span>Collection</span>
                   <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
                 </button>
-                <button onClick={() => { setActiveTab('favorite'); handlePageChange(1); setSelectedPlaylistId('all'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                <button onClick={() => { setActiveTab('favorite'); setSelectedPlaylistId('all'); scrollToTop(); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
                   <span>Favorite</span>
                   <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
@@ -515,7 +476,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
                     <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                       <button
-                        onClick={() => { setSelectedPlaylistId('all'); handlePageChange(1); }}
+                        onClick={() => { setSelectedPlaylistId('all'); scrollToTop(); }}
                         className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
                           ${selectedPlaylistId === 'all'
                             ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
@@ -533,7 +494,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                       {pillsToDisplay.map(p => (
                         <button
                           key={p.id}
-                          onClick={() => { setSelectedPlaylistId(p.id); handlePageChange(1); }}
+                          onClick={() => { setSelectedPlaylistId(p.id); scrollToTop(); }}
                           className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px]
                             ${selectedPlaylistId === p.id
                               ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
@@ -565,21 +526,54 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               )}
             </div>
 
+            {/* --- KHU VỰC HIỂN THỊ DANH SÁCH ĐÃ ĐƯỢC THAY THẾ BẰNG VIRTUALIZATION --- */}
             <div className="min-h-0">
-              <div className="w-full max-w-6xl mx-auto">
-                {flashcardsForCurrentPage.length > 0 ? (
-                  <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {flashcardsForCurrentPage.map(({ card, isFavorite }) => (
-                      <FlashcardItem
-                        key={card.id}
-                        card={card}
-                        isFavorite={isFavorite}
-                        visualStyle={visualStyle}
-                        onImageClick={openVocabDetail}
-                        onFavoriteClick={handleFavoriteClick}
-                        getImageUrlForStyle={getImageUrlForStyle}
-                      />
-                    ))}
+              <div className="w-full max-w-6xl mx-auto px-4">
+                {flashcardsToDisplay.length > 0 ? (
+                  // Container ngoài cùng, có chiều cao động để tạo thanh cuộn
+                  <div
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* Map qua các item ảo thay vì toàn bộ danh sách */}
+                    {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                      const item = flashcardsToDisplay[virtualItem.index];
+                      if (!item) return null; // An toàn nếu item không tồn tại
+
+                      const { card, isFavorite } = item;
+                      const isDouble = layoutMode === 'double';
+                      const isLeft = virtualItem.index % 2 === 0;
+
+                      return (
+                        <div
+                          key={virtualItem.key}
+                          // Wrapper cho mỗi item, được định vị tuyệt đối
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: isDouble ? (isLeft ? '0%' : '50%') : '0%',
+                            width: isDouble ? '50%' : '100%',
+                            transform: `translateY(${virtualItem.start}px)`,
+                            // Tạo khoảng cách (gap) giữa các item trong layout 2 cột
+                            paddingLeft: isDouble && !isLeft ? '0.5rem' : '0',
+                            paddingRight: isDouble && isLeft ? '0.5rem' : '0',
+                            paddingBottom: '1rem' // gap-4 theo chiều dọc
+                          }}
+                        >
+                          <FlashcardItem
+                            card={card}
+                            isFavorite={isFavorite}
+                            visualStyle={visualStyle}
+                            onImageClick={openVocabDetail}
+                            onFavoriteClick={handleFavoriteClick}
+                            getImageUrlForStyle={getImageUrlForStyle}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 text-center px-4">
@@ -588,29 +582,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     <p className="text-gray-500 dark:text-gray-400 max-w-md">{activeTab === 'collection' ? 'Hãy mở rương để nhận thêm flashcard mới!' : selectedPlaylistId === 'all' ? 'Nhấn vào biểu tượng trái tim để thêm từ vào mục yêu thích.' : 'Hãy thêm các từ yêu thích vào playlist này.'}</p>
                   </div>
                 )}
-
-                {totalPages > 1 && (
-                  <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
-                    <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
-                      {paginationItems.map((item, index) =>
-                        typeof item === 'string' ? (
-                          <span key={`ellipsis-${index}`} className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">...</span>
-                        ) : (
-                          <button
-                            key={item}
-                            onClick={() => handlePageChange(item)}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === item ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                          >
-                            {item}
-                          </button>
-                        )
-                      )}
-                    </nav>
-                  </div>
-                )}
               </div>
             </div>
 
+            {/* --- KHỐI MODAL SETTINGS ĐẦY ĐỦ --- */}
             {showSettings && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }} onClick={() => setShowSettings(false)}></div>
@@ -667,6 +642,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               />
             )}
 
+            {/* --- KHỐI MODAL ALL PLAYLISTS ĐẦY ĐỦ --- */}
             {showAllPlaylistsModal && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => { if (!playlistToDelete) setShowAllPlaylistsModal(false); }} style={{ animation: 'modalBackdropIn 0.3s' }}></div>
@@ -703,7 +679,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                               <div
                                 onClick={() => {
                                   setSelectedPlaylistId(p.id);
-                                  handlePageChange(1);
+                                  scrollToTop();
                                   setShowAllPlaylistsModal(false);
                                   setPlaylistSearch('');
                                 }}
