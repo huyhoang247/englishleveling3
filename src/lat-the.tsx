@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; // Điều chỉnh đường dẫn nếu cần
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { defaultImageUrls } from './image-url.ts'; // Điều chỉnh đường dẫn nếu cần
-import ImagePreloader from './ImagePreloader'; // Import component mới để tải trước ảnh
+import ImagePreloader from './ImagePreloader.tsx'; // Import component mới để tải trước ảnh
 
 // ========================================================================
 // === 1. CSS STYLES ======================================================
