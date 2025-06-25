@@ -7,7 +7,7 @@ import { doc, getDoc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { SidebarLayout } from './sidebar-story.tsx';
-import ImagePreloader from './ImagePreloader';
+import ImagePreloader from './ImagePreloader.tsx';
 
 // --- Interfaces and Data (Giữ nguyên) ---
 interface Playlist {
