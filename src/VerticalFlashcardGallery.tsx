@@ -1,15 +1,15 @@
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
+import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
-import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore'; // Thêm setDoc vào import
 import { User } from 'firebase/auth';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { SidebarLayout } from './sidebar-story.tsx';
-import ImagePreloader from './ImagePreloader.tsx'; // Import component preloader
+import ImagePreloader from './ImagePreloader';
 
-// --- Interfaces and Data ---
+// --- Interfaces and Data (Giữ nguyên) ---
 interface Playlist {
   id: string;
   name: string;
@@ -46,6 +46,7 @@ interface DisplayCard {
     isFavorite: boolean;
 }
 
+// --- Dữ liệu tĩnh và hàm khởi tạo (Giữ nguyên) ---
 const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
   const urls: string[] = [];
   for (let i = 1; i <= count; i++) {
@@ -98,7 +99,7 @@ const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
             realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
         };
         const card: Flashcard = { id: i + 1, imageUrl: imageUrls, vocabulary: vocab };
-        return [i + 1, card]; // Key là id, value là object card
+        return [i + 1, card];
     })
 );
 
@@ -120,6 +121,10 @@ const animations = `
   @keyframes comicPop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
 `;
+const scrollbarHide = `
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  `;
 
 interface FlashcardItemProps {
   card: Flashcard;
@@ -193,61 +198,84 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
+  // ==================================================================
+  // === LỖI ĐÃ ĐƯỢC SỬA Ở ĐÂY ==========================================
+  // ==================================================================
   useEffect(() => {
-    if (!currentUser) { setLoading(false); setOpenedImageIds([]); setPlaylists([]); return; }
-    setLoading(true);
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
-        setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
-      } else {
-         const examplePlaylists: Playlist[] = [
-          {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
-          {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
-          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
-          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
-          {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [370, 371, 372], isPinned: false},
-        ];
-        setPlaylists(examplePlaylists);
-        setOpenedImageIds([]);
-        await setDoc(userDocRef, { openedImageIds: [], playlists: examplePlaylists });
-      }
+    if (!currentUser) {
       setLoading(false);
-    }, (error) => { setLoading(false); console.error("Error fetching user data:", error) });
-    return () => unsubscribe();
+      setOpenedImageIds([]);
+      setPlaylists([]);
+      return;
+    }
+    setLoading(true);
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    let unsubscribe = () => {}; // Khởi tạo hàm rỗng
+
+    const setupListener = async () => {
+      try {
+        // 1. Dùng getDoc để kiểm tra một lần duy nhất
+        const docSnap = await getDoc(userDocRef);
+
+        // 2. Nếu tài liệu chưa tồn tại, tạo nó với dữ liệu mẫu
+        if (!docSnap.exists()) {
+          console.log("Creating initial document for new user...");
+          const examplePlaylists: Playlist[] = [
+            {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
+            {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
+            {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
+            {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
+            {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [370, 371, 372], isPinned: false},
+          ];
+          await setDoc(userDocRef, { openedImageIds: [], playlists: examplePlaylists });
+        }
+
+        // 3. Bây giờ tài liệu chắc chắn đã tồn tại, hãy gắn onSnapshot để lắng nghe các cập nhật
+        unsubscribe = onSnapshot(userDocRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const userData = snapshot.data();
+            setOpenedImageIds(userData.openedImageIds || []);
+            setPlaylists(userData.playlists || []);
+          }
+          setLoading(false); // Đặt ở đây để đảm bảo UI chỉ hết loading sau khi có dữ liệu
+        }, (error) => {
+            console.error("Error with onSnapshot listener:", error);
+            setLoading(false);
+        });
+
+      } catch (error) {
+        console.error("Error setting up user listener:", error);
+        setLoading(false);
+      }
+    };
+
+    setupListener();
+
+    // Cleanup: Hủy đăng ký lắng nghe khi component bị unmount
+    return () => {
+      unsubscribe();
+    };
   }, [currentUser]);
 
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
-        const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
+        const card = ALL_CARDS_MAP.get(id);
         if (!card) return undefined;
-        return {
-            card, // Giữ nguyên tham chiếu đến object card gốc
-            isFavorite: allFavoriteCardIds.has(id) // Lấy trạng thái favorite
-        };
+        return { card, isFavorite: allFavoriteCardIds.has(id) };
     };
-
     let cardIdsToShow: number[] = [];
-
     if (activeTab === 'collection') {
         cardIdsToShow = [...openedImageIds].reverse();
     } else if (activeTab === 'favorite') {
         if (selectedPlaylistId === 'all') {
-            // Hiển thị tất cả card yêu thích, sắp xếp theo ID để ổn định
             cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
         } else {
             const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
-            // Sắp xếp ID trong playlist để có thứ tự ổn định
             cardIdsToShow = selectedPlaylist ? [...selectedPlaylist.cardIds].sort((a,b) => b-a) : [];
         }
     }
-    
-    return cardIdsToShow
-        .map(id => getDisplayCard(id))
-        .filter((item): item is DisplayCard => item !== undefined);
-
+    return cardIdsToShow.map(id => getDisplayCard(id)).filter((item): item is DisplayCard => item !== undefined);
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
@@ -257,7 +285,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
 
-  // --- Handlers ---
   const handleShowHome = () => setActiveScreen('home');
   const handleShowStats = () => setActiveScreen('stats');
   const handleShowRank = () => setActiveScreen('rank');
@@ -313,7 +340,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
     const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
     const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-
     const shouldShowLeftDots = leftSiblingIndex > 2;
     const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
 
@@ -327,23 +353,18 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       let leftRange = range(1, leftItemCount);
       return [...leftRange, '...', totalPages];
     }
-
     if (shouldShowLeftDots && !shouldShowRightDots) {
       let rightItemCount = 3 + 2 * siblingCount;
       let rightRange = range(totalPages - rightItemCount + 1, totalPages);
       return [1, '...', ...rightRange];
     }
-
     if (shouldShowLeftDots && shouldShowRightDots) {
       let middleRange = range(leftSiblingIndex, rightSiblingIndex);
       return [1, '...', ...middleRange, '...', totalPages];
     }
-
     return [];
-
   }, [currentPage, totalPages]);
 
-  // LOGIC PRELOADING TỐI ƯU NHẤT: Tải trước các trang đang hiển thị trong thanh phân trang
   useEffect(() => {
     const getUrlsFromPage = (pageNumber: number): string[] => {
         if (pageNumber < 1 || pageNumber > totalPages) return [];
