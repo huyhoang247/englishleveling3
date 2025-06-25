@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
@@ -229,12 +228,13 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         if (!card) return undefined;
         return {
             card, // Giữ nguyên tham chiếu đến object card gốc
-            isFavorite: allFavoriteCardIds.has(id) // Lấy trạng thái favorite
+            isFavorite: allFavoriteCardIds.has(id) // Lấy trạng thái favorite cũng O(1)
         };
     };
 
     let cardIdsToShow: number[] = [];
 
+    // Bước 1: Chỉ lấy ra mảng các ID cần hiển thị (rất nhẹ)
     if (activeTab === 'collection') {
         cardIdsToShow = [...openedImageIds].reverse();
     } else if (activeTab === 'favorite') {
@@ -248,33 +248,33 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         }
     }
     
-    // Chỉ một lần map duy nhất, mỗi lần map là một phép tra cứu O(1)
+    // Bước 2: Map qua mảng ID (ngắn hơn nhiều) để tạo data hoàn chỉnh.
     return cardIdsToShow
         .map(id => getDisplayCard(id))
-        .filter((item): item is DisplayCard => item !== undefined);
+        .filter((item): item is DisplayCard => item !== undefined); // Lọc bỏ những card không tìm thấy
 
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  // --- TỐI ƯU 4: Cập nhật biến này vì cấu trúc dữ liệu đã thay đổi
+  // --- TỐI ƯU 4: Cập nhật biến này vì cấu trúc dữ liệu đã thay đổi ---
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
 
   // --- Handlers ---
-  const handleShowHome = () => setActiveScreen('home');
-  const handleShowStats = () => setActiveScreen('stats');
-  const handleShowRank = () => setActiveScreen('rank');
-  const handleShowGoldMine = () => setActiveScreen('goldMine');
-  const handleShowTasks = () => setActiveScreen('tasks');
-  const handleShowPerformance = () => setActiveScreen('performance');
-  const handleShowSettings = () => setActiveScreen('settings');
-  const handleShowHelp = () => setActiveScreen('help');
+  const handleShowHome = useCallback(() => setActiveScreen('home'), []);
+  const handleShowStats = useCallback(() => setActiveScreen('stats'), []);
+  const handleShowRank = useCallback(() => setActiveScreen('rank'), []);
+  const handleShowGoldMine = useCallback(() => setActiveScreen('goldMine'), []);
+  const handleShowTasks = useCallback(() => setActiveScreen('tasks'), []);
+  const handleShowPerformance = useCallback(() => setActiveScreen('performance'), []);
+  const handleShowSettings = useCallback(() => setActiveScreen('settings'), []);
+  const handleShowHelp = useCallback(() => setActiveScreen('help'), []);
 
-  const closePlaylistModal = () => { setIsPlaylistModalOpen(false); setSelectedCardForPlaylist(null); };
-  const closeVocabDetail = () => { setShowVocabDetail(false); setSelectedCard(null); showNavBar(); };
+  const closePlaylistModal = useCallback(() => { setIsPlaylistModalOpen(false); setSelectedCardForPlaylist(null); }, []);
+  const closeVocabDetail = useCallback(() => { setShowVocabDetail(false); setSelectedCard(null); showNavBar(); }, [showNavBar]);
 
   const openPlaylistModal = useCallback((cardId: number) => {
     setSelectedCardForPlaylist([cardId]);
@@ -301,13 +301,13 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   }, []);
 
-  const handlePageChange = (pageNumber: number) => {
+  const handlePageChange = useCallback((pageNumber: number) => {
     if (pageNumber < 1 || pageNumber > totalPages) return;
     setCurrentPage(pageNumber);
     if (mainContainerRef.current) {
       mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
     }
-  };
+  }, [totalPages]);
 
   const paginationItems = useMemo(() => {
     const siblingCount = 1;
@@ -417,12 +417,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         const userDocRef = doc(db, 'users', currentUser.uid);
         await updateDoc(userDocRef, { playlists: newPlaylists });
         
-        // Chỉ cập nhật state sau khi Firestore thành công
         setPlaylists(newPlaylists);
         if (selectedPlaylistId === playlistToDelete.id) {
             setSelectedPlaylistId('all');
         }
-        setPlaylistToDelete(null); // Đóng modal xác nhận
+        setPlaylistToDelete(null);
     } catch (error) {
         console.error("Lỗi khi xoá playlist:", error);
         alert("Đã xảy ra lỗi khi xoá playlist. Vui lòng thử lại.");
@@ -486,7 +485,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </button>
               </div>
 
-              {/* GIAO DIỆN CHỌN PLAYLIST MỚI - CÓ GHIM VÀ TRUNCATE */}
               {activeTab === 'favorite' && (
                 <div className="px-4 mb-6">
                   <div className="w-full">
@@ -495,7 +493,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </label>
 
                     <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                      {/* Nút "Tất cả" - Luôn hiển thị */}
                       <button
                         onClick={() => { setSelectedPlaylistId('all'); handlePageChange(1); }}
                         className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
@@ -512,7 +509,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         </span>
                       </button>
 
-                      {/* Hiển thị các "pill" đã được tính toán */}
                       {pillsToDisplay.map(p => (
                         <button
                           key={p.id}
@@ -533,7 +529,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         </button>
                       ))}
 
-                      {/* Nút "Tất cả playlist" */}
                        <button
                           onClick={() => setShowAllPlaylistsModal(true)}
                           className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full text-sm font-medium transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400"
@@ -653,7 +648,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               />
             )}
 
-            {/* MODAL CHỌN TẤT CẢ PLAYLIST VỚI CHỨC NĂNG GHIM VÀ XOÁ */}
             {showAllPlaylistsModal && (
               <>
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => { if (!playlistToDelete) setShowAllPlaylistsModal(false); }} style={{ animation: 'modalBackdropIn 0.3s' }}></div>
@@ -732,7 +726,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                       </ul>
                     </div>
 
-                    {/* MODAL XÁC NHẬN XOÁ */}
                     {playlistToDelete && (
                         <div className="absolute inset-0 bg-gray-900/60 dark:bg-black/70 z-10 flex items-center justify-center p-4 rounded-2xl" style={{ animation: 'fadeIn 0.2s' }}>
                             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm text-center p-6" style={{ animation: 'scaleIn 0.2s' }}>
@@ -760,7 +753,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 </div>
               </>
             )}
-
           </>
         )}
 
