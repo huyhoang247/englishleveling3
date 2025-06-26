@@ -114,7 +114,7 @@ const GlobalStyles = () => (
         }
         .chest-body { 
             background: linear-gradient(170deg, #43335b, #2c2240);
-            padding: 25px 20px 20px 20px; position: relative; flex-grow: 1; 
+            padding: 20px; position: relative; flex-grow: 1; 
             display: flex; flex-direction: column; align-items: center; overflow: hidden;
         }
         .chest-body::before {
@@ -123,21 +123,29 @@ const GlobalStyles = () => (
         }
         .chest-body > * { position: relative; z-index: 1; }
         
-        /* MODIFIED: Removed min-height */
+        /* NEW: Flex container for the top area */
+        .chest-top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start; /* Aligns items to their top edge */
+            width: 100%;
+            margin-bottom: 15px; /* Space between top section and visual row */
+        }
+        
         .chest-title { 
             font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+            margin: 0; /* Remove margin to let flexbox handle spacing */
+            text-align: left;
+            flex-grow: 1; /* Allows title to take up space */
         }
 
-        /* Container for top-right elements */
+        /* MODIFIED: No longer absolute */
         .chest-top-right-controls {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 2;
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0; /* Prevent from shrinking */
         }
 
         .chest-level-name {
@@ -156,7 +164,6 @@ const GlobalStyles = () => (
             border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 16px; 
             font-weight: bold; cursor: pointer; display: flex; justify-content: center; 
             align-items: center; transition: all 0.2s ease;
-            flex-shrink: 0;
         }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
         
@@ -355,13 +362,15 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
         <div className="chest-ui-container">
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
-                <div className="chest-top-right-controls">
-                    {levelName && <span className="chest-level-name">{levelName}</span>}
-                    <button className="help-icon">?</button>
-                </div>
                 
-                {/* MODIFIED: Conditionally render the title only if it exists */}
-                {mainTitle && <h1 className="chest-title">{mainTitle}</h1>}
+                {/* MODIFIED: New structure for the top part */}
+                <div className="chest-top-section">
+                    <h1 className="chest-title">{mainTitle}</h1>
+                    <div className="chest-top-right-controls">
+                        {levelName && <span className="chest-level-name">{levelName}</span>}
+                        <button className="help-icon">?</button>
+                    </div>
+                </div>
                 
                 <div className="chest-visual-row">
                     <img src={imageUrl} alt={mainTitle || headerTitle} className="chest-image" />
