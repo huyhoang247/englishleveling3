@@ -122,10 +122,11 @@ const GlobalStyles = () => (
             background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0;
         }
         .chest-body > * { position: relative; z-index: 1; }
+        
+        /* MODIFIED: Removed min-height */
         .chest-title { 
             font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
             text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
-            min-height: 1.2em; /* Giữ lại khoảng trống ngay cả khi title rỗng */
         }
 
         /* Container for top-right elements */
@@ -359,7 +360,9 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
                     <button className="help-icon">?</button>
                 </div>
                 
-                <h1 className="chest-title">{mainTitle}</h1>
+                {/* MODIFIED: Conditionally render the title only if it exists */}
+                {mainTitle && <h1 className="chest-title">{mainTitle}</h1>}
+                
                 <div className="chest-visual-row">
                     <img src={imageUrl} alt={mainTitle || headerTitle} className="chest-image" />
                     <div className="info-bubble">{infoText}</div>
@@ -386,7 +389,6 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
     );
 };
 
-// === MODIFIED: Removed "Rương Từ Vựng" from mainTitle ===
 const CHEST_DATA = [
     { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", levelName: null, imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null },
     { id: 'basic_vocab_chest', headerTitle: "Basic Vocabulary", mainTitle: "", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
