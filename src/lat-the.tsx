@@ -1,4 +1,4 @@
-// lat-the.tsx (Final Optimized Version with Smart Preloading & Hover Effect)
+// lat-the.tsx (Final Optimized Version with Smart Preloading)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
@@ -122,7 +122,23 @@ const GlobalStyles = () => (
             background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0;
         }
         .chest-body > * { position: relative; z-index: 1; }
-        
+        .chest-title { 
+            font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
+        }
+        .chest-level-name {
+            position: absolute;
+            top: 17px;
+            right: 45px; /* Vị trí bên trái icon Dấu hỏi (15px pos + 24px width + 6px gap) */
+            z-index: 2;
+            background-color: rgba(0, 0, 0, 0.25);
+            color: #c7d2fe;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(129, 140, 248, 0.4);
+        }
         .help-icon { 
             position: absolute; top: 15px; right: 15px; width: 24px; height: 24px;
             border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
@@ -132,44 +148,7 @@ const GlobalStyles = () => (
         }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
-        
-        /* === NEW: Chest Image Hover Effect === */
-        .chest-visual-wrapper {
-            flex: 1; min-width: 0;
-            position: relative;
-            cursor: pointer;
-            border-radius: 8px; /* Giúp lớp phủ bo tròn theo */
-            overflow: hidden;
-        }
-        .chest-image {
-            width: 100%; height: auto;
-            display: block;
-            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .chest-hover-title {
-            position: absolute; inset: 0;
-            display: flex; justify-content: center; align-items: center;
-            background-color: rgba(10, 10, 20, 0.7);
-            backdrop-filter: blur(2px);
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .chest-visual-wrapper:hover .chest-hover-title {
-            opacity: 1;
-        }
-        .chest-visual-wrapper:hover .chest-image {
-            transform: scale(1.1);
-        }
-        .hover-title-text {
-            font-size: clamp(1.3rem, 4vw, 1.6rem);
-            color: white; font-weight: 700;
-            text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
-            text-align: center;
-        }
-        /* === END NEW === */
-
+        .chest-image { flex: 1; min-width: 0; height: auto; }
         .info-bubble { 
             flex: 2; background-color: rgba(10, 10, 20, 0.6); color: #d1d5db;
             padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
@@ -355,22 +334,19 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     );
 };
 
-interface ChestUIProps { headerTitle: string; mainTitle: string; imageUrl: string; infoText: React.ReactNode; pityLine1: React.ReactNode; pityLine2: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; }
+interface ChestUIProps { headerTitle: string; mainTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; pityLine1: React.ReactNode; pityLine2: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; }
 
-const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, imageUrl, infoText, pityLine1, pityLine2, price1, price10, onOpen1, onOpen10 }) => {
+const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, imageUrl, infoText, pityLine1, pityLine2, price1, price10, onOpen1, onOpen10 }) => {
     const isFree = typeof price1 === 'string';
     return (
         <div className="chest-ui-container">
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
+                {levelName && <span className="chest-level-name">{levelName}</span>}
                 <button className="help-icon">?</button>
+                <h1 className="chest-title">{mainTitle}</h1>
                 <div className="chest-visual-row">
-                    <div className="chest-visual-wrapper">
-                        <img src={imageUrl} alt={mainTitle} className="chest-image" />
-                        <div className="chest-hover-title">
-                            <span className="hover-title-text">{mainTitle}</span>
-                        </div>
-                    </div>
+                    <img src={imageUrl} alt={mainTitle} className="chest-image" />
                     <div className="info-bubble">{infoText}</div>
                 </div>
                 {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
@@ -395,14 +371,14 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, imageUrl, inf
     );
 };
 
-// === UPDATED: Dữ liệu rương với mainTitle ngắn gọn hơn ===
 const CHEST_DATA = [
-    { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null },
-    { id: 'basic_vocab_chest', headerTitle: "Basic Vocabulary", mainTitle: "Từ Vựng Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'elementary_vocab_chest', headerTitle: "Elementary Vocabulary", mainTitle: "Từ Vựng Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'intermediate_vocab_chest', headerTitle: "Intermediate Vocabulary", mainTitle: "Từ Vựng Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Trung Cấp (B1-B2). Mở rộng kiến thức chuyên sâu hơn.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'advanced_vocab_chest', headerTitle: "Advanced Vocabulary", mainTitle: "Từ Vựng Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Cao Cấp (C1-C2). Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", levelName: null, imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null },
+    { id: 'basic_vocab_chest', headerTitle: "Basic Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'elementary_vocab_chest', headerTitle: "Elementary Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'intermediate_vocab_chest', headerTitle: "Intermediate Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Trung Cấp (B1-B2). Mở rộng kiến thức chuyên sâu hơn.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'advanced_vocab_chest', headerTitle: "Advanced Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Cao Cấp (C1-C2). Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
 ];
+
 
 // ========================================================================
 // === 3. COMPONENT CHÍNH =================================================
