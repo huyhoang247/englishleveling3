@@ -126,11 +126,20 @@ const GlobalStyles = () => (
             font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
             text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
         }
-        .chest-level-name {
+
+        /* === NEW: Container for top-right elements === */
+        .chest-top-right-controls {
             position: absolute;
-            top: 17px;
-            right: 45px; /* Vị trí bên trái icon Dấu hỏi (15px pos + 24px width + 6px gap) */
+            top: 15px;
+            right: 15px;
             z-index: 2;
+            display: flex;
+            align-items: center; /* This is the key for vertical alignment */
+            gap: 8px; /* Space between the tag and the icon */
+        }
+
+        /* MODIFIED: Removed positioning */
+        .chest-level-name {
             background-color: rgba(0, 0, 0, 0.25);
             color: #c7d2fe;
             padding: 4px 10px;
@@ -139,14 +148,18 @@ const GlobalStyles = () => (
             font-weight: 600;
             border: 1px solid rgba(129, 140, 248, 0.4);
         }
+
+        /* MODIFIED: Removed positioning, added flex-shrink */
         .help-icon { 
-            position: absolute; top: 15px; right: 15px; width: 24px; height: 24px;
+            width: 24px; height: 24px;
             border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
             border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 16px; 
             font-weight: bold; cursor: pointer; display: flex; justify-content: center; 
-            align-items: center; transition: all 0.2s ease; z-index: 2; 
+            align-items: center; transition: all 0.2s ease;
+            flex-shrink: 0; /* Prevents icon from shrinking */
         }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
+        
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
         .info-bubble { 
@@ -342,8 +355,12 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
         <div className="chest-ui-container">
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
-                {levelName && <span className="chest-level-name">{levelName}</span>}
-                <button className="help-icon">?</button>
+                {/* === MODIFIED: Grouped level name and help icon for alignment === */}
+                <div className="chest-top-right-controls">
+                    {levelName && <span className="chest-level-name">{levelName}</span>}
+                    <button className="help-icon">?</button>
+                </div>
+                
                 <h1 className="chest-title">{mainTitle}</h1>
                 <div className="chest-visual-row">
                     <img src={imageUrl} alt={mainTitle} className="chest-image" />
