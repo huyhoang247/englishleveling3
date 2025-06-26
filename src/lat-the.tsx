@@ -122,18 +122,25 @@ const GlobalStyles = () => (
             background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0;
         }
         .chest-body > * { position: relative; z-index: 1; }
+        
+        /* NEW: Level Badge Style */
+        .chest-level-badge {
+            display: inline-block;
+            padding: 5px 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+        }
+
         .chest-title { 
-            font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
+            font-size: clamp(1.5rem, 4vw, 1.85rem); color: white; font-weight: 900; 
             text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
         }
-        .help-icon { 
-            position: absolute; top: 15px; right: 15px; width: 24px; height: 24px;
-            border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
-            border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 16px; 
-            font-weight: bold; cursor: pointer; display: flex; justify-content: center; 
-            align-items: center; transition: all 0.2s ease; z-index: 2; 
-        }
-        .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
         .info-bubble { 
@@ -142,9 +149,6 @@ const GlobalStyles = () => (
             font-size: 0.85rem; text-align: left; 
         }
         .pity-timer { text-align: center; color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .highlight-purple { color: #d8b4fe; font-weight: bold; }
-        .highlight-yellow { color: #facc15; font-weight: bold; }
-        .highlight-red { color: #f87171; font-weight: bold; }
         
         .action-button-group { display: flex; gap: 10px; width: 100%; }
         .chest-button {
@@ -321,22 +325,24 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     );
 };
 
-interface ChestUIProps { headerTitle: string; mainTitle: string; imageUrl: string; infoText: React.ReactNode; pityLine1: React.ReactNode; pityLine2: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; }
+interface ChestUIProps { headerTitle: string; mainTitle: string; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; level?: number; levelColor?: string; }
 
-const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, imageUrl, infoText, pityLine1, pityLine2, price1, price10, onOpen1, onOpen10 }) => {
+const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, imageUrl, infoText, price1, price10, onOpen1, onOpen10, level, levelColor }) => {
     const isFree = typeof price1 === 'string';
     return (
         <div className="chest-ui-container">
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
-                <button className="help-icon">?</button>
+                {level && levelColor && (
+                    <div className="chest-level-badge" style={{ backgroundColor: levelColor }}>
+                        Level {level}
+                    </div>
+                )}
                 <h1 className="chest-title">{mainTitle}</h1>
                 <div className="chest-visual-row">
                     <img src={imageUrl} alt={mainTitle} className="chest-image" />
                     <div className="info-bubble">{infoText}</div>
                 </div>
-                {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
-                {pityLine2 && <p className="pity-timer">{pityLine2}</p>}
                 <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
                     <button className={`chest-button ${isFree ? 'btn-free' : 'btn-get-1'}`} onClick={onOpen1}>
                         <span>{isFree ? 'Mở' : 'Mở x1'}</span>
@@ -358,12 +364,61 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, imageUrl, inf
 };
 
 const CHEST_DATA = [
-    { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null },
-    { id: 'basic_vocab_chest', headerTitle: "Basic Vocabulary", mainTitle: "Rương Từ Vựng Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'elementary_vocab_chest', headerTitle: "Elementary Vocabulary", mainTitle: "Rương Từ Vựng Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'intermediate_vocab_chest', headerTitle: "Intermediate Vocabulary", mainTitle: "Rương Từ Vựng Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Trung Cấp (B1-B2). Mở rộng kiến thức chuyên sâu hơn.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'advanced_vocab_chest', headerTitle: "Advanced Vocabulary", mainTitle: "Rương Từ Vựng Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Cao Cấp (C1-C2). Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { 
+        id: 'daily_chest', 
+        headerTitle: "Phúc Lợi Hàng Ngày", 
+        mainTitle: "Rương Miễn Phí", 
+        imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", 
+        infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>,
+        price1: "Miễn Phí", 
+        price10: null 
+    },
+    { 
+        id: 'basic_vocab_chest', 
+        level: 1,
+        levelColor: '#22c55e', // Green
+        headerTitle: "Rương Từ Vựng", 
+        mainTitle: "Basic", 
+        imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", 
+        infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, 
+        price1: 320, 
+        price10: 2980 
+    },
+    { 
+        id: 'elementary_vocab_chest', 
+        level: 2,
+        levelColor: '#a855f7', // Purple
+        headerTitle: "Rương Từ Vựng", 
+        mainTitle: "Elementary", 
+        imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", 
+        infoText: <>Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.</>, 
+        price1: 320, 
+        price10: 2980 
+    },
+    { 
+        id: 'intermediate_vocab_chest', 
+        level: 3,
+        levelColor: '#f59e0b', // Amber/Yellow
+        headerTitle: "Rương Từ Vựng", 
+        mainTitle: "Intermediate", 
+        imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", 
+        infoText: <>Từ vựng trình độ Trung Cấp (B1-B2). Mở rộng kiến thức chuyên sâu hơn.</>, 
+        price1: 320, 
+        price10: 2980 
+    },
+    { 
+        id: 'advanced_vocab_chest', 
+        level: 4,
+        levelColor: '#ef4444', // Red
+        headerTitle: "Rương Từ Vựng", 
+        mainTitle: "Advanced", 
+        imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", 
+        infoText: <>Từ vựng trình độ Cao Cấp (C1-C2). Chinh phục các kỳ thi và ngôn ngữ học thuật.</>, 
+        price1: 320, 
+        price10: 2980 
+    },
 ];
+
 
 // ========================================================================
 // === 3. COMPONENT CHÍNH =================================================
