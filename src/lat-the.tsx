@@ -125,20 +125,20 @@ const GlobalStyles = () => (
         .chest-title { 
             font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
             text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0 0 20px; text-align: center; 
+            min-height: 1.2em; /* Giữ lại khoảng trống ngay cả khi title rỗng */
         }
 
-        /* === NEW: Container for top-right elements === */
+        /* Container for top-right elements */
         .chest-top-right-controls {
             position: absolute;
             top: 15px;
             right: 15px;
             z-index: 2;
             display: flex;
-            align-items: center; /* This is the key for vertical alignment */
-            gap: 8px; /* Space between the tag and the icon */
+            align-items: center;
+            gap: 8px;
         }
 
-        /* MODIFIED: Removed positioning */
         .chest-level-name {
             background-color: rgba(0, 0, 0, 0.25);
             color: #c7d2fe;
@@ -149,14 +149,13 @@ const GlobalStyles = () => (
             border: 1px solid rgba(129, 140, 248, 0.4);
         }
 
-        /* MODIFIED: Removed positioning, added flex-shrink */
         .help-icon { 
             width: 24px; height: 24px;
             border-radius: 50%; background-color: rgba(0, 0, 0, 0.3); 
             border: 1px solid rgba(255,255,255,0.5); color: white; font-size: 16px; 
             font-weight: bold; cursor: pointer; display: flex; justify-content: center; 
             align-items: center; transition: all 0.2s ease;
-            flex-shrink: 0; /* Prevents icon from shrinking */
+            flex-shrink: 0;
         }
         .help-icon:hover { transform: scale(1.1); background-color: rgba(0, 0, 0, 0.5); }
         
@@ -355,7 +354,6 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
         <div className="chest-ui-container">
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
-                {/* === MODIFIED: Grouped level name and help icon for alignment === */}
                 <div className="chest-top-right-controls">
                     {levelName && <span className="chest-level-name">{levelName}</span>}
                     <button className="help-icon">?</button>
@@ -363,7 +361,7 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
                 
                 <h1 className="chest-title">{mainTitle}</h1>
                 <div className="chest-visual-row">
-                    <img src={imageUrl} alt={mainTitle} className="chest-image" />
+                    <img src={imageUrl} alt={mainTitle || headerTitle} className="chest-image" />
                     <div className="info-bubble">{infoText}</div>
                 </div>
                 {pityLine1 && <p className="pity-timer">{pityLine1}</p>}
@@ -388,12 +386,13 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, mainTitle, levelName, im
     );
 };
 
+// === MODIFIED: Removed "Rương Từ Vựng" from mainTitle ===
 const CHEST_DATA = [
     { id: 'daily_chest', headerTitle: "Phúc Lợi Hàng Ngày", mainTitle: "Rương Miễn Phí", levelName: null, imageUrl: "https://static.wikia.nocookie.net/clashroyale/images/d/d7/Wooden_Chest.png", infoText: <>Mở miễn phí mỗi ngày để nhận phần thưởng ngẫu nhiên. Làm mới sau 24 giờ.</>, pityLine1: '', pityLine2: '', price1: "Miễn Phí", price10: null },
-    { id: 'basic_vocab_chest', headerTitle: "Basic Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'elementary_vocab_chest', headerTitle: "Elementary Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'intermediate_vocab_chest', headerTitle: "Intermediate Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Trung Cấp (B1-B2). Mở rộng kiến thức chuyên sâu hơn.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
-    { id: 'advanced_vocab_chest', headerTitle: "Advanced Vocabulary", mainTitle: "Rương Từ Vựng", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Cao Cấp (C1-C2). Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'basic_vocab_chest', headerTitle: "Basic Vocabulary", mainTitle: "", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>3.000 từ vựng cơ bản. Nền tảng vững chắc cho việc học.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'elementary_vocab_chest', headerTitle: "Elementary Vocabulary", mainTitle: "", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'intermediate_vocab_chest', headerTitle: "Intermediate Vocabulary", mainTitle: "", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Trung Cấp (B1-B2). Mở rộng kiến thức chuyên sâu hơn.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
+    { id: 'advanced_vocab_chest', headerTitle: "Advanced Vocabulary", mainTitle: "", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng trình độ Cao Cấp (C1-C2). Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, pityLine1: '', pityLine2: '', price1: 320, price10: 2980 },
 ];
 
 
