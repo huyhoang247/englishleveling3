@@ -1,17 +1,25 @@
-// src/components/VirtualizedFlashcardGrid.tsx (File mới)
+// src/components/VirtualizedFlashcardGrid.tsx (Đầy đủ)
 
 import { useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FlashcardItem } from './FlashcardItem.tsx'; // Import component thẻ
+import { FlashcardItem } from './FlashcardItem.tsx';
 
-// --- Lấy các Interface cần thiết ---
+// --- Interfaces ---
 interface StyledImageUrls {
   default: string;
   anime?: string;
   comic?: string;
   realistic?: string;
 }
-interface VocabularyData { /* ... */ }
+interface VocabularyData {
+  word: string;
+  meaning: string;
+  example: string;
+  phrases: string[];
+  popularity: string;
+  synonyms: string[];
+  antonyms: string[];
+}
 interface Flashcard {
   id: number;
   imageUrl: StyledImageUrls;
@@ -21,10 +29,8 @@ interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
 }
-
-// --- Props cho component ảo hóa ---
 interface VirtualizedFlashcardGridProps {
-  items: DisplayCard[]; // Chỉ nhận mảng 50 thẻ của trang hiện tại
+  items: DisplayCard[];
   layoutMode: 'single' | 'double';
   visualStyle: string;
   onImageClick: (card: Flashcard) => void;
@@ -35,25 +41,18 @@ interface VirtualizedFlashcardGridProps {
 export const VirtualizedFlashcardGrid = ({ items, layoutMode, ...itemProps }: VirtualizedFlashcardGridProps) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Tính toán số cột và số hàng
   const columnCount = layoutMode === 'double' ? 2 : 1;
   const rowCount = Math.ceil(items.length / columnCount);
 
-  // Hook ảo hóa hoạt động trên các HÀNG
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    // ƯỚC TÍNH chiều cao của một hàng. Rất quan trọng!
-    // Con số này không cần chính xác 100%, nhưng càng gần càng tốt.
-    // Dựa trên tỉ lệ ảnh 1024x1536, chiều cao sẽ lớn hơn chiều rộng.
-    estimateSize: () => (layoutMode === 'double' ? 750 : 1000), 
-    overscan: 3, // Render thêm 3 hàng ngoài màn hình để cuộn mượt
+    estimateSize: () => (layoutMode === 'double' ? 750 : 1000),
+    overscan: 3,
   });
 
   return (
-    // Container cha phải có chiều cao và overflow. Nó sẽ nhận từ parent component.
     <div ref={parentRef} className="w-full h-full overflow-y-auto scrollbar-hide">
-      {/* Container có tổng chiều cao ảo để tạo thanh cuộn */}
       <div
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
@@ -61,14 +60,10 @@ export const VirtualizedFlashcardGrid = ({ items, layoutMode, ...itemProps }: Vi
           position: 'relative',
         }}
       >
-        {/* Chỉ render các HÀNG ảo trong viewport */}
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          // Lấy các thẻ thuộc về hàng này
           const startIndex = virtualRow.index * columnCount;
           const itemsInRow = items.slice(startIndex, startIndex + columnCount);
-
           return (
-            // Dùng transform để đặt hàng vào đúng vị trí
             <div
               key={virtualRow.key}
               data-index={virtualRow.index}
@@ -87,7 +82,7 @@ export const VirtualizedFlashcardGrid = ({ items, layoutMode, ...itemProps }: Vi
                   key={card.id}
                   card={card}
                   isFavorite={isFavorite}
-                  {...itemProps} // Truyền tất cả props còn lại cho FlashcardItem
+                  {...itemProps}
                 />
               ))}
             </div>
