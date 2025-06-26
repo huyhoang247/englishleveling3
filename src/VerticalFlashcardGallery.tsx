@@ -146,10 +146,17 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
         </button>
       </div>
       <div className="w-full">
-        <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800' : ''}`}>
-          {visualStyle === 'anime' && <div className="absolute inset-0 bg-gradient-to-br from-pink-100 to-purple-100 opacity-30 mix-blend-overlay pointer-events-none"></div>}
+        {/* === START: TỐI ƯU HIỆU NĂNG CHO VISUAL STYLE === */}
+        <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
+          {/* Tối ưu cho Anime: Bỏ mix-blend-mode & gradient, dùng màu phủ đơn sắc, cực nhẹ */}
+          {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none"></div>}
+          
+          {/* Giữ nguyên cho Comic vì hiệu ứng dot-pattern là đặc trưng, chi phí chấp nhận được */}
           {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={{backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)', backgroundSize: '4px 4px'}}></div>}
-          {visualStyle === 'realistic' && <div className="absolute inset-0 shadow-inner pointer-events-none"></div>}
+
+          {/* Tối ưu cho Realistic: Bỏ gradient, dùng shadow-inner tinh tế */}
+          {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
+          
           <img
             src={getImageUrlForStyle(card, visualStyle)}
             alt={`Flashcard ${card.id}`}
@@ -160,6 +167,7 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
             loading="lazy"
           />
         </div>
+        {/* === END: TỐI ƯU HIỆU NĂNG CHO VISUAL STYLE === */}
       </div>
     </div>
   );
@@ -597,7 +605,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }} onClick={() => setShowSettings(false)}></div>
                 <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={(e) => {if(e.target === e.currentTarget) setShowSettings(false)}}>
                   <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" style={{ animation: 'scaleIn 0.3s ease-out forwards' }} id="settings-panel">
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex-shrink-0">
+                    {/* === START: TỐI ƯU HIỆU NĂNG CHO MODAL HEADER === */}
+                    <div className="bg-indigo-600 p-5 flex-shrink-0 border-b-2 border-indigo-500/50">
+                    {/* === END: TỐI ƯU HIỆU NĂNG CHO MODAL HEADER === */}
                       <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-white flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Cài đặt hiển thị</h3>
                         <button onClick={() => setShowSettings(false)} className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -629,7 +639,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </div>
                     <div className="sticky bottom-0 left-0 right-0 mt-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 p-4 flex space-x-3 flex-shrink-0">
                       <button className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg" onClick={() => setShowSettings(false)}>Hủy</button>
-                      <button className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg flex items-center justify-center" onClick={() => setShowSettings(false)}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Áp dụng</button>
+                      {/* === START: TỐI ƯU HIỆU NĂNG CHO NÚT BẤM === */}
+                      <button className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg flex items-center justify-center" onClick={() => setShowSettings(false)}>
+                      {/* === END: TỐI ƯU HIỆU NĂNG CHO NÚT BẤM === */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Áp dụng
+                      </button>
                     </div>
                   </div>
                 </div>
