@@ -128,18 +128,17 @@ const GlobalStyles = () => (
         .chest-body > * { position: relative; z-index: 1; }
         
         .chest-top-section {
-            display: flex; justify-content: flex-end; align-items: flex-start;
-            width: 100%; margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
         }
         
-        .chest-title { 
-            font-size: clamp(1.4rem, 4vw, 1.75rem); color: white; font-weight: 900; 
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); margin: 0;
-            text-align: left; flex-grow: 1;
-        }
-
-        .chest-top-right-controls {
-            display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        .chest-level-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .chest-level-name {
@@ -164,7 +163,7 @@ const GlobalStyles = () => (
             padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 0.85rem; text-align: left; 
         }
-        .remaining-count-text { text-align: center; color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 2px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .remaining-count-text { color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         .highlight-yellow { color: #facc15; font-weight: bold; }
         
         .action-button-group { display: flex; gap: 10px; width: 100%; }
@@ -344,22 +343,25 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
                 <div className="chest-top-section">
-                    <div className="chest-top-right-controls">
-                        {levelName && <span className="chest-level-name">{levelName}</span>}
+                    <div className="chest-level-info">
                         {levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}
+                        {levelName && <span className="chest-level-name">{levelName}</span>}
                     </div>
+                    
+                    <p className="remaining-count-text">
+                        {isComingSoon 
+                            ? "Sắp ra mắt" 
+                            : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>
+                        }
+                    </p>
                 </div>
                 
                 <div className="chest-visual-row">
                     <img src={imageUrl} alt={headerTitle} className="chest-image" />
                     <div className="info-bubble">{infoText}</div>
                 </div>
-                
-                <p className="remaining-count-text">
-                    {isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}
-                </p>
-                
-                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                                
+                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}>
                     <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}>
                         <span>Mở x1</span>
                         {typeof price1 === 'number' && (
@@ -381,8 +383,8 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
 const CHEST_DEFINITIONS = {
     basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,500 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 2980, isComingSoon: false, range: [0, 2499] as const, },
     elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2500, defaultImageUrls.length - 1] as const, },
-    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "Mở rộng kiến thức chuyên sâu hơn.", price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
-    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.", price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
+    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
+    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
 };
 
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
