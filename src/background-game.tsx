@@ -663,7 +663,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
-    <div className="w-screen h-screen overflow-hidden bg-gray-950">
+    <div className="w-screen h-[100dvh] overflow-hidden bg-gray-950">
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
           onShowStats={toggleStatsFullscreen}
