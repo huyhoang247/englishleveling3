@@ -1,12 +1,34 @@
-// lat-the.tsx (Final Optimized Version with Smart Preloading)
+// lat-the.tsx (Final Optimized Version with Smart Preloading & Correct Data Handling)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
 // Import các tài nguyên cần thiết
-import { db } from './firebase.js'; // Điều chỉnh đường dẫn nếu cần
+import { db } from './firebase.js';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { defaultImageUrls } from './image-url.ts'; // Điều chỉnh đường dẫn nếu cần
-import ImagePreloader from './ImagePreloader.tsx'; // Import component mới để tải trước ảnh
+import { defaultImageUrls } from './image-url.ts';
+import { defaultVocabulary } from './list-vocabulary.ts'; // <<-- IMPORT DANH SÁCH TỪ VỰNG
+import ImagePreloader from './ImagePreloader.tsx';
+
+// ========================================================================
+// === 0. KẾT HỢP DỮ LIỆU (FIX QUAN TRỌNG NHẤT) ============================
+// ========================================================================
+
+// Kiểm tra để đảm bảo hai mảng dữ liệu nguồn có cùng độ dài
+if (defaultImageUrls.length !== defaultVocabulary.length) {
+    console.error(
+        "LỖI DỮ LIỆU NGHIÊM TRỌNG: Số lượng từ vựng và số lượng ảnh không khớp! " +
+        `Từ vựng: ${defaultVocabulary.length}, Ảnh: ${defaultImageUrls.length}. ` +
+        "Dữ liệu sẽ bị lệch."
+    );
+}
+
+// Tạo một mảng dữ liệu hoàn chỉnh, kết hợp từ và ảnh tương ứng
+const vocabularyData = defaultImageUrls.map((imageUrl, index) => ({
+  id: index + 1, // ID là vị trí + 1
+  word: defaultVocabulary[index] || 'Từ bị thiếu', // Lấy từ vựng thật
+  url: imageUrl, // Lấy URL ảnh thật
+}));
+
 
 // ========================================================================
 // === 1. CSS STYLES ======================================================
@@ -413,7 +435,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         const fetchOpenedImages = async () => {
             setIsLoading(true);
             try {
-                const totalImages = defaultImageUrls.length;
+                const totalImages = vocabularyData.length;
                 const ranges = {
                     basic: CHEST_DEFINITIONS.basic.range,
                     elementary: [CHEST_DEFINITIONS.elementary.range[0], totalImages - 1] as const,
@@ -464,20 +486,30 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     }, [availableIndices, preloadPool]);
 
     const urlsToPreload = useMemo(() => {
-        return preloadPool.map(index => defaultImageUrls[index]);
+        return preloadPool.map(index => vocabularyData[index].url);
     }, [preloadPool]);
 
-    const addOpenedImagesToFirestore = async (imageIds: number[]) => {
+    const updateUserDataAfterOpeningChests = async (imageIds: number[], newVocabularyItems: any[]) => {
         if (!currentUserId || imageIds.length === 0) return;
         const userDocRef = doc(db, 'users', currentUserId);
         try {
-            await updateDoc(userDocRef, { openedImageIds: arrayUnion(...imageIds) });
+            // Cập nhật CẢ HAI trường `openedImageIds` và `listVocabulary` cùng lúc
+            await updateDoc(userDocRef, {
+                openedImageIds: arrayUnion(...imageIds),
+                listVocabulary: arrayUnion(...newVocabularyItems)
+            });
+            console.log(`Firestore: Đã cập nhật cho user ${currentUserId} với ${newVocabularyItems.length} thẻ mới.`);
         } catch (e) {
             const err = e as { code?: string };
             if (err.code === 'not-found') {
-                await setDoc(userDocRef, { openedImageIds: imageIds }, { merge: true });
+                // Nếu user chưa có document, tạo mới với cả hai trường
+                await setDoc(userDocRef, {
+                    openedImageIds: imageIds,
+                    listVocabulary: newVocabularyItems
+                }, { merge: true });
+                console.log(`Firestore: Đã tạo document và thêm ${newVocabularyItems.length} thẻ mới cho user ${currentUserId}.`);
             } else {
-                 console.error("Error updating opened images in Firestore:", e);
+                 console.error("Lỗi khi cập nhật dữ liệu người dùng trên Firestore:", e);
             }
         }
     };
@@ -497,16 +529,34 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         let tempPool = [...targetPool];
         const selectedCards: ImageCard[] = [];
         const selectedOriginalIndices: number[] = [];
+        const newVocabularyItems = []; // Mảng chứa các object từ vựng hoàn chỉnh
 
         for (let i = 0; i < count; i++) {
             const randomIndexInPool = Math.floor(Math.random() * tempPool.length);
             const originalImageIndex = tempPool[randomIndexInPool];
-            selectedCards.push({ id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] });
-            selectedOriginalIndices.push(originalImageIndex);
+            
+            // Lấy object từ vựng đầy đủ từ mảng vocabularyData đã được tạo ở đầu file
+            const vocabItem = vocabularyData[originalImageIndex];
+
+            if (vocabItem) {
+                // Dùng cho popup hiển thị trên UI
+                selectedCards.push({ id: vocabItem.id, url: vocabItem.url });
+                // Dùng để cập nhật lại state availableIndices
+                selectedOriginalIndices.push(originalImageIndex);
+                // Dùng để đẩy lên Firestore
+                newVocabularyItems.push(vocabItem);
+            }
+
             tempPool.splice(randomIndexInPool, 1);
         }
 
-        addOpenedImagesToFirestore(selectedOriginalIndices.map(index => index + 1));
+        // Gọi hàm cập nhật Firestore với dữ liệu đã được cấu trúc đúng
+        if (newVocabularyItems.length > 0) {
+            updateUserDataAfterOpeningChests(
+                newVocabularyItems.map(item => item.id), // Mảng các ID
+                newVocabularyItems                      // Mảng các object từ vựng
+            );
+        }
 
         setAvailableIndices(prev => ({ ...prev, [chestType]: prev[chestType].filter(idx => !selectedOriginalIndices.includes(idx)) }));
         setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
