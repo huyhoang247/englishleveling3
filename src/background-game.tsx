@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (ĐÃ SỬA) ---
+// --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI CHIỀU CAO) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -169,7 +169,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     return () => { isCancelled = true; };
   }, []);
 
-  // Set body overflow to hidden
+  // Set body overflow and app height
   useEffect(() => {
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
@@ -177,9 +177,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
 
+    // --- LOGIC MỚI ĐỂ FIX LỖI CHIỀU CAO ---
+    const setAppHeight = () => {
+      // Gán chiều cao thực của viewport vào biến CSS '--app-height'
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+
+    // Chạy khi resize và khi tải lần đầu
+    window.addEventListener('resize', setAppHeight);
+    setAppHeight();
+    // --- KẾT THÚC LOGIC MỚI ---
+
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
+      // Dọn dẹp event listener
+      window.removeEventListener('resize', setAppHeight);
     };
   }, []);
 
@@ -663,7 +676,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
-    <div className="w-screen h-[100svh] overflow-hidden bg-gray-950">
+    <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950">
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
           onShowStats={toggleStatsFullscreen}
