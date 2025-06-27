@@ -1,37 +1,18 @@
-// lat-the.tsx (Final Optimized Version with Smart Preloading & Correct Data Handling)
+// lat-the.tsx (Final Optimized Version with Vocabulary Saving)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
 // Import các tài nguyên cần thiết
-import { db } from './firebase.js';
+import { db } from './firebase.js'; 
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { defaultImageUrls } from './image-url.ts';
-import { defaultVocabulary } from './list-vocabulary.ts'; // <<-- IMPORT DANH SÁCH TỪ VỰNG
-import ImagePreloader from './ImagePreloader.tsx';
+import { defaultImageUrls } from './image-url.ts'; 
+import ImagePreloader from './ImagePreloader.tsx'; 
+
+// <<< THAY ĐỔI 1: IMPORT DANH SÁCH TỪ VỰNG >>>
+import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 0. KẾT HỢP DỮ LIỆU (FIX QUAN TRỌNG NHẤT) ============================
-// ========================================================================
-
-// Kiểm tra để đảm bảo hai mảng dữ liệu nguồn có cùng độ dài
-if (defaultImageUrls.length !== defaultVocabulary.length) {
-    console.error(
-        "LỖI DỮ LIỆU NGHIÊM TRỌNG: Số lượng từ vựng và số lượng ảnh không khớp! " +
-        `Từ vựng: ${defaultVocabulary.length}, Ảnh: ${defaultImageUrls.length}. ` +
-        "Dữ liệu sẽ bị lệch."
-    );
-}
-
-// Tạo một mảng dữ liệu hoàn chỉnh, kết hợp từ và ảnh tương ứng
-const vocabularyData = defaultImageUrls.map((imageUrl, index) => ({
-  id: index + 1, // ID là vị trí + 1
-  word: defaultVocabulary[index] || 'Từ bị thiếu', // Lấy từ vựng thật
-  url: imageUrl, // Lấy URL ảnh thật
-}));
-
-
-// ========================================================================
-// === 1. CSS STYLES ======================================================
+// === 1. CSS STYLES (Không thay đổi) =======================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -244,7 +225,7 @@ const GlobalStyles = () => (
 
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON VÀ DATA ========================================
+// === 2. CÁC COMPONENT CON VÀ DATA (Không thay đổi) =========================
 // ========================================================================
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
@@ -404,7 +385,7 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
 
 const CHEST_DEFINITIONS = {
     basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,500 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 2980, isComingSoon: false, range: [0, 2499] as const, },
-    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2500, defaultImageUrls.length - 1] as const, },
+    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2500, defaultVocabulary.length - 1] as const, }, // Sửa lại range
     intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
     advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
 };
@@ -432,19 +413,23 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
 
     useEffect(() => {
-        const fetchOpenedImages = async () => {
+        const fetchOpenedItems = async () => {
             setIsLoading(true);
             try {
-                const totalImages = vocabularyData.length;
+                // Sử dụng độ dài của 2 danh sách từ vựng và ảnh
+                const totalVocab = defaultVocabulary.length;
+                const totalImages = defaultImageUrls.length;
+                const totalItems = Math.min(totalVocab, totalImages); // Lấy số lượng nhỏ hơn để tránh lỗi index
+
                 const ranges = {
                     basic: CHEST_DEFINITIONS.basic.range,
-                    elementary: [CHEST_DEFINITIONS.elementary.range[0], totalImages - 1] as const,
+                    elementary: [CHEST_DEFINITIONS.elementary.range[0], totalItems - 1] as const,
                 };
                 
                 if (!currentUserId) {
                     setAvailableIndices({
                         basic: Array.from({ length: ranges.basic[1] - ranges.basic[0] + 1 }, (_, i) => ranges.basic[0] + i),
-                        elementary: Array.from({ length: totalImages - ranges.elementary[0] }, (_, i) => ranges.elementary[0] + i)
+                        elementary: Array.from({ length: totalItems - ranges.elementary[0] }, (_, i) => ranges.elementary[0] + i)
                     });
                     return;
                 }
@@ -455,12 +440,12 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 const openedIndices = new Set(openedImageIds.map(id => id - 1));
 
                 const remainingForBasic: number[] = [];
-                for (let i = ranges.basic[0]; i <= ranges.basic[1]; i++) {
+                for (let i = ranges.basic[0]; i <= ranges.basic[1] && i < totalItems; i++) {
                     if (!openedIndices.has(i)) remainingForBasic.push(i);
                 }
 
                 const remainingForElementary: number[] = [];
-                for (let i = ranges.elementary[0]; i < totalImages; i++) {
+                for (let i = ranges.elementary[0]; i < totalItems; i++) {
                      if (!openedIndices.has(i)) remainingForElementary.push(i);
                 }
 
@@ -471,7 +456,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 setIsLoading(false);
             }
         };
-        fetchOpenedImages();
+        fetchOpenedItems();
     }, [currentUserId]);
 
     useEffect(() => {
@@ -486,30 +471,44 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     }, [availableIndices, preloadPool]);
 
     const urlsToPreload = useMemo(() => {
-        return preloadPool.map(index => vocabularyData[index].url);
+        return preloadPool.map(index => defaultImageUrls[index]);
     }, [preloadPool]);
 
-    const updateUserDataAfterOpeningChests = async (imageIds: number[], newVocabularyItems: any[]) => {
+
+    // <<< THAY ĐỔI 2: ĐỔI TÊN VÀ CẬP NHẬT HÀM LƯU DỮ LIỆU >>>
+    // Hàm này giờ sẽ lưu cả ID ảnh và từ vựng tương ứng.
+    const updateUserProgressInFirestore = async (imageIds: number[]) => {
         if (!currentUserId || imageIds.length === 0) return;
+
+        // Chuyển đổi ID (1-based) thành từ vựng (0-based index)
+        const newWords = imageIds
+            .map(id => defaultVocabulary[id - 1])
+            .filter(word => !!word); // Lọc bỏ những từ không hợp lệ (nếu có)
+
+        if (newWords.length === 0) {
+            console.warn("Không tìm thấy từ vựng hợp lệ cho các ID:", imageIds);
+            return;
+        }
+
         const userDocRef = doc(db, 'users', currentUserId);
         try {
-            // Cập nhật CẢ HAI trường `openedImageIds` và `listVocabulary` cùng lúc
+            // Cập nhật cả hai trường bằng arrayUnion để thêm phần tử mới
             await updateDoc(userDocRef, {
                 openedImageIds: arrayUnion(...imageIds),
-                listVocabulary: arrayUnion(...newVocabularyItems)
+                listVocabulary: arrayUnion(...newWords)
             });
-            console.log(`Firestore: Đã cập nhật cho user ${currentUserId} với ${newVocabularyItems.length} thẻ mới.`);
+            console.log(`Đã cập nhật Firestore với các từ: ${newWords.join(', ')}`);
         } catch (e) {
             const err = e as { code?: string };
             if (err.code === 'not-found') {
-                // Nếu user chưa có document, tạo mới với cả hai trường
+                 // Nếu người dùng chưa có document, tạo mới với cả hai trường
                 await setDoc(userDocRef, {
                     openedImageIds: imageIds,
-                    listVocabulary: newVocabularyItems
+                    listVocabulary: newWords
                 }, { merge: true });
-                console.log(`Firestore: Đã tạo document và thêm ${newVocabularyItems.length} thẻ mới cho user ${currentUserId}.`);
+                 console.log(`Đã tạo document mới với các từ: ${newWords.join(', ')}`);
             } else {
-                 console.error("Lỗi khi cập nhật dữ liệu người dùng trên Firestore:", e);
+                 console.error("Lỗi khi cập nhật tiến trình người dùng:", e);
             }
         }
     };
@@ -529,34 +528,18 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         let tempPool = [...targetPool];
         const selectedCards: ImageCard[] = [];
         const selectedOriginalIndices: number[] = [];
-        const newVocabularyItems = []; // Mảng chứa các object từ vựng hoàn chỉnh
 
         for (let i = 0; i < count; i++) {
             const randomIndexInPool = Math.floor(Math.random() * tempPool.length);
             const originalImageIndex = tempPool[randomIndexInPool];
-            
-            // Lấy object từ vựng đầy đủ từ mảng vocabularyData đã được tạo ở đầu file
-            const vocabItem = vocabularyData[originalImageIndex];
-
-            if (vocabItem) {
-                // Dùng cho popup hiển thị trên UI
-                selectedCards.push({ id: vocabItem.id, url: vocabItem.url });
-                // Dùng để cập nhật lại state availableIndices
-                selectedOriginalIndices.push(originalImageIndex);
-                // Dùng để đẩy lên Firestore
-                newVocabularyItems.push(vocabItem);
-            }
-
+            selectedCards.push({ id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] });
+            selectedOriginalIndices.push(originalImageIndex);
             tempPool.splice(randomIndexInPool, 1);
         }
 
-        // Gọi hàm cập nhật Firestore với dữ liệu đã được cấu trúc đúng
-        if (newVocabularyItems.length > 0) {
-            updateUserDataAfterOpeningChests(
-                newVocabularyItems.map(item => item.id), // Mảng các ID
-                newVocabularyItems                      // Mảng các object từ vựng
-            );
-        }
+        // <<< THAY ĐỔI 3: GỌI HÀM MỚI ĐỂ LƯU DỮ LIỆU >>>
+        const imageIdsToSave = selectedOriginalIndices.map(index => index + 1);
+        updateUserProgressInFirestore(imageIdsToSave);
 
         setAvailableIndices(prev => ({ ...prev, [chestType]: prev[chestType].filter(idx => !selectedOriginalIndices.includes(idx)) }));
         setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
@@ -604,14 +587,16 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
             <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => {
-                    const remainingCount = chest.isComingSoon ? 0 : availableIndices[chest.chestType as ChestType]?.length ?? 0;
+                    const chestKey = chest.chestType as ChestType;
+                    // Kiểm tra xem key có tồn tại trong availableIndices không
+                    const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
                     return (
                         <ChestUI
                             key={chest.id}
                             {...chest}
                             remainingCount={remainingCount}
-                            onOpen1={() => !chest.isComingSoon && handleOpenCards(1, chest.chestType as ChestType)}
-                            onOpen10={() => !chest.isComingSoon && handleOpenCards(4, chest.chestType as ChestType)}
+                            onOpen1={() => !chest.isComingSoon && handleOpenCards(1, chestKey)}
+                            onOpen10={() => !chest.isComingSoon && handleOpenCards(4, chestKey)}
                         />
                     );
                 })}
