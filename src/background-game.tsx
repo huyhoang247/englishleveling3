@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI CHIỀU CAO) ---
+// --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI VỊ TRÍ ICON) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -752,7 +752,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </div>
 
             {/* Left-side Action Buttons */}
-            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+            <div 
+              className="absolute left-4 flex flex-col space-y-4 z-30"
+              style={{ bottom: '20%' }} // <-- THAY ĐỔI Ở ĐÂY: Sử dụng tỷ lệ % thay vì giá trị cố định
+            >
               {[
                 {
                   icon: <img src={uiAssets.towerIcon} alt="Leo Tháp Icon" className="w-full h-full object-contain" />,
@@ -788,7 +791,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </div>
 
             {/* Right-side Action Buttons */}
-            <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+            <div 
+              className="absolute right-4 flex flex-col space-y-4 z-30"
+              style={{ bottom: '20%' }} // <-- THAY ĐỔI Ở ĐÂY: Sử dụng tỷ lệ % thay vì giá trị cố định
+            >
               {[
                 {
                   icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />,
