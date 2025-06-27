@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI VỊ TRÍ ICON) ---
+// --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI VỊ TRÍ ICON - LẦN 2) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -752,10 +752,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </div>
 
             {/* Left-side Action Buttons */}
-            <div 
-              className="absolute left-4 flex flex-col space-y-4 z-30"
-              style={{ bottom: '20%' }} // <-- THAY ĐỔI Ở ĐÂY: Sử dụng tỷ lệ % thay vì giá trị cố định
-            >
+            {/* 
+              <<<< THAY ĐỔI Ở ĐÂY >>>>
+              Sử dụng `top-1/2 -translate-y-1/2` để căn giữa theo chiều dọc.
+              Cách này ổn định hơn nhiều so với căn từ `bottom`.
+            */}
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col space-y-4 z-30">
               {[
                 {
                   icon: <img src={uiAssets.towerIcon} alt="Leo Tháp Icon" className="w-full h-full object-contain" />,
@@ -791,10 +793,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </div>
 
             {/* Right-side Action Buttons */}
-            <div 
-              className="absolute right-4 flex flex-col space-y-4 z-30"
-              style={{ bottom: '20%' }} // <-- THAY ĐỔI Ở ĐÂY: Sử dụng tỷ lệ % thay vì giá trị cố định
-            >
+            {/* 
+              <<<< THAY ĐỔI Ở ĐÂY >>>>
+              Áp dụng logic căn giữa tương tự cho cột bên phải.
+            */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-4 z-30">
               {[
                 {
                   icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />,
