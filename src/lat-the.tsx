@@ -12,7 +12,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã sửa lỗi footer trên Android) =======================
+// === 1. CSS STYLES (Không thay đổi) =======================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -81,7 +81,7 @@ const GlobalStyles = () => (
         .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
             gap: 30px; width: 100%; max-width: 1300px; overflow-y: auto;
-            padding: 20px; max-height: calc(100vh - 101px); box-sizing: border-box;
+            padding: 20px 20px 100px; max-height: calc(100vh - 101px); box-sizing: border-box;
             margin-top: 61px;
         }
 
@@ -200,24 +200,7 @@ const GlobalStyles = () => (
         
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
-        
-        /* === SỬA LỖI FOOTER BỊ CHE === */
-        .overlay-footer { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            padding: 15px 20px; 
-            /* Thêm khoảng đệm bằng chiều cao của thanh điều hướng (nếu có) */
-            padding-bottom: calc(15px + env(safe-area-inset-bottom));
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 20px; 
-            background: rgba(10, 21, 46, 0.8); 
-            border-top: 1px solid rgba(255, 255, 255, 0.1); 
-            z-index: 1010; 
-        }
+        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
         .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
