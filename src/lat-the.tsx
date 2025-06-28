@@ -1,4 +1,4 @@
-// lat-the.tsx (Final Optimized Version with Vocabulary Saving)
+// lat-the.tsx (Final Optimized Version with Vocabulary Saving & Safe Area Fix)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
@@ -12,7 +12,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (Không thay đổi) =======================================
+// === 1. CSS STYLES (Cập nhật để hỗ trợ Safe Area) =========================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -200,7 +200,21 @@ const GlobalStyles = () => (
         
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
-        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
+
+        /* <<< SỬA ĐỔI: THÊM SAFE AREA CHO FOOTER >>> */
+        .overlay-footer { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            display: flex; justify-content: center; align-items: center; gap: 20px; 
+            background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); 
+            z-index: 1010;
+            padding-top: 15px;
+            padding-left: 20px;
+            padding-right: 20px;
+            /* Thêm khoảng đệm ở dưới cùng bằng với chiều cao của thanh điều hướng (nếu có) */
+            padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+            box-sizing: border-box;
+        }
+
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
         .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
@@ -486,16 +500,12 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         return preloadPool.map(index => defaultImageUrls[index]);
     }, [preloadPool]);
 
-
-    // <<< THAY ĐỔI 2: ĐỔI TÊN VÀ CẬP NHẬT HÀM LƯU DỮ LIỆU >>>
-    // Hàm này giờ sẽ lưu cả ID ảnh và từ vựng tương ứng.
     const updateUserProgressInFirestore = async (imageIds: number[]) => {
         if (!currentUserId || imageIds.length === 0) return;
 
-        // Chuyển đổi ID (1-based) thành từ vựng (0-based index)
         const newWords = imageIds
             .map(id => defaultVocabulary[id - 1])
-            .filter(word => !!word); // Lọc bỏ những từ không hợp lệ (nếu có)
+            .filter(word => !!word); 
 
         if (newWords.length === 0) {
             console.warn("Không tìm thấy từ vựng hợp lệ cho các ID:", imageIds);
@@ -504,7 +514,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
         const userDocRef = doc(db, 'users', currentUserId);
         try {
-            // Cập nhật cả hai trường bằng arrayUnion để thêm phần tử mới
             await updateDoc(userDocRef, {
                 openedImageIds: arrayUnion(...imageIds),
                 listVocabulary: arrayUnion(...newWords)
@@ -513,7 +522,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         } catch (e) {
             const err = e as { code?: string };
             if (err.code === 'not-found') {
-                 // Nếu người dùng chưa có document, tạo mới với cả hai trường
                 await setDoc(userDocRef, {
                     openedImageIds: imageIds,
                     listVocabulary: newWords
@@ -549,7 +557,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             tempPool.splice(randomIndexInPool, 1);
         }
 
-        // <<< THAY ĐỔI 3: GỌI HÀM MỚI ĐỂ LƯU DỮ LIỆU >>>
         const imageIdsToSave = selectedOriginalIndices.map(index => index + 1);
         updateUserProgressInFirestore(imageIdsToSave);
 
@@ -600,7 +607,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => {
                     const chestKey = chest.chestType as ChestType;
-                    // Kiểm tra xem key có tồn tại trong availableIndices không
                     const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
                     return (
                         <ChestUI
