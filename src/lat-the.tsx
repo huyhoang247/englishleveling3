@@ -1,4 +1,4 @@
-// lat-the.tsx (Final Optimized Version with Vocabulary Saving & Safe Area Support)
+// lat-the.tsx (Final Optimized Version with Vocabulary Saving)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
@@ -12,7 +12,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (CẬP NHẬT HỖ TRỢ SAFE AREA) =========================
+// === 1. CSS STYLES (Không thay đổi) =======================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -36,9 +36,6 @@ const GlobalStyles = () => (
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
-            /* Thêm padding cho vùng an toàn trên và dưới ở cấp độ root */
-            padding-top: calc(20px + env(safe-area-inset-top));
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
         }
         
         /* === HEADER CỐ ĐỊNH === */
@@ -47,9 +44,7 @@ const GlobalStyles = () => (
             top: 0;
             left: 0;
             width: 100%;
-            /* Thay đổi padding để thích ứng với tai thỏ/notch */
             padding: 12px 25px;
-            padding-top: calc(12px + env(safe-area-inset-top));
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -86,12 +81,8 @@ const GlobalStyles = () => (
         .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
             gap: 30px; width: 100%; max-width: 1300px; overflow-y: auto;
-            padding: 20px;
-            /* Điều chỉnh max-height và padding-bottom để không bị che */
-            max-height: calc(100vh - (61px + env(safe-area-inset-top)));
-            padding-bottom: calc(20px + env(safe-area-inset-bottom));
-            box-sizing: border-box;
-            margin-top: calc(61px + env(safe-area-inset-top));
+            padding: 20px; max-height: calc(100vh - 101px); box-sizing: border-box;
+            margin-top: 61px;
         }
 
         /* Tùy chỉnh thanh cuộn */
@@ -209,24 +200,7 @@ const GlobalStyles = () => (
         
         .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
         .overlay-content { width: 100%; max-width: 900px; }
-        
-        .overlay-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 15px 20px;
-            /* CẬP NHẬT QUAN TRỌNG: Thêm padding cho thanh điều hướng */
-            padding-bottom: calc(15px + env(safe-area-inset-bottom));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(10, 21, 46, 0.8);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1010;
-        }
-        
+        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
         .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
