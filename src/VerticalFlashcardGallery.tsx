@@ -54,7 +54,7 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
   }
   return urls;
 };
-const numberOfSampleFlashcards = 3200;
+const numberOfSampleFlashcards = 6500;
 const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
