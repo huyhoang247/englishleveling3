@@ -385,8 +385,8 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
 
 const CHEST_DEFINITIONS = {
     basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 2980, isComingSoon: false, range: [0, 2399] as const, },
-    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "Từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2400, defaultVocabulary.length - 1] as const, },
-    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
+    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2400, 4099] as const, },
+    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 2980, isComingSoon: false, range: [4100, defaultVocabulary.length - 1] as const, },
     advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
 };
 
@@ -398,13 +398,13 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
 
-type ChestType = 'basic' | 'elementary';
+type ChestType = 'basic' | 'elementary' | 'intermediate';
 
 const PRELOAD_POOL_SIZE = 20;
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
     const [isLoading, setIsLoading] = useState(true);
-    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [] });
+    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
@@ -423,13 +423,15 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
                 const ranges = {
                     basic: CHEST_DEFINITIONS.basic.range,
-                    elementary: [CHEST_DEFINITIONS.elementary.range[0], totalItems - 1] as const,
+                    elementary: CHEST_DEFINITIONS.elementary.range,
+                    intermediate: [CHEST_DEFINITIONS.intermediate.range[0], totalItems - 1] as const,
                 };
                 
                 if (!currentUserId) {
                     setAvailableIndices({
                         basic: Array.from({ length: ranges.basic[1] - ranges.basic[0] + 1 }, (_, i) => ranges.basic[0] + i),
-                        elementary: Array.from({ length: totalItems - ranges.elementary[0] }, (_, i) => ranges.elementary[0] + i)
+                        elementary: Array.from({ length: ranges.elementary[1] - ranges.elementary[0] + 1 }, (_, i) => ranges.elementary[0] + i),
+                        intermediate: Array.from({ length: Math.max(0, ranges.intermediate[1] - ranges.intermediate[0] + 1) }, (_, i) => ranges.intermediate[0] + i)
                     });
                     return;
                 }
@@ -445,11 +447,20 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 }
 
                 const remainingForElementary: number[] = [];
-                for (let i = ranges.elementary[0]; i < totalItems; i++) {
+                for (let i = ranges.elementary[0]; i <= ranges.elementary[1] && i < totalItems; i++) {
                      if (!openedIndices.has(i)) remainingForElementary.push(i);
                 }
+                
+                const remainingForIntermediate: number[] = [];
+                for (let i = ranges.intermediate[0]; i <= ranges.intermediate[1] && i < totalItems; i++) {
+                     if (!openedIndices.has(i)) remainingForIntermediate.push(i);
+                }
 
-                setAvailableIndices({ basic: remainingForBasic, elementary: remainingForElementary });
+                setAvailableIndices({ 
+                    basic: remainingForBasic, 
+                    elementary: remainingForElementary,
+                    intermediate: remainingForIntermediate
+                });
             } catch (error) {
                 console.error("Error fetching user data:", error);
             } finally {
@@ -460,7 +471,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     }, [currentUserId]);
 
     useEffect(() => {
-        const allAvailable = [...availableIndices.basic, ...availableIndices.elementary];
+        const allAvailable = [...availableIndices.basic, ...availableIndices.elementary, ...availableIndices.intermediate];
         if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
             const needed = PRELOAD_POOL_SIZE - preloadPool.length;
             const indicesToAddToPool = allAvailable.filter(idx => !preloadPool.includes(idx)).slice(0, needed);
@@ -569,7 +580,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         return <LoadingOverlay isVisible={true} />;
     }
     
-    const totalAvailable = availableIndices.basic.length + availableIndices.elementary.length;
+    const totalAvailable = availableIndices.basic.length + availableIndices.elementary.length + availableIndices.intermediate.length;
 
     return (
         <>
