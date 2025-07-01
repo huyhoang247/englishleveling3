@@ -48,6 +48,17 @@ interface DisplayCard {
     isFavorite: boolean;
 }
 
+/**
+ * Helper function to capitalize the first letter of a string.
+ * @param str The string to capitalize.
+ * @returns The string with its first letter capitalized.
+ */
+const capitalizeFirstLetter = (str: string): string => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+
 const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
   const urls: string[] = [];
   for (let i = 1; i <= count; i++) {
@@ -98,16 +109,17 @@ const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlash
 const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
     Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
         const cardId = i + 1;
-        const word = defaultVocabulary[i];
+        const rawWord = defaultVocabulary[i];
+        const capitalizedWord = capitalizeFirstLetter(rawWord); // <-- CHUYỂN ĐỔI CHỮ CÁI ĐẦU THÀNH IN HOA
 
-        // Tra cứu định nghĩa chi tiết
-        const detailedMeaning = detailedMeaningsMap.get(word);
+        // Tra cứu định nghĩa chi tiết bằng từ đã được viết hoa
+        const detailedMeaning = detailedMeaningsMap.get(capitalizedWord);
 
         // Tạo dữ liệu từ vựng cho flashcard
         const vocab: VocabularyData = {
-            word: word,
-            meaning: detailedMeaning || `Meaning of Word ${cardId}`, // Fallback nếu không có định nghĩa
-            example: `Example sentence for Word ${cardId}.`,
+            word: capitalizedWord, // <-- SỬ DỤNG TỪ ĐÃ VIẾT HOA
+            meaning: detailedMeaning || `Meaning of ${capitalizedWord}`, // Fallback nếu không có định nghĩa
+            example: `Example sentence for ${capitalizedWord}.`,
             phrases: [`Phrase A ${cardId}`, `Phrase B ${cardId}`],
             popularity: cardId % 3 === 0 ? "Cao" : (cardId % 2 === 0 ? "Trung bình" : "Thấp"),
             synonyms: [`Synonym 1.${cardId}`, `Synonym 2.${cardId}`],
@@ -117,7 +129,7 @@ const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
         const imageUrls: StyledImageUrls = {
             default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${cardId}`,
             anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
-            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`, // Đã sửa lỗi cardPhId
+            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`,
             realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
         };
         
@@ -248,7 +260,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return () => unsubscribe();
   }, [currentUser]);
 
-  // --- THAY ĐỔI: Logic này không cần thay đổi. Nó đã sử dụng ALL_CARDS_MAP hiệu quả.
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
         const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
@@ -285,7 +296,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
 
-  // --- Handlers (Không có thay đổi ở đây) ---
+  // --- Handlers ---
   const handleShowHome = useCallback(() => setActiveScreen('home'), []);
   const handleShowStats = useCallback(() => setActiveScreen('stats'), []);
   const handleShowRank = useCallback(() => setActiveScreen('rank'), []);
@@ -376,7 +387,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   `;
 
-  // --- LOGIC MỚI CHO VIỆC GHIM PLAYLIST (Không có thay đổi ở đây) ---
   const pinnedCount = useMemo(() => playlists.filter(p => p.isPinned).length, [playlists]);
 
   const handleTogglePin = useCallback(async (playlistId: string) => {
@@ -455,7 +465,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
 
-  // --- Phần JSX (UI) không có thay đổi ---
   return (
     <SidebarLayout
       setToggleSidebar={setToggleSidebar}
