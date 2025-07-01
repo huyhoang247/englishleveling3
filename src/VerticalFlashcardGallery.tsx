@@ -1,3 +1,5 @@
+// --- START OF FILE VerticalFlashcardGallery.tsx ---
+
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
@@ -5,8 +7,8 @@ import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
 import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import { defaultVocabulary } from './list-vocabulary.ts';
 import { SidebarLayout } from './sidebar-story.tsx';
+import detailedMeaningsText from './vocabulary-definitions.ts'; // <-- IMPORT DỮ LIỆU TỪ FILE MỚI
 
 // --- Interfaces and Data ---
 interface Playlist {
@@ -35,13 +37,11 @@ interface VocabularyData {
   synonyms: string[];
   antonyms: string[];
 }
-// Tối ưu: Loại bỏ isFavorite khỏi đây, vì nó là trạng thái động của user, không phải data gốc của card.
 interface Flashcard {
   id: number;
   imageUrl: StyledImageUrls;
   vocabulary: VocabularyData;
 }
-// Giao diện cho card sẽ hiển thị trên gallery (kết hợp data gốc và trạng thái động)
 interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
@@ -62,6 +62,7 @@ const defaultImageUrls: string[] = [
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
+
 const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
   const data: VocabularyData[] = [];
   for (let i = 1; i <= count; i++) {
@@ -77,13 +78,67 @@ const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
   }
   return data;
 };
-const initialVocabularyData: VocabularyData[] = [
-  { word: "Source", meaning: "Nguồn, gốc", example: "What is the source of this information?", phrases: ["Information source", "Primary source"], popularity: "Cao", synonyms: ["Origin", "Root", "Beginning"], antonyms: ["Result", "Outcome", "End"] },
-  { word: "Insurance", meaning: "Bảo hiểm", example: "You should buy travel insurance before your trip.", phrases: ["Health insurance", "Car insurance"], popularity: "Cao", synonyms: ["Assurance", "Coverage", "Protection"], antonyms: ["Risk", "Danger", "Exposure"] },
-  { word: "Argument", meaning: "Cuộc tranh luận, lý lẽ", example: "They had a heated argument about politics.", phrases: ["Strong argument", "Logical argument"], popularity: "Trung bình", synonyms: ["Dispute", "Debate", "Reasoning"], antonyms: ["Agreement", "Harmony", "Peace"] },
-  { word: "Influence", meaning: "Ảnh hưởng", example: "His parents had a strong influence on his career choice.", phrases: ["Direct influence", "Negative influence"], popularity: "Cao", synonyms: ["Impact", "Effect", "Control"], antonyms: ["Lack of effect", "Insignificance"] },
-  { word: "Vocabulary 5", meaning: "Nghĩa của từ vựng 5", example: "Ví dụ cho từ vựng 5.", phrases: ["Cụm từ 1", "Cụm từ 2"], popularity: "Thấp", synonyms: ["Từ đồng nghĩa 1", "Từ trái nghĩa 2"], antonyms: ["Từ trái nghĩa 1", "Từ trái nghĩa 2"] }
+
+// --- LOGIC MỚI: XỬ LÝ ĐỊNH NGHĨA CHI TIẾT ---
+
+/**
+ * Phân tích khối văn bản định nghĩa thành một Map để tra cứu.
+ * @param text - Chuỗi văn bản chứa các định nghĩa (đã được import).
+ * @returns Một Map với key là từ tiếng Anh (viết hoa chữ cái đầu) và value là định nghĩa đầy đủ.
+ */
+const parseDetailedMeanings = (text: string): Map<string, string> => {
+    const meaningsMap = new Map<string, string>();
+    const lines = text.trim().split('\n');
+
+    for (const line of lines) {
+        const match = line.match(/\(([^)]+)\)/);
+        if (match && match[1]) {
+            const englishWord = match[1];
+            meaningsMap.set(englishWord, line.trim());
+        }
+    }
+    return meaningsMap;
+};
+
+// Parse dữ liệu text thành Map để tra cứu hiệu quả (O(1))
+const detailedMeaningsMap = parseDetailedMeanings(detailedMeaningsText);
+
+// Danh sách các từ vựng gốc (chỉ cần từ tiếng Anh và các thông tin phụ)
+const baseVocabulary: Omit<VocabularyData, 'meaning'>[] = [
+    { word: "Source", example: "What is the source of this information?", phrases: ["Information source", "Primary source"], popularity: "Cao", synonyms: ["Origin", "Root", "Beginning"], antonyms: ["Result", "Outcome", "End"] },
+    { word: "Insurance", example: "You should buy travel insurance before your trip.", phrases: ["Health insurance", "Car insurance"], popularity: "Cao", synonyms: ["Assurance", "Coverage", "Protection"], antonyms: ["Risk", "Danger", "Exposure"] },
+    { word: "Argument", example: "They had a heated argument about politics.", phrases: ["Strong argument", "Logical argument"], popularity: "Trung bình", synonyms: ["Dispute", "Debate", "Reasoning"], antonyms: ["Agreement", "Harmony", "Peace"] },
+    { word: "Influence", example: "His parents had a strong influence on his career choice.", phrases: ["Direct influence", "Negative influence"], popularity: "Cao", synonyms: ["Impact", "Effect", "Control"], antonyms: ["Lack of effect", "Insignificance"] },
+    { word: "Release", example: "The band will release their new album next month.", phrases: ["Press release", "Release date"], popularity: "Trung bình", synonyms: ["Launch", "Publish", "Free"], antonyms: ["Hold", "Confine", "Suppress"] },
+    { word: "Capacity", example: "The stadium has a seating capacity of 50,000.", phrases: ["Storage capacity", "Full capacity"], popularity: "Trung bình", synonyms: ["Volume", "Size", "Ability"], antonyms: ["Inability", "Limitation"] },
+    { word: "Senate", example: "The bill must be approved by the Senate.", phrases: ["Senate hearing", "Senate vote"], popularity: "Thấp", synonyms: ["Upper house", "Council"], antonyms: ["Lower house"] },
+    { word: "Massive", example: "They discovered a massive underground cave.", phrases: ["Massive scale", "Massive attack"], popularity: "Trung bình", synonyms: ["Huge", "Enormous", "Gigantic"], antonyms: ["Tiny", "Small", "Minute"] },
+    { word: "Stick", example: "He used a stick to draw a line in the sand.", phrases: ["Walking stick", "Stick together"], popularity: "Cao", synonyms: ["Rod", "Cane", "Twig"], antonyms: [] },
+    { word: "District", example: "She lives in the financial district.", phrases: ["School district", "Business district"], popularity: "Trung bình", synonyms: ["Area", "Region", "Zone"], antonyms: [] },
+    { word: "Budget", example: "We need to create a budget for the new project.", phrases: ["Annual budget", "On a budget"], popularity: "Cao", synonyms: ["Financial plan", "Allocation"], antonyms: ["Overspending"] },
+    { word: "Measure", example: "We must measure the success of our campaign.", phrases: ["Take measures", "Safety measure"], popularity: "Cao", synonyms: ["Gauge", "Assess", "Quantify"], antonyms: [] },
+    { word: "Cross", example: "Be careful when you cross the street.", phrases: ["Cross the line", "Cross my mind"], popularity: "Cao", synonyms: ["Traverse", "Pass over"], antonyms: ["Stay", "Remain"] },
+    { word: "Central", example: "The central library is located downtown.", phrases: ["Central theme", "Central nervous system"], popularity: "Cao", synonyms: ["Main", "Core", "Key"], antonyms: ["Peripheral", "Minor", "Secondary"] },
+    { word: "Proud", example: "She is very proud of her son's achievements.", phrases: ["Proud moment", "Proud of"], popularity: "Cao", synonyms: ["Pleased", "Satisfied", "Honored"], antonyms: ["Ashamed", "Humble"] },
+    { word: "Core", example: "The core of the problem is a lack of funding.", phrases: ["Core values", "Hard core"], popularity: "Trung bình", synonyms: ["Center", "Heart", "Essence"], antonyms: ["Surface", "Exterior"] },
+    { word: "County", example: "He is the sheriff of this county.", phrases: ["County fair", "County line"], popularity: "Thấp", synonyms: ["Shire", "Province"], antonyms: [] },
+    { word: "Species", example: "Many species are threatened with extinction.", phrases: ["Endangered species", "Human species"], popularity: "Trung bình", synonyms: ["Kind", "Type", "Breed"], antonyms: [] },
+    { word: "Conditions", example: "The working conditions were very poor.", phrases: ["Living conditions", "Terms and conditions"], popularity: "Cao", synonyms: ["Circumstances", "State", "Situation"], antonyms: [] },
+    { word: "Touch", example: "Don't touch the wet paint.", phrases: ["Keep in touch", "A finishing touch"], popularity: "Cao", synonyms: ["Contact", "Feel", "Handle"], antonyms: ["Avoid", "Separate"] },
+    { word: "Vocabulary 5", example: "Ví dụ cho từ vựng 5.", phrases: ["Cụm từ 1", "Cụm từ 2"], popularity: "Thấp", synonyms: ["Từ đồng nghĩa 1"], antonyms: ["Từ trái nghĩa 1"] }
 ];
+
+// Tạo ra mảng initialVocabularyData hoàn chỉnh bằng cách ánh xạ định nghĩa mới.
+const initialVocabularyData: VocabularyData[] = baseVocabulary.map(vocab => {
+    const detailedMeaning = detailedMeaningsMap.get(vocab.word);
+    return {
+        ...vocab,
+        meaning: detailedMeaning || `(Chưa có định nghĩa chi tiết) Nghĩa của ${vocab.word}.`
+    };
+});
+
+// --- KẾT THÚC LOGIC MỚI ---
+
 const vocabularyData: VocabularyData[] = [
   ...initialVocabularyData,
   ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
@@ -124,10 +179,9 @@ const animations = `
 `;
 
 // Tách FlashcardItem ra component riêng và memoize nó.
-// --- TỐI ƯU 3: Cập nhật props cho FlashcardItem để React.memo hoạt động ---
 interface FlashcardItemProps {
   card: Flashcard;
-  isFavorite: boolean; // Truyền isFavorite như một prop riêng
+  isFavorite: boolean;
   visualStyle: string;
   onImageClick: (card: Flashcard) => void;
   onFavoriteClick: (id: number) => void;
@@ -135,15 +189,9 @@ interface FlashcardItemProps {
 }
 
 const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
-  // --- START: TỐI ƯU HIỆU NĂNG CHO VISUAL STYLE (ÁP DỤNG CÁCH 1 & 2) ---
-  
-  // Tối ưu cho Comic Style: Thay thế radial-gradient() đắt đỏ bằng một SVG Data URI nhẹ hơn rất nhiều.
-  // Trình duyệt chỉ cần render một pattern SVG nhỏ và lặp lại nó, thay vì phải tính toán hàng nghìn gradient.
-  // Đây là thay đổi quan trọng nhất để giảm lag khi cuộn.
   const comicDotPattern = {
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='0.5' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E")`,
   };
-  // --- END: TỐI ƯU HIỆU NĂNG CHO VISUAL STYLE ---
 
   return (
     <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
@@ -156,17 +204,10 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
         </button>
       </div>
       <div className="w-full">
-        {/* === START: KHỐI VISUAL STYLE ĐÃ TỐI ƯU === */}
         <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
-          {/* Tối ưu cho Anime: Dùng màu phủ đơn sắc, cực kỳ nhẹ. Đây là cách làm tốt. */}
           {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none"></div>}
-          
-          {/* Tối ưu cho Comic: Dùng SVG pattern thay vì radial-gradient. */}
           {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={comicDotPattern}></div>}
-
-          {/* Tối ưu cho Realistic: Dùng shadow-inner tinh tế, tốt hơn gradient. */}
           {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
-          
           <img
             src={getImageUrlForStyle(card, visualStyle)}
             alt={`Flashcard ${card.id}`}
@@ -177,7 +218,6 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
             loading="lazy"
           />
         </div>
-        {/* === END: KHỐI VISUAL STYLE ĐÃ TỐI ƯU === */}
       </div>
     </div>
   );
@@ -198,7 +238,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all');
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null); // Chấp nhận mảng
+  const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
@@ -227,9 +267,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
          const examplePlaylists: Playlist[] = [
           {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
           {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
-          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 362}, (_, i) => i + 6), isPinned: false},
-          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [368, 369], isPinned: false},
-          {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [370, 371, 372], isPinned: false},
+          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 15}, (_, i) => i + 6), isPinned: false},
+          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [21, 22], isPinned: false},
+          {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [23, 24, 25], isPinned: false},
         ];
         setPlaylists(examplePlaylists);
         setOpenedImageIds([]);
@@ -245,38 +285,33 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
         if (!card) return undefined;
         return {
-            card, // Giữ nguyên tham chiếu đến object card gốc
-            isFavorite: allFavoriteCardIds.has(id) // Lấy trạng thái favorite cũng O(1)
+            card,
+            isFavorite: allFavoriteCardIds.has(id)
         };
     };
 
     let cardIdsToShow: number[] = [];
 
-    // Bước 1: Chỉ lấy ra mảng các ID cần hiển thị (rất nhẹ)
     if (activeTab === 'collection') {
         cardIdsToShow = [...openedImageIds].reverse();
     } else if (activeTab === 'favorite') {
         if (selectedPlaylistId === 'all') {
-            // Hiển thị tất cả card yêu thích, sắp xếp theo ID để ổn định
             cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
         } else {
             const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
-            // Sắp xếp ID trong playlist để có thứ tự ổn định
             cardIdsToShow = selectedPlaylist ? [...selectedPlaylist.cardIds].sort((a,b) => b-a) : [];
         }
     }
     
-    // Bước 2: Map qua mảng ID (ngắn hơn nhiều) để tạo data hoàn chỉnh.
     return cardIdsToShow
         .map(id => getDisplayCard(id))
-        .filter((item): item is DisplayCard => item !== undefined); // Lọc bỏ những card không tìm thấy
+        .filter((item): item is DisplayCard => item !== undefined);
 
   }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
   const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  // --- TỐI ƯU 4: Cập nhật biến này vì cấu trúc dữ liệu đã thay đổi ---
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
@@ -391,11 +426,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     });
 
     if (JSON.stringify(newPlaylists) === JSON.stringify(originalPlaylists)) {
-        return; // Không có gì thay đổi
+        return;
     }
 
     setIsUpdatingPlaylists(true);
-    setPlaylists(newPlaylists); // Cập nhật UI trước (Optimistic Update)
+    setPlaylists(newPlaylists);
 
     try {
         const userDocRef = doc(db, 'users', currentUser.uid);
@@ -403,13 +438,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     } catch (error) {
         console.error("Lỗi khi ghim/bỏ ghim playlist:", error);
         alert("Đã xảy ra lỗi. Vui lòng thử lại.");
-        setPlaylists(originalPlaylists); // Hoàn tác lại nếu có lỗi
+        setPlaylists(originalPlaylists);
     } finally {
         setIsUpdatingPlaylists(false);
     }
   }, [playlists, pinnedCount, currentUser]);
 
-  // --- LOGIC MỚI ĐỂ HIỂN THỊ "PILL" ---
   const pillsToDisplay = useMemo(() => {
     const pinned = playlists.filter(p => p.isPinned);
     const selected = playlists.find(p => p.id === selectedPlaylistId);
@@ -422,7 +456,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return Array.from(displaySet).sort((a,b) => a.name.localeCompare(b.name));
   }, [playlists, selectedPlaylistId]);
 
-  // --- LOGIC MỚI ĐỂ XOÁ PLAYLIST ---
   const handleConfirmDelete = useCallback(async () => {
     if (!playlistToDelete || !currentUser) return;
 
@@ -566,7 +599,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               <div className="w-full max-w-6xl mx-auto">
                 {flashcardsForCurrentPage.length > 0 ? (
                   <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {/* --- TỐI ƯU 5: Cập nhật cách truyền props cho FlashcardItem --- */}
                     {flashcardsForCurrentPage.map(({ card, isFavorite }) => (
                       <FlashcardItem
                         key={card.id}
@@ -791,3 +823,4 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </SidebarLayout>
   );
 }
+// --- END OF FILE VerticalFlashcardGallery.tsx ---
