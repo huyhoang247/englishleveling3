@@ -137,12 +137,12 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               {/* Grid for all vocabulary details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {/* Card for Meaning (Full Width) with Word integrated */}
+                {/* Card for Meaning (Full Width) with Styled Word */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                  <h3 className="inline-block bg-black/50 text-white px-4 py-2 rounded-lg text-2xl font-bold mb-4">
                     {selectedCard.vocabulary.word}
                   </h3>
-                  <p className="text-lg text-gray-700 dark:text-gray-300">
+                  <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                     {selectedCard.vocabulary.meaning}
                   </p>
                 </div>
