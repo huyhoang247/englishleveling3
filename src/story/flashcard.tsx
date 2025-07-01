@@ -132,29 +132,23 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       case 'vocabulary':
         return (
           // --- NEW CLEAN DESIGN AREA ---
-          <div className="flex-grow overflow-y-auto bg-white dark:bg-gray-900 p-6 md:p-8 content-transition">
+          <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
-              
-              {/* --- Main Word as Title --- */}
-              <div className="mb-8">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 text-left">
-                  {selectedCard.vocabulary.word}
-                </h2>
-              </div>
-              
-              {/* --- Grid for all vocabulary details --- */}
+              {/* Grid for all vocabulary details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {/* Card for Meaning (Full Width) */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl md:col-span-2">
-                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Nghĩa của từ</h5>
-                  <p className="text-lg text-gray-800 dark:text-gray-200">
+                {/* Card for Meaning (Full Width) with Word integrated */}
+                <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                    {selectedCard.vocabulary.word}
+                  </h3>
+                  <p className="text-lg text-gray-700 dark:text-gray-300">
                     {selectedCard.vocabulary.meaning}
                   </p>
                 </div>
 
                 {/* Card for Example (Full Width) */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl md:col-span-2">
+                <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ví dụ</h5>
                   <p className="text-gray-700 dark:text-gray-300 italic">
                     "{selectedCard.vocabulary.example}"
@@ -162,11 +156,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 </div>
 
                 {/* Card for Common Phrases */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Cụm từ phổ biến</h5>
                   <div className="flex flex-wrap gap-2">
                     {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                      <span key={index} className="bg-purple-100 text-purple-800 dark:bg-purple-900/70 dark:text-purple-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                      <span key={index} className="bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 px-2.5 py-1 rounded-full text-sm font-medium">
                         {phrase}
                       </span>
                     ))}
@@ -174,14 +168,14 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 </div>
 
                 {/* Card for Popularity */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
                   <div className="flex items-center gap-4">
                     <span className={`
                       px-3 py-1 rounded-full text-sm font-bold
-                      ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
-                        selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" :
-                        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}
+                      ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200" :
+                        selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200" :
+                        "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200"}
                     `}>
                       {selectedCard.vocabulary.popularity}
                     </span>
@@ -198,11 +192,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 </div>
 
                 {/* Card for Synonyms */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Từ đồng nghĩa</h5>
                   <div className="flex flex-wrap gap-2">
                     {selectedCard.vocabulary.synonyms.map((word, index) => (
-                      <span key={index} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                      <span key={index} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300 px-2.5 py-1 rounded-full text-sm font-medium">
                         {word}
                       </span>
                     ))}
@@ -210,11 +204,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 </div>
 
                 {/* Card for Antonyms */}
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Từ trái nghĩa</h5>
                   <div className="flex flex-wrap gap-2">
                     {selectedCard.vocabulary.antonyms.map((word, index) => (
-                      <span key={index} className="bg-pink-100 text-pink-800 dark:bg-pink-900/70 dark:text-pink-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                      <span key={index} className="bg-pink-100 text-pink-800 dark:bg-pink-500/20 dark:text-pink-300 px-2.5 py-1 rounded-full text-sm font-medium">
                         {word}
                       </span>
                     ))}
@@ -240,24 +234,27 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       ></div>
 
       {/* Fullscreen Modal Content */}
-      <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900"
+      <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-black"
            style={{ animation: 'fadeIn 0.3s ease-out forwards' }}
       >
-          {/* HEADER IS REMOVED */}
-
-          {/* Modern Minimalist Tab Navigation */}
-          <div className="flex justify-center bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex-shrink-0 px-6 py-4">
-            <div className="inline-flex bg-gray-50 dark:bg-gray-800 rounded-xl p-1 space-x-1">
+          {/* High-Contrast "Black" Tab Navigation */}
+          <div className="flex justify-center bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 flex-shrink-0 px-4 py-3">
+            <div className="inline-flex bg-gray-900 dark:bg-black rounded-xl p-1 space-x-1 border border-transparent dark:border-gray-800">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.key;
                 return (
                   <button
                     key={tab.key}
                     className={`
-                      px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-out
+                      px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-300
                       ${isActive 
-                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        ? 'bg-white text-gray-900 shadow-sm' // Active in Light Mode
+                        : 'text-gray-400 hover:bg-white/10 hover:text-white' // Inactive in Light Mode
+                      }
+                      dark:focus:outline-none 
+                      ${isActive
+                        ? 'dark:bg-gray-800 dark:text-gray-100' // Active in Dark Mode
+                        : 'dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300' // Inactive in Dark Mode
                       }
                     `}
                     onClick={() => setActiveTab(tab.key)}
