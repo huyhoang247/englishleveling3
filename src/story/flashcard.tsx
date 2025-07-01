@@ -137,97 +137,101 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'vocabulary':
         return (
-          <div className="p-5 overflow-y-auto flex-grow content-transition">{/* Rest of vocabulary content remains the same */}
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{selectedCard.vocabulary.word}</h3>
-            
-            {/* Nghĩa */}
-            <div className="mb-5">
-              <div className="inline-block bg-blue-50 rounded-full px-3 py-1 text-xs font-semibold text-blue-600 mb-2">
-                Nghĩa
+          // --- START: NEW REFINED VOCABULARY UI ---
+          <div className="p-6 overflow-y-auto flex-grow content-transition bg-white dark:bg-gray-900/95">
+            <div className="max-w-3xl mx-auto">
+              {/* Main Word and Meaning */}
+              <div className="text-center mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2 tracking-tight">
+                  {selectedCard.vocabulary.word}
+                </h2>
+                <p className="text-lg text-gray-600 dark:text-gray-300">
+                  {selectedCard.vocabulary.meaning}
+                </p>
               </div>
-              <p className="text-gray-800 dark:text-gray-200">{selectedCard.vocabulary.meaning}</p>
-            </div>
 
-            {/* Ví dụ */}
-            <div className="mb-5">
-              <div className="inline-block bg-green-50 rounded-full px-3 py-1 text-xs font-semibold text-green-600 mb-2">
-                Ví dụ
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 italic bg-green-50 dark:bg-green-900 p-3 rounded-lg border-l-4 border-green-300 dark:border-green-700">
-                "{selectedCard.vocabulary.example}"
-              </p>
-            </div>
-
-            {/* Cụm từ */}
-            <div className="mb-5">
-              <div className="inline-block bg-purple-50 rounded-full px-3 py-1 text-xs font-semibold text-purple-600 mb-2">
-                Cụm từ phổ biến
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                  <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-sm">
-                    {phrase}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Phổ biến */}
-            <div className="mb-5">
-              <div className="inline-block bg-amber-50 rounded-full px-3 py-1 text-xs font-semibold text-amber-600 mb-2">
-                Mức độ phổ biến
-              </div>
-              <div className="flex items-center">
-                <span className={`
-                  px-2 py-1 rounded-lg text-sm font-medium
-                  ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200" :
-                    selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-200" :
-                    "bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200"}
-                `}>
-                  {selectedCard.vocabulary.popularity}
-                </span>
-
-                <div className="ml-3 flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${
-                      selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
-                      selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
-                      selectedCard.vocabulary.popularity === "Thấp" ? "bg-red-500 w-1/5" : ""
-                    }`}
-                  ></div>
+              <div className="space-y-8">
+                {/* Example Section */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    Ví dụ
+                  </h3>
+                  <blockquote className="border-l-4 border-indigo-300 dark:border-indigo-600 pl-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-r-lg">
+                    <p className="text-gray-800 dark:text-gray-200 italic">
+                      "{selectedCard.vocabulary.example}"
+                    </p>
+                  </blockquote>
                 </div>
-              </div>
-            </div>
-
-            {/* Synonyms & Antonyms */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="inline-block bg-indigo-50 rounded-full px-3 py-1 text-xs font-semibold text-indigo-600 mb-2">
-                  Từ đồng nghĩa
+                
+                {/* Phrases Section */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    Cụm từ phổ biến
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCard.vocabulary.phrases.map((phrase, index) => (
+                      <span key={index} className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium">
+                        {phrase}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  {selectedCard.vocabulary.synonyms.map((word, index) => (
-                    <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded">
-                      {word}
+
+                {/* Synonyms & Antonyms Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                      Từ đồng nghĩa
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCard.vocabulary.synonyms.map((word, index) => (
+                        <span key={index} className="text-green-800 bg-green-100 dark:text-green-100 dark:bg-green-900/50 px-3 py-1.5 rounded-lg text-sm font-medium">
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                      Từ trái nghĩa
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCard.vocabulary.antonyms.map((word, index) => (
+                        <span key={index} className="text-red-800 bg-red-100 dark:text-red-100 dark:bg-red-900/50 px-3 py-1.5 rounded-lg text-sm font-medium">
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Popularity Section */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    Mức độ phổ biến
+                  </h3>
+                  <div className="flex items-center space-x-4">
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-bold w-28 text-center
+                        ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200" :
+                          selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200" :
+                          "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                    >
+                      {selectedCard.vocabulary.popularity}
                     </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="inline-block bg-pink-50 rounded-full px-3 py-1 text-xs font-semibold text-pink-600 mb-2">
-                  Từ trái nghĩa
-                </div>
-                <div className="flex flex-col gap-1">
-                  {selectedCard.vocabulary.antonyms.map((word, index) => (
-                    <span key={index} className="text-gray-700 dark:text-gray-300 text-sm bg-pink-50 dark:bg-pink-900 px-2 py-1 rounded">
-                      {word}
-                    </span>
-                  ))}
+                    <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full">
+                      <div className={`h-full rounded-full transition-all duration-500 ${
+                          selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-[90%]" :
+                          selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-[55%]" :
+                          "bg-red-500 w-[20%]"
+                      }`}></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          // --- END: NEW REFINED VOCABULARY UI ---
         );
       default:
         return null;
