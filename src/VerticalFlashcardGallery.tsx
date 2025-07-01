@@ -63,22 +63,6 @@ const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcard
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
-const generatePlaceholderVocabulary = (count: number): VocabularyData[] => {
-  const data: VocabularyData[] = [];
-  for (let i = 1; i <= count; i++) {
-    data.push({
-      word: `Word ${i}`,
-      meaning: `Meaning of Word ${i}`,
-      example: `Example sentence for Word ${i}.`,
-      phrases: [`Phrase A ${i}`, `Phrase B ${i}`],
-      popularity: i % 3 === 0 ? "Cao" : i % 2 === 0 ? "Trung bình" : "Thấp",
-      synonyms: [`Synonym 1.${i}`, `Synonym 2.${i}`],
-      antonyms: [`Antonym 1.${i}`, `Antonym 2.${i}`]
-    });
-  }
-  return data;
-};
-
 // --- LOGIC MỚI: XỬ LÝ ĐỊNH NGHĨA CHI TIẾT ---
 
 /**
@@ -139,23 +123,40 @@ const initialVocabularyData: VocabularyData[] = baseVocabulary.map(vocab => {
 
 // --- KẾT THÚC LOGIC MỚI ---
 
-const vocabularyData: VocabularyData[] = [
-  ...initialVocabularyData,
-  ...generatePlaceholderVocabulary(Math.max(0, numberOfSampleFlashcards - initialVocabularyData.length))
-];
+// --- THAY ĐỔI: Loại bỏ mảng `vocabularyData` và `generatePlaceholderVocabulary` không cần thiết.
+// Toàn bộ logic tạo dữ liệu sẽ được chuyển trực tiếp vào `ALL_CARDS_MAP`.
 
-// --- TỐI ƯU 1: Chuyển mảng dữ liệu gốc thành Map để tra cứu O(1) ---
+// --- TỐI ƯU HÓA: Tạo Map trực tiếp và xử lý dữ liệu ngay trong vòng lặp ---
 const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
     Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
-        const vocab = vocabularyData[i] || { word: `Word ${i + 1}`, meaning: `Meaning ${i + 1}`, example: `Example ${i + 1}`, phrases:[], popularity: 'Thấp', synonyms:[], antonyms:[] };
+        const cardId = i + 1; // ID thật của thẻ, bắt đầu từ 1
+        let vocab: VocabularyData;
+
+        // Nếu ID nằm trong phạm vi dữ liệu thật (index < 21)
+        if (i < initialVocabularyData.length) {
+            vocab = initialVocabularyData[i];
+        }
+        // Ngược lại, tạo dữ liệu mẫu với ID chính xác
+        else {
+            vocab = {
+                word: `Word ${cardId}`,
+                meaning: `Meaning of Word ${cardId}`,
+                example: `Example sentence for Word ${cardId}.`,
+                phrases: [`Phrase A ${cardId}`, `Phrase B ${cardId}`],
+                popularity: cardId % 3 === 0 ? "Cao" : cardId % 2 === 0 ? "Trung bình" : "Thấp",
+                synonyms: [`Synonym 1.${cardId}`, `Synonym 2.${cardId}`],
+                antonyms: [`Antonym 1.${cardId}`, `Antonym 2.${cardId}`]
+            };
+        }
+
         const imageUrls: StyledImageUrls = {
-            default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${i + 1}`,
-            anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${i + 1}`,
-            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${i + 1}`,
-            realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${i + 1}`,
+            default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${cardId}`,
+            anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
+            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardPhId}`,
+            realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
         };
-        const card: Flashcard = { id: i + 1, imageUrl: imageUrls, vocabulary: vocab };
-        return [i + 1, card]; // Key là id, value là object card
+        const card: Flashcard = { id: cardId, imageUrl: imageUrls, vocabulary: vocab };
+        return [cardId, card]; // Key là id, value là object card
     })
 );
 
@@ -279,7 +280,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return () => unsubscribe();
   }, [currentUser]);
 
-  // --- TỐI ƯU 2: Sửa logic tính toán, sử dụng ALL_CARDS_MAP để tăng tốc độ ---
+  // --- THAY ĐỔI: Logic này không cần thay đổi. Nó đã sử dụng ALL_CARDS_MAP hiệu quả.
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
         const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
@@ -316,7 +317,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
 
-  // --- Handlers ---
+  // --- Handlers (Không có thay đổi ở đây) ---
   const handleShowHome = useCallback(() => setActiveScreen('home'), []);
   const handleShowStats = useCallback(() => setActiveScreen('stats'), []);
   const handleShowRank = useCallback(() => setActiveScreen('rank'), []);
@@ -407,7 +408,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   `;
 
-  // --- LOGIC MỚI CHO VIỆC GHIM PLAYLIST ---
+  // --- LOGIC MỚI CHO VIỆC GHIM PLAYLIST (Không có thay đổi ở đây) ---
   const pinnedCount = useMemo(() => playlists.filter(p => p.isPinned).length, [playlists]);
 
   const handleTogglePin = useCallback(async (playlistId: string) => {
@@ -486,6 +487,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
 
+  // --- Phần JSX (UI) không có thay đổi ---
   return (
     <SidebarLayout
       setToggleSidebar={setToggleSidebar}
