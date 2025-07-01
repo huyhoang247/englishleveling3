@@ -51,7 +51,7 @@ const animations = `
   }
 
   .content-transition {
-    animation: slideUp 0.2s ease-out;
+    animation: slideUp 0.3s ease-out;
   }
 `;
 
@@ -62,22 +62,18 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   onClose,
   currentVisualStyle,
 }) => {
-  // State to manage the active tab within the modal
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
 
-  // Reset activeTab to 'basic' whenever a new card is selected or modal opens
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
     }
   }, [showVocabDetail, selectedCard]);
 
-  // If modal is not visible or no card is selected, return null
   if (!showVocabDetail || !selectedCard) {
     return null;
   }
 
-  // Function to get the correct image URL based on visual style
   const getImageUrlForStyle = (card: Flashcard, style: string): string => {
     const url = (() => {
         switch (style) {
@@ -94,14 +90,12 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     return url;
   };
 
-  // Clean tab configuration
   const tabs = [
     { key: 'basic' as const, label: 'Ảnh Gốc' },
     { key: 'example' as const, label: 'Ví Dụ' },
     { key: 'vocabulary' as const, label: 'Từ Vựng' },
   ];
 
-  // Function to render modal content based on activeTab
   const renderModalContent = () => {
     const exampleIndex = (selectedCard.id - 1) % exampleImages.length;
     const exampleImageUrl = exampleImages[exampleIndex];
@@ -137,90 +131,94 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'vocabulary':
         return (
-          // --- UPDATED DESIGN AREA ---
-          <div className="flex-grow overflow-y-auto bg-white dark:bg-gray-900 p-6 md:p-8 space-y-8 content-transition">
-            
-            {/* --- Header: Word and Meaning --- */}
-            <div className="text-center md:text-left">
-              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-gray-100">
-                {selectedCard.vocabulary.word}
-              </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-                {selectedCard.vocabulary.meaning}
-              </p>
-            </div>
-
-            {/* --- Example Section --- */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                <h4 className="text-base font-semibold text-gray-700 dark:text-gray-200">Ví dụ trong câu</h4>
+          // --- NEW CLEAN DESIGN AREA ---
+          <div className="flex-grow overflow-y-auto bg-white dark:bg-gray-900 p-6 md:p-8 content-transition">
+            <div className="max-w-4xl mx-auto">
+              
+              {/* --- Main Word as Title --- */}
+              <div className="mb-8">
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 text-left">
+                  {selectedCard.vocabulary.word}
+                </h2>
               </div>
-              <p className="text-gray-700 dark:text-gray-300 italic bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border-l-4 border-green-400 dark:border-green-600">
-                "{selectedCard.vocabulary.example}"
-              </p>
-            </div>
-            
-            {/* --- Grid for Detailed Info --- */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* --- Grid for all vocabulary details --- */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-              {/* Card for Common Phrases */}
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Cụm từ phổ biến</h5>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                    <span key={index} className="bg-purple-100 text-purple-800 dark:bg-purple-900/70 dark:text-purple-300 px-2.5 py-1 rounded-full text-sm font-medium">
-                      {phrase}
-                    </span>
-                  ))}
+                {/* Card for Meaning (Full Width) */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl md:col-span-2">
+                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Nghĩa của từ</h5>
+                  <p className="text-lg text-gray-800 dark:text-gray-200">
+                    {selectedCard.vocabulary.meaning}
+                  </p>
                 </div>
-              </div>
 
-              {/* Card for Popularity */}
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Mức độ phổ biến</h5>
-                <div className="flex items-center gap-4">
-                  <span className={`
-                    px-3 py-1 rounded-full text-sm font-bold
-                    ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
-                      selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" :
-                      "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}
-                  `}>
-                    {selectedCard.vocabulary.popularity}
-                  </span>
-                  <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
-                        selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
-                        "bg-red-500 w-1/5"
-                      }`}
-                    ></div>
+                {/* Card for Example (Full Width) */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl md:col-span-2">
+                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ví dụ</h5>
+                  <p className="text-gray-700 dark:text-gray-300 italic">
+                    "{selectedCard.vocabulary.example}"
+                  </p>
+                </div>
+
+                {/* Card for Common Phrases */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Cụm từ phổ biến</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCard.vocabulary.phrases.map((phrase, index) => (
+                      <span key={index} className="bg-purple-100 text-purple-800 dark:bg-purple-900/70 dark:text-purple-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                        {phrase}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              {/* Card for Synonyms */}
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Từ đồng nghĩa</h5>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCard.vocabulary.synonyms.map((word, index) => (
-                    <span key={index} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-300 px-2.5 py-1 rounded-full text-sm font-medium">
-                      {word}
+                {/* Card for Popularity */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
+                  <div className="flex items-center gap-4">
+                    <span className={`
+                      px-3 py-1 rounded-full text-sm font-bold
+                      ${selectedCard.vocabulary.popularity === "Cao" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
+                        selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" :
+                        "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}
+                    `}>
+                      {selectedCard.vocabulary.popularity}
                     </span>
-                  ))}
+                    <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full">
+                      <div
+                        className={`h-full rounded-full ${
+                          selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
+                          selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
+                          "bg-red-500 w-1/5"
+                        }`}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Card for Antonyms */}
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Từ trái nghĩa</h5>
-                <div className="flex flex-wrap gap-2">
-                  {selectedCard.vocabulary.antonyms.map((word, index) => (
-                    <span key={index} className="bg-pink-100 text-pink-800 dark:bg-pink-900/70 dark:text-pink-300 px-2.5 py-1 rounded-full text-sm font-medium">
-                      {word}
-                    </span>
-                  ))}
+                {/* Card for Synonyms */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Từ đồng nghĩa</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCard.vocabulary.synonyms.map((word, index) => (
+                      <span key={index} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Card for Antonyms */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Từ trái nghĩa</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCard.vocabulary.antonyms.map((word, index) => (
+                      <span key={index} className="bg-pink-100 text-pink-800 dark:bg-pink-900/70 dark:text-pink-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                        {word}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -237,7 +235,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black bg-opacity-40 z-40"
         style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }}
       ></div>
 
@@ -245,14 +243,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900"
            style={{ animation: 'fadeIn 0.3s ease-out forwards' }}
       >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4 flex-shrink-0">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white">
-                 {selectedCard.vocabulary?.word}
-              </h3>
-            </div>
-          </div>
+          {/* HEADER IS REMOVED */}
 
           {/* Modern Minimalist Tab Navigation */}
           <div className="flex justify-center bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex-shrink-0 px-6 py-4">
