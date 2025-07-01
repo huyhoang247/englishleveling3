@@ -9,6 +9,7 @@ import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
 import detailedMeaningsText from './vocabulary-definitions.ts'; // <-- IMPORT DỮ LIỆU TỪ FILE MỚI
+import { defaultVocabulary } from './list-vocabulary.ts'; // <-- IMPORT DANH SÁCH TỪ VỰNG
 
 // --- Interfaces and Data ---
 interface Playlist {
@@ -54,14 +55,6 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
   }
   return urls;
 };
-const numberOfSampleFlashcards = 6500;
-const defaultImageUrls: string[] = [
-  ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
-];
-const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
-const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
-const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
 // --- LOGIC MỚI: XỬ LÝ ĐỊNH NGHĨA CHI TIẾT ---
 
@@ -87,78 +80,53 @@ const parseDetailedMeanings = (text: string): Map<string, string> => {
 // Parse dữ liệu text thành Map để tra cứu hiệu quả (O(1))
 const detailedMeaningsMap = parseDetailedMeanings(detailedMeaningsText);
 
-// Danh sách các từ vựng gốc (chỉ cần từ tiếng Anh và các thông tin phụ)
-const baseVocabulary: Omit<VocabularyData, 'meaning'>[] = [
-    { word: "Source", example: "What is the source of this information?", phrases: ["Information source", "Primary source"], popularity: "Cao", synonyms: ["Origin", "Root", "Beginning"], antonyms: ["Result", "Outcome", "End"] },
-    { word: "Insurance", example: "You should buy travel insurance before your trip.", phrases: ["Health insurance", "Car insurance"], popularity: "Cao", synonyms: ["Assurance", "Coverage", "Protection"], antonyms: ["Risk", "Danger", "Exposure"] },
-    { word: "Argument", example: "They had a heated argument about politics.", phrases: ["Strong argument", "Logical argument"], popularity: "Trung bình", synonyms: ["Dispute", "Debate", "Reasoning"], antonyms: ["Agreement", "Harmony", "Peace"] },
-    { word: "Influence", example: "His parents had a strong influence on his career choice.", phrases: ["Direct influence", "Negative influence"], popularity: "Cao", synonyms: ["Impact", "Effect", "Control"], antonyms: ["Lack of effect", "Insignificance"] },
-    { word: "Release", example: "The band will release their new album next month.", phrases: ["Press release", "Release date"], popularity: "Trung bình", synonyms: ["Launch", "Publish", "Free"], antonyms: ["Hold", "Confine", "Suppress"] },
-    { word: "Capacity", example: "The stadium has a seating capacity of 50,000.", phrases: ["Storage capacity", "Full capacity"], popularity: "Trung bình", synonyms: ["Volume", "Size", "Ability"], antonyms: ["Inability", "Limitation"] },
-    { word: "Senate", example: "The bill must be approved by the Senate.", phrases: ["Senate hearing", "Senate vote"], popularity: "Thấp", synonyms: ["Upper house", "Council"], antonyms: ["Lower house"] },
-    { word: "Massive", example: "They discovered a massive underground cave.", phrases: ["Massive scale", "Massive attack"], popularity: "Trung bình", synonyms: ["Huge", "Enormous", "Gigantic"], antonyms: ["Tiny", "Small", "Minute"] },
-    { word: "Stick", example: "He used a stick to draw a line in the sand.", phrases: ["Walking stick", "Stick together"], popularity: "Cao", synonyms: ["Rod", "Cane", "Twig"], antonyms: [] },
-    { word: "District", example: "She lives in the financial district.", phrases: ["School district", "Business district"], popularity: "Trung bình", synonyms: ["Area", "Region", "Zone"], antonyms: [] },
-    { word: "Budget", example: "We need to create a budget for the new project.", phrases: ["Annual budget", "On a budget"], popularity: "Cao", synonyms: ["Financial plan", "Allocation"], antonyms: ["Overspending"] },
-    { word: "Measure", example: "We must measure the success of our campaign.", phrases: ["Take measures", "Safety measure"], popularity: "Cao", synonyms: ["Gauge", "Assess", "Quantify"], antonyms: [] },
-    { word: "Cross", example: "Be careful when you cross the street.", phrases: ["Cross the line", "Cross my mind"], popularity: "Cao", synonyms: ["Traverse", "Pass over"], antonyms: ["Stay", "Remain"] },
-    { word: "Central", example: "The central library is located downtown.", phrases: ["Central theme", "Central nervous system"], popularity: "Cao", synonyms: ["Main", "Core", "Key"], antonyms: ["Peripheral", "Minor", "Secondary"] },
-    { word: "Proud", example: "She is very proud of her son's achievements.", phrases: ["Proud moment", "Proud of"], popularity: "Cao", synonyms: ["Pleased", "Satisfied", "Honored"], antonyms: ["Ashamed", "Humble"] },
-    { word: "Core", example: "The core of the problem is a lack of funding.", phrases: ["Core values", "Hard core"], popularity: "Trung bình", synonyms: ["Center", "Heart", "Essence"], antonyms: ["Surface", "Exterior"] },
-    { word: "County", example: "He is the sheriff of this county.", phrases: ["County fair", "County line"], popularity: "Thấp", synonyms: ["Shire", "Province"], antonyms: [] },
-    { word: "Species", example: "Many species are threatened with extinction.", phrases: ["Endangered species", "Human species"], popularity: "Trung bình", synonyms: ["Kind", "Type", "Breed"], antonyms: [] },
-    { word: "Conditions", example: "The working conditions were very poor.", phrases: ["Living conditions", "Terms and conditions"], popularity: "Cao", synonyms: ["Circumstances", "State", "Situation"], antonyms: [] },
-    { word: "Touch", example: "Don't touch the wet paint.", phrases: ["Keep in touch", "A finishing touch"], popularity: "Cao", synonyms: ["Contact", "Feel", "Handle"], antonyms: ["Avoid", "Separate"] },
-    { word: "Vocabulary 5", example: "Ví dụ cho từ vựng 5.", phrases: ["Cụm từ 1", "Cụm từ 2"], popularity: "Thấp", synonyms: ["Từ đồng nghĩa 1"], antonyms: ["Từ trái nghĩa 1"] }
+// --- START: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
+
+// Cập nhật số lượng flashcard dựa trên danh sách từ vựng đã nhập từ list-vocabulary.ts
+const numberOfSampleFlashcards = defaultVocabulary.length;
+
+// Tạo các mảng URL cho ảnh dựa trên số lượng từ vựng mới
+const defaultImageUrls: string[] = [
+  ...initialDefaultImageUrls,
+  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
 ];
+const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
+const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
+const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
-// Tạo ra mảng initialVocabularyData hoàn chỉnh bằng cách ánh xạ định nghĩa mới.
-const initialVocabularyData: VocabularyData[] = baseVocabulary.map(vocab => {
-    const detailedMeaning = detailedMeaningsMap.get(vocab.word);
-    return {
-        ...vocab,
-        meaning: detailedMeaning || `(Chưa có định nghĩa chi tiết) Nghĩa của ${vocab.word}.`
-    };
-});
-
-// --- KẾT THÚC LOGIC MỚI ---
-
-// --- THAY ĐỔI: Loại bỏ mảng `vocabularyData` và `generatePlaceholderVocabulary` không cần thiết.
-// Toàn bộ logic tạo dữ liệu sẽ được chuyển trực tiếp vào `ALL_CARDS_MAP`.
-
-// --- TỐI ƯU HÓA: Tạo Map trực tiếp và xử lý dữ liệu ngay trong vòng lặp ---
+// Tạo Map chứa toàn bộ dữ liệu flashcard, ánh xạ trực tiếp từ defaultVocabulary
 const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
     Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
-        const cardId = i + 1; // ID thật của thẻ, bắt đầu từ 1
-        let vocab: VocabularyData;
+        const cardId = i + 1;
+        const word = defaultVocabulary[i];
 
-        // Nếu ID nằm trong phạm vi dữ liệu thật (index < 21)
-        if (i < initialVocabularyData.length) {
-            vocab = initialVocabularyData[i];
-        }
-        // Ngược lại, tạo dữ liệu mẫu với ID chính xác
-        else {
-            vocab = {
-                word: `Word ${cardId}`,
-                meaning: `Meaning of Word ${cardId}`,
-                example: `Example sentence for Word ${cardId}.`,
-                phrases: [`Phrase A ${cardId}`, `Phrase B ${cardId}`],
-                popularity: cardId % 3 === 0 ? "Cao" : cardId % 2 === 0 ? "Trung bình" : "Thấp",
-                synonyms: [`Synonym 1.${cardId}`, `Synonym 2.${cardId}`],
-                antonyms: [`Antonym 1.${cardId}`, `Antonym 2.${cardId}`]
-            };
-        }
+        // Tra cứu định nghĩa chi tiết
+        const detailedMeaning = detailedMeaningsMap.get(word);
+
+        // Tạo dữ liệu từ vựng cho flashcard
+        const vocab: VocabularyData = {
+            word: word,
+            meaning: detailedMeaning || `Meaning of Word ${cardId}`, // Fallback nếu không có định nghĩa
+            example: `Example sentence for Word ${cardId}.`,
+            phrases: [`Phrase A ${cardId}`, `Phrase B ${cardId}`],
+            popularity: cardId % 3 === 0 ? "Cao" : (cardId % 2 === 0 ? "Trung bình" : "Thấp"),
+            synonyms: [`Synonym 1.${cardId}`, `Synonym 2.${cardId}`],
+            antonyms: [`Antonym 1.${cardId}`, `Antonym 2.${cardId}`]
+        };
 
         const imageUrls: StyledImageUrls = {
             default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${cardId}`,
             anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
-            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardPhId}`,
+            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`, // Đã sửa lỗi cardPhId
             realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
         };
+        
         const card: Flashcard = { id: cardId, imageUrl: imageUrls, vocabulary: vocab };
-        return [cardId, card]; // Key là id, value là object card
+        return [cardId, card];
     })
 );
+
+// --- END: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
 
 const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1",
