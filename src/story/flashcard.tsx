@@ -137,12 +137,16 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               {/* Grid for all vocabulary details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                {/* Card for Meaning (Full Width) with Styled Word */}
+                {/* Card for Meaning (Full Width) with Styled Word as a Tag */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
-                  <h3 className="inline-block bg-black/50 text-white px-4 py-2 rounded-xl text-sm font-bold mb-4">
-                    {selectedCard.vocabulary.word}
-                  </h3>
-                  <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {/* --- NEW TAG DESIGN --- */}
+                  <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 text-base font-semibold px-4 py-1.5 rounded-full mb-4 dark:bg-blue-900/50 dark:text-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    </svg>
+                    <span>{selectedCard.vocabulary.word}</span>
+                  </div>
+                  <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                     {selectedCard.vocabulary.meaning}
                   </p>
                 </div>
