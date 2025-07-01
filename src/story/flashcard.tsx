@@ -137,48 +137,48 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'vocabulary':
         return (
-          <div className="flex-grow overflow-y-auto bg-gray-50 dark:bg-gray-900/50 p-6 md:p-8 space-y-8 content-transition">
+          // --- UPDATED DESIGN AREA ---
+          <div className="flex-grow overflow-y-auto bg-white dark:bg-gray-900 p-6 md:p-8 space-y-8 content-transition">
             
-            {/* --- Phần Header: Từ và Nghĩa --- */}
+            {/* --- Header: Word and Meaning --- */}
             <div className="text-center md:text-left">
-              <h2 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500 dark:from-indigo-400 dark:to-blue-400 pb-1">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 dark:text-gray-100">
                 {selectedCard.vocabulary.word}
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mt-2">
+              <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
                 {selectedCard.vocabulary.meaning}
               </p>
             </div>
 
-            {/* --- Phần Ví dụ --- */}
+            {/* --- Example Section --- */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                {/* Placeholder for an icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Ví dụ trong câu</h4>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                <h4 className="text-base font-semibold text-gray-700 dark:text-gray-200">Ví dụ trong câu</h4>
               </div>
-              <p className="text-gray-700 dark:text-gray-300 italic bg-white dark:bg-gray-800/50 p-4 rounded-lg border-l-4 border-green-400 dark:border-green-600 shadow-sm">
+              <p className="text-gray-700 dark:text-gray-300 italic bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border-l-4 border-green-400 dark:border-green-600">
                 "{selectedCard.vocabulary.example}"
               </p>
             </div>
             
-            {/* --- Grid các thông tin chi tiết --- */}
+            {/* --- Grid for Detailed Info --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              {/* Card for Cụm từ phổ biến */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
-                <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Cụm từ phổ biến</h5>
+              {/* Card for Common Phrases */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Cụm từ phổ biến</h5>
                 <div className="flex flex-wrap gap-2">
                   {selectedCard.vocabulary.phrases.map((phrase, index) => (
-                    <span key={index} className="bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                    <span key={index} className="bg-purple-100 text-purple-800 dark:bg-purple-900/70 dark:text-purple-300 px-2.5 py-1 rounded-full text-sm font-medium">
                       {phrase}
                     </span>
                   ))}
                 </div>
               </div>
 
-              {/* Card for Mức độ phổ biến */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
-                <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Mức độ phổ biến</h5>
+              {/* Card for Popularity */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Mức độ phổ biến</h5>
                 <div className="flex items-center gap-4">
                   <span className={`
                     px-3 py-1 rounded-full text-sm font-bold
@@ -200,24 +200,24 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Card for Từ đồng nghĩa */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
-                <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Từ đồng nghĩa</h5>
+              {/* Card for Synonyms */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Từ đồng nghĩa</h5>
                 <div className="flex flex-wrap gap-2">
                   {selectedCard.vocabulary.synonyms.map((word, index) => (
-                    <span key={index} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                    <span key={index} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-300 px-2.5 py-1 rounded-full text-sm font-medium">
                       {word}
                     </span>
                   ))}
                 </div>
               </div>
 
-              {/* Card for Từ trái nghĩa */}
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
-                <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Từ trái nghĩa</h5>
+              {/* Card for Antonyms */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Từ trái nghĩa</h5>
                 <div className="flex flex-wrap gap-2">
                   {selectedCard.vocabulary.antonyms.map((word, index) => (
-                    <span key={index} className="bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                    <span key={index} className="bg-pink-100 text-pink-800 dark:bg-pink-900/70 dark:text-pink-300 px-2.5 py-1 rounded-full text-sm font-medium">
                       {word}
                     </span>
                   ))}
