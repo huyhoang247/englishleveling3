@@ -1,254 +1,313 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-// --- ĐỊNH NGHĨA CSS (INLINE STYLES) ---
-const styles = {
-  // ... (giữ nguyên các style như file trước)
-  container: {
-    maxWidth: '700px',
-    margin: '2rem auto',
-    padding: '2rem',
-    fontFamily: 'Arial, sans-serif',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    backgroundColor: '#f9f9f9',
-  },
-  h1: {
-    textAlign: 'center',
-    color: '#333',
-  },
-  p: {
-    color: '#555',
-    lineHeight: 1.6,
-  },
-  textarea: {
-    width: '100%',
-    padding: '12px',
-    fontSize: '16px',
-    border: '1px solid #ccc',
-    borderRadius: '4px',
-    boxSizing: 'border-box',
-    marginBottom: '1rem',
-    resize: 'vertical',
-    minHeight: '100px',
-  },
-  button: {
-    display: 'block',
-    width: '100%',
-    padding: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: 'white',
-    backgroundColor: '#007bff',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-  },
-  buttonDisabled: {
-    backgroundColor: '#cccccc',
-    cursor: 'not-allowed',
-  },
-  languageSelector: {
-    marginBottom: '1rem',
-    padding: '8px',
-    fontSize: '14px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-  },
-  resultsContainer: {
-    marginTop: '2rem',
-  },
-  errorMessage: {
-    color: '#d9534f',
-    backgroundColor: '#f2dede',
-    border: '1px solid #ebccd1',
-    padding: '15px',
-    borderRadius: '4px',
-    marginBottom: '1rem',
-  },
-  noErrors: {
-    color: '#28a745',
-    backgroundColor: '#d4edda',
-    border: '1px solid #c3e6cb',
-    padding: '15px',
-    borderRadius: '4px',
-    textAlign: 'center',
-  },
-  resultsListH3: {
-    borderBottom: '2px solid #eee',
-    paddingBottom: '0.5rem',
-    marginBottom: '1rem',
-  },
-  resultItem: {
-    border: '1px solid #e0e0e0',
-    padding: '15px',
-    borderRadius: '5px',
-    marginBottom: '1rem',
-    backgroundColor: 'white',
-  },
-  resultMessage: {
-    fontWeight: 500,
-    color: '#c0392b',
-    margin: '0 0 10px 0',
-  },
-  contextText: {
-    margin: '0 0 10px 0',
-  },
-  errorText: {
-    backgroundColor: '#fbeaa6',
-    textDecoration: 'underline',
-    textDecorationColor: '#d9534f',
-    textDecorationStyle: 'wavy',
-    padding: '2px 0',
-  },
-  suggestion: {
-    color: '#27ae60',
-    fontWeight: 'bold',
-    margin: '0 0 10px 0',
-  },
-  rule: {
-    fontSize: '0.8em',
-    color: '#777',
-    textAlign: 'right',
-    marginTop: '1rem',
-    fontStyle: 'italic',
-  },
-};
+// === COMPONENT CHÍNH ===
+function GrammarChecker() {
+  // State để lưu trữ văn bản người dùng nhập vào
+  const [text, setText] = useState('Helo world. I is a student. This are a example.');
+  
+  // State để lưu kết quả trả về từ API
+  const [result, setResult] = useState(null);
+  
+  // State để hiển thị trạng thái đang tải
+  const [loading, setLoading] = useState(false);
+  
+  // State để lưu lỗi nếu có
+  const [error, setError] = useState(null);
 
+  // --- Hàm xử lý việc gọi API để kiểm tra ngữ pháp ---
+  const handleCheckGrammar = async () => {
+    if (!text.trim()) {
+      alert('Vui lòng nhập câu cần kiểm tra.');
+      return;
+    }
 
-// --- COMPONENT CHÍNH ---
-function App() {
-  const [text, setText] = useState('I need go school'); // Đặt sẵn ví dụ sai để test
-  const [language, setLanguage] = useState('en-US'); // Thêm state cho ngôn ngữ
-  const [results, setResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState(null);
-  const [hasChecked, setHasChecked] = useState(false);
+    setLoading(true);
+    setError(null);
+    setResult(null);
 
-  /**
-   * Hàm gọi API của LanguageTool để kiểm tra ngữ pháp
-   */
-  const checkGrammar = async () => {
-    if (!text.trim()) return;
+    // API endpoint của LanguageTool
+    const apiUrl = 'https://api.languagetool.org/v2/check';
 
-    setIsLoading(true);
-    setApiError(null);
-    setResults([]);
-    setHasChecked(true);
+    // Dữ liệu gửi đi phải ở định dạng x-www-form-urlencoded
+    const params = new URLSearchParams();
+    params.append('text', text);
+    params.append('language', 'en-US'); // Kiểm tra tiếng Anh (Mỹ)
+    params.append('enabledOnly', 'false'); // Kích hoạt tất cả các quy tắc
 
     try {
-      const apiUrl = 'https://api.languagetoolplus.com/v2/check';
-      const data = new URLSearchParams();
-      data.append('text', text);
-      data.append('language', language); // Sử dụng state language
-      data.append('level', 'picky');     // <<< SỬA ĐỔI QUAN TRỌNG NHẤT LÀ ĐÂY!
-
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: data,
+        body: params,
       });
 
       if (!response.ok) {
         throw new Error(`Lỗi từ API: ${response.statusText}`);
       }
 
-      const responseData = await response.json();
-      setResults(responseData.matches);
+      const data = await response.json();
+      setResult(data);
 
     } catch (err) {
-      setApiError('Đã có lỗi xảy ra khi kết nối tới máy chủ. Vui lòng thử lại sau.');
+      setError('Không thể kết nối đến máy chủ kiểm tra. Vui lòng thử lại sau.');
       console.error(err);
     } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Tự động check khi component được tải lần đầu (để thấy ví dụ)
-  useEffect(() => {
-    checkGrammar();
-  }, []); // Chỉ chạy 1 lần
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      checkGrammar();
+      setLoading(false);
     }
   };
 
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.h1}>Kiểm tra Ngữ pháp & Chính tả Tiếng Anh</h1>
-      <p style={styles.p}>Công cụ đã được nâng cấp để phát hiện lỗi tốt hơn. Hãy thử lại câu của bạn!</p>
+  // --- Hàm này tạo ra text được highlight lỗi ---
+  const renderHighlightedText = () => {
+    if (!result || !result.matches || result.matches.length === 0) {
+      return <p className="no-errors">✅ Tuyệt vời! Không tìm thấy lỗi nào.</p>;
+    }
+
+    let lastIndex = 0;
+    const parts = [];
+    // Sắp xếp các lỗi theo vị trí để xử lý tuần tự
+    const sortedMatches = [...result.matches].sort((a, b) => a.offset - b.offset);
+
+    sortedMatches.forEach((match, index) => {
+      // Thêm phần văn bản đúng đứng trước lỗi
+      if (match.offset > lastIndex) {
+        parts.push(text.substring(lastIndex, match.offset));
+      }
       
-      <select 
-        value={language} 
-        onChange={(e) => setLanguage(e.target.value)} 
-        style={styles.languageSelector}
-      >
-        <option value="en-US">Tiếng Anh (Mỹ)</option>
-        <option value="en-GB">Tiếng Anh (Anh)</option>
-        <option value="en-CA">Tiếng Anh (Canada)</option>
-        <option value="en-AU">Tiếng Anh (Úc)</option>
-      </select>
+      // Lấy phần văn bản bị lỗi
+      const errorText = text.substring(match.offset, match.offset + match.length);
+      
+      // Tạo tooltip hiển thị gợi ý và thông báo lỗi
+      const tooltipText = `${match.message}\nGợi ý: ${match.replacements.map(r => r.value).join(', ')}`;
 
+      // Thêm phần văn bản lỗi được highlight
+      parts.push(
+        <span
+          key={`error-${index}`}
+          className="error-highlight"
+          title={tooltipText} // title sẽ hiện tooltip khi hover
+        >
+          {errorText}
+        </span>
+      );
+      
+      lastIndex = match.offset + match.length;
+    });
+
+    // Thêm phần văn bản còn lại sau lỗi cuối cùng
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return <div className="result-text">{parts}</div>;
+  };
+
+  // --- JSX (HTML) để hiển thị component ---
+  return (
+    <div className="container">
+      {/* CSS được nhúng trực tiếp vào component để tạo thành 1 file duy nhất */}
+      <style>{`
+        body {
+          background-color: #f0f2f5;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          margin: 0;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          min-height: 100vh;
+          padding-top: 40px;
+        }
+        .container {
+          max-width: 800px;
+          width: 90%;
+          margin: 0 auto;
+          padding: 30px;
+          background-color: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+          text-align: center;
+          color: #1c1e21;
+          font-size: 2.2em;
+          margin-bottom: 10px;
+        }
+        .subtitle {
+          text-align: center;
+          font-size: 1em;
+          color: #606770;
+          margin-bottom: 30px;
+        }
+        .subtitle a {
+          color: #007bff;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        .subtitle a:hover {
+          text-decoration: underline;
+        }
+        textarea {
+          width: 100%;
+          padding: 15px;
+          font-size: 1.1em;
+          border-radius: 8px;
+          border: 1px solid #ccd0d5;
+          margin-bottom: 20px;
+          box-sizing: border-box;
+          resize: vertical;
+          min-height: 120px;
+          line-height: 1.5;
+        }
+        textarea:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        button {
+          display: block;
+          width: 100%;
+          padding: 15px;
+          font-size: 1.2em;
+          font-weight: bold;
+          color: white;
+          background-image: linear-gradient(to right, #007bff, #0056b3);
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+        button:disabled {
+          background-image: linear-gradient(to right, #aaa, #888);
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        button:not(:disabled):hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+        }
+        .result-container {
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid #e0e0e0;
+        }
+        .result-text {
+          font-size: 1.2em;
+          line-height: 1.7;
+          padding: 15px;
+          border-radius: 8px;
+          background-color: #f8f9fa;
+          border: 1px solid #e9ecef;
+          margin-bottom: 20px;
+        }
+        .no-errors {
+          color: #28a745;
+          font-weight: 500;
+          font-size: 1.2em;
+          text-align: center;
+          padding: 15px;
+          background-color: #e9f7ef;
+          border-radius: 8px;
+        }
+        .error-highlight {
+          background-color: rgba(255, 221, 221, 0.8);
+          padding: 2px 0;
+          border-radius: 3px;
+          cursor: help;
+          text-decoration: underline wavy red 1.5px;
+        }
+        .suggestions ul {
+          list-style-type: none;
+          padding: 0;
+        }
+        .suggestions li {
+          background-color: #fff;
+          border: 1px solid #dee2e6;
+          padding: 15px;
+          margin-bottom: 12px;
+          border-radius: 8px;
+          transition: box-shadow 0.2s;
+        }
+        .suggestions li:hover {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .suggestions p {
+          margin: 5px 0;
+          font-size: 1em;
+          color: #333;
+        }
+        .suggestions .error-word {
+          color: #d8000c;
+          background-color: #ffdddd;
+          padding: 2px 5px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+        .suggestions .suggestion-word {
+          color: #28a745;
+          background-color: #e9f7ef;
+          padding: 2px 5px;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+        .error-message {
+          color: #d8000c;
+          background-color: #ffdddd;
+          border: 1px solid #d8000c;
+          padding: 15px;
+          margin-top: 20px;
+          border-radius: 8px;
+          text-align: center;
+        }
+      `}</style>
+
+      <h1>Công cụ Kiểm tra Ngữ pháp</h1>
+      <p className="subtitle">
+        Sử dụng API miễn phí từ <a href="https://languagetool.org/" target="_blank" rel="noopener noreferrer">LanguageTool</a>
+      </p>
+      
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onKeyPress={handleKeyPress}
-        placeholder="Ví dụ: She love apples..."
-        style={styles.textarea}
-        disabled={isLoading}
+        placeholder="Nhập câu tiếng Anh của bạn vào đây..."
       />
       
-      <button 
-        onClick={checkGrammar} 
-        style={isLoading || !text.trim() ? { ...styles.button, ...styles.buttonDisabled } : styles.button}
-        disabled={isLoading || !text.trim()}
-      >
-        {isLoading ? 'Đang kiểm tra...' : 'Kiểm tra'}
+      <button onClick={handleCheckGrammar} disabled={loading}>
+        {loading ? 'Đang kiểm tra...' : 'Kiểm tra Ngay'}
       </button>
 
-      <div style={styles.resultsContainer}>
-        {apiError && <div style={styles.errorMessage}>{apiError}</div>}
+      {error && <div className="error-message">{error}</div>}
 
-        {results.length > 0 && (
-          <div>
-            <h3 style={styles.resultsListH3}>Gợi ý:</h3>
-            {results.map((match, index) => (
-              <div key={index} style={styles.resultItem}>
-                <p style={styles.resultMessage}><strong>Lỗi:</strong> {match.message}</p>
-                <p style={styles.contextText}>
-                  Trong câu: "...
-                  {match.context.text.slice(0, match.context.offset)}
-                  <span style={styles.errorText}>
-                    {match.context.text.slice(match.context.offset, match.context.offset + match.context.length)}
-                  </span>
-                  {match.context.text.slice(match.context.offset + match.context.length)}
-                  ..."
-                </p>
-                {match.replacements.length > 0 && (
-                  <p style={styles.suggestion}>
-                    <strong>Sửa thành:</strong> {match.replacements.map(rep => `"${rep.value}"`).join(' hoặc ')}
-                  </p>
-                )}
-                <p style={styles.rule}>(Luật: {match.rule.id})</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {hasChecked && !isLoading && results.length === 0 && !apiError && (
-            <div style={styles.noErrors}>
-                ✅ Tuyệt vời! Không tìm thấy lỗi ngữ pháp rõ ràng.
+      {result && (
+        <div className="result-container">
+          <h2>Kết quả phân tích:</h2>
+          {renderHighlightedText()}
+          
+          {result.matches.length > 0 && (
+            <div className="suggestions">
+              <h3>Chi tiết lỗi và gợi ý:</h3>
+              <ul>
+                {result.matches.map((match, index) => (
+                  <li key={`suggestion-${index}`}>
+                    <p><em>{match.message}</em></p>
+                    <p>
+                      Lỗi: <span className="error-word">"{text.substring(match.offset, match.offset + match.length)}"</span>
+                    </p>
+                    <p>
+                      Gợi ý sửa thành: {match.replacements.map(r => 
+                        <span key={r.value} className="suggestion-word">"{r.value}"</span>
+                      ).reduce((prev, curr) => [prev, ', ', curr])}
+                    </p>
+                  </li>
+                ))}
+              </ul>
             </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-export default App;
+export default GrammarChecker;
