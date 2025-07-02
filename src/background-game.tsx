@@ -97,14 +97,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-// <<< THAY ĐỔI 1: TẠO COMPONENT LOADING SPINNER MỚI >>>
+// <<< COMPONENT LOADING SPINNER MỚI >>>
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center text-center">
     <div 
         className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"
     ></div>
+    {/* <<< THAY ĐỔI Ở ĐÂY >>> */}
     <p className="mt-5 text-lg font-medium text-gray-300">
-      Đang đồng bộ dữ liệu...
+      Loading...
     </p>
   </div>
 );
@@ -632,7 +633,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
 
-  // <<< THAY ĐỔI 2: SỬ DỤNG LOADING SPINNER MỚI >>>
+  // <<< SỬ DỤNG LOADING SPINNER MỚI >>>
   if (isLoading) {
     // Màn hình loading fallback khi chờ dữ liệu người dùng hoặc tài nguyên.
     // `index.tsx` xử lý màn hình loading chính, nhưng đây là một dự phòng tốt.
