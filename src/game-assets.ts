@@ -76,7 +76,7 @@ export const itemAssets = {
  * Tài nguyên Lottie Animation
  */
 export const lottieAssets = {
-    characterRun: "https://lottie.host/119868ca-d4f6-40e9-84e2-bf5543ce3264/5JvuqAAA0A.lottie",
+    characterRun: "https://lottie.host/128a87c3-c0c8-4b6f-a9da-096df89982ae/C2nyhBkBTN.lottie",
 };
 
 /**
