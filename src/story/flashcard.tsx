@@ -1,3 +1,5 @@
+// --- START OF FILE flashcard.tsx (6).txt ---
+
 import React, { useState, useEffect } from 'react';
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
 
@@ -31,6 +33,7 @@ interface FlashcardDetailModalProps {
   exampleImages: string[]; // Array of example image URLs
   onClose: () => void; // Function to close the modal
   currentVisualStyle: string; // Add currentVisualStyle prop
+  decomposedWords?: string[]; // NEW: Prop for decomposed words
 }
 
 // Animation styles - Clean and minimal
@@ -61,6 +64,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   exampleImages,
   onClose,
   currentVisualStyle,
+  decomposedWords, // Destructure the new prop
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
 
@@ -172,6 +176,20 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </div>
                 </div>
 
+                {/* --- NEW: Card for Word Decomposition --- */}
+                {decomposedWords && decomposedWords.length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
+                    <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Tách từ</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {decomposedWords.map((word, index) => (
+                        <span key={index} className="bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-300 px-2.5 py-1 rounded-full text-sm font-medium">
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 {/* Card for Popularity */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
