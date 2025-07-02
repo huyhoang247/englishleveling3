@@ -122,7 +122,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
 
-  // const GROUND_LEVEL_PERCENT = 45; // <<-- XOÁ: Không còn sử dụng
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
 
@@ -344,16 +343,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
      return () => {};
   }, [displayedCoins, coins]);
 
-  // <<-- THAY ĐỔI QUAN TRỌNG -->>
-  // Renders the character, now positioned between the icon columns
+  // <<-- THAY ĐỔI QUAN TRỌNG Ở ĐÂY -->>
   const renderCharacter = () => {
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
       <div
-        className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-20 z-10"
-        // style prop đã được xoá và thay thế bằng các class Tailwind ở trên
+        className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20"
       >
         <DotLottieReact
           src={lottieAssets.characterRun}
