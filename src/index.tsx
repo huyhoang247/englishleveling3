@@ -125,22 +125,58 @@ const App: React.FC = () => {
 
   // Màn hình tải hợp nhất: Chờ cả xác thực VÀ tài nguyên
   if (loadingAuth || !assetsLoaded) {
+    const progress = (loadingAuth ? 0 : 50) + (assetsLoaded ? 50 : 0);
+
     return (
-        <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-950 text-white">
-            <div className="text-lg font-semibold">Đang tải...</div>
-            <div className="w-64 bg-gray-700 rounded-full h-2.5 mt-4 overflow-hidden">
-                <div 
-                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" 
-                    // Tính toán thanh tiến trình dựa trên cả 2 tác vụ
-                    style={{ width: `${(loadingAuth ? 0 : 50) + (assetsLoaded ? 50 : 0)}%` }}>
-                </div>
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
+                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+
+        {/* --- Game-like Logo Animation --- */}
+        <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
+            <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-spin" style={{ animationDuration: '6s', animationTimingFunction: 'linear' }}></div>
+            <div className="absolute inset-2 border-t-2 border-cyan-500/80 rounded-full animate-spin" style={{ animationDuration: '2.5s', animationTimingFunction: 'ease-in-out' }}></div>
+            <div className="text-5xl font-black text-cyan-400/80" style={{ textShadow: '0 0 15px rgba(0, 255, 255, 0.5)' }}>
+                G
             </div>
-            <p className="mt-2 text-sm text-gray-400">
-                {loadingAuth ? "Đang xác thực người dùng..." : "Đang chuẩn bị tài nguyên..."}
-            </p>
+        </div>
+
+        {/* --- Loading Status Text --- */}
+        <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
+            style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
+            Đang Tải
+        </h1>
+        <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
+            {loadingAuth ? "Xác thực người dùng..." : "Chuẩn bị tài nguyên..."}
+        </p>
+
+        {/* --- Progress Bar --- */}
+        <div className="w-80 lg:w-96 relative">
+          {/* Bar Frame */}
+          <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
+               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
+            {/* Fill Bar */}
+            <div
+              className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+              style={{
+                width: `${progress}%`,
+                boxShadow: `0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 200, 255, 0.3)`
+              }}
+            >
+                {/* Pulsating light at the end of the bar */}
+                {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
+            </div>
+          </div>
+          {/* Percentage Text inside the bar */}
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
+               style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+             {Math.round(progress)}%
+          </div>
+        </div>
+
       </div>
     );
   }
+
 
   if (!currentUser) {
     return <AuthComponent />;
