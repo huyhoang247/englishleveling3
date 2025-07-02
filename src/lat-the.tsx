@@ -383,7 +383,6 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
     );
 };
 
-// *** THAY ĐỔI: CẬP NHẬT PHẠM VI TỪ VỰNG VÀ KÍCH HOẠT RƯƠNG 'ADVANCED' ***
 const CHEST_DEFINITIONS = {
     basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 2980, isComingSoon: false, range: [0, 2399] as const, },
     elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2400, 4099] as const, },
@@ -400,14 +399,12 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
 
-// *** THAY ĐỔI: THÊM 'advanced' VÀO CHESTTYPE ***
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
 
 const PRELOAD_POOL_SIZE = 20;
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
     const [isLoading, setIsLoading] = useState(true);
-    // *** THAY ĐỔI: CẬP NHẬT TRẠNG THÁI ĐỂ BAO GỒM 'advanced' ***
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -416,47 +413,60 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
 
-    // *** THAY ĐỔI: CẬP NHẬT LOGIC LẤY DỮ LIỆU ĐỂ BAO GỒM RƯƠNG MỚI VÀ PHẠM VI CHÍNH XÁC ***
     useEffect(() => {
         const fetchOpenedItems = async () => {
             setIsLoading(true);
             try {
+                // Sử dụng độ dài của 2 danh sách từ vựng và ảnh
                 const totalVocab = defaultVocabulary.length;
                 const totalImages = defaultImageUrls.length;
-                const totalItems = Math.min(totalVocab, totalImages);
-
-                let openedIndices = new Set<number>();
-                if (currentUserId) {
-                    const userDocRef = doc(db, 'users', currentUserId);
-                    const userDocSnap = await getDoc(userDocRef);
-                    const openedImageIds: number[] = userDocSnap.exists() ? userDocSnap.data()?.openedImageIds || [] : [];
-                    openedIndices = new Set(openedImageIds.map(id => id - 1));
+                const totalItems = Math.min(totalVocab, totalImages); // Lấy số lượng nhỏ hơn để tránh lỗi index
+                
+                if (!currentUserId) {
+                    setAvailableIndices({
+                        basic: Array.from({ length: CHEST_DEFINITIONS.basic.range[1] - CHEST_DEFINITIONS.basic.range[0] + 1 }, (_, i) => CHEST_DEFINITIONS.basic.range[0] + i),
+                        elementary: Array.from({ length: CHEST_DEFINITIONS.elementary.range[1] - CHEST_DEFINITIONS.elementary.range[0] + 1 }, (_, i) => CHEST_DEFINITIONS.elementary.range[0] + i),
+                        intermediate: Array.from({ length: Math.max(0, CHEST_DEFINITIONS.intermediate.range[1] - CHEST_DEFINITIONS.intermediate.range[0] + 1) }, (_, i) => CHEST_DEFINITIONS.intermediate.range[0] + i),
+                        advanced: CHEST_DEFINITIONS.advanced.isComingSoon ? [] : Array.from({ length: Math.max(0, (totalItems - 1) - CHEST_DEFINITIONS.advanced.range[0] + 1) }, (_, i) => CHEST_DEFINITIONS.advanced.range[0] + i)
+                    });
+                    return;
                 }
 
-                const calculateRemaining = (chestDef: typeof CHEST_DEFINITIONS[ChestType]) => {
-                    const remaining: number[] = [];
-                    if (chestDef.isComingSoon || !chestDef.range[0] || chestDef.range[1] === null) {
-                        return remaining;
-                    }
-                    const start = chestDef.range[0];
-                    const end = Math.min(chestDef.range[1], totalItems - 1);
-                    for (let i = start; i <= end; i++) {
-                        if (!openedIndices.has(i)) {
-                            remaining.push(i);
-                        }
-                    }
-                    return remaining;
-                };
+                const userDocRef = doc(db, 'users', currentUserId);
+                const userDocSnap = await getDoc(userDocRef);
+                const openedImageIds: number[] = userDocSnap.exists() ? userDocSnap.data()?.openedImageIds || [] : [];
+                const openedIndices = new Set(openedImageIds.map(id => id - 1));
 
-                setAvailableIndices({
-                    basic: calculateRemaining(CHEST_DEFINITIONS.basic),
-                    elementary: calculateRemaining(CHEST_DEFINITIONS.elementary),
-                    intermediate: calculateRemaining(CHEST_DEFINITIONS.intermediate),
-                    advanced: calculateRemaining(CHEST_DEFINITIONS.advanced),
+                const remainingForBasic: number[] = [];
+                for (let i = CHEST_DEFINITIONS.basic.range[0]; i <= CHEST_DEFINITIONS.basic.range[1] && i < totalItems; i++) {
+                    if (!openedIndices.has(i)) remainingForBasic.push(i);
+                }
+
+                const remainingForElementary: number[] = [];
+                for (let i = CHEST_DEFINITIONS.elementary.range[0]; i <= CHEST_DEFINITIONS.elementary.range[1] && i < totalItems; i++) {
+                     if (!openedIndices.has(i)) remainingForElementary.push(i);
+                }
+                
+                const remainingForIntermediate: number[] = [];
+                for (let i = CHEST_DEFINITIONS.intermediate.range[0]; i <= CHEST_DEFINITIONS.intermediate.range[1] && i < totalItems; i++) {
+                     if (!openedIndices.has(i)) remainingForIntermediate.push(i);
+                }
+
+                const remainingForAdvanced: number[] = [];
+                if (!CHEST_DEFINITIONS.advanced.isComingSoon && CHEST_DEFINITIONS.advanced.range[0] !== null) {
+                    for (let i = CHEST_DEFINITIONS.advanced.range[0]; i < totalItems; i++) {
+                         if (!openedIndices.has(i)) remainingForAdvanced.push(i);
+                    }
+                }
+
+                setAvailableIndices({ 
+                    basic: remainingForBasic, 
+                    elementary: remainingForElementary,
+                    intermediate: remainingForIntermediate,
+                    advanced: remainingForAdvanced
                 });
             } catch (error) {
                 console.error("Error fetching user data:", error);
-                setAvailableIndices({ basic: [], elementary: [], intermediate: [], advanced: [] });
             } finally {
                 setIsLoading(false);
             }
@@ -464,7 +474,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         fetchOpenedItems();
     }, [currentUserId]);
 
-    // *** THAY ĐỔI: CẬP NHẬT PRELOAD POOL VỚI CÁC THẺ 'advanced' ***
     useEffect(() => {
         const allAvailable = [...availableIndices.basic, ...availableIndices.elementary, ...availableIndices.intermediate, ...availableIndices.advanced];
         if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
@@ -575,8 +584,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         return <LoadingOverlay isVisible={true} />;
     }
     
-    // *** THAY ĐỔI: CẬP NHẬT TỔNG SỐ THẺ CÒN LẠI ***
-    const totalAvailable = Object.values(availableIndices).reduce((sum, arr) => sum + arr.length, 0);
+    const totalAvailable = availableIndices.basic.length + availableIndices.elementary.length + availableIndices.intermediate.length + availableIndices.advanced.length;
 
     return (
         <>
@@ -594,13 +602,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
             <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => {
-                    // Sẽ không có key 'master' trong ChestType nên cần kiểm tra
-                    if (!['basic', 'elementary', 'intermediate', 'advanced'].includes(chest.chestType)) {
-                        // Vẫn render rương sắp ra mắt
-                         return <ChestUI key={chest.id} {...chest} remainingCount={0} onOpen1={() => {}} onOpen10={() => {}} />;
-                    }
                     const chestKey = chest.chestType as ChestType;
-                    const remainingCount = availableIndices[chestKey]?.length ?? 0;
+                    // Kiểm tra xem key có tồn tại trong availableIndices không
+                    const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
                     return (
                         <ChestUI
                             key={chest.id}
