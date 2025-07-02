@@ -83,20 +83,23 @@ const App: React.FC = () => {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [assetsLoaded, setAssetsLoaded] = useState(false); // <-- STATE MỚI: Theo dõi tải tài nguyên
 
-  // Effect để tải trước tất cả tài nguyên game
+  // Effect để tải trước tất cả tài nguyên game, CHỈ KHI ĐÃ ĐĂNG NHẬP
   useEffect(() => {
     let isCancelled = false;
     async function preloadAssets() {
-      console.log("Preloading ALL game assets from index.tsx...");
+      console.log("Preloading ALL game assets from index.tsx (triggered by login)...");
       await Promise.all(allImageUrls.map(preloadImage));
       if (!isCancelled) {
         console.log("All game assets preloaded and cached.");
         setAssetsLoaded(true); // Đánh dấu đã tải xong
       }
     }
-    preloadAssets();
+    // Bắt đầu tải tài nguyên chỉ khi có người dùng và tài nguyên chưa được tải.
+    if (currentUser && !assetsLoaded) {
+        preloadAssets();
+    }
     return () => { isCancelled = true; };
-  }, []); // Chạy 1 lần duy nhất khi App được mount
+  }, [currentUser, assetsLoaded]); // Chạy lại khi người dùng đăng nhập hoặc khi tài nguyên tải xong
 
   // Effect để lắng nghe trạng thái đăng nhập
   useEffect(() => {
@@ -123,10 +126,9 @@ const App: React.FC = () => {
   const hideNavBar = () => setIsNavBarVisible(false);
   const showNavBar = () => setIsNavBarVisible(true);
 
-  // Màn hình tải hợp nhất: Chờ cả xác thực VÀ tài nguyên
-  if (loadingAuth || !assetsLoaded) {
-    const progress = (loadingAuth ? 0 : 50) + (assetsLoaded ? 50 : 0);
-
+  // Giai đoạn 1: Chờ kiểm tra trạng thái đăng nhập ban đầu
+  if (loadingAuth) {
+    const progress = 10; // Giả lập một chút tiến trình
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
@@ -146,15 +148,61 @@ const App: React.FC = () => {
             Đang Tải
         </h1>
         <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
-            {loadingAuth ? "Xác thực người dùng..." : "Chuẩn bị tài nguyên..."}
+            Xác thực người dùng...
         </p>
 
         {/* --- Progress Bar --- */}
         <div className="w-80 lg:w-96 relative">
-          {/* Bar Frame */}
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
                style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
-            {/* Fill Bar */}
+            <div
+              className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+              style={{ width: `${progress}%` }} >
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
+               style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+             {Math.round(progress)}%
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Giai đoạn 2: Nếu chưa đăng nhập, hiển thị màn hình đăng nhập
+  if (!currentUser) {
+    return <AuthComponent />;
+  }
+
+  // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
+  if (!assetsLoaded) {
+    const progress = 50; // Giả lập tiến trình đang ở giữa chừng
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
+                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+
+        {/* --- Game-like Logo Animation --- */}
+        <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
+            <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-spin" style={{ animationDuration: '6s', animationTimingFunction: 'linear' }}></div>
+            <div className="absolute inset-2 border-t-2 border-cyan-500/80 rounded-full animate-spin" style={{ animationDuration: '2.5s', animationTimingFunction: 'ease-in-out' }}></div>
+            <div className="text-5xl font-black text-cyan-400/80" style={{ textShadow: '0 0 15px rgba(0, 255, 255, 0.5)' }}>
+                G
+            </div>
+        </div>
+
+        {/* --- Loading Status Text --- */}
+        <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
+            style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
+            Đang Tải
+        </h1>
+        <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
+            Chuẩn bị tài nguyên...
+        </p>
+
+        {/* --- Progress Bar --- */}
+        <div className="w-80 lg:w-96 relative">
+          <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
+               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
               style={{
@@ -162,26 +210,19 @@ const App: React.FC = () => {
                 boxShadow: `0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 200, 255, 0.3)`
               }}
             >
-                {/* Pulsating light at the end of the bar */}
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
             </div>
           </div>
-          {/* Percentage Text inside the bar */}
           <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
                style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
              {Math.round(progress)}%
           </div>
         </div>
-
       </div>
     );
   }
 
-
-  if (!currentUser) {
-    return <AuthComponent />;
-  }
-
+  // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng
   return (
     <div className="app-container">
       {activeTab === 'home' && (
