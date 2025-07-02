@@ -1,3 +1,5 @@
+// --- START OF FILE VerticalFlashcardGallery.tsx (6).txt ---
+
 // --- START OF FILE VerticalFlashcardGallery.tsx ---
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
@@ -140,6 +142,36 @@ const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
 
 // --- END: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
 
+
+// --- START: LOGIC TÁCH TỪ ---
+/**
+ * Xử lý danh sách từ vựng để tìm các từ con.
+ * @param vocabulary - Mảng các từ gốc.
+ * @returns Một Map với key là từ dài (đã viết hoa) và value là mảng các từ con.
+ */
+const processVocabularyForDecomposition = (vocabulary: string[]): Map<string, string[]> => {
+    const uniqueWords = [...new Set(vocabulary.map(w => w.trim()))];
+    const decompositionMap = new Map<string, string[]>();
+
+    for (const longWord of uniqueWords) {
+        if (longWord.length <= 3) continue; // Bỏ qua các từ quá ngắn
+        const foundShortWords = new Set<string>();
+        for (const shortWord of uniqueWords) {
+            // So sánh không phân biệt chữ hoa/thường
+            if (shortWord.length >= 3 && longWord.length > shortWord.length && longWord.toLowerCase().includes(shortWord.toLowerCase())) {
+                foundShortWords.add(shortWord);
+            }
+        }
+        if (foundShortWords.size > 0) {
+            const capitalizedLongWord = capitalizeFirstLetter(longWord);
+            decompositionMap.set(capitalizedLongWord, [...foundShortWords].sort());
+        }
+    }
+    return decompositionMap;
+};
+// --- END: LOGIC TÁCH TỪ ---
+
+
 const exampleImages = [
   "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1",
   "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
@@ -229,10 +261,15 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false);
 
-  // --- Derived State ---
+  // --- Derived State & Memoized Data ---
   const allFavoriteCardIds = useMemo(() => {
     return new Set(playlists.flatMap(p => p.cardIds));
   }, [playlists]);
+
+  // NEW: Memoized decomposition map for performance
+  const wordDecompositionMap = useMemo(() => {
+      return processVocabularyForDecomposition(defaultVocabulary);
+  }, []); // Empty dependency array ensures this heavy logic runs only once.
 
   // --- Effects ---
   useEffect(() => {
@@ -295,6 +332,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
   const totalFlashcardsInCollection = openedImageIds.length;
   const favoriteCount = allFavoriteCardIds.size;
+
+  // NEW: Get decomposed words for the currently selected card
+  const decomposedWordsForSelectedCard = selectedCard
+      ? wordDecompositionMap.get(selectedCard.vocabulary.word)
+      : undefined;
 
   // --- Handlers ---
   const handleShowHome = useCallback(() => setActiveScreen('home'), []);
@@ -667,7 +709,14 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </>
             )}
 
-            <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleImages={exampleImages} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
+            <FlashcardDetailModal 
+              selectedCard={selectedCard} 
+              showVocabDetail={showVocabDetail} 
+              exampleImages={exampleImages} 
+              onClose={closeVocabDetail} 
+              currentVisualStyle={visualStyle} 
+              decomposedWords={decomposedWordsForSelectedCard}
+            />
 
             {isPlaylistModalOpen && selectedCardForPlaylist && (
               <AddToPlaylistModal
