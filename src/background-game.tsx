@@ -1,7 +1,3 @@
-// --- START OF FILE background-game.tsx (24).txt ---
-
-// --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI CHIỀU CAO) ---
-
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -100,6 +96,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return this.props.children;
   }
 }
+
+// <<< THAY ĐỔI 1: TẠO COMPONENT LOADING SPINNER MỚI >>>
+const LoadingSpinner = () => (
+  <div className="flex flex-col items-center justify-center text-center">
+    <div 
+        className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"
+    ></div>
+    <p className="mt-5 text-lg font-medium text-gray-300">
+      Đang đồng bộ dữ liệu...
+    </p>
+  </div>
+);
 
 
 interface ObstacleRunnerGameProps {
@@ -624,13 +632,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
 
+  // <<< THAY ĐỔI 2: SỬ DỤNG LOADING SPINNER MỚI >>>
   if (isLoading) {
-    // Component này sẽ không hiển thị màn hình loading nữa,
-    // vì `index.tsx` đã xử lý việc này. 
-    // Tuy nhiên, giữ lại một fallback đơn giản là một ý hay.
+    // Màn hình loading fallback khi chờ dữ liệu người dùng hoặc tài nguyên.
+    // `index.tsx` xử lý màn hình loading chính, nhưng đây là một dự phòng tốt.
     return (
-      <div className="flex items-center justify-center w-full h-screen bg-gray-950 text-white">
-        Đang đồng bộ dữ liệu...
+      <div className="flex items-center justify-center w-full h-[var(--app-height)] bg-gray-950">
+        <LoadingSpinner />
       </div>
     );
   }
@@ -775,4 +783,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-// --- END OF FILE background-game.tsx ---
