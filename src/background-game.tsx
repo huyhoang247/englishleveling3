@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (24).txt ---
+
 // --- START OF FILE background-game.tsx (ĐÃ SỬA LỖI CHIỀU CAO) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
@@ -18,32 +20,16 @@ import Inventory from './inventory.tsx';
 import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
-import { uiAssets, lottieAssets, allImageUrls } from './game-assets.ts';
+// LƯU Ý: allImageUrls không còn được import ở đây nữa
+import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 
 
 // ==================================================================
-// TÀI NGUYÊN TẬP TRUNG ĐÃ ĐƯỢC CHUYỂN SANG 'game-assets.ts'
+// HÀM HELPER ĐỂ TẢI TRƯỚC HÌNH ẢNH (ĐÃ XÓA VÀ CHUYỂN SANG index.tsx)
 // ==================================================================
-// const towerIconUrl = '...'; // <-- ĐÃ XÓA VÀ CHUYỂN SANG game-assets.ts
-
-
-// ==================================================================
-// HÀM HELPER ĐỂ TẢI TRƯỚC HÌNH ẢNH
-// ==================================================================
-function preloadImage(src: string): Promise<void> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = src;
-    img.onload = () => resolve();
-    img.onerror = () => {
-        console.warn(`Failed to preload image, but continuing: ${src}`);
-        resolve();
-    };
-  });
-}
 
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -121,12 +107,13 @@ interface ObstacleRunnerGameProps {
   hideNavBar: () => void;
   showNavBar: () => void;
   currentUser: User | null;
+  assetsLoaded: boolean; // <-- PROP MỚI: Nhận trạng thái tài nguyên từ cha
 }
 
 // NOTE: This component is now a static lobby screen, not an active game.
-export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser }: ObstacleRunnerGameProps) {
+export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
-  const [imagesLoaded, setImagesLoaded] = useState(false);
+  // const [imagesLoaded, setImagesLoaded] = useState(false); // <-- ĐÃ XÓA state này
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
   // States for UI and User Data
@@ -154,20 +141,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const db = getFirestore();
 
-  // Preload all image assets
-  useEffect(() => {
-    let isCancelled = false;
-    async function preloadAssets() {
-      console.log("Preloading ALL game assets...");
-      await Promise.all(allImageUrls.map(preloadImage));
-      if (!isCancelled) {
-        console.log("All game assets preloaded and cached.");
-        setImagesLoaded(true);
-      }
-    }
-    preloadAssets();
-    return () => { isCancelled = true; };
-  }, []);
+  // Preload all image assets (ĐÃ XÓA useEffect NÀY)
+  // useEffect(() => { ... }, []);
 
   // Set body overflow and app height
   useEffect(() => {
@@ -177,21 +152,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
 
-    // --- LOGIC MỚI ĐỂ FIX LỖI CHIỀU CAO ---
     const setAppHeight = () => {
-      // Gán chiều cao thực của viewport vào biến CSS '--app-height'
       document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
     };
 
-    // Chạy khi resize và khi tải lần đầu
     window.addEventListener('resize', setAppHeight);
     setAppHeight();
-    // --- KẾT THÚC LOGIC MỚI ---
 
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
-      // Dọn dẹp event listener
       window.removeEventListener('resize', setAppHeight);
     };
   }, []);
@@ -401,7 +371,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // This function is now empty as there's no gameplay to start/interact with
   };
   
-  const isLoading = isLoadingUserData || !imagesLoaded;
+  // <<-- THAY ĐỔI QUAN TRỌNG -->>
+  // Sử dụng prop `assetsLoaded` thay vì state `imagesLoaded`
+  const isLoading = isLoadingUserData || !assetsLoaded;
 
   // Animate coin number changes
   useEffect(() => {
@@ -430,20 +402,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // Renders the character, now with a static position
   const renderCharacter = () => {
-    // Combined condition to check if any overlay is open
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
-    // Condition to pause animations
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
       <div
         className="character-container absolute w-24 h-24"
         style={{
-          bottom: `${GROUND_LEVEL_PERCENT}%`, // Fixed position, no jumping
+          bottom: `${GROUND_LEVEL_PERCENT}%`,
         }}
       >
         <DotLottieReact
-          // NOTE: You can replace this with an "idle" animation if you have one
           src={lottieAssets.characterRun}
           loop
           autoplay={!isPaused}
@@ -459,7 +428,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const newState = !prev;
         if (newState) {
             hideNavBar();
-            // Close other overlays
             setIsRankOpen(false);
             setIsGoldMineOpen(false);
             setIsInventoryOpen(false);
@@ -475,7 +443,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
-  const toggleRank = () => {
+  // ... (các hàm toggle khác không thay đổi)
+    const toggleRank = () => {
      if (isLoading) return;
      setIsRankOpen(prev => {
          const newState = !prev;
@@ -656,18 +625,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   if (isLoading) {
+    // Component này sẽ không hiển thị màn hình loading nữa,
+    // vì `index.tsx` đã xử lý việc này. 
+    // Tuy nhiên, giữ lại một fallback đơn giản là một ý hay.
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-950 text-white">
-        <div className="text-lg font-semibold">Đang tải...</div>
-        <div className="w-64 bg-gray-700 rounded-full h-2.5 mt-4 overflow-hidden">
-            <div 
-                className="bg-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" 
-                style={{ width: isLoadingUserData ? (imagesLoaded ? '50%' : '10%') : '100%' }}>
-            </div>
-        </div>
-        <p className="mt-2 text-sm text-gray-400">
-            {isLoadingUserData ? "Đang tải dữ liệu người dùng..." : "Đang chuẩn bị tài nguyên..."}
-        </p>
+      <div className="flex items-center justify-center w-full h-screen bg-gray-950 text-white">
+        Đang đồng bộ dữ liệu...
       </div>
     );
   }
@@ -684,29 +647,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
       >
-        {/* 
-          <<<< THAY ĐỔI QUAN TRỌNG 1 >>>>
-          Component canvas được đặt ở đây, BÊN NGOÀI khối div bị ẩn đi.
-          Nó sẽ luôn được render và chỉ bị tạm dừng thông qua prop `isGamePaused`.
-          Component này đã có zIndex: 0 nên sẽ nằm ở lớp dưới cùng.
-        */}
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
         {/* === MAIN LOBBY SCREEN === */}
-        {/* Khối div này bây giờ chỉ chứa các yếu tố của sảnh chờ, KHÔNG chứa background nữa */}
         <div 
           style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
           className="w-full h-full"
         >
           <div
             className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`}
-            onClick={handleTap} // Click no longer does anything for gameplay
+            onClick={handleTap}
           >
-            {/* 
-              <<<< THAY ĐỔI QUAN TRỌNG 2 >>>>
-              Component DungeonCanvasBackground đã được DI CHUYỂN ra ngoài từ đây.
-            */}
-
             {renderCharacter()}
 
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
@@ -729,7 +680,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      />
                 </button>
 
-                {/* Placeholder for where the health bar used to be, to maintain layout */}
                 <div className="flex-1"></div>
 
                 <div className="flex items-center space-x-1 currency-display-container relative z-10">
@@ -754,33 +704,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             {/* Left-side Action Buttons */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
-                {
-                  icon: <img src={uiAssets.towerIcon} alt="Leo Tháp Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleTowerGame
-                },
-                {
-                  icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleShop
-                },
-                {
-                  icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleInventory
-                }
+                { icon: <img src={uiAssets.towerIcon} alt="Leo Tháp Icon" className="w-full h-full object-contain" />, onClick: toggleTowerGame },
+                { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
+                { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
               ].map((item, index) => (
                 <div key={index} className="group cursor-pointer">
-                  <div
-                      className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                      onClick={item.onClick}
-                  >
+                  <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
                       {item.icon}
                   </div>
                 </div>
@@ -790,32 +719,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             {/* Right-side Action Buttons */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
-                {
-                  icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleVocabularyChest
-                },
-                {
-                  icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true
-                },
-                {
-                  icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />,
-                  label: "",
-                  special: true,
-                  centered: true,
-                  onClick: toggleBlacksmith
-                },
+                { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
+                { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
+                { icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />, onClick: toggleBlacksmith },
               ].map((item, index) => (
                 <div key={index} className="group cursor-pointer">
-                    <div
-                        className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg"
-                        onClick={item.onClick}
-                    >
+                    <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
                         {item.icon}
                     </div>
                 </div>
@@ -825,11 +734,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <TreasureChest
               initialChests={3}
               keyCount={keyCount}
-              onKeyCollect={(n) => {
-                if (auth.currentUser) {
-                  updateKeysInFirestore(auth.currentUser!.uid, -n);
-                }
-              }}
+              onKeyCollect={(n) => { if (auth.currentUser) { updateKeysInFirestore(auth.currentUser!.uid, -n); } }}
               onCoinReward={startCoinCountAnimation}
               onGemReward={handleGemReward}
               isGamePaused={isGamePaused}
@@ -840,88 +745,32 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         {/* === OVERLAY SCREENS === */}
         <div className="absolute inset-0 w-full h-full" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng chỉ số!</div>}>
-                {auth.currentUser && (
-                    <CharacterCard
-                        onClose={toggleStatsFullscreen}
-                        coins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && (<CharacterCard onClose={toggleStatsFullscreen} coins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}/>)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isRankOpen ? 'block' : 'none' }}>
-             <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị bảng xếp hạng!</div>}>
-                 <EnhancedLeaderboard onClose={toggleRank} />
-             </ErrorBoundary>
+             <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị mỏ vàng!</div>}>
-                {auth.currentUser && (
-                    <GoldMine
-                        onClose={toggleGoldMine}
-                        currentCoins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)}
-                        currentUserId={auth.currentUser!.uid}
-                        isGamePaused={isAnyOverlayOpen}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && (<GoldMine onClose={toggleGoldMine} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} currentUserId={auth.currentUser!.uid} isGamePaused={isAnyOverlayOpen}/>)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị túi đồ!</div>}>
-                <Inventory onClose={toggleInventory} />
-            </ErrorBoundary>
+            <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Lucky Game!</div>}>
-                {auth.currentUser && (
-                    <LuckyChestGame
-                        onClose={toggleLuckyGame}
-                        currentCoins={coins}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        currentJackpotPool={jackpotPool}
-                        onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)}
-                        isStatsFullscreen={isStatsFullscreen}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} isStatsFullscreen={isStatsFullscreen}/>)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị lò rèn!</div>}>
-                <Blacksmith onClose={toggleBlacksmith} />
-            </ErrorBoundary>
+            <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
         </div>
-
-        {/* Overlay for Tower Explorer Game */}
         <div className="absolute inset-0 w-full h-full" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị màn hình Leo Tháp!</div>}>
-                {isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}
-            </ErrorBoundary>
+            <ErrorBoundary>{isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}</ErrorBoundary>
         </div>
-
-        {/* Overlay for Shop */}
         <div className="absolute inset-0 w-full h-full" style={{ display: isShopOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Cửa hàng!</div>}>
-                {isShopOpen && <Shop onClose={toggleShop} />}
-            </ErrorBoundary>
+            <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary>
         </div>
-
-        {/* Overlay for Vocabulary Chest */}
         <div className="absolute inset-0 w-full h-full" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
-            <ErrorBoundary fallback={<div className="text-center p-4 bg-red-900 text-white rounded-lg">Lỗi hiển thị Rương Từ Vựng!</div>}>
-                {isVocabularyChestOpen && (
-                    <VocabularyChestScreen 
-                        onClose={toggleVocabularyChest} 
-                        currentUserId={currentUser ? currentUser.uid : null}
-                        onCoinReward={startCoinCountAnimation}
-                        onGemReward={handleGemReward}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward}/>)}</ErrorBoundary>
         </div>
-
       </SidebarLayout>
     </div>
   );
