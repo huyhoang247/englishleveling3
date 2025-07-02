@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-// --- ĐỊNH NGHĨA CSS TRONG JAVASCRIPT (INLINE STYLES) ---
-// Thay vì dùng file CSS riêng, chúng ta định nghĩa các style object ở đây
+// --- ĐỊNH NGHĨA CSS (INLINE STYLES) ---
 const styles = {
+  // ... (giữ nguyên các style như file trước)
   container: {
     maxWidth: '700px',
     margin: '2rem auto',
@@ -48,6 +48,13 @@ const styles = {
   buttonDisabled: {
     backgroundColor: '#cccccc',
     cursor: 'not-allowed',
+  },
+  languageSelector: {
+    marginBottom: '1rem',
+    padding: '8px',
+    fontSize: '14px',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
   },
   resultsContainer: {
     marginTop: '2rem',
@@ -109,43 +116,33 @@ const styles = {
   },
 };
 
+
 // --- COMPONENT CHÍNH ---
 function App() {
-  // State để lưu trữ câu người dùng nhập vào
-  const [text, setText] = useState('');
-  
-  // State để lưu trữ các lỗi ngữ pháp tìm thấy
+  const [text, setText] = useState('I need go school'); // Đặt sẵn ví dụ sai để test
+  const [language, setLanguage] = useState('en-US'); // Thêm state cho ngôn ngữ
   const [results, setResults] = useState([]);
-  
-  // State để biết khi nào đang gọi API (để hiển thị loading)
   const [isLoading, setIsLoading] = useState(false);
-  
-  // State để lưu lỗi nếu có sự cố khi gọi API
   const [apiError, setApiError] = useState(null);
-  
-  // Biến cờ để biết liệu đã có lần kiểm tra nào được thực hiện hay chưa
   const [hasChecked, setHasChecked] = useState(false);
 
   /**
    * Hàm gọi API của LanguageTool để kiểm tra ngữ pháp
    */
   const checkGrammar = async () => {
-    if (!text.trim()) return; // Không kiểm tra nếu ô trống
+    if (!text.trim()) return;
 
-    // Reset trạng thái trước khi bắt đầu
     setIsLoading(true);
     setApiError(null);
     setResults([]);
     setHasChecked(true);
 
     try {
-      // API endpoint của LanguageTool
       const apiUrl = 'https://api.languagetoolplus.com/v2/check';
-
-      // Dữ liệu gửi đi phải ở định dạng x-www-form-urlencoded
       const data = new URLSearchParams();
       data.append('text', text);
-      data.append('language', 'en-US'); // Kiểm tra tiếng Anh (Mỹ)
+      data.append('language', language); // Sử dụng state language
+      data.append('level', 'picky');     // <<< SỬA ĐỔI QUAN TRỌNG NHẤT LÀ ĐÂY!
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -160,22 +157,24 @@ function App() {
       }
 
       const responseData = await response.json();
-      setResults(responseData.matches); // 'matches' là mảng chứa các lỗi
+      setResults(responseData.matches);
 
     } catch (err) {
       setApiError('Đã có lỗi xảy ra khi kết nối tới máy chủ. Vui lòng thử lại sau.');
       console.error(err);
     } finally {
-      setIsLoading(false); // Dừng loading dù thành công hay thất bại
+      setIsLoading(false);
     }
   };
   
-  /**
-   * Hàm xử lý khi người dùng bấm Enter để check
-   */
+  // Tự động check khi component được tải lần đầu (để thấy ví dụ)
+  useEffect(() => {
+    checkGrammar();
+  }, []); // Chỉ chạy 1 lần
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // Ngăn không cho xuống dòng
+      e.preventDefault();
       checkGrammar();
     }
   };
@@ -183,13 +182,24 @@ function App() {
   return (
     <div style={styles.container}>
       <h1 style={styles.h1}>Kiểm tra Ngữ pháp & Chính tả Tiếng Anh</h1>
-      <p style={styles.p}>Nhập một câu tiếng Anh và bấm "Kiểm tra" (hoặc nhấn Enter) để xem gợi ý sửa lỗi.</p>
+      <p style={styles.p}>Công cụ đã được nâng cấp để phát hiện lỗi tốt hơn. Hãy thử lại câu của bạn!</p>
       
+      <select 
+        value={language} 
+        onChange={(e) => setLanguage(e.target.value)} 
+        style={styles.languageSelector}
+      >
+        <option value="en-US">Tiếng Anh (Mỹ)</option>
+        <option value="en-GB">Tiếng Anh (Anh)</option>
+        <option value="en-CA">Tiếng Anh (Canada)</option>
+        <option value="en-AU">Tiếng Anh (Úc)</option>
+      </select>
+
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="Ví dụ: He dont know nothing..."
+        placeholder="Ví dụ: She love apples..."
         style={styles.textarea}
         disabled={isLoading}
       />
@@ -203,10 +213,8 @@ function App() {
       </button>
 
       <div style={styles.resultsContainer}>
-        {/* Hiển thị lỗi API nếu có */}
         {apiError && <div style={styles.errorMessage}>{apiError}</div>}
 
-        {/* Hiển thị kết quả */}
         {results.length > 0 && (
           <div>
             <h3 style={styles.resultsListH3}>Gợi ý:</h3>
@@ -233,7 +241,6 @@ function App() {
           </div>
         )}
 
-        {/* Nếu không có lỗi và đã kiểm tra xong */}
         {hasChecked && !isLoading && results.length === 0 && !apiError && (
             <div style={styles.noErrors}>
                 ✅ Tuyệt vời! Không tìm thấy lỗi ngữ pháp rõ ràng.
