@@ -1,5 +1,3 @@
-// --- START OF FILE index.tsx (17).txt ---
-
 // src/index.tsx
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -81,17 +79,33 @@ const App: React.FC = () => {
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [assetsLoaded, setAssetsLoaded] = useState(false); // <-- STATE MỚI: Theo dõi tải tài nguyên
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0); // <-- STATE MỚI: Theo dõi tiến trình tải
 
   // Effect để tải trước tất cả tài nguyên game, CHỈ KHI ĐÃ ĐĂNG NHẬP
   useEffect(() => {
     let isCancelled = false;
     async function preloadAssets() {
       console.log("Preloading ALL game assets from index.tsx (triggered by login)...");
-      await Promise.all(allImageUrls.map(preloadImage));
+      const totalAssets = allImageUrls.length;
+
+      // <-- Bắt đầu tải tài nguyên bằng vòng lặp để cập nhật tiến trình
+      for (let i = 0; i < totalAssets; i++) {
+        if (isCancelled) return; // Dừng lại nếu component bị unmount
+
+        await preloadImage(allImageUrls[i]); // Tải từng ảnh một
+
+        // <-- Tính toán và cập nhật tiến trình
+        const progress = Math.round(((i + 1) / totalAssets) * 100);
+        setLoadingProgress(progress);
+      }
+      
       if (!isCancelled) {
         console.log("All game assets preloaded and cached.");
-        setAssetsLoaded(true); // Đánh dấu đã tải xong
+        // <-- Đặt một khoảng chờ ngắn để người dùng thấy 100% trước khi chuyển màn hình
+        setTimeout(() => {
+            if (!isCancelled) setAssetsLoaded(true);
+        }, 300);
       }
     }
     // Bắt đầu tải tài nguyên chỉ khi có người dùng và tài nguyên chưa được tải.
@@ -128,7 +142,7 @@ const App: React.FC = () => {
 
   // Giai đoạn 1: Chờ kiểm tra trạng thái đăng nhập ban đầu
   if (loadingAuth) {
-    const progress = 10; // Giả lập một chút tiến trình
+    const progress = 10; // Giả lập một chút tiến trình cho việc xác thực
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
@@ -176,7 +190,7 @@ const App: React.FC = () => {
 
   // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
   if (!assetsLoaded) {
-    const progress = 50; // Giả lập tiến trình đang ở giữa chừng
+    // <-- KHÔNG còn gán cứng `const progress = 50` nữa
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
@@ -193,7 +207,7 @@ const App: React.FC = () => {
         {/* --- Loading Status Text --- */}
         <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
             style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
-            Đang Tải
+            ĐANG TẢI
         </h1>
         <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
             Chuẩn bị tài nguyên...
@@ -206,16 +220,17 @@ const App: React.FC = () => {
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
               style={{
-                width: `${progress}%`,
+                width: `${loadingProgress}%`, // <-- SỬ DỤNG STATE Ở ĐÂY
                 boxShadow: `0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 200, 255, 0.3)`
               }}
             >
-                {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
+                {/* <-- SỬ DỤNG STATE Ở ĐÂY */}
+                {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
             </div>
           </div>
           <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
                style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
-             {Math.round(progress)}%
+             {Math.round(loadingProgress)}%  {/* <-- VÀ Ở ĐÂY */}
           </div>
         </div>
       </div>
