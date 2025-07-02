@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import TreasureChest from './treasure.tsx';
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth } from './firebase.js';
@@ -16,17 +15,10 @@ import Inventory from './inventory.tsx';
 import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
-// LƯU Ý: allImageUrls không còn được import ở đây nữa
 import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
-
-
-// ==================================================================
-// HÀM HELPER ĐỂ TẢI TRƯỚC HÌNH ẢNH (ĐÃ XÓA VÀ CHUYỂN SANG index.tsx)
-// ==================================================================
-
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -48,14 +40,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-const KeyIcon = () => (
-  <img
-    src={uiAssets.keyIcon}
-    alt="Key Icon"
-    className="w-4 h-4 object-contain"
-  />
-);
-
+// const KeyIcon = () => ( ... ); // <<-- XOÁ: Icon không còn được sử dụng
 
 // --- NEW: Error Boundary Component ---
 interface ErrorBoundaryProps {
@@ -97,32 +82,27 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-// <<< COMPONENT LOADING SPINNER MỚI >>>
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center text-center">
     <div 
         className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"
     ></div>
-    {/* <<< THAY ĐỔI Ở ĐÂY >>> */}
     <p className="mt-5 text-lg font-medium text-gray-300">
       Loading...
     </p>
   </div>
 );
 
-
 interface ObstacleRunnerGameProps {
   className?: string;
   hideNavBar: () => void;
   showNavBar: () => void;
   currentUser: User | null;
-  assetsLoaded: boolean; // <-- PROP MỚI: Nhận trạng thái tài nguyên từ cha
+  assetsLoaded: boolean;
 }
 
-// NOTE: This component is now a static lobby screen, not an active game.
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
-  // const [imagesLoaded, setImagesLoaded] = useState(false); // <-- ĐÃ XÓA state này
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
   // States for UI and User Data
@@ -130,7 +110,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(42);
-  const [keyCount, setKeyCount] = useState(0);
+  // const [keyCount, setKeyCount] = useState(0); // <<-- XOÁ
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -145,13 +125,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
 
   const GROUND_LEVEL_PERCENT = 45;
-
   const sidebarToggleRef = useRef<(() => void) | null>(null);
-
   const db = getFirestore();
-
-  // Preload all image assets (ĐÃ XÓA useEffect NÀY)
-  // useEffect(() => { ... }, []);
 
   // Set body overflow and app height
   useEffect(() => {
@@ -188,19 +163,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0);
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
-        setKeyCount(userData.keys || 0);
+        // setKeyCount(userData.keys || 0); // <<-- XOÁ
       } else {
         console.log("No user document found, creating default.");
+        // <<-- XOÁ `keys: 0` từ document mặc định
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
-          keys: 0,
           createdAt: new Date(),
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setKeyCount(0);
+        // setKeyCount(0); // <<-- XOÁ
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -239,8 +214,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
+           // <<-- XOÁ `keys: keyCount` từ transaction
           transaction.set(userDocRef, {
-            coins: coins, gems: gems, keys: keyCount, createdAt: new Date()
+            coins: coins, gems: gems, createdAt: new Date()
           });
         } else {
           const currentCoins = userDoc.data().coins || 0;
@@ -276,30 +252,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 50);
   };
 
-  // Update keys in Firestore
-  const updateKeysInFirestore = async (userId: string, amount: number) => {
-    if (!userId) return;
-    const userDocRef = doc(db, 'users', userId);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-           transaction.set(userDocRef, {
-            coins: coins, gems: gems, keys: keyCount, createdAt: new Date()
-          });
-        } else {
-          const currentKeys = userDoc.data().keys || 0;
-          const newKeys = currentKeys + amount;
-          const finalKeys = Math.max(0, newKeys);
-          transaction.update(userDocRef, { keys: finalKeys });
-          setKeyCount(finalKeys);
-        }
-      });
-    } catch (error) {
-      console.error("Firestore Transaction failed for keys: ", error);
-    }
-  };
-  
+  // const updateKeysInFirestore = async (...) => { ... }; // <<-- XOÁ toàn bộ hàm
+
   // Update jackpot pool in Firestore
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -326,12 +280,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setGems(prev => prev + amount);
   };
 
-  const handleKeyCollect = (amount: number) => {
-      setKeyCount(prev => Math.max(0, prev + amount));
-      if (auth.currentUser) {
-        updateKeysInFirestore(auth.currentUser.uid, amount);
-      }
-  };
+  // const handleKeyCollect = (amount: number) => { ... }; // <<-- XOÁ toàn bộ hàm
   
   // Handle auth state changes
   useEffect(() => {
@@ -354,7 +303,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setKeyCount(0);
+        // setKeyCount(0); // <<-- XOÁ
         setJackpotPool(0);
         setIsLoadingUserData(false);
       }
@@ -375,13 +324,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // The main screen is no longer interactive for gameplay
   const handleTap = () => {
     // This function is now empty as there's no gameplay to start/interact with
   };
   
-  // <<-- THAY ĐỔI QUAN TRỌNG -->>
-  // Sử dụng prop `assetsLoaded` thay vì state `imagesLoaded`
   const isLoading = isLoadingUserData || !assetsLoaded;
 
   // Animate coin number changes
@@ -452,191 +398,181 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
-  // ... (các hàm toggle khác không thay đổi)
-    const toggleRank = () => {
-     if (isLoading) return;
-     setIsRankOpen(prev => {
-         const newState = !prev;
-         if (newState) {
-             hideNavBar();
-             // Close other overlays
-             setIsStatsFullscreen(false);
-             setIsGoldMineOpen(false);
-             setIsInventoryOpen(false);
-             setIsLuckyGameOpen(false);
-             setIsBlacksmithOpen(false);
-             setIsTowerGameOpen(false);
-             setIsShopOpen(false);
-             setIsVocabularyChestOpen(false);
-         } else {
-             showNavBar();
-         }
-         return newState;
-         });
-  };
+  // ... (các hàm toggle khác không thay đổi, giữ nguyên)
+  const toggleRank = () => {
+   if (isLoading) return;
+   setIsRankOpen(prev => {
+       const newState = !prev;
+       if (newState) {
+           hideNavBar();
+           setIsStatsFullscreen(false);
+           setIsGoldMineOpen(false);
+           setIsInventoryOpen(false);
+           setIsLuckyGameOpen(false);
+           setIsBlacksmithOpen(false);
+           setIsTowerGameOpen(false);
+           setIsShopOpen(false);
+           setIsVocabularyChestOpen(false);
+       } else {
+           showNavBar();
+       }
+       return newState;
+       });
+};
 
-  const toggleGoldMine = () => {
-    if (isLoading) return;
-    setIsGoldMineOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsTowerGameOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleGoldMine = () => {
+  if (isLoading) return;
+  setIsGoldMineOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsInventoryOpen(false);
+      setIsLuckyGameOpen(false);
+      setIsBlacksmithOpen(false);
+      setIsTowerGameOpen(false);
+      setIsShopOpen(false);
+      setIsVocabularyChestOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
 
-  const toggleInventory = () => {
-    if (isLoading) return;
-    setIsInventoryOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsTowerGameOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleInventory = () => {
+  if (isLoading) return;
+  setIsInventoryOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsGoldMineOpen(false);
+      setIsLuckyGameOpen(false);
+      setIsBlacksmithOpen(false);
+      setIsTowerGameOpen(false);
+      setIsShopOpen(false);
+      setIsVocabularyChestOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
 
-  const toggleLuckyGame = () => {
-    if (isLoading) return;
-    setIsLuckyGameOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsTowerGameOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleLuckyGame = () => {
+  if (isLoading) return;
+  setIsLuckyGameOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsGoldMineOpen(false);
+      setIsInventoryOpen(false);
+      setIsBlacksmithOpen(false);
+      setIsTowerGameOpen(false);
+      setIsShopOpen(false);
+      setIsVocabularyChestOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
 
-  const toggleBlacksmith = () => {
-    if (isLoading) return;
-    setIsBlacksmithOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsTowerGameOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleBlacksmith = () => {
+  if (isLoading) return;
+  setIsBlacksmithOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsGoldMineOpen(false);
+      setIsInventoryOpen(false);
+      setIsLuckyGameOpen(false);
+      setIsTowerGameOpen(false);
+      setIsShopOpen(false);
+      setIsVocabularyChestOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
 
-  const toggleTowerGame = () => {
-    if (isLoading) return;
-    setIsTowerGameOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleTowerGame = () => {
+  if (isLoading) return;
+  setIsTowerGameOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsGoldMineOpen(false);
+      setIsInventoryOpen(false);
+      setIsLuckyGameOpen(false);
+      setIsBlacksmithOpen(false);
+      setIsShopOpen(false);
+      setIsVocabularyChestOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
 
-  const toggleShop = () => {
-    if (isLoading) return;
-    setIsShopOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsTowerGameOpen(false);
-        setIsVocabularyChestOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleShop = () => {
+  if (isLoading) return;
+  setIsShopOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsGoldMineOpen(false);
+      setIsInventoryOpen(false);
+      setIsLuckyGameOpen(false);
+      setIsBlacksmithOpen(false);
+      setIsTowerGameOpen(false);
+      setIsVocabularyChestOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
 
-  const toggleVocabularyChest = () => {
-    if (isLoading) return;
-    setIsVocabularyChestOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        // Close other overlays
-        setIsStatsFullscreen(false);
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsTowerGameOpen(false);
-        setIsShopOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+const toggleVocabularyChest = () => {
+  if (isLoading) return;
+  setIsVocabularyChestOpen(prev => {
+    const newState = !prev;
+    if (newState) {
+      hideNavBar();
+      setIsStatsFullscreen(false);
+      setIsRankOpen(false);
+      setIsGoldMineOpen(false);
+      setIsInventoryOpen(false);
+      setIsLuckyGameOpen(false);
+      setIsBlacksmithOpen(false);
+      setIsTowerGameOpen(false);
+      setIsShopOpen(false);
+    } else {
+      showNavBar();
+    }
+    return newState;
+  });
+};
+
 
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
   };
 
-  // <<< SỬ DỤNG LOADING SPINNER MỚI >>>
   if (isLoading) {
-    // Màn hình loading fallback khi chờ dữ liệu người dùng hoặc tài nguyên.
-    // `index.tsx` xử lý màn hình loading chính, nhưng đây là một dự phòng tốt.
     return (
       <div className="flex items-center justify-center w-full h-[var(--app-height)] bg-gray-950">
         <LoadingSpinner />
@@ -740,15 +676,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ))}
             </div>
 
-            <TreasureChest
-              initialChests={3}
-              keyCount={keyCount}
-              onKeyCollect={(n) => { if (auth.currentUser) { updateKeysInFirestore(auth.currentUser!.uid, -n); } }}
-              onCoinReward={startCoinCountAnimation}
-              onGemReward={handleGemReward}
-              isGamePaused={isGamePaused}
-              currentUserId={currentUser ? currentUser.uid : null}
-            />
+            {/* <TreasureChest ... /> // <<-- XOÁ */}
+            
           </div>
         </div>
 
