@@ -1,3 +1,5 @@
+// topic.tsx (version đã được tối ưu hóa)
+
 export interface SubTopic {
   title: string;
   words: string[];
@@ -32,7 +34,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Fillers & Communicative Words (Từ đệm & Từ giao tiếp)",
-        words: ["yeah", "well", "like", "you know", "I mean", "okay", "right", "anyway", "hello", "please", "thank you", "sorry", "congratulations"]
+        words: ["yeah", "well", "like", "you know", "i mean", "okay", "right", "anyway", "hello", "please", "thank you", "sorry", "congratulations"]
       }
     ]
   },
@@ -46,7 +48,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Professions & Roles (Nghề nghiệp & Vai trò)",
-        words: ["doctor", "lawyer", "engineer", "manager", "artist", "scientist", "president", "CEO", "employee", "leader"]
+        words: ["doctor", "lawyer", "engineer", "manager", "artist", "scientist", "president", "ceo", "employee", "leader"]
       },
       {
         title: "Government & Politics (Chính phủ & Chính trị)",
@@ -58,7 +60,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Society & Culture (Xã hội & Văn hóa)",
-        words: ["society", "community", "culture", "history", "tradition", "art", "religion", "race", "gender", "diversity", "social", "public"]
+        words: ["society", "community", "culture", "history", "tradition", "religion", "race", "gender", "diversity", "language", "social", "public"]
       }
     ]
   },
@@ -68,15 +70,15 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Education (Giáo dục)",
-        words: ["school", "college", "university", "student", "teacher", "class", "course", "education", "learning", "study", "research", "degree", "academic", "campus", "thesis"]
+        words: ["school", "college", "university", "student", "teacher", "class", "course", "education", "learning", "study", "degree", "academic", "campus", "thesis"]
       },
       {
         title: "Scientific Concepts (Khái niệm khoa học)",
-        words: ["science", "theory", "evidence", "experiment", "data", "analysis", "discovery", "model", "fact", "method"]
+        words: ["science", "theory", "evidence", "experiment", "analysis", "discovery", "model", "fact", "method", "research"]
       },
       {
         title: "Mathematics & Computing (Toán học & Tin học)",
-        words: ["math", "number", "equation", "algorithm", "matrix"]
+        words: ["math", "equation", "matrix"]
       },
       {
         title: "Physics & Space (Vật lý & Vũ trụ)",
@@ -84,7 +86,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Biology & Chemistry (Sinh học & Hóa học)",
-        words: ["biology", "cell", "DNA", "gene", "protein", "organism", "species", "evolution", "chemical", "molecule", "acid", "oxygen", "carbon", "bacteria"]
+        words: ["biology", "cell", "dna", "gene", "protein", "organism", "species", "evolution", "chemical", "molecule", "acid", "oxygen", "carbon", "bacteria"]
       }
     ]
   },
@@ -94,7 +96,7 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Devices & Machines (Thiết bị & Máy móc)",
-        words: ["technology", "device", "machine", "engine", "AI", "robot", "drone", "camera", "phone", "screen"]
+        words: ["technology", "device", "machine", "engine", "ai", "robot", "drone", "camera", "phone", "screen"]
       },
       {
         title: "Software & Hardware (Phần mềm & Phần cứng)",
@@ -120,7 +122,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Work & Management (Công việc & Quản lý)",
-        words: ["job", "work", "career", "management", "project", "team", "meeting", "office", "goal", "strategy", "organization", "customer"]
+        words: ["job", "career", "management", "project", "team", "meeting", "office", "goal", "strategy", "organization", "customer"]
       }
     ]
   },
@@ -138,7 +140,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Medical Practice (Thực hành y khoa)",
-        words: ["medicine", "doctor", "hospital", "treatment", "drug", "vaccine", "therapy", "clinical", "medical", "surgery", "patient"]
+        words: ["medicine", "hospital", "treatment", "drug", "vaccine", "therapy", "clinical", "medical", "surgery", "patient"]
       }
     ]
   },
@@ -148,7 +150,7 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Fauna (Động vật)",
-        words: ["animal", "dog", "cat", "fish", "bird", "horse", "species", "wildlife"]
+        words: ["animal", "dog", "cat", "fish", "bird", "horse", "wildlife"]
       },
       {
         title: "Flora (Thực vật)",
@@ -170,11 +172,11 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Media (Truyền thông)",
-        words: ["music", "song", "audio", "film", "movie", "video", "sound", "camera", "theater", "entertainment"]
+        words: ["music", "song", "audio", "film", "movie", "video", "sound", "theater", "entertainment"]
       },
       {
         title: "Literature & Games (Văn học & Trò chơi)",
-        words: ["book", "story", "word", "language", "write", "read", "author", "page", "article", "literature", "game", "sport", "team", "player", "win", "score", "play"]
+        words: ["book", "story", "word", "write", "read", "author", "page", "article", "literature", "game", "sport", "player", "win", "score"]
       }
     ]
   },
@@ -232,7 +234,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Philosophical Concepts (Khái niệm triết học)",
-        words: ["truth", "life", "death", "time", "space", "power", "reason", "sense", "purpose", "problem", "solution", "freedom", "value", "issue"]
+        words: ["truth", "life", "death", "power", "reason", "sense", "purpose", "problem", "solution", "freedom", "value", "issue"]
       }
     ]
   },
@@ -242,7 +244,7 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Time Terms (Thuật ngữ thời gian)",
-        words: ["time", "year", "month", "week", "day", "hour", "minute", "second", "today", "yesterday", "tomorrow", "morning", "night", "January", "Monday"]
+        words: ["time", "year", "month", "week", "day", "hour", "minute", "second", "today", "yesterday", "tomorrow", "morning", "night", "january", "monday"]
       },
       {
         title: "Numbers & Quantities (Số & Số lượng)",
