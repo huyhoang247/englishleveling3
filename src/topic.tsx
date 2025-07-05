@@ -1,141 +1,267 @@
-1. Từ vựng Cốt lõi & Giao tiếp Hàng ngày (Core & Daily Communication)
-
-Đây là nhóm quan trọng nhất, chứa các từ có tần suất sử dụng cao nhất, từ nối, giới từ, và các từ đệm trong giao tiếp.
-
-Đại từ, Mạo từ, Giới từ: i, you, he, she, it, we, they, the, a, an, in, on, at, for, with, about, to, from, of.
-
-Liên từ & Trạng từ nối: and, but, so, because, however, therefore, although, if, or, when, then.
-
-Động từ Khiếm khuyết & Trợ động từ: can, could, will, would, may, must, should, is, are, was, were, do, did, have, has, had.
-
-Từ chỉ Mức độ & Tần suất: very, really, so, just, only, always, never, often, sometimes, basically, literally, absolutely.
-
-Từ đệm & Giao tiếp: yeah, well, like, you know, I mean, okay, right, anyway, hello, please, thank you, sorry, congratulations.
-
-2. Con người & Xã hội (People & Society)
-
-Nhóm này bao gồm các từ liên quan đến con người, mối quan hệ, cấu trúc xã hội, chính trị, và pháp luật.
-
-Gia đình & Mối quan hệ: family, friend, mother, father, son, daughter, husband, wife, relationship, love, partner.
-
-Nghề nghiệp & Vai trò: teacher, student, doctor, lawyer, engineer, manager, artist, scientist, president, CEO, employee, leader.
-
-Chính trị & Chính phủ: government, politics, democracy, election, senate, congress, policy, federal, political, campaign, vote.
-
-Pháp luật & Tội phạm: law, justice, court, police, crime, prison, legal, authority, rule, trial, violence.
-
-Xã hội & Văn hóa: society, community, culture, history, tradition, art, religion, race, gender, diversity, social, public.
-
-3. Khoa học & Học thuật (Science & Academia)
-
-Đây là một nhóm rất lớn trong danh sách của bạn, chứa nhiều thuật ngữ chuyên ngành.
-
-Giáo dục & Trường học: school, college, university, student, teacher, class, course, education, learning, study, research, degree, academic, campus, thesis.
-
-Khoa học Tổng quát: science, theory, evidence, experiment, data, analysis, research, discovery, model, fact, method.
-
-Toán học & Vật lý: math, number, equation, algorithm, matrix, physics, energy, force, quantum, gravity, atom, particle, light, speed, wave.
-
-Sinh học & Hóa học: biology, cell, DNA, gene, protein, organism, species, evolution, chemical, molecule, acid, oxygen, carbon, bacteria.
-
-Thiên văn & Vũ trụ: space, star, planet, moon, sun, universe, galaxy, earth, orbit, rocket, telescope.
-
-4. Công nghệ & Máy tính (Technology & Computing)
-
-Một nhóm từ vựng hiện đại và cực kỳ phổ biến.
-
-Công nghệ & Thiết bị: technology, device, machine, engine, AI, robot, drone, camera, phone, screen.
-
-Máy tính & Phần mềm: computer, software, hardware, app, program, code, database, server, network, internet, website, digital, online.
-
-Thuật ngữ Kỹ thuật: data, algorithm, interface, system, function, process, platform, cloud, virtual, cyber, programming.
-
-5. Kinh doanh & Tài chính (Business & Finance)
-
-Các từ liên quan đến kinh tế, thương mại, và tiền bạc.
-
-Kinh tế & Thị trường: economy, market, business, company, industry, growth, trade, product, service, consumer.
-
-Tài chính & Đầu tư: money, finance, financial, budget, cost, price, tax, investment, stock, credit, bank, dollar, cash.
-
-Công việc & Quản lý: job, work, career, management, project, team, meeting, office, goal, strategy, organization, customer.
-
-6. Sức khỏe & Y tế (Health & Medicine)
-
-Nhóm từ vựng quan trọng về cơ thể và sức khỏe.
-
-Cơ thể người: body, head, face, eye, hand, heart, brain, blood, skin, bone, muscle.
-
-Sức khỏe & Bệnh tật: health, healthy, disease, cancer, virus, pain, symptom, mental, physical, illness, pandemic.
-
-Y tế & Điều trị: medicine, doctor, hospital, treatment, drug, vaccine, therapy, clinical, medical, surgery, patient.
-
-7. Thiên nhiên & Môi trường (Nature & Environment)
-
-Các từ mô tả thế giới tự nhiên xung quanh chúng ta.
-
-Động vật: animal, dog, cat, fish, bird, horse, species, wild.
-
-Thực vật & Nông nghiệp: plant, tree, flower, garden, forest, leaf, food, farm, agriculture, crop.
-
-Địa lý & Phong cảnh: world, country, city, land, sea, ocean, river, mountain, nature, environment, water, air.
-
-Thời tiết & Khí hậu: weather, climate, sun, wind, rain, snow, temperature, heat, cold, storm.
-
-8. Nghệ thuật & Giải trí (Arts & Entertainment)
-
-Lĩnh vực sáng tạo và thư giãn.
-
-Nghệ thuật & Thiết kế: art, design, image, picture, photo, color, style, creative, painting, drawing.
-
-Âm nhạc & Phim ảnh: music, song, audio, film, movie, video, sound, camera, theater, entertainment.
-
-Văn học & Viết lách: book, story, word, language, write, read, author, page, article, literature.
-
-Thể thao & Trò chơi: game, sport, team, player, win, score, play, football, basketball.
-
-9. Đồ vật, Nhà cửa & Đời sống (Objects, Home & Life)
-
-Các từ về vật dụng, thức ăn, và các khía cạnh đời thường.
-
-Đồ ăn & Thức uống: food, water, eat, drink, apple, bread, coffee, sugar, meat, chicken, cheese, pizza.
-
-Đồ vật & Dụng cụ: thing, object, tool, box, key, table, chair, door, window, car, phone, computer.
-
-Nhà cửa: home, house, room, kitchen, street, city, town.
-
-Quần áo: clothes, wear, shirt, hat, shoe.
-
-10. Hành động, Trạng thái & Tính chất (Actions, States & Qualities)
-
-Nhóm này chứa các động từ và tính từ phổ biến không thuộc các nhóm chuyên ngành trên.
-
-Động từ Hành động: go, come, get, give, make, take, see, look, run, walk, talk, say, ask, help, try, work, play.
-
-Tính từ Mô tả: good, bad, big, small, new, old, high, low, long, short, easy, hard, beautiful, happy, sad, important, different, same.
-
-Trạng thái & Quá trình: be, become, seem, feel, change, continue, start, stop, end, live, die, happen.
-
-11. Khái niệm Trừu tượng & Tư duy (Abstract Concepts & Thinking)
-
-Các từ diễn tả ý tưởng, cảm xúc, và quá trình nhận thức.
-
-Tư duy & Nhận thức: idea, thought, mind, think, know, believe, understand, remember, forget, learn, information, knowledge.
-
-Cảm xúc & Cảm giác: love, hate, fear, hope, feeling, emotion, happy, sad, angry, excited, proud.
-
-Khái niệm & Nguyên tắc: truth, life, death, time, space, power, reason, sense, purpose, problem, solution, freedom, value, issue.
-
-12. Thời gian & Số đếm (Time & Numbers)
-
-Thời gian: time, year, month, week, day, hour, minute, second, today, yesterday, tomorrow, morning, night, January, Monday.
-
-Số đếm & Lượng từ: one, two, three...ten, hundred, thousand, million, number, amount, few, many, some, all.
-
-13. Từ lóng, Tiếng nói Thân mật & Từ Chửi thề (Slang, Informal & Profanity)
-
-Danh sách của bạn cũng chứa một số từ thuộc nhóm này, nên cần phân loại riêng để biết ngữ cảnh sử dụng.
-
-Thân mật/Rút gọn: wanna, gonna, kinda, dude, guy, kid, stuff, cool, awesome, y'all.
-
-Chửi thề/Thô tục (Lưu ý khi sử dụng): fuck, shit (không có trong list nhưng crap có), ass, damn.
+export interface SubTopic {
+  title: string;
+  words: string[];
+}
+
+export interface TopicGroup {
+  id: number;
+  title: string;
+  subtopics: SubTopic[];
+}
+
+export const topicData: TopicGroup[] = [
+  {
+    id: 1,
+    title: "Core & Daily Communication (Cơ bản & Giao tiếp hàng ngày)",
+    subtopics: [
+      {
+        title: "Pronouns, Articles & Prepositions (Đại từ, Mạo từ & Giới từ)",
+        words: ["i", "you", "he", "she", "it", "we", "they", "the", "a", "an", "in", "on", "at", "for", "with", "about", "to", "from", "of"]
+      },
+      {
+        title: "Conjunctions & Discourse Adverbs (Liên từ & Trạng từ nối ý)",
+        words: ["and", "but", "so", "because", "however", "therefore", "although", "if", "or", "when", "then"]
+      },
+      {
+        title: "Modal & Auxiliary Verbs (Động từ khuyết thiếu & phụ trợ)",
+        words: ["can", "could", "will", "would", "may", "must", "should", "is", "are", "was", "were", "do", "did", "have", "has", "had"]
+      },
+      {
+        title: "Degree & Frequency (Mức độ & Tần suất)",
+        words: ["very", "really", "so", "just", "only", "always", "never", "often", "sometimes", "basically", "literally", "absolutely"]
+      },
+      {
+        title: "Fillers & Communicative Words (Từ đệm & Từ giao tiếp)",
+        words: ["yeah", "well", "like", "you know", "I mean", "okay", "right", "anyway", "hello", "please", "thank you", "sorry", "congratulations"]
+      }
+    ]
+  },
+  {
+    id: 2,
+    title: "People & Society (Con người & Xã hội)",
+    subtopics: [
+      {
+        title: "Family & Relationships (Gia đình & Mối quan hệ)",
+        words: ["family", "friend", "mother", "father", "son", "daughter", "husband", "wife", "partner", "relationship"]
+      },
+      {
+        title: "Professions & Roles (Nghề nghiệp & Vai trò)",
+        words: ["teacher", "student", "doctor", "lawyer", "engineer", "manager", "artist", "scientist", "president", "CEO", "employee", "leader"]
+      },
+      {
+        title: "Government & Politics (Chính phủ & Chính trị)",
+        words: ["government", "politics", "democracy", "election", "senate", "congress", "campaign", "vote", "policy", "federal", "political"]
+      },
+      {
+        title: "Law & Justice (Luật pháp & Công lý)",
+        words: ["law", "justice", "court", "police", "crime", "prison", "legal", "authority", "rule", "trial", "violence"]
+      },
+      {
+        title: "Society & Culture (Xã hội & Văn hóa)",
+        words: ["society", "community", "culture", "history", "tradition", "art", "religion", "race", "gender", "diversity", "social", "public"]
+      }
+    ]
+  },
+  {
+    id: 3,
+    title: "Science & Academia (Khoa học & Học thuật)",
+    subtopics: [
+      {
+        title: "Education (Giáo dục)",
+        words: ["school", "college", "university", "student", "teacher", "class", "course", "education", "learning", "study", "research", "degree", "academic", "campus", "thesis"]
+      },
+      {
+        title: "Scientific Concepts (Khái niệm khoa học)",
+        words: ["science", "theory", "evidence", "experiment", "data", "analysis", "discovery", "model", "fact", "method"]
+      },
+      {
+        title: "Mathematics & Computing (Toán học & Tin học)",
+        words: ["math", "number", "equation", "algorithm", "matrix"]
+      },
+      {
+        title: "Physics & Space (Vật lý & Vũ trụ)",
+        words: ["physics", "energy", "force", "quantum", "gravity", "atom", "particle", "light", "speed", "wave", "space", "star", "planet", "universe", "galaxy", "earth", "orbit", "rocket", "telescope"]
+      },
+      {
+        title: "Biology & Chemistry (Sinh học & Hóa học)",
+        words: ["biology", "cell", "DNA", "gene", "protein", "organism", "species", "evolution", "chemical", "molecule", "acid", "oxygen", "carbon", "bacteria"]
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: "Technology & Computing (Công nghệ & Tin học)",
+    subtopics: [
+      {
+        title: "Devices & Machines (Thiết bị & Máy móc)",
+        words: ["technology", "device", "machine", "engine", "AI", "robot", "drone", "camera", "phone", "screen"]
+      },
+      {
+        title: "Software & Hardware (Phần mềm & Phần cứng)",
+        words: ["computer", "software", "hardware", "app", "program", "code", "database", "server", "network", "internet", "website", "digital", "online"]
+      },
+      {
+        title: "Systems & Processes (Hệ thống & Quy trình)",
+        words: ["data", "algorithm", "interface", "system", "function", "process", "platform", "cloud", "virtual", "cyber", "programming"]
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: "Business & Finance (Kinh doanh & Tài chính)",
+    subtopics: [
+      {
+        title: "Economy & Markets (Kinh tế & Thị trường)",
+        words: ["economy", "market", "business", "company", "industry", "growth", "trade", "consumer"]
+      },
+      {
+        title: "Financial Terms (Thuật ngữ tài chính)",
+        words: ["money", "finance", "budget", "cost", "price", "tax", "investment", "stock", "credit", "bank", "dollar", "cash"]
+      },
+      {
+        title: "Work & Management (Công việc & Quản lý)",
+        words: ["job", "work", "career", "management", "project", "team", "meeting", "office", "goal", "strategy", "organization", "customer"]
+      }
+    ]
+  },
+  {
+    id: 6,
+    title: "Health & Medicine (Sức khỏe & Y học)",
+    subtopics: [
+      {
+        title: "Anatomy (Giải phẫu)",
+        words: ["body", "head", "face", "eye", "hand", "heart", "brain", "blood", "skin", "bone", "muscle"]
+      },
+      {
+        title: "Health & Disease (Sức khỏe & Bệnh lý)",
+        words: ["health", "healthy", "disease", "cancer", "virus", "pain", "symptom", "mental", "physical", "illness", "pandemic"]
+      },
+      {
+        title: "Medical Practice (Thực hành y khoa)",
+        words: ["medicine", "doctor", "hospital", "treatment", "drug", "vaccine", "therapy", "clinical", "medical", "surgery", "patient"]
+      }
+    ]
+  },
+  {
+    id: 7,
+    title: "Nature & Environment (Thiên nhiên & Môi trường)",
+    subtopics: [
+      {
+        title: "Fauna (Động vật)",
+        words: ["animal", "dog", "cat", "fish", "bird", "horse", "species", "wild"]
+      },
+      {
+        title: "Flora (Thực vật)",
+        words: ["plant", "tree", "flower", "garden", "forest", "leaf", "food", "farm", "agriculture", "crop"]
+      },
+      {
+        title: "Geography & Climate (Địa lý & Khí hậu)",
+        words: ["world", "country", "city", "land", "sea", "ocean", "river", "mountain", "nature", "environment", "water", "air", "weather", "climate", "sun", "wind", "rain", "snow", "temperature", "heat`, "cold", "storm"]
+      }
+    ]
+  },
+  {
+    id: 8,
+    title: "Arts & Entertainment (Nghệ thuật & Giải trí)",
+    subtopics: [
+      {
+        title: "Visual Arts (Nghệ thuật thị giác)",
+        words: ["art", "design", "image", "picture", "photo", "color`, "style`, "creative`, "painting`, "drawing"]
+      },
+      {
+        title: "Media (Truyền thông)",
+        words: ["music`, "song`, "audio`, "film`, "movie`, "video`, "sound`, "camera`, "theater`, "entertainment"]
+      },
+      {
+        title: "Literature & Games (Văn học & Trò chơi)",
+        words: ["book`, "story`, "word`, "language`, "write`, "read`, "author`, "page`, "article`, "literature`, "game`, "sport`, "team`, "player`, "win`, "score`, "play"]
+      }
+    ]
+  },
+  {
+    id: 9,
+    title: "Objects, Home & Life (Đồ vật, Nhà & Cuộc sống)",
+    subtopics: [
+      {
+        title: "Food & Drink (Thức ăn & Đồ uống)",
+        words: ["food`, "water`, "eat`, "drink`, "apple`, "bread`, "coffee`, "sugar`, "meat`, "chicken`, "cheese`, "pizza"]
+      },
+      {
+        title: "Household Items (Đồ gia dụng)",
+        words: ["thing`, "object`, "tool`, "box`, "key`, "table`, "chair`, "door`, "window`, "car`, "phone`, "computer"]
+      },
+      {
+        title: "Living Environment (Môi trường sống)",
+        words: ["home`, "house`, "room`, "kitchen`, "street`, "city`, "town"]
+      },
+      {
+        title: "Clothing (Quần áo)",
+        words: ["clothes`, "wear`, "shirt`, "hat`, "shoe"]
+      }
+    ]
+  },
+  {
+    id: 10,
+    title: "Actions, States & Qualities (Hành động, Trạng thái & Tính chất)",
+    subtopics: [
+      {
+        title: "Actions (Hành động)",
+        words: ["go`, "come`, "get`, "give`, "make`, "take`, "see`, "look`, "run`, "walk`, "talk`, "say`, "ask`, "help`, "try`, "work`, "play"]
+      },
+      {
+        title: "Qualities & States (Tính chất & Trạng thái)",
+        words: ["good`, "bad`, "big`, "small`, "new`, "old`, "high`, "low`, "long`, "short`, "easy`, "hard`, "beautiful`, "happy`, "sad`, "important`, "different`, "same"]
+      },
+      {
+        title: "Change & Existence (Thay đổi & Tồn tại)",
+        words: ["be`, "become`, "seem`, "feel`, "change`, "continue`, "start`, "stop`, "end`, "live`, "die`, "happen"]
+      }
+    ]
+  },
+  {
+    id: 11,
+    title: "Abstract Concepts & Thinking (Khái niệm trừu tượng & Tư duy)",
+    subtopics: [
+      {
+        title: "Cognition & Knowledge (Nhận thức & Kiến thức)",
+        words: ["idea`, "thought`, "mind`, "think`, "know`, "believe`, "understand`, "remember`, "forget`, "learn`, "information`, "knowledge"]
+      },
+      {
+        title: "Emotions (Cảm xúc)",
+        words: ["love`, "hate`, "fear`, "hope`, "feeling`, "emotion`, "happy`, "sad`, "angry`, "excited`, "proud"]
+      },
+      {
+        title: "Philosophical Concepts (Khái niệm triết học)",
+        words: ["truth`, "life`, "death`, "time`, "space`, "power`, "reason`, "sense`, "purpose`, "problem`, "solution`, "freedom`, "value`, "issue"]
+      }
+    ]
+  },
+  {
+    id: 12,
+    title: "Time & Numbers (Thời gian & Số lượng)",
+    subtopics: [
+      {
+        title: "Time Terms (Thuật ngữ thời gian)",
+        words: ["time`, "year`, "month`, "week`, "day`, "hour`, "minute`, "second`, "today`, "yesterday`, "tomorrow`, "morning`, "night`, "January`, "Monday"]
+      },
+      {
+        title: "Numbers & Quantities (Số & Khối lượng)",
+        words: ["one`, "two`, "three`, "four`, "five`, "six`, "seven`, "eight`, "nine`, "ten`, "hundred`, "thousand`, "million`, "number`, "amount`, "few`, "many`, "some`, "all"]
+      }
+    ]
+  },
+  {
+    id: 13,
+    title: "Slang, Informal & Profanity (Tiếng lóng, Thông tục & Thô tục)",
+    subtopics: [
+      {
+        title: "Informal & Slang (Thông tục & Tiếng lóng)",
+        words: ["wanna", "gonna", "kinda", "dude", "guy", "kid`, "stuff`, "cool`, "awesome`, "y'all"]
+      },
+      {
+        title: "Profanity (Thô tục)",
+        words: ["fuck`, "shit`, "crap`, "ass`, "damn"]
+      }
+    ]
+  }
+];
