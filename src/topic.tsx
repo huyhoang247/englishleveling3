@@ -23,7 +23,7 @@ export const topicData: TopicGroup[] = [
         words: ["and", "but", "so", "because", "however", "therefore", "although", "if", "or", "when", "then"]
       },
       {
-        title: "Modal & Auxiliary Verbs (Động từ khuyết thiếu & phụ trợ)",
+        title: "Modal & Auxiliary Verbs (Động từ khuyết thiếu & Phụ trợ)",
         words: ["can", "could", "will", "would", "may", "must", "should", "is", "are", "was", "were", "do", "did", "have", "has", "had"]
       },
       {
@@ -46,7 +46,7 @@ export const topicData: TopicGroup[] = [
       },
       {
         title: "Professions & Roles (Nghề nghiệp & Vai trò)",
-        words: ["teacher", "student", "doctor", "lawyer", "engineer", "manager", "artist", "scientist", "president", "CEO", "employee", "leader"]
+        words: ["doctor", "lawyer", "engineer", "manager", "artist", "scientist", "president", "CEO", "employee", "leader"]
       },
       {
         title: "Government & Politics (Chính phủ & Chính trị)",
@@ -148,15 +148,15 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Fauna (Động vật)",
-        words: ["animal", "dog", "cat", "fish", "bird", "horse", "species", "wild"]
+        words: ["animal", "dog", "cat", "fish", "bird", "horse", "species", "wildlife"]
       },
       {
         title: "Flora (Thực vật)",
-        words: ["plant", "tree", "flower", "garden", "forest", "leaf", "food", "farm", "agriculture", "crop"]
+        words: ["plant", "tree", "flower", "garden", "forest", "leaf", "farm", "agriculture", "crop"]
       },
       {
         title: "Geography & Climate (Địa lý & Khí hậu)",
-        words: ["world", "country", "city", "land", "sea", "ocean", "river", "mountain", "nature", "environment", "water", "air", "weather", "climate", "sun", "wind", "rain", "snow", "temperature", "heat`, "cold", "storm"]
+        words: ["world", "country", "land", "sea", "ocean", "river", "mountain", "nature", "environment", "water", "air", "weather", "climate", "sun", "wind", "rain", "snow", "temperature", "heat", "cold", "storm"]
       }
     ]
   },
@@ -166,15 +166,15 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Visual Arts (Nghệ thuật thị giác)",
-        words: ["art", "design", "image", "picture", "photo", "color`, "style`, "creative`, "painting`, "drawing"]
+        words: ["art", "design", "image", "picture", "photo", "color", "style", "creative", "painting", "drawing"]
       },
       {
         title: "Media (Truyền thông)",
-        words: ["music`, "song`, "audio`, "film`, "movie`, "video`, "sound`, "camera`, "theater`, "entertainment"]
+        words: ["music", "song", "audio", "film", "movie", "video", "sound", "camera", "theater", "entertainment"]
       },
       {
         title: "Literature & Games (Văn học & Trò chơi)",
-        words: ["book`, "story`, "word`, "language`, "write`, "read`, "author`, "page`, "article`, "literature`, "game`, "sport`, "team`, "player`, "win`, "score`, "play"]
+        words: ["book", "story", "word", "language", "write", "read", "author", "page", "article", "literature", "game", "sport", "team", "player", "win", "score", "play"]
       }
     ]
   },
@@ -184,19 +184,19 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Food & Drink (Thức ăn & Đồ uống)",
-        words: ["food`, "water`, "eat`, "drink`, "apple`, "bread`, "coffee`, "sugar`, "meat`, "chicken`, "cheese`, "pizza"]
+        words: ["food", "water", "eat", "drink", "apple", "bread", "coffee", "sugar", "meat", "chicken", "cheese", "pizza"]
       },
       {
-        title: "Household Items (Đồ gia dụng)",
-        words: ["thing`, "object`, "tool`, "box`, "key`, "table`, "chair`, "door`, "window`, "car`, "phone`, "computer"]
+        title: "Common Objects & Tools (Đồ vật & Công cụ thông thường)",
+        words: ["thing", "object", "tool", "box", "key", "table", "chair", "door", "window", "car"]
       },
       {
         title: "Living Environment (Môi trường sống)",
-        words: ["home`, "house`, "room`, "kitchen`, "street`, "city`, "town"]
+        words: ["home", "house", "room", "kitchen", "street", "city", "town"]
       },
       {
         title: "Clothing (Quần áo)",
-        words: ["clothes`, "wear`, "shirt`, "hat`, "shoe"]
+        words: ["clothes", "wear", "shirt", "hat", "shoe"]
       }
     ]
   },
@@ -205,16 +205,16 @@ export const topicData: TopicGroup[] = [
     title: "Actions, States & Qualities (Hành động, Trạng thái & Tính chất)",
     subtopics: [
       {
-        title: "Actions (Hành động)",
-        words: ["go`, "come`, "get`, "give`, "make`, "take`, "see`, "look`, "run`, "walk`, "talk`, "say`, "ask`, "help`, "try`, "work`, "play"]
+        title: "Common Actions (Hành động thông thường)",
+        words: ["go", "come", "get", "give", "make", "take", "see", "look", "run", "walk", "talk", "say", "ask", "help", "try", "work", "play"]
       },
       {
-        title: "Qualities & States (Tính chất & Trạng thái)",
-        words: ["good`, "bad`, "big`, "small`, "new`, "old`, "high`, "low`, "long`, "short`, "easy`, "hard`, "beautiful`, "happy`, "sad`, "important`, "different`, "same"]
+        title: "Qualities (Adjectives) (Tính chất - Tính từ)",
+        words: ["good", "bad", "big", "small", "new", "old", "high", "low", "long", "short", "easy", "hard", "beautiful", "important", "different", "same"]
       },
       {
-        title: "Change & Existence (Thay đổi & Tồn tại)",
-        words: ["be`, "become`, "seem`, "feel`, "change`, "continue`, "start`, "stop`, "end`, "live`, "die`, "happen"]
+        title: "States & Change (Verbs) (Trạng thái & Thay đổi - Động từ)",
+        words: ["be", "become", "seem", "feel", "change", "continue", "start", "stop", "end", "live", "die", "happen"]
       }
     ]
   },
@@ -224,15 +224,15 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Cognition & Knowledge (Nhận thức & Kiến thức)",
-        words: ["idea`, "thought`, "mind`, "think`, "know`, "believe`, "understand`, "remember`, "forget`, "learn`, "information`, "knowledge"]
+        words: ["idea", "thought", "mind", "think", "know", "believe", "understand", "remember", "forget", "learn", "information", "knowledge"]
       },
       {
         title: "Emotions (Cảm xúc)",
-        words: ["love`, "hate`, "fear`, "hope`, "feeling`, "emotion`, "happy`, "sad`, "angry`, "excited`, "proud"]
+        words: ["love", "hate", "fear", "hope", "feeling", "emotion", "happy", "sad", "angry", "excited", "proud"]
       },
       {
         title: "Philosophical Concepts (Khái niệm triết học)",
-        words: ["truth`, "life`, "death`, "time`, "space`, "power`, "reason`, "sense`, "purpose`, "problem`, "solution`, "freedom`, "value`, "issue"]
+        words: ["truth", "life", "death", "time", "space", "power", "reason", "sense", "purpose", "problem", "solution", "freedom", "value", "issue"]
       }
     ]
   },
@@ -242,11 +242,11 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Time Terms (Thuật ngữ thời gian)",
-        words: ["time`, "year`, "month`, "week`, "day`, "hour`, "minute`, "second`, "today`, "yesterday`, "tomorrow`, "morning`, "night`, "January`, "Monday"]
+        words: ["time", "year", "month", "week", "day", "hour", "minute", "second", "today", "yesterday", "tomorrow", "morning", "night", "January", "Monday"]
       },
       {
-        title: "Numbers & Quantities (Số & Khối lượng)",
-        words: ["one`, "two`, "three`, "four`, "five`, "six`, "seven`, "eight`, "nine`, "ten`, "hundred`, "thousand`, "million`, "number`, "amount`, "few`, "many`, "some`, "all"]
+        title: "Numbers & Quantities (Số & Số lượng)",
+        words: ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "hundred", "thousand", "million", "number", "amount", "few", "many", "some", "all"]
       }
     ]
   },
@@ -256,11 +256,11 @@ export const topicData: TopicGroup[] = [
     subtopics: [
       {
         title: "Informal & Slang (Thông tục & Tiếng lóng)",
-        words: ["wanna", "gonna", "kinda", "dude", "guy", "kid`, "stuff`, "cool`, "awesome`, "y'all"]
+        words: ["wanna", "gonna", "kinda", "dude", "guy", "kid", "stuff", "cool", "awesome", "y'all"]
       },
       {
         title: "Profanity (Thô tục)",
-        words: ["fuck`, "shit`, "crap`, "ass`, "damn"]
+        words: ["fuck", "shit", "crap", "ass", "damn"]
       }
     ]
   }
