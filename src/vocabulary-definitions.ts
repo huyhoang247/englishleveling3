@@ -999,6 +999,1007 @@ Kết thúc (Finish) là hành động hoặc thời điểm hoàn thành, chấ
 Đối xử (Treat) là cách hành động, cư xử của một người đối với người khác hoặc một vật khác.
 Tiếp thị (Marketing) là tất cả các hoạt động mà một công ty thực hiện để quảng bá, giới thiệu và bán sản phẩm hoặc dịch vụ của mình đến khách hàng.
 Giây (Seconds) là một đơn vị đo thời gian rất ngắn, một phút có 60 giây.
+Giải pháp (Solutions) là cách thức, phương pháp, hoặc câu trả lời để giải quyết một vấn đề, một khó khăn hay một tình huống phức tạp nào đó.
+Sự giữ (Holding) là hành động cầm, nắm, hoặc giữ một vật gì đó trong tay hoặc bằng một bộ phận cơ thể. Nó cũng có thể mang nghĩa duy trì một vị trí hay một tình trạng.
+Hôm qua (Yesterday) là ngày liền trước ngày hôm nay.
+Gần hơn (Closer) là trạng thái ở một khoảng cách ngắn hơn so với trước đó hoặc so với một vật khác. Nó cũng có thể chỉ sự thân thiết hơn trong một mối quan hệ.
+Chống lại (Anti) là hành động hoặc thái độ phản đối, đi ngược lại hoặc ngăn cản một điều gì đó.
+Các bên (Sides) là những nhóm người, phe phái, hoặc các phía khác nhau trong một cuộc tranh luận, một cuộc xung đột, hoặc một thỏa thuận.
+Sự mở đầu (Opening) là phần bắt đầu của một sự kiện, một câu chuyện, một bài phát biểu; hoặc là một khe hở, một lối vào.
+Cây (Plant) là một loại sinh vật sống, thường mọc từ đất, có rễ, thân, lá. Từ này thường dùng để chỉ các loại cây nhỏ, cây hoa, rau củ nói chung.
+Nghe (Listening) là hành động chủ động dùng tai để tiếp nhận và chú ý đến âm thanh, lời nói, hoặc âm nhạc, thường đi kèm với sự thấu hiểu.
+Người Trung Quốc (Chinese) là những người có quốc tịch Trung Quốc hoặc thuộc dân tộc Trung Hoa.
+Bình luận (Comment) là lời nhận xét, ý kiến, hoặc sự giải thích về một vấn đề, một bài viết, một sự kiện nào đó.
+Đã qua (Passed) là trạng thái đã đi ngang qua một điểm nào đó, đã vượt qua (như một kỳ thi), hoặc chỉ thời gian đã trôi qua.
+Hữu ích (Helpful) là tính chất của một cái gì đó (thông tin, hành động, đồ vật) mang lại lợi ích, giúp đỡ được cho người khác.
+Cơ sở (Basis) là nền tảng, nền móng, hoặc lý do chính để một ý kiến, một lập luận, hay một công trình được xây dựng và phát triển dựa trên đó.
+Tóc (Hair) là những sợi nhỏ mọc trên da đầu của người hoặc trên cơ thể của động vật.
+Mây (Cloud) là những khối gồm vô số hạt nước nhỏ li ti ngưng tụ lại, lơ lửng trên bầu trời.
+Tốc độ (Speed) là mức độ nhanh hay chậm của một chuyển động, được đo bằng quãng đường đi được trong một đơn vị thời gian.
+Cây (Tree) là một loại thực vật thân gỗ, sống lâu năm, thường có kích thước lớn, có một thân chính và nhiều cành lá (khác với 'plant' là từ chung hơn).
+Hợp pháp (Legal) là những gì phù hợp, được cho phép hoặc được công nhận bởi pháp luật của một quốc gia.
+Chia sẻ (Sharing) là hành động cho người khác cùng dùng chung, cùng biết đến hoặc cùng hưởng một thứ gì đó (đồ vật, thông tin, cảm xúc).
+Hoàn toàn (Fully) là trạng thái trọn vẹn, đầy đủ, không thiếu sót hay bỏ lại phần nào.
+Trích dẫn (Quote) là việc lặp lại chính xác lời nói hoặc câu văn của một người khác, thường được đặt trong dấu ngoặc kép.
+Quy tắc (Rule) là những quy định hoặc nguyên tắc bắt buộc mọi người phải tuân theo trong một hoàn cảnh, một trò chơi, hay một tổ chức nhất định.
+Được thiết kế (Designed) là trạng thái đã được tạo ra theo một kế hoạch, một bản vẽ cụ thể với một mục đích rõ ràng về hình dáng và chức năng.
+Hành trình (Journey) là một chuyến đi dài từ nơi này đến nơi khác, thường mang ý nghĩa về sự trải nghiệm và khám phá trên đường đi.
+Ăn uống (Eating) là hành động đưa thức ăn vào cơ thể để duy trì sự sống và năng lượng.
+Lời khuyên (Advice) là ý kiến hoặc gợi ý được đưa ra để giúp ai đó quyết định phải làm gì.
+Phân tích (Analysis) là việc xem xét, nghiên cứu một vấn đề một cách chi tiết bằng cách chia nhỏ nó ra để hiểu rõ bản chất và các mối quan hệ bên trong.
+Phát triển (Grew) là hành động hoặc quá trình trở nên lớn hơn, mạnh hơn, tốt hơn hoặc phức tạp hơn theo thời gian (dạng quá khứ của 'grow').
+Hình ảnh (Images) là sự tái hiện lại hình dáng của người, vật, hoặc cảnh quan bằng cách vẽ, chụp ảnh, hoặc tưởng tượng trong đầu.
+Dân sự (Civil) là những gì liên quan đến người dân và các quyền lợi, quan hệ của họ trong xã hội, không liên quan đến quân sự hay tôn giáo.
+Chủ đề (Subject) là vấn đề, đối tượng chính được nói đến, được thảo luận, hoặc được nghiên cứu trong một cuộc trò chuyện, bài viết, tác phẩm.
+Liên hệ (Contact) là hành động tạo ra sự kết nối, giao tiếp với ai đó qua điện thoại, email, gặp mặt...
+Truyền thống (Traditional) là những giá trị, phong tục, thói quen được hình thành từ lâu đời và được truyền từ thế hệ này sang thế hệ khác.
+Bài tập (Exercise) là hoạt động thể chất để rèn luyện sức khỏe, hoặc là những bài toán, câu hỏi được đưa ra để luyện tập kiến thức, kỹ năng.
+Các cô gái (Girls) là từ chỉ những người là nữ giới, thường là trẻ em hoặc thanh thiếu niên.
+Được xuất bản (Published) là trạng thái của một tác phẩm (sách, báo, bài viết) đã được in ấn và phát hành rộng rãi cho công chúng.
+Cung cấp (Providing) là hành động đưa, trao, hoặc mang lại cho ai đó thứ họ cần hoặc muốn.
+Hướng về (Toward) là chỉ sự di chuyển, sự nhìn hoặc sự hướng tới một vị trí, một mục tiêu, hoặc một đối tượng cụ thể.
+Đảm bảo (Ensure) là hành động làm cho một điều gì đó chắc chắn sẽ xảy ra hoặc chắc chắn đúng.
+Thiết bị (Device) là một loại máy móc, công cụ được tạo ra cho một mục đích cụ thể, đặc biệt là các thiết bị điện tử như điện thoại, máy tính.
+Động vật (Animal) là các sinh vật sống có khả năng di chuyển, cảm nhận và không phải là thực vật hay con người.
+Nói chuyện (Talks) là những cuộc trò chuyện, thảo luận hoặc đàm phán giữa hai hay nhiều người/bên.
+Chậm (Slow) là tính chất di chuyển, hành động hoặc diễn ra với tốc độ thấp, không nhanh.
+Đại lý (Agency) là một công ty hoặc tổ chức thay mặt cho một công ty/tổ chức khác để thực hiện một dịch vụ nào đó (ví dụ: đại lý du lịch, đại lý quảng cáo).
+Hàng ngày (Daily) là những gì diễn ra hoặc được thực hiện mỗi ngày, lặp đi lặp lại từ ngày này qua ngày khác.
+Được coi là (Considered) là trạng thái được xem xét, được nhìn nhận hoặc được cho là có một đặc điểm hay vai trò nào đó sau khi đã suy nghĩ.
+Phần mềm (Software) là các chương trình, ứng dụng và dữ liệu được cài đặt trên máy tính hoặc thiết bị điện tử để thực hiện các nhiệm vụ cụ thể.
+Núm bấm (Button) là một cái nút nhỏ trên thiết bị, khi ấn vào sẽ kích hoạt một chức năng nào đó.
+Chi tiêu (Spending) là hành động dùng tiền để mua sắm hàng hóa, dịch vụ hoặc thanh toán cho một thứ gì đó.
+Cuộc gọi (Calling) là hành động liên lạc với ai đó bằng điện thoại, thường để nói chuyện trực tiếp.
+Chi phí (Costs) là tổng số tiền bạn cần phải trả để mua, làm, hoặc sở hữu một thứ gì đó.
+Tổng thể (Overall) là nhìn nhận hoặc đánh giá một vấn đề, sự việc một cách toàn diện, bao quát tất cả các phần, thay vì chỉ xem xét từng chi tiết nhỏ.
+Phong cách (Style) là cách riêng của một người trong việc ăn mặc, hành động, hoặc sáng tạo nghệ thuật, thể hiện cá tính và sở thích của họ.
+Thông minh (Smart) là khả năng suy nghĩ, học hỏi, và hiểu mọi thứ một cách nhanh chóng và dễ dàng.
+Buồn cười (Funny) là điều gì đó gây ra tiếng cười hoặc sự vui vẻ, hài hước.
+Kết nối (Connection) là mối liên hệ, sự gắn kết giữa hai hoặc nhiều người, sự vật, hoặc ý tưởng với nhau.
+Hữu ích (Useful) là một thứ gì đó có ích, giúp bạn đạt được mục tiêu hoặc giải quyết một vấn đề một cách hiệu quả.
+Lập kế hoạch (Planning) là quá trình suy nghĩ và sắp xếp các bước cần thực hiện để đạt được một mục tiêu cụ thể trong tương lai.
+Thủ đô (Capital) là thành phố quan trọng nhất của một quốc gia, nơi đặt các cơ quan chính phủ trung ương.
+Quen thuộc (Familiar) là một điều gì đó mà bạn đã biết, đã thấy, hoặc đã trải qua trước đây, tạo ra cảm giác gần gũi, không xa lạ.
+Bán (Sell) là hành động trao một món đồ hoặc dịch vụ cho người khác để nhận lại tiền.
+Đi bộ (Walking) là hành động di chuyển từ nơi này đến nơi khác bằng cách sử dụng đôi chân của mình.
+Chia sẻ (Shared) là hành động cho người khác cùng dùng, biết hoặc trải qua điều gì đó với mình; hoặc chỉ một thứ được nhiều người cùng sở hữu, sử dụng.
+Chín (Nine) là con số đứng ngay sau số tám (8) và trước số mười (10), được viết là 9.
+Giữ (Kept) là hành động cầm, nắm hoặc sở hữu một thứ gì đó và không để nó mất đi hoặc bị lấy đi.
+Trả (Paid) là hành động đưa tiền cho người khác để thanh toán cho một món hàng hoặc dịch vụ đã nhận.
+Nhận ra (Realized) là hành động chợt hiểu hoặc ý thức được một sự thật nào đó mà trước đây mình không biết hoặc không để ý.
+Nhỏ hơn (Smaller) là tính từ dùng để so sánh kích thước, chỉ một vật có kích cỡ không lớn bằng một vật khác.
+Ghé thăm (Visit) là hành động đi đến một nơi nào đó hoặc gặp một người nào đó trong một khoảng thời gian ngắn.
+Lớp học (Classes) là nơi một nhóm học sinh tụ tập để được giáo viên dạy về một môn học cụ thể.
+Tín dụng (Credit) là sự tin tưởng cho phép bạn nhận hàng hóa hoặc tiền bạc trước và trả lại sau; hoặc sự công nhận, khen ngợi cho một thành tích nào đó.
+Hành tinh (Planet) là một thiên thể rất lớn, có hình cầu, quay quanh một ngôi sao (như Trái Đất quay quanh Mặt Trời).
+Đứa trẻ (Kid) là một người còn nhỏ tuổi, thường là trẻ em hoặc thanh thiếu niên.
+Công bằng (Fair) là cách đối xử với mọi người một cách bình đẳng, đúng đắn, không thiên vị ai.
+Ngay lập tức (Immediately) là làm một việc gì đó ngay lúc này, không có bất kỳ sự chậm trễ nào.
+Khủng hoảng (Crisis) là một tình huống cực kỳ khó khăn, nguy hiểm và đòi hỏi phải có quyết định nhanh chóng.
+Hoạt động (Activity) là hành động làm một việc gì đó, thường liên quan đến sự vận động hoặc tham gia vào một sự kiện.
+Bảo vệ (Protect) là hành động giữ cho ai đó hoặc cái gì đó được an toàn, không bị tổn hại hay nguy hiểm.
+Vợ (Wife) là người phụ nữ đã kết hôn với một người đàn ông.
+Dầu (Oil) là một chất lỏng đặc, sánh, thường được lấy từ dưới lòng đất (dầu mỏ) hoặc từ thực vật (dầu ăn), dùng làm nhiên liệu hoặc trong nấu ăn.
+Cải thiện (Improve) là làm cho một thứ gì đó trở nên tốt hơn, chất lượng hơn so với trước đây.
+Sạch (Clean) là trạng thái không có bụi bẩn, vết bẩn hoặc vi khuẩn.
+Du lịch (Travel) là hành động đi đến những nơi khác nhau, thường là để giải trí, khám phá hoặc nghỉ ngơi.
+Chiến thắng (Win) là đạt được vị trí số một hoặc thành công trong một cuộc thi, trận đấu hay một cuộc chiến.
+Lợi ích (Benefit) là một kết quả tốt, một ưu điểm hoặc một điều có lợi mà bạn nhận được từ một việc gì đó.
+Đã cho thấy (Showed) là hành động trong quá khứ, chỉ việc đã làm cho ai đó nhìn thấy hoặc hiểu ra một điều gì đó.
+Buôn bán (Trade) là hoạt động mua và bán hàng hóa, dịch vụ giữa các cá nhân, công ty hoặc quốc gia.
+Hiện đại (Modern) là những gì liên quan đến thời điểm hiện tại hoặc gần đây, trái ngược với quá khứ hoặc cổ xưa.
+Lực lượng (Forces) là sức mạnh về thể chất hoặc quyền lực, thường dùng để chỉ quân đội hoặc cảnh sát.
+Chi tiết (Details) là những thông tin nhỏ, cụ thể tạo nên một tổng thể lớn hơn.
+Đã được cho thấy (Shown) là dạng bị động, chỉ một vật hoặc một thông tin đã được người khác làm cho hiển thị ra.
+Đầu tư (Investment) là hành động bỏ tiền, thời gian, hoặc công sức vào một thứ gì đó với hy vọng sẽ thu lại lợi ích lớn hơn trong tương lai.
+Rất (Highly) là một từ chỉ mức độ rất cao, thường đi kèm với tính từ để nhấn mạnh (ví dụ: 'rất được khuyến khích').
+Giấc mơ (Dream) là những hình ảnh, suy nghĩ và cảm xúc xảy ra trong đầu bạn khi bạn đang ngủ; hoặc là một mong muốn, khát vọng lớn trong cuộc sống.
+Tập tin (File) là một tập hợp thông tin được lưu trữ cùng nhau, thường là trên máy tính (như file văn bản, file hình ảnh) hoặc trong một bìa hồ sơ.
+Con trai (Boy) là một đứa trẻ hoặc người nam giới trẻ tuổi.
+Bài phát biểu (Speech) là một bài nói chuyện trang trọng được chuẩn bị trước để trình bày trước nhiều người.
+Tấn công (Attack) là hành động dùng bạo lực hoặc lời nói gay gắt để làm hại hoặc chỉ trích ai đó, cái gì đó.
+Giữa (Middle) là vị trí trung tâm, cách đều hai bên hoặc hai điểm đầu cuối.
+Thông thường (Typically) là cách nói về một điều gì đó hay xảy ra theo thói quen, hoặc là cách mà sự việc thường diễn ra trong hầu hết các trường hợp.
+Tồn tại (Exist) là trạng thái có thật, có sự sống hoặc có mặt trong thực tế, không phải là tưởng tượng.
+Chủ yếu (Mostly) có nghĩa là phần lớn, gần như toàn bộ nhưng không phải là tất cả. Nó dùng để chỉ thành phần hoặc đặc điểm chính của một sự vật, sự việc.
+Nhận được (Received) là hành động có được một thứ gì đó từ người khác, có thể là một món quà, một lá thư, hoặc một thông tin.
+Lựa chọn (Options) là những phương án, những khảh năng khác nhau mà bạn có thể quyết định để làm theo một điều gì đó.
+Sự bổ sung (Addition) là việc thêm một thứ gì đó vào một thứ đã có sẵn để làm cho nó nhiều hơn, đầy đủ hơn hoặc tốt hơn.
+Phổ biến (Popular) là một thứ gì đó được nhiều người biết đến, yêu thích và sử dụng.
+Sản xuất (Produce) là hành động tạo ra hoặc làm ra một sản phẩm, hàng hóa nào đó, thường là từ nguyên liệu thô. (Đây là động từ, chỉ hành động).
+Kết nối (Connected) là trạng thái được nối liền, có mối liên hệ với nhau về mặt vật lý (như dây điện) hoặc về mặt tình cảm, thông tin (như bạn bè, internet).
+Cực kỳ (Extremely) là một từ dùng để nhấn mạnh mức độ rất cao, rất nhiều của một tính chất nào đó (ví dụ: cực kỳ vui, cực kỳ khó).
+Lớn tuổi hơn (Older) là tính từ so sánh, chỉ một người hoặc một vật có số tuổi nhiều hơn so với người hoặc vật khác.
+Đại dịch (Pandemic) là một trận dịch bệnh nguy hiểm lây lan trên quy mô rất lớn, ảnh hưởng đến nhiều quốc gia và châu lục.
+Thư viện (Library) là nơi lưu giữ rất nhiều sách, báo, tài liệu để mọi người có thể đến đọc hoặc mượn về nhà.
+Em bé (Baby) là một đứa trẻ sơ sinh hoặc một đứa trẻ còn rất nhỏ.
+Có xu hướng (Tend) là khuynh hướng hoặc khả năng dễ làm một việc gì đó một cách tự nhiên hoặc thường xuyên.
+Tập (Episode) là một phần trong một chuỗi chương trình, chẳng hạn như một tập phim trong một bộ phim truyền hình dài kỳ.
+Sự tiến bộ (Progress) là sự phát triển, đi lên, trở nên tốt hơn hoặc gần hơn với một mục tiêu nào đó.
+Phía tây (West) là một trong bốn hướng chính (Đông, Tây, Nam, Bắc), là hướng mặt trời lặn.
+Cuộc bầu cử (Election) là quá trình người dân bỏ phiếu để chọn ra người đại diện cho mình để lãnh đạo một tổ chức hoặc một quốc gia.
+Khỏe mạnh (Healthy) là trạng thái cơ thể không có bệnh tật, hoạt động tốt và tinh thần thoải mái.
+Sản xuất (Production) là quá trình, hoạt động tạo ra hàng hóa, dịch vụ. (Đây là danh từ, chỉ cả quá trình).
+Nói (Tells) là hành động kể lại một câu chuyện hoặc truyền đạt một thông tin cho ai đó.
+Tối (Dark) là trạng thái thiếu ánh sáng, khó nhìn thấy mọi vật.
+Tài khoản (Account) là một bản ghi thông tin cá nhân hoặc giao dịch, ví dụ như tài khoản ngân hàng, tài khoản mạng xã hội.
+Một trăm (Hundred) là con số 100.
+Giáo viên (Teacher) là người dạy học, truyền đạt kiến thức và kỹ năng cho học sinh ở trường.
+Suy nghĩ (Thoughts) là những ý tưởng, ý kiến hoặc hình ảnh xuất hiện trong đầu của một người.
+Lý thuyết (Theory) là một hệ thống các ý tưởng hoặc quy tắc được đưa ra để giải thích một sự thật hoặc một sự kiện nào đó, thường dựa trên các nguyên tắc chung.
+Vùng (Region) là một khu vực địa lý rộng lớn có những đặc điểm riêng về tự nhiên hoặc văn hóa.
+Máy móc (Machine) là một thiết bị có các bộ phận chuyển động, sử dụng năng lượng để thực hiện một công việc cụ thể.
+Đánh giá (Review) là hành động xem xét, nhận xét hoặc đưa ra ý kiến về chất lượng của một cái gì đó (như một bộ phim, một cuốn sách, một sản phẩm).
+Tầm nhìn (Vision) là khả năng nhìn xa trông rộng, hình dung về tương lai hoặc một kế hoạch dài hạn.
+Chương (Chapter) là một phần chính trong một cuốn sách, thường được đánh số thứ tự.
+Hào hứng (Exciting) là cảm giác vui vẻ, phấn khích và mong chờ một điều gì đó thú vị sắp xảy ra.
+Ứng dụng (Application) là một chương trình máy tính hoặc điện thoại được thiết kế để thực hiện một chức năng cụ thể cho người dùng (viết tắt là 'app').
+Nguyên bản (Original) là cái đầu tiên, không phải là bản sao chép hay bắt chước; là nguồn gốc của mọi thứ.
+Thu nhập (Income) là tổng số tiền mà một người hoặc một công ty kiếm được từ công việc kinh doanh hoặc đầu tư trong một khoảng thời gian.
+An toàn (Safety) là tình trạng được bảo vệ, không bị nguy hiểm, rủi ro hay tổn thương.
+Phần (Section) là một bộ phận, một đoạn được chia ra từ một tổng thể lớn hơn.
+Sông (River) là một dòng nước tự nhiên, lớn, chảy ra biển, hồ hoặc một con sông khác.
+Nhớ (Miss) là cảm giác buồn hoặc trống vắng khi ai đó hoặc điều gì đó bạn yêu quý không ở bên cạnh bạn.
+Da (Skin) là lớp vỏ bọc bên ngoài cơ thể của người và động vật.
+Vật (Object) là một thứ có hình dạng cụ thể mà bạn có thể nhìn thấy và chạm vào được, nhưng không phải là người hay động vật.
+Phòng thí nghiệm (Lab) là một căn phòng được trang bị các thiết bị đặc biệt để thực hiện các cuộc thí nghiệm khoa học.
+Bài thuyết trình (Presentation) là một bài nói chuyện trước nhiều người để trình bày thông tin, ý tưởng hoặc một kế hoạch nào đó.
+Thực vật (Plants) là các sinh vật sống như cây cối, hoa, cỏ, thường mọc ở mặt đất và tự tạo ra thức ăn nhờ ánh sáng mặt trời.
+Giao dịch (Dealing) là hành động mua bán, trao đổi hoặc làm việc kinh doanh với ai đó.
+Hoạt động (Activities) là những việc làm, hành động có sự tham gia của cơ thể hoặc trí óc để đạt được một mục đích nào đó.
+Tivi (TV) là thiết bị điện tử dùng để thu nhận hình ảnh và âm thanh được phát từ xa, trình chiếu các chương trình giải trí, tin tức.
+Một cách dễ dàng (Easily) là trạng thái thực hiện một việc gì đó mà không gặp khó khăn, không tốn nhiều công sức.
+Nguyên tố (Elements) là những chất cơ bản, tinh khiết nhất tạo nên mọi vật chất trong tự nhiên. Ví dụ như oxy để thở, sắt để làm thép, hay vàng. Mọi thứ phức tạp hơn đều được tạo thành từ việc kết hợp các nguyên tố này.
+Dạy (Taught) là hành động truyền đạt kiến thức, kỹ năng, hoặc kinh nghiệm cho người khác để họ hiểu và làm được điều gì đó. 'Taught' là dạng quá khứ của từ 'Teach' (dạy).
+Tối nay (Tonight) là khoảng thời gian buổi tối và ban đêm của ngày hôm nay.
+Châu Âu (Europe) là tên của một trong các châu lục trên thế giới, nơi có nhiều quốc gia nổi tiếng như Anh, Pháp, Đức, Ý.
+Nâng (Raise) là hành động di chuyển một vật gì đó từ vị trí thấp lên vị trí cao hơn. Nó cũng có thể mang nghĩa là tăng lên, ví dụ như nâng lương, nâng giá.
+Thưởng thức (Enjoy) là cảm nhận sự vui vẻ, hài lòng, hoặc thích thú khi trải nghiệm một điều gì đó, thường là qua các giác quan. Ví dụ: thưởng thức một món ăn ngon, một bản nhạc hay.
+Gần (Near) là chỉ khoảng cách ngắn, không xa về không gian hoặc thời gian. Ví dụ: nhà tôi ở gần trường học; sắp gần đến Tết.
+Dấu (Mark) là một ký hiệu, một vết, hoặc một hình ảnh nhỏ để lại trên một bề mặt để nhận biết, ghi nhớ hoặc chỉ ra điều gì đó. Ví dụ: dấu chấm, dấu phẩy; dấu chân trên cát.
+Sẵn sàng (Willing) thể hiện sự tự nguyện, đồng ý và không phản đối khi làm một việc gì đó cho người khác hoặc đối mặt với một tình huống.
+Đúng (Correct) là sự phù hợp với sự thật, với quy tắc, hoặc với một tiêu chuẩn đã được chấp nhận.
+Động vật (Animals) là những sinh vật sống có khả năng di chuyển, cảm nhận và không phải là con người hay thực vật. Ví dụ: chó, mèo, chim, cá.
+Thư điện tử (Email) là một phương pháp gửi và nhận tin nhắn qua mạng máy tính, giống như gửi thư truyền thống nhưng nhanh hơn và không cần giấy.
+Ngôi sao (Star) là một thiên thể khí nóng, khổng lồ trên trời, tự phát ra ánh sáng như Mặt Trời của chúng ta. Vào ban đêm, chúng ta thấy chúng như những chấm sáng nhỏ.
+Lớn hơn (Larger) là từ dùng để so sánh kích thước, số lượng hoặc mức độ của hai thứ, chỉ ra rằng một thứ có kích thước, số lượng hoặc mức độ vượt trội so với thứ kia.
+Đường đua (Track) là một con đường hoặc một khu vực được thiết kế đặc biệt cho các cuộc thi về tốc độ như chạy, đua xe.
+Bệnh nhân (Patient) là người đang bị bệnh và đang được bác sĩ hoặc nhân viên y tế chăm sóc, chữa trị.
+Bìa sách (Cover) là lớp giấy cứng hoặc vật liệu khác bọc bên ngoài của một cuốn sách để bảo vệ và trang trí.
+Ghi chú (Note) là việc viết ra những thông tin ngắn gọn, quan trọng để giúp ghi nhớ hoặc để lại lời nhắn cho ai đó.
+Cửa (Door) là một bộ phận có thể đóng mở của một tòa nhà, căn phòng, hoặc chiếc xe, cho phép người ta đi ra đi vào.
+Nỗi sợ (Fear) là một cảm xúc mạnh mẽ, khó chịu xuất hiện khi bạn nghĩ rằng mình đang gặp nguy hiểm hoặc có điều gì đó tồi tệ sắp xảy ra.
+Mục đích (Purpose) là lý do tại sao một cái gì đó tồn tại hoặc tại sao một người làm một việc gì đó; là kết quả mà bạn muốn đạt được.
+Bức tường (Wall) là một cấu trúc thẳng đứng, thường làm bằng gạch hoặc bê tông, dùng để ngăn cách các không gian, bao quanh một khu vực, hoặc nâng đỡ mái nhà.
+Bề mặt (Surface) là lớp ngoài cùng của một vật thể, là nơi bạn có thể nhìn thấy và chạm vào.
+Đẩy (Push) là hành động dùng lực để di chuyển một vật gì đó ra xa khỏi mình.
+Số không (Zero) là con số (0) biểu thị sự không có gì cả, là điểm khởi đầu trên một thang đo.
+Trung bình (Average) là một con số đại diện cho một nhóm số, được tính bằng cách cộng tất cả các số trong nhóm lại rồi chia cho số lượng các số đó.
+Hộp (Box) là một vật chứa đồ, thường có hình vuông hoặc chữ nhật với các mặt phẳng và được làm bằng bìa cứng, gỗ, hoặc nhựa.
+Áp lực (Pressure) là lực tác động lên một bề mặt. Về mặt tinh thần, nó là cảm giác căng thẳng, lo lắng khi phải đối mặt với nhiều yêu cầu hoặc kỳ vọng.
+Trực tiếp (Directly) là làm một việc gì đó mà không qua trung gian, không vòng vo, đi thẳng vào vấn đề.
+Tập trung (Focused) là trạng thái dồn hết sự chú ý và suy nghĩ của mình vào một việc duy nhất mà không bị phân tâm bởi những thứ khác.
+Thuế (Tax) là số tiền mà người dân và doanh nghiệp bắt buộc phải nộp cho nhà nước để nhà nước chi tiêu cho các hoạt động chung như xây dựng trường học, bệnh viện, đường sá.
+Tỉ (Billion) là một con số, bằng một nghìn triệu (1.000.000.000).
+Cửa hàng (Store) là nơi người ta trưng bày và bán các loại hàng hóa cho khách hàng.
+Rõ ràng (Clearly) là chỉ một điều gì đó dễ nhìn, dễ nghe, dễ hiểu, không mơ hồ hay khó nắm bắt.
+Dòng (Lines) là một vạch kẻ dài và hẹp, hoặc một hàng chữ được viết hay in ra. Nó cũng có thể chỉ một hàng người đang xếp hàng.
+Một mình (Alone) là trạng thái ở một nơi nào đó mà không có ai khác ở cùng.
+Phiên bản (Version) là một dạng cụ thể của một sản phẩm (như phần mềm, sách, phim), thường có những thay đổi hoặc cải tiến so với các dạng trước đó.
+Trở lại (Return) là hành động quay về nơi mình đã xuất phát hoặc đưa một thứ gì đó về vị trí cũ của nó.
+Chiến đấu (Fight) là hành động dùng sức mạnh thể chất hoặc vũ khí để chống lại kẻ thù, hoặc nỗ lực rất lớn để vượt qua khó khăn.
+Giải pháp (Solution) là cách thức hoặc câu trả lời để giải quyết một vấn đề hay một tình huống khó khăn.
+Đáng kể (Significant) là chỉ một điều gì đó đủ lớn, đủ quan trọng để được chú ý hoặc có ảnh hưởng lớn.
+Cơ bản (Basic) là những gì nền tảng, thiết yếu, và quan trọng nhất mà mọi thứ khác đều dựa vào.
+Giá (Price) là số tiền bạn phải trả để mua một món đồ hoặc sử dụng một dịch vụ.
+Phạm vi (Range) là khoảng giới hạn giữa giá trị nhỏ nhất và lớn nhất của một nhóm sự vật, sự việc. Ví dụ: phạm vi giá từ 100 đến 200 nghìn.
+Nghĩa (Meaning) là ý tưởng, thông điệp hoặc nội dung mà một từ, một câu, hoặc một ký hiệu muốn biểu đạt.
+Hiệu suất (Performance) là mức độ thực hiện công việc tốt và hiệu quả như thế nào. Ví dụ: một chiếc xe có hiệu suất cao là xe chạy nhanh và ít tốn xăng.
+Kỹ thuật số (Digital) là công nghệ sử dụng các tín hiệu điện tử (dưới dạng số 0 và 1) để lưu trữ, xử lý và truyền tải thông tin, ví dụ như máy tính, điện thoại thông minh.
+Thế hệ (Generation) là một nhóm người sinh ra và lớn lên trong cùng một khoảng thời gian, thường có chung những trải nghiệm và quan điểm.
+Con đường (Road) là một dải đất được làm phẳng và cứng để xe cộ và người có thể đi lại dễ dàng.
+Bỏ phiếu (Vote) là hành động thể hiện sự lựa chọn hoặc ý kiến của mình một cách chính thức, thường là trong một cuộc bầu cử hoặc trưng cầu ý dân.
+Tổng cộng (Total) là kết quả cuối cùng khi bạn cộng tất cả các con số hoặc các phần riêng lẻ lại với nhau.
+Sự điều trị (Treatment) là quá trình sử dụng thuốc men, phương pháp y tế hoặc các liệu pháp để chữa bệnh, làm giảm triệu chứng hoặc cải thiện sức khỏe cho ai đó.
+Thị trấn (Town) là một khu dân cư lớn hơn làng nhưng nhỏ hơn thành phố, thường có các cửa hàng, trường học và dịch vụ cơ bản.
+Nóng (Hot) là trạng thái có nhiệt độ cao, tạo ra cảm giác ấm hoặc bỏng rát khi chạm vào. Ví dụ: nước sôi, thời tiết mùa hè.
+Phù hợp (Fit) là trạng thái vừa vặn về kích cỡ (như quần áo) hoặc thích hợp, đúng với một mục đích hay hoàn cảnh nào đó.
+Cơ sở (Base) là nền tảng, điểm khởi đầu hoặc phần quan trọng nhất để xây dựng hay phát triển một cái gì đó. Nó cũng có thể là một địa điểm hoạt động chính.
+Tôn trọng (Respect) là sự coi trọng, đánh giá cao phẩm chất, giá trị, hoặc quyền lợi của người khác và thể hiện qua lời nói, hành động lịch sự.
+Nhận thức (Aware) là việc biết hoặc hiểu rằng một điều gì đó đang tồn tại hoặc đang xảy ra xung quanh bạn.
+Ở trên (Above) là vị trí cao hơn một vật khác, không nhất thiết phải chạm vào vật đó.
+Quên (Forget) là không thể nhớ lại một thông tin hoặc một sự việc đã biết trước đây.
+Phim (Movie) là một chuỗi các hình ảnh chuyển động, thường có âm thanh, kể một câu chuyện để giải trí hoặc truyền tải thông điệp.
+Đề nghị (Offer) là hành động đưa ra một ý kiến, một lời mời, hoặc một thứ gì đó cho người khác để họ xem xét và quyết định có chấp nhận hay không.
+Áp dụng (Apply) là việc sử dụng một kiến thức, quy tắc, hoặc phương pháp vào một tình huống thực tế cụ thể.
+Nhân vật (Character) là một người, con vật hoặc sinh vật do tác giả tạo ra trong một câu chuyện, bộ phim, hay vở kịch.
+Kinh nghiệm (Experiences) là những kiến thức, kỹ năng hoặc hiểu biết mà bạn có được sau khi đã từng trải qua, làm hoặc chứng kiến một việc gì đó.
+Trượt (Slide) là hành động di chuyển một cách trơn tru, liên tục trên một bề mặt nhẵn.
+Thành viên (Member) là một cá nhân thuộc về một nhóm, một câu lạc bộ, một tổ chức hoặc một gia đình.
+Miếng (Pieces) là một phần nhỏ được tách ra hoặc bị vỡ ra từ một vật thể lớn hơn.
+Nhận ra (Recognize) là việc xác định được ai đó hoặc cái gì đó bạn đã từng biết, từng thấy hoặc từng nghe trước đây.
+Mạng (Web) là một hệ thống gồm nhiều yếu tố được kết nối chằng chịt với nhau, giống như mạng nhện. Trong công nghệ, nó thường dùng để chỉ Mạng Lưới Toàn Cầu (World Wide Web).
+Sinh Ra (Born) là thời điểm một người hoặc một con vật bắt đầu cuộc sống bên ngoài cơ thể mẹ.
+Dự Án (Projects) là một kế hoạch hoặc một nhiệm vụ cụ thể có mục tiêu rõ ràng, có thời gian bắt đầu và kết thúc, cần nhiều nguồn lực để hoàn thành.
+Lớn Hơn (Bigger) là từ dùng để so sánh kích thước, số lượng hoặc mức độ của một vật này vượt trội hơn một vật khác.
+Giám Đốc (Director) là người đứng đầu, có trách nhiệm lãnh đạo và quản lý một công ty, một tổ chức, hoặc một bộ phận. Trong làm phim, đó là người chỉ đạo diễn xuất và sáng tạo.
+Lái Xe (Drive) là hành động điều khiển một phương tiện như ô tô, xe tải để làm cho nó di chuyển.
+Quản Lý (Management) là công việc tổ chức, điều hành và giám sát hoạt động của một nhóm người hoặc một tổ chức để đạt được mục tiêu đề ra.
+Giọng Nói (Voice) là âm thanh mà một người tạo ra khi nói hoặc hát, mang đặc điểm riêng về âm sắc, độ cao.
+Tế Bào (Cell) là đơn vị cấu trúc nhỏ nhất và cơ bản nhất của mọi sinh vật sống.
+Nhất Thiết (Necessarily) là một từ mang ý nghĩa 'chắc chắn phải như vậy' hoặc 'không thể khác được'. Thường dùng trong câu phủ định để nói rằng một điều gì đó không phải lúc nào cũng đúng.
+Xanh Lá Cây (Green) là màu sắc của lá cây, cỏ và nhiều loại thực vật trong tự nhiên.
+Một Cách Cụ Thể (Specifically) là trạng thái chỉ rõ, nói chính xác về một điều gì đó thay vì nói chung chung.
+Đã Dành (Spent) là hành động sử dụng hết thời gian, tiền bạc hoặc năng lượng cho một việc gì đó trong quá khứ.
+Mạng Internet (Internet) là một hệ thống mạng máy tính khổng lồ kết nối toàn cầu, cho phép mọi người truy cập thông tin và giao tiếp với nhau.
+Tinh Thần (Spirit) là phần cảm xúc, ý chí, suy nghĩ và tâm hồn của một con người, đối lập với thể chất.
+Địa Điểm (Site) là một vị trí, một nơi cụ thể nơi một sự kiện diễn ra, một tòa nhà được xây dựng hoặc một trang web tồn tại.
+Bình Thường (Normal) là trạng thái phổ biến, quen thuộc, không có gì đặc biệt hay khác lạ so với tiêu chuẩn chung.
+Trở Thành (Becomes) là quá trình thay đổi từ một trạng thái, một vai trò, hoặc một dạng này sang một trạng thái, vai trò, hoặc dạng khác.
+Lớn Nhất (Biggest) là từ dùng để chỉ một vật có kích thước, quy mô hoặc mức độ vượt trội hơn tất cả những vật khác trong cùng một nhóm so sánh.
+Tin Tưởng (Trust) là niềm tin chắc chắn vào sự trung thực, khả năng, hoặc sự tốt đẹp của ai đó hoặc cái gì đó.
+Dấu Hiệu (Sign) là một vật, một hành động hoặc một sự kiện cho thấy sự tồn tại hoặc báo trước một điều gì đó sắp xảy ra.
+Sự tăng trưởng (Growth) là quá trình lớn lên, phát triển về kích thước, số lượng hoặc mức độ quan trọng.
+Giữa các quốc gia (International) là những gì liên quan đến, hoặc diễn ra giữa hai hay nhiều quốc gia khác nhau.
+Xem xét (Consider) là hành động suy nghĩ cẩn thận về một vấn đề hoặc một quyết định trước khi đưa ra kết luận.
+Phút (Minute) là một đơn vị đo thời gian, bằng 60 giây.
+Theo sau (Following) là hành động đi ngay sau, xảy ra ngay sau hoặc tuân theo một điều gì đó đã có trước.
+Khác nhau (Various) là tính từ chỉ sự đa dạng, bao gồm nhiều loại hoặc nhiều thứ không giống nhau.
+Dễ dàng hơn (Easier) là trạng thái thực hiện một việc gì đó ít tốn công sức, ít khó khăn hơn so với trước đây hoặc so với một việc khác.
+Sản phẩm (Products) là những vật phẩm được tạo ra thông qua sản xuất hoặc quá trình tự nhiên để bán hoặc sử dụng.
+Thử thách (Challenges) là những nhiệm vụ hoặc tình huống khó khăn đòi hỏi nỗ lực, kỹ năng và sự kiên trì để vượt qua.
+Nền tảng chia sẻ video (YouTube) là một trang web hoặc ứng dụng cho phép người dùng tải lên, xem, bình luận và chia sẻ các video. YouTube là ví dụ nổi tiếng và lớn nhất của loại nền tảng này.
+Phía dưới (Below) là vị trí ở thấp hơn một vật hoặc một điểm nào đó.
+Tiêu cực (Negative) là những suy nghĩ, hành động, hoặc kết quả xấu, không mang lại lợi ích, và thường gây ra cảm giác buồn bã, thất vọng.
+Máy tính (Computer) là một thiết bị điện tử giúp chúng ta làm việc, học tập, giải trí, lưu trữ thông tin và kết nối với mọi người qua internet.
+An toàn (Safe) là tình trạng không bị nguy hiểm, không bị đe dọa hay tổn hại về thân thể, tài sản hoặc tinh thần.
+Tòa án (Court) là nơi các thẩm phán làm việc để xét xử các vụ việc, giải quyết tranh chấp và quyết định xem ai đúng ai sai theo pháp luật.
+Thông điệp (Message) là thông tin, ý tưởng hoặc cảm xúc mà một người muốn truyền đạt cho người khác, có thể qua lời nói, văn bản hoặc hành động.
+Mạnh mẽ (Powerful) là có nhiều sức mạnh, quyền lực hoặc có khả năng tạo ra ảnh hưởng lớn đến người khác hoặc sự vật khác.
+Sự di chuyển (Movement) là hành động thay đổi vị trí của một vật hoặc một người từ nơi này sang nơi khác.
+Thể chất (Physical) là những gì liên quan đến cơ thể của con người, như sức khỏe, sức mạnh, ngoại hình, trái ngược với tinh thần hay trí tuệ.
+Kết quả (Effect) là sự thay đổi hoặc tác động được tạo ra bởi một nguyên nhân hay hành động nào đó. (Ví dụ: tác động của việc tập thể dục lên sức khỏe).
+Tế bào (Cells) là những đơn vị cấu tạo nhỏ nhất, cơ bản nhất của mọi sinh vật sống, giống như những viên gạch nhỏ xây nên một ngôi nhà lớn.
+Thiên nhiên (Nature) là toàn bộ thế giới vật chất xung quanh chúng ta mà không do con người tạo ra, bao gồm cây cối, sông núi, động vật, thời tiết.
+Thế kỷ (Century) là một khoảng thời gian dài 100 năm.
+Giữa (Among) là ở trong một nhóm gồm ba người hoặc ba vật trở lên.
+Y tế (Medical) là những gì liên quan đến việc chăm sóc sức khỏe, chữa bệnh cho con người, bao gồm bác sĩ, bệnh viện, thuốc men.
+Kết quả (Result) là cái cuối cùng nhận được sau một quá trình, một cuộc thi, hay một phép tính. (Ví dụ: kết quả của trận đấu).
+Công cụ (Tools) là những vật dụng được tạo ra để giúp con người làm một việc gì đó dễ dàng và hiệu quả hơn, như búa, kìm, tuốc nơ vít.
+Nhanh (Quick) là hành động hoặc quá trình diễn ra trong một khoảng thời gian ngắn, không tốn nhiều thời gian.
+Phim (Film) là một câu chuyện được kể bằng những hình ảnh chuyển động liên tiếp, có âm thanh, được chiếu trên màn hình.
+Bằng chứng (Evidence) là những thông tin, sự thật hoặc đồ vật giúp chứng minh một điều gì đó là đúng hay sai.
+Thấp hơn (Lower) là ở một vị trí, mức độ hoặc giá trị không cao bằng một cái khác.
+Âm thanh (Sounds) là những gì mà tai của chúng ta có thể nghe được, được tạo ra bởi các rung động trong không khí.
+Chọn (Choose) là hành động quyết định lấy hoặc thích một cái gì đó trong số nhiều cái khác.
+Quân đội (Military) là lực lượng vũ trang của một quốc gia, có nhiệm vụ bảo vệ đất nước khỏi các mối đe dọa từ bên ngoài.
+Mắt (Eyes) là bộ phận trên cơ thể người và động vật dùng để nhìn, giúp chúng ta quan sát thế giới xung quanh.
+Loại (Types) là các nhóm khác nhau của cùng một sự vật, sự việc được phân chia dựa trên những đặc điểm riêng.
+Giấy (Paper) là một vật liệu mỏng làm từ gỗ hoặc các sợi thực vật khác, thường dùng để viết, vẽ hoặc in ấn.
+Bệnh (Disease) là tình trạng cơ thể hoặc tâm trí hoạt động không bình thường, gây ra cảm giác khó chịu và cần được chữa trị.
+Cơ hội (Chance) là một hoàn cảnh thuận lợi để làm một điều gì đó mà bạn muốn.
+Tám (Eight) là con số đứng sau số bảy và đứng trước số chín, ký hiệu là 8.
+Nhân viên (Staff) là tập hợp tất cả những người cùng làm việc cho một công ty, một tổ chức hoặc một cửa hàng.
+Nghiên cứu (Studies) là quá trình tìm hiểu, xem xét, thu thập thông tin một cách kỹ lưỡng về một chủ đề nào đó để khám phá ra những kiến thức mới.
+Tăng lên (Increase) là làm cho số lượng, kích thước, hoặc mức độ của một cái gì đó trở nên lớn hơn, nhiều hơn.
+Công lý (Justice) là sự công bằng, lẽ phải, nơi mọi người được đối xử bình đẳng theo pháp luật và người có lỗi phải chịu trách nhiệm.
+Chơi (Playing) là hoạt động tham gia vào một trò chơi hoặc một môn thể thao để giải trí, vui vẻ.
+Nói chuyện (Speaking) là hành động dùng lời nói để giao tiếp, trao đổi thông tin hoặc ý nghĩ với người khác.
+Hình ảnh (Image) là sự tái hiện lại một người, một vật hoặc một cảnh vật bằng cách vẽ, chụp ảnh hoặc trong suy nghĩ.
+Chùm (Bunch) là một nhóm các vật giống nhau mọc hoặc được buộc lại với nhau. (Ví dụ: chùm chìa khóa, chùm nho).
+Đáy (Bottom) là phần thấp nhất, ở dưới cùng của một vật gì đó.
+Nền kinh tế (Economy) là toàn bộ hoạt động mua bán, sản xuất hàng hóa, và tạo ra việc làm, tiền bạc của một quốc gia hay một khu vực.
+Kích thước (Size) là độ lớn, nhỏ, dài, ngắn của một vật nào đó.
+Dân số (Population) là tổng số người đang sinh sống tại một nơi cụ thể, như một thành phố hay một quốc gia.
+Bộ phận (Parts) là từng phần nhỏ riêng lẻ kết hợp lại với nhau để tạo thành một vật thể hoàn chỉnh.
+Đô la (Dollars) là đơn vị tiền tệ chính thức của Hoa Kỳ và một số quốc gia khác.
+Khuôn viên trường (Campus) là toàn bộ khu vực đất đai và các tòa nhà của một trường đại học hoặc trường học.
+Bàn (Table) là một món đồ nội thất có mặt phẳng và chân đỡ, dùng để đặt đồ vật lên trên.
+Sâu (Deep) là có khoảng cách lớn từ trên bề mặt xuống đến đáy, hoặc đi sâu vào bên trong một cái gì đó.
+Báo cáo (Report) là một bài viết hoặc bài nói trình bày thông tin về một sự việc, một kết quả nghiên cứu một cách có tổ chức, chính thức.
+Toàn cầu (Global) là những gì liên quan đến, hoặc ảnh hưởng đến toàn bộ thế giới, tất cả các quốc gia.
+Mọi người (Folks) là một cách gọi thân mật, không trang trọng để chỉ một nhóm người nói chung, tương tự như 'mọi người' hay 'các bạn'.
+Chọn (Pick) là hành động lựa ra một hoặc nhiều thứ từ một nhóm dựa trên sở thích, nhu cầu hoặc một tiêu chí nào đó.
+Kiến thức (Knowledge) là sự hiểu biết, thông tin và kỹ năng mà bạn có được thông qua học tập, trải nghiệm hoặc được dạy.
+Hiện tại (Current) là chỉ thời điểm đang diễn ra, ngay bây giờ, không phải quá khứ hay tương lai.
+Rơi (Fall) là hành động di chuyển từ trên cao xuống thấp một cách nhanh chóng, thường là do tác động của trọng lực.
+Cho phép (Allow) là hành động đồng ý, chấp thuận hoặc tạo điều kiện cho ai đó làm một việc gì đó.
+Trường học (Schools) là nơi học sinh, sinh viên đến để học tập kiến thức và kỹ năng dưới sự hướng dẫn của giáo viên.
+Đang phát triển (Growing) là quá trình trở nên lớn hơn, mạnh hơn, nhiều hơn hoặc tiến bộ, phức tạp hơn theo thời gian.
+Phía nam (South) là một trong bốn hướng chính trên la bàn hoặc bản đồ, ngược với phía bắc.
+Bữa tiệc (Party) là một sự kiện xã hội nơi mọi người tụ tập để ăn mừng, vui chơi, trò chuyện và giao lưu với nhau.
+Nỗ lực (Efforts) là sự cố gắng, sự bỏ công sức và tâm huyết ra để làm một việc gì đó, đặc biệt là những việc khó khăn.
+Công nghiệp (Industry) là tập hợp các công ty, nhà máy cùng sản xuất một loại sản phẩm hoặc cung cấp một loại dịch vụ nhất định (ví dụ: công nghiệp ô tô, công nghiệp thực phẩm).
+Địa chỉ (Address) là thông tin chi tiết về nơi ở của một người hoặc vị trí của một tòa nhà (bao gồm số nhà, tên đường, thành phố...).
+Đã viết (Wrote) là dạng quá khứ của động từ 'viết', chỉ hành động tạo ra chữ, văn bản đã hoàn thành trong quá khứ.
+Nhanh (Fast) là tính từ mô tả một hành động hoặc sự việc diễn ra với tốc độ cao, trong một khoảng thời gian ngắn.
+Đứng (Stand) là hành động giữ cho cơ thể ở tư thế thẳng trên đôi chân của mình, không ngồi, không nằm.
+Nghe (Listen) là hành động chủ động tập trung để tiếp nhận âm thanh bằng tai, thường là để hiểu nội dung.
+Phản hồi (Response) là câu trả lời, hành động hoặc cảm xúc đáp lại một câu hỏi, một tình huống hay một sự việc nào đó.
+Trang web (Website) là một tập hợp các trang thông tin (văn bản, hình ảnh, video) trên Internet mà bạn có thể truy cập bằng máy tính hoặc điện thoại.
+Tự nhiên (Natural) là những gì thuộc về thiên nhiên, tồn tại hoặc xảy ra mà không có sự can thiệp, tác động của con người.
+Sớm (Soon) là chỉ một thời điểm trong tương lai gần, không lâu sau thời điểm nói.
+Tỉ lệ (Rate) là một con số dùng để đo lường, so sánh sự thay đổi của một thứ gì đó so với một thứ khác hoặc trong một khoảng thời gian nhất định (ví dụ: tỉ lệ tăng trưởng).
+Chất lượng (Quality) là mức độ tốt, bền, hay hoàn hảo của một sản phẩm, dịch vụ hoặc một trải nghiệm.
+Điện thoại (Phone) là một thiết bị điện tử dùng để liên lạc bằng giọng nói với người khác ở xa, và ngày nay còn có nhiều chức năng thông minh khác.
+Suốt (Throughout) là từ chỉ sự việc diễn ra liên tục từ đầu đến cuối trong một khoảng thời gian hoặc không gian nào đó.
+Ăn (Eat) là hành động đưa thức ăn vào miệng, nhai và nuốt để nuôi sống cơ thể.
+Sự kiện (Event) là một việc quan trọng hoặc đặc biệt diễn ra tại một thời điểm và địa điểm cụ thể.
+Bảy (Seven) là con số tự nhiên nằm giữa số sáu và số tám, được viết là 7.
+Kinh tế (Economic) là những gì liên quan đến việc sản xuất, mua bán, và sử dụng hàng hóa, dịch vụ và tiền bạc của một quốc gia hoặc khu vực.
+Xe hơi (Car) là một loại phương tiện giao thông có bốn bánh, dùng động cơ để di chuyển và chở người hoặc hàng hóa.
+Lực (Force) là sức đẩy hoặc sức kéo tác động lên một vật, làm cho nó thay đổi tốc độ, hướng di chuyển hoặc hình dạng.
+Khán giả (Audience) là nhóm người xem hoặc nghe một buổi biểu diễn, một chương trình, một bài phát biểu hay một bộ phim.
+Phía bắc (North) là một trong bốn hướng chính trên la bàn hoặc bản đồ, ngược với phía nam.
+Thử thách (Challenge) là một nhiệm vụ hoặc tình huống khó khăn đòi hỏi sự nỗ lực, kỹ năng và quyết tâm để vượt qua.
+Chương trình (Shows) là một buổi biểu diễn, một tiết mục hoặc một loạt các tập được phát sóng trên TV, radio hoặc sân khấu cho khán giả xem.
+Đặc biệt (Particularly) là từ dùng để nhấn mạnh một điều gì đó hơn những thứ khác; một cách cụ thể, riêng biệt.
+Chúa (Lord) là một danh xưng trang trọng dùng để chỉ một vị thần hoặc một người có quyền lực tối cao, thường được dùng trong tôn giáo.
+Tháng (Month) là một đơn vị thời gian, dài khoảng 30 hoặc 31 ngày, một năm có 12 tháng.
+Trung Quốc (China) là tên của một quốc gia lớn ở khu vực Đông Á.
+Sự nghiệp (Career) là toàn bộ quá trình công việc và các vị trí mà một người làm trong suốt cuộc đời của họ, thường là trong một lĩnh vực cụ thể.
+Tiêu tiền (Spend) là hành động dùng tiền để mua một thứ gì đó hoặc trả cho một dịch vụ.
+Điểm (Points) là đơn vị dùng để tính kết quả trong các trò chơi, cuộc thi hoặc để đánh giá mức độ hoàn thành một việc gì đó.
+Âm thanh (Sound) là những rung động trong không khí mà tai của chúng ta có thể nghe được.
+Bắt đầu (Begin) là hành động khởi đầu, làm một việc gì đó từ thời điểm đầu tiên.
+Hỏi (Asking) là hành động đưa ra câu hỏi để tìm kiếm thông tin hoặc câu trả lời.
+Mất (Lost) là tình trạng không còn sở hữu, không tìm thấy hoặc không biết vị trí của một thứ gì đó.
+Con người (Humans) là loài sinh vật bậc cao, có khả năng suy nghĩ, nói chuyện, và tạo ra các xã hội phức tạp.
+Chuyên nghiệp (Professional) là tính từ mô tả một người làm việc có kỹ năng cao, thái độ nghiêm túc, và được trả tiền để làm công việc đó.
+Đã sống (Lived) là dạng quá khứ của động từ 'sống', chỉ việc tồn tại, trải qua cuộc sống tại một nơi hoặc trong một khoảng thời gian đã qua.
+Người dùng (User) là người sử dụng một sản phẩm, dịch vụ, máy tính hay một hệ thống nào đó.
+Máy ảnh (Camera) là một thiết bị dùng để chụp ảnh hoặc quay phim bằng cách thu lại hình ảnh ánh sáng.
+Thuộc về tâm trí (Mental) là những gì liên quan đến suy nghĩ, cảm xúc, và hoạt động của bộ não. Ví dụ, sức khỏe tâm trí là sức khỏe về tinh thần, không phải về cơ thể.
+Mùa hè (Summer) là một trong bốn mùa trong năm, thường là mùa nóng nhất, có ngày dài và đêm ngắn. Đây là thời gian mọi người thường đi nghỉ mát và học sinh được nghỉ học.
+Các mức độ (Levels) là những cấp bậc, giai đoạn khác nhau của một thứ gì đó, thường được sắp xếp từ thấp đến cao, từ dễ đến khó. Ví dụ: trò chơi có nhiều cấp độ, từ cấp độ 1 (dễ) đến cấp độ 10 (khó).
+Vua (King) là người đứng đầu một quốc gia trong chế độ quân chủ (một vương quốc), có quyền lực cao nhất và thường cha truyền con nối.
+Đã di chuyển (Moved) có nghĩa là đã thay đổi vị trí từ nơi này sang nơi khác. Ví dụ: 'Tôi đã di chuyển cái bàn ra góc phòng' hoặc 'Gia đình tôi đã di chuyển đến một thành phố mới.'
+Mười (Ten) là con số 10, đứng ngay sau số 9.
+Đã viết (Written) là hành động tạo ra chữ, văn bản, hoặc câu chuyện bằng bút, máy tính đã được hoàn thành trong quá khứ. Ví dụ: 'Bức thư này được viết bởi mẹ tôi.'
+Có liên quan (Related) là khi hai hay nhiều thứ có một sự kết nối, điểm chung hoặc ảnh hưởng lẫn nhau. Ví dụ: Sốt và ho là các triệu chứng có liên quan đến bệnh cúm.
+Đăng bài (Post) là hành động chia sẻ thông tin, hình ảnh, hoặc trạng thái lên mạng xã hội, diễn đàn, hoặc blog để người khác có thể thấy.
+Tổ chức (Organization) là một nhóm người cùng làm việc với nhau một cách có hệ thống để đạt được một mục tiêu chung. Ví dụ: trường học, công ty, hoặc một câu lạc bộ.
+Sự thật (Truth) là những gì thực sự tồn tại, thực sự đã xảy ra, đúng với thực tế và không phải là giả dối hay tưởng tượng.
+Vượt ra ngoài (Beyond) là đi qua một giới hạn, một điểm nào đó hoặc xa hơn những gì được mong đợi. Ví dụ: 'Vẻ đẹp của ngọn núi này vượt ra ngoài sức tưởng tượng của tôi.'
+Nhận ra (Notice) là hành động nhìn thấy, nghe thấy hoặc ý thức được về sự tồn tại của một điều gì đó mà trước đó bạn có thể đã bỏ qua.
+Về phía (Towards) là chỉ hướng di chuyển hoặc hướng tới một người, một vật, hoặc một địa điểm nào đó. Ví dụ: 'Anh ấy đang đi về phía công viên.'
+Gửi (Send) là hành động làm cho một thứ gì đó (như thư, bưu kiện, email) đi từ nơi của bạn đến nơi của người khác.
+Sự quan tâm (Interest) là cảm giác tò mò, muốn tìm hiểu hoặc tham gia vào một điều gì đó. Nó cũng có thể là lợi ích mà bạn nhận được từ một việc gì đó.
+Trang (Page) là một mặt của một tờ giấy trong sách, vở, hoặc tạp chí. Trên internet, nó là một tài liệu riêng lẻ mà bạn xem trên trình duyệt web.
+Bạn (Friend) là người mà bạn có mối quan hệ thân thiết, tin tưởng, cùng chia sẻ và giúp đỡ lẫn nhau.
+Đỏ (Red) là một màu sắc cơ bản, giống như màu của máu, quả dâu tây chín, hoặc xe cứu hỏa.
+Sách (Books) là tập hợp các tờ giấy có chữ viết hoặc hình ảnh được đóng lại với nhau, dùng để đọc và tìm hiểu kiến thức hoặc giải trí.
+Chuỗi (Series) là một loạt các sự vật, sự việc, hoặc chương trình có liên quan đến nhau và diễn ra theo một thứ tự nhất định. Ví dụ: một chuỗi phim nhiều phần.
+Tuần (Weeks) là một đơn vị thời gian kéo dài 7 ngày, từ thứ Hai đến Chủ Nhật.
+Đã thay đổi (Changed) là trạng thái không còn giống như ban đầu, đã trở nên khác đi. Ví dụ: 'Cậu ấy đã thay đổi rất nhiều sau khi lên đại học.'
+Bằng (Equal) có nghĩa là có cùng giá trị, kích thước, số lượng, hoặc tầm quan trọng. Ví dụ: 2 + 2 bằng 4.
+Mặt đất (Ground) là bề mặt của Trái Đất mà chúng ta đi lại, đứng và xây dựng mọi thứ trên đó.
+Quyết định (Decision) là sự lựa chọn cuối cùng sau khi đã suy nghĩ, cân nhắc giữa nhiều phương án khác nhau.
+Liên bang (Federal) là một hệ thống chính quyền trong đó quyền lực được chia sẻ giữa một chính phủ trung ương và các chính quyền của các bang hay địa phương. Ví dụ: Chính phủ liên bang Hoa Kỳ.
+Xã hội (Society) là một cộng đồng lớn gồm nhiều người cùng sống chung, có chung văn hóa, luật lệ và cách thức tổ chức cuộc sống.
+Mua (Buy) là hành động dùng tiền để đổi lấy một món hàng hoặc một dịch vụ nào đó.
+Đào tạo (Training) là quá trình dạy và học một kỹ năng cụ thể cho một công việc hoặc một hoạt động nào đó. Ví dụ: đào tạo nhân viên mới.
+Phát triển (Grow) là quá trình trở nên lớn hơn, tốt hơn, hoàn thiện hơn hoặc phức tạp hơn theo thời gian. Ví dụ: cây cối phát triển, một đứa trẻ phát triển.
+Gen (Genes) là những đơn vị nhỏ trong cơ thể sinh vật, mang thông tin di truyền quyết định các đặc điểm như màu mắt, chiều cao, và được truyền từ cha mẹ sang con cái.
+Hai mươi (Twenty) là con số 20, bằng hai lần mười.
+Đáng chú ý (Remarkable) là những điều gì đó đặc biệt, khác thường và gây ấn tượng mạnh mẽ, khiến người khác phải để tâm đến.
+Liên kết (Links) là sự kết nối giữa các sự vật, sự việc. Trên internet, đó là một đoạn văn bản hoặc hình ảnh mà bạn có thể nhấn vào để đi đến một trang web khác.
+Hiến pháp (Constitution) là văn bản luật pháp cao nhất của một quốc gia, quy định những nguyên tắc cơ bản về cách tổ chức và hoạt động của chính phủ cũng như quyền và nghĩa vụ của công dân.
+Quản lý (Managed) là hành động điều hành, tổ chức, hoặc kiểm soát một nhóm người, một công việc, hay một hệ thống để nó hoạt động hiệu quả.
+Hoàn cảnh (Circumstances) là toàn bộ những điều kiện, sự kiện, và tình hình xung quanh có ảnh hưởng đến một người hoặc một sự việc.
+Lợi nhuận (Profit) là số tiền kiếm được sau khi đã trừ đi tất cả các chi phí đã bỏ ra để kinh doanh hoặc đầu tư.
+Túi (Bag) là một vật dụng dùng để chứa, đựng và mang theo các đồ vật khác, thường có quai xách hoặc dây đeo.
+Nước Đức (Germany) là tên của một quốc gia ở Trung Âu, nổi tiếng với ngành công nghiệp ô tô, bia và lịch sử lâu đời.
+Chủng tộc (Race) là một cách phân loại con người thành các nhóm dựa trên các đặc điểm ngoại hình chung như màu da, màu tóc, nét mặt.
+Yêu thích (Favorite) là thứ mà bạn thích nhất trong số nhiều lựa chọn khác. Ví dụ: 'Màu xanh là màu yêu thích của tôi.'
+Chính (Main) có nghĩa là quan trọng nhất, cơ bản nhất hoặc lớn nhất. Ví dụ: nguyên nhân chính, con đường chính.
+Hoàn hảo (Perfect) là trạng thái tốt đẹp đến mức không thể tốt hơn được nữa, không có bất kỳ lỗi lầm hay thiếu sót nào.
+Nhiều (Lots) là một từ dùng để chỉ một số lượng lớn, không xác định của một thứ gì đó.
+Cha (Father) là người đàn ông đã sinh ra hoặc nuôi nấng một người con; người bố.
+Rạp hát (Theater) là một tòa nhà hoặc một không gian được thiết kế để trình diễn các vở kịch, buổi hòa nhạc, hoặc các buổi biểu diễn nghệ thuật khác cho khán giả xem.
+Âm thanh (Audio) là những gì liên quan đến âm thanh, tiếng động mà tai người có thể nghe được, thường được ghi lại hoặc truyền đi.
+Sản phẩm (Product) là một vật phẩm hoặc dịch vụ được tạo ra để bán cho người khác sử dụng hoặc tiêu dùng.
+Đã đi (Gone) là trạng thái không còn ở một nơi nào đó nữa, đã di chuyển đến nơi khác hoặc đã biến mất.
+Tương tự (Similar) là khi hai hay nhiều thứ có những điểm giống nhau, gần giống nhau nhưng không hoàn toàn y hệt.
+Đất (Land) là bề mặt của Trái Đất không bị nước bao phủ, là nơi con người, động vật sinh sống và cây cối mọc lên.
+Số (Numbers) là các ký hiệu (như 1, 2, 3) dùng để đếm, đo lường và xác định số lượng.
+Mã (Code) là một hệ thống các ký hiệu, chữ, hoặc số được dùng để biểu thị thông tin một cách bí mật hoặc ngắn gọn (ví dụ: mã vạch, mã giảm giá).
+Chức năng (Function) là nhiệm vụ hoặc công dụng chính của một vật gì đó, hoặc vai trò mà một người đảm nhận.
+Hệ thống (Systems) là một tập hợp gồm nhiều phần tử, bộ phận có liên quan và tương tác với nhau để cùng thực hiện một mục đích chung.
+Siêu (Super) là một từ dùng để nhấn mạnh một thứ gì đó rất lớn, rất giỏi, hoặc vượt trội hơn hẳn so với mức bình thường.
+Cắt (Cut) là hành động dùng một vật sắc (như dao, kéo) để chia một thứ gì đó ra thành các phần nhỏ hơn hoặc tạo ra một vết hở trên bề mặt.
+Chú ý (Attention) là sự tập trung suy nghĩ, ánh mắt hoặc lắng nghe vào một người, một sự vật, hay một sự việc cụ thể.
+Chờ đợi (Wait) là hành động ở yên tại một nơi hoặc không làm gì khác trong một khoảng thời gian để mong một điều gì đó sẽ xảy ra.
+Màu sắc (Color) là đặc điểm của ánh sáng mà mắt chúng ta cảm nhận được, giúp phân biệt các vật thể với nhau (ví dụ: xanh, đỏ, vàng).
+Đơn giản (Simply) có nghĩa là một cách dễ dàng, không phức tạp, không cầu kỳ.
+Câu chuyện (Stories) là một bài kể về các sự kiện có thật hoặc do tưởng tượng, thường có nhân vật, bối cảnh và một diễn biến cụ thể.
+Dài hơn (Longer) là tính từ so sánh, chỉ một vật có chiều dài hoặc thời gian kéo dài lớn hơn một vật khác.
+Tưởng tượng (Imagine) là khả năng tạo ra những hình ảnh, ý tưởng, hoặc cảm giác mới trong tâm trí mà không cần nhìn hay nghe thấy trực tiếp.
+Cá nhân (Personal) là những gì thuộc về riêng một người nào đó, không phải của chung hay của người khác.
+Giai đoạn (Period) là một khoảng thời gian cụ thể trong một quá trình phát triển hoặc một sự kiện lịch sử.
+Hành động (Act) là một việc làm cụ thể, một cử chỉ hoặc một quyết định được thực hiện tại một thời điểm.
+Môi trường (Environment) là tất cả những gì bao quanh chúng ta, bao gồm không khí, nước, đất đai, cây cối, và các sinh vật khác.
+Chi phí (Cost) là số tiền hoặc nguồn lực cần phải bỏ ra để mua, làm ra hoặc sở hữu một thứ gì đó.
+Có trách nhiệm (Responsible) là việc một người phải thực hiện đầy đủ nghĩa vụ của mình và sẵn sàng gánh chịu kết quả từ hành động của bản thân.
+Bằng cấp (Degree) là một văn bằng chính thức do trường đại học hoặc cao đẳng cấp để công nhận rằng một người đã hoàn thành một khóa học.
+Tài chính (Financial) là những gì liên quan đến tiền bạc và việc quản lý tiền, chẳng hạn như thu nhập, chi tiêu, đầu tư.
+Khoa (Faculty) là một đơn vị lớn trong một trường đại học, chuyên phụ trách giảng dạy và nghiên cứu về một lĩnh vực cụ thể (ví dụ: Khoa Kinh tế, Khoa Luật).
+Tiếp cận (Approach) là cách thức, phương pháp để bắt đầu giải quyết một vấn đề, hoặc là hành động di chuyển lại gần một người hay một vật.
+Vị trí (Position) là nơi chốn cụ thể của một người hoặc một vật, hoặc là cấp bậc, chức vụ của một người trong công việc.
+Hào hứng (Excited) là cảm giác vui vẻ, phấn khởi và tràn đầy năng lượng khi mong đợi hoặc trải nghiệm một điều gì đó thú vị.
+Phụ nữ (Woman) là một người trưởng thành thuộc giới tính nữ.
+Xin lỗi (Sorry) là lời nói dùng để thể hiện sự hối tiếc hoặc áy náy khi đã làm điều gì đó sai hoặc gây phiền toái cho người khác.
+Trước đó (Earlier) chỉ một thời điểm đã xảy ra trong quá khứ, trước một thời điểm khác đang được nói đến.
+Phần trăm (Percent) là một phần trong một trăm, được ký hiệu là %, dùng để biểu thị một tỉ lệ (ví dụ: 50% nghĩa là 50 trên 100).
+Nhà thờ (Church) là một tòa nhà được xây dựng để những người theo đạo Thiên Chúa đến cầu nguyện và thực hiện các nghi lễ tôn giáo.
+Không khí (Air) là hỗn hợp các chất khí (chủ yếu là nitơ và oxy) bao quanh Trái Đất, mà con người và động vật cần để thở.
+Khu vực (Areas) là một vùng đất, một khoảng không gian có ranh giới nhất định hoặc có một đặc điểm chung nào đó.
+Giữ (Hold) là hành động cầm, nắm một vật gì đó trong tay hoặc duy trì một thứ gì đó ở một vị trí hay trạng thái nhất định.
+Hành động (Action) là quá trình làm một việc gì đó, thường là để đạt được một mục tiêu hoặc giải quyết một vấn đề.
+Ngắn (Short) là tính từ chỉ một vật có chiều dài, chiều cao hoặc thời gian kéo dài ít hơn so với bình thường hoặc so với vật khác.
+Đã xây dựng (Built) là trạng thái một công trình (nhà cửa, cầu cống) đã được hoàn thành việc thi công, tạo nên từ các vật liệu.
+Ý tưởng (Ideas) là những suy nghĩ, khái niệm hoặc kế hoạch mới nảy sinh trong đầu một người.
+Theo (Follow) là hành động đi hoặc di chuyển phía sau một ai đó, hoặc làm theo sự chỉ dẫn, quy tắc của người khác.
+Buổi sáng (Morning) là khoảng thời gian từ lúc mặt trời mọc cho đến buổi trưa.
+Nghỉ ngơi (Rest) là hành động dừng làm việc hoặc dừng hoạt động để cơ thể và tâm trí được thư giãn, hồi phục năng lượng.
+Mạnh (Strong) là có nhiều sức lực về thể chất hoặc có ý chí, tinh thần vững vàng, khó bị tác động.
+Văn hóa (Culture) là toàn bộ những giá trị về vật chất và tinh thần như phong tục, tín ngưỡng, nghệ thuật, lối sống... do con người tạo ra và được truyền từ thế hệ này sang thế hệ khác.
+Cần thiết (Needed) có nghĩa là rất quan trọng, không thể thiếu để làm một việc gì đó hoặc để đạt được một kết quả.
+Tin tức (News) là những thông tin mới về các sự kiện quan trọng hoặc thú vị đang xảy ra ở khắp nơi, thường được truyền qua báo chí, tivi, internet.
+Chính (Major) có nghĩa là quan trọng nhất, lớn nhất, hoặc chủ yếu trong một nhóm hay một vấn đề.
+Rủi ro (Risk) là khả năng xảy ra một điều gì đó không mong muốn, có thể gây ra tổn thất hoặc nguy hiểm.
+An ninh (Security) là tình trạng an toàn, trật tự, không bị đe dọa bởi nguy hiểm, tội phạm hay các cuộc tấn công.
+Cộng (Plus) là hành động thêm một thứ gì đó vào một thứ khác, thường làm cho tổng số lượng tăng lên. Ví dụ, 2 cộng 2 bằng 4, hoặc 'niềm vui cộng thêm bạn bè'.
+Thay đổi (Changes) là sự việc hoặc quá trình làm cho một thứ gì đó trở nên khác đi so với trước đây, ví dụ như thay đổi thời tiết, thay đổi công việc.
+Kiểm tra (Test) là hành động xem xét, thử nghiệm một cái gì đó để đánh giá chất lượng, kiến thức, hoặc xem nó có hoạt động đúng hay không. Ví dụ: bài kiểm tra ở trường, kiểm tra xe trước khi đi.
+Tài nguyên (Resources) là tất cả những gì chúng ta có thể sử dụng để làm một việc gì đó, ví dụ như tiền bạc, thời gian, con người, hoặc vật liệu như gỗ, nước.
+Khó (Difficult) là tính chất của một việc gì đó đòi hỏi nhiều nỗ lực, kỹ năng hoặc suy nghĩ để hoàn thành hoặc để hiểu.
+Thành viên (Members) là những người thuộc về một nhóm, một câu lạc bộ, một tổ chức hoặc một gia đình. Ví dụ: thành viên câu lạc bộ sách, thành viên trong nhà.
+Phương tiện truyền thông (Media) là các kênh hoặc công cụ dùng để truyền tải thông tin đến nhiều người cùng một lúc, như báo chí, TV, radio, và internet (mạng xã hội, trang tin tức).
+Trái Đất (Earth) là hành tinh nơi chúng ta và mọi sinh vật đang sinh sống, là ngôi nhà chung của nhân loại.
+Xem (Watch) là hành động dùng mắt để nhìn vào một thứ gì đó một cách tập trung trong một khoảng thời gian, thường là để giải trí hoặc theo dõi diễn biến. Ví dụ: xem phim, xem một trận bóng đá.
+Bộ não (Brain) là bộ phận nằm trong đầu của con người và động vật, dùng để suy nghĩ, điều khiển cơ thể, ghi nhớ và cảm nhận mọi thứ.
+Thấp (Low) có nghĩa là ở một vị trí, mức độ hoặc số lượng không cao. Ví dụ: cái bàn thấp, nhiệt độ thấp, giá thấp.
+Bộ phận (Department) là một phần riêng biệt trong một tổ chức lớn hơn (như công ty, trường học, bệnh viện), mỗi bộ phận có một nhiệm vụ riêng. Ví dụ: bộ phận bán hàng, bộ phận nhân sự.
+Đặc biệt (Special) có nghĩa là khác biệt, nổi bật hơn so với những thứ thông thường, hoặc có một ý nghĩa quan trọng riêng. Ví dụ: một món quà đặc biệt, một ngày đặc biệt.
+Chìa khóa (Key) là vật dụng dùng để mở hoặc đóng ổ khóa. Theo nghĩa bóng, nó cũng là giải pháp hoặc yếu tố quan trọng nhất để giải quyết một vấn đề. Ví dụ: 'Chăm chỉ là chìa khóa của thành công'.
+Các công ty (Companies) là các tổ chức được lập ra để kinh doanh, tức là bán sản phẩm hoặc cung cấp dịch vụ để kiếm lợi nhuận.
+Phổ biến (Common) là thứ gì đó được nhiều người biết đến, sử dụng, hoặc xảy ra thường xuyên, rất dễ bắt gặp. Ví dụ: điện thoại thông minh là một vật rất phổ biến.
+Công cụ tìm kiếm (Google) là một chương trình hoặc trang web giúp bạn tìm kiếm thông tin trên Internet bằng cách gõ từ khóa. Google là công cụ tìm kiếm phổ biến nhất thế giới.
+Lĩnh vực (Field) là một phạm vi hoạt động, kiến thức hoặc ngành nghề cụ thể. Ví dụ: lĩnh vực y tế, lĩnh vực công nghệ thông tin.
+Âm nhạc (Music) là nghệ thuật kết hợp âm thanh (như giọng hát, tiếng nhạc cụ) theo giai điệu và nhịp điệu để tạo ra các tác phẩm có cảm xúc.
+Thiết kế (Design) là quá trình lên kế hoạch và tạo ra hình dáng, cấu trúc hoặc chức năng cho một vật thể, một không gian hay một hệ thống. Ví dụ: thiết kế thời trang, thiết kế nhà cửa.
+Dịch vụ (Services) là những hoạt động phục vụ nhu cầu của người khác mà không tạo ra sản phẩm vật chất. Ví dụ: dịch vụ cắt tóc, dịch vụ sửa chữa, dịch vụ y tế.
+Thứ ba (Third) là số thứ tự đứng ngay sau thứ hai và đứng trước thứ tư trong một dãy. Ví dụ: người về thứ ba trong cuộc thi.
+Tác động (Impact) là sự ảnh hưởng mạnh mẽ của một sự việc này lên một sự việc khác, gây ra sự thay đổi. Ví dụ: Internet có tác động lớn đến cách chúng ta giao tiếp.
+Ngôn ngữ (Language) là hệ thống âm thanh, chữ viết và quy tắc mà con người trong cùng một cộng đồng dùng để giao tiếp và thể hiện suy nghĩ.
+Địa phương (Local) chỉ những gì thuộc về một khu vực, một vùng đất nhỏ và cụ thể, trái ngược với toàn quốc hay quốc tế. Ví dụ: đặc sản địa phương, chính quyền địa phương.
+Sự khác biệt (Difference) là điểm không giống nhau khi so sánh hai hay nhiều thứ với nhau.
+Mô hình (Model) là một phiên bản thu nhỏ hoặc một sơ đồ đại diện cho một vật thể hoặc một hệ thống thật, giúp người ta dễ hình dung và nghiên cứu. Ví dụ: mô hình nhà, mô hình kinh doanh.
+Quan điểm (View) là cách nhìn nhận, suy nghĩ và đánh giá của một người về một vấn đề nào đó.
+Đơn giản (Simple) có nghĩa là không phức tạp, dễ hiểu, dễ làm.
+Ở lại (Stay) là hành động tiếp tục ở một nơi nào đó, không di chuyển hay rời đi.
+Chợ (Market) là nơi mọi người tụ tập để mua và bán hàng hóa, thực phẩm. Nó cũng có thể chỉ thị trường kinh doanh nói chung.
+Có sẵn (Available) có nghĩa là một thứ gì đó đang ở trạng thái sẵn sàng để được sử dụng, mua hoặc gặp mặt. Ví dụ: 'Sản phẩm này có sẵn trong kho'.
+Vui (Happy) là trạng thái cảm xúc tích cực, cảm thấy hài lòng, thích thú và dễ chịu.
+To lớn (Huge) là tính từ chỉ một cái gì đó có kích thước, quy mô hoặc mức độ rất lớn, vượt xa mức bình thường.
+Đêm (Night) là khoảng thời gian từ khi mặt trời lặn đến khi mặt trời mọc, trời tối và hầu hết mọi người nghỉ ngơi, ngủ.
+Văn phòng (Office) là nơi làm việc của những người làm công việc giấy tờ, hành chính, quản lý, thường được trang bị bàn ghế, máy tính.
+Cung cấp (Provide) là hành động đưa hoặc trao cho ai đó thứ mà họ cần. Ví dụ: công ty cung cấp máy tính cho nhân viên.
+Tim (Heart) là bộ phận trong cơ thể có nhiệm vụ bơm máu đi khắp nơi. Theo nghĩa bóng, 'tim' hay 'trái tim' còn tượng trưng cho tình yêu và cảm xúc.
+Chắc chắn (Definitely) là một từ khẳng định sự việc nào đó là hoàn toàn đúng, không có gì nghi ngờ.
+Phía sau (Behind) là vị trí ở đằng sau lưng hoặc bị che khuất bởi một vật khác.
+Rời đi (Leave) là hành động di chuyển ra khỏi một nơi nào đó.
+Vấn đề (Problems) là một tình huống khó khăn, một câu hỏi cần giải quyết hoặc một điều gì đó gây ra sự lo lắng.
+Rõ ràng (Clear) có nghĩa là dễ nhìn, dễ nghe, dễ hiểu, không mơ hồ hay khó nhận biết.
+Bên ngoài (Outside) là phần không gian hoặc khu vực không nằm bên trong một vật, một tòa nhà hay một ranh giới nào đó.
+Tạo ra (Create) là hành động làm cho một cái gì đó mới mẻ xuất hiện hoặc tồn tại, thứ mà trước đó chưa có.
+Hình thức (Form) là vẻ bề ngoài, cách tổ chức hoặc cấu trúc của một sự vật, sự việc.
+Phía trước (Front) là vị trí ở đằng trước mặt hoặc ở phần đầu của một vật gì đó.
+Đang xảy ra (Happening) chỉ một sự việc, một hành động đang diễn ra ngay tại thời điểm nói.
+Dừng lại (Stop) là hành động ngưng một chuyển động hoặc một hoạt động đang diễn ra.
+Đã đề cập (Mentioned) có nghĩa là một thông tin hoặc một người nào đó đã được nhắc đến, nói đến trước đó trong cuộc trò chuyện hoặc trong văn bản.
+Cuộc sống (Living) là toàn bộ quá trình tồn tại và trải nghiệm của một người từ khi sinh ra đến khi mất đi, bao gồm mọi hoạt động, cảm xúc và sự kiện.
+Dịch vụ (Service) là một hành động hoặc công việc mà một người hoặc công ty làm để giúp đỡ hoặc đáp ứng nhu cầu của người khác, thường để nhận lại tiền (ví dụ: cắt tóc, sửa xe).
+Tập trung (Focus) là dồn hết sự chú ý và suy nghĩ của mình vào một việc duy nhất, không để bị phân tâm bởi những thứ khác.
+Thỏa thuận (Deal) là sự đồng ý, nhất trí giữa hai hay nhiều bên về một vấn đề nào đó, thường liên quan đến việc trao đổi, mua bán hoặc hợp tác.
+Kế hoạch (Plan) là một tập hợp các bước hoặc hành động được suy nghĩ và sắp xếp trước để đạt được một mục tiêu cụ thể.
+Con số (Figure) là một ký hiệu (như 1, 2, 3) dùng để biểu thị số lượng hoặc một giá trị nhất định, thường được dùng trong tính toán hoặc thống kê.
+Truy cập (Access) là hành động đi vào một nơi nào đó hoặc có được quyền sử dụng một cái gì đó, ví dụ như vào một trang web, một tòa nhà, hoặc một tệp dữ liệu.
+Nghiên cứu (Study) là quá trình tìm hiểu, xem xét một cách cẩn thận và có hệ thống để khám phá hoặc hiểu rõ hơn về một vấn đề, sự vật.
+Kiểm tra (Check) là hành động xem xét lại một cái gì đó để chắc chắn rằng nó đúng, an toàn, hoặc hoạt động bình thường.
+Bên trong (Inside) là phần không gian hoặc bề mặt ở phía trong của một vật thể, một căn phòng, hay một khu vực giới hạn.
+Đã hỏi (Asked) là hành động đặt câu hỏi đã xảy ra trong quá khứ.
+Bước (Step) là một hành động di chuyển chân để đi lại, hoặc là một giai đoạn, một phần trong một quy trình lớn hơn.
+Số Sáu (Six) là con số tự nhiên nằm giữa số năm và số bảy, được viết là 6.
+Chung (General) là chỉ những gì thuộc về, áp dụng cho tất cả hoặc hầu hết mọi người, mọi vật trong một nhóm, không phải của riêng ai.
+Viết (Write) là hành động dùng chữ cái hoặc ký hiệu để ghi lại thông tin, suy nghĩ lên một bề mặt như giấy hoặc màn hình.
+Dễ dàng (Easy) là trạng thái không đòi hỏi nhiều nỗ lực, kỹ năng hay sự phức tạp để thực hiện hoặc để hiểu.
+Lớn (Large) là tính từ chỉ một thứ có kích thước, số lượng, hoặc quy mô to hơn mức bình thường.
+Kiểm soát (Control) là khả năng điều khiển, ra lệnh hoặc gây ảnh hưởng đến hành vi của một người, một hệ thống hay một tình huống.
+Tiếp tục (Continue) là hành động làm tiếp một việc đang dang dở mà không dừng lại, hoặc bắt đầu lại sau một khoảng thời gian gián đoạn.
+Quốc gia (National) là những gì liên quan hoặc thuộc về một đất nước, một dân tộc (ví dụ: đội tuyển quốc gia, quốc ca).
+Trò chơi (Game) là một hoạt động được tổ chức để giải trí hoặc thi đấu, thường có các quy tắc và mục tiêu để người chơi tuân theo.
+Giá trị (Value) là mức độ quan trọng, hữu ích, ý nghĩa hoặc số tiền mà một thứ gì đó được cho là có.
+Đơn lẻ (Single) là chỉ có một cái duy nhất, không đi thành đôi, thành cặp hay thành nhóm.
+Vấn đề (Issue) là một chủ đề hoặc một tình huống khó khăn đang được quan tâm, tranh luận hoặc cần được giải quyết.
+Mát mẻ (Cool) là trạng thái có nhiệt độ thấp một cách dễ chịu, không quá nóng cũng không quá lạnh.
+Loại (Type) là một nhóm các sự vật, con người có chung những đặc điểm hoặc tính chất nhất định.
+Công nghệ (Technology) là việc áp dụng kiến thức khoa học để tạo ra các công cụ, máy móc, quy trình nhằm giải quyết các vấn đề và làm cho cuộc sống dễ dàng hơn.
+Đầy đủ (Full) là trạng thái chứa đựng tối đa, không còn chỗ trống, hoặc có tất cả các phần cần thiết, không thiếu thứ gì.
+Trả tiền (Pay) là hành động đưa tiền cho người khác để đổi lấy hàng hóa, dịch vụ hoặc để thanh toán một khoản nợ.
+Về phía trước (Ahead) là ở vị trí đằng trước một người/vật khác, hoặc chỉ sự tiến bộ, đi trước về thời gian hay thành tích.
+Sẵn sàng (Ready) là trạng thái đã được chuẩn bị xong xuôi và có thể bắt đầu một hành động hoặc đối mặt với một sự việc ngay lập tức.
+Nước Mỹ (America) là tên gọi chung của Hợp chúng quốc Hoa Kỳ, một quốc gia ở Bắc Mỹ.
+Số lượng (Amount) là một đại lượng cho biết một thứ gì đó có bao nhiêu, nhiều hay ít, thường dùng cho những thứ không đếm được.
+Toàn bộ (Entire) là tất cả, trọn vẹn, không bỏ sót bất kỳ phần nào của một sự vật hay một nhóm.
+Thuộc chính trị (Political) là những gì liên quan đến chính phủ, nhà nước, và các hoạt động quản lý, điều hành một quốc gia.
+Các loại (Kinds) là chỉ nhiều nhóm, nhiều kiểu khác nhau của cùng một sự vật, sự việc.
+Giờ (Hours) là một đơn vị đo thời gian, mỗi giờ bằng 60 phút và một ngày có 24 giờ.
+Danh sách (List) là một tập hợp các từ, tên, hoặc các mục được viết hoặc in ra theo một thứ tự nhất định.
+Trẻ em (Child) là một người còn nhỏ tuổi, thường là từ khi sinh ra cho đến tuổi thiếu niên.
+Tình huống (Situation) là toàn bộ các hoàn cảnh, sự việc đang diễn ra tại một thời điểm và địa điểm cụ thể.
+Tấm ván (Board) là một miếng gỗ hoặc vật liệu cứng khác, có dạng phẳng và mỏng, thường dùng trong xây dựng hoặc làm đồ nội thất.
+Nhanh chóng (Quickly) là thực hiện một hành động với tốc độ cao, trong một khoảng thời gian ngắn.
+Sự phát triển (Development) là quá trình một cái gì đó trở nên lớn hơn, tiến bộ hơn, phức tạp hơn hoặc hoàn thiện hơn theo thời gian.
+Viết lách (Writing) là hoạt động hoặc công việc liên quan đến việc viết văn, viết báo, sáng tác.
+Nội dung (Content) là thông tin, ý tưởng, hình ảnh được chứa đựng bên trong một cuốn sách, bài báo, trang web, hoặc một video.
+Bức tranh (Picture) là một hình ảnh được tạo ra bằng cách vẽ, sơn, hoặc chụp ảnh, dùng để mô tả lại một người, một vật, hoặc một khung cảnh.
+Cuộc họp (Meeting) là sự kiện khi một nhóm người tụ tập lại với nhau để thảo luận về một chủ đề hoặc công việc cụ thể.
+Trực tuyến (Online) là trạng thái đang được kết nối và hoạt động trên mạng Internet.
+Sự hiểu biết (Understanding) là khả năng nhận thức và nắm bắt được ý nghĩa, bản chất của một thông tin, một vấn đề hay một người nào đó.
+Cao hơn (Higher) là ở một vị trí, cấp độ, hoặc mức độ ở trên so với một điểm tham chiếu khác.
+Cha mẹ (Parents) là người sinh ra và nuôi dưỡng mình, bao gồm bố và mẹ.
+Sự khởi đầu (Beginning) là điểm xuất phát, lúc bắt đầu của một sự việc, một quá trình hay một câu chuyện.
+Đẹp đẽ (Beautiful) là chỉ một cái gì đó có vẻ ngoài hoặc phẩm chất làm cho người khác cảm thấy thích thú, dễ chịu và ngưỡng mộ.
+Vai trò (Role) là nhiệm vụ, chức năng hoặc vị trí mà một người hay một vật đảm nhận trong một hoàn cảnh cụ thể.
+Rõ ràng (Specific) là chỉ một điều gì đó được nói hoặc mô tả một cách chi tiết, cụ thể, không mập mờ, dễ hiểu.
+Động đậy (Moving) là hành động di chuyển, thay đổi vị trí, không đứng yên một chỗ.
+Mặt trước (Face) là phía đằng trước của một vật thể, nơi thường chứa những bộ phận chính hoặc là phía người ta thường nhìn vào đầu tiên.
+Chắc chắn (Certainly) là thể hiện sự tin tưởng tuyệt đối, không có chút nghi ngờ nào về một điều gì đó.
+Rõ ràng (Obviously) là một điều gì đó rất dễ thấy, dễ hiểu, không cần phải giải thích nhiều.
+Học sinh (Student) là người đang đi học tại các trường phổ thông (tiểu học, trung học cơ sở, trung học phổ thông).
+Trung tâm (Center) là điểm ở chính giữa của một khu vực hoặc một vật thể; hoặc là nơi tập trung các hoạt động quan trọng.
+Tác phẩm (Works) là sản phẩm sáng tạo của một người, thường trong lĩnh vực nghệ thuật, văn học, âm nhạc như một cuốn sách, một bức tranh hay một bản nhạc.
+Quá khứ (Past) là khoảng thời gian đã trôi qua, những sự kiện đã xảy ra trước thời điểm hiện tại.
+Chiến tranh (War) là cuộc xung đột vũ trang quy mô lớn giữa các quốc gia hoặc các phe phái, gây ra nhiều chết chóc và tàn phá.
+Công ty (Company) là một tổ chức kinh doanh được thành lập để sản xuất, mua bán hàng hóa hoặc cung cấp dịch vụ nhằm kiếm lợi nhuận.
+Đã nghe (Heard) là hành động tiếp nhận âm thanh bằng tai đã diễn ra trong quá khứ.
+Ánh sáng (Light) là thứ năng lượng giúp chúng ta nhìn thấy mọi vật, thường phát ra từ mặt trời, bóng đèn, hoặc ngọn lửa.
+Sai (Wrong) là không đúng, không chính xác, hoặc không phù hợp với sự thật, quy tắc hay chuẩn mực.
+Tuyệt vời (Amazing) là chỉ một điều gì đó cực kỳ tốt, hay, đẹp, gây ngạc nhiên và ấn tượng mạnh mẽ.
+Cuộc sống (Lives) là quá trình tồn tại, sinh trưởng và phát triển của con người, con vật, hay cây cối.
+Đã nói (Talked) là hành động sử dụng lời nói để giao tiếp đã diễn ra trong quá khứ.
+Cộng (Add) là hành động gộp các số hoặc các thứ lại với nhau để có một tổng lớn hơn.
+Khoa học (Science) là lĩnh vực nghiên cứu về thế giới tự nhiên và xã hội thông qua quan sát, thí nghiệm để tìm ra các quy luật.
+Dự án (Project) là một kế hoạch, một nhiệm vụ có mục tiêu và thời gian cụ thể để tạo ra một sản phẩm hay kết quả nào đó.
+Đại học (University) là cơ sở giáo dục bậc cao, nơi đào tạo chuyên sâu về nhiều ngành nghề khác nhau và cấp các bằng cấp như cử nhân, thạc sĩ, tiến sĩ.
+Trẻ (Young) là chỉ người hoặc vật đang ở giai đoạn đầu của cuộc đời, chưa già.
+Triệu (Million) là một con số bằng một nghìn lần của một nghìn (1.000.000).
+Xây dựng (Build) là hành động lắp ráp, kết hợp các vật liệu lại với nhau để tạo ra một công trình như nhà cửa, cầu cống.
+Miễn phí (Free) là không phải trả tiền để có được hoặc sử dụng một thứ gì đó.
+Giáo dục (Education) là quá trình dạy và học kiến thức, kỹ năng để giúp con người phát triển toàn diện.
+Chia sẻ (Share) là hành động cho người khác cùng dùng chung một thứ gì đó của mình, hoặc kể cho người khác nghe về suy nghĩ, cảm xúc của mình.
+Tòa nhà (Building) là một công trình xây dựng có mái và tường, dùng để ở, làm việc hoặc chứa đồ đạc.
+Thức ăn (Food) là những thứ mà con người và động vật ăn hoặc uống để duy trì sự sống và năng lượng.
+Trẻ em (Children) là những người còn nhỏ tuổi, thường là từ lúc mới sinh cho đến tuổi thiếu niên.
+Phòng (Room) là một không gian được ngăn ra bên trong một tòa nhà, có tường và cửa riêng.
+Sớm (Early) là xảy ra trước thời gian dự kiến hoặc ở giai đoạn đầu của một khoảng thời gian.
+Học tập (Learning) là quá trình tiếp thu kiến thức, kỹ năng mới thông qua việc học, trải nghiệm hoặc được dạy.
+Chống lại (Against) là hành động phản đối, đối đầu hoặc ngăn cản một ai đó hoặc một điều gì đó.
+Xấu (Bad) là không tốt, có chất lượng kém, gây khó chịu hoặc có hại.
+Tâm trí (Mind) là nơi chứa đựng suy nghĩ, cảm xúc, ý thức, và trí nhớ của một người.
+Khu vực (Area) là một vùng đất, một khoảng không gian có ranh giới nhất định.
+Luật (Law) là hệ thống các quy tắc do nhà nước hoặc một tổ chức đặt ra để mọi người phải tuân theo.
+Khoảnh khắc (Moment) là một khoảng thời gian rất ngắn, chỉ kéo dài trong chốc lát.
+Lớp học (Class) là một nhóm học sinh cùng học một môn với một giáo viên; hoặc là căn phòng nơi việc học diễn ra.
+Tốt (Nice) là dễ chịu, tử tế, thân thiện hoặc có chất lượng tốt.
+Trắng (White) là màu sắc giống như màu của tuyết hay sữa, là màu sáng nhất.
+Trẻ con (Kids) là cách gọi thân mật, gần gũi của trẻ em.
+Đại học (College) là một cơ sở giáo dục bậc cao sau trung học, tương tự như 'University' nhưng đôi khi có quy mô nhỏ hơn hoặc tập trung vào một số lĩnh vực cụ thể.
+Đã xảy ra (Happened) là một sự việc, một sự kiện đã diễn ra trong quá khứ.
+Năng lượng (Energy) là sức mạnh để hoạt động, làm việc, di chuyển (ví dụ: điện, sức nóng, hoặc sức lực của cơ thể).
+Hy vọng (Hope) là cảm giác mong muốn và tin tưởng rằng một điều gì đó tốt đẹp sẽ xảy ra trong tương lai, ngay cả khi bạn không chắc chắn.
+Nguyên nhân (Cause) là nguồn gốc, là lý do ban đầu khiến một sự việc nào đó xảy ra.
+Dòng (Line) là một vệt dài và thẳng (hoặc cong) được vẽ trên một bề mặt, hoặc một hàng người/vật nối đuôi nhau.
+Câu trả lời (Answer) là lời giải đáp cho một câu hỏi, hoặc là giải pháp cho một vấn đề.
+Thành phố (City) là một khu vực dân cư lớn, đông đúc với nhiều nhà cửa, đường sá và các hoạt động kinh tế, văn hóa phát triển.
+Đội (Team) là một nhóm người cùng làm việc, cùng chơi hoặc cùng nhau hướng tới một mục tiêu chung.
+Dưới (Under) là một từ chỉ vị trí ở phía thấp hơn, bị che khuất hoặc ở bên dưới một vật nào đó.
+Tương lai (Future) là khoảng thời gian sắp xảy ra, những gì sẽ đến sau thời điểm hiện tại.
+Tuần (Week) là một khoảng thời gian gồm 7 ngày liên tiếp (ví dụ: từ Thứ Hai đến Chủ Nhật).
+Xa (Far) là một từ chỉ khoảng cách lớn, ở một nơi không gần với vị trí của người nói hoặc người nghe.
+Chính phủ (Government) là tổ chức có quyền lực cao nhất, quản lý và điều hành một quốc gia hoặc một vùng lãnh thổ.
+Nghe (Hear) là hành động dùng tai để tiếp nhận, cảm nhận âm thanh.
+Thứ tự (Order) là sự sắp xếp người hoặc vật theo một quy tắc nhất định, ví dụ như từ trước đến sau, từ nhỏ đến lớn.
+Lý do (Reason) là lời giải thích tại sao một việc gì đó xảy ra hoặc tại sao ai đó làm một điều gì đó.
+Trước (Ago) là một từ dùng để chỉ một khoảng thời gian đã qua, tính từ quá khứ ngược về thời điểm hiện tại. Ví dụ: '3 ngày trước'.
+Xã hội (Social) là những gì liên quan đến cộng đồng người sống chung, cách họ tương tác và mối quan hệ giữa họ.
+Ngôi nhà (House) là một công trình xây dựng để con người ở, là nơi che mưa che nắng và là nơi gia đình sinh sống.
+Xảy ra (Happen) có nghĩa là một sự việc, một sự kiện nào đó diễn ra hoặc bắt đầu tồn tại.
+Ngang qua (Across) là di chuyển từ bên này sang bên kia của một cái gì đó, như đi ngang qua đường, đi ngang qua một con sông.
+Cặp (Couple) có nghĩa là hai người hoặc hai vật đi cùng với nhau, thường là một đôi. Ví dụ: một cặp vợ chồng, một cặp giày.
+Nghiên cứu (Research) là quá trình tìm hiểu, thu thập thông tin và phân tích một cách có hệ thống để khám phá ra kiến thức mới về một chủ đề nào đó.
+Cấp độ (Level) là một mức độ, một vị trí trong một hệ thống xếp hạng từ thấp đến cao hoặc từ dễ đến khó.
+Hỗ trợ (Support) là hành động giúp đỡ, ủng hộ ai đó về tinh thần, vật chất hoặc bằng hành động cụ thể.
+Bên trái (Left) là phía hoặc hướng đối diện với bên phải.
+Tìm thấy (Found) là hành động phát hiện ra hoặc khám phá ra một người, một vật mà trước đó bị mất hoặc chưa được biết đến.
+Màu đen (Black) là màu tối nhất, do không có hoặc hấp thụ hoàn toàn ánh sáng.
+Lịch sử (History) là những câu chuyện, sự kiện đã xảy ra trong quá khứ, đặc biệt là những gì liên quan đến con người và các quốc gia.
+Học (Learn) là quá trình tiếp thu kiến thức, kỹ năng hoặc kinh nghiệm mới thông qua việc học tập, trải nghiệm hoặc được dạy.
+Quyền lực (Power) là khả năng kiểm soát, ra lệnh hoặc gây ảnh hưởng đến người khác hoặc sự việc.
+Người Mỹ (American) là người có quốc tịch hoặc có nguồn gốc từ Hợp chúng quốc Hoa Kỳ (nước Mỹ).
+Năm (Five) là con số 5.
+Bên (Side) là một phía của một vật gì đó, thường là đối lập với một phía khác (ví dụ: bên trong và bên ngoài, bên trái và bên phải).
+Chương trình (Program) là một kế hoạch gồm các hoạt động được sắp xếp theo thứ tự để đạt được một mục tiêu cụ thể, ví dụ như chương trình truyền hình, chương trình máy tính.
+Đoạn video (Video) là một đoạn phim ngắn được ghi lại, có cả hình ảnh chuyển động và âm thanh.
+Kinh doanh (Business) là hoạt động sản xuất, mua bán hàng hóa hoặc cung cấp dịch vụ nhằm mục đích kiếm lợi nhuận.
+Câu chuyện (Story) là một lời kể về các sự kiện có thật hoặc hư cấu, thường có nhân vật và diễn biến.
+Vấn đề (Problem) là một tình huống khó khăn, một câu hỏi cần được giải quyết hoặc một điều gì đó không mong muốn.
+Sức khỏe (Health) là tình trạng chung của cơ thể và tinh thần, chỉ việc không bị bệnh tật và cảm thấy khỏe mạnh.
+Thông tin (Information) là những dữ liệu, tin tức hoặc kiến thức về một sự vật, sự việc nào đó.
+Thật (Real) có nghĩa là có thật, tồn tại trong thực tế, không phải là giả tạo hay tưởng tượng.
+Tiền (Money) là vật dùng để trao đổi, mua bán hàng hóa và dịch vụ trong một xã hội.
+Thứ hai (Second) có thể là vị trí đứng ngay sau vị trí đầu tiên, hoặc là đơn vị đo thời gian (60 giây bằng 1 phút).
+Sách (Book) là một tập hợp các tờ giấy có chữ viết hoặc hình ảnh được đóng lại với nhau, dùng để đọc và cung cấp thông tin hoặc giải trí.
+Câu hỏi (Questions) là những lời nói hoặc câu viết ra nhằm mục đích tìm kiếm thông tin, lời giải đáp.
+Tổng thống (President) là người đứng đầu nhà nước hoặc chính phủ của một quốc gia theo chế độ cộng hòa.
+Hiểu (Understand) là khả năng nắm bắt được ý nghĩa, bản chất của một điều gì đó.
+Gọi (Call) là hành động tạo ra âm thanh bằng giọng nói để thu hút sự chú ý, hoặc dùng điện thoại để liên lạc với ai đó.
+Cao (High) là từ chỉ một vị trí ở trên, một mức độ lớn hoặc vượt trội so với mức trung bình.
+Nghĩa là (Means) là một từ dùng để giải thích, làm rõ ý nghĩa của một từ hoặc một khái niệm nào đó.
+Đặt (Set) là hành động để một vật nào đó vào một vị trí cụ thể. Nó cũng có nghĩa là thiết lập, quy định một cái gì đó (ví dụ: đặt ra quy tắc).
+Bắt đầu (Started) là hành động đầu tiên hoặc thời điểm đầu tiên của một việc gì đó, là điểm khởi đầu của một quá trình hay sự kiện.
+Ý tưởng (Idea) là một suy nghĩ, một khái niệm hay một kế hoạch mới nảy ra trong đầu bạn, thường là để giải quyết một vấn đề hoặc sáng tạo ra cái gì đó.
+Mang đến (Brought) là hành động di chuyển một vật gì đó từ nơi này đến nơi khác, thường là đến gần người nói hoặc người nhận.
+Đi bộ (Walk) là hành động di chuyển bằng hai chân với tốc độ bình thường, không nhanh như chạy, để đi từ nơi này đến nơi khác.
+Tuổi (Age) là số năm mà một người, một con vật hay một sự vật đã tồn tại kể từ khi được sinh ra hoặc tạo ra.
+Quan tâm (Interested) là cảm giác muốn tìm hiểu, khám phá thêm về một người, một sự vật, hay một vấn đề nào đó vì bạn thấy nó hấp dẫn hoặc quan trọng.
+Chính sách (Policy) là một bộ quy tắc, kế hoạch hành động được một tổ chức (như chính phủ, công ty) đặt ra để giải quyết một vấn đề hoặc đạt được một mục tiêu cụ thể.
+Nghệ thuật (Art) là sự sáng tạo ra những sản phẩm (như tranh vẽ, âm nhạc, kịch) để thể hiện vẻ đẹp, cảm xúc hoặc ý tưởng của con người.
+Vui (Fun) là cảm giác thích thú, dễ chịu và sảng khoái khi bạn tham gia vào một hoạt động giải trí nào đó.
+Đoán (Guess) là hành động đưa ra một câu trả lời hoặc một ý kiến khi bạn không chắc chắn về sự thật, dựa trên những thông tin ít ỏi có sẵn.
+Vấn đề (Issues) là một tình huống khó khăn cần được giải quyết, hoặc một chủ đề quan trọng đang được tranh luận, thảo luận.
+Cơ hội (Opportunity) là một thời điểm hoặc hoàn cảnh thuận lợi để bạn làm một điều gì đó mà bạn mong muốn hoặc có thể mang lại lợi ích.
+Chạy (Run) là hành động di chuyển bằng chân nhanh hơn đi bộ, khi cả hai chân đều có lúc không chạm đất.
+Nhìn (Looks) là hành động hướng mắt về một phía để thấy một người hoặc một vật gì đó. Nó cũng có thể chỉ vẻ bề ngoài của ai đó hoặc cái gì đó.
+Phía trước (Forward) là hướng ở đằng trước mặt bạn, hướng di chuyển tới tương lai hoặc một vị trí xa hơn.
+Nhóm (Group) là một tập hợp gồm nhiều người hoặc nhiều vật có chung một đặc điểm hoặc cùng làm một việc gì đó với nhau.
+Đọc (Read) là hành động nhìn vào các ký tự, chữ viết và hiểu ý nghĩa của chúng.
+Nhỏ (Small) là tính từ chỉ một thứ gì đó có kích thước, số lượng hoặc mức độ không lớn.
+Không gian (Space) là khoảng trống không có vật cản xung quanh bạn, hoặc cũng có thể chỉ vùng vũ trụ bao la bên ngoài Trái Đất.
+Nước (Water) là một chất lỏng trong suốt, không màu, không mùi, rất cần thiết cho sự sống của con người, động vật và thực vật.
+Đất nước (Country) là một vùng đất có biên giới, chính phủ và người dân riêng, ví dụ như Việt Nam, Mỹ, Nhật Bản.
+Kinh nghiệm (Experience) là những kiến thức hoặc kỹ năng mà bạn có được sau khi đã từng làm, từng trải qua một việc gì đó trong thực tế.
+Nhớ (Remember) là hành động gợi lại trong trí óc của mình một thông tin, một sự kiện hay một người nào đó từ quá khứ.
+Bốn (Four) là con số ngay sau số ba (3) và đứng trước số năm (5), được viết là 4.
+Quá trình (Process) là một chuỗi các hành động hoặc các bước nối tiếp nhau được thực hiện để đạt được một kết quả cuối cùng.
+Chăm sóc (Care) là hành động quan tâm, trông nom và giúp đỡ ai đó (đặc biệt là người ốm, người già, trẻ em) hoặc một cái gì đó để họ được khỏe mạnh và an toàn.
+Khó (Hard) là tính từ chỉ một việc gì đó không dễ làm, đòi hỏi nhiều nỗ lực, kỹ năng hoặc sức mạnh.
+Một vài (Few) là một số lượng nhỏ, không nhiều, thường nhiều hơn hai nhưng không đáng kể.
+Hệ thống (System) là một tập hợp các bộ phận, quy tắc có liên quan và hoạt động cùng nhau để thực hiện một chức năng chung.
+Tốt nhất (Best) là trạng thái hoặc chất lượng cao nhất, vượt trội hơn tất cả những cái khác trong cùng một nhóm.
+Tiểu bang (State) là một khu vực hành chính lớn trong một quốc gia liên bang (như Mỹ, Úc), có chính quyền và luật pháp riêng ở một mức độ nào đó.
+Trình diễn (Show) là hành động biểu diễn một cái gì đó (như ca hát, diễn kịch, hoặc một kỹ năng) cho người khác xem.
+Trường (School) là nơi học sinh đến để học tập kiến thức và kỹ năng từ các giáo viên.
+Giữa (Between) là vị trí ở trong khoảng không gian hoặc thời gian ngăn cách hai người, hai vật hoặc hai điểm.
+Dữ liệu (Data) là những thông tin, con số, sự kiện được thu thập lại để phân tích hoặc sử dụng làm cơ sở cho một việc gì đó.
+Sự thật (Fact) là một điều đã được chứng minh là đúng hoặc được mọi người công nhận là có thật.
+Cố gắng (Trying) là hành động nỗ lực hết sức mình để làm một việc gì đó, đặc biệt là những việc khó khăn.
+Học sinh (Students) là những người đang đi học tại một ngôi trường để tiếp thu kiến thức.
+Kết thúc (End) là điểm cuối cùng, phần cuối cùng của một sự việc, một câu chuyện, một khoảng thời gian hay một quá trình.
+Mang (Bring) là hành động cầm, giữ một vật gì đó và di chuyển nó cùng với bạn đến một nơi khác.
+Khác (Else) là một từ dùng để chỉ một người, một vật, hoặc một điều gì đó khác với cái vừa được nhắc đến.
+Con người (Human) là một cá thể thuộc loài người, có khả năng suy nghĩ, cảm xúc và giao tiếp phức tạp.
+Cảm giác (Sense) là khả năng của cơ thể để nhận biết thế giới xung quanh (nhìn, nghe, ngửi, nếm, chạm) hoặc một cảm nhận trong lòng (vui, buồn, sợ hãi).
+Thú vị (Interesting) là tính từ chỉ một thứ gì đó thu hút sự chú ý, khiến bạn tò mò và muốn tìm hiểu thêm về nó.
+Đủ (Enough) là trạng thái có vừa đúng số lượng hoặc mức độ cần thiết, không thừa cũng không thiếu.
+Công cộng (Public) là những gì thuộc về hoặc dành cho tất cả mọi người trong xã hội, không phải của riêng cá nhân nào (ví dụ: công viên công cộng, giao thông công cộng).
+Nhà (Home) là nơi một người hoặc một gia đình sinh sống, tạo cảm giác thân thuộc, an toàn và thoải mái.
+Đồ đạc (Stuff) là một từ không trang trọng dùng để chỉ chung các đồ vật, vật dụng cá nhân mà không cần gọi tên cụ thể.
+Sắp tới (Coming) là chỉ một sự kiện hoặc một khoảng thời gian sẽ sớm xảy ra trong tương lai gần.
+Giữ (Keep) là hành động tiếp tục có, cầm hoặc sở hữu một cái gì đó, không để nó mất đi hoặc thay đổi.
+Ví dụ (Example) là một trường hợp cụ thể được đưa ra để làm rõ, minh họa cho một ý kiến, một quy tắc hay một khái niệm chung.
+Đẹp (Pretty) là có vẻ ngoài ưa nhìn, hài hòa, làm cho người khác cảm thấy thích thú hoặc dễ chịu khi ngắm nhìn.
+Cố gắng (Try) là hành động dồn sức lực, tâm trí để làm một việc gì đó, dù có thể chưa biết kết quả sẽ thành công hay không.
+Cả hai (Both) là từ dùng để chỉ chung cho hai người, hai vật, hoặc hai sự việc đang được nhắc đến, không bỏ sót cái nào.
+Không bao giờ (Never) là trạng thái không xảy ra vào bất kỳ thời điểm nào, từ quá khứ, hiện tại cho đến tương lai. Hoàn toàn không một lần nào.
+Khóa học (Course) là một chuỗi các bài học hoặc buổi học về một chủ đề cụ thể, được tổ chức trong một khoảng thời gian nhất định để cung cấp kiến thức hoặc kỹ năng.
+Tốt hơn (Better) là trạng thái có chất lượng, mức độ hoặc giá trị cao hơn khi so sánh với một cái khác hoặc so với trước đây.
+Yêu (Love) là một cảm xúc sâu sắc, mạnh mẽ về sự quý mến, gắn bó và quan tâm đặc biệt dành cho một người, một sự vật hoặc một điều gì đó.
+Có thể (May) là từ dùng để chỉ một điều gì đó có khả năng xảy ra, được phép làm hoặc có thể là sự thật, nhưng không chắc chắn 100%.
+Loại (Sort) là một nhóm các sự vật, con người có cùng đặc điểm, tính chất chung. Nó cũng là hành động phân chia, sắp xếp mọi thứ vào các nhóm khác nhau.
+Cuối cùng (Last) là vị trí ở sau hết trong một dãy, một danh sách hoặc một chuỗi sự kiện; là thứ không còn gì theo sau nữa.
+Chúa (God) là đấng tối cao, thiêng liêng trong nhiều tôn giáo, được tin là người tạo ra và cai quản vũ trụ.
+Dài (Long) là có kích thước lớn về chiều dài, hoặc kéo dài trong một khoảng thời gian đáng kể.
+Ba (Three) là con số đứng ngay sau số hai và trước số bốn, biểu thị số lượng là 3.
+Chắc chắn (Sure) là trạng thái hoàn toàn tin tưởng, không còn nghi ngờ gì về một điều gì đó là đúng sự thật hoặc sẽ xảy ra.
+Điểm (Point) là ý chính, mục đích quan trọng nhất của một lời nói, bài viết. Nó cũng có thể là một vị trí cụ thể hoặc số điểm trong thi đấu, học tập.
+Giúp đỡ (Help) là hành động hỗ trợ, làm cho ai đó dễ dàng hơn trong việc hoàn thành một công việc hoặc thoát khỏi khó khăn.
+Câu hỏi (Question) là một lời nói, một câu văn được dùng để yêu cầu thông tin hoặc để tìm ra câu trả lời cho một vấn đề nào đó.
+Tiếp theo (Next) là thứ tự ngay liền sau một cái gì đó trong không gian, thời gian hoặc một danh sách.
+Năm (Year) là một khoảng thời gian dài khoảng 365 ngày, là thời gian Trái Đất quay một vòng quanh Mặt Trời.
+Quan trọng (Important) là có giá trị lớn, có ảnh hưởng hoặc tác động đáng kể đến một sự vật, sự việc nào đó.
+Giống nhau (Same) là trạng thái không có sự khác biệt khi so sánh hai hay nhiều thứ với nhau.
+Thế giới (World) là Trái Đất và tất cả mọi thứ trên đó, bao gồm các quốc gia, con người, sinh vật và thiên nhiên.
+Tại sao (Why) là từ dùng để hỏi về lý do, nguyên nhân của một sự việc, một hành động nào đó.
+Cuộc sống (Life) là khoảng thời gian từ lúc một sinh vật được sinh ra cho đến khi chết, bao gồm tất cả những trải nghiệm và hoạt động diễn ra trong thời gian đó.
+Dưới (Down) là một vị trí hoặc hướng ở phía thấp hơn so với một điểm mốc nào đó.
+Khác nhau (Different) là trạng thái không giống nhau, có những đặc điểm, tính chất riêng biệt khi so sánh hai hay nhiều thứ.
+Đến (Come) là hành động di chuyển từ một nơi khác tới vị trí của người nói hoặc một địa điểm được nhắc đến.
+Mới (New) là thứ vừa mới được tạo ra, xuất hiện hoặc chưa từng được sử dụng, trải nghiệm trước đây.
+Xung quanh (Around) là khu vực hoặc không gian bao bọc ở mọi phía của một người, một vật nào đó.
+Bộ phận (Part) là một phần, một mảnh tách ra từ một tổng thể lớn hơn.
+Một chút (Bit) là một lượng rất nhỏ, một phần không đáng kể của một cái gì đó.
+Rộng lớn (Big) là có kích thước, quy mô hoặc mức độ lớn hơn so với bình thường.
+Đã gọi (Called) là hành động dùng tên để nói về ai đó, cái gì đó; hoặc là hành động dùng điện thoại để liên lạc đã xảy ra trong quá khứ.
+Cảm thấy (Feel) là trải nghiệm một cảm xúc (vui, buồn) hoặc một cảm giác vật lý (nóng, lạnh) trong cơ thể hoặc tâm trí.
+Số (Number) là một ký hiệu hoặc từ dùng để biểu thị số lượng, để đếm hoặc đo lường.
+Kể (Tell) là hành động thuật lại một câu chuyện, một sự việc hoặc cung cấp thông tin cho người khác bằng lời nói.
+Nơi chốn (Place) là một vị trí, một khu vực hoặc một địa điểm cụ thể ở đâu đó.
+Đang làm việc (Working) là trạng thái một người đang thực hiện một công việc, một nhiệm vụ; hoặc một máy móc đang hoạt động.
+Thay đổi (Change) là hành động hoặc quá trình làm cho một cái gì đó trở nên khác đi so với trước đây.
+Lần (Times) là một đơn vị đếm, chỉ số lượt một hành động hoặc sự việc xảy ra.
+Cộng đồng (Community) là một nhóm người cùng sống ở một khu vực hoặc có chung sở thích, niềm tin, đặc điểm.
+Câu nói (Saying) là một câu ngắn gọn, súc tích, thường chứa đựng một kinh nghiệm, một lời khuyên hay một sự thật được nhiều người biết đến.
+Xa (Away) là ở một khoảng cách lớn, không ở gần vị trí của người nói hoặc một điểm mốc.
+Tiểu bang (States) là một khu vực hành chính, một phần của một quốc gia liên bang (như Hoa Kỳ), có chính quyền và luật pháp riêng trong một số lĩnh vực.
+Gia đình (Family) là một nhóm người có quan hệ huyết thống hoặc hôn nhân, sống cùng nhau và yêu thương, chăm sóc lẫn nhau.
+Công việc (Job) là một hoạt động có trả lương mà một người làm thường xuyên để kiếm sống.
+Già (Old) là trạng thái đã sống trong một thời gian dài, đã đi đến giai đoạn cuối của cuộc đời. Nó cũng dùng để chỉ đồ vật đã cũ, tồn tại từ lâu.
+Di chuyển (Move) là hành động thay đổi vị trí từ nơi này sang nơi khác.
+Về cơ bản (Basically) là cách nói tóm lại, chỉ những điểm chính, cốt lõi và quan trọng nhất của một vấn đề, bỏ qua các chi tiết phức tạp.
+Mở (Open) là hành động làm cho một thứ gì đó không còn bị đóng, bị chặn lại, để có thể đi qua, nhìn vào trong, hoặc sử dụng được (ví dụ: mở cửa, mở sách).
+Ít hơn (Less) là dùng để so sánh số lượng, mức độ của hai thứ, chỉ rằng một thứ có số lượng hoặc mức độ nhỏ hơn, không nhiều bằng thứ kia.
+Phụ nữ (Women) là những người thuộc giới tính nữ đã trưởng thành, ví dụ như mẹ, bà, cô, chị em gái của bạn.
+Khá (Quite) là một từ chỉ mức độ, có nghĩa là ở mức trên trung bình một chút, tốt hơn bình thường nhưng chưa đến mức rất tốt hay xuất sắc (ví dụ: học khá, làm bài khá tốt).
+Thống nhất (United) là sự kết hợp nhiều thành phần, nhiều ý kiến, hoặc nhiều người lại với nhau thành một khối, một thể chung, không bị chia rẽ.
+Ít nhất (Least) là chỉ mức độ, số lượng nhỏ nhất trong một nhóm so sánh hoặc một yêu cầu tối thiểu (ví dụ: 'Bạn cần ít nhất 10 điểm để qua môn').
+Chơi (Play) là hoạt động làm cho vui, để giải trí, thư giãn, thường không vì mục đích công việc hay học tập nghiêm túc (ví dụ: chơi game, chơi thể thao).
+Đã thấy (Saw) là hành động dùng mắt để nhận biết một sự vật, sự việc nào đó đã xảy ra trong quá khứ.
+Bàn tay (Hand) là một bộ phận của cơ thể người, ở cuối cánh tay, dùng để cầm, nắm, và làm nhiều việc khác.
+Đặc biệt (Especially) là dùng để nhấn mạnh một điều gì đó nổi bật, quan trọng, hoặc đáng chú ý hơn những thứ khác.
+Cụ thể (Particular) là chỉ một cái gì đó riêng biệt, xác định rõ ràng, chứ không phải nói chung chung.
+Lượt (Turn) là quyền hoặc cơ hội của một người để làm điều gì đó trong một chuỗi hoạt động lần lượt (ví dụ: 'Đến lượt bạn đi').
+Từ (Words) là đơn vị cơ bản của ngôn ngữ, dùng để diễn đạt ý nghĩ, cảm xúc, hoặc để gọi tên sự vật, sự việc.
+Có thể (Possible) là chỉ một việc gì đó có khả năng xảy ra hoặc có thể thực hiện được.
+Nhu cầu (Needs) là những thứ thiết yếu mà con người hoặc sinh vật cần để tồn tại và phát triển, như thức ăn, nước uống, nơi ở.
+Nhận được (Gets) là hành động tiếp nhận, thu về, hoặc có được một thứ gì đó từ người khác hoặc từ một nguồn nào đó.
+Không có gì (Nothing) là chỉ sự trống rỗng, không có sự vật, sự việc, hay giá trị nào cả.
+Chắc chắn (Certain) là sự tin tưởng tuyệt đối vào một điều gì đó là đúng, sẽ xảy ra, không còn nghi ngờ gì nữa.
+Một nửa (Half) là một trong hai phần bằng nhau khi bạn chia một thứ gì đó ra làm hai.
+Bạn bè (Friends) là những người mà bạn có mối quan hệ thân thiết, tin tưởng, yêu quý và chia sẻ cùng nhau, không phải người trong gia đình.
+Gần (Close) là chỉ khoảng cách ngắn về không gian (nhà gần trường), thời gian (gần Tết), hoặc mối quan hệ (bạn thân).
+Đầu (Head) là bộ phận trên cùng của cơ thể người, chứa bộ não, mắt, mũi, miệng.
+Đã làm việc (Worked) là hành động sử dụng sức lực hoặc trí óc để tạo ra kết quả, đã xảy ra trong quá khứ.
+Nhìn thấy (Seeing) là hành động đang dùng mắt để nhận biết, quan sát sự vật, sự việc.
+Anh chàng (Guy) là một từ thân mật, không trang trọng dùng để chỉ một người đàn ông hoặc con trai.
+Thuật ngữ (Term) là một từ hoặc cụm từ có nghĩa cụ thể trong một lĩnh vực chuyên môn nào đó (ví dụ: 'lạm phát' là thuật ngữ kinh tế).
+Bao gồm (Including) là dùng để liệt kê một hoặc vài thành phần nằm trong một nhóm lớn hơn.
+Đã học (Learned) là hành động tiếp thu kiến thức hoặc kỹ năng mới, đã hoàn thành trong quá khứ.
+Thà (Rather) là dùng để thể hiện sự lựa chọn, ưu tiên làm việc này hơn là làm việc kia (ví dụ: 'Thà ở nhà còn hơn đi chơi lúc trời mưa').
+Cuối cùng (Finally) là chỉ điều gì đó xảy ra sau một thời gian dài chờ đợi, hoặc là điều cuối cùng trong một danh sách, một chuỗi sự kiện.
+Nói (Speak) là hành động dùng miệng phát ra âm thanh, từ ngữ để giao tiếp, truyền đạt thông tin.
+Mối quan hệ (Relationship) là cách thức mà hai hay nhiều người, sự vật kết nối, liên quan đến nhau (ví dụ: mối quan hệ gia đình, bạn bè, đồng nghiệp).
+Cuộc trò chuyện (Conversation) là cuộc đối thoại, nói chuyện qua lại giữa hai hay nhiều người với nhau.
+Nơi chốn (Places) là những địa điểm, vị trí cụ thể trong không gian như thành phố, công viên, ngôi nhà.
+Liên quan (Involved) là có sự gắn kết, dính líu hoặc là một phần của một sự việc, một hoạt động nào đó.
+Đã nhìn (Looked) là hành động hướng mắt về một phía nào đó một cách có chủ đích, đã xảy ra trong quá khứ.
+Một vài (Several) là chỉ một số lượng không nhiều nhưng nhiều hơn hai, ba thứ; một số lượng không xác định nhưng không lớn.
+Gặp gỡ (Meet) là hành động hai hay nhiều người đến cùng một nơi để thấy mặt nhau, nói chuyện hoặc làm gì đó cùng nhau.
+Đã lấy (Taken) là hành động cầm, nắm, hoặc chiếm hữu một thứ gì đó, đã xảy ra trong quá khứ.
+Đã tạo ra (Created) là hành động làm ra một thứ gì đó mới mẻ, độc đáo chưa từng có trước đây, đã xảy ra trong quá khứ.
+Đánh (Hit) là hành động dùng tay hoặc một vật gì đó tác động một lực mạnh và nhanh vào một người hoặc vật khác.
+Đang cho (Giving) là hành động đang đưa, trao một thứ gì đó cho người khác mà không đòi hỏi nhận lại.
+Đang chạy (Running) là hành động di chuyển nhanh bằng chân, với các bước chân liên tục rời khỏi mặt đất.
+Các quốc gia (Countries) là những vùng lãnh thổ lớn có chính phủ riêng, có biên giới và người dân sinh sống.
+Muốn (Wants) là cảm giác mong ước, ao ước có được hoặc làm một điều gì đó.
+Cộng đồng (Communities) là một nhóm người sống cùng một khu vực hoặc có chung một đặc điểm, sở thích, mục tiêu.
+Cảm giác (Feeling) là những trải nghiệm về mặt tinh thần hoặc thể chất mà một người có được, như vui, buồn, đau, nóng, lạnh.
+Tuyệt vời (Wonderful) là một từ để khen ngợi, chỉ một điều gì đó rất tốt đẹp, ấn tượng và mang lại cảm giác vui vẻ, hài lòng.
+Dẫn dắt (Lead) là hành động đi trước để chỉ đường, hướng dẫn, hoặc chỉ huy một nhóm người đi theo mình.
+Thực hành (Practice) là hành động lặp đi lặp lại một kỹ năng để trở nên thành thạo và giỏi hơn.
+Lấy (Takes) là hành động dùng tay hoặc một công cụ để cầm, nắm một vật gì đó. Nó cũng có nghĩa là nhận một thứ gì đó về phía mình hoặc chiếm một khoảng thời gian nhất định.
+Được biết đến (Known) có nghĩa là nhiều người biết về một người, một sự vật, hay một địa điểm nào đó, làm cho nó trở nên quen thuộc hoặc nổi tiếng.
+Đàn ông (Men) là những người thuộc giới tính nam đã trưởng thành, trái ngược với phụ nữ hoặc trẻ em trai.
+Chính nó (Itself) là từ dùng để nhấn mạnh, chỉ vào bản thân một sự vật, sự việc, chứ không phải một yếu tố nào khác bên ngoài.
+Phút (Minutes) là một đơn vị đo thời gian, mỗi phút bằng 60 giây. Người ta thường dùng phút để nói về những khoảng thời gian ngắn trong một giờ.
+Chào mừng (Welcome) là lời nói hoặc hành động thể hiện sự vui vẻ, thân thiện khi ai đó đến một nơi nào đó.
+Dường như (Seems) là từ dùng để diễn tả một điều gì đó có vẻ là đúng, dựa trên cảm nhận hoặc những gì bạn thấy, nhưng bạn không hoàn toàn chắc chắn 100%.
+Tuyệt đối (Absolutely) là từ dùng để nhấn mạnh một điều gì đó là hoàn toàn đúng, chắc chắn, không có bất kỳ nghi ngờ hay ngoại lệ nào.
+Đang xem (Watching) là hành động dùng mắt để tập trung theo dõi một sự việc, một chương trình (như TV, phim) hoặc hành động của ai đó đang diễn ra.
+Bắt đầu (Starting) là thời điểm hoặc hành động khởi đầu một việc gì đó, làm cho nó từ chưa tồn tại trở thành tồn tại hoặc từ trạng thái đứng yên sang chuyển động.
+Hoàn toàn (Completely) có nghĩa là một cách trọn vẹn, đầy đủ, không thiếu một phần nào cả.
+Trường hợp (Cases) là những tình huống, hoàn cảnh hoặc ví dụ cụ thể của một vấn đề nào đó đang được xem xét.
+Khả năng (Ability) là năng lực, kỹ năng mà một người có thể làm được một việc gì đó, ví dụ như khả năng nói tiếng Anh, khả năng bơi lội.
+Cá nhân (Individual) chỉ một người riêng lẻ, một con người độc lập, không phải là một nhóm hay tập thể.
+Thường (Usually) chỉ một thói quen hoặc một hành động xảy ra lặp đi lặp lại trong hầu hết các lần, nhưng không phải là luôn luôn.
+Bất kỳ ai (Anyone) là từ dùng để chỉ một người nào đó không xác định, có thể là người này hoặc người kia, không quan trọng là ai.
+Tay (Hands) là bộ phận ở cuối cánh tay của con người, dùng để cầm, nắm, và làm rất nhiều công việc khác nhau.
+Nhóm (Groups) là một tập hợp gồm hai hay nhiều người hoặc sự vật có chung một đặc điểm hoặc cùng làm một việc gì đó với nhau.
+Mục tiêu (Goal) là kết quả cuối cùng mà bạn muốn đạt được và lên kế hoạch, nỗ lực để thực hiện nó.
+Video (Videos) là những đoạn phim ngắn được ghi lại bằng máy quay, điện thoại, cho phép bạn xem lại hình ảnh chuyển động và âm thanh.
+Đặt (Putting) là hành động di chuyển một vật gì đó và để nó vào một vị trí cụ thể.
+Nghĩa đen (Literally) có nghĩa là hiểu một từ hoặc một câu theo đúng ý nghĩa gốc, cơ bản nhất của nó, không phải theo nghĩa bóng hay ẩn dụ.
+Gia đình (Families) là một nhóm người có quan hệ huyết thống hoặc hôn nhân, sống cùng nhau và yêu thương, chăm sóc lẫn nhau (ví dụ: bố, mẹ, con cái).
+Quyền (Rights) là những điều mà một người được phép làm hoặc được hưởng một cách hợp pháp, công bằng mà không ai có thể ngăn cản.
+Việc đọc (Reading) là hành động dùng mắt để nhìn vào các chữ viết và dùng trí não để hiểu ý nghĩa của chúng.
+Món quà (Present) là một vật gì đó mà bạn trao cho người khác để thể hiện tình cảm, sự quan tâm hoặc để chúc mừng một dịp đặc biệt mà không cần họ trả lại.
+Đã quyết định (Decided) là trạng thái đã đưa ra một lựa chọn cuối cùng sau khi suy nghĩ, cân nhắc về một vấn đề nào đó.
+Thành công (Success) là việc đạt được một mục tiêu, một kết quả tốt đẹp như mong muốn sau những nỗ lực đã bỏ ra.
+Hơn nữa (Further) là từ dùng để bổ sung thêm thông tin, ý kiến vào một điều đã nói trước đó.
+Đã cố gắng (Tried) là hành động đã nỗ lực, dùng sức lực hoặc trí tuệ để làm một việc gì đó, dù kết quả có thể thành công hoặc không.
+Về cơ bản (Essentially) là từ dùng để tóm tắt ý chính, cốt lõi nhất của một vấn đề phức tạp, chỉ ra điểm quan trọng nhất.
+Kể (Telling) là hành động dùng lời nói để thuật lại một câu chuyện, một sự việc cho người khác nghe.
+Với tới (Reach) là hành động vươn tay hoặc di chuyển để chạm vào, lấy được một vật gì đó, hoặc đạt đến một địa điểm, một cấp độ nào đó.
+Lý do (Reasons) là những nguyên nhân, lời giải thích cho việc tại sao một điều gì đó xảy ra hoặc tại sao ai đó làm một việc gì đó.
+Nhận ra (Realize) là hành động bất chợt hiểu ra hoặc ý thức được một sự thật nào đó mà trước đây mình không biết hoặc không để ý.
+Đang ngồi (Sitting) là trạng thái cơ thể ở tư thế mông đặt trên một bề mặt (như ghế, sàn nhà) và phần thân trên thẳng đứng.
+Cuối cùng (Final) chỉ một cái gì đó ở vị trí cuối cùng trong một chuỗi, một danh sách hoặc là bước kết thúc của một quá trình.
+Nhấp chuột (Click) là hành động nhấn và thả nhanh một nút trên con chuột máy tính để ra lệnh cho máy tính thực hiện một tác vụ.
+Tiềm năng (Potential) là khả năng hoặc phẩm chất ẩn giấu bên trong một người hay một sự vật, có thể phát triển để trở nên tốt hơn, thành công hơn trong tương lai.
+Gặp (Met) là hành động ở cùng một nơi với một người khác, có thể là tình cờ hoặc có hẹn trước.
+Hy vọng (Hope) là cảm giác mong muốn một điều tốt đẹp sẽ xảy ra trong tương lai và tin rằng điều đó có thể trở thành sự thật.
+Nguyên nhân (Cause) là nguồn gốc, là lý do ban đầu làm cho một sự việc, một kết quả nào đó xảy ra.
+Dòng (Line) có thể là một vạch kẻ dài và mảnh, hoặc là một hàng người hay vật thể xếp nối đuôi nhau.
+Câu trả lời (Answer) là lời nói, bài viết hoặc hành động dùng để phản hồi lại một câu hỏi, một vấn đề được đặt ra.
+Thành phố (City) là một khu vực dân cư rộng lớn và đông đúc, có cơ sở hạ tầng phát triển như nhà cao tầng, đường sá, bệnh viện, trường học.
+Đội (Team) là một nhóm người cùng làm việc, cùng chơi với nhau để đạt được một mục tiêu chung, ví dụ như đội bóng đá.
+Dưới (Under) là một từ chỉ vị trí ở phía thấp hơn so với một vật khác.
+Tương lai (Future) là khoảng thời gian sắp tới, chưa xảy ra, đối lập với quá khứ và hiện tại.
+Tuần (Week) là một khoảng thời gian kéo dài 7 ngày liên tiếp (từ thứ Hai đến Chủ Nhật).
+Xa (Far) là từ chỉ một khoảng cách lớn về không gian hoặc thời gian.
+Chính phủ (Government) là một tổ chức gồm những người có quyền điều hành và quản lý một quốc gia. Họ chịu trách nhiệm tạo ra luật pháp, duy trì trật tự và cung cấp các dịch vụ công cộng cho người dân.
+Nghe (Hear) là hành động dùng tai để tiếp nhận âm thanh. Đây là một khả năng tự nhiên của cơ thể, không nhất thiết phải có sự chú ý hay tập trung (khác với 'lắng nghe').
+Thứ tự (Order) là sự sắp xếp các vật, các sự việc, hoặc con người theo một quy luật nhất định, ví dụ như từ đầu đến cuối, từ nhỏ đến lớn, hoặc theo số đếm 1, 2, 3.
+Lý do (Reason) là lời giải thích cho câu hỏi 'Tại sao?'. Nó là nguyên nhân, là cơ sở để một hành động hay một sự việc nào đó xảy ra.
+Trước (Ago) là từ dùng để chỉ một khoảng thời gian trong quá khứ, tính từ hiện tại ngược trở lại. Ví dụ: 'một năm trước' (one year ago).
+Xã hội (Social) là những gì liên quan đến cộng đồng người, cách họ sống, tương tác và tổ chức cùng nhau trong một nhóm lớn như một quốc gia hay một thành phố.
+Ngôi nhà (House) là một công trình xây dựng để con người ở, sinh hoạt và trú ngụ, bảo vệ họ khỏi thời tiết và các yếu tố bên ngoài.
+Xảy ra (Happen) có nghĩa là một sự kiện hoặc một tình huống nào đó diễn ra, tồn tại trong thực tế.
+Ngang qua (Across) là di chuyển từ bên này sang bên kia của một thứ gì đó, ví dụ như đi ngang qua đường, bơi ngang qua sông.
+Cặp (Couple) thường chỉ hai người hoặc hai vật cùng loại đi chung với nhau, đặc biệt là một cặp đôi đang yêu hoặc đã kết hôn.
+Giải thích (Explain) là hành động làm cho một điều gì đó trở nên rõ ràng, dễ hiểu hơn bằng cách cung cấp thông tin chi tiết hoặc lý do.
+Quyết định (Decisions) là sự lựa chọn cuối cùng sau khi đã suy nghĩ, cân nhắc về một vấn đề nào đó.
+Người Mỹ (Americans) là những người có quốc tịch hoặc là công dân của Hợp chúng quốc Hoa Kỳ (nước Mỹ).
+Bất cứ ai (Anybody) là từ dùng để chỉ một người nào đó không xác định, không quan trọng là người nào.
+Tốt (Fine) là một từ diễn tả trạng thái ổn, chấp nhận được, hoặc chất lượng khá tốt, không có vấn đề gì.
+Tạo ra (Creating) là hành động làm cho một thứ gì đó mới mẻ xuất hiện hoặc tồn tại, có thể là một vật thể, một ý tưởng, hay một tác phẩm nghệ thuật.
+Chính chúng ta (Ourselves) là từ dùng để chỉ bản thân nhóm người đang nói, nhấn mạnh rằng chính họ thực hiện hành động chứ không phải ai khác.
+Ngồi (Sit) là hành động đặt phần mông của cơ thể lên một bề mặt như ghế, sàn nhà, và giữ cho phần thân trên thẳng đứng.
+Có vẻ (Seem) là từ dùng để diễn tả một điều gì đó trông như thế nào hoặc tạo ra một ấn tượng nào đó, nhưng chưa chắc đó là sự thật.
+Biết (Knows) là trạng thái có thông tin, sự thật hoặc sự hiểu biết về một điều gì đó trong đầu.
+Thực tế (Reality) là trạng thái của mọi thứ như chúng thật sự tồn tại, trái ngược với những gì trong tưởng tượng, trong mơ hay trong suy nghĩ.
+Thành công (Successful) là trạng thái đạt được kết quả tốt đẹp, mục tiêu hoặc mong muốn mà mình đã đặt ra.
+Dạy (Teach) là hành động truyền đạt kiến thức, kỹ năng hoặc kinh nghiệm cho người khác.
+Giúp đỡ (Helping) là hành động hỗ trợ, tương trợ người khác làm một việc gì đó để công việc của họ trở nên dễ dàng hơn hoặc để họ vượt qua khó khăn.
+Dù sao (Anyway) là từ dùng để giới thiệu một ý mới hoặc quay lại một chủ đề cũ, bất kể những gì vừa được nói trước đó.
+Tuyệt vời (Awesome) là một từ cảm thán để diễn tả sự ngưỡng mộ, khen ngợi một điều gì đó cực kỳ tốt, ấn tượng hoặc đáng kinh ngạc.
+Được cho là (Supposed) có nghĩa là một điều gì đó được mong đợi hoặc được tin là sẽ xảy ra hoặc phải làm theo một quy tắc, kế hoạch nào đó.
+Bắt đầu (Starts) là thời điểm hoặc hành động khởi đầu của một quá trình, một sự kiện hay một công việc.
+Vượt qua (Pass) có nghĩa là di chuyển qua một điểm, một chướng ngại vật, hoặc đạt được mức điểm yêu cầu trong một bài kiểm tra.
+Tiểu bang California (California) là một trong 50 tiểu bang của Hoa Kỳ, nằm ở bờ biển phía Tây.
+Tên thủ đô Hoa Kỳ (Washington) là tên thủ đô của Hợp chúng quốc Hoa Kỳ (Mỹ). Tên đầy đủ là Washington, D.C.
+Bước chân (Steps) vừa có nghĩa là hành động nhấc chân lên và đặt xuống để đi, vừa có nghĩa là các giai đoạn, các phần trong một kế hoạch hoặc quy trình.
+Con đường nhỏ (Path) là một lối đi hẹp, thường do người hoặc động vật đi lại nhiều mà tạo thành, nhỏ hơn con đường thông thường.
+Cho phép (Allows) là hành động đồng ý, cấp quyền cho ai đó làm một việc gì đó.
+Trình bày (Showing) là hành động đưa ra, phô bày hoặc giải thích một điều gì đó cho người khác xem hoặc hiểu.
+Đã gửi (Sent) là dạng quá khứ của 'gửi', có nghĩa là một lá thư, email, hoặc một vật gì đó đã được chuyển đi đến một nơi khác.
+Bối cảnh (Background) là toàn bộ tình huống, sự kiện, hoặc thông tin xung quanh một vấn đề, giúp chúng ta hiểu rõ hơn về nó.
+Văn bản (Text) là bất kỳ đoạn chữ viết hoặc chữ in nào, ví dụ như trong một cuốn sách, một tin nhắn, hoặc một bài báo.
+Cuối cùng (Ultimately) có nghĩa là xét đến tận cùng, sau tất cả mọi thứ, hoặc là kết quả sau cùng quan trọng nhất của một quá trình dài.
+Cảm thấy (Feels) là trạng thái nhận biết được một cảm xúc (vui, buồn) hoặc một cảm giác vật lý (nóng, lạnh) trong cơ thể.
+Phục vụ (Serve) là hành động cung cấp một dịch vụ, đồ ăn, hoặc giúp đỡ ai đó theo một cách hữu ích.
+Theo (According) là từ dùng để chỉ nguồn thông tin của một điều gì đó. Ví dụ: 'Theo lời bác sĩ...' (According to the doctor...).
+Tiêu chuẩn (Standard) là một mức độ chất lượng hoặc một quy tắc được chấp nhận rộng rãi, dùng làm cơ sở để so sánh hoặc đánh giá.
+Hành vi (Behavior) là cách một người hoặc một con vật hành động, cư xử trong các tình huống khác nhau.
+Phát hiện (Finding) vừa là hành động tìm ra một điều gì đó, vừa là kết quả hay thông tin mà bạn tìm thấy sau một cuộc nghiên cứu, tìm kiếm.
+Hoàn thành (Complete) là hành động làm xong một công việc, một nhiệm vụ từ đầu đến cuối, không còn gì dang dở.
+Thua (Lose) là trạng thái không chiến thắng trong một cuộc thi, trò chơi, hoặc làm mất một thứ gì đó mà mình đã có.
+Phức tạp (Complex) là tính chất của một sự vật, sự việc có nhiều phần khác nhau, khó hiểu hoặc khó giải quyết.
+Quy tắc (Rules) là những chỉ dẫn hoặc luật lệ bắt buộc mọi người phải tuân theo trong một tình huống, một trò chơi, hoặc trong xã hội.
+Mắt (Eye) là bộ phận trên cơ thể người và động vật dùng để nhìn, quan sát thế giới xung quanh.
+Vẽ (Draw) là hành động dùng bút, bút chì, hoặc các dụng cụ khác để tạo ra hình ảnh, đường nét trên một bề mặt như giấy hoặc vải.
+Lớn hơn (Greater) là một cách so sánh để chỉ một thứ có kích thước, số lượng, hoặc giá trị vượt trội hơn so với thứ khác.
+Hiện tại (Currently) là trạng thái hoặc hành động đang diễn ra ngay tại thời điểm nói, trong giai đoạn này.
+Về phía trước (Forth) có nghĩa là di chuyển ra khỏi một nơi nào đó hoặc tiến lên theo một hướng nhất định.
+Được yêu thích (Loved) là trạng thái được ai đó dành cho tình cảm sâu sắc, sự quan tâm, chăm sóc và trân trọng.
+Hàng ngàn (Thousands) là một con số rất lớn, chỉ số lượng gồm nhiều lần một nghìn, thường dùng để diễn tả một đám đông hoặc số lượng nhiều không đếm chính xác.
+Ở đâu đó (Somewhere) là một nơi không xác định cụ thể, chỉ biết là nó tồn tại ở một vị trí nào đó.
+Bổ sung (Additional) là thêm vào những thứ đã có sẵn để làm cho nó đầy đủ hơn, nhiều hơn hoặc tốt hơn.
+Người lao động (Workers) là những người dùng sức lực hoặc trí óc của mình để làm việc và nhận lương hoặc thù lao.
+Mang đến (Bringing) là hành động di chuyển hoặc chuyển một thứ gì đó từ nơi này đến nơi khác, thường là đến gần người nói hoặc người nghe.
+Chiến lược (Strategy) là một kế hoạch tổng thể, dài hạn được tạo ra để đạt được một mục tiêu quan trọng, thường bao gồm cách sử dụng nguồn lực và đối phó với thử thách.
+Chống lại (Versus) là từ dùng để chỉ sự đối đầu, cạnh tranh hoặc so sánh giữa hai người, hai đội, hoặc hai ý tưởng khác nhau.
+Giải quyết (Solve) là tìm ra câu trả lời hoặc cách xử lý cho một vấn đề, một bài toán khó hoặc một tình huống rắc rối.
+Có nghĩa (Meant) là dạng quá khứ của 'mean', dùng để chỉ một điều gì đó đã được dự định, có ý nghĩa, hoặc có mục đích là như vậy.
+Gần đây (Recent) là chỉ những sự việc, hành động hoặc thời gian vừa mới xảy ra cách đây không lâu.
+Bắn (Shot) là hành động sử dụng một vũ khí (như súng) để phóng ra một viên đạn, hoặc hành động ném/đá một quả bóng về phía mục tiêu (như trong thể thao).
+Các nhà khoa học (Scientists) là những người nghiên cứu về thế giới tự nhiên và xã hội bằng cách quan sát, làm thí nghiệm để tìm ra các quy luật và sự thật.
+Nói chung (Generally) là khi nói về một điều gì đó một cách tổng quát, áp dụng cho hầu hết các trường hợp, chứ không đi vào chi tiết hay ngoại lệ.
+Các mối quan hệ (Relationships) là sự kết nối hoặc tương tác giữa hai hay nhiều người với nhau, ví dụ như gia đình, bạn bè, đồng nghiệp.
+Mẹ (Mom) là người phụ nữ đã sinh ra và/hoặc nuôi dưỡng một người, thường là từ dùng thân mật để gọi mẹ.
+Đánh giá cao (Appreciate) là nhận ra và cảm thấy biết ơn về giá trị, tầm quan trọng hoặc những điều tốt đẹp của một người hay một sự vật, sự việc.
+Ví dụ (Examples) là những trường hợp cụ thể được đưa ra để minh họa, làm rõ cho một ý tưởng hay một quy tắc chung.
+Được rồi (Alright) là một cách để thể hiện sự đồng ý, chấp nhận hoặc để nói rằng mọi thứ đều ổn, không có vấn đề gì.
+Hiệu quả (Effective) là khi một hành động hoặc phương pháp tạo ra được kết quả mong muốn, đạt được mục tiêu một cách tốt nhất.
+Giáo viên (Teachers) là người làm công việc giảng dạy, truyền đạt kiến thức và kỹ năng cho học sinh ở trường học.
+Đã phát triển (Developed) là trạng thái đã trở nên lớn hơn, hoàn thiện hơn, tiên tiến hơn hoặc phức tạp hơn so với trước đây.
+Không ai (Nobody) là đại từ dùng để chỉ không có một người nào cả.
+Được phép (Allowed) là trạng thái được sự đồng ý hoặc cho phép để làm một việc gì đó từ người có thẩm quyền.
+Đã kết thúc (Ended) là trạng thái một sự việc, một hoạt động hoặc một khoảng thời gian đã đi đến điểm cuối cùng, không còn tiếp diễn nữa.
+Thật sự (Truly) là một trạng từ nhấn mạnh rằng điều gì đó là hoàn toàn đúng sự thật, chân thành và không hề giả dối.
+Không còn nữa (Anymore) là trạng thái một điều gì đó từng tồn tại hoặc xảy ra trong quá khứ nhưng bây giờ đã chấm dứt.
+Lên (Onto) là giới từ chỉ sự di chuyển đến một vị trí ở trên bề mặt của một vật gì đó.
+Biết (Knowing) là trạng thái có thông tin, sự hiểu biết hoặc nhận thức về một điều gì đó.
+Mục tiêu (Goals) là những kết quả cụ thể mà một người hoặc một tổ chức lên kế hoạch và cố gắng để đạt được trong tương lai.
+Cô gái (Girl) là một đứa trẻ hoặc một người trẻ tuổi thuộc giới tính nữ.
+Lợi ích (Benefits) là những kết quả tốt, những điều thuận lợi hoặc giá trị tích cực mà bạn nhận được từ một việc gì đó.
+Sáng tạo (Creative) là khả năng suy nghĩ và tạo ra những ý tưởng hoặc những thứ mới mẻ, độc đáo, không giống ai.
+Lãnh đạo (Leader) là người dẫn dắt, chỉ huy và có tầm ảnh hưởng đến một nhóm người để cùng nhau đạt được một mục tiêu chung.
+Đứng (Standing) là hành động giữ cơ thể ở tư thế thẳng trên đôi chân của mình, không ngồi hoặc nằm.
+Năng động (Active) là trạng thái luôn vận động, tham gia vào nhiều hoạt động và tràn đầy năng lượng, trái ngược với thụ động hay lười biếng.
+Xác định (Identify) là nhận ra và chỉ ra chính xác một người hay một vật gì đó là ai, là gì.
+Bố (Dad) là người đàn ông đã sinh ra và/hoặc nuôi dưỡng một người, thường là từ dùng thân mật để gọi bố.
+Chết (Died) là trạng thái sự sống của một sinh vật (người, động vật, thực vật) đã chấm dứt hoàn toàn.
+Hơi (Kinda) là từ lóng, viết tắt của 'kind of', dùng trong giao tiếp thân mật để diễn tả một điều gì đó 'ở một mức độ nào đó', 'không hoàn toàn nhưng cũng gần như vậy'.
+Đối tác (Partners) là những người cùng làm việc, kinh doanh hoặc hợp tác với nhau để đạt được một mục tiêu chung.
+Vô cùng (Incredibly) là một trạng từ dùng để nhấn mạnh một tính chất nào đó ở mức độ rất cao, đến mức khó tin.
+Ủy ban (Committee) là một nhóm người được giao nhiệm vụ để xem xét, thảo luận và đưa ra quyết định về một vấn đề cụ thể.
+Cuộc trò chuyện (Conversations) là sự trao đổi, nói chuyện qua lại giữa hai hay nhiều người về một chủ đề nào đó.
+Trừ khi (Unless) là một liên từ dùng để chỉ một điều kiện: việc A sẽ xảy ra, nếu việc B (điều kiện) không xảy ra.
+Tham gia (Joining) là hành động trở thành một thành viên của một nhóm, một tổ chức hoặc góp mặt vào một hoạt động nào đó.
+Bài hát (Song) là một bản nhạc có lời, thường được tạo ra để hát. Nó kết hợp giai điệu và ca từ để truyền tải cảm xúc hoặc kể một câu chuyện.
+Xin chào (Hello) là lời chào hỏi thông dụng khi bạn gặp ai đó, dùng để bắt đầu một cuộc trò chuyện và thể hiện sự thân thiện, lịch sự.
+Đã thêm (Added) là hành động gộp thêm một thứ gì đó vào một nhóm hoặc một cái đã có sẵn. Ví dụ, thêm đường vào cà phê, thêm một người bạn vào danh bạ.
+Nhận (Receive) là hành động tiếp nhận một thứ gì đó từ người khác đưa cho bạn, ví dụ như nhận một món quà, nhận một lá thư, hay nhận thông tin.
+Giữ (Keeping) là hành động tiếp tục có hoặc nắm giữ một thứ gì đó, không vứt đi hay cho đi. Ví dụ: giữ lại một kỷ vật, giữ một lời hứa.
+Giao tiếp (Communication) là quá trình trao đổi thông tin, suy nghĩ, hoặc cảm xúc với người khác thông qua lời nói, chữ viết, hoặc cử chỉ, hành động.
+Nghệ thuật (Arts) là sự sáng tạo ra các sản phẩm (như tranh vẽ, âm nhạc, văn học) để thể hiện ý tưởng, cảm xúc, hoặc cái đẹp.
+Dặm (Miles) là một đơn vị đo khoảng cách, thường được sử dụng ở các nước như Mỹ và Anh. Một dặm dài hơn một ki-lô-mét một chút (1 dặm ≈ 1.6 km).
+Đá (Rock) là một vật thể rắn, cứng, tự nhiên được tìm thấy trên mặt đất, thường dùng trong xây dựng hoặc làm vật trang trí.
+Đã nâng (Raised) là hành động đã đưa một thứ gì đó lên một vị trí cao hơn. Nó cũng có thể có nghĩa là nêu lên một vấn đề hoặc nuôi nấng ai đó (nuôi con).
+Tiêu đề (Title) là tên gọi của một cuốn sách, bài báo, bài hát, hoặc một tác phẩm nào đó, giúp người khác biết nội dung chính của nó là gì.
+Người theo đạo Cơ Đốc (Christian) là người có tín ngưỡng theo tôn giáo dựa trên cuộc đời và những lời dạy của Chúa Jesus.
+Được cung cấp (Provided) có nghĩa là được người khác đưa cho hoặc làm cho có sẵn thứ gì đó mà bạn cần. Ví dụ: 'Bữa trưa được cung cấp miễn phí.'
+Mẫu đơn (Forms) là một tờ giấy hoặc một tài liệu điện tử có sẵn các chỗ trống để bạn điền thông tin cá nhân vào, thường dùng để đăng ký một dịch vụ nào đó.
+Nghệ sĩ (Artist) là người tạo ra các tác phẩm nghệ thuật, chẳng hạn như họa sĩ, ca sĩ, nhạc sĩ, nhà văn.
+Ngày mai (Tomorrow) là ngày tiếp theo ngay sau ngày hôm nay.
+Anh trai (Brother) là người con trai có cùng cha mẹ với bạn và lớn tuổi hơn bạn.
+Bao gồm (Includes) có nghĩa là chứa đựng hoặc có một thứ gì đó như một phần của tổng thể. Ví dụ: 'Giá vé bao gồm một phần nước uống.'
+Liên minh (Union) là sự kết hợp hoặc liên kết giữa các cá nhân, nhóm, hoặc quốc gia để cùng nhau làm việc và đạt được một mục tiêu chung.
+Quán bar (Bar) là một nơi kinh doanh đồ uống có cồn (như bia, rượu) và các loại nước giải khát khác, thường có không gian để mọi người ngồi trò chuyện, thư giãn.
+Sự tự tin (Confidence) là niềm tin vào khả năng, phẩm chất và sự phán đoán của chính bản thân mình.
+Sự cam kết (Commitment) là một lời hứa hoặc một quyết định chắc chắn để làm điều gì đó; là sự tận tâm với một công việc hay một mối quan hệ.
+Quản lý (Manage) là hành động tổ chức, điều khiển, và giám sát một công việc, một đội nhóm, hoặc một hệ thống để nó hoạt động hiệu quả.
+Yếu tố (Factor) là một trong những nguyên nhân hoặc thành phần góp phần tạo ra một kết quả hay một tình huống nào đó.
+Kết thúc (Ends) là điểm hoặc thời điểm mà một việc gì đó dừng lại, không còn tiếp diễn nữa.
+Có khả năng (Potentially) diễn tả một điều gì đó có thể xảy ra hoặc có thể trở thành sự thật trong tương lai, mặc dù hiện tại chưa chắc chắn.
+Tuyệt vời (Fantastic) là một từ dùng để khen ngợi, chỉ một thứ gì đó cực kỳ tốt, hay, hoặc ấn tượng.
+Đang hoạt động (Operating) có nghĩa là một máy móc, hệ thống, hoặc một tổ chức đang làm việc, đang chạy, không bị hỏng hóc hay tạm dừng.
+Liên tục (Constantly) có nghĩa là một hành động xảy ra lặp đi lặp lại rất nhiều lần hoặc diễn ra không ngừng nghỉ.
+Bất cứ khi nào (Whenever) là một từ chỉ thời gian không xác định, có nghĩa là 'vào mọi lúc mà...' hoặc 'hễ khi nào...'. Ví dụ: 'Hãy gọi cho tôi bất cứ khi nào bạn cần.'
+Nhảy (Jump) là hành động dùng lực của chân để đẩy cơ thể lên không trung rồi đáp xuống.
+Khó khăn (Tough) dùng để mô tả một tình huống, một công việc rất vất vả, đòi hỏi nhiều nỗ lực; hoặc chỉ một người mạnh mẽ, kiên cường.
+Cần thiết (Required) có nghĩa là một thứ gì đó bắt buộc phải có hoặc phải được thực hiện, không thể thiếu được.
+Trở nên (Becoming) là quá trình thay đổi từ trạng thái này sang một trạng thái khác. Ví dụ: 'Anh ấy đang trở nên mạnh mẽ hơn.'
+Trả tiền (Paying) là hành động đưa tiền cho người khác để đổi lấy một món hàng hoặc một dịch vụ.
+Thua lỗ (Loss) là tình trạng mất mát về tiền bạc trong kinh doanh (khi chi phí lớn hơn doanh thu) hoặc sự mất đi một thứ gì đó quý giá.
+Ngoại trừ (Except) là một từ dùng để chỉ ra một người hoặc một vật không nằm trong một nhóm được nhắc đến. Ví dụ: 'Mọi người đều đến, ngoại trừ Nam.'
+Của ai (Whose) là một từ dùng để hỏi về sự sở hữu. Ví dụ: 'Cái bút này là của ai?'
+Lớn nhất (Largest) là tính từ so sánh cao nhất của 'lớn', chỉ một thứ có kích thước, quy mô, hoặc số lượng vượt trội hơn tất cả những thứ khác trong cùng một nhóm.
+Sử dụng (Uses) là hành động dùng một thứ gì đó cho một mục đích cụ thể.
+Vật liệu (Materials) là những chất hoặc vật được dùng để làm ra hoặc xây dựng nên một thứ khác. Ví dụ: gỗ, sắt, xi măng là vật liệu xây dựng.
+Vắc-xin (Vaccine) là một chế phẩm sinh học giúp cơ thể tạo ra sự miễn dịch, phòng chống lại một căn bệnh truyền nhiễm nào đó.
+Mang lại (Brings) có nghĩa là gây ra hoặc tạo ra một kết quả, một cảm giác nào đó. Ví dụ: 'Thành công mang lại hạnh phúc.'
+Đội (Teams) là một nhóm người cùng làm việc hoặc chơi chung với nhau để đạt được một mục tiêu chung (ví dụ: đội bóng đá, đội dự án).
+Hình ảnh (Pictures) là sự tái hiện lại một vật, một người, hay một cảnh vật bằng cách vẽ, chụp ảnh.
+Hàng triệu (Millions) là một con số rất lớn, bằng một nghìn lần của một nghìn (1,000,000).
+Thẻ (Card) là một miếng giấy cứng hoặc nhựa nhỏ, thường có thông tin trên đó, dùng cho nhiều mục đích khác nhau (thẻ ngân hàng, thẻ căn cước, danh thiếp).
+Kế hoạch (Plans) là một tập hợp các ý định hoặc các bước đã được suy nghĩ kỹ lưỡng để đạt được một mục tiêu nào đó trong tương lai.
+Thực hành (Practices) là hành động lặp đi lặp lại một kỹ năng để trở nên giỏi hơn, hoặc là việc áp dụng lý thuyết vào thực tế.
+Tăng lên (Rise) là sự di chuyển lên một vị trí cao hơn hoặc sự gia tăng về số lượng, mức độ. Ví dụ: 'Mặt trời mọc (tăng lên) ở phía đông', 'giá cả tăng lên'.
+
 `;
 
 export default detailedMeaningsText;
