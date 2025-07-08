@@ -145,16 +145,28 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           // --- GIAO DIỆN VÍ DỤ MỚI ---
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
-              {/* === TIÊU ĐỀ MỚI === */}
-              <div className="flex items-center gap-3 mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+
+              {/*
+              ================================================================
+              BẮT ĐẦU KHỐI CODE ĐƯỢC CHỈNH SỬA THEO YÊU CẦU MỚI NHẤT
+              ================================================================
+              */}
+              <div className="flex items-center gap-2.5 mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                  Ví dụ: <span className="font-mono text-blue-600 dark:text-blue-400">{wordToFind}</span>
+                <h3 className="text-xl font-semibold">
+                  <span className="font-mono uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                    {wordToFind}
+                  </span>
                 </h3>
               </div>
-              
+              {/*
+              ================================================================
+              KẾT THÚC KHỐI CODE ĐƯỢC CHỈNH SỬA
+              ================================================================
+              */}
+
               {filteredSentences.length > 0 ? (
                 <div className="space-y-5">
                   {filteredSentences.map((sentence, index) => (
