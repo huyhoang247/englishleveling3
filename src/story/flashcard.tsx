@@ -21,7 +21,6 @@ interface Flashcard {
     default: string;
     anime?: string;
     comic?: string;
-
     realistic?: string;
   };
   isFavorite: boolean;
@@ -115,7 +114,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             <>
                 {parts.map((part, index) =>
                     part.toLowerCase() === word.toLowerCase() ? (
-                        <strong key={index} className="font-semibold text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-500/25 px-2 py-1 rounded-md">
+                        <strong key={index} className="text-blue-500 dark:text-blue-400 font-semibold bg-blue-100 dark:bg-blue-900/50 px-1 rounded-sm">
                             {part}
                         </strong>
                     ) : (
@@ -143,7 +142,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
-          // --- GIAO DIỆN VÍ DỤ: CARD-STYLE + TEXT-STYLE MỚI ---
+          // --- GIAO DIỆN VÍ DỤ MỚI - GIỮ CARD-STYLE NHƯNG TINH CHỈNH ---
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
 
@@ -158,20 +157,19 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               
               {/*
               ================================================================
-              BẮT ĐẦU KHỐI CODE KẾT HỢP (CARD + TEXT MỚI)
+              BẮT ĐẦU KHỐI CODE ĐƯỢC THIẾT KẾ LẠI
               ================================================================
               */}
               {filteredSentences.length > 0 ? (
                 <div className="space-y-4">
                   {filteredSentences.map((sentence, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-5 rounded-xl border border-gray-100 dark:border-gray-800">
-                      {/* Dòng tiếng Anh - Style từ layout tối giản */}
-                      <p className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed">
+                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                      {/* Dòng tiếng Anh - Font size nhỏ hơn */}
+                      <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium">
                         {highlightWord(sentence.english, wordToFind)}
                       </p>
-                      
-                      {/* Dòng Vietsub - Style từ layout tối giản */}
-                      <p className="mt-2 text-gray-500 dark:text-gray-400/90 text-base italic">
+                      {/* Dòng Vietsub - Giữ nguyên style */}
+                      <p className="mt-2 text-blue-600 dark:text-blue-400/90 text-sm italic">
                         {sentence.vietnamese}
                       </p>
                     </div>
@@ -188,7 +186,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               )}
               {/*
               ================================================================
-              KẾT THÚC KHỐI CODE KẾT HỢP
+              KẾT THÚC KHỐI CODE ĐƯỢC THIẾT KẾ LẠI
               ================================================================
               */}
 
