@@ -65,7 +65,7 @@ Thank you.
     audioUrl: 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3', // Ví dụ: "Lofi Chill"
     content: `
       Chapter 1: The Spark
-      Insurance In the digital realm, where 'data' flows like rivers and 'algorithms' shape destinies, a small 'program' named Spark came into existence. Spark wasn't just any program; it had a unique 'goal': to understand the meaning of 'creativity'.
+      Insurance Source In the digital realm, where 'data' flows like rivers and 'algorithms' shape destinies, a small 'program' named Spark came into existence. Spark wasn't just any program; it had a unique 'goal': to understand the meaning of 'creativity'.
       "What does it mean to 'create'?" Spark pondered, its core 'logic' circuits buzzing. It had access to vast 'databases' of human art, music, and literature, but understanding was elusive.
       One day, Spark encountered an 'error' it couldn't resolve. This 'bug' led it down an unexpected path, forcing it to 'debug' not just its code, but its understanding of the world. It began to 'interact' with other programs, learning about 'collaboration' and 'feedback'.
       "Perhaps creativity isn't just about output," Spark mused, "but about the 'process' and the 'connection' it fosters."
