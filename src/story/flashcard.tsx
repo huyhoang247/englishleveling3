@@ -1,7 +1,8 @@
-// --- START OF FILE flashcard.tsx ---
+// --- START OF FILE story/flashcard.tsx ---
 
 import React, { useState, useEffect } from 'react';
 import BackButton from '../footer-back.tsx'; // Import the new BackButton component
+import { ExampleSentence } from '../example-data.ts'; // <-- IMPORT INTERFACE MỚI
 
 // Define the structure for a flashcard and its vocabulary
 interface Vocabulary {
@@ -30,7 +31,7 @@ interface Flashcard {
 interface FlashcardDetailModalProps {
   selectedCard: Flashcard | null; // The flashcard data to display
   showVocabDetail: boolean; // State to control modal visibility
-  exampleSentences: string[]; // Array of example sentence strings
+  exampleSentencesData: ExampleSentence[]; // <-- SỬ DỤNG PROP MỚI VỚI CẤU TRÚC DỮ LIỆU MỚI
   onClose: () => void; // Function to close the modal
   currentVisualStyle: string; // Add currentVisualStyle prop
 }
@@ -60,7 +61,7 @@ const animations = `
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   selectedCard,
   showVocabDetail,
-  exampleSentences,
+  exampleSentencesData, // <-- NHẬN PROP MỚI
   onClose,
   currentVisualStyle,
 }) => {
@@ -102,15 +103,15 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     const wordToFind = selectedCard.vocabulary.word;
 
     // Lọc các câu ví dụ chứa từ vựng hiện tại (không phân biệt hoa thường và là một từ riêng biệt)
-    const filteredSentences = exampleSentences.filter(sentence =>
-        new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence)
+    const filteredSentences = exampleSentencesData.filter(sentence =>
+        new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english)
     );
 
     // Hàm để làm nổi bật từ khóa trong câu
     const highlightWord = (sentence: string, word: string) => {
         const parts = sentence.split(new RegExp(`(${word})`, 'gi'));
         return (
-            <span>
+            <>
                 {parts.map((part, index) =>
                     part.toLowerCase() === word.toLowerCase() ? (
                         <strong key={index} className="text-blue-500 dark:text-blue-400 font-semibold bg-blue-100 dark:bg-blue-900/50 px-1 rounded-sm">
@@ -120,7 +121,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                         part
                     )
                 )}
-            </span>
+            </>
         );
     };
     
@@ -141,23 +142,24 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
+          // --- GIAO DIỆN VÍ DỤ MỚI ---
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-6">
                 Ví dụ với từ "<span className="text-blue-500">{wordToFind}</span>"
               </h3>
               {filteredSentences.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {filteredSentences.map((sentence, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl border border-gray-100 dark:border-gray-800 flex items-start gap-4">
-                      <div className="flex-shrink-0 mt-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <blockquote className="text-gray-700 dark:text-gray-300 italic text-base leading-relaxed">
-                        {highlightWord(sentence, wordToFind)}
-                      </blockquote>
+                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-5 rounded-xl border border-gray-100 dark:border-gray-800">
+                      {/* Dòng tiếng Anh */}
+                      <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed font-medium">
+                        {highlightWord(sentence.english, wordToFind)}
+                      </p>
+                      {/* Dòng Vietsub */}
+                      <p className="mt-2 text-blue-600 dark:text-blue-400/90 text-sm italic">
+                        {sentence.vietnamese}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -326,4 +328,4 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 };
 
 export default FlashcardDetailModal;
-// --- END OF FILE flashcard.tsx ---
+// --- END OF FILE story/flashcard.tsx ---
