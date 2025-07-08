@@ -140,12 +140,12 @@ const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
 
 // --- END: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
 
-const exampleImages = [
-  "https://placehold.co/1024x1536/FF5733/FFFFFF?text=Example+1",
-  "https://placehold.co/1024x1536/33FF57/FFFFFF?text=Example+2",
-  "https://placehold.co/1024x1536/3357FF/FFFFFF?text=Example+3",
-  "https://placehold.co/1024x1536/FF33A1/FFFFFF?text=Example+4",
-  "https://placehold.co/1024x1536/A133FF/FFFFFF?text=Example+5",
+// Dữ liệu câu ví dụ mới
+const exampleSentences = [
+  "The river is the main source of water for the town.",
+  "Solar energy is a renewable source of power.",
+  "The company is looking for a new source of raw materials.",
+  "Health insurance is a must for all employees."
 ];
 const animations = `
   @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
@@ -667,7 +667,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </>
             )}
 
-            <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleImages={exampleImages} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
+            <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleSentences={exampleSentences} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
 
             {isPlaylistModalOpen && selectedCardForPlaylist && (
               <AddToPlaylistModal
