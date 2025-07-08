@@ -142,15 +142,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
-          // --- GIAO DIỆN VÍ DỤ MỚI ---
+          // --- GIAO DIỆN VÍ DỤ MỚI - TINH TẾ & GỌN GÀNG ---
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
 
-              {/*
-              ================================================================
-              BẮT ĐẦU KHỐI CODE ĐƯỢC CHỈNH SỬA THEO YÊU CẦU MỚI NHẤT
-              ================================================================
-              */}
               <div className="flex items-center gap-2 mb-8">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -159,22 +154,28 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   {wordToFind}
                 </span>
               </div>
+              
               {/*
               ================================================================
-              KẾT THÚC KHỐI CODE ĐƯỢC CHỈNH SỬA
+              BẮT ĐẦU KHỐI CODE ĐƯỢC THIẾT KẾ LẠI
               ================================================================
               */}
-
               {filteredSentences.length > 0 ? (
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {filteredSentences.map((sentence, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-5 rounded-xl border border-gray-100 dark:border-gray-800">
-                      {/* Dòng tiếng Anh */}
-                      <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed font-medium">
-                        {highlightWord(sentence.english, wordToFind)}
-                      </p>
-                      {/* Dòng Vietsub */}
-                      <p className="mt-2 text-blue-600 dark:text-blue-400/90 text-sm italic">
+                    <div key={index} className="pb-6 border-b border-gray-200 dark:border-gray-800 last:border-b-0">
+                      {/* Dòng tiếng Anh với icon */}
+                      <div className="flex items-start gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                        <p className="flex-1 text-gray-800 dark:text-gray-200 text-base font-medium leading-relaxed">
+                          {highlightWord(sentence.english, wordToFind)}
+                        </p>
+                      </div>
+                      
+                      {/* Dòng Vietsub thụt vào */}
+                      <p className="pl-8 mt-1.5 text-gray-500 dark:text-gray-400 text-sm italic">
                         {sentence.vietnamese}
                       </p>
                     </div>
@@ -189,6 +190,12 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Chưa có câu ví dụ nào cho từ này trong danh sách.</p>
                 </div>
               )}
+              {/*
+              ================================================================
+              KẾT THÚC KHỐI CODE ĐƯỢC THIẾT KẾ LẠI
+              ================================================================
+              */}
+
             </div>
           </div>
         );
