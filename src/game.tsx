@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (Corrected) ---
+// --- START OF FILE game.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
@@ -813,16 +813,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         </div>
       )}
 
-      {/* 
-        ================================================================
-        SỬA LỖI Ở ĐÂY: Thay `exampleImages` bằng `exampleSentences`
-        ================================================================
-      */}
       {selectedVocabCard && showVocabDetail && (
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleSentences={[]} 
+          exampleSentencesData={[]}
           onClose={closeVocabDetail}
           currentVisualStyle="default"
         />
@@ -851,3 +846,5 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 };
 
 export default EbookReader;
+
+// --- END OF FILE game.tsx ---
