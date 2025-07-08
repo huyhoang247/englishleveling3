@@ -142,7 +142,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
-          // --- GIAO DIỆN VÍ DỤ MỚI - TINH TẾ & GỌN GÀNG ---
+          // --- GIAO DIỆN VÍ DỤ MỚI - GIỮ CARD-STYLE NHƯNG TINH CHỈNH ---
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
 
@@ -161,21 +161,15 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               ================================================================
               */}
               {filteredSentences.length > 0 ? (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {filteredSentences.map((sentence, index) => (
-                    <div key={index} className="pb-6 border-b border-gray-200 dark:border-gray-800 last:border-b-0">
-                      {/* Dòng tiếng Anh với icon */}
-                      <div className="flex items-start gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                        </svg>
-                        <p className="flex-1 text-gray-800 dark:text-gray-200 text-base font-medium leading-relaxed">
-                          {highlightWord(sentence.english, wordToFind)}
-                        </p>
-                      </div>
-                      
-                      {/* Dòng Vietsub thụt vào */}
-                      <p className="pl-8 mt-1.5 text-gray-500 dark:text-gray-400 text-sm italic">
+                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                      {/* Dòng tiếng Anh - Font size nhỏ hơn */}
+                      <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium">
+                        {highlightWord(sentence.english, wordToFind)}
+                      </p>
+                      {/* Dòng Vietsub - Giữ nguyên style */}
+                      <p className="mt-2 text-blue-600 dark:text-blue-400/90 text-sm italic">
                         {sentence.vietnamese}
                       </p>
                     </div>
