@@ -151,15 +151,13 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               BẮT ĐẦU KHỐI CODE ĐƯỢC CHỈNH SỬA THEO YÊU CẦU MỚI NHẤT
               ================================================================
               */}
-              <div className="flex items-center gap-2.5 mb-8">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <div className="flex items-center gap-2 mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <h3 className="text-xl font-semibold">
-                  <span className="font-mono uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                    {wordToFind}
-                  </span>
-                </h3>
+                <span className="font-sans text-lg font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                  {wordToFind}
+                </span>
               </div>
               {/*
               ================================================================
