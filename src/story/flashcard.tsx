@@ -1,3 +1,5 @@
+// --- START OF FILE flashcard.tsx (10).txt ---
+
 // --- START OF FILE story/flashcard.tsx ---
 
 import React, { useState, useEffect } from 'react';
@@ -114,7 +116,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             <>
                 {parts.map((part, index) =>
                     part.toLowerCase() === word.toLowerCase() ? (
-                        <strong key={index} className="text-blue-500 dark:text-blue-400 font-semibold bg-blue-100 dark:bg-blue-900/50 px-1 rounded-sm">
+                        <strong key={index} className="text-blue-500 dark:text-blue-400 font-semibold">
                             {part}
                         </strong>
                     ) : (
@@ -169,7 +171,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                         {highlightWord(sentence.english, wordToFind)}
                       </p>
                       {/* Dòng Vietsub - Giữ nguyên style */}
-                      <p className="mt-2 text-blue-600 dark:text-blue-400/90 text-sm italic">
+                      <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">
                         {sentence.vietnamese}
                       </p>
                     </div>
