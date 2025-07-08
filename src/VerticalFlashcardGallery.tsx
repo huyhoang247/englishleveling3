@@ -10,6 +10,7 @@ import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
 import detailedMeaningsText from './vocabulary-definitions.ts'; // <-- IMPORT DỮ LIỆU TỪ FILE MỚI
 import { defaultVocabulary } from './list-vocabulary.ts'; // <-- IMPORT DANH SÁCH TỪ VỰNG
+import { exampleData } from './example-data.ts'; // <-- IMPORT DỮ LIỆU VÍ DỤ TỪ FILE MỚI
 
 // --- Interfaces and Data ---
 interface Playlist {
@@ -140,13 +141,6 @@ const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
 
 // --- END: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
 
-// Dữ liệu câu ví dụ mới
-const exampleSentences = [
-  "The river is the main source of water for the town.",
-  "Solar energy is a renewable source of power.",
-  "The company is looking for a new source of raw materials.",
-  "Health insurance is a must for all employees."
-];
 const animations = `
   @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
   @keyframes slideIn { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
@@ -667,7 +661,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </>
             )}
 
-            <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleSentences={exampleSentences} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
+            <FlashcardDetailModal selectedCard={selectedCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleData} onClose={closeVocabDetail} currentVisualStyle={visualStyle} />
 
             {isPlaylistModalOpen && selectedCardForPlaylist && (
               <AddToPlaylistModal
