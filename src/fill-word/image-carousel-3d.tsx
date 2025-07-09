@@ -1,4 +1,4 @@
-// --- START OF FILE image-carousel-3d.tsx (UPDATED WITH 3D TILT) ---
+// --- START OF FILE image-carousel-3d.tsx (UPDATED WITH PERSPECTIVE TILT) ---
 
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,14 +9,10 @@ interface ImageCarousel3DProps {
   word: string;
 }
 
-// TỐI ƯU HÓA 1: Virtualization (Ảo hóa)
-// Chỉ render 2 ảnh ở mỗi bên của ảnh trung tâm.
-// Tổng cộng sẽ có tối đa 5 ảnh được render tại một thời điểm (2 trái + 1 giữa + 2 phải).
 const RENDER_WINDOW = 2;
 
 const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageClick, word }) => {
   const [index, setIndex] = useState(0);
-  // Đảm bảo carousel hoạt động ngay cả khi chỉ có 1 hoặc 2 ảnh
   const displayImages = imageUrls.length < 3 ? [imageUrls[0], imageUrls[0], imageUrls[0]] : imageUrls;
   const numImages = displayImages.length;
 
@@ -25,16 +21,37 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
 
   const getStyle = (imageIndex: number) => {
     const offset = (imageIndex - index + numImages) % numImages;
-    // TỐI ƯU HÓA 2: Đã loại bỏ `filter: blur()` để giảm tải cho GPU.
-    // Hiệu ứng chiều sâu giờ chỉ dựa vào `transform`, `opacity` và `brightness`.
-    if (offset === 0) return { transform: 'translateX(0) translateZ(0) scale(1) rotateY(0deg)', opacity: 1, zIndex: 3, filter: 'brightness(1)' };
+
+    // Ảnh trung tâm
+    if (offset === 0) return { 
+      transform: 'translateX(0) translateZ(0) scale(1) rotateY(0deg)', 
+      opacity: 1, 
+      zIndex: 3, 
+      filter: 'brightness(1)',
+      transformOrigin: 'center center' // Điểm xoay ở giữa
+    };
     
-    // YÊU CẦU MỚI: Thêm độ nghiêng (rotateY) để tăng hiệu ứng 3D
     // Ảnh bên phải
-    if (offset === 1) return { transform: 'translateX(50%) translateZ(-120px) scale(0.75) rotateY(-35deg)', opacity: 0.3, zIndex: 2, filter: 'brightness(0.6)' };
+    if (offset === 1) return { 
+      // ĐIỀU CHỈNH 1: Đặt điểm xoay là cạnh trái của ảnh
+      transformOrigin: 'left center', 
+      // ĐIỀU CHỈNH 2: Tinh chỉnh các giá trị transform để có hiệu ứng như hình mẫu
+      transform: 'translateX(40%) translateZ(-150px) scale(0.8) rotateY(-50deg)', 
+      opacity: 0.5, 
+      zIndex: 2, 
+      filter: 'brightness(0.5)' 
+    };
     
     // Ảnh bên trái (mặc định)
-    return { transform: 'translateX(-50%) translateZ(-120px) scale(0.75) rotateY(35deg)', opacity: 0.3, zIndex: 1, filter: 'brightness(0.6)' };
+    return { 
+      // ĐIỀU CHỈNH 1: Đặt điểm xoay là cạnh phải của ảnh
+      transformOrigin: 'right center',
+      // ĐIỀU CHỈNH 2: Tinh chỉnh các giá trị transform để có hiệu ứng như hình mẫu
+      transform: 'translateX(-40%) translateZ(-150px) scale(0.8) rotateY(50deg)', 
+      opacity: 0.5, 
+      zIndex: 1, 
+      filter: 'brightness(0.5)'
+    };
   };
   
   const handleDragEnd = (event: any, info: any) => {
@@ -45,29 +62,23 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
 
   return (
     <div className="relative w-full h-52 mt-6 flex items-center justify-center" style={{ perspective: '1000px' }}>
-      <div className="relative w-full h-full" style={{ transformStyle: 'preserve-d' }}>
-        {/* AnimatePresence giờ đây rất hữu ích để xử lý animation khi các ảnh bị ẩn/hiện do virtualization */}
+      <div className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
         <AnimatePresence initial={false}>
           {displayImages.map((url, i) => {
-            // TỐI ƯU HÓA 1: Logic của Virtualization
-            // Tính khoảng cách vòng tròn từ ảnh hiện tại đến ảnh trung tâm (index)
             const distance = Math.abs(index - i);
             const circularDistance = Math.min(distance, numImages - distance);
             
-            // Nếu ảnh nằm ngoài "cửa sổ render", không render nó
             if (circularDistance > RENDER_WINDOW) {
               return null;
             }
 
             return (
               <motion.div
-                // Sử dụng key ổn định hơn, phòng trường hợp url bị trùng lặp
                 key={url + i}
                 className="absolute w-full h-full cursor-grab active:cursor-grabbing"
                 style={{ top: 0, left: 0, width: '60%', height: '100%', margin: '0 auto', right: 0 }}
                 initial={getStyle(i)}
                 animate={getStyle(i)}
-                // exit prop được AnimatePresence sử dụng khi component bị loại bỏ khỏi DOM
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 drag="x"
