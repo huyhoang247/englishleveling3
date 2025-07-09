@@ -348,9 +348,14 @@ export default function VocabularyGame() {
       }, 1500);
 
     } else {
-      setFeedback(`Không đúng, hãy thử lại!`); // Có thể bỏ hiển thị từ đúng ở đây để tăng thử thách
+      setFeedback(`Không đúng, hãy thử lại!`);
       setIsCorrect(false);
       setStreak(0);
+      // Thêm đoạn này để tự động ẩn thông báo sai sau 2 giây
+      setTimeout(() => {
+        setFeedback('');
+        setIsCorrect(null); // Reset luôn trạng thái để người dùng có thể nhập lại
+      }, 2000);
     }
   };
 
@@ -522,15 +527,35 @@ export default function VocabularyGame() {
                   </div>
                 </div>
 
-                <WordSquaresInput
-                  word={currentWord.word}
-                  userInput={userInput}
-                  setUserInput={setUserInput}
-                  checkAnswer={checkAnswer}
-                  feedback={feedback}
-                  isCorrect={isCorrect}
-                  disabled={isCorrect === true}
-                />
+                {/* Container để định vị cho thông báo */}
+                <div className="relative w-full">
+                  <WordSquaresInput
+                    word={currentWord.word}
+                    userInput={userInput}
+                    setUserInput={setUserInput}
+                    checkAnswer={checkAnswer}
+                    // Không truyền feedback vào đây nữa
+                    // isCorrect và disabled vẫn cần để style cho các ô input
+                    isCorrect={isCorrect}
+                    disabled={isCorrect === true}
+                  />
+
+                  {/* --- KHUNG THÔNG BÁO MỚI --- */}
+                  {/* Thông báo này sẽ "nổi" lên trên và không làm xê dịch bố cục */}
+                  <div
+                    className={`
+                      absolute -bottom-16 left-0 right-0 mx-auto w-fit
+                      py-2 px-6 rounded-full shadow-lg text-white text-base font-semibold
+                      transition-all duration-300 ease-in-out
+                      ${feedback ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
+                      ${isCorrect === true ? 'bg-gradient-to-r from-green-500 to-emerald-600' : ''}
+                      ${isCorrect === false ? 'bg-gradient-to-r from-red-500 to-rose-600' : ''}
+                    `}
+                  >
+                    {feedback}
+                  </div>
+                </div>
+
               </div>
             )}
           </>
