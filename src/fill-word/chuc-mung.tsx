@@ -1,78 +1,82 @@
-// --- START OF FILE chuc-mung.tsx (PHIÊN BẢN PHÁO HOA) ---
+// --- START OF FILE chuc-mung.tsx (CANVAS & OPTIMIZED) ---
 
 import React, { useRef, useEffect, useCallback } from 'react';
 
-// --- CÁC HẰNG SỐ CÓ THỂ TÙY CHỈNH CHO HIỆU ỨNG PHÁO HOA ---
-const PARTICLE_COUNT = 300; // Tăng số lượng hạt cho vụ nổ lớn hơn
-// Bảng màu rực rỡ, tươi sáng hơn cho pháo hoa
-const COLORS = ['#FFD700', '#FF4500', '#FF69B4', '#1E90FF', '#32CD32', '#FFFFFF'];
-const GRAVITY = 0.08; // Tăng trọng lực để hạt rơi nhanh hơn một chút
-const DRAG = 0.97; // Lực cản không khí (số càng nhỏ cản càng mạnh, hạt dừng nhanh hơn)
-const INITIAL_VELOCITY = 6; // Vận tốc ban đầu mạnh hơn để "vụ nổ" tỏa rộng hơn
-const TRAIL_EFFECT_ALPHA = 0.15; // Độ mờ của hiệu ứng "đuôi" (càng nhỏ đuôi càng dài)
+// --- CÁC HẰNG SỐ CÓ THỂ TÙY CHỈNH CHO HIỆU ỨNG ---
+const PARTICLE_COUNT = 70; // Số lượng hạt confetti (đã giảm xuống)
+const COLORS = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800'];
+const GRAVITY = 0.05; // Lực hút làm hạt rơi nhanh dần
+const DRAG = 0.98; // Lực cản không khí (số càng nhỏ cản càng mạnh)
+const INITIAL_VELOCITY = 4; // Vận tốc ban đầu khi "bắn" ra
 
-// --- ĐỊNH NGHĨA LỚP PARTICLE ĐỂ QUẢN LÝ TỪNG HẠT PHÁO HOA ---
+// --- ĐỊNH NGHĨA LỚP PARTICLE ĐỂ QUẢN LÝ TỪNG HẠT CONFETTI ---
 class Particle {
   x: number;
   y: number;
-  radius: number;
+  width: number;
+  height: number;
   color: string;
   vx: number; // Vận tốc theo trục X
   vy: number; // Vận tốc theo trục Y
   alpha: number; // Độ trong suốt (để làm mờ dần)
+  rotation: number; // Góc xoay hiện tại
+  spin: number; // Tốc độ xoay
 
   constructor(canvasWidth: number, canvasHeight: number) {
-    // Bắt đầu từ giữa màn hình, phía trên - tâm của vụ nổ pháo hoa
+    // Bắt đầu từ giữa màn hình, phía trên
     this.x = canvasWidth * 0.5;
     this.y = canvasHeight * 0.2;
 
-    // Bán kính ngẫu nhiên cho các hạt tròn to nhỏ khác nhau
-    this.radius = Math.random() * 3 + 2; // Bán kính từ 2px đến 5px
+    // Kích thước ngẫu nhiên
+    this.width = Math.random() * 8 + 4;
+    this.height = Math.random() * 8 + 4;
 
-    // Màu ngẫu nhiên từ bảng màu
+    // Màu ngẫu nhiên
     this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
 
-    // Vận tốc ban đầu ngẫu nhiên theo mọi hướng, tạo thành vụ nổ tròn
+    // Vận tốc ban đầu ngẫu nhiên theo mọi hướng
     const angle = Math.random() * Math.PI * 2;
     const speed = Math.random() * INITIAL_VELOCITY;
     this.vx = Math.cos(angle) * speed;
-    this.vy = Math.sin(angle) * speed - 1; // Hơi hướng lên trên một chút ban đầu
+    this.vy = Math.sin(angle) * speed - 2; // Thêm -2 để có xu hướng bắn lên trên một chút
 
-    // Khởi tạo độ trong suốt
+    // Khởi tạo các thuộc tính vật lý
     this.alpha = 1;
+    this.rotation = Math.random() * 360;
+    this.spin = (Math.random() - 0.5) * 10;
   }
 
   // Cập nhật vị trí và trạng thái của hạt trong mỗi khung hình
   update() {
     this.vy += GRAVITY; // Áp dụng trọng lực
-    this.vx *= DRAG;     // Áp dụng lực cản
+    this.vx *= DRAG; // Áp dụng lực cản
     this.vy *= DRAG;
 
     this.x += this.vx;
     this.y += this.vy;
     
-    this.alpha -= 0.01; // Giảm độ trong suốt để mờ dần, tốc độ mờ nhanh hơn một chút
+    this.rotation += this.spin; // Cập nhật góc xoay
+    this.alpha -= 0.005; // Giảm độ trong suốt để mờ dần
   }
 
-  // Vẽ hạt tròn lên canvas
+  // Vẽ hạt lên canvas
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.save();
+    ctx.save(); // Lưu trạng thái canvas hiện tại
     ctx.globalAlpha = this.alpha; // Áp dụng độ trong suốt
-    
-    ctx.beginPath();
+    ctx.translate(this.x, this.y); // Di chuyển gốc tọa độ đến vị trí của hạt
+    ctx.rotate(this.rotation * Math.PI / 180); // Xoay canvas
     ctx.fillStyle = this.color;
-    // Vẽ hình tròn tại vị trí của hạt
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    ctx.fill();
-    
-    ctx.restore();
+    // Vẽ hình chữ nhật tại gốc tọa độ mới (đã được di chuyển và xoay)
+    ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+    ctx.restore(); // Khôi phục lại trạng thái canvas ban đầu
   }
 }
 
-// --- COMPONENT PHÁO HOA SỬ DỤNG CANVAS ---
-const FireworksEffect: React.FC = () => {
+// --- COMPONENT CONFETTI SỬ DỤNG CANVAS ---
+const Confetti: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sử dụng ref để lưu trữ mảng hạt và ID của animation frame
+  // Điều này ngăn việc re-render không cần thiết và giữ trạng thái animation
   const particlesRef = useRef<Particle[]>([]);
   const animationFrameIdRef = useRef<number>();
 
@@ -91,60 +95,62 @@ const FireworksEffect: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    // Hàm để thiết lập kích thước canvas bằng kích thước cửa sổ
     const setCanvasSize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      // Tạo một vụ nổ pháo hoa mới mỗi khi thay đổi kích thước cửa sổ
-      createParticles(canvas); 
+      createParticles(canvas); // Tạo lại hạt confetti khi thay đổi kích thước
     };
     
     setCanvasSize();
 
     // Vòng lặp animation
     const animate = () => {
-      // Thay vì xóa hoàn toàn, vẽ một lớp nền bán trong suốt để tạo hiệu ứng "đuôi"
-      // Màu nền tối giúp các hạt pháo hoa nổi bật
-      ctx.fillStyle = `rgba(10, 10, 20, ${TRAIL_EFFECT_ALPHA})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Xóa toàn bộ canvas trước khi vẽ khung hình mới
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Lặp qua từng hạt để cập nhật và vẽ
-      // Dùng vòng lặp ngược để có thể xóa phần tử an toàn
-      for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-        const particle = particlesRef.current[i];
+      particlesRef.current.forEach((particle, index) => {
         particle.update();
         particle.draw(ctx);
 
-        // Loại bỏ hạt khi nó đã mờ hẳn để tối ưu hiệu năng
-        if (particle.alpha <= 0) {
-          particlesRef.current.splice(i, 1);
+        // Loại bỏ hạt khi nó đã mờ hẳn hoặc rơi ra khỏi màn hình
+        if (particle.alpha <= 0 || particle.y > canvas.height + 20) {
+          particlesRef.current.splice(index, 1);
         }
-      }
+      });
       
+      // Tiếp tục vòng lặp animation cho khung hình tiếp theo
       animationFrameIdRef.current = requestAnimationFrame(animate);
     };
 
+    // Bắt đầu animation
     animate();
 
+    // Lắng nghe sự kiện thay đổi kích thước cửa sổ
     window.addEventListener('resize', setCanvasSize);
 
-    // Hàm dọn dẹp khi component bị unmount
+    // Hàm dọn dẹp (cleanup) khi component bị unmount
     return () => {
+      // Dừng vòng lặp animation
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
       }
+      // Gỡ bỏ trình lắng nghe sự kiện
       window.removeEventListener('resize', setCanvasSize);
     };
-  }, [createParticles]);
+  }, [createParticles]); // Dependency array đảm bảo effect chỉ chạy lại nếu createParticles thay đổi
 
   return (
+    // Render một canvas duy nhất, cố định trên màn hình
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-50 bg-transparent"
+      className="fixed inset-0 pointer-events-none z-50"
       aria-hidden="true"
     />
   );
 };
 
-export default FireworksEffect;
+export default Confetti;
 
-// --- END OF FILE chuc-mung.tsx (PHIÊN BẢN PHÁO HOA) ---
+// --- END OF FILE chuc-mung.tsx (CANVAS & OPTIMIZED) ---
