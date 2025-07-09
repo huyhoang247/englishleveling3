@@ -45,10 +45,23 @@ const GoldIcon = ({ className = '' }: { className?: string }) => (
 export default function App() {
   const [vocabulary, setVocabulary] = useState(initialVocabularyData);
 
+  // Sắp xếp với logic mới, ưu tiên "có thể nhận thưởng" lên đầu
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
+    // Ưu tiên 1: Xếp những mục "có thể nhận thưởng" lên đầu
+    const aIsClaimable = a.exp >= a.maxExp;
+    const bIsClaimable = b.exp >= b.maxExp;
+
+    if (aIsClaimable !== bIsClaimable) {
+      // Nếu b claim được (true=1) và a không (false=0), kết quả là 1 -> b lên trước.
+      return (bIsClaimable ? 1 : 0) - (aIsClaimable ? 1 : 0);
+    }
+
+    // Ưu tiên 2: Nếu cùng trạng thái nhận thưởng, sắp xếp theo level giảm dần
     if (b.level !== a.level) {
       return b.level - a.level;
     }
+
+    // Ưu tiên 3: Nếu cùng hết, sắp xếp theo exp giảm dần
     return b.exp - a.exp;
   });
 
