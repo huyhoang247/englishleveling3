@@ -69,9 +69,8 @@ export default function App() {
         <div className="w-full max-w-4xl mx-auto">
           <header className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
-              Bảng Xếp Hạng Từ Vựng
+              Thành Tựu
             </h1>
-            <p className="text-slate-400 mt-2 text-lg">Theo dõi tiến độ và nhận phần thưởng thông thạo!</p>
           </header>
 
           <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
