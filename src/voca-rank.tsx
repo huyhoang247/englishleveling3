@@ -40,28 +40,28 @@ const GoldIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
+// Icon mới: Sách (tổng từ vựng)
+const BookOpenIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A9.735 9.735 0 006 21a9.707 9.707 0 005.25-1.533" />
+        <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v14.25a.75.75 0 01-1 .707A9.735 9.735 0 0118 21a9.707 9.707 0 01-5.25-1.533" />
+    </svg>
+);
+
 
 // --- Thành phần chính của ứng dụng ---
 export default function App() {
   const [vocabulary, setVocabulary] = useState(initialVocabularyData);
 
-  // Sắp xếp với logic mới, ưu tiên "có thể nhận thưởng" lên đầu
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
-    // Ưu tiên 1: Xếp những mục "có thể nhận thưởng" lên đầu
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
-
     if (aIsClaimable !== bIsClaimable) {
-      // Nếu b claim được (true=1) và a không (false=0), kết quả là 1 -> b lên trước.
       return (bIsClaimable ? 1 : 0) - (aIsClaimable ? 1 : 0);
     }
-
-    // Ưu tiên 2: Nếu cùng trạng thái nhận thưởng, sắp xếp theo level giảm dần
     if (b.level !== a.level) {
       return b.level - a.level;
     }
-
-    // Ưu tiên 3: Nếu cùng hết, sắp xếp theo exp giảm dần
     return b.exp - a.exp;
   });
 
@@ -76,15 +76,41 @@ export default function App() {
     );
   }, []);
 
+  // --- Tính toán các chỉ số thống kê ---
+  const totalWords = vocabulary.length;
+  // Mỗi level-up (từ lv1 -> lv2,...) cho 1 thẻ. Tổng số thẻ = tổng (level - 1) của mỗi từ.
+  const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
+
   return (
     <>
       <div className="bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white min-h-screen font-sans p-4 sm:p-8 flex justify-center">
         <div className="w-full max-w-4xl mx-auto">
-          <header className="text-center mb-10">
+          <header className="text-center mb-8"> {/* Giảm margin-bottom */}
             <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
               Thành Tựu
             </h1>
           </header>
+
+          {/* --- Bảng Thống Kê Mới --- */}
+          <section className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Thống kê Từ vựng */}
+            <div className="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <BookOpenIcon className="w-8 h-8 text-cyan-400 flex-shrink-0" />
+              <div>
+                <p className="text-2xl font-bold text-white">{totalWords}</p>
+                <p className="text-sm text-slate-400">Từ đã học</p>
+              </div>
+            </div>
+            {/* Thống kê Thẻ thông thạo */}
+            <div className="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <MasteryCardIcon className="w-8 h-8 text-sky-400 flex-shrink-0" />
+              <div>
+                <p className="text-2xl font-bold text-white">{totalMasteryCards}</p>
+                <p className="text-sm text-slate-400">Thẻ thông thạo</p>
+              </div>
+            </div>
+          </section>
+
 
           <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
             <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
