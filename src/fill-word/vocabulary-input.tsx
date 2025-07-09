@@ -116,17 +116,17 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      {/* [START] KHỐI ĐƯỢC THAY ĐỔI */}
       {/* Container cho phép cuộn ngang và ẩn thanh cuộn */}
       <div className="w-full flex justify-center">
         <div className="w-full overflow-x-auto hide-scrollbar">
             {/* Container nội bộ để các ô không bị ngắt dòng và căn giữa khi ít ô */}
-            <div className="inline-flex justify-center p-2 gap-2 w-full">
+            <div className="inline-flex justify-center p-1 gap-2 w-full">
                 {squares.map((char, index) => (
                 <div
                     key={index}
-                    // Kích thước ô, font chữ, và các style khác được cố định
-                    className={`word-square aspect-square w-12 md:w-14 flex-shrink-0 flex items-center justify-center border rounded-lg text-2xl font-bold transition-all duration-200
+                    // [START] Kích thước ô và font chữ đã được điều chỉnh cho hợp lý hơn
+                    className={`word-square aspect-square w-10 md:w-12 flex-shrink-0 flex items-center justify-center border rounded-lg text-xl font-bold transition-all duration-200
+                    // [END]
                     ${index === userInput.length && !disabled && isCorrect === null ? 'scale-105 border-blue-400 ring-1 ring-blue-200' : ''}
                     ${getSquareStyle(index)} ${getSquareAnimation(index)}`}
                     onClick={() => handleSquareClick(index)}
@@ -137,7 +137,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
             </div>
         </div>
       </div>
-      {/* [END] KHỐI ĐƯỢC THAY ĐỔI */}
 
       {/* Container cho ô hiển thị từ và nút kiểm tra */}
       <div className="flex justify-center items-center gap-3 w-full min-h-[3.5rem]">
