@@ -120,7 +120,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
 
       <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word}</p>
-        <span className="md:hidden text-xs text-slate-400">Từ vựng</span>
+        <span className="md:hidden text-xs text-slate-400">{`Level ${level}`}</span>
       </div>
 
       <div className="col-span-12 md:col-span-3 md:px-2">
