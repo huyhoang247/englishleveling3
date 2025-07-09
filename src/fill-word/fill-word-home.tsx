@@ -311,7 +311,7 @@ export default function VocabularyGame() {
     if (!currentWord || !userInput.trim()) return;
 
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
-      setFeedback('Chính xác!');
+      setFeedback('');
       setIsCorrect(true);
       setScore(score + 1);
 
@@ -348,7 +348,7 @@ export default function VocabularyGame() {
       }, 1500);
 
     } else {
-      setFeedback(`Không đúng, hãy thử lại!`); // Có thể bỏ hiển thị từ đúng ở đây để tăng thử thách
+      setFeedback(``); // Có thể bỏ hiển thị từ đúng ở đây để tăng thử thách
       setIsCorrect(false);
       setStreak(0);
     }
