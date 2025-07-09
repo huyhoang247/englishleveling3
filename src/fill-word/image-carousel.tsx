@@ -1,8 +1,9 @@
 // --- START OF FILE image-carousel.tsx ---
 
 import { useMemo, useCallback } from 'react';
+import { defaultImageUrls } from '../image-url.ts'; // Giả sử bạn có file này
 
-// Định nghĩa lại kiểu dữ liệu để đảm bảo tính nhất quán
+// Định nghĩa kiểu dữ liệu để đảm bảo tính nhất quán
 interface VocabularyItem {
   word: string;
   hint: string;
@@ -12,10 +13,6 @@ interface VocabularyItem {
 // Hàm trợ giúp để tạo URL ảnh (sao chép từ component cha)
 const generateImageUrl = (imageIndex?: number) => {
   if (imageIndex !== undefined && typeof imageIndex === 'number') {
-    const defaultImageUrls = [
-      'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/image/book.png',
-      // Thêm các URL khác nếu cần
-    ];
     const adjustedIndex = imageIndex - 1;
     if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) {
       return defaultImageUrls[adjustedIndex];
@@ -29,11 +26,11 @@ interface ImageCarouselProps {
   currentIndex: number;
   onIndexChange: (newIndex: number) => void;
   onCenterImageClick: () => void; // Hàm để mở popup
+  isAnswered: boolean; // Prop mới để vô hiệu hóa điều hướng
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ words, currentIndex, onIndexChange, onCenterImageClick }) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({ words, currentIndex, onIndexChange, onCenterImageClick, isAnswered }) => {
   // Sử dụng useMemo để tính toán danh sách hiển thị chỉ khi danh sách từ thay đổi
-  // Điều này xử lý các trường hợp có ít hơn 3 ảnh
   const displayItems = useMemo(() => {
     if (!words || words.length === 0) {
       return [];
@@ -44,8 +41,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ words, currentIndex, onIn
     }
     if (words.length === 2) {
       // Tạo một mảng 3 phần tử để hiệu ứng mượt mà
-      // Khi ở index 0 -> [word1, word0, word1]
-      // Khi ở index 1 -> [word0, word1, word0]
       if (currentIndex === 0) return [words[1], words[0], words[1]];
       return [words[0], words[1], words[0]];
     }
@@ -56,41 +51,40 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ words, currentIndex, onIn
     return [words[prevIndex], words[currentIndex], words[nextIndex]];
   }, [words, currentIndex]);
 
-  // Sử dụng useCallback để không tạo lại hàm trên mỗi lần render
   const navigate = useCallback((direction: 'prev' | 'next') => {
-    if (words.length <= 1) return; // Không điều hướng nếu chỉ có 1 từ
+    if (isAnswered || words.length <= 1) return; // Không điều hướng nếu đã trả lời đúng hoặc chỉ có 1 từ
     const n = words.length;
     const newIndex = direction === 'prev'
       ? (currentIndex - 1 + n) % n
       : (currentIndex + 1) % n;
     onIndexChange(newIndex);
-  }, [currentIndex, words.length, onIndexChange]);
-
+  }, [currentIndex, words.length, onIndexChange, isAnswered]);
 
   if (displayItems.length === 0) {
     return (
-      <div className="relative w-full h-64 flex items-center justify-center bg-gray-200 rounded-2xl">
-        <p>Không có ảnh để hiển thị</p>
+      <div className="relative w-full h-64 flex items-center justify-center bg-gray-200 rounded-2xl mt-6">
+        <p className="text-gray-500">Không có ảnh để hiển thị</p>
       </div>
     );
   }
 
   const [leftItem, centerItem, rightItem] = displayItems;
+  const sideImageClasses = `absolute w-2/3 h-full transition-all duration-500 ease-in-out ${isAnswered ? '' : 'cursor-pointer'}`;
+  const centerImageClasses = `absolute w-full h-full transition-all duration-500 ease-in-out cursor-pointer group`;
 
   return (
     <div 
       className="relative w-full h-64 mt-6 flex items-center justify-center"
-      // Thêm perspective để tạo hiệu ứng 3D
       style={{ perspective: '1000px' }}
     >
       {/* Ảnh bên trái */}
       <div
-        className="absolute w-2/3 h-full cursor-pointer transition-all duration-500 ease-in-out"
+        className={sideImageClasses}
         style={{
-          transform: 'translateX(-50%) scale(0.75)',
-          filter: 'brightness(0.6) blur(3px)',
+          transform: 'translateX(-55%) scale(0.7) rotateY(35deg)',
+          filter: 'brightness(0.5) blur(4px)',
           zIndex: 10,
-          opacity: 0.8,
+          opacity: isAnswered ? 0.3 : 0.8,
         }}
         onClick={() => navigate('prev')}
       >
@@ -103,9 +97,9 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ words, currentIndex, onIn
 
       {/* Ảnh ở giữa (chính) */}
       <div
-        className="absolute w-full h-full cursor-pointer transition-all duration-500 ease-in-out"
+        className={centerImageClasses}
         style={{
-          transform: 'translateX(0) scale(1)',
+          transform: 'translateX(0) scale(1) rotateY(0)',
           filter: 'brightness(1) blur(0)',
           zIndex: 20,
         }}
@@ -116,19 +110,19 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ words, currentIndex, onIn
           alt={centerItem.word}
           className="w-full h-full object-contain rounded-2xl shadow-2xl"
         />
-        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 rounded-2xl flex items-center justify-center">
-            <p className="text-white text-lg font-bold opacity-0 hover:opacity-100 transition-opacity">Chạm để xem chi tiết</p>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-2xl flex items-center justify-center">
+            <p className="text-white text-lg font-bold opacity-0 group-hover:opacity-100 transition-opacity">Chạm để xem chi tiết</p>
         </div>
       </div>
 
       {/* Ảnh bên phải */}
       <div
-        className="absolute w-2/3 h-full cursor-pointer transition-all duration-500 ease-in-out"
+        className={sideImageClasses}
         style={{
-          transform: 'translateX(50%) scale(0.75)',
-          filter: 'brightness(0.6) blur(3px)',
+          transform: 'translateX(55%) scale(0.7) rotateY(-35deg)',
+          filter: 'brightness(0.5) blur(4px)',
           zIndex: 10,
-          opacity: 0.8,
+          opacity: isAnswered ? 0.3 : 0.8,
         }}
         onClick={() => navigate('next')}
       >
