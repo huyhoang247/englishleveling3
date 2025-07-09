@@ -44,7 +44,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     const letters = [
       ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
       ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-      ['z', 'x', 'c', 'v', 'b', 'n', 'm']
+      ['z', 'x', 'c', 'v', 'b', 'n', 'm', "'"] // Đã di chuyển phím ' vào đây
     ];
 
     return letters.map((row, rowIndex) => (
@@ -56,7 +56,8 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
             onClick={() => handleKeyPress(key)}
             disabled={disabled || userInput.length >= wordLength} // Disable phím khi input đầy hoặc game over
           >
-            {key.toUpperCase()} {/* Hiển thị chữ in hoa trên phím */}
+            {/* Nếu là phím ', không cần chuyển sang chữ hoa */}
+            {key === "'" ? key : key.toUpperCase()} 
           </button>
         ))}
         {rowIndex === 2 && (
