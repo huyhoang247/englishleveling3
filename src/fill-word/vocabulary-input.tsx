@@ -28,6 +28,36 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     squares[i] = characters[i];
   }
 
+  // [START] THAY ĐỔI MỚI
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const contentContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      const scrollContainer = scrollContainerRef.current;
+      const contentContainer = contentContainerRef.current;
+
+      if (scrollContainer && contentContainer) {
+        // So sánh chiều rộng thực của nội dung với chiều rộng nhìn thấy của container
+        const isCurrentlyOverflowing = contentContainer.scrollWidth > scrollContainer.clientWidth;
+        setIsOverflowing(isCurrentlyOverflowing);
+      }
+    };
+
+    // Chạy kiểm tra sau khi render và mỗi khi từ thay đổi
+    checkOverflow();
+
+    // Thêm listener để kiểm tra lại khi thay đổi kích thước cửa sổ
+    window.addEventListener('resize', checkOverflow);
+
+    // Dọn dẹp listener khi component bị unmount
+    return () => {
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [word]); // Phụ thuộc vào `word` để chạy lại mỗi khi có từ mới
+  // [END] THAY ĐỔI MỚI
+
   const handleSquareClick = (index: number) => {
     if (disabled) return;
 
@@ -45,7 +75,7 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         20% { transform: translateX(-3px); }
         40% { transform: translateX(3px); }
         60% { transform: translateX(-2px); }
-        80% { transform: translateX(2px); }
+        80% { translateX(2px); }
       }
       .animate-shake {
         animation: shake 0.4s ease-in-out;
@@ -65,13 +95,12 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
       .animate-pulse {
         animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
-      /* Tiện ích ẩn thanh cuộn */
       .hide-scrollbar::-webkit-scrollbar {
         display: none;
       }
       .hide-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     `;
     document.head.appendChild(style);
@@ -81,7 +110,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     };
   }, []);
 
-  // Lấy style phù hợp cho từng ô chữ cái
   const getSquareStyle = (index: number) => {
     if (isCorrect === true) {
       return 'bg-gradient-to-br from-green-100 to-green-200 border-green-400 text-green-700 shadow-md';
@@ -93,7 +121,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return 'bg-white border-gray-200 text-gray-400';
   };
 
-  // Lấy animation phù hợp cho từng ô chữ cái
   const getSquareAnimation = (index: number) => {
     if (index === userInput.length && !disabled && isCorrect === null) {
       return 'animate-pulse';
@@ -108,7 +135,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
     return '';
   };
 
-  // Định dạng hiển thị từ với chữ cái đầu viết hoa
   const formatDisplayWord = (input: string) => {
     if (!input) return '';
     return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
@@ -117,10 +143,15 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   return (
     <div className="w-full space-y-4">
       {/* [START] KHỐI ĐƯỢC THAY ĐỔI */}
-      {/* Container cho phép cuộn ngang, justify-start để nội dung luôn bắt đầu từ bên trái */}
-      <div className="w-full overflow-x-auto hide-scrollbar flex justify-start">
-        {/* Container nội bộ, không còn w-full để có thể giãn nở tự do */}
-        <div className="inline-flex p-1 gap-2">
+      {/* Container cuộn: Áp dụng class justify-start hoặc justify-center một cách linh hoạt */}
+      <div
+        ref={scrollContainerRef}
+        className={`w-full overflow-x-auto hide-scrollbar flex ${
+          isOverflowing ? 'justify-start' : 'justify-center'
+        }`}
+      >
+        {/* Container nội dung: Dùng để đo chiều rộng thực */}
+        <div ref={contentContainerRef} className="inline-flex p-1 gap-2">
             {squares.map((char, index) => (
             <div
                 key={index}
@@ -138,14 +169,11 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
 
       {/* Container cho ô hiển thị từ và nút kiểm tra */}
       <div className="flex justify-center items-center gap-3 w-full min-h-[3.5rem]">
-        {/* Hộp hiển thị từ */}
         {userInput.length > 0 && (
           <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
             {formatDisplayWord(userInput)}
           </div>
         )}
-
-        {/* Nút kiểm tra - Chỉ hiển thị khi nhập đủ ký tự */}
         {userInput.length === wordLength && !disabled && (
           <button
             onClick={checkAnswer}
@@ -160,7 +188,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         )}
       </div>
 
-      {/* Bàn phím chữ cái ảo */}
       <VirtualKeyboard
         userInput={userInput}
         setUserInput={setUserInput}
@@ -168,7 +195,6 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         disabled={disabled}
       />
 
-      {/* Phản hồi */}
       {feedback && (
         <div className={`flex items-center justify-center p-3 rounded-lg shadow-sm mt-4 text-sm transition-all duration-200
           ${isCorrect
