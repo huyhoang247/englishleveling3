@@ -47,7 +47,7 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
               onDragEnd={handleDragEnd}
               onClick={() => { if (((i - index + numImages) % numImages) === 0) onImageClick(); }}
             >
-              <img src={url} alt={`${word} - view ${i + 1}`} className="w-full h-full object-contain rounded-2xl shadow-lg bg-white p-1" style={{ pointerEvents: 'none' }} />
+              <img src={url} alt={`${word} - view ${i + 1}`} className="w-full h-full object-contain rounded-2xl shadow-lg" style={{ pointerEvents: 'none' }} />
             </motion.div>
           ))}
         </AnimatePresence>
@@ -63,4 +63,3 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
 };
 
 export default memo(ImageCarousel3D);
-// --- END OF FILE image-carousel-3d.tsx (MODIFIED) ---
