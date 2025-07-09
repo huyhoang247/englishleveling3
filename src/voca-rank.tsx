@@ -27,7 +27,6 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
-// Icon mới: Thẻ thông thạo
 const MasteryCardIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
         <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
@@ -35,7 +34,6 @@ const MasteryCardIcon = ({ className = '' }: { className?: string }) => (
     </svg>
 );
 
-// Icon mới: Vàng (dùng hình ngôi sao)
 const GoldIcon = ({ className = '' }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
     <path fillRule="evenodd" d="M10.868 2.884c.321-.662 1.215-.662 1.536 0l1.83 3.755 4.145.604c.73.107 1.022.998.494 1.507l-2.998 2.922.708 4.129c.125.727-.635 1.285-1.29.938l-3.706-1.948-3.706 1.948c-.655.347-1.415-.211-1.29-.938l.708-4.129-2.998-2.922c-.528-.509-.236-1.4.494-1.507l4.145-.604 1.83-3.755z" clipRule="evenodd" />
@@ -47,7 +45,6 @@ const GoldIcon = ({ className = '' }: { className?: string }) => (
 export default function App() {
   const [vocabulary, setVocabulary] = useState(initialVocabularyData);
 
-  // Sắp xếp từ vựng theo level giảm dần, sau đó là EXP giảm dần
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
     if (b.level !== a.level) {
       return b.level - a.level;
@@ -79,15 +76,15 @@ export default function App() {
 
           <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
             {/* --- Header của bảng (đã cập nhật) --- */}
+            {/* Thay đổi ở đây: điều chỉnh col-span cho phù hợp */}
             <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
               <div className="col-span-1 text-center">HẠNG</div>
               <div className="col-span-3">TỪ VỰNG</div>
-              <div className="col-span-4">TIẾN TRÌNH</div>
-              <div className="col-span-2 text-center">THƯỞNG CẤP</div>
+              <div className="col-span-3">TIẾN TRÌNH</div>
+              <div className="col-span-3 text-center">THƯỞNG CẤP</div>
               <div className="col-span-2 text-center">HÀNH ĐỘNG</div>
             </div>
 
-            {/* --- Danh sách từ vựng dạng thẻ --- */}
             <div className="flex flex-col gap-2">
               {sortedVocabulary.map((item, index) => (
                 <VocabularyRow key={item.id} item={item} rank={index + 1} onClaim={handleClaim} />
@@ -117,7 +114,6 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
   };
   
   return (
-    // Đây là một "thẻ" (card)
     <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
       
       {/* Cột 0: Thứ hạng */}
@@ -131,8 +127,9 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         <span className="md:hidden text-xs text-slate-400">Từ vựng</span>
       </div>
 
-      {/* Cột 2: Thanh tiến trình (cập nhật span) */}
-      <div className="col-span-12 md:col-span-4 md:px-2">
+      {/* Cột 2: Thanh tiến trình */}
+      {/* Thay đổi ở đây: điều chỉnh col-span */}
+      <div className="col-span-12 md:col-span-3 md:px-2">
         <div className="w-full bg-slate-700 rounded-full h-3">
           <div
             className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out"
@@ -142,9 +139,10 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
 
-      {/* Cột 3: Phần thưởng cấp (Thiết kế mới) */}
-      <div className="col-span-5 sm:col-span-4 md:col-span-2">
-        <div className="flex items-center justify-start md:justify-center gap-4">
+      {/* Cột 3: Phần thưởng cấp (Thiết kế mới trong ô) */}
+      {/* Thay đổi ở đây: thiết kế lại hoàn toàn */}
+      <div className="col-span-6 md:col-span-3 flex items-center justify-center">
+        <div className="flex w-full max-w-[180px] items-center justify-around rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
             <div className="flex items-center gap-1.5" title="1 Thẻ thông thạo">
                 <MasteryCardIcon className="w-6 h-6 text-sky-300 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">x1</span>
@@ -158,7 +156,8 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
 
 
       {/* Cột 4: Nút Claim */}
-      <div className="col-span-7 sm:col-span-8 md:col-span-2 flex justify-end md:justify-center">
+      {/* Thay đổi ở đây: điều chỉnh col-span */}
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
           disabled={!isClaimable}
