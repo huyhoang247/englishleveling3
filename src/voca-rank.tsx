@@ -89,7 +89,7 @@ export default function App() {
           </header>
 
           {/* --- Bảng Thống Kê (Thiết kế nhỏ gọn) --- */}
-          <section className="mb-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+          <section className="mb-8 flex flex-row justify-center items-center gap-4">
             <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
               <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
               <div>
