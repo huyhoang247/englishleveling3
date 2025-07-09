@@ -147,32 +147,32 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
         ))}
       </div>
 
-      {/* Hộp hiển thị từ - Luôn hiển thị để giữ khoảng cách */}
-      <div className="flex justify-center w-full min-h-[2.5rem]">
+      {/* [START] KHỐI ĐƯỢC THAY ĐỔI */}
+      {/* Container cho ô hiển thị từ và nút kiểm tra */}
+      <div className="flex justify-center items-center gap-3 w-full min-h-[3.5rem]">
+        {/* Hộp hiển thị từ */}
         {userInput.length > 0 && (
           <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 shadow-sm text-indigo-700 font-medium text-center transition-all duration-300 hover:scale-105">
             {formatDisplayWord(userInput)}
           </div>
         )}
-      </div>
 
-      {/* Nút kiểm tra */}
-      <div className="flex justify-center">
-        <button
-          onClick={checkAnswer}
-          className={`px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm flex items-center
-          ${userInput.length === wordLength && !disabled
-              ? 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white hover:shadow-md hover:-translate-y-0.5'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-          disabled={userInput.length !== wordLength || disabled}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          Kiểm tra
-        </button>
+        {/* Nút kiểm tra - Chỉ hiển thị khi nhập đủ ký tự */}
+        {userInput.length === wordLength && !disabled && (
+          <button
+            onClick={checkAnswer}
+            className="px-6 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm flex items-center bg-gradient-to-r from-blue-400 to-indigo-500 text-white hover:shadow-md hover:-translate-y-0.5"
+            disabled={disabled}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Kiểm tra
+          </button>
+        )}
       </div>
+      {/* [END] KHỐI ĐƯỢC THAY ĐỔI */}
+
 
       {/* Bàn phím chữ cái ảo */}
       <VirtualKeyboard
