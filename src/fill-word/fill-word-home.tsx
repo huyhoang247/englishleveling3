@@ -1,7 +1,7 @@
 // --- START OF FILE fill-word-home.tsx ---
 
 import { useState, useEffect, useRef } from 'react';
-// The import for WordSquaresInput is removed as we will define it in this file.
+import WordSquaresInput from './vocabulary-input.tsx';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -134,97 +134,6 @@ const shuffleArray = <T extends any[]>(array: T): T => {
   }
   return shuffledArray as T;
 };
-
-// --- START: New WordSquaresInput component implementation ---
-interface WordSquaresInputProps {
-  word: string;
-  userInput: string;
-  setUserInput: (value: string) => void;
-  checkAnswer: () => void;
-  feedback: string;
-  isCorrect: boolean | null;
-  disabled: boolean;
-}
-
-const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
-  word,
-  userInput,
-  setUserInput,
-  checkAnswer,
-  feedback,
-  isCorrect,
-  disabled
-}) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!disabled && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [word, disabled]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value.length <= word.length) {
-      setUserInput(e.target.value);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && userInput.length === word.length && !disabled) {
-      checkAnswer();
-    }
-  };
-  
-  const showCheckButton = userInput.length === word.length && !disabled;
-
-  return (
-    <div className="w-full flex flex-col items-center">
-      <div className="w-full flex items-stretch justify-center gap-3">
-        <div className="relative flex-grow">
-          <input
-            ref={inputRef}
-            type="text"
-            value={userInput}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            maxLength={word.length}
-            disabled={disabled}
-            placeholder={word ? '...'.padStart(word.length, ' .') : ''}
-            className={`
-              w-full h-full bg-white rounded-xl shadow-lg p-4 text-center text-xl sm:text-2xl font-bold text-indigo-800
-              transition-all duration-300
-              border-2
-              ${isCorrect === true ? 'border-green-500 text-green-700' : ''}
-              ${isCorrect === false ? 'border-red-500 text-red-700' : 'border-transparent'}
-              focus:outline-none focus:ring-4 focus:ring-indigo-300
-              disabled:bg-gray-200 disabled:text-gray-400
-            `}
-            autoComplete="off"
-          />
-        </div>
-
-        {showCheckButton && (
-          <button
-            onClick={checkAnswer}
-            disabled={disabled}
-            className="flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="font-bold">Kiểm tra</span>
-          </button>
-        )}
-      </div>
-      {feedback && (
-        <p className="mt-3 text-sm text-red-600 font-medium h-5">
-          {feedback}
-        </p>
-      )}
-    </div>
-  );
-};
-// --- END: New WordSquaresInput component implementation ---
 
 
 export default function VocabularyGame() {
