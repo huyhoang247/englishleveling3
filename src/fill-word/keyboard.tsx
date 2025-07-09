@@ -44,24 +44,13 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     const letters = [
       ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
       ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-      ['z', 'x', 'c', 'v', 'b', 'n', 'm', "'"] // Đã di chuyển phím ' vào đây
+      ["'", 'z', 'x', 'c', 'v', 'b', 'n', 'm'] // Đã di chuyển phím ' vào đây
     ];
 
     return letters.map((row, rowIndex) => (
       <div key={rowIndex} className="flex justify-center gap-1 mb-1">
-        {row.map(key => (
-          <button
-            key={key}
-            className="w-8 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => handleKeyPress(key)}
-            disabled={disabled || userInput.length >= wordLength} // Disable phím khi input đầy hoặc game over
-          >
-            {/* Nếu là phím ', không cần chuyển sang chữ hoa */}
-            {key === "'" ? key : key.toUpperCase()} 
-          </button>
-        ))}
         {rowIndex === 2 && (
-          // Nút xóa (Delete)
+          // Nút xóa (Delete) ở đầu hàng thứ 3
           <button
             className="w-10 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleDelete}
@@ -85,6 +74,17 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
             </svg>
           </button>
         )}
+        {row.map(key => (
+          <button
+            key={key}
+            className="w-8 h-10 bg-white text-gray-800 rounded-lg flex items-center justify-center shadow active:bg-gray-200 active:shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handleKeyPress(key)}
+            disabled={disabled || userInput.length >= wordLength} // Disable phím khi input đầy hoặc game over
+          >
+            {/* Nếu là phím ', không cần chuyển sang chữ hoa */}
+            {key === "'" ? key : key.toUpperCase()}
+          </button>
+        ))}
       </div>
     ));
   };
