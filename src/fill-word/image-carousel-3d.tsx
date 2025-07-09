@@ -28,9 +28,10 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
     // TỐI ƯU HÓA 2: Đã loại bỏ `filter: blur()` để giảm tải cho GPU.
     // Hiệu ứng chiều sâu giờ chỉ dựa vào `transform`, `opacity` và `brightness`.
     if (offset === 0) return { transform: 'translateX(0) translateZ(0) scale(1)', opacity: 1, zIndex: 3, filter: 'brightness(1)' };
-    if (offset === 1) return { transform: 'translateX(50%) translateZ(-120px) scale(0.75)', opacity: 0.4, zIndex: 2, filter: 'brightness(0.7)' };
+    // YÊU CẦU: Làm cho ảnh 2 bên mờ hơn bằng cách giảm opacity và brightness
+    if (offset === 1) return { transform: 'translateX(50%) translateZ(-120px) scale(0.75)', opacity: 0.3, zIndex: 2, filter: 'brightness(0.6)' };
     // Mặc định cho các ảnh bên trái
-    return { transform: 'translateX(-50%) translateZ(-120px) scale(0.75)', opacity: 0.4, zIndex: 1, filter: 'brightness(0.7)' };
+    return { transform: 'translateX(-50%) translateZ(-120px) scale(0.75)', opacity: 0.3, zIndex: 1, filter: 'brightness(0.6)' };
   };
   
   const handleDragEnd = (event: any, info: any) => {
