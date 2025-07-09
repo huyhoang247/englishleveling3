@@ -1,6 +1,6 @@
-// --- START OF FILE fill-word-home.tsx ---
+// --- START OF FILE fill-word-home.tsx (OPTIMIZED) ---
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react'; // Thêm useCallback và memo
 import WordSquaresInput from './vocabulary-input.tsx';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -39,7 +39,9 @@ interface StreakDisplayProps {
   isAnimating: boolean;
 }
 
-const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => {
+// TỐI ƯU HÓA: Sử dụng React.memo để ngăn re-render không cần thiết.
+// Component này sẽ chỉ render lại khi props `displayedStreak` hoặc `isAnimating` thay đổi.
+const StreakDisplay: React.FC<StreakDisplayProps> = memo(({ displayedStreak, isAnimating }) => {
   return (
     <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}>
        <style jsx>{`
@@ -66,9 +68,11 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
       <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
     </div>
   );
-};
+});
 
-const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = ({ timeLeft, totalTime }) => {
+// TỐI ƯU HÓA: Sử dụng React.memo để ngăn re-render không cần thiết.
+// Component này sẽ chỉ render lại khi prop `timeLeft` thay đổi.
+const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => {
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.max(0, timeLeft / totalTime);
@@ -110,7 +114,7 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = ({ tim
       <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span>
     </div>
   );
-};
+});
 
 const RefreshIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -135,6 +139,16 @@ const shuffleArray = <T extends any[]>(array: T): T => {
   return shuffledArray as T;
 };
 
+// TỐI ƯU HÓA: Di chuyển hàm thuần túy ra ngoài component để tránh tạo lại.
+const generateImageUrl = (imageIndex?: number) => {
+  if (imageIndex !== undefined && typeof imageIndex === 'number') {
+      const adjustedIndex = imageIndex - 1;
+      if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) {
+          return defaultImageUrls[adjustedIndex];
+      }
+  }
+  return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`;
+};
 
 export default function VocabularyGame() {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
@@ -325,9 +339,7 @@ export default function VocabularyGame() {
         if (prevTime <= 0) {
           return 0; 
         }
-
         const newTime = prevTime - 1;
-
         if (newTime <= 0) {
           console.log("Time is up! Resetting streak.");
           setStreak(0);
@@ -340,10 +352,11 @@ export default function VocabularyGame() {
     }, 1000);
 
     return () => clearInterval(timerId);
-  }, [currentWord, gameOver]);
+  }, [currentWord, gameOver, isCorrect]);
 
-  // Select the next word from the shuffled list
-  const selectNextWord = () => {
+
+  // TỐI ƯU HÓA: Sử dụng useCallback để hàm không bị tạo lại trên mỗi lần render.
+  const selectNextWord = useCallback(() => {
     setIsTimeUp(false);
     
     if (currentWordIndex < shuffledUnusedWords.length - 1) {
@@ -357,10 +370,10 @@ export default function VocabularyGame() {
       setGameOver(true);
       setCurrentWord(null);
     }
-  };
+  }, [currentWordIndex, shuffledUnusedWords]);
   
-  // Function to animate coin counting
-  const startCoinCountAnimation = (startValue: number, endValue: number) => {
+  // TỐI ƯU HÓA: Sử dụng useCallback. Vì chỉ dùng setter, dependency array là rỗng.
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const difference = endValue - startValue;
     let step = Math.ceil(difference / 30);
@@ -376,16 +389,17 @@ export default function VocabularyGame() {
             setDisplayedCoins(current);
         }
     }, 30);
-  };
+  }, []);
 
-  // Check the user's answer
-  const checkAnswer = async () => {
+  // TỐI ƯU HÓA: Sử dụng useCallback để không tạo lại hàm trên mỗi lần render.
+  // Điều này quan trọng vì nó được truyền xuống component con WordSquaresInput.
+  const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect === true) return;
 
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setIsCorrect(true);
       setFeedback('');
-      setScore(score + 1);
+      setScore(score => score + 1);
 
       const newStreak = streak + 1;
       setStreak(newStreak);
@@ -422,21 +436,10 @@ export default function VocabularyGame() {
       setIsCorrect(false);
       setStreak(0);
     }
-  };
+  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation]);
 
-  // Generate image URL
-  const generateImageUrl = (imageIndex?: number) => {
-     if (imageIndex !== undefined && typeof imageIndex === 'number') {
-         const adjustedIndex = imageIndex - 1;
-         if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) {
-             return defaultImageUrls[adjustedIndex];
-         }
-     }
-     return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`;
-  };
-
-  // Reset the game
-  const resetGame = () => {
+  // TỐI ƯU HÓA: Sử dụng useCallback.
+  const resetGame = useCallback(() => {
     setIsTimeUp(false);
     setScore(0);
     setGameOver(false);
@@ -457,7 +460,7 @@ export default function VocabularyGame() {
         setCurrentWordIndex(0);
         setGameOver(false);
     }
-  };
+  }, [vocabularyList, usedWords]);
 
   // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
