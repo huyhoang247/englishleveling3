@@ -27,6 +27,22 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
+// Icon mới: Thẻ thông thạo
+const MasteryCardIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
+        <path fillRule="evenodd" d="M1.5 8.625v10.5a1.875 1.875 0 001.875 1.875h17.25A1.875 1.875 0 0022.5 19.125v-10.5a1.875 1.875 0 00-1.875-1.875H3.375A1.875 1.875 0 001.5 8.625zM6 12a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V12zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+    </svg>
+);
+
+// Icon mới: Vàng (dùng hình ngôi sao)
+const GoldIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+    <path fillRule="evenodd" d="M10.868 2.884c.321-.662 1.215-.662 1.536 0l1.83 3.755 4.145.604c.73.107 1.022.998.494 1.507l-2.998 2.922.708 4.129c.125.727-.635 1.285-1.29.938l-3.706-1.948-3.706 1.948c-.655.347-1.415-.211-1.29-.938l.708-4.129-2.998-2.922c-.528-.509-.236-1.4.494-1.507l4.145-.604 1.83-3.755z" clipRule="evenodd" />
+  </svg>
+);
+
+
 // --- Thành phần chính của ứng dụng ---
 export default function App() {
   const [vocabulary, setVocabulary] = useState(initialVocabularyData);
@@ -52,18 +68,6 @@ export default function App() {
 
   return (
     <>
-      {/* Cập nhật animation để phù hợp với màu chữ mới của Level */}
-      <style>{`
-        @keyframes level-up-pop {
-          0% { transform: scale(1); color: #fcd34d; } /* amber-300 */
-          50% { transform: scale(1.5); color: #67e8f9; } /* cyan-300 */
-          100% { transform: scale(1); color: #fcd34d; } /* amber-300 */
-        }
-        .animate-level-up-pop {
-          animation: level-up-pop 0.6s ease-in-out;
-        }
-      `}</style>
-      
       <div className="bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white min-h-screen font-sans p-4 sm:p-8 flex justify-center">
         <div className="w-full max-w-4xl mx-auto">
           <header className="text-center mb-10">
@@ -74,13 +78,13 @@ export default function App() {
           </header>
 
           <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
-            {/* --- Header của bảng --- */}
+            {/* --- Header của bảng (đã cập nhật) --- */}
             <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
               <div className="col-span-1 text-center">HẠNG</div>
               <div className="col-span-3">TỪ VỰNG</div>
-              <div className="col-span-5">TIẾN TRÌNH</div>
-              <div className="col-span-1 text-center">LEVEL</div>
-              <div className="col-span-2 text-center">PHẦN THƯỞỞNG</div>
+              <div className="col-span-4">TIẾN TRÌNH</div>
+              <div className="col-span-2 text-center">THƯỞNG CẤP</div>
+              <div className="col-span-2 text-center">HÀNH ĐỘNG</div>
             </div>
 
             {/* --- Danh sách từ vựng dạng thẻ --- */}
@@ -105,14 +109,11 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = Math.min((exp / maxExp) * 100, 100);
   const isClaimable = exp >= maxExp;
-
-  const [justLeveledUp, setJustLeveledUp] = useState(false);
+  const goldReward = 100 * level;
 
   const handleClaimClick = () => {
     if (!isClaimable) return;
     onClaim(id);
-    setJustLeveledUp(true);
-    setTimeout(() => setJustLeveledUp(false), 600); 
   };
   
   return (
@@ -130,8 +131,8 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         <span className="md:hidden text-xs text-slate-400">Từ vựng</span>
       </div>
 
-      {/* Cột 2: Thanh tiến trình */}
-      <div className="col-span-12 md:col-span-5 md:px-2">
+      {/* Cột 2: Thanh tiến trình (cập nhật span) */}
+      <div className="col-span-12 md:col-span-4 md:px-2">
         <div className="w-full bg-slate-700 rounded-full h-3">
           <div
             className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out"
@@ -141,17 +142,20 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
 
-      {/* Cột 3: Level Tag (Thiết kế mới) */}
-      <div className="col-span-5 sm:col-span-4 md:col-span-1 flex items-center justify-start md:justify-center">
-        <div className="flex items-baseline justify-center bg-amber-900/50 border border-amber-500/30 rounded-full px-3 py-1 w-fit">
-          <span className="text-xs font-semibold text-amber-400/80 mr-1">
-            Lv.
-          </span>
-          <span className={`font-bold text-lg text-amber-300 transition-colors duration-300 ${justLeveledUp ? 'animate-level-up-pop' : ''}`}>
-            {level}
-          </span>
+      {/* Cột 3: Phần thưởng cấp (Thiết kế mới) */}
+      <div className="col-span-5 sm:col-span-4 md:col-span-2">
+        <div className="flex items-center justify-start md:justify-center gap-4">
+            <div className="flex items-center gap-1.5" title="1 Thẻ thông thạo">
+                <MasteryCardIcon className="w-6 h-6 text-sky-300 flex-shrink-0" />
+                <span className="text-sm font-semibold text-slate-200">x1</span>
+            </div>
+            <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}>
+                <GoldIcon className="w-5 h-5 text-yellow-300 flex-shrink-0" />
+                <span className="text-sm font-semibold text-slate-200">{goldReward}</span>
+            </div>
         </div>
       </div>
+
 
       {/* Cột 4: Nút Claim */}
       <div className="col-span-7 sm:col-span-8 md:col-span-2 flex justify-end md:justify-center">
