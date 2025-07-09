@@ -1,91 +1,123 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 
-// Component Confetti để hiển thị hiệu ứng chúc mừng
-const Confetti: React.FC = () => {
-  // State để lưu trữ dữ liệu các hạt confetti
-  const [particles, setParticles] = useState<any[]>([]);
+// Định nghĩa kiểu cho một hạt confetti
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  speed: number;
+  direction: number; // Góc di chuyển
+  rotation: number; // Góc xoay của hạt
+  rotationSpeed: number; // Tốc độ xoay
+}
 
-  // Hàm tạo các hạt confetti ngẫu nhiên
-  const createParticles = () => {
-    const newParticles = [];
-    for (let i = 0; i < 50; i++) { // Tạo 50 hạt confetti
-      newParticles.push({
-        id: i, // ID duy nhất cho mỗi hạt
-        // Vị trí ngang ngẫu nhiên (0% đến 100% chiều rộng container)
-        x: Math.random() * 100,
-        // Vị trí dọc ngẫu nhiên (0% đến 100% chiều cao container)
-        y: Math.random() * 100,
-        // Kích thước ngẫu nhiên cho hạt (từ 4px đến 12px)
-        size: Math.random() * 8 + 4,
-        // Màu ngẫu nhiên từ danh sách màu định sẵn
-        color: getRandomColor(),
-        // Tốc độ ngẫu nhiên cho chuyển động rơi (từ 1 đến 3 đơn vị mỗi chu kỳ)
-        speed: Math.random() * 2 + 1,
-        // Hướng ngẫu nhiên cho chuyển động ngang nhẹ (0 đến 360 độ)
-        direction: Math.random() * 360
-      });
-    }
-    // Cập nhật state với các hạt mới, gây render lại
-    setParticles(newParticles);
-  };
+// Hàm lấy màu ngẫu nhiên từ danh sách
+const getRandomColor = () => {
+  const colors = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800'];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
 
-  // Hàm lấy màu ngẫu nhiên từ danh sách các màu định sẵn
-  const getRandomColor = () => {
-    const colors = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800']; // Danh sách màu
-    // Trả về một màu ngẫu nhiên từ mảng
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
+const ConfettiCanvas: React.FC = () => {
+  // useRef để truy cập thẻ <canvas> mà không gây re-render
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // useRef để lưu trữ mảng các hạt và ID của animation frame
+  const particlesRef = useRef<Particle[]>([]);
+  const animationFrameId = useRef<number>();
 
-  // Effect hook để xử lý animation của các hạt và thay đổi hiển thị
+  // Effect này chỉ chạy một lần khi component được mount
   useEffect(() => {
-    // Tạo các hạt confetti khi component được render
-    createParticles();
+    const canvas = canvasRef.current;
+    // Lấy context để vẽ, nếu không có thì thoát
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    // Thiết lập interval để cập nhật vị trí hạt định kỳ
-    const interval = setInterval(() => {
-      setParticles(prevParticles =>
-        prevParticles.map(particle => ({
-          ...particle, // Giữ nguyên các thuộc tính hiện tại của hạt
-          // Cập nhật vị trí dọc dựa trên tốc độ (di chuyển xuống dưới)
-          y: particle.y + particle.speed,
-          // Cập nhật vị trí ngang dựa trên hướng (chuyển đổi độ sang radian cho Math.sin)
-          // Điều này tạo ra chuyển động ngang nhẹ dựa trên hướng ngẫu nhiên
-          x: particle.x + Math.sin(particle.direction * Math.PI / 180) * 0.5
-        }))
-        // Lọc bỏ các hạt đã di chuyển ra khỏi màn hình nếu cần thiết để cải thiện hiệu suất
-        .filter(particle => particle.y < 110) // Loại bỏ hạt khi chúng di chuyển xuống dưới 110% chiều cao màn hình
-      );
-    }, 50); // Cập nhật mỗi 50 mili giây (điều khiển độ mượt và tốc độ animation)
+    // Thiết lập kích thước canvas bằng kích thước cửa sổ
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Hàm tạo các hạt confetti
+    const createParticles = () => {
+      const newParticles: Particle[] = [];
+      // Tạo 150 hạt cho hiệu ứng dày dặn hơn (canvas xử lý dễ dàng)
+      for (let i = 0; i < 150; i++) {
+        newParticles.push({
+          id: i,
+          x: Math.random() * canvas.width,
+          y: Math.random() * -canvas.height, // Bắt đầu từ phía trên màn hình
+          size: Math.random() * 8 + 4,
+          color: getRandomColor(),
+          speed: Math.random() * 2 + 1,
+          direction: Math.random() * Math.PI * 2, // Hướng bay ngẫu nhiên (radian)
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10, // Xoay theo cả 2 chiều
+        });
+      }
+      particlesRef.current = newParticles;
+    };
+
+    // Vòng lặp animation chính
+    const animate = () => {
+      // Xóa toàn bộ canvas trước mỗi khung hình
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Lặp qua từng hạt để cập nhật và vẽ lại
+      particlesRef.current.forEach(particle => {
+        // Cập nhật vị trí
+        particle.y += particle.speed;
+        particle.x += Math.sin(particle.direction) * 0.5;
+        particle.rotation += particle.rotationSpeed;
+
+        // Vẽ hạt
+        ctx.save(); // Lưu trạng thái context hiện tại
+        ctx.translate(particle.x, particle.y); // Di chuyển gốc tọa độ đến vị trí hạt
+        ctx.rotate(particle.rotation * Math.PI / 180); // Xoay context
+        ctx.fillStyle = particle.color;
+        // Vẽ hình chữ nhật, khi xoay sẽ tạo hiệu ứng confetti đẹp hơn
+        ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+        ctx.restore(); // Khôi phục lại trạng thái context
+      });
+
+      // Lọc bỏ những hạt đã rơi ra khỏi màn hình
+      particlesRef.current = particlesRef.current.filter(p => p.y < canvas.height + 20);
+      
+      // Nếu hết hạt, có thể tạo lại để hiệu ứng kéo dài
+      if (particlesRef.current.length === 0) {
+        // Bạn có thể dừng animation ở đây nếu chỉ muốn nó chạy 1 lần
+        // Hoặc tạo lại hạt nếu muốn nó lặp lại
+        // Ở đây, ta sẽ dừng lại
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+        }
+        return;
+      }
+
+      // Yêu cầu trình duyệt vẽ khung hình tiếp theo
+      animationFrameId.current = requestAnimationFrame(animate);
+    };
+
+    // Bắt đầu quá trình
+    createParticles();
+    animate();
 
     // Hàm cleanup: Chạy khi component bị unmount
     return () => {
-      // Xóa interval để dừng cập nhật animation
-      clearInterval(interval);
+      // Hủy vòng lặp animation để tránh rò rỉ bộ nhớ
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
     };
-  }, []); // Mảng dependencies rỗng: effect chỉ chạy một lần sau khi mount
+  }, []); // Mảng dependencies rỗng đảm bảo effect chỉ chạy 1 lần
 
-  // Render hiệu ứng chúc mừng
   return (
-    // Container cố định chiếm toàn màn hình, không nhận tương tác chuột, z-index cao để hiển thị trên cùng
+    // Container cố định, chiếm toàn màn hình và không cản trở tương tác
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-50">
-      {/* Map qua mảng particles và render một div cho mỗi hạt */}
-      {particles.map(particle => (
-        <div
-          key={particle.id} // Key duy nhất cho mỗi hạt, cần thiết cho việc render danh sách trong React
-          className="absolute rounded-full" // Vị trí tuyệt đối và hình dạng tròn (class Tailwind)
-          style={{
-            left: `${particle.x}%`, // Đặt vị trí ngang sử dụng phần trăm
-            top: `${particle.y}%`, // Đặt vị trí dọc sử dụng phần trăm
-            width: `${particle.size}px`, // Đặt chiều rộng bằng giá trị pixel
-            height: `${particle.size}px`, // Đặt chiều cao bằng giá trị pixel
-            backgroundColor: particle.color, // Đặt màu nền sử dụng màu đã tạo
-            // Thêm transition nhỏ để cập nhật hình ảnh mượt hơn khi các hạt di chuyển
-            transition: 'all 0.05s linear',
-          }}
-        />
-      ))}
+      <canvas ref={canvasRef} />
     </div>
   );
 };
 
-export default Confetti; // Export component để sử dụng ở nơi khác
+// Đổi tên export để phù hợp với file fill-word-home.tsx của bạn
+export default ConfettiCanvas;
