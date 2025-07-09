@@ -69,7 +69,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
 const RefreshIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path>
-    <path d="M3 12a9 9 0 0 1 9-9c2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
+    <path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
   </svg>
 );
 
@@ -325,16 +325,21 @@ export default function VocabularyGame() {
 
       setShowConfetti(true);
 
-      // Lưu từ vựng đã trả lời đúng vào Firestore
+      // Lưu từ vựng đã trả lời đúng và cập nhật coin vào Firestore
       if (user && currentWord.word) {
+        const coinReward = 2 * newStreak;
+        const updatedCoins = coins + coinReward;
+        setCoins(updatedCoins); // Cập nhật UI ngay lập tức
+
         try {
           const userDocRef = doc(db, 'users', user.uid);
           await updateDoc(userDocRef, {
-            'fill-word-1': arrayUnion(currentWord.word)
+            'fill-word-1': arrayUnion(currentWord.word),
+            'coins': updatedCoins // Cập nhật coin trên Firestore
           });
-          console.log(`Saved correctly answered word "${currentWord.word}" to Firestore field 'fill-word-1'.`);
+          console.log(`Saved word "${currentWord.word}" and updated coins to ${updatedCoins}.`);
         } catch (firestoreError) {
-          console.error("Error saving word to Firestore:", firestoreError);
+          console.error("Error saving word and coins to Firestore:", firestoreError);
         }
       }
 
@@ -350,7 +355,7 @@ export default function VocabularyGame() {
     } else {
       setFeedback(``); // Có thể bỏ hiển thị từ đúng ở đây để tăng thử thách
       setIsCorrect(false);
-      setStreak(0);
+      setStreak(0); // Reset streak khi trả lời sai
     }
   };
 
