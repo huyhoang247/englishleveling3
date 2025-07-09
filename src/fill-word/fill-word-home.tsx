@@ -74,10 +74,6 @@ const RefreshIcon = ({ className }) => (
 );
 
 const getStreakText = (streak: number) => {
-  if (streak >= 20) return "Không thể cản phá!";
-  if (streak >= 10) return "Tuyệt đỉnh!";
-  if (streak >= 5) return "Siêu xuất sắc!";
-  if (streak >= 3) return "Xuất sắc!";
   return "";
 };
 
