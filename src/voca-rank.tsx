@@ -75,8 +75,6 @@ export default function App() {
           </header>
 
           <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
-            {/* --- Header của bảng (đã cập nhật) --- */}
-            {/* Thay đổi ở đây: điều chỉnh col-span cho phù hợp */}
             <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
               <div className="col-span-1 text-center">HẠNG</div>
               <div className="col-span-3">TỪ VỰNG</div>
@@ -116,19 +114,15 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
   return (
     <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
       
-      {/* Cột 0: Thứ hạng */}
       <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center">
         <span className="text-xl font-bold text-slate-500">{rank}</span>
       </div>
 
-      {/* Cột 1: Từ vựng */}
       <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word}</p>
         <span className="md:hidden text-xs text-slate-400">Từ vựng</span>
       </div>
 
-      {/* Cột 2: Thanh tiến trình */}
-      {/* Thay đổi ở đây: điều chỉnh col-span */}
       <div className="col-span-12 md:col-span-3 md:px-2">
         <div className="w-full bg-slate-700 rounded-full h-3">
           <div
@@ -139,14 +133,15 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
 
-      {/* Cột 3: Phần thưởng cấp (Thiết kế mới trong ô) */}
-      {/* Thay đổi ở đây: thiết kế lại hoàn toàn */}
       <div className="col-span-6 md:col-span-3 flex items-center justify-center">
-        <div className="flex w-full max-w-[180px] items-center justify-around rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
+        <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
             <div className="flex items-center gap-1.5" title="1 Thẻ thông thạo">
                 <MasteryCardIcon className="w-6 h-6 text-sky-300 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">x1</span>
             </div>
+            
+            <div className="h-6 w-px bg-slate-600"></div>
+
             <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}>
                 <GoldIcon className="w-5 h-5 text-yellow-300 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">{goldReward}</span>
@@ -154,9 +149,6 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         </div>
       </div>
 
-
-      {/* Cột 4: Nút Claim */}
-      {/* Thay đổi ở đây: điều chỉnh col-span */}
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
