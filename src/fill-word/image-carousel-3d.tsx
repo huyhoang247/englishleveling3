@@ -1,4 +1,4 @@
-// --- START OF FILE image-carousel-3d.tsx (OPTIMIZED) ---
+// --- START OF FILE image-carousel-3d.tsx (MODIFIED) ---
 
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,8 +20,8 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
   const getStyle = (imageIndex: number) => {
     const offset = (imageIndex - index + numImages) % numImages;
     if (offset === 0) return { transform: 'translateX(0) translateZ(0) scale(1)', opacity: 1, zIndex: 3, filter: 'blur(0px) brightness(1)' };
-    if (offset === 1) return { transform: 'translateX(50%) translateZ(-150px) scale(0.75)', opacity: 0.4, zIndex: 2, filter: 'blur(4px) brightness(0.8)' };
-    return { transform: 'translateX(-50%) translateZ(-150px) scale(0.75)', opacity: 0.4, zIndex: 1, filter: 'blur(4px) brightness(0.8)' };
+    if (offset === 1) return { transform: 'translateX(50%) translateZ(-120px) scale(0.75)', opacity: 0.4, zIndex: 2, filter: 'blur(4px) brightness(0.8)' };
+    return { transform: 'translateX(-50%) translateZ(-120px) scale(0.75)', opacity: 0.4, zIndex: 1, filter: 'blur(4px) brightness(0.8)' };
   };
   
   const handleDragEnd = (event: any, info: any) => {
@@ -31,7 +31,7 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
   };
 
   return (
-    <div className="relative w-full h-64 mt-6 flex items-center justify-center" style={{ perspective: '1000px' }}>
+    <div className="relative w-full h-52 mt-6 flex items-center justify-center" style={{ perspective: '1000px' }}>
       <div className="relative w-full h-full" style={{ transformStyle: 'preserve-d' }}>
         <AnimatePresence initial={false}>
           {displayImages.map((url, i) => (
@@ -52,15 +52,15 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
           ))}
         </AnimatePresence>
       </div>
-      <button onClick={handlePrev} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-2 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all focus:outline-none">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+      <button onClick={handlePrev} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-1.5 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
       </button>
-      <button onClick={handleNext} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-2 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all focus:outline-none">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+      <button onClick={handleNext} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-1.5 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
       </button>
     </div>
   );
 };
 
 export default memo(ImageCarousel3D);
-// --- END OF FILE image-carousel-3d.tsx (OPTIMIZED) ---
+// --- END OF FILE image-carousel-3d.tsx (MODIFIED) ---
