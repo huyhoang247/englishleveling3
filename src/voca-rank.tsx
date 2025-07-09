@@ -20,30 +20,24 @@ const initialVocabularyData: VocabularyItem[] = [
   { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
 ];
 
-// --- Các biểu tượng (Icon) ---
+// --- Biểu tượng (Icon) ---
 const TrophyIcon = ({ className = '' }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
   </svg>
 );
 
-const ArrowRightIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-  </svg>
-);
-
-const LockClosedIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-        <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
-    </svg>
-);
-
 // --- Thành phần chính của ứng dụng ---
 export default function App() {
   const [vocabulary, setVocabulary] = useState(initialVocabularyData);
 
-  const sortedVocabulary = [...vocabulary].sort((a, b) => b.level - a.level || b.exp - a.exp);
+  // Sắp xếp từ vựng theo level giảm dần, sau đó là EXP giảm dần
+  const sortedVocabulary = [...vocabulary].sort((a, b) => {
+    if (b.level !== a.level) {
+      return b.level - a.level;
+    }
+    return b.exp - a.exp;
+  });
 
   const handleClaim = useCallback((id: number) => {
     setVocabulary(prevVocab =>
@@ -57,36 +51,52 @@ export default function App() {
   }, []);
 
   return (
-    <div className="bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white min-h-screen font-sans p-4 sm:p-8 flex justify-center">
-      <div className="w-full max-w-5xl mx-auto">
-        <header className="text-center mb-10">
-          <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
-            Bảng Xếp Hạng Từ Vựng
-          </h1>
-          <p className="text-slate-400 mt-2 text-lg">Theo dõi tiến độ và nhận phần thưởng thông thạo!</p>
-        </header>
+    <>
+      {/* Cập nhật animation để phù hợp với màu chữ mới của Level */}
+      <style>{`
+        @keyframes level-up-pop {
+          0% { transform: scale(1); color: #fcd34d; } /* amber-300 */
+          50% { transform: scale(1.5); color: #67e8f9; } /* cyan-300 */
+          100% { transform: scale(1); color: #fcd34d; } /* amber-300 */
+        }
+        .animate-level-up-pop {
+          animation: level-up-pop 0.6s ease-in-out;
+        }
+      `}</style>
+      
+      <div className="bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white min-h-screen font-sans p-4 sm:p-8 flex justify-center">
+        <div className="w-full max-w-4xl mx-auto">
+          <header className="text-center mb-10">
+            <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
+              Bảng Xếp Hạng Từ Vựng
+            </h1>
+            <p className="text-slate-400 mt-2 text-lg">Theo dõi tiến độ và nhận phần thưởng thông thạo!</p>
+          </header>
 
-        <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
-          {/* --- Header của bảng (Bố cục mới) --- */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
-            <div className="col-span-1 text-center">HẠNG</div>
-            <div className="col-span-4">TỪ VỰNG</div>
-            <div className="col-span-4">TIẾN TRÌNH</div>
-            <div className="col-span-3 text-center">PHẦN THƯỞNG & HÀNH ĐỘNG</div>
-          </div>
+          <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
+            {/* --- Header của bảng --- */}
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
+              <div className="col-span-1 text-center">HẠNG</div>
+              <div className="col-span-3">TỪ VỰNG</div>
+              <div className="col-span-5">TIẾN TRÌNH</div>
+              <div className="col-span-1 text-center">LEVEL</div>
+              <div className="col-span-2 text-center">PHẦN THƯỞỞNG</div>
+            </div>
 
-          <div className="flex flex-col gap-2">
-            {sortedVocabulary.map((item, index) => (
-              <VocabularyRow key={item.id} item={item} rank={index + 1} onClaim={handleClaim} />
-            ))}
-          </div>
-        </main>
-        
-        <footer className="text-center mt-8 text-slate-500 text-sm">
-          <p>Thiết kế bởi Gemini. Chúc bạn học tốt!</p>
-        </footer>
+            {/* --- Danh sách từ vựng dạng thẻ --- */}
+            <div className="flex flex-col gap-2">
+              {sortedVocabulary.map((item, index) => (
+                <VocabularyRow key={item.id} item={item} rank={index + 1} onClaim={handleClaim} />
+              ))}
+            </div>
+          </main>
+          
+          <footer className="text-center mt-8 text-slate-500 text-sm">
+            <p>Thiết kế bởi Gemini. Chúc bạn học tốt!</p>
+          </footer>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -96,22 +106,32 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
   const progressPercentage = Math.min((exp / maxExp) * 100, 100);
   const isClaimable = exp >= maxExp;
 
+  const [justLeveledUp, setJustLeveledUp] = useState(false);
+
+  const handleClaimClick = () => {
+    if (!isClaimable) return;
+    onClaim(id);
+    setJustLeveledUp(true);
+    setTimeout(() => setJustLeveledUp(false), 600); 
+  };
+  
   return (
-    <div className="grid grid-cols-12 gap-x-4 gap-y-4 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
+    // Đây là một "thẻ" (card)
+    <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
       
-      {/* Cột 1: Thứ hạng */}
-      <div className="col-span-1 self-start md:self-center text-center">
+      {/* Cột 0: Thứ hạng */}
+      <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center">
         <span className="text-xl font-bold text-slate-500">{rank}</span>
       </div>
 
-      {/* Cột 2: Từ vựng & Level */}
-      <div className="col-span-11 md:col-span-4">
+      {/* Cột 1: Từ vựng */}
+      <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word}</p>
-        <p className="text-sm text-cyan-400/80 font-medium">Level {level}</p>
+        <span className="md:hidden text-xs text-slate-400">Từ vựng</span>
       </div>
 
-      {/* Cột 3: Thanh tiến trình */}
-      <div className="col-span-12 md:col-span-4">
+      {/* Cột 2: Thanh tiến trình */}
+      <div className="col-span-12 md:col-span-5 md:px-2">
         <div className="w-full bg-slate-700 rounded-full h-3">
           <div
             className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out"
@@ -121,29 +141,25 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
 
-      {/* Cột 4: Phần thưởng và Nút hành động */}
-      <div className="col-span-12 md:col-span-3 flex flex-col sm:flex-row items-center gap-4 md:justify-center">
-        {/* Visual phần thưởng */}
-        <div className="flex-1 flex items-center justify-center h-full text-slate-400">
-            {isClaimable ? (
-                <div className="flex items-center gap-2 font-semibold">
-                    <span>Lv.{level}</span>
-                    <ArrowRightIcon className="w-5 h-5 text-slate-500"/>
-                    <span className="text-lg font-bold text-emerald-400 animate-pulse">Lv.{level + 1}</span>
-                </div>
-            ) : (
-                <div className="flex items-center gap-2">
-                    <LockClosedIcon className="w-5 h-5" />
-                    <span className="text-sm">Đã khóa</span>
-                </div>
-            )}
+      {/* Cột 3: Level Tag (Thiết kế mới) */}
+      <div className="col-span-5 sm:col-span-4 md:col-span-1 flex items-center justify-start md:justify-center">
+        <div className="flex items-baseline justify-center bg-amber-900/50 border border-amber-500/30 rounded-full px-3 py-1 w-fit">
+          <span className="text-xs font-semibold text-amber-400/80 mr-1">
+            Lv.
+          </span>
+          <span className={`font-bold text-lg text-amber-300 transition-colors duration-300 ${justLeveledUp ? 'animate-level-up-pop' : ''}`}>
+            {level}
+          </span>
         </div>
-        {/* Nút hành động */}
+      </div>
+
+      {/* Cột 4: Nút Claim */}
+      <div className="col-span-7 sm:col-span-8 md:col-span-2 flex justify-end md:justify-center">
         <button
-          onClick={() => onClaim(id)}
+          onClick={handleClaimClick}
           disabled={!isClaimable}
           className={`
-            flex items-center justify-center gap-2 w-full sm:w-auto flex-grow-0 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 border
+            flex items-center justify-center gap-2 w-full max-w-[150px] px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 border
             ${isClaimable
               ? 'bg-emerald-500 border-emerald-400 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
               : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed'
@@ -151,7 +167,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {isClaimable ? 'Nhận' : 'Chưa Đạt'}
+          {isClaimable ? 'Nhận Thưởng' : 'Chưa Đạt'}
         </button>
       </div>
     </div>
