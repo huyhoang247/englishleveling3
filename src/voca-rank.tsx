@@ -40,7 +40,6 @@ const GoldIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
-// Icon mới: Sách (tổng từ vựng)
 const BookOpenIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
         <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A9.735 9.735 0 006 21a9.707 9.707 0 005.25-1.533" />
@@ -76,36 +75,32 @@ export default function App() {
     );
   }, []);
 
-  // --- Tính toán các chỉ số thống kê ---
   const totalWords = vocabulary.length;
-  // Mỗi level-up (từ lv1 -> lv2,...) cho 1 thẻ. Tổng số thẻ = tổng (level - 1) của mỗi từ.
   const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
 
   return (
     <>
       <div className="bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white min-h-screen font-sans p-4 sm:p-8 flex justify-center">
         <div className="w-full max-w-4xl mx-auto">
-          <header className="text-center mb-8"> {/* Giảm margin-bottom */}
+          <header className="text-center mb-8">
             <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
               Thành Tựu
             </h1>
           </header>
 
-          {/* --- Bảng Thống Kê Mới --- */}
-          <section className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Thống kê Từ vựng */}
-            <div className="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-              <BookOpenIcon className="w-8 h-8 text-cyan-400 flex-shrink-0" />
+          {/* --- Bảng Thống Kê (Thiết kế nhỏ gọn) --- */}
+          <section className="mb-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+            <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
               <div>
-                <p className="text-2xl font-bold text-white">{totalWords}</p>
+                <p className="text-xl font-bold text-white">{totalWords}</p>
                 <p className="text-sm text-slate-400">Từ đã học</p>
               </div>
             </div>
-            {/* Thống kê Thẻ thông thạo */}
-            <div className="flex items-center gap-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-              <MasteryCardIcon className="w-8 h-8 text-sky-400 flex-shrink-0" />
+            <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+              <MasteryCardIcon className="w-7 h-7 text-sky-400 flex-shrink-0" />
               <div>
-                <p className="text-2xl font-bold text-white">{totalMasteryCards}</p>
+                <p className="text-xl font-bold text-white">{totalMasteryCards}</p>
                 <p className="text-sm text-slate-400">Thẻ thông thạo</p>
               </div>
             </div>
