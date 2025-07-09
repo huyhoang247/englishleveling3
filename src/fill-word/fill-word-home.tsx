@@ -1,4 +1,4 @@
-// --- START OF FILE fill-word-home.tsx (OPTIMIZED) ---
+// --- START OF FILE fill-word-home.tsx (FIXED) ---
 
 import { useState, useEffect, useRef, useCallback, memo } from 'react'; // Thêm useCallback và memo
 import WordSquaresInput from './vocabulary-input.tsx';
@@ -537,8 +537,9 @@ export default function VocabularyGame() {
                     <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                   </div>
                 </div>
-
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6">
+                
+                {/* DÒNG ĐÃ SỬA: Xóa class 'mb-6' để căn chỉnh lại giao diện */}
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
                       style={{ width: `${gameProgress}%` }}
