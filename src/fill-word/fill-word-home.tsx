@@ -1,3 +1,5 @@
+// --- START OF FILE fill-word-home.tsx ---
+
 import { useState, useEffect, useRef } from 'react';
 import WordSquaresInput from './vocabulary-input.tsx';
 import { db, auth } from '../firebase.js';
@@ -66,7 +68,51 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
   );
 };
 
-const RefreshIcon = ({ className }) => (
+const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = ({ timeLeft, totalTime }) => {
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.max(0, timeLeft / totalTime);
+  const strokeDashoffset = circumference * (1 - progress);
+
+  const getTimeColor = () => {
+    if (timeLeft <= 0) return 'text-gray-400';
+    if (timeLeft <= 10) return 'text-red-500';
+    if (timeLeft <= 20) return 'text-yellow-500';
+    return 'text-indigo-400';
+  };
+
+  const ringColorClass = getTimeColor();
+
+  return (
+    <div className="relative flex items-center justify-center w-8 h-8">
+      <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44">
+        <circle
+          className="text-gray-200"
+          stroke="currentColor"
+          strokeWidth="3"
+          fill="transparent"
+          r={radius}
+          cx="22"
+          cy="22"
+        />
+        <circle
+          className={`${ringColorClass} transition-all duration-500`}
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          fill="transparent"
+          r={radius}
+          cx="22"
+          cy="22"
+          style={{ strokeDasharray: circumference, strokeDashoffset }}
+        />
+      </svg>
+      <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span>
+    </div>
+  );
+};
+
+const RefreshIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path>
     <path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
@@ -97,30 +143,29 @@ export default function VocabularyGame() {
   const [user, setUser] = useState<User | null>(null);
   const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
 
-  // State mới để lưu danh sách các từ chưa dùng, đã được xáo trộn
   const [shuffledUnusedWords, setShuffledUnusedWords] = useState<VocabularyItem[]>([]);
-  // State để theo dõi chỉ mục của từ hiện tại trong shuffledUnusedWords
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [score, setScore] = useState(0); // Score can still track correct answers if needed internally
-  // Sử dụng Set để quản lý các từ đã dùng hiệu quả hơn (cho mục đích lưu vào Firestore và kiểm tra nhanh)
+  const [score, setScore] = useState(0);
   const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const [coins, setCoins] = useState(0);
-  const [displayedCoins, setDisplayedCoins] = useState(0); // NEW: State for animated coin display
+  const [displayedCoins, setDisplayedCoins] = useState(0);
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
 
-  // Ref để theo dõi xem dữ liệu đã được tải và xử lý lần đầu chưa
-  const isInitialLoadComplete = useRef(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const TOTAL_TIME = 60;
+  const [isTimeUp, setIsTimeUp] = useState(false);
 
+  const isInitialLoadComplete = useRef(false);
 
   // Lắng nghe trạng thái xác thực người dùng
   useEffect(() => {
@@ -134,17 +179,16 @@ export default function VocabularyGame() {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
-        console.log("No user logged in, cannot fetch data from user document.");
         setLoading(false);
         setVocabularyList([]);
         setOpenedImageIds([]);
         setCoins(0);
-        setDisplayedCoins(0); // Reset displayed coins
+        setDisplayedCoins(0);
         setUsedWords(new Set());
-        setShuffledUnusedWords([]); // Reset shuffled list
-        setCurrentWordIndex(0); // Reset index
-        setCurrentWord(null); // Reset current word
-        setGameOver(false); // Reset game over
+        setShuffledUnusedWords([]);
+        setCurrentWordIndex(0);
+        setCurrentWord(null);
+        setGameOver(false);
         setError("Vui lòng đăng nhập để chơi.");
         return;
       }
@@ -180,25 +224,17 @@ export default function VocabularyGame() {
              } else {
                  setError("Dữ liệu ảnh trong tài khoản của bạn có định dạng sai.");
              }
-          } else {
-            // Không có openedImageIds là bình thường
           }
 
           if (userData && Array.isArray(userData['fill-word-1'])) {
               fetchedCompletedWords = userData['fill-word-1'] as string[];
-          } else {
-              // Nếu không có trường 'fill-word-1' hoặc sai định dạng, khởi tạo rỗng
           }
 
           if (userData && typeof userData.coins === 'number') {
             fetchedCoins = userData.coins;
-          } else {
-            // Mặc định là 0 nếu không có hoặc sai định dạng
           }
 
-          // Kết hợp danh sách từ vựng với chỉ mục ảnh tương ứng
           const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
-              // ... (logic không đổi)
               const imageIndex = fetchedImageIds[index];
               const adjustedIndex = imageIndex !== undefined ? imageIndex - 1 : undefined;
               const isValidImageIndex = adjustedIndex !== undefined && adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length;
@@ -211,15 +247,14 @@ export default function VocabularyGame() {
           setVocabularyList(vocabularyWithImages);
           setOpenedImageIds(fetchedImageIds);
           setCoins(fetchedCoins);
-          setDisplayedCoins(fetchedCoins); // Initialize displayed coins
+          setDisplayedCoins(fetchedCoins);
           setUsedWords(new Set(fetchedCompletedWords));
 
         } else {
-          console.log("User document does not exist.");
           setVocabularyList([]);
           setOpenedImageIds([]);
           setCoins(0);
-          setDisplayedCoins(0); // Reset displayed coins
+          setDisplayedCoins(0);
           setUsedWords(new Set());
           setShuffledUnusedWords([]);
           setCurrentWordIndex(0);
@@ -227,9 +262,7 @@ export default function VocabularyGame() {
           setGameOver(false);
           setError("Không tìm thấy dữ liệu người dùng.");
         }
-
         setLoading(false);
-
       } catch (err: any) {
         console.error("Error fetching user data from document:", err);
         setError(`Không thể tải dữ liệu người dùng: ${err.message}`);
@@ -244,7 +277,7 @@ export default function VocabularyGame() {
        setVocabularyList([]);
        setOpenedImageIds([]);
        setCoins(0);
-       setDisplayedCoins(0); // Reset displayed coins
+       setDisplayedCoins(0);
        setUsedWords(new Set());
        setShuffledUnusedWords([]);
        setCurrentWordIndex(0);
@@ -252,36 +285,67 @@ export default function VocabularyGame() {
        setGameOver(false);
        setError("Vui lòng đăng nhập để chơi.");
     }
-
   }, [user]);
 
-  // Effect để xử lý dữ liệu sau khi tải xong (vocabularyList và usedWords)
+  // Effect để xử lý dữ liệu sau khi tải xong
   useEffect(() => {
-      // ... (logic không đổi)
-      if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
-          const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
-          if (unusedWords.length === 0) {
-              setGameOver(true);
-              setCurrentWord(null);
-          } else {
-              const shuffled = shuffleArray(unusedWords);
-              setShuffledUnusedWords(shuffled);
-              setCurrentWord(shuffled[0]);
-              setCurrentWordIndex(0);
-              setGameOver(false);
-          }
-          isInitialLoadComplete.current = true;
-      } else if (!loading && !error && vocabularyList.length === 0) {
-           setCurrentWord(null);
-           setGameOver(false);
-           setShuffledUnusedWords([]);
-           setCurrentWordIndex(0);
-      }
+    if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
+        const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
+        if (unusedWords.length === 0) {
+            setGameOver(true);
+            setCurrentWord(null);
+        } else {
+            const shuffled = shuffleArray(unusedWords);
+            setShuffledUnusedWords(shuffled);
+            setCurrentWord(shuffled[0]);
+            setCurrentWordIndex(0);
+            setGameOver(false);
+        }
+        isInitialLoadComplete.current = true;
+    } else if (!loading && !error && vocabularyList.length === 0) {
+         setCurrentWord(null);
+         setGameOver(false);
+         setShuffledUnusedWords([]);
+         setCurrentWordIndex(0);
+    }
   }, [vocabularyList, loading, error, usedWords]);
+
+  // useEffect for the countdown timer
+  useEffect(() => {
+    if (!currentWord || gameOver || isCorrect === true) {
+      return;
+    }
+
+    setTimeLeft(TOTAL_TIME);
+    setIsTimeUp(false);
+    setFeedback(''); 
+
+    const timerId = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 0) {
+          return 0; 
+        }
+
+        const newTime = prevTime - 1;
+
+        if (newTime <= 0) {
+          console.log("Time is up! Resetting streak.");
+          setStreak(0);
+          setIsTimeUp(true);
+          setFeedback('Hết giờ! Chuỗi của bạn đã bị reset.');
+          setTimeout(() => setFeedback(''), 3000);
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [currentWord, gameOver]);
 
   // Select the next word from the shuffled list
   const selectNextWord = () => {
-    // ... (logic không đổi)
+    setIsTimeUp(false);
+    
     if (currentWordIndex < shuffledUnusedWords.length - 1) {
       const nextIndex = currentWordIndex + 1;
       setCurrentWordIndex(nextIndex);
@@ -295,11 +359,11 @@ export default function VocabularyGame() {
     }
   };
   
-  // NEW: Function to animate coin counting
+  // Function to animate coin counting
   const startCoinCountAnimation = (startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const difference = endValue - startValue;
-    let step = Math.ceil(difference / 30); // ~30 steps for the animation
+    let step = Math.ceil(difference / 30);
     if (step === 0) step = 1;
 
     let current = startValue;
@@ -311,17 +375,16 @@ export default function VocabularyGame() {
         } else {
             setDisplayedCoins(current);
         }
-    }, 30); // Animate every 30ms
+    }, 30);
   };
-
 
   // Check the user's answer
   const checkAnswer = async () => {
-    if (!currentWord || !userInput.trim()) return;
+    if (!currentWord || !userInput.trim() || isCorrect === true) return;
 
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
-      setFeedback('');
       setIsCorrect(true);
+      setFeedback('');
       setScore(score + 1);
 
       const newStreak = streak + 1;
@@ -332,37 +395,30 @@ export default function VocabularyGame() {
       setUsedWords(prevUsedWords => new Set(prevUsedWords).add(currentWord.word));
       setShowConfetti(true);
 
-      // Lưu từ vựng đã trả lời đúng và cập nhật coin vào Firestore
       if (user && currentWord.word) {
         const coinReward = 2 * newStreak;
-        const oldCoins = coins; // Get current true value
+        const oldCoins = coins;
         const updatedCoins = oldCoins + coinReward;
         
-        setCoins(updatedCoins); // Update the "true" state immediately
-        startCoinCountAnimation(oldCoins, updatedCoins); // Start the UI animation
+        setCoins(updatedCoins);
+        startCoinCountAnimation(oldCoins, updatedCoins);
 
         try {
           const userDocRef = doc(db, 'users', user.uid);
           await updateDoc(userDocRef, {
             'fill-word-1': arrayUnion(currentWord.word),
-            'coins': updatedCoins // Save the final, correct value to Firestore
+            'coins': updatedCoins
           });
-          console.log(`Saved word "${currentWord.word}" and updated coins to ${updatedCoins}.`);
         } catch (firestoreError) {
           console.error("Error saving word and coins to Firestore:", firestoreError);
         }
       }
 
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 2000);
-
-      setTimeout(() => {
-         selectNextWord();
-      }, 1500);
+      setTimeout(() => setShowConfetti(false), 2000);
+      setTimeout(() => selectNextWord(), 1500);
 
     } else {
-      setFeedback(``);
+      setFeedback('');
       setIsCorrect(false);
       setStreak(0);
     }
@@ -370,13 +426,10 @@ export default function VocabularyGame() {
 
   // Generate image URL
   const generateImageUrl = (imageIndex?: number) => {
-     // ... (logic không đổi)
      if (imageIndex !== undefined && typeof imageIndex === 'number') {
          const adjustedIndex = imageIndex - 1;
          if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) {
              return defaultImageUrls[adjustedIndex];
-         } else {
-             console.warn(`Adjusted image index ${adjustedIndex} (from Firestore ID ${imageIndex}) is out of bounds for defaultImageUrls array.`);
          }
      }
      return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`;
@@ -384,7 +437,7 @@ export default function VocabularyGame() {
 
   // Reset the game
   const resetGame = () => {
-    // ... (logic không đổi)
+    setIsTimeUp(false);
     setScore(0);
     setGameOver(false);
     setStreak(0);
@@ -405,7 +458,6 @@ export default function VocabularyGame() {
         setGameOver(false);
     }
   };
-
 
   // Hiển thị trạng thái loading hoặc lỗi
   if (loading) {
@@ -435,7 +487,6 @@ export default function VocabularyGame() {
 
   // Calculate game progress percentage based on completed words
   const gameProgress = vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0;
-
 
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
@@ -478,7 +529,7 @@ export default function VocabularyGame() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* UPDATED: Pass displayedCoins to the component */}
+                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                     <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                   </div>
@@ -527,6 +578,7 @@ export default function VocabularyGame() {
                   )}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <p className="text-white text-center">Đoán từ này là gì?</p>
+
                   </div>
                 </div>
 
