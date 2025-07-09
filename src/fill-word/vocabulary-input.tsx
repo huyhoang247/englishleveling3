@@ -117,8 +117,8 @@ const WordSquaresInput: React.FC<WordSquaresInputProps> = ({
   return (
     <div className="w-full space-y-4">
       {/* [START] KHỐI ĐƯỢC THAY ĐỔI */}
-      {/* Container cho phép cuộn ngang, đồng thời căn giữa nội dung khi từ ngắn */}
-      <div className="w-full overflow-x-auto hide-scrollbar flex justify-center">
+      {/* Container cho phép cuộn ngang, justify-start để nội dung luôn bắt đầu từ bên trái */}
+      <div className="w-full overflow-x-auto hide-scrollbar flex justify-start">
         {/* Container nội bộ, không còn w-full để có thể giãn nở tự do */}
         <div className="inline-flex p-1 gap-2">
             {squares.map((char, index) => (
