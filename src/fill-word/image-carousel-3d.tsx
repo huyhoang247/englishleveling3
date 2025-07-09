@@ -52,10 +52,12 @@ const ImageCarousel3D: React.FC<ImageCarousel3DProps> = ({ imageUrls, onImageCli
           ))}
         </AnimatePresence>
       </div>
-      <button onClick={handlePrev} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-1.5 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all focus:outline-none">
+      {/* Nút Previous - đã loại bỏ backdrop-blur-sm */}
+      <button onClick={handlePrev} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-1.5 rounded-full hover:bg-white/80 transition-all focus:outline-none">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
       </button>
-      <button onClick={handleNext} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-1.5 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all focus:outline-none">
+      {/* Nút Next - đã loại bỏ backdrop-blur-sm */}
+      <button onClick={handleNext} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/50 p-1.5 rounded-full hover:bg-white/80 transition-all focus:outline-none">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
       </button>
     </div>
