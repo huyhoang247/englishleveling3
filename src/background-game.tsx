@@ -1,5 +1,3 @@
-// --- START OF FILE background-game.tsx (Fixed Version) ---
-
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -385,7 +383,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
-  // ... (các hàm toggle khác không thay đổi)
     const toggleRank = () => {
      if (isLoading) return;
      setIsRankOpen(prev => {
@@ -558,22 +555,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
   
-  // <<< THAY ĐỔI 1: XÓA BỎ KHỐI LOADING CŨ >>>
-  // Khối `if (isLoading)` đã được xóa khỏi đây.
+  // *** THAY ĐỔI 1: XÓA `if (isLoading)` TỪ ĐÂY ***
 
   const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
+    // *** THAY ĐỔI 2: Thêm `relative` vào div ngoài cùng ***
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
-      
-      {/* <<< THAY ĐỔI 2: THÊM LỚP PHỦ LOADING MỚI >>> */}
-      {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
-           <LoadingSpinner />
-        </div>
-      )}
-
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
           onShowStats={toggleStatsFullscreen}
@@ -585,7 +574,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         {/* === MAIN LOBBY SCREEN === */}
         <div 
-          style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} 
+          // *** THAY ĐỔI 3: Thêm `visibility` để ẩn nội dung khi đang tải ***
+          style={{ 
+            display: isAnyOverlayOpen ? 'none' : 'block',
+            visibility: isLoading ? 'hidden' : 'visible'
+          }} 
           className="w-full h-full"
         >
           <div
@@ -697,6 +690,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward}/>)}</ErrorBoundary>
         </div>
       </SidebarLayout>
+      
+      {/* *** THAY ĐỔI 4: Thêm lớp phủ loading ở đây *** */}
+      {isLoading && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
+            <LoadingSpinner />
+        </div>
+      )}
     </div>
   );
 }
