@@ -159,9 +159,10 @@ export default function VocabularyGame() {
   if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans rounded-2xl overflow-hidden">
-      {/* Thanh header ngang màu xám */}
-      <header className="w-full h-10 bg-gray-200 border-b border-gray-300" />
+    // Thay đổi ở đây: `rounded-2xl` thành `rounded-b-2xl`
+    <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans rounded-b-2xl overflow-hidden">
+      {/* Thay đổi ở đây: màu và viền của header */}
+      <header className="w-full h-10 bg-black/80 border-b border-white/10" />
       
       {/* Nội dung game với padding */}
       <main className="p-8 w-full flex flex-col items-center">
