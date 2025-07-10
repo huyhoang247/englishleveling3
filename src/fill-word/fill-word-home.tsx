@@ -56,13 +56,7 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
   );
 });
 
-// --- THAY ĐỔI Ở ĐÂY: Thêm component BackIcon ---
-const BackIcon = ({ className }: { className: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 12H5"></path>
-    <polyline points="12 19 5 12 12 5"></polyline>
-  </svg>
-);
+// --- THAY ĐỔI Ở ĐÂY: Xóa BackIcon vì không còn dùng ---
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>);
 const getStreakText = (streak: number) => { return ""; };
 
@@ -168,14 +162,17 @@ export default function VocabularyGame() {
 
   return (
     <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
-        {/* --- THAY ĐỔI Ở ĐÂY: Thay thế các nút tròn bằng nút Back --- */}
-        <button 
-          onClick={() => alert('Chức năng quay lại sẽ được thêm ở đây!')} 
-          className="p-1.5 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors duration-200"
+      <header className="w-full h-10 flex items-center justify-between px-2 bg-black/90 border-b border-white/20">
+        {/* --- THAY ĐỔI Ở ĐÂY: Nút Back mới --- */}
+        <button
+          onClick={() => alert('Chức năng quay lại sẽ được thêm ở đây!')}
+          className="flex items-center h-8 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors"
           aria-label="Quay lại"
         >
-          <BackIcon className="w-5 h-5 text-white" />
+          <span className="bg-white/10 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back" className="w-5 h-5" />
+          </span>
+          <span className="ml-1.5 mr-2.5 font-semibold text-sm text-white">BACK</span>
         </button>
 
         {/* Bên phải: Chỉ số người chơi */}
