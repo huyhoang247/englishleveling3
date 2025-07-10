@@ -145,7 +145,7 @@ const App: React.FC = () => {
     const progress = 10; // Giả lập một chút tiến trình cho việc xác thực
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black overflow-hidden">
 
         {/* --- Game-like Logo Animation --- */}
         <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
@@ -193,7 +193,7 @@ const App: React.FC = () => {
     // <-- KHÔNG còn gán cứng `const progress = 50` nữa
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black overflow-hidden">
 
         {/* --- Game-like Logo Animation --- */}
         <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
