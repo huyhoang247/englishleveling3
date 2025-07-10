@@ -350,17 +350,14 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
     return (
         <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/60 transition-all duration-300">
             <div className="max-w-[1600px] mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-                {/* --- Phần bên trái: Logo & Điều hướng --- */}
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <div className="bg-cyan-500/10 text-cyan-400 p-2 rounded-lg">
-                            <ShoppingCart className="w-6 h-6" />
-                        </div>
-                        <h1 className="text-xl font-bold text-white hidden sm:block">Cửa Hàng</h1>
-                    </div>
+                {/* --- Phần bên trái: Nút đóng & Điều hướng --- */}
+                <div className="flex items-center gap-4">
+                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-700/60 hover:text-white transition-colors" aria-label="Đóng cửa hàng">
+                        <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
+                    </button>
                     <nav className="hidden md:flex items-center gap-4">
                         {navItems.map(item => (
-                            <a key={item} href="#" className={`text-sm font-medium px-2 py-1 rounded-md transition-colors ${
+                            <a key={item} href="#" className={`text-sm font-medium px-3 py-2 rounded-md transition-colors ${
                                 activeNav === item 
                                 ? 'text-white bg-white/10' 
                                 : 'text-slate-400 hover:text-white'
@@ -371,7 +368,7 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
                     </nav>
                 </div>
                 
-                {/* --- Phần bên phải: Tiền tệ & Nút Đóng --- */}
+                {/* --- Phần bên phải: Tiền tệ & Nút Nạp --- */}
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-4 bg-slate-800/50 p-1.5 pr-2 rounded-lg border border-slate-700">
                         <div className="flex items-center gap-2">
@@ -384,10 +381,7 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
                             <span className="font-bold text-sm">{userGems.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden lg:block">NẠP</button>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors" aria-label="Đóng cửa hàng">
-                        <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
-                    </button>
+                    <button className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden sm:block">NẠP</button>
                 </div>
             </div>
         </header>
