@@ -8,7 +8,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 
 // Các component con được tách ra các file riêng
-import HeaderBackground from './header-background.tsx'; // <--- 1. IMPORT COMPONENT HEADERBACKGROUND
+import HeaderBackground from '../header-background.tsx'; // <--- 1. IMPORT COMPONENT HEADERBACKGROUND
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
