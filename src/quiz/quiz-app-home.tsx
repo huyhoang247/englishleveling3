@@ -212,12 +212,14 @@ export default function QuizAppHome() {
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
+        
+        {/* THAY ĐỔI 1: Chỉ hiển thị thanh gradient khi không ở màn hình game */}
+        {currentView !== 'fillInBlanks' && (
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
+        )}
 
-        {/* Container chính không có padding */}
-        <div className="h-[calc(100%-8px)]"> {/* 8px = height của gradient line trên cùng */}
-          
-          {/* --- THAY ĐỔI Ở ĐÂY --- */}
+        {/* THAY ĐỔI 2: Điều chỉnh chiều cao của container dựa vào việc thanh gradient có hiển thị hay không */}
+        <div className={currentView === 'fillInBlanks' ? 'h-full' : 'h-[calc(100%-8px)]'}>
           {/* Navigation bar và Breadcrumbs - Sẽ không hiển thị khi ở 'main' hoặc 'fillInBlanks' */}
           {currentView !== 'main' && currentView !== 'fillInBlanks' && (
             <div className="p-6">
