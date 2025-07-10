@@ -131,7 +131,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   useEffect(() => {
     if (!currentWord || gameOver || isCorrect) return;
     setTimeLeft(TOTAL_TIME);
-    const timerId = setInterval(() => setTimeLeft(prev => { if (prev <= 1) { setStreak(0); setFeedback('Hết giờ! Chuỗi của bạn đã bị reset.'); setTimeout(() => setFeedback(''), 3000); clearInterval(timerId); return 0; } return prev - 1; }), 1000);
+    const timerId = setInterval(() => setTimeLeft(prev => { if (prev <= 1) { setStreak(0); clearInterval(timerId); return 0; } return prev - 1; }), 1000);
     return () => clearInterval(timerId);
   }, [currentWord, gameOver, isCorrect]);
 
