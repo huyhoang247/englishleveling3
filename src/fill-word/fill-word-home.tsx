@@ -169,7 +169,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
+    <div className="flex flex-col h-screen w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans overflow-y-hidden">
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
         <button
           onClick={onGoBack}
