@@ -1,3 +1,5 @@
+--- START OF FILE sidebar.tsx (31).txt ---
+
 import React, { useState, useEffect } from 'react';
 // Import the Rank component - REMOVED: Rank is now rendered by the parent
 // import EnhancedLeaderboard from './rank.tsx';
@@ -18,6 +20,7 @@ interface SidebarLayoutProps {
   onShowHelp?: () => void;
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
   onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
+  onShowAchievements?: () => void; // NEW: Handler for showing Achievements
 }
 
 // SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
@@ -39,6 +42,13 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
+);
+
+// NEW: Icon for Achievements
+const TrophyIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
 );
 
 const HomeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -214,7 +224,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 // SidebarLayout component including Sidebar and main content area
 // Accept new specific handlers for menu items
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame, onShowAchievements }: SidebarLayoutProps) {
   // State to track sidebar visibility
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   // Removed activeItem and activeContent states
@@ -249,6 +259,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine }, // NEW: Gold Mine menu item
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame }, // NEW: Lucky Game menu item
+    { id: 'achievements', label: 'Thành Tựu', icon: TrophyIcon, onClick: onShowAchievements }, // NEW: Achievements menu item
     // { id: 'tasks', label: 'Công việc', icon: ClipboardIcon, badge: 2, onClick: onShowTasks }, // REMOVED
     // { id: 'performance', label: 'Hiệu suất', icon: ActivityIcon, onClick: onShowPerformance }, // REMOVED: Performance menu item
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
