@@ -160,8 +160,8 @@ export default function VocabularyGame() {
 
   return (
     <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      {/* --- THAY ĐỔI Ở ĐÂY: h-9 -> h-10 --- */}
-      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/80 border-b border-white/20">
+      {/* --- THAY ĐỔI Ở ĐÂY: bg-black/80 -> bg-black/90 --- */}
+      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
         {/* Bên trái: Các nút điều khiển cửa sổ */}
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500/90"></div>
