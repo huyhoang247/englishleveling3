@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (Fixed Version) ---
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -81,8 +83,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-// [GIẢI THÍCH] Component này không còn được dùng để hiển thị loading chính nữa
-// nên có thể xóa đi nếu muốn, nhưng giữ lại cũng không sao.
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center text-center">
     <div 
@@ -318,8 +318,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // This function is now empty as there's no gameplay to start/interact with
   };
   
-  // [XÓA BỎ] Dòng này không cần thiết nữa vì ta không muốn hiển thị spinner thứ hai.
-  // const isLoading = isLoadingUserData || !assetsLoaded;
+  const isLoading = isLoadingUserData || !assetsLoaded;
 
   // Animate coin number changes
   useEffect(() => {
@@ -346,10 +345,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
      return () => {};
   }, [displayedCoins, coins]);
 
+  // <<-- THAY ĐỔI QUAN TRỌNG Ở ĐÂY -->>
   const renderCharacter = () => {
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
-    // [SỬA ĐỔI] Loại bỏ `isLoading` khỏi điều kiện tạm dừng
-    const isPaused = isAnyOverlayOpen || isBackgroundPaused;
+    const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
       <div
@@ -366,7 +365,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleStatsFullscreen = () => {
-    // [SỬA ĐỔI] Loại bỏ kiểm tra `isLoading` để cho phép mở overlay ngay cả khi dữ liệu người dùng đang tải nền.
+    if (isLoading) return;
     setIsStatsFullscreen(prev => {
         const newState = !prev;
         if (newState) {
@@ -385,7 +384,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         return newState;
     });
   };
+
+  // ... (các hàm toggle khác không thay đổi)
     const toggleRank = () => {
+     if (isLoading) return;
      setIsRankOpen(prev => {
          const newState = !prev;
          if (newState) {
@@ -406,6 +408,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleGoldMine = () => {
+    if (isLoading) return;
     setIsGoldMineOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -426,6 +429,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleInventory = () => {
+    if (isLoading) return;
     setIsInventoryOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -446,6 +450,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleLuckyGame = () => {
+    if (isLoading) return;
     setIsLuckyGameOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -466,6 +471,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleBlacksmith = () => {
+    if (isLoading) return;
     setIsBlacksmithOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -486,6 +492,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleTowerGame = () => {
+    if (isLoading) return;
     setIsTowerGameOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -506,6 +513,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleShop = () => {
+    if (isLoading) return;
     setIsShopOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -526,6 +534,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleVocabularyChest = () => {
+    if (isLoading) return;
     setIsVocabularyChestOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -548,31 +557,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
   };
-
-  // ===================================================================
-  // === [THAY ĐỔI LỚN NHẤT] XÓA BỎ KHỐI `if (isLoading)` TẠI ĐÂY ===
-  // ===================================================================
-  // Khối code này đã bị xóa. Nó là nguyên nhân gây ra màn hình loading
-  // thứ hai (cái "nháy"). Bằng cách xóa nó, component sẽ render giao
-  // diện chính ngay lập tức, và dữ liệu (coins, gems) sẽ cập nhật
-  // sau một khoảnh khắc ngắn khi fetch xong, tạo ra trải nghiệm mượt mà hơn.
-  /*
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center w-full h-[var(--app-height)] bg-gray-950">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-  */
-  // ===================================================================
   
+  // <<< THAY ĐỔI 1: XÓA BỎ KHỐI LOADING CŨ >>>
+  // Khối `if (isLoading)` đã được xóa khỏi đây.
+
   const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
-  // [SỬA ĐỔI] Loại bỏ `isLoading` khỏi điều kiện tạm dừng game
-  const isGamePaused = isAnyOverlayOpen || isBackgroundPaused;
+  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
-    <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950">
+    <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
+      
+      {/* <<< THAY ĐỔI 2: THÊM LỚP PHỦ LOADING MỚI >>> */}
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
+           <LoadingSpinner />
+        </div>
+      )}
+
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
           onShowStats={toggleStatsFullscreen}
