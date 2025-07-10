@@ -56,7 +56,6 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
   );
 });
 
-// --- THAY ĐỔI Ở ĐÂY: Thêm component BackIcon bằng SVG ---
 const BackIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -168,16 +167,15 @@ export default function VocabularyGame() {
   return (
     <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
-        {/* --- THAY ĐỔI Ở ĐÂY: Nút Back thiết kế mới --- */}
+        {/* --- THAY ĐỔI Ở ĐÂY: Nút nhỏ hơn (w-7 h-7) và icon nhỏ hơn (w-3.5 h-3.5) --- */}
         <button
           onClick={() => alert('Chức năng quay lại sẽ được thêm ở đây!')}
-          className="group w-8 h-8 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
+          className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
           aria-label="Quay lại"
         >
-          <BackIcon className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
+          <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
 
-        {/* Bên phải: Chỉ số người chơi */}
         <div className="flex items-center gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
