@@ -1,3 +1,5 @@
+// --- START OF FILE quiz-app-home.tsx (16).txt ---
+
 import { useState } from 'react';
 // Import component QuizApp từ file quiz.tsx
 import QuizApp from './quiz.tsx';
@@ -87,6 +89,7 @@ export default function QuizAppHome() {
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
     switch(currentView) {
+      // ... (các case 'main', 'quizTypes', 'practices' giữ nguyên)
       case 'main':
         return (
           <div className="flex flex-col items-center gap-6">
@@ -189,11 +192,12 @@ export default function QuizAppHome() {
             </div>
           </div>
         );
-
+        
       case 'fillInBlanks':
-         // Render component VocabularyGame khi chọn điền từ
+         // --- THAY ĐỔI DUY NHẤT Ở FILE NÀY ---
+         // Truyền hàm `goBack` vào component VocabularyGame qua prop `onGoBack`
         return (
-          <VocabularyGame />
+          <VocabularyGame onGoBack={goBack} />
         );
 
       case 'quiz': // Case mới để render component QuizApp
@@ -208,7 +212,7 @@ export default function QuizAppHome() {
     }
   };
 
-  // Thay đổi phần return cuối cùng để có background và container đẹp hơn
+  // ... (phần return cuối cùng giữ nguyên)
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
