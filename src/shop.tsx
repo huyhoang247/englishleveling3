@@ -339,7 +339,7 @@ const ShopCountdown = () => {
 };
 
 
-// --- START: HEADER MỚI CỦA CỬA HÀNG ---
+// --- START: HEADER MỚI CỦA CỬA HÀNG (ĐÃ CẬP NHẬT) ---
 const ShopHeader = ({ onClose }: { onClose: () => void }) => {
     // Giá trị tiền tệ mẫu, trong ứng dụng thật sẽ lấy từ state hoặc context
     const userGold = 15280;
@@ -371,7 +371,7 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
                     </nav>
                 </div>
                 
-                {/* --- Phần bên phải: Tiền tệ & Người dùng --- */}
+                {/* --- Phần bên phải: Tiền tệ & Nút Đóng --- */}
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-4 bg-slate-800/50 p-1.5 pr-2 rounded-lg border border-slate-700">
                         <div className="flex items-center gap-2">
@@ -385,16 +385,9 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
                         </div>
                     </div>
                     <button className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden lg:block">NẠP</button>
-                    <div className="w-px h-8 bg-slate-700 hidden sm:block"></div>
-                    <div className="flex items-center gap-2">
-                         <div className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-500 overflow-hidden">
-                             {/* Placeholder for user avatar */}
-                             <img src="https://placehold.co/40x40/1e293b/94a3b8?text=U" alt="User Avatar" />
-                         </div>
-                         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-700 hover:bg-red-500/80 transition-colors" aria-label="Đóng cửa hàng">
-                             <img src={uiAssets.closeIcon} alt="Close" className="w-4 h-4" />
-                         </button>
-                    </div>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors" aria-label="Đóng cửa hàng">
+                        <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
         </header>
@@ -437,11 +430,8 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
             
             <div className="absolute inset-0 top-16 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
 
-            {/* Thêm pt-8 để tạo khoảng cách với header, và pt-16 (chiều cao header) + pt-8 = pt-24 */}
             <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pt-8">
                 <main>
-                    {/* Header cũ đã được xóa và thay bằng ShopHeader ở trên */}
-                    
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
 
                     <section>
