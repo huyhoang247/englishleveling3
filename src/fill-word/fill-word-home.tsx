@@ -169,7 +169,6 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
 
   return (
-    // THAY ĐỔI 1: Thêm h-full để component chiếm toàn bộ chiều cao được cấp
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
         <button
@@ -186,8 +185,8 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         </div>
       </header>
       
-      {/* THAY ĐỔI 2: Thêm flex-grow để <main> giãn ra, lấp đầy không gian còn lại */}
-      <main className="flex-grow p-8 w-full flex flex-col items-center">
+      {/* --- THAY ĐỔI Ở ĐÂY: Tăng padding-bottom để tạo thêm không gian ở dưới --- */}
+      <main className="flex-grow px-8 pt-8 pb-16 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
