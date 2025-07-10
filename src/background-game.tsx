@@ -1,3 +1,5 @@
+--- START OF FILE background-game.tsx (11).txt ---
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -19,6 +21,7 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
+import AchievementsScreen from './thanh-tuu.tsx'; // NEW: Import achievements screen
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -121,6 +124,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isTowerGameOpen, setIsTowerGameOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false); // NEW: State for achievements screen
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
@@ -288,6 +292,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false); // NEW: Reset state
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -345,7 +350,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // <<-- THAY ĐỔI QUAN TRỌNG Ở ĐÂY -->>
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
@@ -376,6 +381,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsTowerGameOpen(false);
             setIsShopOpen(false);
             setIsVocabularyChestOpen(false);
+            setIsAchievementsOpen(false);
         } else {
             showNavBar();
         }
@@ -397,6 +403,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsTowerGameOpen(false);
              setIsShopOpen(false);
              setIsVocabularyChestOpen(false);
+             setIsAchievementsOpen(false);
          } else {
              showNavBar();
          }
@@ -418,6 +425,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -439,6 +447,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -460,6 +469,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -481,6 +491,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -502,6 +513,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -523,6 +535,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -544,6 +557,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -551,13 +565,37 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
+  // NEW: Toggle function for achievements screen
+  const toggleAchievements = () => {
+    if (isLoading) return;
+    setIsAchievementsOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
+        setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+
+
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
   };
   
   // *** THAY ĐỔI 1: XÓA `if (isLoading)` TỪ ĐÂY ***
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   return (
@@ -569,6 +607,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowRank={toggleRank}
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
+          onShowAchievements={toggleAchievements}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
@@ -688,6 +727,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward}/>)}</ErrorBoundary>
+        </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>{isAchievementsOpen && <AchievementsScreen onClose={toggleAchievements} />}</ErrorBoundary>
         </div>
       </SidebarLayout>
       
