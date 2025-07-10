@@ -1,7 +1,6 @@
 // src/index.tsx
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import './index.css'; 
 import Home from './background-game.tsx'; // Component chính của màn hình 'home'
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
@@ -146,7 +145,7 @@ const App: React.FC = () => {
     const progress = 10; // Giả lập một chút tiến trình cho việc xác thực
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black overflow-hidden">
+                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
 
         {/* --- Game-like Logo Animation --- */}
         <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
@@ -194,7 +193,7 @@ const App: React.FC = () => {
     // <-- KHÔNG còn gán cứng `const progress = 50` nữa
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black overflow-hidden">
+                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
 
         {/* --- Game-like Logo Animation --- */}
         <div className="relative w-24 h-24 mb-8 flex items-center justify-center">
