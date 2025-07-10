@@ -1,6 +1,7 @@
 // src/index.tsx
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import './index.css'; 
 import Home from './background-game.tsx'; // Component chính của màn hình 'home'
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
