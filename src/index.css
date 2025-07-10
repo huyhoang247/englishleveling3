@@ -1,0 +1,15 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+ * Reset margin và padding mặc định để layout toàn màn hình hoạt động đúng.
+ * Điều này đảm bảo body và root container không có khoảng đệm thừa.
+*/
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  /* Tùy chọn: Đảm bảo chúng chiếm toàn bộ chiều cao */
+  height: 100%; 
+}
