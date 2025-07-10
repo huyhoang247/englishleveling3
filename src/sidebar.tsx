@@ -1,5 +1,3 @@
---- START OF FILE sidebar.tsx (31).txt ---
-
 import React, { useState, useEffect } from 'react';
 // Import the Rank component - REMOVED: Rank is now rendered by the parent
 // import EnhancedLeaderboard from './rank.tsx';
