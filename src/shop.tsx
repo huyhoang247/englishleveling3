@@ -1,3 +1,5 @@
+// --- START OF FILE shop.tsx.txt ---
+
 import React, { useState, useEffect } from 'react';
 import { itemDatabase, ItemRank } from './inventory/item-database.ts';
 import { uiAssets } from './game-assets.ts';
@@ -47,7 +49,6 @@ const getRarityDisplayName = (rarity: string) => {
     return `${rarity.toUpperCase()} Rank`;
 }
 const formatStatName = (stat: string) => {
-    // Sử dụng map định dạng tên chỉ số giống trong inventory
     const translations: { [key: string]: string } = { damage: 'Sát thương', health: 'Máu', durability: 'Độ bền', healing: 'Hồi máu', defense: 'Phòng thủ', energyRestore: 'Hồi năng lượng', magicBoost: 'Tăng phép', intelligence: 'Trí tuệ', resurrection: 'Hồi sinh', fireDamage: 'Sát thương lửa', strength: 'Sức mạnh', attackSpeed: 'Tốc độ tấn công', manaRegen: 'Hồi mana', range: 'Tầm xa', poisonDamage: 'Sát thương độc', duration: 'Thời gian', magicResist: 'Kháng phép', manaRestore: 'Hồi mana', speed: 'Tốc độ', cleanse: 'Thanh tẩy', strengthBoost: 'Tăng sức mạnh', luck: 'May mắn', lifeSteal: 'Hút Máu', darkDamage: 'ST Bóng Tối', critChance: 'Tỷ Lệ Chí Mạng'};
     return translations[stat] || stat.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 };
@@ -115,23 +116,19 @@ const Sparkles = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><p
 const ShoppingCart = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.16" /></Icon> );
 const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></Icon> );
 const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon> );
-const Home = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon> );
-const Package = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M16.5 9.4a2.5 2.5 0 0 0-3 0L8 12.9a2.5 2.5 0 0 0 0 4.2l5.5 3.5a2.5 2.5 0 0 0 3 0l5.5-3.5a2.5 2.5 0 0 0 0-4.2z"/><path d="M12 22V12"/><path d="m7 12-4-2.5a2.5 2.5 0 0 1 0-4.2L8.5 2"/></Icon> );
-
 
 // --- Dữ liệu tĩnh cho các loại vật phẩm khác ---
 const sampleItemsNonWeapons = [
-    { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'Sử thi', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' },
-    { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'Sử thi', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
-    { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'Sử thi', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' },
-    { id: 1003, name: 'Ngọc Tái Sinh', type: 'Vật phẩm', rarity: 'Hiếm', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' },
-    { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'Phổ thông', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
-    { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'Hiếm', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
+    { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'S', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' },
+    { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'SR', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
+    { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'S', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' },
+    { id: 1003, name: 'Ngọc Tái Sinh', type: 'Vật phẩm', rarity: 'A', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' },
+    { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'B', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
+    { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'A', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
 ];
 
-
 // --- Cấu hình màu sắc & giá cho các cấp độ hiếm ---
-const rarityConfigTailwind = { // Giữ lại để dùng cho button MUA NGAY và thẻ vật phẩm cũ
+const rarityConfigTailwind = {
     'SR': { color: 'red-500' }, 'S': { color: 'yellow-400' },
     'A': { color: 'purple-500' }, 'B': { color: 'blue-500' },
     'D': { color: 'green-500' }, 'E': { color: 'gray-500' },
@@ -235,7 +232,6 @@ const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: s
     );
 };
 
-
 // --- START: MODAL CHI TIẾT VẬT PHẨM ĐƯỢC THIẾT KẾ LẠI ---
 const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => void }) => {
     const [activeModalTab, setActiveModalTab] = useState<'info' | 'skills'>('info');
@@ -255,7 +251,6 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
           
           <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}>
             
-            {/* ---- PHẦN 1: HEADER (CỐ ĐỊNH) ---- */}
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4">
               <div className="flex justify-between items-start mb-4">
                 <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3>
@@ -283,18 +278,12 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
               )}
             </div>
 
-            {/* ---- PHẦN 2: CONTENT (CÓ THỂ CUỘN) ---- */}
             <div className="flex-1 min-h-[150px] overflow-y-auto scrollbar-hidden">
               <div className="modal-tab-content pt-4 pb-2">
-                {(!hasSkills || activeModalTab === 'info') ? (
-                    renderItemStats(item)
-                ) : (
-                    renderItemSkills(item)
-                )}
+                {(!hasSkills || activeModalTab === 'info') ? ( renderItemStats(item) ) : ( renderItemSkills(item) )}
               </div>
             </div>
 
-            {/* ---- PHẦN 3: FOOTER (CỐ ĐỊNH) ---- */}
             <div className="flex-shrink-0 mt-auto flex flex-col gap-4 border-t border-gray-700/50 pt-4">
                 <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                     <p className="text-sm text-gray-400">Giá vật phẩm</p>
@@ -309,17 +298,11 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
                 </div>
             </div>
           </div>
-          <style jsx>{`
-            .scrollbar-hidden::-webkit-scrollbar { display: none; }
-            .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
-            @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-            .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); }
-          `}</style>
+          <style jsx>{` .scrollbar-hidden::-webkit-scrollbar { display: none; } .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); } `}</style>
         </div>
     );
 };
 // --- END: MODAL CHI TIẾT VẬT PHẨM ĐƯỢC THIẾT KẾ LẠI ---
-
 
 // --- Component Đồng hồ đếm ngược ---
 const ShopCountdown = () => {
@@ -355,45 +338,62 @@ const ShopCountdown = () => {
     );
 };
 
-// --- START: HEADER MỚI CỦA CỬA HÀNG ---
-const ShopHeader = () => {
-    return (
-        <header className="fixed top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    {/* --- Left Section: Logo & Navigation --- */}
-                    <div className="flex items-center gap-8">
-                        <div className="text-xl font-bold text-white tracking-wider">
-                            V<span className="text-cyan-400">GAME</span>
-                        </div>
-                        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-                            <a href="#" className="text-slate-300 hover:text-white transition-colors">Trang Chủ</a>
-                            <a href="#" className="text-slate-300 hover:text-white transition-colors">Kho Đồ</a>
-                            <a href="#" className="text-cyan-400 border-b-2 border-cyan-400 pb-1 -mb-1">Cửa Hàng</a>
-                        </nav>
-                    </div>
 
-                    {/* --- Right Section: Currency & Player Info --- */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-4 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                            <div className="flex items-center gap-2">
-                                <Coins className="w-5 h-5 text-yellow-400" />
-                                <span className="font-bold text-base text-white">15,280</span>
-                            </div>
-                            <div className="w-px h-6 bg-slate-600"></div>
-                            <div className="flex items-center gap-2">
-                                <Gem className="w-5 h-5 text-cyan-400" />
-                                <span className="font-bold text-base text-white">3,250</span>
-                            </div>
-                            <button className="hidden sm:block ml-2 bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-1.5 rounded-md hover:bg-yellow-400 transition-colors">NẠP</button>
+// --- START: HEADER MỚI CỦA CỬA HÀNG ---
+const ShopHeader = ({ onClose }: { onClose: () => void }) => {
+    // Giá trị tiền tệ mẫu, trong ứng dụng thật sẽ lấy từ state hoặc context
+    const userGold = 15280;
+    const userGems = 3250;
+    const navItems = ['Cửa Hàng', 'Nhiệm Vụ', 'Bang Hội', 'Sự Kiện'];
+    const activeNav = 'Cửa Hàng';
+
+    return (
+        <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/60 transition-all duration-300">
+            <div className="max-w-[1600px] mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                {/* --- Phần bên trái: Logo & Điều hướng --- */}
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <div className="bg-cyan-500/10 text-cyan-400 p-2 rounded-lg">
+                            <ShoppingCart className="w-6 h-6" />
                         </div>
-                        <div className="flex items-center gap-3">
-                            <img src="https://placehold.co/40x40/1e293b/94a3b8?text=AV" alt="Player Avatar" className="w-10 h-10 rounded-full border-2 border-slate-600"/>
-                            <div className="hidden lg:block">
-                                <p className="font-semibold text-white text-sm">ShadowBlade</p>
-                                <p className="text-xs text-slate-400">Cấp 72</p>
-                            </div>
+                        <h1 className="text-xl font-bold text-white hidden sm:block">Cửa Hàng</h1>
+                    </div>
+                    <nav className="hidden md:flex items-center gap-4">
+                        {navItems.map(item => (
+                            <a key={item} href="#" className={`text-sm font-medium px-2 py-1 rounded-md transition-colors ${
+                                activeNav === item 
+                                ? 'text-white bg-white/10' 
+                                : 'text-slate-400 hover:text-white'
+                            }`}>
+                                {item}
+                            </a>
+                        ))}
+                    </nav>
+                </div>
+                
+                {/* --- Phần bên phải: Tiền tệ & Người dùng --- */}
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 bg-slate-800/50 p-1.5 pr-2 rounded-lg border border-slate-700">
+                        <div className="flex items-center gap-2">
+                            <Coins className="w-5 h-5 text-yellow-400" />
+                            <span className="font-bold text-sm">{userGold.toLocaleString()}</span>
                         </div>
+                        <div className="w-px h-5 bg-slate-600"></div>
+                        <div className="flex items-center gap-2">
+                            <Gem className="w-5 h-5 text-cyan-400" />
+                            <span className="font-bold text-sm">{userGems.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <button className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden lg:block">NẠP</button>
+                    <div className="w-px h-8 bg-slate-700 hidden sm:block"></div>
+                    <div className="flex items-center gap-2">
+                         <div className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-500 overflow-hidden">
+                             {/* Placeholder for user avatar */}
+                             <img src="https://placehold.co/40x40/1e293b/94a3b8?text=U" alt="User Avatar" />
+                         </div>
+                         <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-700 hover:bg-red-500/80 transition-colors" aria-label="Đóng cửa hàng">
+                             <img src={uiAssets.closeIcon} alt="Close" className="w-4 h-4" />
+                         </button>
                     </div>
                 </div>
             </div>
@@ -406,7 +406,7 @@ const ShopHeader = () => {
 // --- Component Chính Của Cửa Hàng ---
 const GameShopUI = ({ onClose }: { onClose: () => void }) => {
     const [activeCategory, setActiveCategory] = useState('Vũ khí');
-    const [selectedItem, setSelectedItem] = 'useState<any | null>(null)';
+    const [selectedItem, setSelectedItem] = useState<any | null>(null);
     const [allItems, setAllItems] = useState<any[]>([]);
 
     useEffect(() => {
@@ -416,7 +416,6 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
 
     const gridItems = allItems.filter(item => item.type === activeCategory);
     
-    // CẬP NHẬT: Hàm này sẽ lấy dữ liệu đầy đủ từ database để truyền vào modal
     const handleSelectItem = (shopItem: any) => {
         const baseItem = itemDatabase.get(shopItem.id);
         
@@ -426,32 +425,23 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
             return;
         }
 
-        // Kết hợp thông tin đầy đủ (stats, skills) từ database
-        // với thông tin từ cửa hàng (price, rarity ngẫu nhiên)
-        const detailedItem = {
-            ...baseItem,
-            ...shopItem,
-        };
-
+        const detailedItem = { ...baseItem, ...shopItem, };
         setSelectedItem(detailedItem);
     };
 
     const handleCloseModal = () => setSelectedItem(null);
 
     return (
-        <div className="relative w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
-            {/* THAY ĐỔI: Thêm Header mới vào đây */}
-            <ShopHeader />
-
-            <button onClick={onClose} className="fixed top-4 right-4 lg:top-6 lg:right-6 z-[60]" aria-label="Đóng cửa hàng">
-                <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
-            </button>
-            <div className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
+        <div className="w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
+            <ShopHeader onClose={onClose} />
             
-            {/* THAY ĐỔI: Thêm pt-24 để tạo không gian cho header cố định */}
-            <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24">
+            <div className="absolute inset-0 top-16 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
+
+            {/* Thêm pt-8 để tạo khoảng cách với header, và pt-16 (chiều cao header) + pt-8 = pt-24 */}
+            <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pt-8">
                 <main>
-                    {/* THAY ĐỔI: Đã xóa header cũ ở đây */}
+                    {/* Header cũ đã được xóa và thay bằng ShopHeader ở trên */}
+                    
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
 
                     <section>
