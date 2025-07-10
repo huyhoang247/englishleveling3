@@ -55,6 +55,14 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
     </div>
   );
 });
+
+// --- THAY ĐỔI Ở ĐÂY: Thêm component BackIcon ---
+const BackIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5"></path>
+    <polyline points="12 19 5 12 12 5"></polyline>
+  </svg>
+);
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>);
 const getStreakText = (streak: number) => { return ""; };
 
@@ -160,14 +168,16 @@ export default function VocabularyGame() {
 
   return (
     <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      {/* --- THAY ĐỔI Ở ĐÂY: bg-black/80 -> bg-black/90 --- */}
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
-        {/* Bên trái: Các nút điều khiển cửa sổ */}
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500/90"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500/90"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500/90"></div>
-        </div>
+        {/* --- THAY ĐỔI Ở ĐÂY: Thay thế các nút tròn bằng nút Back --- */}
+        <button 
+          onClick={() => alert('Chức năng quay lại sẽ được thêm ở đây!')} 
+          className="p-1.5 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors duration-200"
+          aria-label="Quay lại"
+        >
+          <BackIcon className="w-5 h-5 text-white" />
+        </button>
+
         {/* Bên phải: Chỉ số người chơi */}
         <div className="flex items-center gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
