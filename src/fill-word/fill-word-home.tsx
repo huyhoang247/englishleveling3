@@ -1,4 +1,4 @@
-// --- START OF FILE fill-word-home.tsx (FULL & OPTIMIZED) ---
+// --- START OF FILE fill-word-home.tsx (29).txt ---
 
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
@@ -18,6 +18,11 @@ interface VocabularyItem {
   word: string;
   hint: string;
   imageIndex?: number;
+}
+
+// --- THAY ĐỔI 1: Định nghĩa props cho component ---
+interface VocabularyGameProps {
+  onGoBack: () => void; // Hàm để quay lại, không có tham số và không trả về gì
 }
 
 // Các component phụ vẫn giữ lại trong file này
@@ -56,7 +61,6 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
   );
 });
 
-// --- THAY ĐỔI Ở ĐÂY: Tăng strokeWidth của BackIcon từ 2.5 lên 3.5 ---
 const BackIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -69,8 +73,8 @@ const getStreakText = (streak: number) => { return ""; };
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 
-// Component chính của Game
-export default function VocabularyGame() {
+// --- THAY ĐỔI 2: Cập nhật chữ ký của component để nhận props ---
+export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +97,7 @@ export default function VocabularyGame() {
   const TOTAL_TIME = 60;
   const isInitialLoadComplete = useRef(false);
 
+  // ... (toàn bộ logic của component giữ nguyên) ...
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   useEffect(() => {
     const fetchUserData = async () => {
@@ -168,8 +173,9 @@ export default function VocabularyGame() {
   return (
     <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
+        {/* --- THAY ĐỔI 3: Thay thế alert bằng hàm onGoBack từ props --- */}
         <button
-          onClick={() => alert('Chức năng quay lại sẽ được thêm ở đây!')}
+          onClick={onGoBack}
           className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
           aria-label="Quay lại"
         >
@@ -183,6 +189,7 @@ export default function VocabularyGame() {
       </header>
       
       <main className="p-8 w-full flex flex-col items-center">
+        {/* ... (toàn bộ phần main giữ nguyên) ... */}
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
@@ -239,4 +246,3 @@ export default function VocabularyGame() {
     </div>
   );
 }
-// --- END OF FILE fill-word-home.tsx (FULL & OPTIMIZED) ---
