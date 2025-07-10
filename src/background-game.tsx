@@ -662,31 +662,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         {/* === OVERLAY SCREENS === */}
-        <div className="absolute inset-0 w-full h-full" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
             <ErrorBoundary>{auth.currentUser && (<CharacterCard onClose={toggleStatsFullscreen} coins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}/>)}</ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isRankOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}>
              <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{auth.currentUser && (<GoldMine onClose={toggleGoldMine} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} currentUserId={auth.currentUser!.uid} isGamePaused={isAnyOverlayOpen}/>)}</ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
             <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} isStatsFullscreen={isStatsFullscreen}/>)}</ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}</ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isShopOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward}/>)}</ErrorBoundary>
         </div>
       </SidebarLayout>
