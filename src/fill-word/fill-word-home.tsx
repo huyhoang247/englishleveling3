@@ -185,8 +185,8 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         </div>
       </header>
       
-      {/* --- THAY ĐỔI Ở ĐÂY: Tăng padding-bottom để tạo thêm không gian ở dưới --- */}
-      <main className="flex-grow px-8 pt-8 pb-16 w-full flex flex-col items-center">
+      {/* --- THAY ĐỔI Ở ĐÂY: Tăng padding-bottom lên pb-24 --- */}
+      <main className="flex-grow px-8 pt-8 pb-24 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
