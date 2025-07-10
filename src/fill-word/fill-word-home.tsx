@@ -160,8 +160,8 @@ export default function VocabularyGame() {
 
   return (
     <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      {/* --- THAY ĐỔI Ở ĐÂY --- */}
-      <header className="w-full h-9 flex items-center justify-between px-4 bg-black/80 border-b border-white/20">
+      {/* --- THAY ĐỔI Ở ĐÂY: h-9 -> h-10 --- */}
+      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/80 border-b border-white/20">
         {/* Bên trái: Các nút điều khiển cửa sổ */}
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500/90"></div>
@@ -193,7 +193,6 @@ export default function VocabularyGame() {
             </div>
           ) : (
             <>
-              {/* --- THAY ĐỔI Ở ĐÂY: đã gỡ bỏ Coin và Streak khỏi đây --- */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
@@ -202,7 +201,6 @@ export default function VocabularyGame() {
                         <span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{vocabularyList.length}</span>
                       </div>
                   </div>
-                  {/* Chỉ còn lại đồng hồ đếm ngược ở đây */}
                   <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
