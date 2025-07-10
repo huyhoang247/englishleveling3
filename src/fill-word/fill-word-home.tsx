@@ -1,4 +1,4 @@
-// --- START OF FILE fill-word-home.tsx (FULL & OPTIMIZED) ---
+// --- START OF FILE fill-word-home.tsx (MODIFIED) ---
 
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
@@ -12,6 +12,7 @@ import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
 import ImageCarousel3D from './image-carousel-3d.tsx';
+import HeaderBackground from '../header-background.tsx'; // <<< IMPORT MỚI
 
 // Định nghĩa kiểu dữ liệu
 interface VocabularyItem {
@@ -177,22 +178,25 @@ export default function VocabularyGame() {
           </div>
         ) : (
           <>
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
-              <div className="flex justify-between items-center mb-4">
-                <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
-                    <div className="flex items-center">
-                      <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{usedWords.size}</span>
-                      <span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{vocabularyList.length}</span>
-                    </div>
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl overflow-hidden">
+              <HeaderBackground />
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
+                      <div className="flex items-center">
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{usedWords.size}</span>
+                        <span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{vocabularyList.length}</span>
+                      </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
-                  <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-                  <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
+                    <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
-              </div>
-              <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
-                  <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
               </div>
             </div>
             {currentWord ? (
@@ -219,4 +223,4 @@ export default function VocabularyGame() {
     </div>
   );
 }
-// --- END OF FILE fill-word-home.tsx (FULL & OPTIMIZED) ---
+// --- END OF FILE fill-word-home.tsx (MODIFIED) ---
