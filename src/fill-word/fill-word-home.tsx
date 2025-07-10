@@ -7,8 +7,7 @@ import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 
-// Các component con được tách ra các file riêng
-import HeaderBackground from '../header-background.tsx'; // <--- 1. IMPORT COMPONENT HEADERBACKGROUND
+// Các component con được tách ra các file riêng (đây là lý do file này ngắn lại)
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
@@ -160,69 +159,69 @@ export default function VocabularyGame() {
   if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 p-8 shadow-xl font-sans">
-      {showConfetti && <Confetti />}
-      <div className="w-full flex flex-col items-center">
-        {gameOver ? (
-          <div className="text-center py-8 w-full">
-            <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
-              <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
-              <p className="text-xl mb-4">Hoàn thành: <span className="font-bold text-indigo-600">{usedWords.size}/{vocabularyList.length}</span></p>
-              <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}></div>
-              </div>
-            </div>
-            <button onClick={resetGame} className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105">
-              <RefreshIcon className="mr-2 h-5 w-5" /> Chơi lại
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* <--- 2. THÊM CONTAINER VÀ COMPONENT HEADERBACKGROUND VÀO ĐÂY ---> */}
-            <div className="relative w-full h-24 mb-6 rounded-xl shadow-lg overflow-hidden">
-              <HeaderBackground />
-            </div>
-
-            {/* <--- 3. GIỮ NGUYÊN STATUS BAR GỐC (chỉ đổi thành rounded-xl cho đẹp) ---> */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
-              <div className="flex justify-between items-center mb-4">
-                <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
-                    <div className="flex items-center">
-                      <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{usedWords.size}</span>
-                      <span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{vocabularyList.length}</span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
-                  <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-                  <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+    <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans rounded-2xl overflow-hidden">
+      {/* Thanh header ngang màu xám */}
+      <header className="w-full h-10 bg-gray-200 border-b border-gray-300" />
+      
+      {/* Nội dung game với padding */}
+      <main className="p-8 w-full flex flex-col items-center">
+        {showConfetti && <Confetti />}
+        <div className="w-full flex flex-col items-center">
+          {gameOver ? (
+            <div className="text-center py-8 w-full">
+              <div className="bg-white p-8 rounded-2xl shadow-lg mb-6">
+                <h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2>
+                <p className="text-xl mb-4">Hoàn thành: <span className="font-bold text-indigo-600">{usedWords.size}/{vocabularyList.length}</span></p>
+                <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
+                  <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}></div>
                 </div>
               </div>
-              <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
-                  <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
-              </div>
+              <button onClick={resetGame} className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105">
+                <RefreshIcon className="mr-2 h-5 w-5" /> Chơi lại
+              </button>
             </div>
-            {currentWord ? (
-              <div className="w-full space-y-6">
-                <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
-                <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
+          ) : (
+            <>
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
+                      <div className="flex items-center">
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{usedWords.size}</span>
+                        <span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{vocabularyList.length}</span>
+                      </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+                  </div>
+                </div>
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
+                    <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
+                </div>
               </div>
-            ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
-          </>
-        )}
-      </div>
-      {showImagePopup && currentWord && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
-            <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
-            <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
-            <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-full object-contain" />
-            <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-              <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p><p className="text-gray-800">{currentWord.hint}</p>
-            </div>
-          </div>
+              {currentWord ? (
+                <div className="w-full space-y-6">
+                  <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
+                  <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
+                </div>
+              ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
+            </>
+          )}
         </div>
-      )}
+        {showImagePopup && currentWord && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
+              <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
+              <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
+              <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-full object-contain" />
+              <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                <p className="font-medium text-gray-700 mb-1">Định nghĩa:</p><p className="text-gray-800">{currentWord.hint}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
