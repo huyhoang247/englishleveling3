@@ -19,10 +19,8 @@ interface VocabularyItem {
   hint: string;
   imageIndex?: number;
 }
-
-// --- THAY ĐỔI 1: Định nghĩa props cho component ---
 interface VocabularyGameProps {
-  onGoBack: () => void; // Hàm để quay lại, không có tham số và không trả về gì
+  onGoBack: () => void;
 }
 
 // Các component phụ vẫn giữ lại trong file này
@@ -73,7 +71,7 @@ const getStreakText = (streak: number) => { return ""; };
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 
-// --- THAY ĐỔI 2: Cập nhật chữ ký của component để nhận props ---
+// Component chính của Game
 export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +95,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const TOTAL_TIME = 60;
   const isInitialLoadComplete = useRef(false);
 
-  // ... (toàn bộ logic của component giữ nguyên) ...
+  // ... (toàn bộ logic hooks giữ nguyên) ...
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   useEffect(() => {
     const fetchUserData = async () => {
@@ -171,9 +169,9 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
 
   return (
-    <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
+    // THAY ĐỔI 1: Thêm h-full để component chiếm toàn bộ chiều cao được cấp
+    <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
-        {/* --- THAY ĐỔI 3: Thay thế alert bằng hàm onGoBack từ props --- */}
         <button
           onClick={onGoBack}
           className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
@@ -188,8 +186,8 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         </div>
       </header>
       
-      <main className="p-8 w-full flex flex-col items-center">
-        {/* ... (toàn bộ phần main giữ nguyên) ... */}
+      {/* THAY ĐỔI 2: Thêm flex-grow để <main> giãn ra, lấp đầy không gian còn lại */}
+      <main className="flex-grow p-8 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
