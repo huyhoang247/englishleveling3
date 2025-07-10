@@ -159,12 +159,9 @@ export default function VocabularyGame() {
   if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
 
   return (
-    // Thay đổi ở đây: `rounded-2xl` thành `rounded-b-2xl`
-    <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans rounded-b-2xl overflow-hidden">
-      {/* Thay đổi ở đây: màu và viền của header */}
-      <header className="w-full h-10 bg-black/80 border-b border-white/10" />
+    <div className="flex flex-col w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
+      <header className="w-full h-10 bg-black/80 rounded-b-2xl" />
       
-      {/* Nội dung game với padding */}
       <main className="p-8 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
@@ -183,6 +180,7 @@ export default function VocabularyGame() {
             </div>
           ) : (
             <>
+              {/* Thay đổi ở đây: Khôi phục lại bo góc trên `rounded-t-xl` */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
