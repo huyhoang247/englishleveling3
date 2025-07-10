@@ -1,5 +1,3 @@
-// --- START OF FILE quiz-app-home.tsx (16).txt ---
-
 import { useState } from 'react';
 // Import component QuizApp từ file quiz.tsx
 import QuizApp from './quiz.tsx';
@@ -89,7 +87,6 @@ export default function QuizAppHome() {
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
     switch(currentView) {
-      // ... (các case 'main', 'quizTypes', 'practices' giữ nguyên)
       case 'main':
         return (
           <div className="flex flex-col items-center gap-6">
@@ -192,10 +189,9 @@ export default function QuizAppHome() {
             </div>
           </div>
         );
-        
+
       case 'fillInBlanks':
-         // --- THAY ĐỔI DUY NHẤT Ở FILE NÀY ---
-         // Truyền hàm `goBack` vào component VocabularyGame qua prop `onGoBack`
+         // Render component VocabularyGame khi chọn điền từ
         return (
           <VocabularyGame onGoBack={goBack} />
         );
@@ -212,7 +208,7 @@ export default function QuizAppHome() {
     }
   };
 
-  // ... (phần return cuối cùng giữ nguyên)
+  // Thay đổi phần return cuối cùng để có background và container đẹp hơn
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
@@ -220,9 +216,10 @@ export default function QuizAppHome() {
 
         {/* Container chính không có padding */}
         <div className="h-[calc(100%-8px)]"> {/* 8px = height của gradient line trên cùng */}
-          {/* Navigation bar và Breadcrumbs - Có padding */}
-          {currentView !== 'main' && (
-            // Thêm padding p-6 vào div chứa breadcrumbs, loại bỏ mb-6
+          
+          {/* --- THAY ĐỔI Ở ĐÂY --- */}
+          {/* Navigation bar và Breadcrumbs - Sẽ không hiển thị khi ở 'main' hoặc 'fillInBlanks' */}
+          {currentView !== 'main' && currentView !== 'fillInBlanks' && (
             <div className="p-6">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
