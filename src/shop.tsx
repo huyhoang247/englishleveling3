@@ -67,7 +67,6 @@ const renderItemStats = (item: any) => {
         {Object.entries(item.stats).map(([stat, value]) => (
           <div key={stat} className="flex justify-between items-center">
             <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span>
-            {/* THAY ĐỔI Ở ĐÂY: Đã xóa `+` trước value */}
             <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') || stat === 'lifeSteal' ? `${(Number(value) * 100).toFixed(0)}%` : value}</span>
           </div>
         ))}
@@ -116,6 +115,9 @@ const Sparkles = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><p
 const ShoppingCart = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.16" /></Icon> );
 const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></Icon> );
 const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon> );
+const Home = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon> );
+const Package = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M16.5 9.4a2.5 2.5 0 0 0-3 0L8 12.9a2.5 2.5 0 0 0 0 4.2l5.5 3.5a2.5 2.5 0 0 0 3 0l5.5-3.5a2.5 2.5 0 0 0 0-4.2z"/><path d="M12 22V12"/><path d="m7 12-4-2.5a2.5 2.5 0 0 1 0-4.2L8.5 2"/></Icon> );
+
 
 // --- Dữ liệu tĩnh cho các loại vật phẩm khác ---
 const sampleItemsNonWeapons = [
@@ -353,10 +355,58 @@ const ShopCountdown = () => {
     );
 };
 
+// --- START: HEADER MỚI CỦA CỬA HÀNG ---
+const ShopHeader = () => {
+    return (
+        <header className="fixed top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
+                    {/* --- Left Section: Logo & Navigation --- */}
+                    <div className="flex items-center gap-8">
+                        <div className="text-xl font-bold text-white tracking-wider">
+                            V<span className="text-cyan-400">GAME</span>
+                        </div>
+                        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+                            <a href="#" className="text-slate-300 hover:text-white transition-colors">Trang Chủ</a>
+                            <a href="#" className="text-slate-300 hover:text-white transition-colors">Kho Đồ</a>
+                            <a href="#" className="text-cyan-400 border-b-2 border-cyan-400 pb-1 -mb-1">Cửa Hàng</a>
+                        </nav>
+                    </div>
+
+                    {/* --- Right Section: Currency & Player Info --- */}
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                            <div className="flex items-center gap-2">
+                                <Coins className="w-5 h-5 text-yellow-400" />
+                                <span className="font-bold text-base text-white">15,280</span>
+                            </div>
+                            <div className="w-px h-6 bg-slate-600"></div>
+                            <div className="flex items-center gap-2">
+                                <Gem className="w-5 h-5 text-cyan-400" />
+                                <span className="font-bold text-base text-white">3,250</span>
+                            </div>
+                            <button className="hidden sm:block ml-2 bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-1.5 rounded-md hover:bg-yellow-400 transition-colors">NẠP</button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <img src="https://placehold.co/40x40/1e293b/94a3b8?text=AV" alt="Player Avatar" className="w-10 h-10 rounded-full border-2 border-slate-600"/>
+                            <div className="hidden lg:block">
+                                <p className="font-semibold text-white text-sm">ShadowBlade</p>
+                                <p className="text-xs text-slate-400">Cấp 72</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
+};
+// --- END: HEADER MỚI CỦA CỬA HÀNG ---
+
+
 // --- Component Chính Của Cửa Hàng ---
 const GameShopUI = ({ onClose }: { onClose: () => void }) => {
     const [activeCategory, setActiveCategory] = useState('Vũ khí');
-    const [selectedItem, setSelectedItem] = useState<any | null>(null);
+    const [selectedItem, setSelectedItem] = 'useState<any | null>(null)';
     const [allItems, setAllItems] = useState<any[]>([]);
 
     useEffect(() => {
@@ -390,28 +440,18 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
 
     return (
         <div className="relative w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
-            <button onClick={onClose} className="absolute top-4 right-4 lg:top-6 lg:right-6 z-[60]" aria-label="Đóng cửa hàng">
+            {/* THAY ĐỔI: Thêm Header mới vào đây */}
+            <ShopHeader />
+
+            <button onClick={onClose} className="fixed top-4 right-4 lg:top-6 lg:right-6 z-[60]" aria-label="Đóng cửa hàng">
                 <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
             </button>
             <div className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
-            <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+            
+            {/* THAY ĐỔI: Thêm pt-24 để tạo không gian cho header cố định */}
+            <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24">
                 <main>
-                    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                        <h1 className="text-3xl font-bold text-white">Cửa Hàng</h1>
-                        <div className="flex items-center gap-4 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                            <div className="flex items-center gap-2">
-                                <Coins className="w-6 h-6 text-yellow-400" />
-                                <span className="font-bold text-lg">15,280</span>
-                            </div>
-                            <div className="w-px h-6 bg-slate-600"></div>
-                            <div className="flex items-center gap-2">
-                                <Gem className="w-6 h-6 text-cyan-400" />
-                                <span className="font-bold text-lg">3,250</span>
-                            </div>
-                            <button className="ml-2 bg-yellow-500 text-slate-900 font-bold text-sm px-3 py-1.5 rounded-md hover:bg-yellow-400 transition-colors">NẠP</button>
-                        </div>
-                    </header>
-
+                    {/* THAY ĐỔI: Đã xóa header cũ ở đây */}
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
 
                     <section>
