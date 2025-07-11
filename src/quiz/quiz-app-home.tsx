@@ -202,7 +202,11 @@ export default function QuizAppHome() {
         );
 
       case 'quiz':
-        return <QuizApp />;
+        // ==========================================================
+        // === ĐÂY LÀ DÒNG CODE ĐÃ ĐƯỢC SỬA ========================
+        // ==========================================================
+        // Truyền hàm `goBack` vào component QuizApp thông qua prop `onGoBack`
+        return <QuizApp onGoBack={goBack} />;
 
       default:
         return <div>Nội dung không tồn tại</div>;
