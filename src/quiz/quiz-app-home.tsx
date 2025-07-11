@@ -1,19 +1,14 @@
 import { useState } from 'react';
-// Import component QuizApp từ file quiz.tsx
 import QuizApp from './quiz.tsx';
-// Import component Breadcrumbs mới tạo
 import Breadcrumbs from '../bread-crumbs.tsx';
-// Import component VocabularyGame từ fill-word-home.tsx
-import VocabularyGame from '../fill-word/fill-word-home.tsx'; // Import VocabularyGame
+import VocabularyGame from '../fill-word/fill-word-home.tsx';
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-  // Thêm state mới để lưu practice đã chọn
   const [selectedPractice, setSelectedPractice] = useState(null);
 
-  // Hàm xử lý khi chọn Quiz
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
@@ -21,37 +16,32 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   };
 
-  // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    // THAY ĐỔI Ở ĐÂY: Sửa tên view để khớp với logic mới
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      // Khi chọn "Điền Từ", chúng ta chuyển sang view 'vocabularyGame'
-      setCurrentView('vocabularyGame'); 
+      // Đổi tên view để dễ nhận biết hơn
+      setCurrentView('vocabularyGame');
     }
     setSelectedPractice(null);
   };
 
-  // Hàm xử lý khi chọn Practice
   const handlePracticeSelect = (practice) => {
     setCurrentView('quiz');
     setSelectedPractice(practice);
   };
 
-  // Hàm quay lại màn hình trước
   const goBack = () => {
-    // THAY ĐỔI Ở ĐÂY: Thêm logic quay lại từ màn hình game
     if (currentView === 'vocabularyGame') {
-      setCurrentView('quizTypes');
-      setSelectedType(null);
+        setCurrentView('quizTypes');
+        setSelectedType(null);
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
       setSelectedType(null);
       setSelectedPractice(null);
-    } else if (currentView === 'practices') {
+    } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
       setCurrentView('quizTypes');
       setSelectedType(null);
       setSelectedPractice(null);
@@ -60,7 +50,6 @@ export default function QuizAppHome() {
     }
   };
 
-  // Hàm quay về màn hình chính
   const goHome = () => {
     setCurrentView('main');
     setSelectedQuiz(null);
@@ -68,15 +57,16 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   };
 
-  // --- THAY ĐỔI LỚN NHẤT: TÁCH RIÊNG LOGIC RENDER ---
-  // Nếu view hiện tại là game điền từ, trả về component game ngay lập tức.
-  // Điều này ngăn nó bị bọc trong các layout gây lỗi của trang quiz.
+  // --- THAY ĐỔI DUY NHẤT Ở ĐÂY ---
+  // Khi ở trong màn hình game, bọc nó trong một lớp phủ có z-index cao.
   if (currentView === 'vocabularyGame') {
-    return <VocabularyGame onGoBack={goBack} />;
+    return (
+      <div className="fixed inset-0 z-[51] bg-white">
+        <VocabularyGame onGoBack={goBack} />
+      </div>
+    );
   }
   
-  // Render nội dung tùy thuộc vào view hiện tại (cho các màn hình quiz khác)
-  // Lưu ý: case 'fillInBlanks' đã được đổi tên và xử lý ở trên nên có thể bỏ đi.
   const renderContent = () => {
     switch(currentView) {
       case 'main':
@@ -119,7 +109,6 @@ export default function QuizAppHome() {
             </div>
 
             <div className="space-y-5 w-full">
-              {/* Lựa chọn 1: Trắc nghiệm */}
               <button
                 onClick={() => handleTypeSelect('tracNghiem')}
                 className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
@@ -142,7 +131,6 @@ export default function QuizAppHome() {
                 </div>
               </button>
 
-              {/* Lựa chọn 2: Điền từ */}
               <button
                 onClick={() => handleTypeSelect('dienTu')}
                 className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
@@ -172,12 +160,13 @@ export default function QuizAppHome() {
         return (
           <div className="flex flex-col items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
+
             <div className="space-y-4 w-full">
               <button
                 onClick={() => handlePracticeSelect(1)}
                 className="w-full bg-white border border-gray-200 hover:border-indigo-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
-                 <div className="flex items-center">
+                <div className="flex items-center">
                   <div className="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-indigo-200">
                     <span>1</span>
                   </div>
@@ -190,6 +179,7 @@ export default function QuizAppHome() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+
               <button
                 onClick={() => handlePracticeSelect(2)}
                 className="w-full bg-white border border-gray-200 hover:border-pink-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
@@ -210,7 +200,7 @@ export default function QuizAppHome() {
             </div>
           </div>
         );
-      
+
       case 'quiz':
         return <QuizApp />;
 
@@ -218,14 +208,11 @@ export default function QuizAppHome() {
         return <div>Nội dung không tồn tại</div>;
     }
   };
-  
-  // Layout chính chỉ dành cho các màn hình quiz (không phải game)
+
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
-        
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
-
         <div className={'h-[calc(100%-8px)]'}>
           {currentView !== 'main' && (
             <div className="p-6">
