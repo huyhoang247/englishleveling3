@@ -57,14 +57,22 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   };
 
-  // --- THAY ĐỔI DUY NHẤT Ở ĐÂY --- (Phần này là từ code gốc của bạn, không liên quan đến padding)
-  // Khi ở trong màn hình game, bọc nó trong một lớp phủ có z-index cao.
+  // Khi ở trong màn hình game điền từ, bọc nó trong một lớp phủ
   if (currentView === 'vocabularyGame') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
         <VocabularyGame onGoBack={goBack} />
       </div>
     );
+  }
+
+  // ==========================================================
+  // === ĐÂY LÀ THAY ĐỔI QUAN TRỌNG ĐỂ SỬA LỖI ==================
+  // ==========================================================
+  // Nếu là màn hình quiz, trả về component QuizApp để nó chiếm toàn bộ màn hình
+  // mà không bị bao bọc bởi layout của QuizAppHome.
+  if (currentView === 'quiz') {
+    return <QuizApp onGoBack={goBack} />;
   }
   
   const renderContent = () => {
@@ -201,12 +209,9 @@ export default function QuizAppHome() {
           </div>
         );
 
-      case 'quiz':
-        // ==========================================================
-        // === ĐÂY LÀ DÒNG CODE ĐÃ ĐƯỢC SỬA ========================
-        // ==========================================================
-        // Truyền hàm `goBack` vào component QuizApp thông qua prop `onGoBack`
-        return <QuizApp onGoBack={goBack} />;
+      // Xóa case 'quiz' vì đã được xử lý ở trên
+      // case 'quiz':
+      //  return <QuizApp onGoBack={goBack} />;
 
       default:
         return <div>Nội dung không tồn tại</div>;
@@ -218,7 +223,6 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
         <div className={'h-[calc(100%-8px)]'}>
-          {/* === THAY ĐỔI DUY NHẤT ĐƯỢC ÁP DỤNG Ở ĐÂY === */}
           {currentView !== 'main' && currentView !== 'quiz' && (
             <div className="p-6">
               <div className="flex justify-start mb-2">
@@ -233,14 +237,6 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           {/* 
-            // ==========================================================
-            // === ĐÂY LÀ DÒNG CODE ĐÃ ĐƯỢC THAY ĐỔI (Cách 1) ==========
-            // ==========================================================
-            // Thay vì dùng 'p-6' cố định, ta dùng logic có điều kiện:
-            // - Nếu là màn hình 'quiz', dùng 'py-6' (chỉ padding trên/dưới)
-            // - Nếu là màn hình khác, dùng 'p-6' (padding tất cả các phía)
-           */}
            <div className={`overflow-y-auto ${currentView === 'quiz' ? 'py-6' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
             {renderContent()}
           </div>
