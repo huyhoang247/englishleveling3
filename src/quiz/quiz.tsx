@@ -1,3 +1,5 @@
+
+
 import { useState, useEffect, memo } from 'react'; // MODIFIED: Added memo
 // Import necessary modules from firebase.js and firestore
 import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
@@ -394,7 +396,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       </header>
       
       {/* --- MAIN CONTENT AREA --- */}
-      <main className="flex-grow overflow-y-auto flex items-center justify-center p-4">
+      {/* MODIFIED: Replaced 'items-center' with 'items-start' and added 'pt-0' to remove top space */}
+      <main className="flex-grow overflow-y-auto flex items-start justify-center p-4 pt-0">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {/* Display message if no matching questions */}
           {filteredQuizData.length === 0 && !showScore ? (
