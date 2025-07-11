@@ -273,7 +273,8 @@ export default function QuizAppHome() {
     <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="w-full h-full bg-white flex flex-col">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex-shrink-0"></div>
-        <div className="flex-grow overflow-y-auto">
+        {/* FIX: Only allow scrolling on sub-views, preventing it on 'main' */}
+        <div className={`flex-grow ${currentView === 'main' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {currentView !== 'main' && (
             <div className="p-6 pb-0">
               <div className="flex justify-start mb-2">
@@ -288,7 +289,8 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>
+           {/* FIX: Only apply bottom padding on sub-views to make space for a potential bottom navbar */}
+           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative pb-32' : ''}`}>
             {renderContent()}
           </div>
         </div>
