@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react'; // MODIFIED: Added memo
 // Import necessary modules from firebase.js and firestore
 import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
@@ -80,6 +80,21 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
   );
 };
 
+// ADDED: Countdown Timer Component (Adapted from fill-word-home.tsx)
+const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => {
+  const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress);
+  const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; };
+  const ringColorClass = getTimeColor();
+  return (
+    <div className="relative flex items-center justify-center w-8 h-8">
+      <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44">
+        <circle className="text-white/20" stroke="currentColor" strokeWidth="3" fill="transparent" r={radius} cx="22" cy="22" />
+        <circle className={`${ringColorClass} transition-all duration-500`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="transparent" r={radius} cx="22" cy="22" style={{ strokeDasharray: circumference, strokeDashoffset }} />
+      </svg>
+      <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span>
+    </div>
+  );
+});
 
 // SVG Icons (Replaced lucide-react icons)
 const CheckIcon = ({ className }) => (
@@ -98,7 +113,7 @@ const XIcon = ({ className }) => (
 const RefreshIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path>
-    <path d="M3 12a9 9 0 0 1 9-9c2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
+    <path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
   </svg>
 );
 
@@ -131,6 +146,11 @@ export default function QuizApp() {
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null); // State to store user information
+  
+  // ADDED: State and constant for countdown timer
+  const TOTAL_TIME = 30; // 30 seconds per question
+  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+
   // State to store shuffled options for the current question
   const [shuffledOptions, setShuffledOptions] = useState([]);
   // State to store the user's vocabulary list
@@ -205,6 +225,41 @@ export default function QuizApp() {
       setShuffledOptions(shuffleArray(filteredQuizData[currentQuestion].options));
     }
   }, [currentQuestion, filteredQuizData]); // Dependency array includes currentQuestion and filteredQuizData
+  
+  // ADDED: Logic to handle when the timer runs out
+  const handleTimeUp = () => {
+    if (answered) return; // Do nothing if already answered
+    
+    setAnswered(true);
+    setSelectedOption(null); // Mark as incorrect because no option was chosen
+    setStreak(0); // Reset streak
+    // The UI will now show the correct answer and the "Next Question" button
+  };
+
+  // ADDED: Effect for the countdown timer
+  useEffect(() => {
+    // Don't run timer if quiz is over, an answer has been given, or there are no questions
+    if (showScore || answered || filteredQuizData.length === 0) {
+      return;
+    }
+
+    // Reset timer for the new question
+    setTimeLeft(TOTAL_TIME);
+
+    const timerId = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timerId);
+          handleTimeUp();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => clearInterval(timerId);
+  }, [currentQuestion, answered, showScore, filteredQuizData.length]);
 
 
   // Function to update coins in Firestore
@@ -293,6 +348,7 @@ export default function QuizApp() {
     setSelectedOption(null);
     setAnswered(false);
     setStreak(0);
+    setTimeLeft(TOTAL_TIME); // MODIFIED: Reset timer
     // Keep coins when retaking the quiz, coins are already saved in Firestore
     // filteredQuizData does not need to be reset as it depends on userVocabulary
   };
@@ -439,12 +495,13 @@ export default function QuizApp() {
                   </div>
                   {/* Coins and Streak on the right */}
                   <div className="flex items-center gap-2">
+                    {/* ADDED: Countdown Timer */}
+                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+
                     {/* Using CoinDisplay component for coins */}
-                    {/* Pass coins and showScore state to CoinDisplay */}
                     <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
 
                     {/* Using StreakDisplay component */}
-                    {/* Pass streak and streakAnimation state to StreakDisplay */}
                     <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
                   </div>
                 </div>
