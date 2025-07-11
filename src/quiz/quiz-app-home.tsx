@@ -12,42 +12,30 @@ export default function QuizAppHome() {
   const [selectedType, setSelectedType] = useState(null);
   // Thêm state mới để lưu practice đã chọn
   const [selectedPractice, setSelectedPractice] = useState(null);
-  // Các state liên quan đến câu hỏi và đáp án có thể không cần thiết ở đây nữa
-  // nếu logic quiz được xử lý hoàn toàn trong QuizApp từ quiz.tsx
-  // const [currentQuestion, setCurrentQuestion] = useState(1);
-  // const [selectedAnswer, setSelectedAnswer] = useState(null);
-  // const [timer, setTimer] = useState(0); // Cần thêm logic để quản lý timer
 
   // Hàm xử lý khi chọn Quiz
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
-    // Reset states liên quan đến quiz nếu có
-    setSelectedType(null); // Reset type khi chọn lại quiz
-    setSelectedPractice(null); // Reset practice khi chọn lại quiz
+    setSelectedType(null); 
+    setSelectedPractice(null);
   };
 
   // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    // Chuyển đến màn hình practices nếu chọn trắc nghiệm
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      // Nếu chọn điền từ, chuyển view sang 'fillInBlanks' để render VocabularyGame
       setCurrentView('fillInBlanks');
     }
-    setSelectedPractice(null); // Reset practice khi chọn loại bài tập
+    setSelectedPractice(null);
   };
 
   // Hàm xử lý khi chọn Practice
   const handlePracticeSelect = (practice) => {
-    // Khi chọn practice, chuyển view sang 'quiz' để render component QuizApp
     setCurrentView('quiz');
-    // Lưu practice đã chọn vào state mới
     setSelectedPractice(practice);
-    // Có thể truyền thêm thông tin về practice đã chọn vào state nếu cần
-    // Ví dụ: setSelectedPractice(practice);
   };
 
   // Hàm quay lại màn hình trước
@@ -55,19 +43,15 @@ export default function QuizAppHome() {
     if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
-      setSelectedType(null); // Reset type khi quay lại main
-      setSelectedPractice(null); // Reset practice khi quay lại main
-    } else if (currentView === 'practices' || currentView === 'fillInBlanks') { // Bao gồm cả fillInBlanks khi quay lại
+      setSelectedType(null);
+      setSelectedPractice(null);
+    } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
       setCurrentView('quizTypes');
-      setSelectedType(null); // Reset type khi quay lại quizTypes
-      setSelectedPractice(null); // Reset practice khi quay lại quizTypes
-    } else if (currentView === 'quiz') { // Nếu đang ở màn hình quiz, quay lại màn hình practices
+      setSelectedType(null);
+      setSelectedPractice(null);
+    } else if (currentView === 'quiz') {
        setCurrentView('practices');
-       // selectedPractice sẽ được giữ lại để hiển thị trong breadcrumbs khi quay lại practices
     }
-    // Reset states liên quan khi quay lại
-    // setCurrentQuestion(1);
-    // setSelectedAnswer(null);
   };
 
   // Hàm quay về màn hình chính
@@ -75,14 +59,8 @@ export default function QuizAppHome() {
     setCurrentView('main');
     setSelectedQuiz(null);
     setSelectedType(null);
-    setSelectedPractice(null); // Reset practice khi về trang chủ
-    // Reset states liên quan khi về trang chủ
-    // setCurrentQuestion(1);
-    // setSelectedAnswer(null);
+    setSelectedPractice(null);
   };
-
-  // Các hàm xử lý trong quiz (handleNextQuestion, handlePrevQuestion, handleSelectAnswer)
-  // sẽ được xử lý bên trong component QuizApp từ quiz.tsx
 
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
@@ -116,57 +94,64 @@ export default function QuizAppHome() {
           </div>
         );
 
-      // --- START: ĐÃ CẬP NHẬT GIAO DIỆN MỚI ---
+      // --- PHẦN GIAO DIỆN ĐƯỢC THIẾT KẾ LẠI ---
       case 'quizTypes':
         return (
-          <div className="flex flex-col items-center">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800">Chọn hình thức luyện tập</h1>
-              <p className="mt-2 text-gray-600">Bạn muốn thử thách bản thân với dạng bài nào?</p>
+          <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900">Hình thức Luyện tập</h2>
+              <p className="mt-2 text-md text-gray-600">Chọn một hình thức để thử thách kiến thức của bạn.</p>
             </div>
 
-            <div className="w-full max-w-lg space-y-5">
-              {/* Lựa chọn Trắc Nghiệm */}
+            <div className="space-y-5 w-full">
+              {/* Lựa chọn 1: Trắc nghiệm */}
               <button
                 onClick={() => handleTypeSelect('tracNghiem')}
-                className="group w-full flex items-center justify-between p-5 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg hover:-translate-y-1"
+                className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
               >
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mr-5">
-                    <span className="text-3xl">🔍</span>
+                  <div className="p-3 bg-white/20 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">Trắc Nghiệm</h3>
-                    <p className="text-sm text-gray-500">Chọn đáp án đúng trong các lựa chọn</p>
+                  <div className="ml-5">
+                    <h3 className="text-xl font-bold">Trắc Nghiệm</h3>
+                    <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
+                  </div>
+                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
                   </div>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </button>
 
-              {/* Lựa chọn Điền Từ */}
+              {/* Lựa chọn 2: Điền từ */}
               <button
                 onClick={() => handleTypeSelect('dienTu')}
-                className="group w-full flex items-center justify-between p-5 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 hover:border-purple-500 hover:shadow-lg hover:-translate-y-1"
+                className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
               >
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mr-5">
-                    <span className="text-3xl">✏️</span>
+                  <div className="p-3 bg-white/20 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
+                    </svg>
                   </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold text-lg text-gray-800 group-hover:text-purple-600 transition-colors">Điền Từ</h3>
-                    <p className="text-sm text-gray-500">Điền từ vựng còn thiếu vào ô trống</p>
+                  <div className="ml-5">
+                    <h3 className="text-xl font-bold">Điền Từ</h3>
+                    <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
+                  </div>
+                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
                   </div>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </button>
             </div>
           </div>
         );
-      // --- END: ĐÃ CẬP NHẬT GIAO DIỆN MỚI ---
 
       case 'practices':
         return (
@@ -175,7 +160,7 @@ export default function QuizAppHome() {
 
             <div className="space-y-4 w-full">
               <button
-                onClick={() => handlePracticeSelect(1)} // Khi nhấn Practice 1
+                onClick={() => handlePracticeSelect(1)}
                 className="w-full bg-white border border-gray-200 hover:border-indigo-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
                 <div className="flex items-center">
@@ -193,7 +178,7 @@ export default function QuizAppHome() {
               </button>
 
               <button
-                onClick={() => handlePracticeSelect(2)} // Khi nhấn Practice 2
+                onClick={() => handlePracticeSelect(2)}
                 className="w-full bg-white border border-gray-200 hover:border-pink-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
                 <div className="flex items-center">
@@ -214,15 +199,12 @@ export default function QuizAppHome() {
         );
 
       case 'fillInBlanks':
-         // Render component VocabularyGame khi chọn điền từ
         return (
           <VocabularyGame onGoBack={goBack} />
         );
 
-      case 'quiz': // Case mới để render component QuizApp
+      case 'quiz':
         return (
-          // Render component QuizApp từ quiz.tsx
-          // Bạn có thể truyền props vào đây nếu QuizApp cần thông tin về quiz/practice
           <QuizApp />
         );
 
@@ -231,19 +213,15 @@ export default function QuizAppHome() {
     }
   };
 
-  // Thay đổi phần return cuối cùng để có background và container đẹp hơn
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         
-        {/* THAY ĐỔI 1: Chỉ hiển thị thanh gradient khi không ở màn hình game */}
         {currentView !== 'fillInBlanks' && (
           <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
         )}
 
-        {/* THAY ĐỔI 2: Điều chỉnh chiều cao của container dựa vào việc thanh gradient có hiển thị hay không */}
         <div className={currentView === 'fillInBlanks' ? 'h-full' : 'h-[calc(100%-8px)]'}>
-          {/* Navigation bar và Breadcrumbs - Sẽ không hiển thị khi ở 'main' hoặc 'fillInBlanks' */}
           {currentView !== 'main' && currentView !== 'fillInBlanks' && (
             <div className="p-6">
               <div className="flex justify-start mb-2">
@@ -258,10 +236,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-
-          {/* Main content - Padding có điều kiện và Z-index */}
-          {/* Thêm class z-[51] khi currentView không phải là 'main' */}
-           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}> {/* Thêm fillInBlanks vào điều kiện không padding */}
+           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}>
             {renderContent()}
           </div>
         </div>
