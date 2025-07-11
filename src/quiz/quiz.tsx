@@ -574,19 +574,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 </div>
 
                 <div className="p-6">
-                  {/* Streak text message */}
-                  {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
-                    <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
-                      <div className="flex items-center justify-center">
-                        <img
-                          src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                          alt="Streak Icon"
-                          className="h-5 w-5 mr-2 text-white" // Adjust size as needed
-                        />
-                        <span className="text-white font-medium">{getStreakText()}</span>
-                      </div>
-                    </div>
-                  )}
+                  {/* ----- BLOCK THÔNG BÁO STREAK ĐÃ BỊ XÓA Ở ĐÂY ----- */}
 
                   <div className="space-y-3 mb-6">
                     {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
