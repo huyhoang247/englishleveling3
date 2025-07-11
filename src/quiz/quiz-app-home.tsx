@@ -33,20 +33,21 @@ export default function QuizAppHome() {
   };
 
   const goBack = () => {
-    if (currentView === 'vocabularyGame') {
-        setCurrentView('quizTypes');
-        setSelectedType(null);
+    if (currentView === 'vocabularyGame' || currentView === 'quiz') { // Gộp điều kiện cho cả 2 game
+        setCurrentView('practices'); // Quay lại màn hình chọn practice
+        if (selectedType === 'dienTu') { // Nếu là game điền từ, quay lại màn hình chọn loại quiz
+            setCurrentView('quizTypes');
+            setSelectedType(null);
+        }
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
       setSelectedType(null);
       setSelectedPractice(null);
-    } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
+    } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
       setSelectedType(null);
       setSelectedPractice(null);
-    } else if (currentView === 'quiz') {
-       setCurrentView('practices');
     }
   };
 
@@ -67,12 +68,16 @@ export default function QuizAppHome() {
   }
 
   // ==========================================================
-  // === ĐÂY LÀ THAY ĐỔI QUAN TRỌNG ĐỂ SỬA LỖI ==================
+  // === SỬA LỖI TẠI ĐÂY =======================================
   // ==========================================================
-  // Nếu là màn hình quiz, trả về component QuizApp để nó chiếm toàn bộ màn hình
-  // mà không bị bao bọc bởi layout của QuizAppHome.
+  // Nếu là màn hình quiz, cũng bọc nó trong một lớp phủ toàn màn hình
+  // để ẩn thanh navbar, tương tự như VocabularyGame.
   if (currentView === 'quiz') {
-    return <QuizApp onGoBack={goBack} />;
+    return (
+      <div className="fixed inset-0 z-[51] bg-white">
+        <QuizApp onGoBack={goBack} />
+      </div>
+    );
   }
   
   const renderContent = () => {
@@ -209,10 +214,6 @@ export default function QuizAppHome() {
           </div>
         );
 
-      // Xóa case 'quiz' vì đã được xử lý ở trên
-      // case 'quiz':
-      //  return <QuizApp onGoBack={goBack} />;
-
       default:
         return <div>Nội dung không tồn tại</div>;
     }
@@ -223,7 +224,7 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
         <div className={'h-[calc(100%-8px)]'}>
-          {currentView !== 'main' && currentView !== 'quiz' && (
+          {currentView !== 'main' && (
             <div className="p-6">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
@@ -237,7 +238,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`overflow-y-auto ${currentView === 'quiz' ? 'py-6' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
+           <div className={`overflow-y-auto p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
             {renderContent()}
           </div>
         </div>
