@@ -270,12 +270,12 @@ export default function QuizAppHome() {
   }
 
   return (
-    <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
-      <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
-        <div className={'h-[calc(100%-8px)]'}>
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex-shrink-0"></div>
+        <div className="flex-grow overflow-y-auto">
           {currentView !== 'main' && (
-            <div className="p-6">
+            <div className="p-6 pb-0">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
                     currentView={currentView}
@@ -288,7 +288,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-80`}>
+           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>
             {renderContent()}
           </div>
         </div>
