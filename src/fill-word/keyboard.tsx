@@ -93,7 +93,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     // Đã loại bỏ class 'bg-gray-100' khỏi div container chính
     <div className="w-full max-w-md mx-auto p-2 rounded-xl shadow-inner">
       {/* Bàn phím layout */}
-      <div>
+      <div className="mb-2">
         {/* Render các hàng phím chữ cái */}
         {renderAlphaKeys()}
       </div>
