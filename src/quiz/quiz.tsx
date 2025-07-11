@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import quizData from './quiz-data.ts'; // Import quizData from the new file
-import Confetti from '../fill-word/chuc-mung.tsx'; // Import the congratulations effect
+import Confetti from '../fill-word/chuc-mung.tsx'; // ADDED: Import the congratulations effect
 // Import GameProgressBar component (assuming its structure is suitable for adaptation)
 // We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
 // import GameProgressBar from './progress-bar.tsx';
@@ -154,7 +154,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null); // State to store user information
-  const [showConfetti, setShowConfetti] = useState(false); // State for congratulations effect
+  const [showConfetti, setShowConfetti] = useState(false); // ADDED: State for congratulations effect
   
   // ADDED: State and constant for countdown timer
   const TOTAL_TIME = 30; // 30 seconds per question
@@ -296,8 +296,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     const isCorrect = selectedAnswer === filteredQuizData[currentQuestion].correctAnswer;
 
     if (isCorrect) {
-      // MODIFIED: Trigger confetti effect on correct answer. No timeout needed here.
+      // ADDED: Trigger confetti effect on correct answer
       setShowConfetti(true);
+      // Hide the confetti after a few seconds
+      setTimeout(() => setShowConfetti(false), 4000);
 
       setScore(score + 1);
 
@@ -382,8 +384,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* MODIFIED: Conditionally render the confetti effect and pass the onComplete handler */}
-      {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+      {/* ADDED: Conditionally render the confetti effect */}
+      {showConfetti && <Confetti />}
       
       {/* --- NEW HEADER --- */}
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
@@ -632,6 +634,23 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 </div>
 
                 {/* Removed the old progress bar at the bottom */}
+                {/*
+                <div className="bg-gray-50 px-8 py-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
+                    </div>
+
+                    <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                      {/* Use filteredQuizData.length for progress calculation *
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                        style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                */}
               </>
             )
           )}
