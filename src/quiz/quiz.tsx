@@ -97,31 +97,38 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
 });
 
 // SVG Icons (Replaced lucide-react icons)
-const CheckIcon = ({ className }) => (
+const CheckIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 6L9 17L4 12"></path>
   </svg>
 );
 
-const XIcon = ({ className }) => (
+const XIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"></line>
     <line x1="6" y1="6" x2="18" y2="18"></line>
   </svg>
 );
 
-const RefreshIcon = ({ className }) => (
+const RefreshIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path>
     <path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path>
   </svg>
 );
 
-const AwardIcon = ({ className }) => (
+const AwardIcon = ({ className }: { className: string }) => (
  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinecap="round">
     <circle cx="12" cy="8" r="7"></circle>
     <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
 </svg>
+);
+
+// ADDED: BackIcon component
+const BackIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+  </svg>
 );
 
 // Function to shuffle an array (Fisher-Yates (Knuth) Shuffle)
@@ -135,7 +142,7 @@ const shuffleArray = (array) => {
 };
 
 
-export default function QuizApp() {
+export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -369,286 +376,298 @@ export default function QuizApp() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 pb-24">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 mb-4">
-        {/* Display message if no matching questions */}
-        {filteredQuizData.length === 0 && !showScore ? (
-           <div className="p-10 text-center">
-             <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy câu hỏi nào phù hợp</h2>
-             <p className="text-gray-600">Dựa trên danh sách từ vựng của bạn, hiện không có câu hỏi nào trong bộ dữ liệu khớp. Hãy thêm từ vựng mới hoặc thử lại sau.</p>
-           </div>
-        ) : (
-          showScore ? (
+    <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* --- NEW HEADER --- */}
+      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
+        <button
+          onClick={onGoBack}
+          className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
+          aria-label="Quay lại"
+        >
+          <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
+        </button>
+
+        <div className="flex items-center gap-3">
+          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+          <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+        </div>
+      </header>
+      
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="flex-grow overflow-y-auto flex items-center justify-center p-4 pb-24">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
+          {/* Display message if no matching questions */}
+          {filteredQuizData.length === 0 && !showScore ? (
             <div className="p-10 text-center">
-              <div className="mb-8">
-                <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
-                  {/* Using AwardIcon SVG */}
-                  <AwardIcon className="w-16 h-16 text-indigo-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Quiz</h2>
-                <p className="text-gray-500">Bạn đã hoàn thành bài kiểm tra!</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-xl p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
-                  {/* Use filteredQuizData.length for total questions */}
-                  <span className="text-2xl font-bold text-indigo-600">{score}/{filteredQuizData.length}</span>
-                </div>
-
-                <div className="mb-3">
-                  <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                    {/* Use filteredQuizData.length for percentage calculation */}
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                      style={{ width: `${(score / filteredQuizData.length) * 100}%` }}
-                    ></div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy câu hỏi nào phù hợp</h2>
+              <p className="text-gray-600">Dựa trên danh sách từ vựng của bạn, hiện không có câu hỏi nào trong bộ dữ liệu khớp. Hãy thêm từ vựng mới hoặc thử lại sau.</p>
+            </div>
+          ) : (
+            showScore ? (
+              <div className="p-10 text-center">
+                <div className="mb-8">
+                  <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                    {/* Using AwardIcon SVG */}
+                    <AwardIcon className="w-16 h-16 text-indigo-600" />
                   </div>
-                  {/* Use filteredQuizData.length for percentage calculation */}
-                  <p className="text-right mt-1 text-sm text-gray-600 font-medium">
-                    {Math.round((score / filteredQuizData.length) * 100)}%
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Quiz</h2>
+                  <p className="text-gray-500">Bạn đã hoàn thành bài kiểm tra!</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
+                    {/* Use filteredQuizData.length for total questions */}
+                    <span className="text-2xl font-bold text-indigo-600">{score}/{filteredQuizData.length}</span>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                      {/* Use filteredQuizData.length for percentage calculation */}
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                        style={{ width: `${(score / filteredQuizData.length) * 100}%` }}
+                      ></div>
+                    </div>
+                    {/* Use filteredQuizData.length for percentage calculation */}
+                    <p className="text-right mt-1 text-sm text-gray-600 font-medium">
+                      {Math.round((score / filteredQuizData.length) * 100)}%
+                    </p>
+                  </div>
+
+                  {/* Using CoinDisplay component for coins in results */}
+                  <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center">
+                      {/* Display streak icon in results - Using img tag directly */}
+                      <img
+                        src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                        alt="Streak Icon"
+                        className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
+                      />
+                      <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Corrected text */}
+                    </div>
+                    {/* Pass coins to CoinDisplay */}
+                    {/* Display total user coins from state */}
+                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Always display coins here */}
+                  </div>
+
+                  {/* Using StreakDisplay component for streak in results */}
+                  <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        {/* Display streak icon in results - Using img tag directly */}
+                        <img
+                          src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                          alt="Streak Icon"
+                          className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
+                        />
+                        <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
+                      </div>
+                      {/* Pass streak to StreakDisplay, no animation in results */}
+                      <StreakDisplay displayedStreak={streak} isAnimating={false} />
+                    </div>
+                  </div>
+
+                  {/* Display number of matching questions */}
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-700">Câu hỏi khớp với từ vựng của bạn:</span>
+                      <span className="font-bold text-blue-600">{matchingQuestionsCount}</span>
+                    </div>
+                  </div>
+
+
+                  <p className="text-gray-600 text-sm italic mt-4">
+                    {score === filteredQuizData.length ?
+                      "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
+                      score > filteredQuizData.length / 2 ?
+                        "Kết quả tốt! Bạn có thể cải thiện thêm." :
+                        "Hãy thử lại để cải thiện điểm số của bạn."
+                    }
                   </p>
                 </div>
 
-                {/* Using CoinDisplay component for coins in results */}
-                <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-center">
-                     {/* Display streak icon in results - Using img tag directly */}
-                     <img
-                       src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                       alt="Streak Icon"
-                       className="h-5 w-5 text-orange-500 mr-1" // Adjust size as needed
-                     />
-                    <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span> {/* Corrected text */}
-                  </div>
-                   {/* Pass coins to CoinDisplay */}
-                  {/* Display total user coins from state */}
-                  <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} /> {/* Always display coins here */}
-                </div>
-
-                {/* Using StreakDisplay component for streak in results */}
-                <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      {/* Display streak icon in results - Using img tag directly */}
-                       <img
-                        src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                        alt="Streak Icon"
-                        className="h-6 w-6 text-orange-500 mr-2" // Adjust size as needed
-                      />
-                      <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
-                    </div>
-                     {/* Pass streak to StreakDisplay, no animation in results */}
-                    <StreakDisplay displayedStreak={streak} isAnimating={false} />
-                  </div>
-                </div>
-
-                {/* Display number of matching questions */}
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-700">Câu hỏi khớp với từ vựng của bạn:</span>
-                    <span className="font-bold text-blue-600">{matchingQuestionsCount}</span>
-                  </div>
-                </div>
-
-
-                <p className="text-gray-600 text-sm italic mt-4">
-                  {score === filteredQuizData.length ?
-                    "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
-                    score > filteredQuizData.length / 2 ?
-                      "Kết quả tốt! Bạn có thể cải thiện thêm." :
-                      "Hãy thử lại để cải thiện điểm số của bạn."
-                  }
-                </p>
+                <button
+                  onClick={resetQuiz}
+                  className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  {/* Using RefreshIcon SVG */}
+                  <RefreshIcon className="mr-2 h-5 w-5" />
+                  Làm lại quiz
+                </button>
               </div>
+            ) : (
+              <>
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+                  {/* Header row with question counter on the left and coins/streak on the right */}
+                  <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
+                    {/* Question counter on the left - Styled like progress-bar.tsx counter */}
+                    <div className="relative">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
+                        <div className="flex items-center">
+                          {/* Current question number */}
+                          <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
+                            {currentQuestion + 1}
+                          </span>
 
-              <button
-                onClick={resetQuiz}
-                className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                {/* Using RefreshIcon SVG */}
-                <RefreshIcon className="mr-2 h-5 w-5" />
-                Làm lại quiz
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-                {/* Header row with question counter on the left and coins/streak on the right */}
-                <div className="flex justify-between items-center mb-4"> {/* Reduced bottom margin */}
-                  {/* Question counter on the left - Styled like progress-bar.tsx counter */}
-                  <div className="relative">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"> {/* Adjusted background and border */}
-                      <div className="flex items-center">
-                        {/* Current question number */}
-                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200"> {/* Adjusted gradient for white text */}
-                          {currentQuestion + 1}
-                        </span>
+                          {/* Separator */}
+                          <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
 
-                        {/* Separator */}
-                        <span className="mx-0.5 text-white/70 text-xs">/</span> {/* Adjusted color */}
-
-                        {/* Total questions */}
-                        <span className="text-xs text-white/50">{filteredQuizData.length}</span> {/* Adjusted color */}
+                          {/* Total questions */}
+                          <span className="text-xs text-white/50">{filteredQuizData.length}</span> {/* Adjusted color */}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {/* Coins and Streak on the right */}
-                  <div className="flex items-center gap-2">
-                    {/* ADDED: Countdown Timer */}
-                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
-
-                    {/* Using CoinDisplay component for coins */}
-                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={showScore} />
-
-                    {/* Using StreakDisplay component */}
-                    <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
-                  </div>
-                </div>
-
-                {/* Progress bar under the header row */}
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
-                    {/* Progress fill with smooth animation */}
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: `${quizProgress}%` }}
-                    >
-                      {/* Light reflex effect */}
-                      <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-                    </div>
-                </div>
-
-                 {/* Removed the display of matching questions count */}
-                 {/*
-                 <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
-                   {matchingQuestionsCount} câu hỏi khớp
-                 </div>
-                 */}
-                {/* START: Updated question display block */}
-                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
-                  {/* Hiệu ứng đồ họa - ánh sáng góc */}
-                  <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
-
-                  {/* Hiệu ứng đồ họa - đường trang trí */}
-                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
-                  <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
-
-                  {/* Icon câu hỏi */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-indigo-500/30 p-1.5 rounded-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
-                    </div>
-                    <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
-                  </div>
-
-                  {/* Nội dung câu hỏi */}
-                  <h2 className="text-xl font-bold text-white leading-tight">
-                    {filteredQuizData[currentQuestion]?.question}
-                  </h2>
-                </div>
-                {/* END: Updated question display block */}
-
-
-              </div>
-
-              <div className="p-6">
-                {/* Streak text message */}
-                {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
-                  <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
-                    <div className="flex items-center justify-center">
-                       <img
-                         src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
-                         alt="Streak Icon"
-                         className="h-5 w-5 mr-2 text-white" // Adjust size as needed
-                       />
-                      <span className="text-white font-medium">{getStreakText()}</span>
+                    {/* MODIFIED: Right side now only contains the Countdown Timer */}
+                    <div className="flex items-center gap-2">
+                      <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                     </div>
                   </div>
-                )}
 
-                <div className="space-y-3 mb-6">
-                  {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
-                  {/* Use filteredQuizData to get the correct answer */}
-                  {shuffledOptions.map((option, index) => {
-                    const isCorrect = option === filteredQuizData[currentQuestion]?.correctAnswer;
-                    const isSelected = option === selectedOption;
-
-                    let bgColor = "bg-white";
-                    let borderColor = "border-gray-200";
-                    let textColor = "text-gray-700";
-                    let labelBg = "bg-gray-100";
-
-                    if (answered) {
-                      if (isCorrect) {
-                        bgColor = "bg-green-50";
-                        borderColor = "border-green-500";
-                        textColor = "text-green-800";
-                        labelBg = "bg-green-500 text-white";
-                      } else if (isSelected) {
-                        bgColor = "bg-red-50";
-                        borderColor = "border-red-500";
-                        textColor = "text-red-800";
-                        labelBg = "bg-red-500 text-white";
-                      }
-                    }
-                    return (
-                      <button
-                        key={option} // Use option as key since it's unique within options
-                        onClick={() => !answered && handleAnswer(option)}
-                        disabled={answered || filteredQuizData.length === 0} // Disable button if no questions
-                        className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered && filteredQuizData.length > 0 ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                  {/* Progress bar under the header row */}
+                  <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"> {/* Added margin bottom */}
+                      {/* Progress fill with smooth animation */}
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+                        style={{ width: `${quizProgress}%` }}
                       >
-                        <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
-                          {/* Keep original index for labels A, B, C, D */}
-                          {optionLabels[index]}
-                        </div>
-                        <span className="flex-grow">{option}</span>
-                        {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
-                        {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />} {/* Using XIcon SVG */}
+                        {/* Light reflex effect */}
+                        <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                      </div>
+                  </div>
+
+                  {/* Removed the display of matching questions count */}
+                  {/*
+                  <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
+                    {matchingQuestionsCount} câu hỏi khớp
+                  </div>
+                  */}
+                  {/* START: Updated question display block */}
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                    {/* Hiệu ứng đồ họa - ánh sáng góc */}
+                    <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+
+                    {/* Hiệu ứng đồ họa - đường trang trí */}
+                    <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
+                    <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
+
+                    {/* Icon câu hỏi */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                      </div>
+                      <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
+                    </div>
+
+                    {/* Nội dung câu hỏi */}
+                    <h2 className="text-xl font-bold text-white leading-tight">
+                      {filteredQuizData[currentQuestion]?.question}
+                    </h2>
+                  </div>
+                  {/* END: Updated question display block */}
+
+
+                </div>
+
+                <div className="p-6">
+                  {/* Streak text message */}
+                  {streak >= 1 && getStreakText() !== "" && ( // Show streak text for streak 1 and above, and if getStreakText is not empty
+                    <div className={`mb-4 p-2 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-center transition-all duration-300 ${streakAnimation ? 'scale-110' : 'scale-100'}`}>
+                      <div className="flex items-center justify-center">
+                        <img
+                          src={getStreakIconUrl(streak)} // Use getStreakIconUrl here
+                          alt="Streak Icon"
+                          className="h-5 w-5 mr-2 text-white" // Adjust size as needed
+                        />
+                        <span className="text-white font-medium">{getStreakText()}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 mb-6">
+                    {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
+                    {/* Use filteredQuizData to get the correct answer */}
+                    {shuffledOptions.map((option, index) => {
+                      const isCorrect = option === filteredQuizData[currentQuestion]?.correctAnswer;
+                      const isSelected = option === selectedOption;
+
+                      let bgColor = "bg-white";
+                      let borderColor = "border-gray-200";
+                      let textColor = "text-gray-700";
+                      let labelBg = "bg-gray-100";
+
+                      if (answered) {
+                        if (isCorrect) {
+                          bgColor = "bg-green-50";
+                          borderColor = "border-green-500";
+                          textColor = "text-green-800";
+                          labelBg = "bg-green-500 text-white";
+                        } else if (isSelected) {
+                          bgColor = "bg-red-50";
+                          borderColor = "border-red-500";
+                          textColor = "text-red-800";
+                          labelBg = "bg-red-500 text-white";
+                        }
+                      }
+                      return (
+                        <button
+                          key={option} // Use option as key since it's unique within options
+                          onClick={() => !answered && handleAnswer(option)}
+                          disabled={answered || filteredQuizData.length === 0} // Disable button if no questions
+                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered && filteredQuizData.length > 0 ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                        >
+                          <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
+                            {/* Keep original index for labels A, B, C, D */}
+                            {optionLabels[index]}
+                          </div>
+                          <span className="flex-grow">{option}</span>
+                          {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />} {/* Using CheckIcon SVG */}
+                          {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />} {/* Using XIcon SVG */}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
+                    <div className="mt-8 flex justify-end">
+                      <button
+                        onClick={handleNextQuestion}
+                        className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
+                      >
+                        {/* Use filteredQuizData.length to check */}
+                        {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
                       </button>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
 
-                {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      onClick={handleNextQuestion}
-                      className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
-                    >
-                      {/* Use filteredQuizData.length to check */}
-                      {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
-                    </button>
-                  </div>
-                )}
-              </div>
+                {/* Removed the old progress bar at the bottom */}
+                {/*
+                <div className="bg-gray-50 px-8 py-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
+                    </div>
 
-              {/* Removed the old progress bar at the bottom */}
-              {/*
-              <div className="bg-gray-50 px-8 py-4 border-t">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
-                  </div>
-
-                  <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
-                     {/* Use filteredQuizData.length for progress calculation *
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                      style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
-                    ></div>
+                    <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                      {/* Use filteredQuizData.length for progress calculation *
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                        style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              */}
-            </>
-          )
-        )}
-      </div>
+                */}
+              </>
+            )
+          )}
+        </div>
+      </main>
     </div>
   );
 }
