@@ -27,7 +27,6 @@ export default function QuizAppHome() {
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      // Sửa lại để trỏ đúng view cho game điền từ
       setCurrentView('fillInBlanks');
     }
     setSelectedPractice(null);
@@ -95,42 +94,60 @@ export default function QuizAppHome() {
           </div>
         );
 
-      // --- PHẦN GIAO DIỆN HÌNH THỨC LUYỆN TẬP ĐƯỢC NÂNG CẤP ---
+      // --- PHẦN GIAO DIỆN ĐƯỢC THIẾT KẾ LẠI ---
       case 'quizTypes':
         return (
-          <div className="flex flex-col items-center w-full max-w-2xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-gray-900">Chọn Hình Thức Luyện Tập</h2>
-              <p className="mt-2 text-md text-gray-600">Thử thách kiến thức của bạn theo cách bạn muốn.</p>
+          <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-900">Hình thức Luyện tập</h2>
+              <p className="mt-2 text-md text-gray-600">Chọn một hình thức để thử thách kiến thức của bạn.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full">
+            <div className="space-y-5 w-full">
               {/* Lựa chọn 1: Trắc nghiệm */}
               <button
                 onClick={() => handleTypeSelect('tracNghiem')}
-                className="group flex flex-col items-center text-center p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl border-2 border-transparent hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
+                className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="mb-5 bg-blue-100 p-4 rounded-full transition-all duration-300 group-hover:bg-blue-500 group-hover:scale-110">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-blue-500 transition-colors duration-300 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="flex items-center">
+                  <div className="p-3 bg-white/20 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-xl font-bold">Trắc Nghiệm</h3>
+                    <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
+                  </div>
+                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Trắc Nghiệm</h3>
-                <p className="text-gray-500 text-sm px-2">Chọn đáp án đúng từ các lựa chọn có sẵn.</p>
               </button>
 
               {/* Lựa chọn 2: Điền từ */}
               <button
                 onClick={() => handleTypeSelect('dienTu')}
-                className="group flex flex-col items-center text-center p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl border-2 border-transparent hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
+                className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="mb-5 bg-purple-100 p-4 rounded-full transition-all duration-300 group-hover:bg-purple-500 group-hover:scale-110">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-purple-500 transition-colors duration-300 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
-                  </svg>
+                <div className="flex items-center">
+                  <div className="p-3 bg-white/20 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
+                    </svg>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-xl font-bold">Điền Từ</h3>
+                    <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
+                  </div>
+                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Điền Từ</h3>
-                <p className="text-gray-500 text-sm px-2">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
               </button>
             </div>
           </div>
