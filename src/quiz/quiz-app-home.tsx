@@ -116,34 +116,57 @@ export default function QuizAppHome() {
           </div>
         );
 
+      // --- START: ĐÃ CẬP NHẬT GIAO DIỆN MỚI ---
       case 'quizTypes':
         return (
-          <div className="flex flex-col items-center gap-4">
-            <div className="text-center mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">Chọn loại bài tập</h1>
-              <div className="w-16 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
+          <div className="flex flex-col items-center">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-800">Chọn hình thức luyện tập</h1>
+              <p className="mt-2 text-gray-600">Bạn muốn thử thách bản thân với dạng bài nào?</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="w-full max-w-lg space-y-5">
+              {/* Lựa chọn Trắc Nghiệm */}
               <button
                 onClick={() => handleTypeSelect('tracNghiem')}
-                className="bg-white border-2 border-green-400 hover:bg-green-50 text-green-600 py-5 px-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md flex flex-col items-center"
+                className="group w-full flex items-center justify-between p-5 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 hover:border-blue-500 hover:shadow-lg hover:-translate-y-1"
               >
-                <span className="text-3xl mb-2">🔍</span>
-                <span className="font-medium">Trắc Nghiệm</span>
-                <span className="text-xs text-gray-500 mt-1">Chọn đáp án đúng</span>
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mr-5">
+                    <span className="text-3xl">🔍</span>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">Trắc Nghiệm</h3>
+                    <p className="text-sm text-gray-500">Chọn đáp án đúng trong các lựa chọn</p>
+                  </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
+
+              {/* Lựa chọn Điền Từ */}
               <button
                 onClick={() => handleTypeSelect('dienTu')}
-                className="bg-white border-2 border-yellow-400 hover:bg-yellow-50 text-yellow-600 py-5 px-4 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md flex flex-col items-center"
+                className="group w-full flex items-center justify-between p-5 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 hover:border-purple-500 hover:shadow-lg hover:-translate-y-1"
               >
-                <span className="text-3xl mb-2">✏️</span>
-                <span className="font-medium">Điền Từ</span>
-                <span className="text-xs text-gray-500 mt-1">Điền từ còn thiếu</span>
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mr-5">
+                    <span className="text-3xl">✏️</span>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-lg text-gray-800 group-hover:text-purple-600 transition-colors">Điền Từ</h3>
+                    <p className="text-sm text-gray-500">Điền từ vựng còn thiếu vào ô trống</p>
+                  </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
         );
+      // --- END: ĐÃ CẬP NHẬT GIAO DIỆN MỚI ---
 
       case 'practices':
         return (
