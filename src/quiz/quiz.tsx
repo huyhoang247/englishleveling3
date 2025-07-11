@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, memo } from 'react'; // MODIFIED: Added memo
 // Import necessary modules from firebase.js and firestore
 import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
@@ -7,6 +5,7 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 import CoinDisplay from '../coin-display.tsx'; // Import the CoinDisplay component
 import quizData from './quiz-data.ts'; // Import quizData from the new file
+import Confetti from '../fill-word/chuc-mung.tsx'; // ADDED: Import the congratulations effect
 // Import GameProgressBar component (assuming its structure is suitable for adaptation)
 // We will adapt the visual style, not use the component directly as per the user's request to keep progress-bar.tsx unchanged.
 // import GameProgressBar from './progress-bar.tsx';
@@ -155,6 +154,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null); // State to store user information
+  const [showConfetti, setShowConfetti] = useState(false); // ADDED: State for congratulations effect
   
   // ADDED: State and constant for countdown timer
   const TOTAL_TIME = 30; // 30 seconds per question
@@ -296,6 +296,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     const isCorrect = selectedAnswer === filteredQuizData[currentQuestion].correctAnswer;
 
     if (isCorrect) {
+      // ADDED: Trigger confetti effect on correct answer
+      setShowConfetti(true);
+      // Hide the confetti after a few seconds
+      setTimeout(() => setShowConfetti(false), 4000);
+
       setScore(score + 1);
 
       // Increase streak and award coins for correct answers
@@ -379,6 +384,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* ADDED: Conditionally render the confetti effect */}
+      {showConfetti && <Confetti />}
+      
       {/* --- NEW HEADER --- */}
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button
