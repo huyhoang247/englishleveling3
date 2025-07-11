@@ -221,7 +221,6 @@ export default function QuizAppHome() {
   // --- START: MODIFIED CODE ---
   // If the view is for selecting quiz types or practices, wrap it in a full-screen container to hide the bottom navbar.
   if (currentView === 'quizTypes' || currentView === 'practices') {
-    const isCentered = currentView === 'quizTypes'; // Center content only for quizTypes view
     return (
       <div className="fixed inset-0 z-[51] bg-white">
         <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
@@ -240,8 +239,8 @@ export default function QuizAppHome() {
                    />
                 </div>
               </div>
-              {/* Conditionally apply centering for quizTypes, but not for practices */}
-              <div className={`overflow-y-auto p-6 flex-grow ${isCentered ? 'flex items-center' : ''}`}>
+              {/* Removed vertical centering to align content to the top */}
+              <div className="overflow-y-auto p-6">
                 {renderContent()}
               </div>
             </div>
