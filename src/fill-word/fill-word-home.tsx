@@ -170,7 +170,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      {/* --- SỬA Ở ĐÂY: Thêm 'flex-shrink-0' để ngăn header co lại, giúp layout ổn định và animation mượt hơn --- */}
+      {/* --- SỬA Ở ĐÂY: Giữ 'flex-shrink-0' để ngăn header co lại, đảm bảo layout ổn định --- */}
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button
           onClick={onGoBack}
@@ -187,10 +187,10 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       </header>
       
       {/* 
-        Sử dụng overflow-y-auto cho main để nội dung tự cuộn bên trong thay vì đẩy toàn bộ trang,
-        giúp header luôn cố định và tăng hiệu năng.
+        --- SỬA Ở ĐÂY: Xóa 'overflow-y-auto' và giảm padding-bottom từ 'pb-24' xuống 'pb-8'.
+        Điều này làm cho nội dung vừa với màn hình mà không cần thanh cuộn.
       */}
-      <main className="flex-grow px-8 pt-8 pb-24 w-full flex flex-col items-center overflow-y-auto">
+      <main className="flex-grow px-8 pt-8 pb-8 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
