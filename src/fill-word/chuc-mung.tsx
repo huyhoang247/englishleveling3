@@ -73,8 +73,7 @@ class Particle {
 }
 
 // --- COMPONENT CONFETTI SỬ DỤNG CANVAS ---
-// MODIFIED: Added onComplete prop
-const Confetti: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+const Confetti: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sử dụng ref để lưu trữ mảng hạt và ID của animation frame
   // Điều này ngăn việc re-render không cần thiết và giữ trạng thái animation
@@ -110,13 +109,6 @@ const Confetti: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
       // Xóa toàn bộ canvas trước khi vẽ khung hình mới
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // MODIFIED: Check if there are any particles left. If not, call onComplete.
-      if (particlesRef.current.length === 0) {
-        cancelAnimationFrame(animationFrameIdRef.current);
-        onComplete();
-        return; // Stop the animation loop
-      }
-
       // Lặp qua từng hạt để cập nhật và vẽ
       particlesRef.current.forEach((particle, index) => {
         particle.update();
@@ -147,7 +139,7 @@ const Confetti: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
       // Gỡ bỏ trình lắng nghe sự kiện
       window.removeEventListener('resize', setCanvasSize);
     };
-  }, [createParticles, onComplete]); // MODIFIED: Added onComplete to dependency array
+  }, [createParticles]); // Dependency array đảm bảo effect chỉ chạy lại nếu createParticles thay đổi
 
   return (
     // Render một canvas duy nhất, cố định trên màn hình
