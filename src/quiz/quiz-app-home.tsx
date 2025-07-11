@@ -17,7 +17,7 @@ export default function QuizAppHome() {
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
-    setSelectedType(null);
+    setSelectedType(null); 
     setSelectedPractice(null);
   };
 
@@ -27,7 +27,6 @@ export default function QuizAppHome() {
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      // Sửa lại để chuyển sang view của game điền từ
       setCurrentView('fillInBlanks');
     }
     setSelectedPractice(null);
@@ -51,7 +50,7 @@ export default function QuizAppHome() {
       setSelectedType(null);
       setSelectedPractice(null);
     } else if (currentView === 'quiz') {
-      setCurrentView('practices');
+       setCurrentView('practices');
     }
   };
 
@@ -65,7 +64,7 @@ export default function QuizAppHome() {
 
   // Render nội dung tùy thuộc vào view hiện tại
   const renderContent = () => {
-    switch (currentView) {
+    switch(currentView) {
       case 'main':
         return (
           <div className="flex flex-col items-center gap-6">
@@ -98,17 +97,14 @@ export default function QuizAppHome() {
       // --- PHẦN GIAO DIỆN ĐƯỢC THIẾT KẾ LẠI ---
       case 'quizTypes':
         return (
-          <div className="flex flex-col items-center w-full max-w-md mx-auto">
-            {/* --- TIÊU ĐỀ ĐÃ ĐƯỢC NÂNG CẤP --- */}
-            <div className="text-center mb-8">
+          <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
+            <div className="text-center">
+              {/* --- THAY ĐỔI TIÊU ĐỀ TẠI ĐÂY --- */}
               <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">
-                Hình thức Luyện tập
+                Quiz {selectedQuiz}
               </h2>
-              <p className="mt-3 text-lg text-gray-500">
-                Chọn một hình thức để thử thách kiến thức của bạn.
-              </p>
+              <p className="mt-2 text-md text-gray-500">Chọn hình thức luyện tập bạn muốn.</p>
             </div>
-            {/* --- KẾT THÚC PHẦN NÂNG CẤP --- */}
 
             <div className="space-y-5 w-full">
               {/* Lựa chọn 1: Trắc nghiệm */}
@@ -127,9 +123,9 @@ export default function QuizAppHome() {
                     <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
                   </div>
                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
                   </div>
                 </div>
               </button>
@@ -149,10 +145,10 @@ export default function QuizAppHome() {
                     <h3 className="text-xl font-bold">Điền Từ</h3>
                     <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
                   </div>
-                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
+                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
                   </div>
                 </div>
               </button>
