@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo } from 'react'; // MODIFIED: Added memo
 // Import necessary modules from firebase.js and firestore
 import { db, auth } from '../firebase.js'; // Import db and auth from your firebase file
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
@@ -118,7 +118,7 @@ const RefreshIcon = ({ className }: { className: string }) => (
 );
 
 const AwardIcon = ({ className }: { className: string }) => (
- <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinecap="round">
     <circle cx="12" cy="8" r="7"></circle>
     <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
 </svg>
@@ -360,6 +360,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     // filteredQuizData does not need to be reset as it depends on userVocabulary
   };
 
+
+
+  const getStreakText = () => {
+    if (streak >= 20) return "Không thể cản phá!";
+    if (streak >= 10) return "Tuyệt đỉnh!";
+    if (streak >= 5) return "Siêu xuất sắc!";
+    if (streak >= 3) return "Xuất sắc!";
+    // Removed the condition for streak 2
+    return "";
+  };
+
   // Calculate quiz progress percentage
   const quizProgress = filteredQuizData.length > 0 ? (currentQuestion / filteredQuizData.length) * 100 : 0;
 
@@ -525,6 +536,12 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       </div>
                   </div>
 
+                  {/* Removed the display of matching questions count */}
+                  {/*
+                  <div className="absolute top-4 left-4 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md">
+                    {matchingQuestionsCount} câu hỏi khớp
+                  </div>
+                  */}
                   {/* START: Updated question display block */}
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
                     {/* Hiệu ứng đồ họa - ánh sáng góc */}
@@ -557,6 +574,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 </div>
 
                 <div className="p-6">
+                  {/* ----- BLOCK THÔNG BÁO STREAK ĐÃ BỊ XÓA Ở ĐÂY ----- */}
+
                   <div className="space-y-3 mb-6">
                     {/* Map over shuffledOptions instead of quizData[currentQuestion].options */}
                     {/* Use filteredQuizData to get the correct answer */}
@@ -601,24 +620,37 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                     })}
                   </div>
 
-                  {/* MODIFIED: Container for the next button to reserve space and prevent layout shift */}
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      onClick={handleNextQuestion}
-                      // Conditionally apply opacity and pointer-events instead of conditionally rendering
-                      className={`
-                        px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white 
-                        rounded-lg font-medium shadow-md hover:shadow-lg
-                        transition-opacity duration-300
-                        ${answered && filteredQuizData.length > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-                      `}
-                      // Also disable the button when it's not visible for accessibility
-                      disabled={!answered || filteredQuizData.length === 0}
-                    >
-                      {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
-                    </button>
+                  {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
+                    <div className="mt-8 flex justify-end">
+                      <button
+                        onClick={handleNextQuestion}
+                        className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
+                      >
+                        {/* Use filteredQuizData.length to check */}
+                        {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Removed the old progress bar at the bottom */}
+                {/*
+                <div className="bg-gray-50 px-8 py-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <p className="text-gray-600">Điểm: <span className="font-bold text-indigo-600">{score}</span></p>
+                    </div>
+
+                    <div className="h-2 bg-gray-200 rounded-full w-48 overflow-hidden">
+                      {/* Use filteredQuizData.length for progress calculation *
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                        style={{ width: `${(currentQuestion / (filteredQuizData.length > 1 ? filteredQuizData.length - 1 : 1)) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
+                */}
               </>
             )
           )}
