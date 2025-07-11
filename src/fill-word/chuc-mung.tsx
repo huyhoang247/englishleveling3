@@ -107,7 +107,6 @@ const Confetti: React.FC = () => {
       // Xóa toàn bộ canvas trước khi vẽ khung hình mới
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // --- PHẦN ĐƯỢC THAY ĐỔI ĐỂ TỐI ƯU ---
       // Tạo một mảng mới để chứa các hạt còn "sống" sau khi cập nhật.
       const particlesToKeep = [];
 
@@ -116,18 +115,17 @@ const Confetti: React.FC = () => {
         particle.update();
         particle.draw(ctx);
 
-        // Kiểm tra xem hạt có còn hợp lệ để hiển thị không.
-        // Nếu hạt vẫn còn nhìn thấy được và chưa rơi ra khỏi màn hình,
-        // chúng ta sẽ giữ lại nó.
-        if (particle.alpha > 0 && particle.y <= canvas.height + 20) {
+        // --- ĐÂY LÀ PHẦN THAY ĐỔI QUAN TRỌNG ---
+        // Chỉ kiểm tra xem hạt có còn nhìn thấy được không (alpha > 0).
+        // Chúng ta không còn kiểm tra vị trí của hạt nữa.
+        // Điều này cho phép hạt rơi ra khỏi màn hình nhưng vẫn tiếp tục mờ dần.
+        if (particle.alpha > 0) {
           particlesToKeep.push(particle);
         }
       }
 
       // Thay thế mảng hạt cũ bằng mảng mới chỉ chứa các hạt hợp lệ.
-      // Đây là thao tác rất nhanh, không gây sắp xếp lại mảng nhiều lần như `splice`.
       particlesRef.current = particlesToKeep;
-      // --- KẾT THÚC PHẦN THAY ĐỔI ---
       
       // Tiếp tục vòng lặp animation cho khung hình tiếp theo
       animationFrameIdRef.current = requestAnimationFrame(animate);
