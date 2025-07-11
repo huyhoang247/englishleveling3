@@ -57,7 +57,7 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   };
 
-  // --- THAY ĐỔI DUY NHẤT Ở ĐÂY ---
+  // --- THAY ĐỔI DUY NHẤT Ở ĐÂY --- (Phần này là từ code gốc của bạn, không liên quan đến padding)
   // Khi ở trong màn hình game, bọc nó trong một lớp phủ có z-index cao.
   if (currentView === 'vocabularyGame') {
     return (
@@ -228,7 +228,15 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`overflow-y-auto p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
+           {/* 
+            // ==========================================================
+            // === ĐÂY LÀ DÒNG CODE ĐÃ ĐƯỢC THAY ĐỔI (Cách 1) ==========
+            // ==========================================================
+            // Thay vì dùng 'p-6' cố định, ta dùng logic có điều kiện:
+            // - Nếu là màn hình 'quiz', dùng 'py-6' (chỉ padding trên/dưới)
+            // - Nếu là màn hình khác, dùng 'p-6' (padding tất cả các phía)
+           */}
+           <div className={`overflow-y-auto ${currentView === 'quiz' ? 'py-6' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
             {renderContent()}
           </div>
         </div>
