@@ -396,8 +396,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       </header>
       
       {/* --- MAIN CONTENT AREA --- */}
-      {/* MODIFIED: Replaced 'items-center' with 'items-start' and added 'pt-0' to remove top space */}
-      <main className="flex-grow overflow-y-auto flex items-start justify-center p-4 pt-0">
+      {/* MODIFIED: 'items-center' was removed as requested. 'p-4' is kept.
+          NOTE: This may cause the card to stretch vertically due to default 'align-items: stretch'. */}
+      <main className="flex-grow overflow-y-auto flex justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {/* Display message if no matching questions */}
           {filteredQuizData.length === 0 && !showScore ? (
