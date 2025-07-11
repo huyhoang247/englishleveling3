@@ -620,17 +620,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                     })}
                   </div>
 
-                  {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
-                    <div className="mt-8 flex justify-end">
-                      <button
-                        onClick={handleNextQuestion}
-                        className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
-                      >
-                        {/* Use filteredQuizData.length to check */}
-                        {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
-                      </button>
-                    </div>
-                  )}
+                  {/* Container for the button is always rendered with a minimum height to reserve space and prevent layout shift. */}
+                  <div className="mt-8 flex justify-end items-center min-h-[48px]">
+                    {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
+                        <button
+                          onClick={handleNextQuestion}
+                          className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
+                        >
+                          {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
+                        </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Removed the old progress bar at the bottom */}
