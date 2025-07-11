@@ -24,10 +24,12 @@ export default function QuizAppHome() {
   // Hàm xử lý khi chọn loại (Trắc nghiệm hoặc Điền từ)
   const handleTypeSelect = (type) => {
     setSelectedType(type);
+    // THAY ĐỔI Ở ĐÂY: Sửa tên view để khớp với logic mới
     if (type === 'tracNghiem') {
       setCurrentView('practices');
     } else {
-      setCurrentView('fillInBlanks');
+      // Khi chọn "Điền Từ", chúng ta chuyển sang view 'vocabularyGame'
+      setCurrentView('vocabularyGame'); 
     }
     setSelectedPractice(null);
   };
@@ -40,12 +42,16 @@ export default function QuizAppHome() {
 
   // Hàm quay lại màn hình trước
   const goBack = () => {
-    if (currentView === 'quizTypes') {
+    // THAY ĐỔI Ở ĐÂY: Thêm logic quay lại từ màn hình game
+    if (currentView === 'vocabularyGame') {
+      setCurrentView('quizTypes');
+      setSelectedType(null);
+    } else if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
       setSelectedType(null);
       setSelectedPractice(null);
-    } else if (currentView === 'practices' || currentView === 'fillInBlanks') {
+    } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
       setSelectedType(null);
       setSelectedPractice(null);
@@ -62,7 +68,15 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   };
 
-  // Render nội dung tùy thuộc vào view hiện tại
+  // --- THAY ĐỔI LỚN NHẤT: TÁCH RIÊNG LOGIC RENDER ---
+  // Nếu view hiện tại là game điền từ, trả về component game ngay lập tức.
+  // Điều này ngăn nó bị bọc trong các layout gây lỗi của trang quiz.
+  if (currentView === 'vocabularyGame') {
+    return <VocabularyGame onGoBack={goBack} />;
+  }
+  
+  // Render nội dung tùy thuộc vào view hiện tại (cho các màn hình quiz khác)
+  // Lưu ý: case 'fillInBlanks' đã được đổi tên và xử lý ở trên nên có thể bỏ đi.
   const renderContent = () => {
     switch(currentView) {
       case 'main':
@@ -94,12 +108,10 @@ export default function QuizAppHome() {
           </div>
         );
 
-      // --- PHẦN GIAO DIỆN ĐƯỢC THIẾT KẾ LẠI ---
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
             <div className="text-center">
-              {/* --- THAY ĐỔI TIÊU ĐỀ TẠI ĐÂY --- */}
               <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">
                 Quiz {selectedQuiz}
               </h2>
@@ -160,13 +172,12 @@ export default function QuizAppHome() {
         return (
           <div className="flex flex-col items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
-
             <div className="space-y-4 w-full">
               <button
                 onClick={() => handlePracticeSelect(1)}
                 className="w-full bg-white border border-gray-200 hover:border-indigo-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
-                <div className="flex items-center">
+                 <div className="flex items-center">
                   <div className="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-indigo-200">
                     <span>1</span>
                   </div>
@@ -179,7 +190,6 @@ export default function QuizAppHome() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-
               <button
                 onClick={() => handlePracticeSelect(2)}
                 className="w-full bg-white border border-gray-200 hover:border-pink-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
@@ -200,32 +210,24 @@ export default function QuizAppHome() {
             </div>
           </div>
         );
-
-      case 'fillInBlanks':
-        return (
-          <VocabularyGame onGoBack={goBack} />
-        );
-
+      
       case 'quiz':
-        return (
-          <QuizApp />
-        );
+        return <QuizApp />;
 
       default:
         return <div>Nội dung không tồn tại</div>;
     }
   };
-
+  
+  // Layout chính chỉ dành cho các màn hình quiz (không phải game)
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         
-        {currentView !== 'fillInBlanks' && (
-          <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
-        )}
+        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
 
-        <div className={currentView === 'fillInBlanks' ? 'h-full' : 'h-[calc(100%-8px)]'}>
-          {currentView !== 'main' && currentView !== 'fillInBlanks' && (
+        <div className={'h-[calc(100%-8px)]'}>
+          {currentView !== 'main' && (
             <div className="p-6">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
@@ -239,7 +241,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
+           <div className={`overflow-y-auto p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
             {renderContent()}
           </div>
         </div>
