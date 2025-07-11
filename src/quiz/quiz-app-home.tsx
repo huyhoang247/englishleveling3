@@ -1,3 +1,5 @@
+// --- START OF FILE quiz-app-home.tsx ---
+
 import { useState } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
@@ -218,6 +220,40 @@ export default function QuizAppHome() {
         return <div>Nội dung không tồn tại</div>;
     }
   };
+
+  // --- START: MODIFIED CODE ---
+  // If the view is for selecting quiz types, wrap it in a full-screen container to hide the bottom navbar.
+  if (currentView === 'quizTypes') {
+    return (
+      <div className="fixed inset-0 z-[51] bg-white">
+        <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
+          <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
+            {/* The main container is now a flex column to allow vertical centering */}
+            <div className={'h-[calc(100%-8px)] flex flex-col'}>
+              <div className="p-6">
+                <div className="flex justify-start mb-2">
+                   <Breadcrumbs
+                      currentView={currentView}
+                      selectedQuiz={selectedQuiz}
+                      selectedType={selectedType}
+                      selectedPractice={selectedPractice}
+                      goHome={goHome}
+                      setCurrentView={setCurrentView}
+                   />
+                </div>
+              </div>
+              {/* This content area centers the buttons vertically and has no bottom padding */}
+              <div className="overflow-y-auto p-6 flex-grow flex items-center">
+                {renderContent()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // --- END: MODIFIED CODE ---
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
