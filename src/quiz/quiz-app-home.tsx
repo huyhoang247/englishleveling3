@@ -83,29 +83,49 @@ export default function QuizAppHome() {
     switch(currentView) {
       case 'main':
         return (
-          <div className="flex flex-col items-center gap-6">
-            <div className="text-center mb-2">
-              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Quiz App</h1>
-              <p className="text-gray-600 mt-2">Chọn bộ quiz để bắt đầu học tập</p>
+          <div className="flex flex-col items-center gap-8 w-full pt-8">
+            <div className="text-center">
+              <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                Quiz App
+              </h1>
+              <p className="text-gray-500 mt-2 text-lg">Chọn một chế độ để bắt đầu</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="w-full max-w-md space-y-5">
               <button
                 onClick={() => handleQuizSelect(1)}
-                className="bg-gradient-to-br from-blue-500 to-blue-600 text-white py-6 px-6 rounded-xl shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium flex flex-col items-center"
+                className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-blue-300 group"
               >
-                <span className="text-3xl mb-2">📚</span>
-                <span className="text-lg">Quiz 1</span>
-                <span className="text-xs text-blue-100 mt-1">10 câu hỏi</span>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-md">
+                  <span className="text-4xl">📚</span>
+                </div>
+                <div className="ml-5 text-left flex-grow">
+                  <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
+                  <p className="text-gray-500 text-sm mt-1">Luyện tập các câu hỏi trắc nghiệm</p>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
-              <button
-                onClick={() => handleQuizSelect(2)}
-                className="bg-gradient-to-br from-purple-500 to-purple-600 text-white py-6 px-6 rounded-xl shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium flex flex-col items-center"
-              >
-                <span className="text-3xl mb-2">🧠</span>
-                <span className="text-lg">Quiz 2</span>
-                <span className="text-xs text-purple-100 mt-1">8 câu hỏi</span>
-              </button>
+
+              <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">
+                  Sắp ra mắt
+                </div>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm">
+                  <span className="text-4xl">📄</span>
+                </div>
+                <div className="ml-5 text-left flex-grow">
+                  <h3 className="text-xl font-bold text-gray-500">Đề Thi</h3>
+                  <p className="text-gray-400 text-sm mt-1">Kiểm tra kiến thức với các đề thi thử</p>
+                </div>
+              </div>
             </div>
           </div>
         );
