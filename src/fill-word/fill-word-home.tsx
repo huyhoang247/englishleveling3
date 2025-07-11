@@ -1,4 +1,4 @@
-// --- START OF FILE fill-word-home.tsx (29).txt ---
+// --- START OF FILE fill-word-home.tsx ---
 
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
@@ -170,7 +170,8 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20">
+      {/* --- SỬA Ở ĐÂY: Thêm 'flex-shrink-0' để ngăn header co lại --- */}
+      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button
           onClick={onGoBack}
           className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
@@ -185,7 +186,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         </div>
       </header>
       
-      {/* --- THAY ĐỔI Ở ĐÂY: Tăng padding-bottom lên pb-24 --- */}
+      {/* Phần main giữ nguyên, phần nội dung bị tràn (do pb-24) sẽ được trình duyệt xử lý bằng cách cho phép cuộn toàn trang */}
       <main className="flex-grow px-8 pt-8 pb-24 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
