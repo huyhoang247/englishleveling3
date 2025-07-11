@@ -12,7 +12,7 @@ export default function QuizAppHome() {
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
-    setSelectedType(null); 
+    setSelectedType(null);
     setSelectedPractice(null);
   };
 
@@ -218,7 +218,8 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
         <div className={'h-[calc(100%-8px)]'}>
-          {currentView !== 'main' && (
+          {/* === THAY ĐỔI DUY NHẤT ĐƯỢC ÁP DỤNG Ở ĐÂY === */}
+          {currentView !== 'main' && currentView !== 'quiz' && (
             <div className="p-6">
               <div className="flex justify-start mb-2">
                  <Breadcrumbs
