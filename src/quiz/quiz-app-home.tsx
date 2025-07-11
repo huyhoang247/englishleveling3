@@ -69,9 +69,6 @@ export default function QuizAppHome() {
     );
   }
 
-  // ==========================================================
-  // === SỬA LỖI TẠI ĐÂY =======================================
-  // ==========================================================
   // Nếu là màn hình quiz, cũng bọc nó trong một lớp phủ toàn màn hình
   // để ẩn thanh navbar, tương tự như VocabularyGame.
   if (currentView === 'quiz') {
@@ -173,7 +170,7 @@ export default function QuizAppHome() {
 
       case 'practices':
         return (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
 
             <div className="space-y-4 w-full">
@@ -222,14 +219,14 @@ export default function QuizAppHome() {
   };
 
   // --- START: MODIFIED CODE ---
-  // If the view is for selecting quiz types, wrap it in a full-screen container to hide the bottom navbar.
-  if (currentView === 'quizTypes') {
+  // If the view is for selecting quiz types or practices, wrap it in a full-screen container to hide the bottom navbar.
+  if (currentView === 'quizTypes' || currentView === 'practices') {
+    const isCentered = currentView === 'quizTypes'; // Center content only for quizTypes view
     return (
       <div className="fixed inset-0 z-[51] bg-white">
         <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
           <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
-            {/* The main container is now a flex column to allow vertical centering */}
             <div className={'h-[calc(100%-8px)] flex flex-col'}>
               <div className="p-6">
                 <div className="flex justify-start mb-2">
@@ -243,8 +240,8 @@ export default function QuizAppHome() {
                    />
                 </div>
               </div>
-              {/* This content area centers the buttons vertically and has no bottom padding */}
-              <div className="overflow-y-auto p-6 flex-grow flex items-center">
+              {/* Conditionally apply centering for quizTypes, but not for practices */}
+              <div className={`overflow-y-auto p-6 flex-grow ${isCentered ? 'flex items-center' : ''}`}>
                 {renderContent()}
               </div>
             </div>
