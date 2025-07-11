@@ -238,7 +238,6 @@ export default function QuizAppHome() {
     }
   };
 
-  // --- START: MODIFIED CODE ---
   // If the view is for selecting quiz types or practices, wrap it in a full-screen container to hide the bottom navbar.
   if (currentView === 'quizTypes' || currentView === 'practices') {
     return (
@@ -269,7 +268,6 @@ export default function QuizAppHome() {
       </div>
     );
   }
-  // --- END: MODIFIED CODE ---
 
   return (
     <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
@@ -290,7 +288,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`overflow-y-auto p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-64`}>
+           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-80`}>
             {renderContent()}
           </div>
         </div>
