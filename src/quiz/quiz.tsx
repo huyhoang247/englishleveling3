@@ -394,7 +394,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       </header>
       
       {/* --- MAIN CONTENT AREA --- */}
-      <main className="flex-grow overflow-y-auto flex justify-center p-8">
+      <main className="flex-grow overflow-y-auto flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {/* Display message if no matching questions */}
           {filteredQuizData.length === 0 && !showScore ? (
