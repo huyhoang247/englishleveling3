@@ -394,7 +394,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       </header>
       
       {/* --- MAIN CONTENT AREA --- */}
-      <main className="flex-grow overflow-y-auto flex items-center justify-center p-4 pb-24">
+      <main className="flex-grow overflow-y-auto flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {/* Display message if no matching questions */}
           {filteredQuizData.length === 0 && !showScore ? (
@@ -619,18 +619,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       );
                     })}
                   </div>
-
-                  {/* Container for the button is always rendered with a minimum height to reserve space and prevent layout shift. */}
-                  <div className="mt-8 flex justify-end items-center min-h-[48px]">
-                    {answered && (filteredQuizData.length > 0) && ( // Only show next button if there are questions
-                        <button
-                          onClick={handleNextQuestion}
-                          className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 shadow-md hover:shadow-lg"
-                        >
-                          {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
-                        </button>
-                    )}
-                  </div>
                 </div>
 
                 {/* Removed the old progress bar at the bottom */}
@@ -656,6 +644,20 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           )}
         </div>
       </main>
+
+      {/* Floating Next Question Button */}
+      {answered && (filteredQuizData.length > 0) && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={handleNextQuestion}
+            className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
+          >
+            {/* Use filteredQuizData.length to check */}
+            {currentQuestion < filteredQuizData.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }
