@@ -239,7 +239,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'p-6'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}>
+           <div className={`overflow-y-auto ${currentView === 'quiz' || currentView === 'fillInBlanks' ? 'p-0' : 'px-6 pt-6 pb-24'} ${currentView !== 'main' ? 'z-[51] relative' : ''}`}>
             {renderContent()}
           </div>
         </div>
