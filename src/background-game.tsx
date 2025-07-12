@@ -108,16 +108,6 @@ interface ObstacleRunnerGameProps {
   assetsLoaded: boolean;
 }
 
-// --- HÀM HỖ TRỢ BÊN NGOÀI COMPONENT ---
-const calculateExpForLevels = (level: number): number => {
-    if (level <= 1) {
-        return 0;
-    }
-    const n = level - 1;
-    const sumOfLevelMultipliers = n * (n + 1) / 2;
-    return sumOfLevelMultipliers * 100;
-};
-
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
@@ -169,7 +159,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
-  // <<< PHIÊN BẢN HOÀN CHỈNH VÀ CHÍNH XÁC NHẤT >>>
+  // <<< THAY ĐỔI 2: VIẾT LẠI HOÀN TOÀN `fetchVocabularyData` ĐỂ ĐỒNG BỘ DỮ LIỆU >>>
   const fetchVocabularyData = async (userId: string) => {
     try {
         // --- BƯỚC 1: LẤY DỮ LIỆU SONG SONG ---
@@ -181,8 +171,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             getDoc(achievementDocRef),
         ]);
 
-        // --- BƯỚC 2: TÍNH TỔNG EXP TỪ completedWords ---
-        const wordToTotalExpMap = new Map<string, number>();
+        // --- BƯỚC 2: XỬ LÝ DỮ LIỆU TỪ `completedWords` ---
+        const wordToExpMap = new Map<string, number>();
         completedWordsSnap.forEach(wordDoc => {
             const word = wordDoc.id;
             const gameModes = wordDoc.data().gameModes || {};
@@ -190,38 +180,59 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             Object.values(gameModes).forEach((mode: any) => {
                 totalCorrectCount += mode.correctCount || 0;
             });
-            wordToTotalExpMap.set(word, totalCorrectCount * 100);
+            wordToExpMap.set(word, totalCorrectCount * 100); 
         });
 
-        // --- BƯỚC 3: LẤY DỮ LIỆU LEVEL ĐÃ LƯU TỪ achievements ---
+        // --- BƯỚC 3: XỬ LÝ DỮ LIỆU TỪ `achievements` (dữ liệu đã lưu) ---
         const existingAchievements = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
-        const wordToLevelMap = new Map<string, number>(
-            existingAchievements.map((item: {word: string, level: number}) => [item.word, item.level])
+        const existingAchievementsMap = new Map<string, VocabularyItem>(
+            existingAchievements.map((item: VocabularyItem) => [item.word, item])
         );
 
-        // --- BƯỚC 4: TỔNG HỢP, TÍNH TOÁN VÀ TẠO DỮ LIỆU CUỐI CÙNG ---
+        // --- BƯỚC 4: TỔNG HỢP VÀ ĐỒNG BỘ DỮ LIỆU (PHẦN SỬA LỖI) ---
         const syncedVocabularyData: VocabularyItem[] = [];
-        let idCounter = 1;
+        let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
 
-        wordToTotalExpMap.forEach((totalExp, word) => {
-            const level = wordToLevelMap.get(word) || 1; // Lấy level đã lưu, hoặc mặc định là 1
-            
-            // Tính toán EXP đã "tiêu" cho các cấp trước đó
-            const expSpent = calculateExpForLevels(level);
-            
-            // EXP tiến trình hiện tại = TỔNG EXP - EXP ĐÃ TIÊU
-            const currentProgressExp = totalExp - expSpent;
-            
-            // Max EXP cho cấp hiện tại
-            const maxExpForCurrentLevel = level * 100;
+        wordToExpMap.forEach((totalExp, word) => {
+            const existingItem = existingAchievementsMap.get(word);
 
-            syncedVocabularyData.push({
-                id: idCounter++,
-                word: word,
-                level: level,
-                exp: currentProgressExp,
-                maxExp: maxExpForCurrentLevel,
-            });
+            if (existingItem) {
+                // TỪ VỰNG ĐÃ TỒN TẠI: Đồng bộ tiến trình dựa trên cấp độ đã nhận
+                // Tính tổng EXP đã "tiêu" để đạt cấp độ hiện tại
+                let expSpentToReachCurrentLevel = 0;
+                for (let i = 1; i < existingItem.level; i++) {
+                    expSpentToReachCurrentLevel += i * 100;
+                }
+
+                // Tiến trình hiện tại = Tổng EXP kiếm được - EXP đã tiêu
+                const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
+
+                syncedVocabularyData.push({
+                    ...existingItem, // Giữ lại ID và các thuộc tính cũ
+                    exp: currentProgressExp,
+                    maxExp: existingItem.level * 100, // EXP cần cho cấp tiếp theo
+                });
+
+            } else {
+                // TỪ VỰNG MỚI: Tính toán cấp độ và tiến trình ban đầu từ tổng EXP
+                let level = 1;
+                let expProgress = totalExp;
+                let maxExpForLevel = 100;
+
+                while (expProgress >= maxExpForLevel) {
+                    expProgress -= maxExpForLevel;
+                    level++;
+                    maxExpForLevel = level * 100;
+                }
+
+                syncedVocabularyData.push({
+                    id: idCounter++, // Gán ID mới
+                    word: word,
+                    exp: expProgress,
+                    level: level,
+                    maxExp: maxExpForLevel,
+                });
+            }
         });
         
         console.log("Vocabulary achievements data synced and processed correctly.");
@@ -229,6 +240,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     } catch (error) {
         console.error("Error fetching and syncing vocabulary achievements data:", error);
+        // Trong trường hợp lỗi, vẫn set dữ liệu mặc định để app không bị crash
         setVocabularyData(initialVocabularyData);
     }
   };
@@ -364,7 +376,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       if (user) {
         // --- Gọi cả hai hàm fetch khi có user ---
         fetchUserData(user.uid);
-        fetchVocabularyData(user.uid);
+        fetchVocabularyData(user.uid); // <-- THAY ĐỔI 3: GỌI HÀM MỚI
         fetchJackpotPool();
       } else {
         // Reset all states on logout
@@ -385,7 +397,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGems(0);
         setJackpotPool(0);
         setIsLoadingUserData(false);
-        setVocabularyData(null);
+        setVocabularyData(null); // <-- THAY ĐỔI 4: Reset dữ liệu thành tựu
       }
     });
     return () => unsubscribe();
@@ -408,6 +420,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // This function is now empty as there's no gameplay to start/interact with
   };
   
+  // --- THAY ĐỔI 5: Cập nhật điều kiện loading, thêm cả việc chờ dữ liệu thành tựu ---
   const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
 
   // Animate coin number changes
@@ -435,6 +448,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
      return () => {};
   }, [displayedCoins, coins]);
 
+  // <<-- THAY ĐỔI QUAN TRỌNG Ở ĐÂY -->>
   const renderCharacter = () => {
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
