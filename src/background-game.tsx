@@ -114,7 +114,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(0);
-  const [masteryCards, setMasteryCards] = useState(0); // <<< THÊM MỚI: State cho Mastery Cards
+  const [masteryCards, setMasteryCards] = useState(0);
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -200,15 +200,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 });
 
             } else {
-                // <<< SỬA LỖI TẠI ĐÂY: Loại bỏ việc tự động lên cấp >>>
-                // Tạo một item mới ở cấp 1 và gán toàn bộ EXP kiếm được.
-                // Giao việc xử lý lên cấp tuần tự cho màn hình Thành Tựu.
                 syncedVocabularyData.push({
                     id: idCounter++,
                     word: word,
-                    exp: totalExp,      // Gán toàn bộ EXP
-                    level: 1,           // Luôn bắt đầu từ cấp 1
-                    maxExp: 100,        // maxExp cho cấp 1 là 100
+                    exp: totalExp,
+                    level: 1,
+                    maxExp: 100,
                 });
             }
         });
@@ -234,19 +231,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0);
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
-        setMasteryCards(userData.masteryCards || 0); // <<< THÊM MỚI
+        setMasteryCards(userData.masteryCards || 0);
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
-          masteryCards: 0, // <<< THÊM MỚI
+          masteryCards: 0,
           createdAt: new Date(),
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setMasteryCards(0); // <<< THÊM MỚI
+        setMasteryCards(0);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -300,7 +297,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
   
-  // <<< THÊM MỚI: Hàm để cập nhật Mastery Cards trên Firestore >>>
   const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update mastery cards: User not authenticated.");
@@ -316,7 +312,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const currentCards = userDoc.data().masteryCards || 0;
           const newCards = currentCards + amount;
           transaction.update(userDocRef, { masteryCards: newCards });
-          setMasteryCards(newCards); // Cập nhật state ở component cha
+          setMasteryCards(newCards);
         }
       });
       console.log(`Mastery Cards updated in Firestore for user ${userId}.`);
@@ -391,7 +387,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setMasteryCards(0); // <<< THÊM MỚI: Reset state khi logout
+        setMasteryCards(0);
         setJackpotPool(0);
         setIsLoadingUserData(true);
         setVocabularyData(null);
@@ -458,21 +454,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
   
-  // <<< THÊM MỚI: Hàm xử lý nhận thưởng, sẽ được truyền xuống AchievementsScreen >>>
   const handleRewardClaim = (reward: { gold: number; masteryCards: number }) => {
     if (!auth.currentUser) return;
     
     console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
 
-    // Cập nhật Vàng. `startCoinCountAnimation` sẽ gọi `updateCoinsInFirestore` bên trong nó.
     if (reward.gold > 0) {
         startCoinCountAnimation(reward.gold);
     }
 
-    // Cập nhật Thẻ Thông Thạo
     if (reward.masteryCards > 0) {
         updateMasteryCardsInFirestore(auth.currentUser.uid, reward.masteryCards);
     }
+  };
+
+  // <<< THÊM MỚI: Hàm để cập nhật state vocabularyData từ component con >>>
+  const handleVocabularyUpdate = (updatedData: VocabularyItem[]) => {
+    setVocabularyData(updatedData);
   };
 
   const toggleStatsFullscreen = () => {
@@ -871,6 +869,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         userId={auth.currentUser.uid}
                         initialData={vocabularyData}
                         onClaimReward={handleRewardClaim}
+                        onDataUpdate={handleVocabularyUpdate}
                     />
                 )}
             </ErrorBoundary>
