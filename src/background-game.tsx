@@ -21,7 +21,8 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
-import AchievementsScreen from './thanh-tuu.tsx';
+// --- Import component Thành Tựu và dữ liệu/type của nó ---
+import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx'; // NEW: Import Admin Panel
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
@@ -107,6 +108,8 @@ interface ObstacleRunnerGameProps {
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
+  // --- Thêm state để lưu dữ liệu thành tựu ---
+  const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
 
   // States for UI and User Data
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
@@ -152,6 +155,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       window.removeEventListener('resize', setAppHeight);
     };
   }, []);
+
+  // --- Hàm mới để fetch dữ liệu thành tựu từ vựng ---
+  const fetchVocabularyData = async (userId: string) => {
+    try {
+      // Dữ liệu thành tựu sẽ được lưu trong một sub-document để dễ quản lý
+      const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+      const docSnap = await getDoc(achievementDocRef);
+
+      if (docSnap.exists() && docSnap.data().vocabulary) {
+        console.log("Vocabulary achievements data fetched.");
+        setVocabularyData(docSnap.data().vocabulary);
+      } else {
+        // Nếu không có, tạo dữ liệu mặc định cho người dùng mới
+        console.log("No vocabulary achievements data found, creating default.");
+        await setDoc(achievementDocRef, { vocabulary: initialVocabularyData }, { merge: true });
+        setVocabularyData(initialVocabularyData);
+      }
+    } catch (error) {
+      console.error("Error fetching vocabulary achievements data:", error);
+      // Trong trường hợp lỗi, vẫn set dữ liệu mặc định để app không bị crash
+      setVocabularyData(initialVocabularyData);
+    }
+  };
 
   // Fetch user data from Firestore
   const fetchUserData = async (userId: string) => {
@@ -281,7 +307,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
+        // --- Gọi cả hai hàm fetch khi có user ---
         fetchUserData(user.uid);
+        fetchVocabularyData(user.uid); // <-- THÊM MỚI
         fetchJackpotPool();
       } else {
         // Reset all states on logout
@@ -302,6 +330,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGems(0);
         setJackpotPool(0);
         setIsLoadingUserData(false);
+        setVocabularyData(null); // <-- THÊM MỚI: Reset dữ liệu thành tựu
       }
     });
     return () => unsubscribe();
@@ -324,7 +353,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     // This function is now empty as there's no gameplay to start/interact with
   };
   
-  const isLoading = isLoadingUserData || !assetsLoaded;
+  // --- Cập nhật điều kiện loading, thêm cả việc chờ dữ liệu thành tựu ---
+  const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
 
   // Animate coin number changes
   useEffect(() => {
@@ -764,9 +794,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward}/>)}</ErrorBoundary>
         </div>
+        
+        {/* --- CẬP NHẬT RENDER CHO MÀN HÌNH THÀNH TỰU --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isAchievementsOpen && <AchievementsScreen onClose={toggleAchievements} />}</ErrorBoundary>
+            <ErrorBoundary>
+                {isAchievementsOpen && auth.currentUser && vocabularyData && (
+                    <AchievementsScreen 
+                        onClose={toggleAchievements} 
+                        userId={auth.currentUser.uid}
+                        initialData={vocabularyData}
+                    />
+                )}
+            </ErrorBoundary>
         </div>
+        
         {/* NEW: Render Admin Panel */}
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary>
