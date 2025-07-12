@@ -1,120 +1,180 @@
 import React, { useState, useCallback, useEffect } from 'react';
-// --- Thêm các import cần thiết cho Firestore ---
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+// --- THAY ĐỔI 1: Thêm các import cần thiết cho Firestore ---
+import { getFirestore, doc, getDocs, collection, writeBatch, increment } from 'firebase/firestore';
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
 export type VocabularyItem = {
-  id: number;
-  word: string;
+  // Thay id bằng word vì word là duy nhất
+  word: string; 
   exp: number;
   level: number;
   maxExp: number;
+  // Thêm totalExp để tính toán dễ dàng hơn khi lên cấp
+  totalExp: number; 
 };
 
-// --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới) ---
-export const initialVocabularyData: VocabularyItem[] = [
-  { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
-  { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
-  { id: 3, word: 'Luminous', exp: 30, level: 2, maxExp: 100 },
-  { id: 4, word: 'Ubiquitous', exp: 95, level: 8, maxExp: 100 },
-  { id: 5, word: 'Mellifluous', exp: 100, level: 1, maxExp: 100 },
-  { id: 6, word: 'Petrichor', exp: 15, level: 4, maxExp: 100 },
-  { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
-];
+// --- Xóa Dữ liệu mẫu vì không còn cần thiết ---
+// export const initialVocabularyData: VocabularyItem[] = [...];
 
-// --- Cập nhật Prop để nhận dữ liệu từ cha ---
+// --- THAY ĐỔI 2: Cập nhật Prop, chỉ cần userId và onClose ---
 interface AchievementsScreenProps {
   onClose: () => void;
-  userId: string; // ID người dùng để biết lưu vào document nào
-  initialData: VocabularyItem[]; // Dữ liệu được fetch từ Firestore
+  userId: string;
 }
 
 // --- Biểu tượng (Icon) - không thay đổi ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
-  );
+);
 const TrophyIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
   </svg>
 );
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
-    <img
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png"
-        alt="Thẻ thông thạo"
-        className={className}
-        {...props}
-    />
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png" alt="Thẻ thông thạo" className={className} {...props} />
 );
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
-    <img
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
-        alt="Vàng"
-        className={className}
-        {...props}
-    />
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} {...props} />
 );
 const BookOpenIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24" fill="currentColor" className={className}>
         <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A9.735 9.735 0 006 21a9.707 9.707 0 005.25-1.533" />
         <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v14.25a.75.75 0 01-1 .707A9.735 9.735 0 0118 21a9.707 9.707 0 01-5.25-1.533" />
     </svg>
 );
 
 
-// --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData }: AchievementsScreenProps) {
-  // --- Sử dụng dữ liệu từ props thay vì dữ liệu tĩnh ---
-  const [vocabulary, setVocabulary] = useState(initialData);
+// --- Hàm helper để tính toán EXP và Level ---
+const calculateMastery = (data: any) => {
+    const level = data.level || 1;
+    const gameModes = data.gameModes || {};
+    let totalCorrectAnswers = 0;
+    
+    // Tổng hợp correctCount từ tất cả các gameModes
+    for (const mode in gameModes) {
+        totalCorrectAnswers += gameModes[mode].correctCount || 0;
+    }
+
+    const totalExp = totalCorrectAnswers * 100;
+    
+    // Tính tổng EXP cần để đạt được cấp hiện tại
+    let expRequiredForCurrentLevel = 0;
+    for (let i = 1; i < level; i++) {
+        expRequiredForCurrentLevel += i * 100;
+    }
+
+    const exp = totalExp - expRequiredForCurrentLevel;
+    const maxExp = level * 100;
+
+    return { word: data.word, level, totalExp, exp, maxExp };
+};
+
+
+// --- THAY ĐỔI 3: Component chính được tái cấu trúc hoàn toàn ---
+export default function AchievementsScreen({ onClose, userId }: AchievementsScreenProps) {
+  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const db = getFirestore();
 
-  // --- Đồng bộ state nội bộ khi prop initialData thay đổi ---
+  // Fetch dữ liệu thành tựu từ Firestore
   useEffect(() => {
-      setVocabulary(initialData);
-  }, [initialData]);
+    if (!userId) {
+      setError("Không tìm thấy ID người dùng.");
+      setLoading(false);
+      return;
+    }
 
+    const fetchAchievements = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const completedWordsColRef = collection(db, 'users', userId, 'completedWords');
+        const snapshot = await getDocs(completedWordsColRef);
+        
+        const masteryList: VocabularyItem[] = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            data.word = doc.id; // Gán ID của document (chính là từ vựng) vào data
+            masteryList.push(calculateMastery(data));
+        });
+
+        setVocabulary(masteryList);
+      } catch (err: any) {
+        console.error("Lỗi khi tải dữ liệu thành tựu:", err);
+        setError("Không thể tải dữ liệu thành tựu. Vui lòng thử lại.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAchievements();
+  }, [userId, db]);
+  
+  // Sắp xếp dữ liệu để hiển thị
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
-    if (aIsClaimable !== bIsClaimable) {
-      return (bIsClaimable ? 1 : 0) - (aIsClaimable ? 1 : 0);
-    }
-    if (b.level !== a.level) {
-      return b.level - a.level;
-    }
+    if (aIsClaimable !== bIsClaimable) return bIsClaimable ? 1 : -1;
+    if (b.level !== a.level) return b.level - a.level;
     return b.exp - a.exp;
   });
 
-  const handleClaim = useCallback(async (id: number) => {
-    // Tạo danh sách mới sau khi cập nhật
-    const updatedList = vocabulary.map(item => {
-      if (item.id === id && item.exp >= item.maxExp) {
-        // TODO: Add rewards logic (gold, mastery cards) to user's main data
-        return { ...item, level: item.level + 1, exp: 0 };
-      }
-      return item;
-    });
+  // Hàm nhận thưởng
+  const handleClaim = useCallback(async (word: string) => {
+    const itemToClaim = vocabulary.find(item => item.word === word);
+    if (!itemToClaim || itemToClaim.exp < itemToClaim.maxExp) return;
 
-    // Cập nhật state cục bộ để UI phản hồi ngay lập tức
-    setVocabulary(updatedList);
+    const goldReward = itemToClaim.level * 100;
 
-    // Lưu danh sách đã cập nhật vào Firestore
     try {
-      const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-      await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
-      console.log("Vocabulary mastery progress saved to Firestore.");
+      const batch = writeBatch(db);
+
+      // Thao tác 1: Tăng cấp cho từ vựng trong /completedWords/{word}
+      const achievementDocRef = doc(db, 'users', userId, 'completedWords', word);
+      batch.update(achievementDocRef, { level: increment(1) });
+
+      // Thao tác 2: Cộng vàng cho người dùng trong /users/{userId}
+      const userDocRef = doc(db, 'users', userId);
+      batch.update(userDocRef, { coins: increment(goldReward) });
+
+      await batch.commit();
+
+      // Cập nhật UI ngay lập tức để phản hồi nhanh
+      setVocabulary(prev => prev.map(item => {
+        if (item.word === word) {
+          const newData = { ...item, level: item.level + 1 };
+          // Tính toán lại exp và maxExp cho cấp mới
+          const newMastery = calculateMastery({
+            word: newData.word,
+            level: newData.level,
+            // Giả lập gameModes để hàm calculate hoạt động đúng, vì totalExp không đổi
+            // Cách tính này đảm bảo thanh tiến trình được cập nhật chính xác
+            gameModes: { temp: { correctCount: item.totalExp / 100 } }
+          });
+          return newMastery;
+        }
+        return item;
+      }));
+      console.log(`Nhận thưởng thành công cho từ "${word}".`);
     } catch (error) {
-      console.error("Error saving vocabulary progress:", error);
-      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ
-      setVocabulary(vocabulary);
+      console.error("Lỗi khi nhận thưởng:", error);
+      // Optional: Hiển thị thông báo lỗi cho người dùng
     }
   }, [vocabulary, userId, db]);
-
+  
   const totalWords = vocabulary.length;
   const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
+  
+  if (loading) {
+    return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 text-white">Đang tải thành tựu...</div>;
+  }
+  if (error) {
+    return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 text-red-400 p-8 text-center">{error}</div>;
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
@@ -161,9 +221,16 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
           </div>
 
           <div className="flex flex-col gap-2">
-            {sortedVocabulary.map((item, index) => (
-              <VocabularyRow key={item.id} item={item} rank={index + 1} onClaim={handleClaim} />
-            ))}
+            {sortedVocabulary.length > 0 ? (
+                sortedVocabulary.map((item, index) => (
+                    <VocabularyRow key={item.word} item={item} rank={index + 1} onClaim={handleClaim} />
+                ))
+            ) : (
+                <div className="text-center py-12 text-slate-400">
+                    <p>Chưa có dữ liệu thành tựu.</p>
+                    <p className="text-sm">Hãy hoàn thành các bài học để bắt đầu!</p>
+                </div>
+            )}
           </div>
         </main>
         
@@ -175,16 +242,16 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
   );
 }
 
-// --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
-function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void }) {
-  const { id, word, exp, level, maxExp } = item;
+// --- THAY ĐỔI 4: Cập nhật component VocabularyRow để dùng `word` ---
+function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (word: string) => void }) {
+  const { word, exp, level, maxExp } = item;
   const progressPercentage = Math.min((exp / maxExp) * 100, 100);
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
   const handleClaimClick = () => {
     if (!isClaimable) return;
-    onClaim(id);
+    onClaim(word);
   };
   
   return (
