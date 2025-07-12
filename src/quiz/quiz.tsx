@@ -1,16 +1,16 @@
-// --- FILE: quiz.tsx ---
-
 import { useState, useEffect, memo } from 'react';
+// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` và `increment` >>>
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
-import { User } from 'firebase/auth'; 
 
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
 
+// Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
 
+// Define streak icon URLs
 const streakIconUrls = {
   default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png',
   streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png',
@@ -19,6 +19,7 @@ const streakIconUrls = {
   streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png',
 };
 
+// Function to get the correct streak icon URL based on streak count
 const getStreakIconUrl = (streak: number) => {
   if (streak >= 20) return streakIconUrls.streak20;
   if (streak >= 10) return streakIconUrls.streak10;
@@ -27,6 +28,7 @@ const getStreakIconUrl = (streak: number) => {
   return streakIconUrls.default;
 };
 
+// StreakDisplay component (Integrated)
 interface StreakDisplayProps {
   displayedStreak: number;
   isAnimating: boolean;
@@ -50,6 +52,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
   );
 };
 
+// Countdown Timer Component
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => {
   const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress);
   const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; };
@@ -65,12 +68,14 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
   );
 });
 
+// SVG Icons
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17L4 12"></path></svg> );
 const XIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg> );
 const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> );
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 
+// Function to shuffle an array
 const shuffleArray = (array) => {
   const shuffledArray = [...array];
   for (let i = shuffledArray.length - 1; i > 0; i--) {
@@ -79,6 +84,7 @@ const shuffleArray = (array) => {
   }
   return shuffledArray;
 };
+
 
 export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -90,14 +96,15 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [streak, setStreak] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const TOTAL_TIME = 30;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
-  const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
+  const [shuffledOptions, setShuffledOptions] = useState([]);
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
   const [filteredQuizData, setFilteredQuizData] = useState(quizData);
   const [matchingQuestionsCount, setMatchingQuestionsCount] = useState(0);
+
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -110,16 +117,19 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     const fetchData = async () => {
       if (user) {
         try {
+          // Lấy coins từ document chính của user
           const userRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(userRef);
 
           if (docSnap.exists()) {
             setCoins(docSnap.data().coins || 0);
           } else {
+            // Nếu user chưa có document, tạo mới với 0 coins
             await setDoc(userRef, { coins: 0 });
             setCoins(0);
           }
 
+          // Lấy danh sách từ vựng từ subcollection 'openedVocab'
           const vocabColRef = collection(db, 'users', user.uid, 'openedVocab');
           const vocabSnapshot = await getDocs(vocabColRef);
           
@@ -138,6 +148,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           setUserVocabulary([]);
         }
       } else {
+        // Nếu không có người dùng, reset state
         setCoins(0);
         setUserVocabulary([]);
       }
@@ -153,10 +164,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
         )
       );
-      setFilteredQuizData(filtered.length > 0 ? shuffleArray(filtered) : []);
+      setFilteredQuizData(filtered);
       setMatchingQuestionsCount(filtered.length);
     } else {
-      setFilteredQuizData(shuffleArray(quizData));
+      setFilteredQuizData(quizData);
       setMatchingQuestionsCount(0);
     }
   }, [userVocabulary]);
@@ -192,7 +203,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, filteredQuizData.length]);
 
-  const handleAnswer = async (selectedAnswer: string) => {
+  // <<< THAY ĐỔI 2: XÓA HÀM `updateCoinsInFirestore` VÌ LOGIC SẼ ĐƯỢC GỘP VÀO `handleAnswer` >>>
+  
+  // <<< THAY ĐỔI 3: CẬP NHẬT `handleAnswer` ĐỂ GHI DỮ LIỆU BẰNG BATCH >>>
+  const handleAnswer = async (selectedAnswer) => {
     if (answered || filteredQuizData.length === 0) return;
     setSelectedOption(selectedAnswer);
     setAnswered(true);
@@ -212,11 +226,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       else if (newStreak >= 5) { coinsToAdd = 10; } 
       else if (newStreak >= 3) { coinsToAdd = 5; } 
       else if (newStreak >= 1) { coinsToAdd = 1; }
-      
-      const newTotalCoins = coins + coinsToAdd;
 
       if (coinsToAdd > 0) {
-        setCoins(newTotalCoins);
+        const totalCoins = coins + coinsToAdd;
+        setCoins(totalCoins);
         setCoinAnimation(true);
         setTimeout(() => setCoinAnimation(false), 1500);
       }
@@ -225,19 +238,23 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         setStreakAnimation(true);
         setTimeout(() => setStreakAnimation(false), 1500);
       }
-      
+
+      // Tìm từ vựng khớp với câu hỏi để cập nhật vào Firestore
       const matchedWord = userVocabulary.find(vocabWord =>
         new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
       );
 
-      if (user && matchedWord) {
+      // Nếu có người dùng, có từ vựng khớp và có thưởng coin, tiến hành ghi dữ liệu
+      if (user && matchedWord && coinsToAdd > 0) {
         try {
           const batch = writeBatch(db);
           const gameModeId = "quiz-1";
           
+          // Thao tác 1: Cập nhật số coin của người dùng
           const userDocRef = doc(db, 'users', user.uid);
-          batch.update(userDocRef, { coins: newTotalCoins });
+          batch.update(userDocRef, { coins: coins + coinsToAdd });
 
+          // Thao tác 2: Cập nhật số lần trả lời đúng cho từ vựng này
           const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
           batch.set(completedWordRef, {
             lastCompletedAt: new Date(),
@@ -246,19 +263,19 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 correctCount: increment(1)
               }
             }
-          }, { merge: true });
+          }, { merge: true }); // Dùng merge để không ghi đè các game mode khác
 
           await batch.commit();
           console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
         } catch (error) {
           console.error("Lỗi khi thực hiện batch write:", error);
-          setCoins(coins);
         }
       }
     } else {
       setStreak(0);
     }
   };
+
 
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
@@ -270,9 +287,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       setShowScore(true);
     }
   };
-  
+
   const resetQuiz = () => {
-    setFilteredQuizData(shuffleArray(filteredQuizData));
     setCurrentQuestion(0);
     setScore(0);
     setShowScore(false);
@@ -282,7 +298,16 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setTimeLeft(TOTAL_TIME);
   };
 
-  const quizProgress = filteredQuizData.length > 0 ? ((currentQuestion + 1) / filteredQuizData.length) * 100 : 0;
+  const getStreakText = () => {
+    if (streak >= 20) return "Không thể cản phá!";
+    if (streak >= 10) return "Tuyệt đỉnh!";
+    if (streak >= 5) return "Siêu xuất sắc!";
+    if (streak >= 3) return "Xuất sắc!";
+    return "";
+  };
+
+  const quizProgress = filteredQuizData.length > 0 ? (currentQuestion / filteredQuizData.length) * 100 : 0;
+
 
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
@@ -331,13 +356,47 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                     <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        style={{ width: `${filteredQuizData.length > 0 ? (score / filteredQuizData.length) * 100 : 0}%` }}
+                        style={{ width: `${(score / filteredQuizData.length) * 100}%` }}
                       ></div>
                     </div>
                     <p className="text-right mt-1 text-sm text-gray-600 font-medium">
-                      {filteredQuizData.length > 0 ? Math.round((score / filteredQuizData.length) * 100) : 0}%
+                      {Math.round((score / filteredQuizData.length) * 100)}%
                     </p>
                   </div>
+
+                  <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center">
+                      <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="h-5 w-5 text-orange-500 mr-1" />
+                      <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span>
+                    </div>
+                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+                  </div>
+
+                  <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="h-6 w-6 text-orange-500 mr-2" />
+                        <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
+                      </div>
+                      <StreakDisplay displayedStreak={streak} isAnimating={false} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-700">Câu hỏi khớp với từ vựng của bạn:</span>
+                      <span className="font-bold text-blue-600">{matchingQuestionsCount}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 text-sm italic mt-4">
+                    {score === filteredQuizData.length ?
+                      "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
+                      score > filteredQuizData.length / 2 ?
+                        "Kết quả tốt! Bạn có thể cải thiện thêm." :
+                        "Hãy thử lại để cải thiện điểm số của bạn."
+                    }
+                  </p>
                 </div>
 
                 <button
@@ -378,6 +437,19 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   </div>
 
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
+                    <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
+                    <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
+                    <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="bg-indigo-500/30 p-1.5 rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                      </div>
+                      <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
+                    </div>
                     <h2 className="text-xl font-bold text-white leading-tight">
                       {filteredQuizData[currentQuestion]?.question}
                     </h2>
@@ -397,9 +469,15 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
                       if (answered) {
                         if (isCorrect) {
-                          bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white";
+                          bgColor = "bg-green-50";
+                          borderColor = "border-green-500";
+textColor = "text-green-800";
+                          labelBg = "bg-green-500 text-white";
                         } else if (isSelected) {
-                          bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white";
+                          bgColor = "bg-red-50";
+                          borderColor = "border-red-500";
+                          textColor = "text-red-800";
+                          labelBg = "bg-red-500 text-white";
                         }
                       }
                       return (
@@ -426,7 +504,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         </div>
       </main>
 
-      {answered && (filteredQuizData.length > 0) && !showScore && (
+      {answered && (filteredQuizData.length > 0) && (
         <div className="fixed bottom-6 right-6 z-50">
           <button
             onClick={handleNextQuestion}
@@ -436,6 +514,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           </button>
         </div>
       )}
+
     </div>
   );
 }
