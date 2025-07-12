@@ -1,3 +1,5 @@
+// src/background-game.tsx
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -19,7 +21,8 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
-import AchievementsScreen from './thanh-tuu.tsx'; // NEW: Import achievements screen
+import AchievementsScreen from './thanh-tuu.tsx';
+import AdminPanel from './admin.tsx'; // NEW: Import Admin Panel
 
 // --- SVG Icon Components (Replacement for lucide-react) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -122,7 +125,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isTowerGameOpen, setIsTowerGameOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
-  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false); // NEW: State for achievements screen
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false); // NEW: State for Admin Panel
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
@@ -290,7 +294,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false); // NEW: Reset state
+        setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false); // NEW: Reset state
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -348,7 +353,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // <<-- THAY ĐỔI QUAN TRỌNG Ở ĐÂY -->>
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
@@ -380,6 +385,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsShopOpen(false);
             setIsVocabularyChestOpen(false);
             setIsAchievementsOpen(false);
+            setIsAdminPanelOpen(false);
         } else {
             showNavBar();
         }
@@ -402,6 +408,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsShopOpen(false);
              setIsVocabularyChestOpen(false);
              setIsAchievementsOpen(false);
+             setIsAdminPanelOpen(false);
          } else {
              showNavBar();
          }
@@ -424,6 +431,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -446,6 +454,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -468,6 +477,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -490,6 +500,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -512,6 +523,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -534,6 +546,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -556,6 +569,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -563,7 +577,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
-  // NEW: Toggle function for achievements screen
   const toggleAchievements = () => {
     if (isLoading) return;
     setIsAchievementsOpen(prev => {
@@ -579,6 +592,33 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
+        setIsAdminPanelOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+  
+  // NEW: Toggle function for Admin Panel screen
+  const toggleAdminPanel = () => {
+    if (isLoading) return;
+    
+    setIsAdminPanelOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        // Close all other overlays
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
+        setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
       } else {
         showNavBar();
       }
@@ -590,14 +630,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
   };
-  
-  // *** THAY ĐỔI 1: XÓA `if (isLoading)` TỪ ĐÂY ***
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
+  const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com'; // Check if user is admin
 
   return (
-    // *** THAY ĐỔI 2: Thêm `relative` vào div ngoài cùng ***
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
@@ -606,12 +644,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
           onShowAchievements={toggleAchievements}
+          onShowAdmin={isAdmin ? toggleAdminPanel : undefined} // NEW: Pass handler only if user is admin
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
         {/* === MAIN LOBBY SCREEN === */}
         <div 
-          // *** THAY ĐỔI 3: Thêm `visibility` để ẩn nội dung khi đang tải ***
           style={{ 
             display: isAnyOverlayOpen ? 'none' : 'block',
             visibility: isLoading ? 'hidden' : 'visible'
@@ -729,9 +767,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAchievementsOpen && <AchievementsScreen onClose={toggleAchievements} />}</ErrorBoundary>
         </div>
+        {/* NEW: Render Admin Panel */}
+        <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary>
+        </div>
       </SidebarLayout>
       
-      {/* *** THAY ĐỔI 4: Thêm lớp phủ loading ở đây *** */}
       {isLoading && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
             <LoadingSpinner />
