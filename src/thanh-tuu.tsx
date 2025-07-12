@@ -39,11 +39,14 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
-const MasteryCardIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
-        <path fillRule="evenodd" d="M1.5 8.625v10.5a1.875 1.875 0 001.875 1.875h17.25A1.875 1.875 0 0022.5 19.125v-10.5a1.875 1.875 0 00-1.875-1.875H3.375A1.875 1.875 0 001.5 8.625zM6 12a.75.75 0 01.75-.75h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V12zm2.25 0a.75.75 0 01.75-.75h3.75a.75.75 0 010 1.5H9a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-    </svg>
+// --- CẬP NHẬT: Thay thế MasteryCardIcon SVG bằng thẻ <img> ---
+const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
+    <img
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png"
+        alt="Thẻ thông thạo"
+        className={className}
+        {...props}
+    />
 );
 
 // --- CẬP NHẬT: Thay thế GoldIcon SVG bằng thẻ <img> ---
@@ -122,7 +125,8 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
             </div>
           </div>
           <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
-            <MasteryCardIcon className="w-7 h-7 text-sky-400 flex-shrink-0" />
+            {/* CẬP NHẬT: Xóa class 'text-sky-400' */}
+            <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalMasteryCards}</p>
               <p className="text-sm text-slate-400">Thẻ thông thạo</p>
@@ -192,14 +196,14 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
       <div className="col-span-6 md:col-span-3 flex items-center justify-center">
         <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
             <div className="flex items-center gap-1.5" title="1 Thẻ thông thạo">
-                <MasteryCardIcon className="w-6 h-6 text-sky-300 flex-shrink-0" />
+                {/* CẬP NHẬT: Xóa class 'text-sky-300' */}
+                <MasteryCardIcon className="w-6 h-6 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">x1</span>
             </div>
             
             <div className="h-6 w-px bg-slate-600"></div>
 
             <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}>
-                {/* CẬP NHẬT: Xóa class 'text-yellow-300' vì không cần thiết cho thẻ <img> */}
                 <GoldIcon className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">{goldReward}</span>
             </div>
