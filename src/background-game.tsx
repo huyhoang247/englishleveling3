@@ -106,6 +106,25 @@ interface ObstacleRunnerGameProps {
   assetsLoaded: boolean;
 }
 
+// --- THÊM HÀM HỖ TRỢ NÀY BÊN NGOÀI COMPONENT ---
+/**
+ * Tính tổng số EXP cần thiết để đạt đến một cấp độ nhất định.
+ * @param level Cấp độ cần tính.
+ * @returns Tổng số EXP đã "tiêu" để đạt được cấp độ đó.
+ */
+const calculateExpForLevels = (level: number): number => {
+    if (level <= 1) {
+        return 0;
+    }
+    // Ví dụ: để đạt cấp 3, bạn cần EXP cho cấp 1 (100) + cấp 2 (200) = 300.
+    // Công thức tính tổng của 1 đến n: n * (n + 1) / 2
+    // Ở đây ta tính tổng của 100 * (1 + 2 + ... + (level - 1))
+    const n = level - 1;
+    const sumOfLevelMultipliers = n * (n + 1) / 2;
+    return sumOfLevelMultipliers * 100;
+};
+
+
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
@@ -169,7 +188,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             getDoc(achievementDocRef),
         ]);
 
-        // --- BƯỚC 2: XỬ LÝ DỮ LIỆU TỪ `completedWords` ---
+        // --- BƯỚC 2: XỬ LÝ DỮ LIỆU TỪ `completedWords` ĐỂ LẤY TỔNG EXP ---
         const wordToExpMap = new Map<string, number>();
         completedWordsSnap.forEach(wordDoc => {
             const word = wordDoc.id;
@@ -181,13 +200,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             wordToExpMap.set(word, totalCorrectCount * 100); // 1 lần đúng = 100 EXP
         });
 
-        // --- BƯỚC 3: XỬ LÝ DỮ LIỆU TỪ `achievements` (dữ liệu đã lưu) ---
+        // --- BƯỚC 3: XỬ LÝ DỮ LIỆU TỪ `achievements` (dữ liệu đã lưu về level) ---
         const existingAchievements = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
         const existingAchievementsMap = new Map<string, VocabularyItem>(
             existingAchievements.map((item: VocabularyItem) => [item.word, item])
         );
 
-        // --- BƯỚC 4: TỔNG HỢP VÀ ĐỒNG BỘ DỮ LIỆU ---
+        // --- BƯỚC 4: TỔNG HỢP VÀ ĐỒNG BỘ DỮ LIỆU (ĐÃ SỬA LỖI) ---
         const syncedVocabularyData: VocabularyItem[] = [];
         let idCounter = 1;
 
@@ -195,33 +214,26 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const existingData = existingAchievementsMap.get(word);
 
             if (existingData) {
-                // Từ này đã tồn tại, cập nhật EXP và giữ nguyên level đã claim
+                // TỪ ĐÃ TỒN TẠI: Tính toán EXP tiến trình dựa trên tổng EXP và level đã đạt.
+                // Lấy tổng EXP đã kiếm được (`totalExp`) trừ đi lượng EXP đã "tiêu" cho các cấp trước đó.
+                const expSpentOnPreviousLevels = calculateExpForLevels(existingData.level);
+                const currentProgressExp = totalExp - expSpentOnPreviousLevels;
+                const maxExpForCurrentLevel = existingData.level * 100;
+
                 syncedVocabularyData.push({
                     ...existingData,
-                    exp: totalExp, // Cập nhật EXP mới nhất
-                    maxExp: existingData.level * 100, // maxExp cho cấp hiện tại
+                    exp: currentProgressExp,
+                    maxExp: maxExpForCurrentLevel,
                 });
             } else {
-                // Từ này mới, tạo dữ liệu mặc định cho nó
-                // Tính level và exp ban đầu cho từ mới
-                let level = 1;
-                let expForNextLevel = 100;
-                let expProgress = totalExp;
-                while (expProgress >= expForNextLevel) {
-                    expProgress -= expForNextLevel;
-                    level++;
-                    expForNextLevel = level * 100;
-                }
-                
-                // Lưu ý: Chúng ta không tự động thăng cấp ở đây.
-                // Chúng ta chỉ lưu level là 1 và EXP là tổng EXP.
-                // Việc thăng cấp sẽ do người dùng chủ động "Claim".
+                // TỪ MỚI: Bắt đầu ở level 1 với toàn bộ EXP kiếm được là tiến trình.
+                // Người dùng sẽ phải "Claim" để lên các cấp tiếp theo.
                 syncedVocabularyData.push({
-                    id: idCounter++, // ID này chỉ dùng cho key của React, không quan trọng
+                    id: idCounter++,
                     word: word,
-                    exp: totalExp, // Tổng EXP kiếm được
-                    level: 1,      // Bắt đầu từ level 1
-                    maxExp: 100,   // Cần 100 EXP để lên level 2
+                    exp: totalExp,
+                    level: 1,
+                    maxExp: 100,
                 });
             }
         });
