@@ -12,7 +12,7 @@ export type VocabularyItem = {
   maxExp: number;
 };
 
-// --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới) ---
+// --- Dữ liệu mẫu (Không thay đổi) ---
 export const initialVocabularyData: VocabularyItem[] = [
   { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
   { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
@@ -23,13 +23,12 @@ export const initialVocabularyData: VocabularyItem[] = [
   { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
 ];
 
-// --- CẬP NHẬT Prop để nhận dữ liệu từ cha và gửi tín hiệu nhận thưởng ---
+// --- CẬP NHẬT Prop để nhận dữ liệu từ cha ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
-  initialData: VocabularyItem[];
+  vocabularyData: VocabularyItem[]; // Sử dụng prop này làm nguồn dữ liệu chính
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
-  // <<< THÊM MỚI: Callback để cập nhật dữ liệu ở component cha >>>
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
 }
 
@@ -70,15 +69,12 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
-  const [vocabulary, setVocabulary] = useState(initialData);
+export default function AchievementsScreen({ onClose, userId, vocabularyData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
+  // Xóa bỏ state cục bộ 'vocabulary' và useEffect đi kèm.
   const db = getFirestore();
 
-  useEffect(() => {
-      setVocabulary(initialData);
-  }, [initialData]);
-
-  const sortedVocabulary = [...vocabulary].sort((a, b) => {
+  // Sắp xếp trực tiếp từ prop `vocabularyData`
+  const sortedVocabulary = [...vocabularyData].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
     if (aIsClaimable !== bIsClaimable) {
@@ -91,16 +87,15 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   });
 
   const handleClaim = useCallback(async (id: number) => {
-    // Tìm item gốc để xác định phần thưởng
-    const originalItem = vocabulary.find(item => item.id === id);
+    // Tìm item trong `vocabularyData` (prop) thay vì state cục bộ
+    const originalItem = vocabularyData.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
     
-    // Phần thưởng từ việc lên cấp này
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
 
-    // Tạo danh sách mới sau khi cập nhật
-    const updatedList = vocabulary.map(item => {
+    // Tạo danh sách mới bằng cách map qua `vocabularyData` (prop)
+    const updatedList = vocabularyData.map(item => {
       if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
         const newLevel = item.level + 1;
@@ -123,14 +118,14 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
-      onDataUpdate(vocabulary); // Rollback state ở cha
+      // Nếu lỗi, rollback bằng cách gọi onDataUpdate với dữ liệu cũ
+      onDataUpdate(vocabularyData);
     }
-  }, [vocabulary, userId, db, onClaimReward, onDataUpdate]); // Thêm onDataUpdate vào dependencies
+  }, [vocabularyData, userId, db, onClaimReward, onDataUpdate]);
 
-  const totalWords = vocabulary.length;
-  // Con số này vẫn dùng để hiển thị, không ảnh hưởng đến logic lưu trữ
-  const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
+  // Tính toán trực tiếp từ prop `vocabularyData`
+  const totalWords = vocabularyData.length;
+  const totalMasteryCards = vocabularyData.reduce((sum, item) => sum + (item.level - 1), 0);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
