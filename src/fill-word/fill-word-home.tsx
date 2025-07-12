@@ -3,11 +3,12 @@
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
-import { doc, getDoc, getDocs, updateDoc, arrayUnion, collection } from 'firebase/firestore';
+// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` >>>
+import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 
-// Các component con được tách ra các file riêng (đây là lý do file này ngắn lại)
+// Các component con được tách ra các file riêng
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
@@ -96,44 +97,36 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const isInitialLoadComplete = useRef(false);
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
-
+  
+  // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN LOGIC LẤY DỮ LIỆU >>>
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
-        setLoading(false);
-        setVocabularyList([]);
-        setCoins(0);
-        setUsedWords(new Set());
-        setCurrentWord(null);
-        setError("Vui lòng đăng nhập để chơi.");
+        setLoading(false); setVocabularyList([]); setCoins(0); setUsedWords(new Set()); setCurrentWord(null); setError("Vui lòng đăng nhập để chơi.");
         return;
       }
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true); setError(null);
 
-        // Bước 1: Lấy dữ liệu từ document chính của user (coins, completed words)
-        const userDocRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
+        // Sử dụng Promise.all để lấy dữ liệu song song, tăng hiệu suất
+        const [
+          userDocSnap, 
+          openedVocabSnapshot, 
+          completedWordsSnapshot
+        ] = await Promise.all([
+          getDoc(doc(db, 'users', user.uid)),
+          getDocs(collection(db, 'users', user.uid, 'openedVocab')),
+          getDocs(collection(db, 'users', user.uid, 'completedWords'))
+        ]);
+
+        // Xử lý coins từ document chính
+        const fetchedCoins = userDocSnap.exists() ? (userDocSnap.data().coins || 0) : 0;
         
-        let fetchedCoins = 0;
-        let fetchedCompletedWords: string[] = [];
-        
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          fetchedCoins = (userData?.coins && typeof userData.coins === 'number') ? userData.coins : 0;
-          fetchedCompletedWords = (userData?.['fill-word-1'] && Array.isArray(userData['fill-word-1'])) ? userData['fill-word-1'] : [];
-        }
-
-        // Bước 2: Lấy danh sách từ vựng từ subcollection 'openedVocab'
-        const openedVocabColRef = collection(db, 'users', user.uid, 'openedVocab');
-        const vocabSnapshot = await getDocs(openedVocabColRef);
-
+        // Xử lý danh sách từ vựng cần chơi
         const vocabularyWithImages: VocabularyItem[] = [];
-        vocabSnapshot.forEach((vocabDoc) => {
+        openedVocabSnapshot.forEach((vocabDoc) => {
           const data = vocabDoc.data();
           const imageIndex = Number(vocabDoc.id); // doc.id chính là imageId
-
           if (data.word && !isNaN(imageIndex)) {
             vocabularyWithImages.push({
               word: data.word,
@@ -143,11 +136,18 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
           }
         });
 
-        // Bước 3: Cập nhật state
+        // Xử lý danh sách từ đã hoàn thành
+        const fetchedCompletedWords = new Set<string>();
+        completedWordsSnapshot.forEach((completedDoc) => {
+            // doc.id chính là từ đã hoàn thành
+            fetchedCompletedWords.add(completedDoc.id);
+        });
+
+        // Cập nhật state
         setVocabularyList(vocabularyWithImages);
         setCoins(fetchedCoins);
         setDisplayedCoins(fetchedCoins);
-        setUsedWords(new Set(fetchedCompletedWords));
+        setUsedWords(fetchedCompletedWords);
 
       } catch (err: any) {
         setError(`Không thể tải dữ liệu người dùng: ${err.message}`);
@@ -183,17 +183,50 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
+  // <<< THAY ĐỔI 3: CẬP NHẬT `checkAnswer` ĐỂ GHI VÀO SUBCOLLECTION >>>
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setIsCorrect(true); setFeedback(''); const newStreak = streak + 1; setStreak(newStreak); setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500);
       setUsedWords(prev => new Set(prev).add(currentWord.word)); setShowConfetti(true);
+      
       if (user) {
-        const coinReward = 2 * newStreak; const updatedCoins = coins + coinReward; setCoins(updatedCoins); startCoinCountAnimation(coins, updatedCoins);
-        try { await updateDoc(doc(db, 'users', user.uid), { 'fill-word-1': arrayUnion(currentWord.word), 'coins': updatedCoins }); } catch (e) { console.error("Error updating Firestore:", e); }
+        const coinReward = 2 * newStreak; 
+        const updatedCoins = coins + coinReward; 
+        setCoins(updatedCoins); 
+        startCoinCountAnimation(coins, updatedCoins);
+        
+        try {
+            // Chuẩn bị các tham chiếu
+            const userDocRef = doc(db, 'users', user.uid);
+            // Dùng chính từ vựng làm ID cho document trong subcollection
+            const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
+            
+            // Sử dụng WriteBatch để đảm bảo cả hai thao tác đều thành công hoặc thất bại cùng nhau
+            const batch = writeBatch(db);
+
+            // Thao tác 1: Thêm từ đã hoàn thành vào subcollection
+            batch.set(completedWordRef, { 
+                completedAt: new Date(),
+                gameMode: "fill-word-1" 
+            });
+
+            // Thao tác 2: Cập nhật số coin của người dùng
+            batch.update(userDocRef, { 'coins': updatedCoins });
+            
+            await batch.commit();
+
+        } catch (e) { 
+            console.error("Lỗi khi cập nhật dữ liệu với batch:", e); 
+        }
       }
-      setTimeout(() => setShowConfetti(false), 2000); setTimeout(selectNextWord, 1500);
-    } else { setFeedback(''); setIsCorrect(false); setStreak(0); }
+      setTimeout(() => setShowConfetti(false), 2000); 
+      setTimeout(selectNextWord, 1500);
+    } else { 
+      setFeedback(''); 
+      setIsCorrect(false); 
+      setStreak(0); 
+    }
   }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation]);
   
   const resetGame = useCallback(() => {
@@ -212,7 +245,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
-  if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Bạn chưa mở thẻ từ vựng nào.<br/>Hãy vào màn hình "Lật thẻ" để bắt đầu!</div>;
+  if (vocabularyList.length === 0 && !loading && !error) return <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Bạn chưa mở thẻ từ vựng nào.<br/>Hãy vào màn hình "Lật thẻ" để bắt đầu!</div>;
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
