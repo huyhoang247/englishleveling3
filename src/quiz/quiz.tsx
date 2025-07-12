@@ -1,7 +1,7 @@
 import { useState, useEffect, memo } from 'react';
-// Import necessary modules from firebase.js and firestore
+// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` và `increment` >>>
 import { db, auth } from '../firebase.js';
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
@@ -203,25 +203,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, filteredQuizData.length]);
 
-
-  const updateCoinsInFirestore = async (newCoins) => {
-    if (user) {
-      const userRef = doc(db, 'users', user.uid);
-      try {
-        await updateDoc(userRef, { coins: newCoins });
-        console.log("Coins updated successfully in Firestore!");
-      } catch (error) {
-        console.error("Error updating coins in Firestore:", error);
-      }
-    }
-  };
+  // <<< THAY ĐỔI 2: XÓA HÀM `updateCoinsInFirestore` VÌ LOGIC SẼ ĐƯỢC GỘP VÀO `handleAnswer` >>>
+  // const updateCoinsInFirestore = async (newCoins) => { ... };
 
 
-  const handleAnswer = (selectedAnswer) => {
+  // <<< THAY ĐỔI 3: CẬP NHẬT `handleAnswer` ĐỂ GHI DỮ LIỆU BẰNG BATCH >>>
+  const handleAnswer = async (selectedAnswer) => {
     if (answered || filteredQuizData.length === 0) return;
     setSelectedOption(selectedAnswer);
     setAnswered(true);
-    const isCorrect = selectedAnswer === filteredQuizData[currentQuestion].correctAnswer;
+    const currentQuizItem = filteredQuizData[currentQuestion];
+    const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
 
     if (isCorrect) {
       setShowConfetti(true);
@@ -240,18 +232,52 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
         setCoins(totalCoins);
-        updateCoinsInFirestore(totalCoins);
         setCoinAnimation(true);
         setTimeout(() => setCoinAnimation(false), 1500);
       }
+
       if (newStreak >= 1) {
         setStreakAnimation(true);
         setTimeout(() => setStreakAnimation(false), 1500);
+      }
+
+      // Tìm từ vựng khớp với câu hỏi để cập nhật vào Firestore
+      const matchedWord = userVocabulary.find(vocabWord =>
+        new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
+      );
+
+      // Nếu có người dùng, có từ vựng khớp và có thưởng coin, tiến hành ghi dữ liệu
+      if (user && matchedWord && coinsToAdd > 0) {
+        try {
+          const batch = writeBatch(db);
+          const gameModeId = "quiz-1";
+          
+          // Thao tác 1: Cập nhật số coin của người dùng
+          const userDocRef = doc(db, 'users', user.uid);
+          batch.update(userDocRef, { coins: coins + coinsToAdd });
+
+          // Thao tác 2: Cập nhật số lần trả lời đúng cho từ vựng này
+          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
+          batch.set(completedWordRef, {
+            lastCompletedAt: new Date(),
+            gameModes: {
+              [gameModeId]: {
+                correctCount: increment(1)
+              }
+            }
+          }, { merge: true }); // Dùng merge để không ghi đè các game mode khác
+
+          await batch.commit();
+          console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
+        } catch (error) {
+          console.error("Lỗi khi thực hiện batch write:", error);
+        }
       }
     } else {
       setStreak(0);
     }
   };
+
 
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
@@ -447,7 +473,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                         if (isCorrect) {
                           bgColor = "bg-green-50";
                           borderColor = "border-green-500";
-                          textColor = "text-green-800";
+textColor = "text-green-800";
                           labelBg = "bg-green-500 text-white";
                         } else if (isSelected) {
                           bgColor = "bg-red-50";
