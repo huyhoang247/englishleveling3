@@ -1,12 +1,9 @@
-
-
 // src/background-game.tsx
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
-// <<< THAY ĐỔI 1: THÊM `collection` và `getDocs` >>>
 import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs } from 'firebase/firestore';
 import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
@@ -17,18 +14,17 @@ import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 import GoldMine from './gold-miner.tsx';
 import Inventory from './inventory.tsx';
-import DungeonCanvasBackground from './DungeonCanvasBackground.tsx'; // Sử dụng background canvas mới
+import DungeonCanvasBackground from './DungeonCanvasBackground.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
-// --- Import component Thành Tựu và dữ liệu/type của nó ---
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
-import AdminPanel from './admin.tsx'; // NEW: Import Admin Panel
+import AdminPanel from './admin.tsx';
 
-// --- SVG Icon Components (Replacement for lucide-react) ---
+// --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -49,7 +45,7 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 );
 
 
-// --- NEW: Error Boundary Component ---
+// --- Error Boundary Component ---
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -111,14 +107,14 @@ interface ObstacleRunnerGameProps {
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
-  // --- Thêm state để lưu dữ liệu thành tựu ---
   const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
 
   // States for UI and User Data
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
-  const [gems, setGems] = useState(42);
+  const [gems, setGems] = useState(0);
+  const [masteryCards, setMasteryCards] = useState(0); // <<< THÊM MỚI: State cho Mastery Cards
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -132,7 +128,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
-  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false); // NEW: State for Admin Panel
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
@@ -159,10 +155,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
-  // <<< THAY ĐỔI 2: VIẾT LẠI HOÀN TOÀN `fetchVocabularyData` ĐỂ ĐỒNG BỘ DỮ LIỆU >>>
   const fetchVocabularyData = async (userId: string) => {
     try {
-        // --- BƯỚC 1: LẤY DỮ LIỆU SONG SONG ---
         const completedWordsCol = collection(db, 'users', userId, 'completedWords');
         const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
 
@@ -171,7 +165,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             getDoc(achievementDocRef),
         ]);
 
-        // --- BƯỚC 2: XỬ LÝ DỮ LIỆU TỪ `completedWords` ---
         const wordToExpMap = new Map<string, number>();
         completedWordsSnap.forEach(wordDoc => {
             const word = wordDoc.id;
@@ -183,13 +176,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             wordToExpMap.set(word, totalCorrectCount * 100); 
         });
 
-        // --- BƯỚC 3: XỬ LÝ DỮ LIỆU TỪ `achievements` (dữ liệu đã lưu) ---
         const existingAchievements = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
         const existingAchievementsMap = new Map<string, VocabularyItem>(
             existingAchievements.map((item: VocabularyItem) => [item.word, item])
         );
 
-        // --- BƯỚC 4: TỔNG HỢP VÀ ĐỒNG BỘ DỮ LIỆU (PHẦN SỬA LỖI) ---
         const syncedVocabularyData: VocabularyItem[] = [];
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
 
@@ -197,24 +188,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const existingItem = existingAchievementsMap.get(word);
 
             if (existingItem) {
-                // TỪ VỰNG ĐÃ TỒN TẠI: Đồng bộ tiến trình dựa trên cấp độ đã nhận
-                // Tính tổng EXP đã "tiêu" để đạt cấp độ hiện tại
                 let expSpentToReachCurrentLevel = 0;
                 for (let i = 1; i < existingItem.level; i++) {
                     expSpentToReachCurrentLevel += i * 100;
                 }
-
-                // Tiến trình hiện tại = Tổng EXP kiếm được - EXP đã tiêu
                 const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-
                 syncedVocabularyData.push({
-                    ...existingItem, // Giữ lại ID và các thuộc tính cũ
+                    ...existingItem,
                     exp: currentProgressExp,
-                    maxExp: existingItem.level * 100, // EXP cần cho cấp tiếp theo
+                    maxExp: existingItem.level * 100,
                 });
 
             } else {
-                // TỪ VỰNG MỚI: Tính toán cấp độ và tiến trình ban đầu từ tổng EXP
                 let level = 1;
                 let expProgress = totalExp;
                 let maxExpForLevel = 100;
@@ -224,9 +209,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     level++;
                     maxExpForLevel = level * 100;
                 }
-
                 syncedVocabularyData.push({
-                    id: idCounter++, // Gán ID mới
+                    id: idCounter++,
                     word: word,
                     exp: expProgress,
                     level: level,
@@ -240,13 +224,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     } catch (error) {
         console.error("Error fetching and syncing vocabulary achievements data:", error);
-        // Trong trường hợp lỗi, vẫn set dữ liệu mặc định để app không bị crash
         setVocabularyData(initialVocabularyData);
     }
   };
 
-
-  // Fetch user data from Firestore
   const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
     try {
@@ -259,16 +240,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0);
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
+        setMasteryCards(userData.masteryCards || 0); // <<< THÊM MỚI
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
+          masteryCards: 0, // <<< THÊM MỚI
           createdAt: new Date(),
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
+        setMasteryCards(0); // <<< THÊM MỚI
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -277,7 +261,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // Fetch global jackpot pool data
   const fetchJackpotPool = async () => {
     try {
         const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -296,7 +279,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // Update coins in Firestore
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update coins: User not authenticated.");
@@ -323,8 +305,32 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.error("Firestore Transaction failed for coins: ", error);
     }
   };
+  
+  // <<< THÊM MỚI: Hàm để cập nhật Mastery Cards trên Firestore >>>
+  const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
+    if (!userId) {
+      console.error("Cannot update mastery cards: User not authenticated.");
+      return;
+    }
+    const userDocRef = doc(db, 'users', userId);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          transaction.set(userDocRef, { masteryCards: amount });
+        } else {
+          const currentCards = userDoc.data().masteryCards || 0;
+          const newCards = currentCards + amount;
+          transaction.update(userDocRef, { masteryCards: newCards });
+          setMasteryCards(newCards); // Cập nhật state ở component cha
+        }
+      });
+      console.log(`Mastery Cards updated in Firestore for user ${userId}.`);
+    } catch (error) {
+      console.error("Firestore Transaction failed for mastery cards: ", error);
+    }
+  };
 
-  // Animate coin counter
    const startCoinCountAnimation = (reward: number) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
@@ -344,7 +350,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }, 50);
   };
 
-  // Update jackpot pool in Firestore
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
@@ -370,16 +375,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setGems(prev => prev + amount);
   };
   
-  // Handle auth state changes
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
-        // --- Gọi cả hai hàm fetch khi có user ---
         fetchUserData(user.uid);
-        fetchVocabularyData(user.uid); // <-- THAY ĐỔI 3: GỌI HÀM MỚI
+        fetchVocabularyData(user.uid);
         fetchJackpotPool();
       } else {
-        // Reset all states on logout
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
@@ -390,20 +392,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false); // NEW: Reset state
+        setIsAdminPanelOpen(false);
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
+        setMasteryCards(0); // <<< THÊM MỚI: Reset state khi logout
         setJackpotPool(0);
-        setIsLoadingUserData(false);
-        setVocabularyData(null); // <-- THAY ĐỔI 4: Reset dữ liệu thành tựu
+        setIsLoadingUserData(true);
+        setVocabularyData(null);
       }
     });
     return () => unsubscribe();
   }, [auth, db]);
 
-  // Pause animations when tab is not visible
   useEffect(() => {
       const handleVisibilityChange = () => {
           if (document.hidden) {
@@ -416,14 +418,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  const handleTap = () => {
-    // This function is now empty as there's no gameplay to start/interact with
-  };
+  const handleTap = () => { };
   
-  // --- THAY ĐỔI 5: Cập nhật điều kiện loading, thêm cả việc chờ dữ liệu thành tựu ---
   const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
 
-  // Animate coin number changes
   useEffect(() => {
     if (displayedCoins === coins) return;
     if (Math.abs(coins - displayedCoins) > 10) {
@@ -448,7 +446,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
      return () => {};
   }, [displayedCoins, coins]);
 
-  // <<-- THAY ĐỔI QUAN TRỌNG Ở ĐÂY -->>
   const renderCharacter = () => {
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
@@ -465,6 +462,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         />
       </div>
     );
+  };
+  
+  // <<< THÊM MỚI: Hàm xử lý nhận thưởng, sẽ được truyền xuống AchievementsScreen >>>
+  const handleRewardClaim = (reward: { gold: number; masteryCards: number }) => {
+    if (!auth.currentUser) return;
+    
+    console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
+
+    // Cập nhật Vàng. `startCoinCountAnimation` sẽ gọi `updateCoinsInFirestore` bên trong nó.
+    if (reward.gold > 0) {
+        startCoinCountAnimation(reward.gold);
+    }
+
+    // Cập nhật Thẻ Thông Thạo
+    if (reward.masteryCards > 0) {
+        updateMasteryCardsInFirestore(auth.currentUser.uid, reward.masteryCards);
+    }
   };
 
   const toggleStatsFullscreen = () => {
@@ -697,7 +711,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
   
-  // NEW: Toggle function for Admin Panel screen
   const toggleAdminPanel = () => {
     if (isLoading) return;
     
@@ -705,7 +718,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        // Close all other overlays
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
@@ -723,14 +735,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
-
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
   };
 
   const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
-  const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com'; // Check if user is admin
+  const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
@@ -741,11 +752,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
           onShowAchievements={toggleAchievements}
-          onShowAdmin={isAdmin ? toggleAdminPanel : undefined} // NEW: Pass handler only if user is admin
+          onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
-        {/* === MAIN LOBBY SCREEN === */}
         <div 
           style={{ 
             display: isAnyOverlayOpen ? 'none' : 'block',
@@ -800,7 +810,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {/* Left-side Action Buttons */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
                 { icon: <img src={uiAssets.towerIcon} alt="Leo Tháp Icon" className="w-full h-full object-contain" />, onClick: toggleTowerGame },
@@ -815,7 +824,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ))}
             </div>
 
-            {/* Right-side Action Buttons */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
                 { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
@@ -833,7 +841,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           </div>
         </div>
 
-        {/* === OVERLAY SCREENS === */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
             <ErrorBoundary>{auth.currentUser && (<CharacterCard onClose={toggleStatsFullscreen} coins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}/>)}</ErrorBoundary>
         </div>
@@ -862,7 +869,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward}/>)}</ErrorBoundary>
         </div>
         
-        {/* --- CẬP NHẬT RENDER CHO MÀN HÌNH THÀNH TỰU --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAchievementsOpen && auth.currentUser && vocabularyData && (
@@ -870,12 +876,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleAchievements} 
                         userId={auth.currentUser.uid}
                         initialData={vocabularyData}
+                        onClaimReward={handleRewardClaim}
                     />
                 )}
             </ErrorBoundary>
         </div>
         
-        {/* NEW: Render Admin Panel */}
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary>
         </div>
