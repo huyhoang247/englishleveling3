@@ -39,7 +39,6 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => (
   </svg>
 );
 
-// --- CẬP NHẬT: Thay thế MasteryCardIcon SVG bằng thẻ <img> ---
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
     <img
         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png"
@@ -49,7 +48,6 @@ const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [ke
     />
 );
 
-// --- CẬP NHẬT: Thay thế GoldIcon SVG bằng thẻ <img> ---
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
     <img
         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
@@ -58,7 +56,6 @@ const GoldIcon = ({ className = '', ...props }: { className?: string; [key: stri
         {...props}
     />
 );
-
 
 const BookOpenIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -115,7 +112,6 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
           </h1>
         </header>
 
-        {/* --- Bảng Thống Kê (Thiết kế nhỏ gọn) --- */}
         <section className="mb-8 flex flex-row justify-center items-center gap-4">
           <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
@@ -125,7 +121,6 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
             </div>
           </div>
           <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
-            {/* CẬP NHẬT: Xóa class 'text-sky-400' */}
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalMasteryCards}</p>
@@ -180,7 +175,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
 
       <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word}</p>
-        <span className="md:hidden text-xs text-slate-400">{`Level ${level}`}</span>
+        <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span>
       </div>
 
       <div className="col-span-12 md:col-span-3 md:px-2">
@@ -196,7 +191,6 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
       <div className="col-span-6 md:col-span-3 flex items-center justify-center">
         <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
             <div className="flex items-center gap-1.5" title="1 Thẻ thông thạo">
-                {/* CẬP NHẬT: Xóa class 'text-sky-300' */}
                 <MasteryCardIcon className="w-6 h-6 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">x1</span>
             </div>
@@ -210,22 +204,25 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         </div>
       </div>
 
+      {/* --- PHIÊN BẢN NÚT ĐÃ ĐƯỢC CẬP NHẬT --- */}
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
           disabled={!isClaimable}
           className={`
-            flex items-center justify-center gap-2 w-full max-w-[150px] px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 border
+            flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border
             ${isClaimable
-              ? 'bg-emerald-500 border-emerald-400 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
-              : 'bg-slate-700 border-slate-600 text-slate-400 cursor-not-allowed'
+              ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
+              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
             }
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {isClaimable ? 'Nhận Thưởng' : 'Chưa Đạt'}
+          {isClaimable ? 'Nhận' : 'Chưa Đạt'}
         </button>
       </div>
+      {/* --- KẾT THÚC CẬP NHẬT --- */}
+
     </div>
   );
 }
