@@ -111,7 +111,7 @@ const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children
 const Shield = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Icon> );
 const Gem = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M12 22 6 9l-4-6"/><path d="M12 22 18 9l4-6"/></Icon> );
 const Swords = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M14.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4-4L14.5 3.5z"/><path d="M19.5 8.5a2.12 2.12 0 0 1-3-3L10 12l4 4L19.5 8.5z"/></Icon> );
-const Coins = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18" /><path d="M7 6h1v4" /><path d="m16.71 13.88.7.71-2.82 2.82" /></Icon> );
+const Coins = (props: any) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" {...props} /> );
 const Sparkles = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m12 3-1.9 4.2-4.3.4 3.3 2.9-1 4.2 3.6-2.3 3.6 2.3-1-4.2 3.3-2.9-4.3-.4L12 3z"/><path d="M5 12.5 3.1 14 5 15.5"/><path d="M19 12.5 20.9 14 19 15.5"/></Icon> );
 const ShoppingCart = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.16" /></Icon> );
 const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></Icon> );
@@ -193,7 +193,7 @@ const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => 
                 <h3 className="text-base font-bold text-white truncate">{item.name}</h3>
                 <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center space-x-1.5">
-                        <Gem className={`w-4 h-4 ${rarityTextColor}`} />
+                        <Coins className="w-4 h-4" />
                         <span className="text-lg font-bold text-white">{item.price.toLocaleString()}</span>
                     </div>
                     <button className="text-xs font-semibold text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -288,7 +288,7 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
                 <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                     <p className="text-sm text-gray-400">Giá vật phẩm</p>
                     <div className="flex items-center space-x-3 mt-1">
-                        <Gem className={`w-7 h-7 ${getRarityTextColor(item.rarity)}`} />
+                        <Coins className="w-7 h-7" />
                         <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
                     </div>
                 </div>
