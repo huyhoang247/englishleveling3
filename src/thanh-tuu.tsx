@@ -1,7 +1,4 @@
-// thanh-tuu.tsx
-
 import React, { useState, useCallback, useEffect } from 'react';
-// --- Thêm các import cần thiết cho Firestore ---
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
@@ -27,7 +24,7 @@ export const initialVocabularyData: VocabularyItem[] = [
 // --- CẬP NHẬT Prop để nhận dữ liệu từ cha và gửi tín hiệu nhận thưởng ---
 interface AchievementsScreenProps {
   onClose: () => void;
-  userId: string; 
+  userId: string;
   initialData: VocabularyItem[];
   // <<< THÊM MỚI: Prop để xử lý việc nhận thưởng ở component cha >>>
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
@@ -70,7 +67,6 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-// <<< CẬP NHẬT: Thêm onClaimReward vào props >>>
 export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
   const db = getFirestore();
@@ -91,7 +87,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     return b.exp - a.exp;
   });
 
-  // <<< CẬP NHẬT: Sửa lại hàm handleClaim để gọi callback onClaimReward >>>
   const handleClaim = useCallback(async (id: number) => {
     // Tìm item gốc để xác định phần thưởng
     const originalItem = vocabulary.find(item => item.id === id);
@@ -115,7 +110,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     // Cập nhật state cục bộ để UI phản hồi ngay lập tức
     setVocabulary(updatedList);
     
-    // <<< THAY ĐỔI QUAN TRỌNG: Gọi callback để component cha xử lý lưu trữ phần thưởng >>>
+    // Gọi callback để component cha xử lý lưu trữ phần thưởng
     onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
 
     // Lưu danh sách tiến trình thành tựu đã cập nhật vào Firestore
