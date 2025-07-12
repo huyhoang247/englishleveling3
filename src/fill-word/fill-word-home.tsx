@@ -175,7 +175,6 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
-  // <<< CHANGE: Cập nhật `checkAnswer` để ghi nhận số lần hoàn thành bằng writeBatch >>>
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
@@ -195,12 +194,10 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
             const batch = writeBatch(db);
             const userDocRef = doc(db, 'users', user.uid);
             const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
-            const gameModeId = "fill-word-1"; // ID duy nhất cho game này
+            const gameModeId = "fill-word-1";
 
-            // Thao tác 1: Cập nhật coin của user
             batch.update(userDocRef, { 'coins': updatedCoins });
 
-            // Thao tác 2: Ghi nhận lần hoàn thành cho từ này
             batch.set(completedWordRef, {
                 lastCompletedAt: new Date(),
                 gameModes: {
@@ -208,15 +205,14 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
                         correctCount: increment(1)
                     }
                 }
-            }, { merge: true }); // Dùng merge để không ghi đè các game mode khác
+            }, { merge: true });
 
             await batch.commit();
             console.log(`Batch write thành công cho từ '${currentWord.word}' và cập nhật coins.`);
 
         } catch (e) { 
             console.error("Lỗi khi cập nhật dữ liệu với batch:", e); 
-            // Optional: Xử lý lỗi, ví dụ: hoàn tác thay đổi trên UI
-            setCoins(coins); // Đặt lại coins về giá trị cũ
+            setCoins(coins);
             const revertedUsedWords = new Set(usedWords);
             revertedUsedWords.delete(currentWord.word);
             setUsedWords(revertedUsedWords);
