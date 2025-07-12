@@ -90,60 +90,34 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
     return b.exp - a.exp;
   });
 
-  // <<< SỬA LỖI LOGIC TRIỆT ĐỂ TẠI ĐÂY >>>
   const handleClaim = useCallback(async (id: number) => {
-    let itemToUpdate: VocabularyItem | undefined = vocabulary.find(item => item.id === id);
-
-    if (!itemToUpdate || itemToUpdate.exp < itemToUpdate.maxExp) {
-      return; // Không làm gì nếu không tìm thấy hoặc không đủ điều kiện
-    }
-
-    // --- Tính toán local để cập nhật UI ngay lập tức ---
-    let newLevel = itemToUpdate.level;
-    let newExp = itemToUpdate.exp;
-    let currentMaxExp = itemToUpdate.maxExp;
-
-    // Dùng vòng lặp while để xử lý trường hợp lên nhiều cấp
-    while (newExp >= currentMaxExp) {
-      // TODO: Add rewards logic for each level up
-      newExp -= currentMaxExp;
-      newLevel += 1;
-      currentMaxExp = newLevel * 100;
-    }
-    
-    // Tạo đối tượng đã cập nhật hoàn toàn cho state local
-    const updatedItemForState = { 
-        ...itemToUpdate, 
-        level: newLevel, 
-        exp: newExp, 
-        maxExp: currentMaxExp 
-    };
-
-    const updatedListForState = vocabulary.map(item => 
-      item.id === id ? updatedItemForState : item
-    );
+    // Tạo danh sách mới sau khi cập nhật
+    const updatedList = vocabulary.map(item => {
+      if (item.id === id && item.exp >= item.maxExp) {
+        // TODO: Add rewards logic (gold, mastery cards) to user's main data
+        // Logic mới: Trừ đi EXP của cấp hiện tại và tăng cấp
+        const expRemaining = item.exp - item.maxExp;
+        const newLevel = item.level + 1;
+        const newMaxExp = newLevel * 100;
+        return { ...item, level: newLevel, exp: expRemaining, maxExp: newMaxExp };
+      }
+      return item;
+    });
 
     // Cập nhật state cục bộ để UI phản hồi ngay lập tức
-    setVocabulary(updatedListForState);
+    setVocabulary(updatedList);
 
-    // --- Chuẩn bị dữ liệu để LƯU VÀO FIRESTORE ---
-    // Tạo một danh sách mới từ state, nhưng chỉ giữ lại các trường cần thiết.
-    // QUAN TRỌNG: KHÔNG LƯU `exp` và `maxExp` để `fetchVocabularyData` toàn quyền tính toán.
-    const listToSave = updatedListForState.map(({ id, word, level }) => ({ word, level }));
-
-
-    // Lưu danh sách đã được đơn giản hóa vào Firestore
+    // Lưu danh sách đã cập nhật vào Firestore
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-      await setDoc(achievementDocRef, { vocabulary: listToSave }, { merge: true });
-      console.log("Vocabulary mastery progress (level only) saved to Firestore.");
+      await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+      console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
+      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ
       setVocabulary(vocabulary);
     }
   }, [vocabulary, userId, db]);
-
 
   const totalWords = vocabulary.length;
   const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
@@ -210,7 +184,7 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
 // --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
 function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void }) {
   const { id, word, exp, level, maxExp } = item;
-  const progressPercentage = Math.min((exp / maxExp) * 100, 100);
+  const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
@@ -229,6 +203,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
       <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word}</p>
         <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span>
+        <span className="hidden md:block text-xs text-slate-400">{`Cấp ${level}`}</span>
       </div>
 
       <div className="col-span-12 md:col-span-3 md:px-2">
@@ -270,7 +245,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {isClaimable ? 'Claim' : 'Chưa Đạt'}
+          {isClaimable ? 'Nhận' : 'Chưa Đạt'}
         </button>
       </div>
     </div>
