@@ -243,8 +243,7 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
     if (!item) return null;
 
     const hasSkills = item.skills && item.skills.length > 0;
-    const config = rarityConfigTailwind[item.rarity as keyof typeof rarityConfigTailwind] || rarityConfigTailwind['E'];
-
+    
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
@@ -293,7 +292,7 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
                     </div>
                 </div>
                 <div className="flex items-stretch gap-4">
-                    <button className={`flex-1 bg-gradient-to-r from-${config.color} via-${config.color} to-cyan-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg`}>MUA NGAY</button>
+                    <button className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold uppercase tracking-wider py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/40 active:scale-100 shadow-lg shadow-cyan-500/20 border-t border-cyan-400/50">MUA NGAY</button>
                     <button className="bg-slate-700 text-white font-bold p-3 rounded-lg hover:bg-slate-600 transition-colors duration-300">TẶNG</button>
                 </div>
             </div>
