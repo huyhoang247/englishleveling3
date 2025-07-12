@@ -1,3 +1,5 @@
+// src/thanh-tuu.tsx
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
@@ -26,8 +28,9 @@ interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
   initialData: VocabularyItem[];
-  // <<< THÊM MỚI: Prop để xử lý việc nhận thưởng ở component cha >>>
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
+  // <<< THÊM MỚI: Callback để cập nhật dữ liệu ở component cha >>>
+  onDataUpdate: (updatedData: VocabularyItem[]) => void;
 }
 
 // --- Biểu tượng (Icon) - không thay đổi ---
@@ -67,7 +70,7 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward }: AchievementsScreenProps) {
+export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
   const db = getFirestore();
 
@@ -107,8 +110,8 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
 
-    // Cập nhật state cục bộ để UI phản hồi ngay lập tức
-    setVocabulary(updatedList);
+    // Cập nhật state ở component cha NGAY LẬP TỨC để đồng bộ hóa giao diện
+    onDataUpdate(updatedList);
     
     // Gọi callback để component cha xử lý lưu trữ phần thưởng
     onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
@@ -121,9 +124,9 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
       // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
-      setVocabulary(vocabulary);
+      onDataUpdate(vocabulary); // Rollback state ở cha
     }
-  }, [vocabulary, userId, db, onClaimReward]); // Thêm onClaimReward vào dependencies
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate]); // Thêm onDataUpdate vào dependencies
 
   const totalWords = vocabulary.length;
   // Con số này vẫn dùng để hiển thị, không ảnh hưởng đến logic lưu trữ
