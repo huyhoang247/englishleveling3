@@ -13,7 +13,7 @@ interface SidebarLayoutProps {
   onShowStats?: () => void; // Handler for showing Stats
   onShowRank?: () => void;   // Handler for showing Rank
   onShowSettings?: () => void;
-  onShowHelp?: () => void;
+  // onShowHelp?: () => void; // REMOVED
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
   onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
   onShowAchievements?: () => void; // NEW: Handler for showing Achievements
@@ -193,7 +193,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -219,7 +219,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
     { id: 'achievements', label: 'Thành Tựu', icon: TrophyIcon, onClick: onShowAchievements },
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
-    { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
+    // { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp }, // REMOVED
     // NEW: Admin Panel menu item, placed after Help
     { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
   ];
