@@ -127,13 +127,6 @@ const sampleItemsNonWeapons = [
     { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'A', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
 ];
 
-// --- Cấu hình màu sắc & giá cho các cấp độ hiếm ---
-const rarityConfigTailwind = {
-    'SR': { color: 'red-500' }, 'S': { color: 'yellow-400' },
-    'A': { color: 'purple-500' }, 'B': { color: 'blue-500' },
-    'D': { color: 'green-500' }, 'E': { color: 'gray-500' },
-};
-
 const SHOP_WEAPON_RANKS: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
 const SHOP_WEAPON_PRICES: { [key in ItemRank]?: number } = { 'E': 100, 'D': 500, 'B': 1000, 'A': 2000, 'S': 5000, 'SR': 10000 };
 
@@ -282,20 +275,24 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
                 {(!hasSkills || activeModalTab === 'info') ? ( renderItemStats(item) ) : ( renderItemSkills(item) )}
               </div>
             </div>
-
-            <div className="flex-shrink-0 mt-auto flex flex-col gap-4 border-t border-gray-700/50 pt-4">
-                <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                    <p className="text-sm text-gray-400">Giá vật phẩm</p>
-                    <div className="flex items-center space-x-3 mt-1">
-                        <Coins className="w-7 h-7" />
-                        <span className="text-2xl font-bold text-white">{item.price.toLocaleString()}</span>
+            
+            {/* --- START: KHU VỰC MUA HÀNG ĐÃ THIẾT KẾ LẠI --- */}
+            <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
+                <div className="flex items-center justify-between">
+                    {/* Price Display */}
+                    <div className="flex items-center space-x-2">
+                        <Coins className="w-6 h-6" />
+                        <span className="text-xl font-bold text-white">{item.price.toLocaleString()}</span>
                     </div>
-                </div>
-                <div className="flex items-stretch gap-4">
-                    <button className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold uppercase tracking-wider py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/40 active:scale-100 shadow-lg shadow-cyan-500/20 border-t border-cyan-400/50">MUA NGAY</button>
-                    <button className="bg-slate-700 text-white font-bold p-3 rounded-lg hover:bg-slate-600 transition-colors duration-300">TẶNG</button>
+
+                    {/* Compact Buy Button */}
+                    <button className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold text-sm uppercase px-5 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100">
+                        MUA NGAY
+                    </button>
                 </div>
             </div>
+            {/* --- END: KHU VỰC MUA HÀNG ĐÃ THIẾT KẾ LẠI --- */}
+
           </div>
           <style jsx>{` .scrollbar-hidden::-webkit-scrollbar { display: none; } .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); } `}</style>
         </div>
