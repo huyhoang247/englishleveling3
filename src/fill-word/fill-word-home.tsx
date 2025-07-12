@@ -3,7 +3,7 @@
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, getDocs, updateDoc, arrayUnion, collection } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 
@@ -95,30 +95,71 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const TOTAL_TIME = 60;
   const isInitialLoadComplete = useRef(false);
 
-  // ... (toàn bộ logic hooks giữ nguyên) ...
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
+
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user) { setLoading(false); setVocabularyList([]); setCoins(0); setUsedWords(new Set()); setCurrentWord(null); setError("Vui lòng đăng nhập để chơi."); return; }
+      if (!user) {
+        setLoading(false);
+        setVocabularyList([]);
+        setCoins(0);
+        setUsedWords(new Set());
+        setCurrentWord(null);
+        setError("Vui lòng đăng nhập để chơi.");
+        return;
+      }
       try {
-        setLoading(true); setError(null);
-        const userDocRef = doc(db, 'users', user.uid); const docSnap = await getDoc(userDocRef);
+        setLoading(true);
+        setError(null);
+
+        // Bước 1: Lấy dữ liệu từ document chính của user (coins, completed words)
+        const userDocRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+        
+        let fetchedCoins = 0;
+        let fetchedCompletedWords: string[] = [];
+        
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          const fetchedVocabulary = (userData?.listVocabulary && Array.isArray(userData.listVocabulary)) ? userData.listVocabulary.map((word: string) => ({ word, hint: `Nghĩa của từ "${word}"` })) : [];
-          const fetchedImageIds = (userData?.openedImageIds && Array.isArray(userData.openedImageIds) && userData.openedImageIds.every((id: any) => typeof id === 'number')) ? userData.openedImageIds : [];
-          const fetchedCompletedWords = (userData?.['fill-word-1'] && Array.isArray(userData['fill-word-1'])) ? userData['fill-word-1'] : [];
-          const fetchedCoins = (userData?.coins && typeof userData.coins === 'number') ? userData.coins : 0;
-          const vocabularyWithImages = fetchedVocabulary.map((item, index) => {
-            const imageIndex = fetchedImageIds[index]; const adjustedIndex = imageIndex !== undefined ? imageIndex - 1 : undefined; const isValid = adjustedIndex !== undefined && adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length;
-            return { ...item, imageIndex: isValid ? imageIndex : undefined };
-          });
-          setVocabularyList(vocabularyWithImages); setCoins(fetchedCoins); setDisplayedCoins(fetchedCoins); setUsedWords(new Set(fetchedCompletedWords));
-        } else { setError("Không tìm thấy dữ liệu người dùng."); setVocabularyList([]); }
-      } catch (err: any) { setError(`Không thể tải dữ liệu người dùng: ${err.message}`); } finally { setLoading(false); }
+          fetchedCoins = (userData?.coins && typeof userData.coins === 'number') ? userData.coins : 0;
+          fetchedCompletedWords = (userData?.['fill-word-1'] && Array.isArray(userData['fill-word-1'])) ? userData['fill-word-1'] : [];
+        }
+
+        // Bước 2: Lấy danh sách từ vựng từ subcollection 'openedVocab'
+        const openedVocabColRef = collection(db, 'users', user.uid, 'openedVocab');
+        const vocabSnapshot = await getDocs(openedVocabColRef);
+
+        const vocabularyWithImages: VocabularyItem[] = [];
+        vocabSnapshot.forEach((vocabDoc) => {
+          const data = vocabDoc.data();
+          const imageIndex = Number(vocabDoc.id); // doc.id chính là imageId
+
+          if (data.word && !isNaN(imageIndex)) {
+            vocabularyWithImages.push({
+              word: data.word,
+              hint: `Nghĩa của từ "${data.word}"`,
+              imageIndex: imageIndex
+            });
+          }
+        });
+
+        // Bước 3: Cập nhật state
+        setVocabularyList(vocabularyWithImages);
+        setCoins(fetchedCoins);
+        setDisplayedCoins(fetchedCoins);
+        setUsedWords(new Set(fetchedCompletedWords));
+
+      } catch (err: any) {
+        setError(`Không thể tải dữ liệu người dùng: ${err.message}`);
+        setVocabularyList([]);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchUserData();
   }, [user]);
+
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
       const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
@@ -128,6 +169,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       isInitialLoadComplete.current = true;
     }
   }, [vocabularyList, loading, error, usedWords]);
+  
   useEffect(() => {
     if (!currentWord || gameOver || isCorrect) return;
     setTimeLeft(TOTAL_TIME);
@@ -138,7 +180,9 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const selectNextWord = useCallback(() => {
     if (currentWordIndex < shuffledUnusedWords.length - 1) { const nextIndex = currentWordIndex + 1; setCurrentWordIndex(nextIndex); setCurrentWord(shuffledUnusedWords[nextIndex]); setUserInput(''); setFeedback(''); setIsCorrect(null); } else { setGameOver(true); setCurrentWord(null); }
   }, [currentWordIndex, shuffledUnusedWords]);
+  
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
+  
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
@@ -151,6 +195,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       setTimeout(() => setShowConfetti(false), 2000); setTimeout(selectNextWord, 1500);
     } else { setFeedback(''); setIsCorrect(false); setStreak(0); }
   }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation]);
+  
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setUserInput(''); setFeedback(''); setIsCorrect(null);
     const unused = vocabularyList.filter(item => !usedWords.has(item.word));
@@ -162,15 +207,15 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
     if (currentWord.imageIndex !== undefined) { const imageUrl = generateImageUrl(currentWord.imageIndex); return [imageUrl, imageUrl, imageUrl]; }
     return [`https://placehold.co/400x320/93c5fd/1e3a8a?text=?`, `https://placehold.co/400x320/a5b4fc/1e3a8a?text=Guess`, `https://placehold.co/400x320/c4b5fd/1e3a8a?text=The+Word`];
   }, [currentWord]);
+  
   const handleImageClick = useCallback(() => setShowImagePopup(true), []);
   
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
-  if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Không có từ vựng nào.</div>;
+  if (vocabularyList.length === 0 && !loading && !error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Bạn chưa mở thẻ từ vựng nào.<br/>Hãy vào màn hình "Lật thẻ" để bắt đầu!</div>;
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      {/* --- SỬA Ở ĐÂY: Giữ 'flex-shrink-0' để ngăn header co lại, đảm bảo layout ổn định --- */}
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button
           onClick={onGoBack}
@@ -186,10 +231,6 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         </div>
       </header>
       
-      {/* 
-        --- SỬA Ở ĐÂY: Xóa 'overflow-y-auto' và giảm padding-bottom từ 'pb-24' xuống 'pb-8'.
-        Điều này làm cho nội dung vừa với màn hình mà không cần thanh cuộn.
-      */}
       <main className="flex-grow px-8 pt-8 pb-8 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
