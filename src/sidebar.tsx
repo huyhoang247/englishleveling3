@@ -1,39 +1,85 @@
-// --- START OF FILE sidebar.tsx ---
+// src/sidebar.tsx
 
 import React, { useState, useEffect } from 'react';
+// Import the Rank component - REMOVED: Rank is now rendered by the parent
+// import EnhancedLeaderboard from './rank.tsx';
 
 // Define prop types for SidebarLayout
 interface SidebarLayoutProps {
   children: React.ReactNode;
+  // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  onShowStats?: () => void;
-  onShowRank?: () => void;
+  // NEW props to handle toggling specific screens in the parent
+  onShowStats?: () => void; // Handler for showing Stats
+  onShowRank?: () => void;   // Handler for showing Rank
   onShowSettings?: () => void;
   onShowHelp?: () => void;
-  onShowGoldMine?: () => void;
-  onShowLuckyGame?: () => void;
-  onShowAchievements?: () => void;
-  onShowAdmin?: () => void; // NEW: Handler for Admin Panel
+  onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
+  onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
+  onShowAchievements?: () => void; // NEW: Handler for showing Achievements
+  onShowAdmin?: () => void; // NEW: Handler for showing Admin Panel
 }
 
-// --- SVG Icon Components ---
+// SVG Icon Components (Replacement for lucide-react) - Keep these here or move to a shared library
+// Keeping these here for now, but ideally should be in library/icon.tsx
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
+
+// NEW: Icon for Achievements
 const TrophyIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
     </svg>
 );
+
+// NEW: Icon for Admin Panel
+const DatabaseIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+    </svg>
+);
+
+const HomeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+  </svg>
+);
+
 const SettingsIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="3"></circle>
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
   </svg>
 );
+
+const CalendarIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+  </svg>
+);
+
 const UsersIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -42,6 +88,7 @@ const UsersIcon = ({ size = 24, color = 'currentColor', className = '', ...props
     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
   </svg>
 );
+
 const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <circle cx="12" cy="12" r="10"></circle>
@@ -49,11 +96,50 @@ const HelpCircleIcon = ({ size = 24, color = 'currentColor', className = '', ...
     <line x1="12" y1="17" x2="12.01" y2="17"></line>
   </svg>
 );
+
+const BellIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+  </svg>
+);
+
+const SearchIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+);
+
 const ChevronDownIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
     <polyline points="6 9 12 15 18 9"></polyline>
   </svg>
 );
+
+const FileTextIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+    <polyline points="14 2 14 8 20 8"></polyline>
+    <line x1="16" y1="13" x2="8" y2="13"></line>
+    <line x1="16" y1="17" x2="8" y2="17"></line>
+    <line x1="10" y1="9" x2="8" y2="9"></line>
+  </svg>
+);
+
+const ClipboardIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+  </svg>
+);
+
+const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+  </svg>
+);
+
 const AwardIcon = ({ size = 24, className = '', ...props }) => (
   <img
     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
@@ -64,6 +150,7 @@ const AwardIcon = ({ size = 24, className = '', ...props }) => (
     {...props}
   />
 );
+
 const FrameIcon = ({ size = 24, className = '', ...props }) => (
   <img
     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/frame.png"
@@ -74,6 +161,7 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
     {...props}
   />
 );
+
 const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -88,35 +176,13 @@ const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...pro
     className={className}
     {...props}
   >
-    <path d="M14 14l-4 4-2-2 4-4 2-2 2-2 2-2 2-2 2-2"></path>
-    <path d="M18 6l-2-2"></path>
-    <path d="M12 8l-2-2"></path>
-    <path d="M8 12l-2-2"></path>
-    <path d="M6 18l-2-2"></path>
-    <path d="M16 10l-2-2"></path>
-    <path d="M20 14l-2-2"></path>
-    <path d="M14 18l-2-2"></path>
-    <path d="M10 22l-2-2"></path>
-    <path d="M2 10l-2-2"></path>
-    <path d="M22 2l-2-2"></path>
-    <path d="M20 20l-2-2"></path>
-    <path d="M18 22l-2-2"></path>
-    <path d="M22 18l-2-2"></path>
-    <path d="M10 2l-2-2"></path>
-    <path d="M6 6l-2-2"></path>
-    <path d="M2 2l-2-2"></path>
-    <path d="M22 6l-2-2"></path>
-    <path d="M12 20l-2-2"></path>
-    <path d="M16 22l-2-2"></path>
-    <path d="M20 10l-2-2"></path>
-    <path d="M14 2l-2-2"></path>
-    <path d="M8 2l-2-2"></path>
-    <path d="M4 22l-2-2"></path>
+    <path d="M14.5 9.5 3 21" /><path d="m11 14 3.5-3.5" /><path d="M14 3 21 10" /><path d="M21 3 14 10" /><path d="M15 2 22 9" /><path d="M9 15 2 22" />
   </svg>
 );
+
 const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/fortune-wheel.png"
+    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/fortune-wheel.png" // Updated image URL
     alt="Lucky Game Icon"
     width={size}
     height={size}
@@ -125,19 +191,11 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
   />
 );
 
-// NEW: Icon for Admin Panel
-const SlidersHorizontalIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-        <line x1="21" y1="10" x2="3" y2="10"></line>
-        <line x1="21" y1="6" x2="3" y2="6"></line>
-        <line x1="21" y1="14" x2="3" y2="14"></line>
-        <line x1="21" y1="18" x2="3" y2="18"></line>
-    </svg>
-);
 
-
+// SidebarLayout component including Sidebar and main content area
 function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowHelp, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -162,8 +220,8 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'achievements', label: 'Thành Tựu', icon: TrophyIcon, onClick: onShowAchievements },
     { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp },
-    // NEW: Admin Panel menu item
-    { id: 'admin', label: 'Admin Panel', icon: SlidersHorizontalIcon, onClick: onShowAdmin },
+    // NEW: Admin Panel menu item, placed after Help
+    { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
   ];
 
 
@@ -175,7 +233,6 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
           onClick={toggleSidebar}
         />
       )}
-
       <div
         className={`
           fixed left-0 top-0 z-50 h-screen flex items-center
@@ -194,6 +251,11 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
             <nav className="flex-1 py-4 overflow-y-auto">
               <ul className="space-y-0 px-2">
                 {menuItems.map((item, index) => {
+                  // Only render the Admin item if the onShowAdmin handler is provided
+                  if (item.id === 'admin' && !onShowAdmin) {
+                    return null;
+                  }
+                  
                   const Icon = item.icon;
                   return (
                     <li key={item.id} className={`${index !== 0 ? 'border-t border-opacity-20 border-gray-700' : ''}`}>
@@ -298,5 +360,3 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
 }
 
 export { SidebarLayout };
-
-// --- END OF FILE sidebar.tsx ---
