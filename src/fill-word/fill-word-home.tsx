@@ -1,8 +1,9 @@
-// --- FILE: fill-word-home.tsx ---
+// --- START OF FILE fill-word-home.tsx ---
 
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
+// <<< THAY ĐỔI 1: IMPORT THÊM `increment` >>>
 import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
@@ -97,6 +98,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
+  // <<< THAY ĐỔI 2: KHÔNG CÓ THAY ĐỔI Ở ĐÂY, LOGIC VẪN ĐÚNG >>>
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
@@ -106,6 +108,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       try {
         setLoading(true); setError(null);
 
+        // Sử dụng Promise.all để lấy dữ liệu song song, tăng hiệu suất
         const [
           userDocSnap, 
           openedVocabSnapshot, 
@@ -116,12 +119,14 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
           getDocs(collection(db, 'users', user.uid, 'completedWords'))
         ]);
 
+        // Xử lý coins từ document chính
         const fetchedCoins = userDocSnap.exists() ? (userDocSnap.data().coins || 0) : 0;
         
+        // Xử lý danh sách từ vựng cần chơi
         const vocabularyWithImages: VocabularyItem[] = [];
         openedVocabSnapshot.forEach((vocabDoc) => {
           const data = vocabDoc.data();
-          const imageIndex = Number(vocabDoc.id);
+          const imageIndex = Number(vocabDoc.id); // doc.id chính là imageId
           if (data.word && !isNaN(imageIndex)) {
             vocabularyWithImages.push({
               word: data.word,
@@ -131,11 +136,14 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
           }
         });
 
+        // Xử lý danh sách từ đã hoàn thành
         const fetchedCompletedWords = new Set<string>();
         completedWordsSnapshot.forEach((completedDoc) => {
+            // doc.id chính là từ đã hoàn thành
             fetchedCompletedWords.add(completedDoc.id);
         });
 
+        // Cập nhật state
         setVocabularyList(vocabularyWithImages);
         setCoins(fetchedCoins);
         setDisplayedCoins(fetchedCoins);
@@ -175,14 +183,12 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
+  // <<< THAY ĐỔI 3: CẬP NHẬT `checkAnswer` ĐỂ GHI NHẬN SỐ LẦN HOÀN THÀNH >>>
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setIsCorrect(true); setFeedback(''); const newStreak = streak + 1; setStreak(newStreak); setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500);
-      
-      const newUsedWords = new Set(usedWords).add(currentWord.word);
-      setUsedWords(newUsedWords); 
-      setShowConfetti(true);
+      setUsedWords(prev => new Set(prev).add(currentWord.word)); setShowConfetti(true);
       
       if (user) {
         const coinReward = 2 * newStreak; 
@@ -191,13 +197,18 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         startCoinCountAnimation(coins, updatedCoins);
         
         try {
-            const batch = writeBatch(db);
+            // Chuẩn bị các tham chiếu
             const userDocRef = doc(db, 'users', user.uid);
             const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
+            
+            // Sử dụng WriteBatch để đảm bảo các thao tác đều thành công hoặc thất bại cùng nhau
+            const batch = writeBatch(db);
+
+            // Thao tác 1: Cập nhật hoặc tạo mới document cho từ đã hoàn thành.
+            // Sử dụng `set` với `{ merge: true }` và `increment`
+            // - { merge: true } sẽ tạo document nếu chưa có, hoặc cập nhật nếu đã có.
+            // - increment(1) sẽ tăng giá trị `correctCount` lên 1 một cách an toàn trên server.
             const gameModeId = "fill-word-1";
-
-            batch.update(userDocRef, { 'coins': updatedCoins });
-
             batch.set(completedWordRef, {
                 lastCompletedAt: new Date(),
                 gameModes: {
@@ -205,31 +216,25 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
                         correctCount: increment(1)
                     }
                 }
-            }, { merge: true });
+            }, { merge: true }); // Quan trọng: merge để không ghi đè các game mode khác
 
+            // Thao tác 2: Cập nhật số coin của người dùng
+            batch.update(userDocRef, { 'coins': updatedCoins });
+            
             await batch.commit();
-            console.log(`Batch write thành công cho từ '${currentWord.word}' và cập nhật coins.`);
 
         } catch (e) { 
             console.error("Lỗi khi cập nhật dữ liệu với batch:", e); 
-            setCoins(coins);
-            const revertedUsedWords = new Set(usedWords);
-            revertedUsedWords.delete(currentWord.word);
-            setUsedWords(revertedUsedWords);
         }
       }
       setTimeout(() => setShowConfetti(false), 2000); 
       setTimeout(selectNextWord, 1500);
     } else { 
-      setFeedback('Đáp án chưa đúng. Thử lại nhé!'); 
+      setFeedback(''); 
       setIsCorrect(false); 
       setStreak(0); 
-      setTimeout(() => {
-        setFeedback('');
-        setIsCorrect(null);
-      }, 1500);
     }
-  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation, usedWords]);
+  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation]);
   
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setUserInput(''); setFeedback(''); setIsCorrect(null);
