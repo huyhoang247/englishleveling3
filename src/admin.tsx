@@ -7,7 +7,7 @@ import { auth } from './firebase.js';
 // --- Hằng số ---
 const ADMIN_EMAIL = 'vanlongt309@gmail.com';
 
-// --- Icons ---
+// --- Icons (Thêm ChevronRightIcon) ---
 const XIcon = ({ className = '' }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
 const SaveIcon = ({ className = '' }) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>);
 const TrashIcon = ({ className = '' }) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>);
@@ -18,6 +18,7 @@ const ArrowLeftIcon = ({ className = '' }) => (<svg xmlns="http://www.w3.org/200
 const FileTextIcon = ({ className = '' }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>);
 const ListIcon = ({ className = '' }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>;
 const BarChartIcon = ({ className = '' }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>;
+const ChevronRightIcon = ({ className = '' }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>;
 
 
 // --- Component phụ ---
@@ -66,7 +67,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         let docsList: DocumentData[] = [];
         if (collectionName === 'users' && mode === 'ranking') {
             docsList = docsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // SỬA Ở ĐÂY: từ coin -> coins
             docsList.sort((a, b) => (b.coins || 0) - (a.coins || 0));
         } else {
             docsList = docsSnap.docs.map(doc => ({ id: doc.id }));
@@ -93,6 +93,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       setIsLoading(false);
   }, [db]);
 
+  // --- Các hàm xử lý sự kiện (không thay đổi logic chính) ---
   const handleSelectCollection = (collectionName: string) => {
     setSelectedCollection(collectionName);
     setSelectedDocId(null);
@@ -195,6 +196,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     return documents.filter(doc => doc.id.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [documents, searchTerm, userViewMode]);
 
+  // --- Render ---
   if (isLoading && !isAuthorized) { return <div className="fixed inset-0 bg-gray-900 flex items-center justify-center text-white">Đang kiểm tra quyền...</div>; }
   if (!isAuthorized) { return (
       <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -216,6 +218,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md text-slate-200 font-sans flex flex-col p-2 sm:p-4 z-50">
         <header className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800 flex-shrink-0">
+            {/* Header content... */}
             <div className="flex items-center gap-2 min-w-0">
                 {currentView !== 'collections' && (
                     <button onClick={handleBack} className="p-2 rounded-full text-slate-400 hover:bg-slate-800 hover:text-white transition-colors md:hidden">
@@ -228,9 +231,9 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         </header>
 
         <div className="flex-1 flex md:grid md:grid-cols-[350px_1fr] md:gap-4 overflow-hidden">
-            
             <aside className={`flex-col bg-slate-900 md:flex md:p-3 rounded-lg md:border md:border-slate-800 overflow-hidden ${currentView === 'collections' || currentView === 'documents' ? 'flex' : 'hidden'}`}>
-                <div className={`${currentView === 'collections' ? 'block' : 'hidden'} md:block w-full p-2 md:p-0`}>
+                {/* Aside content... (Collections, Documents lists) */}
+                 <div className={`${currentView === 'collections' ? 'block' : 'hidden'} md:block w-full p-2 md:p-0`}>
                     <h2 className="text-lg font-semibold mb-3 text-slate-300 px-1">Collections</h2>
                     <ul className="space-y-1.5">
                         {collectionsToManage.map(col => (
@@ -239,7 +242,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                     </ul>
                 </div>
                 {selectedCollection && <div className="hidden md:block w-full h-[1px] bg-slate-800 my-4"></div>}
-                
                 <div className={`${currentView === 'documents' ? 'flex' : 'hidden'} md:flex flex-col flex-1 w-full p-2 md:p-0 overflow-hidden`}>
                      <div className="flex justify-between items-center mb-2 flex-shrink-0">
                         <h2 className="text-lg font-semibold text-slate-300">Documents</h2>
@@ -248,7 +250,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                             <button onClick={() => fetchDocuments(selectedCollection!, userViewMode)} className="p-1.5 rounded-md hover:bg-slate-700" title="Refresh"><RefreshCwIcon className={isLoading ? 'animate-spin' : ''}/></button>
                         </div>
                     </div>
-                    
                     {selectedCollection === 'users' && (
                         <div className="grid grid-cols-2 gap-2 mb-3 flex-shrink-0">
                             <button onClick={() => handleSetUserViewMode('list')} className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${userViewMode === 'list' ? 'bg-indigo-600 text-white' : 'bg-slate-800 hover:bg-slate-700'}`}>
@@ -259,7 +260,6 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                             </button>
                         </div>
                     )}
-                    
                     <div className="flex-1 overflow-y-auto -mr-2 pr-2">
                         {isLoading ? <p className="text-center text-slate-500 py-4">Đang tải...</p> : (
                             <>
@@ -283,6 +283,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
             </aside>
 
             <main className={`flex-col bg-slate-900 md:flex md:p-4 rounded-lg md:border md:border-slate-800 overflow-hidden ${currentView === 'editor' ? 'flex' : 'hidden'}`}>
+                {/* Main content... (Editor view) */}
                 {!selectedDocId ? (
                     <div className="hidden md:flex flex-1 flex-col items-center justify-center text-slate-600">
                         <FileTextIcon className="h-16 w-16 mb-4"/>
@@ -334,7 +335,6 @@ const UserRankingView = ({ users, onUserSelect }: UserRankingViewProps) => {
                             <p className="font-semibold text-cyan-300 truncate">{user.username || 'N/A'}</p>
                             <p className="text-xs text-slate-400 truncate">{user.email || 'N/A'}</p>
                         </td>
-                        {/* SỬA Ở ĐÂY: từ coin -> coins */}
                         <td className="p-2 text-right font-bold text-amber-300 font-mono">{user.coins?.toLocaleString() || 0}</td>
                     </tr>
                 ))}
@@ -343,66 +343,78 @@ const UserRankingView = ({ users, onUserSelect }: UserRankingViewProps) => {
     );
 }
 
-
 // --- Trình chỉnh sửa JSON ---
 const JsonEditor = ({ data, onDataChange, path = [] }: { data: any, onDataChange: (path: (string|number)[], value: any) => void, path?: (string|number)[] }) => {
     if (typeof data !== 'object' || data === null) {
         return <p className="text-slate-400">Dữ liệu không hợp lệ.</p>;
     }
     return (
-        <div className="space-y-2">
+        <div className="space-y-3">
             {Object.entries(data).map(([key, value]) => (
-                <Field key={key} fieldKey={key} value={value} onDataChange={onDataChange} path={[...path, key]} />
+                <div key={key} className="grid grid-cols-[1fr_2fr] gap-2 items-start">
+                    <label className="text-sm text-slate-400 font-medium truncate pt-1.5">{key}:</label>
+                    <Field fieldKey={key} value={value} onDataChange={onDataChange} path={[...path, key]} />
+                </div>
             ))}
         </div>
     );
 };
 
+// --- COMPONENT ĐƯỢC NÂNG CẤP ---
 const Field = ({ fieldKey, value, onDataChange, path }: { fieldKey: string | number, value: any, onDataChange: (path: (string|number)[], value: any) => void, path: (string|number)[] }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
     const valueType = typeof value;
-    
-    const handleValueChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+    const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let newValue: any = e.target.value;
         if (valueType === 'number') { newValue = parseFloat(newValue) || 0; }
-        if (valueType === 'boolean') { newValue = (e.target as HTMLInputElement).checked; }
+        if (valueType === 'boolean') { newValue = e.target.checked; }
         onDataChange(path, newValue);
     };
+    
+    // Xử lý object và array phức tạp
+    const isCollapsible = (Array.isArray(value) || (valueType === 'object' && value !== null)) 
+                          && !('seconds' in value && 'nanoseconds' in value);
 
-    const renderInput = () => {
-        if (valueType === 'string') {
-            return <input type="text" value={value} onChange={handleValueChange} className="w-full bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-sm text-cyan-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />;
-        }
-        if (valueType === 'number') {
-            return <input type="number" value={value} onChange={handleValueChange} className="w-full bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-sm text-amber-300 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />;
-        }
-        if (valueType === 'boolean') {
+    if (isCollapsible) {
+        const summary = Array.isArray(value) ? `Array [${value.length}]` : `Object {${Object.keys(value).length}}`;
+        return (
+            <div className="w-full">
+                <button 
+                    onClick={() => setIsExpanded(p => !p)}
+                    className="w-full flex items-center justify-between bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-sm text-slate-300 hover:bg-slate-700/50 transition-colors"
+                >
+                    <span className="font-mono text-purple-300">{summary}</span>
+                    <ChevronRightIcon className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                </button>
+                {isExpanded && (
+                    <div className="mt-2 pl-3 py-2 border-l-2 border-slate-700">
+                        <JsonEditor data={value} onDataChange={onDataChange} path={path} />
+                    </div>
+                )}
+            </div>
+        );
+    }
+    
+    // Xử lý các kiểu dữ liệu đơn giản
+    switch (valueType) {
+        case 'string':
+            return <input type="text" value={value} onChange={handleValueChange} className="w-full bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-sm text-cyan-300 focus:ring-1 focus:ring-indigo-500 outline-none" />;
+        case 'number':
+            return <input type="number" value={value} onChange={handleValueChange} className="w-full bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-sm text-amber-300 focus:ring-1 focus:ring-indigo-500 outline-none" />;
+        case 'boolean':
             return (
-                <label className="flex items-center gap-2 cursor-pointer h-full">
+                <label className="flex items-center gap-2 cursor-pointer h-full pt-1">
                     <input type="checkbox" checked={value} onChange={handleValueChange} className="form-checkbox h-4 w-4 rounded bg-slate-700 border-slate-600 text-indigo-500 focus:ring-indigo-500" />
                     <span className={`text-sm font-mono ${value ? 'text-green-400' : 'text-red-400'}`}>{String(value)}</span>
                 </label>
             );
-        }
-        if (value !== null && typeof value === 'object') {
-            if ('seconds' in value && 'nanoseconds' in value && Object.keys(value).length === 2) {
+        default:
+            // Xử lý Timestamp và null
+            if (value !== null && 'seconds' in value && 'nanoseconds' in value) {
                 const date = new Date(value.seconds * 1000).toLocaleString('vi-VN');
                 return <div className="text-xs text-purple-300 bg-slate-800 p-2 rounded-md">Timestamp: <span className="font-mono">{date}</span></div>
             }
-            return (
-                <div className="pl-4 border-l-2 border-slate-700/50">
-                    <JsonEditor data={value} onDataChange={onDataChange} path={path} />
-                </div>
-            );
-        }
-        return <span className="text-slate-500 text-sm italic pt-1">null</span>;
-    };
-
-    return (
-        <div className="grid grid-cols-3 gap-2 items-start">
-            <label className="col-span-1 text-sm text-slate-400 font-medium truncate pt-1">{fieldKey}:</label>
-            <div className="col-span-2">
-                {renderInput()}
-            </div>
-        </div>
-    );
+            return <span className="text-slate-500 text-sm italic pt-1">null</span>;
+    }
 };
