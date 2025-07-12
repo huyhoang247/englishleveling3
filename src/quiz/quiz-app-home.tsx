@@ -11,6 +11,17 @@ export default function QuizAppHome() {
   const [selectedType, setSelectedType] = useState(null);
   const [selectedPractice, setSelectedPractice] = useState(null);
 
+  // THAY ĐỔI 1: Định nghĩa các quy tắc CSS để ẩn thanh cuộn trong một chuỗi.
+  const scrollbarHideStyle = `
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+  `;
+
   const handleQuizSelect = (quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
@@ -255,6 +266,8 @@ export default function QuizAppHome() {
   if (currentView === 'quizTypes' || currentView === 'practices') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
+        {/* THAY ĐỔI 2: Chèn thẻ <style> vào đây. */}
+        <style>{scrollbarHideStyle}</style>
         <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
           <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
@@ -272,7 +285,8 @@ export default function QuizAppHome() {
                 </div>
               </div>
               {/* Removed vertical centering to align content to the top */}
-              <div className="overflow-y-auto p-6">
+              {/* THAY ĐỔI 3: Áp dụng lớp 'scrollbar-hide'. */}
+              <div className="overflow-y-auto p-6 scrollbar-hide">
                 {renderContent()}
               </div>
             </div>
@@ -283,29 +297,34 @@ export default function QuizAppHome() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="w-full h-full bg-white flex flex-col">
-        <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex-shrink-0"></div>
-        <div className="flex-grow overflow-y-auto">
-          {currentView !== 'main' && (
-            <div className="p-6 pb-0">
-              <div className="flex justify-start mb-2">
-                 <Breadcrumbs
-                    currentView={currentView}
-                    selectedQuiz={selectedQuiz}
-                    selectedType={selectedType}
-                    selectedPractice={selectedPractice}
-                    goHome={goHome}
-                    setCurrentView={setCurrentView}
-                 />
+    <>
+      {/* THAY ĐỔI 2 (cho trường hợp khác): Chèn thẻ <style> vào đây. */}
+      <style>{scrollbarHideStyle}</style>
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="w-full h-full bg-white flex flex-col">
+          <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex-shrink-0"></div>
+          {/* THAY ĐỔI 4: Áp dụng lớp 'scrollbar-hide'. */}
+          <div className="flex-grow overflow-y-auto scrollbar-hide">
+            {currentView !== 'main' && (
+              <div className="p-6 pb-0">
+                <div className="flex justify-start mb-2">
+                   <Breadcrumbs
+                      currentView={currentView}
+                      selectedQuiz={selectedQuiz}
+                      selectedType={selectedType}
+                      selectedPractice={selectedPractice}
+                      goHome={goHome}
+                      setCurrentView={setCurrentView}
+                   />
+                </div>
               </div>
+            )}
+             <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>
+              {renderContent()}
             </div>
-          )}
-           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>
-            {renderContent()}
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
