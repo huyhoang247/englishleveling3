@@ -1,7 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+// --- Thêm các import cần thiết cho Firestore ---
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-// --- Định nghĩa Type cho dữ liệu ---
-type VocabularyItem = {
+// --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
+export type VocabularyItem = {
   id: number;
   word: string;
   exp: number;
@@ -9,8 +11,8 @@ type VocabularyItem = {
   maxExp: number;
 };
 
-// --- Dữ liệu mẫu ---
-const initialVocabularyData: VocabularyItem[] = [
+// --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới) ---
+export const initialVocabularyData: VocabularyItem[] = [
   { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
   { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
   { id: 3, word: 'Luminous', exp: 30, level: 2, maxExp: 100 },
@@ -20,25 +22,25 @@ const initialVocabularyData: VocabularyItem[] = [
   { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
 ];
 
-// --- Định nghĩa Prop ---
+// --- Cập nhật Prop để nhận dữ liệu từ cha ---
 interface AchievementsScreenProps {
   onClose: () => void;
+  userId: string; // ID người dùng để biết lưu vào document nào
+  initialData: VocabularyItem[]; // Dữ liệu được fetch từ Firestore
 }
 
-// --- Biểu tượng (Icon) ---
+// --- Biểu tượng (Icon) - không thay đổi ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
-
 const TrophyIcon = ({ className = '' }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
   </svg>
 );
-
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
     <img
         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png"
@@ -47,7 +49,6 @@ const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [ke
         {...props}
     />
 );
-
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
     <img
         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
@@ -56,7 +57,6 @@ const GoldIcon = ({ className = '', ...props }: { className?: string; [key: stri
         {...props}
     />
 );
-
 const BookOpenIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
         <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A9.735 9.735 0 006 21a9.707 9.707 0 005.25-1.533" />
@@ -66,8 +66,15 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
-  const [vocabulary, setVocabulary] = useState(initialVocabularyData);
+export default function AchievementsScreen({ onClose, userId, initialData }: AchievementsScreenProps) {
+  // --- Sử dụng dữ liệu từ props thay vì dữ liệu tĩnh ---
+  const [vocabulary, setVocabulary] = useState(initialData);
+  const db = getFirestore();
+
+  // --- Đồng bộ state nội bộ khi prop initialData thay đổi ---
+  useEffect(() => {
+      setVocabulary(initialData);
+  }, [initialData]);
 
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
@@ -81,16 +88,30 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
     return b.exp - a.exp;
   });
 
-  const handleClaim = useCallback((id: number) => {
-    setVocabulary(prevVocab =>
-      prevVocab.map(item => {
-        if (item.id === id && item.exp >= item.maxExp) {
-          return { ...item, level: item.level + 1, exp: 0 };
-        }
-        return item;
-      })
-    );
-  }, []);
+  const handleClaim = useCallback(async (id: number) => {
+    // Tạo danh sách mới sau khi cập nhật
+    const updatedList = vocabulary.map(item => {
+      if (item.id === id && item.exp >= item.maxExp) {
+        // TODO: Add rewards logic (gold, mastery cards) to user's main data
+        return { ...item, level: item.level + 1, exp: 0 };
+      }
+      return item;
+    });
+
+    // Cập nhật state cục bộ để UI phản hồi ngay lập tức
+    setVocabulary(updatedList);
+
+    // Lưu danh sách đã cập nhật vào Firestore
+    try {
+      const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+      await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+      console.log("Vocabulary mastery progress saved to Firestore.");
+    } catch (error) {
+      console.error("Error saving vocabulary progress:", error);
+      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ
+      setVocabulary(vocabulary);
+    }
+  }, [vocabulary, userId, db]);
 
   const totalWords = vocabulary.length;
   const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
@@ -117,7 +138,6 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalWords}</p>
-              {/* --- CẬP NHẬT TEXT --- */}
               <p className="text-sm text-slate-400">Vocabulary</p>
             </div>
           </div>
@@ -125,7 +145,6 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalMasteryCards}</p>
-              {/* --- CẬP NHẬT TEXT --- */}
               <p className="text-sm text-slate-400">Mastery</p>
             </div>
           </div>
@@ -156,7 +175,7 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
   );
 }
 
-// --- Thành phần cho mỗi hàng (card) trong bảng ---
+// --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
 function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = Math.min((exp / maxExp) * 100, 100);
@@ -192,7 +211,6 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
 
       <div className="col-span-6 md:col-span-3 flex items-center justify-center">
         <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
-            {/* --- CẬP NHẬT TEXT --- */}
             <div className="flex items-center gap-1.5" title="1 Mastery">
                 <MasteryCardIcon className="w-6 h-6 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">x1</span>
@@ -220,7 +238,6 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {/* --- CẬP NHẬT TEXT --- */}
           {isClaimable ? 'Claim' : 'Chưa Đạt'}
         </button>
       </div>
