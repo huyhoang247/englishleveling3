@@ -1,14 +1,13 @@
-// lat-the.tsx (Final Optimized Version with Vocabulary Saving)
+// lat-the.tsx (Final Optimized Version with Vocabulary Saving & Subcollections for Scalability)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
-// Import các tài nguyên cần thiết
+// <<< THAY ĐỔI 1: IMPORT THÊM CÁC HÀM TỪ FIRESTORE >>>
 import { db } from './firebase.js'; 
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
+
 import { defaultImageUrls } from './image-url.ts'; 
 import ImagePreloader from './ImagePreloader.tsx'; 
-
-// <<< THAY ĐỔI 1: IMPORT DANH SÁCH TỪ VỰNG >>>
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
@@ -225,7 +224,7 @@ const GlobalStyles = () => (
 
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON VÀ DATA =======================================
+// === 2. CÁC COMPONENT CON VÀ DATA (Không thay đổi) =======================
 // ========================================================================
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
@@ -387,7 +386,7 @@ const CHEST_DEFINITIONS = {
     basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 2980, isComingSoon: false, range: [0, 2399] as const, },
     elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2400, 4099] as const, },
     intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 2980, isComingSoon: false, range: [4100, 6499] as const, },
-    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 2980, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
+    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2O2_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 2980, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
     master: { id: 'master_vocab_chest', chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
 };
 
@@ -413,15 +412,16 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
 
+    // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN HÀM fetchOpenedItems >>>
     useEffect(() => {
         const fetchOpenedItems = async () => {
             setIsLoading(true);
             try {
-                // Sử dụng độ dài của 2 danh sách từ vựng và ảnh
                 const totalVocab = defaultVocabulary.length;
                 const totalImages = defaultImageUrls.length;
-                const totalItems = Math.min(totalVocab, totalImages); // Lấy số lượng nhỏ hơn để tránh lỗi index
+                const totalItems = Math.min(totalVocab, totalImages);
                 
+                // Logic cho người dùng chưa đăng nhập không đổi
                 if (!currentUserId) {
                     setAvailableIndices({
                         basic: Array.from({ length: CHEST_DEFINITIONS.basic.range[1] - CHEST_DEFINITIONS.basic.range[0] + 1 }, (_, i) => CHEST_DEFINITIONS.basic.range[0] + i),
@@ -432,30 +432,37 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     return;
                 }
 
-                const userDocRef = doc(db, 'users', currentUserId);
-                const userDocSnap = await getDoc(userDocRef);
-                const openedImageIds: number[] = userDocSnap.exists() ? userDocSnap.data()?.openedImageIds || [] : [];
-                const openedIndices = new Set(openedImageIds.map(id => id - 1));
+                // Lấy tất cả document trong subcollection 'openedVocab'
+                const userOpenedVocabColRef = collection(db, 'users', currentUserId, 'openedVocab');
+                const querySnapshot = await getDocs(userOpenedVocabColRef);
 
+                // Tạo một Set chứa các ID đã mở (index 0-based) để tra cứu nhanh
+                // doc.id là imageId (1-based), nên cần trừ 1
+                const openedIndices0Based = new Set<number>();
+                querySnapshot.forEach(doc => {
+                    openedIndices0Based.add(Number(doc.id) - 1);
+                });
+                
+                // Tính toán các thẻ còn lại dựa trên Set ở trên
                 const remainingForBasic: number[] = [];
                 for (let i = CHEST_DEFINITIONS.basic.range[0]; i <= CHEST_DEFINITIONS.basic.range[1] && i < totalItems; i++) {
-                    if (!openedIndices.has(i)) remainingForBasic.push(i);
+                    if (!openedIndices0Based.has(i)) remainingForBasic.push(i);
                 }
 
                 const remainingForElementary: number[] = [];
                 for (let i = CHEST_DEFINITIONS.elementary.range[0]; i <= CHEST_DEFINITIONS.elementary.range[1] && i < totalItems; i++) {
-                     if (!openedIndices.has(i)) remainingForElementary.push(i);
+                     if (!openedIndices0Based.has(i)) remainingForElementary.push(i);
                 }
                 
                 const remainingForIntermediate: number[] = [];
                 for (let i = CHEST_DEFINITIONS.intermediate.range[0]; i <= CHEST_DEFINITIONS.intermediate.range[1] && i < totalItems; i++) {
-                     if (!openedIndices.has(i)) remainingForIntermediate.push(i);
+                     if (!openedIndices0Based.has(i)) remainingForIntermediate.push(i);
                 }
 
                 const remainingForAdvanced: number[] = [];
                 if (!CHEST_DEFINITIONS.advanced.isComingSoon && CHEST_DEFINITIONS.advanced.range[0] !== null) {
                     for (let i = CHEST_DEFINITIONS.advanced.range[0]; i < totalItems; i++) {
-                         if (!openedIndices.has(i)) remainingForAdvanced.push(i);
+                         if (!openedIndices0Based.has(i)) remainingForAdvanced.push(i);
                     }
                 }
 
@@ -466,7 +473,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     advanced: remainingForAdvanced
                 });
             } catch (error) {
-                console.error("Error fetching user data:", error);
+                console.error("Error fetching user data from subcollection:", error);
             } finally {
                 setIsLoading(false);
             }
@@ -474,6 +481,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         fetchOpenedItems();
     }, [currentUserId]);
 
+    // Preloading logic không đổi
     useEffect(() => {
         const allAvailable = [...availableIndices.basic, ...availableIndices.elementary, ...availableIndices.intermediate, ...availableIndices.advanced];
         if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
@@ -490,40 +498,55 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     }, [preloadPool]);
 
 
-    // <<< THAY ĐỔI 2: ĐỔI TÊN VÀ CẬP NHẬT HÀM LƯU DỮ LIỆU >>>
-    // Hàm này giờ sẽ lưu cả ID ảnh và từ vựng tương ứng.
-    const updateUserProgressInFirestore = async (imageIds: number[]) => {
+    // <<< THAY ĐỔI 3: CẬP NHẬT HÀM LƯU DỮ LIỆU SỬ DỤNG WRITEBATCH >>>
+    const updateUserProgressInFirestore = async (imageIds: number[], chestType: ChestType) => {
         if (!currentUserId || imageIds.length === 0) return;
 
-        // Chuyển đổi ID (1-based) thành từ vựng (0-based index)
-        const newWords = imageIds
-            .map(id => defaultVocabulary[id - 1])
-            .filter(word => !!word); // Lọc bỏ những từ không hợp lệ (nếu có)
+        const newWordsData = imageIds
+            .map(id => ({ id, word: defaultVocabulary[id - 1] }))
+            .filter(item => !!item.word);
 
-        if (newWords.length === 0) {
+        if (newWordsData.length === 0) {
             console.warn("Không tìm thấy từ vựng hợp lệ cho các ID:", imageIds);
             return;
         }
 
         const userDocRef = doc(db, 'users', currentUserId);
+        const userOpenedVocabColRef = collection(userDocRef, 'openedVocab');
+
         try {
-            // Cập nhật cả hai trường bằng arrayUnion để thêm phần tử mới
-            await updateDoc(userDocRef, {
-                openedImageIds: arrayUnion(...imageIds),
-                listVocabulary: arrayUnion(...newWords)
+            const batch = writeBatch(db);
+
+            newWordsData.forEach(item => {
+                const newVocabDocRef = doc(userOpenedVocabColRef, String(item.id));
+                batch.set(newVocabDocRef, {
+                    word: item.word,
+                    collectedAt: new Date(),
+                    chestType: chestType,
+                });
             });
-            console.log(`Đã cập nhật Firestore với các từ: ${newWords.join(', ')}`);
+
+            // Tùy chọn: cập nhật trường tổng số lượng trên document cha
+            // để không phải query cả collection mỗi lần cần hiển thị tổng số
+            batch.update(userDocRef, {
+                totalVocabCollected: increment(newWordsData.length)
+            });
+
+            await batch.commit();
+            console.log(`Batch write thành công cho ${newWordsData.length} từ mới.`);
         } catch (e) {
             const err = e as { code?: string };
+            // Nếu document user chưa tồn tại, tạo mới trước
             if (err.code === 'not-found') {
-                 // Nếu người dùng chưa có document, tạo mới với cả hai trường
-                await setDoc(userDocRef, {
-                    openedImageIds: imageIds,
-                    listVocabulary: newWords
-                }, { merge: true });
-                 console.log(`Đã tạo document mới với các từ: ${newWords.join(', ')}`);
+                console.log('User document not found, creating a new one...');
+                try {
+                   await setDoc(userDocRef, { totalVocabCollected: 0 }); // Tạo doc user trước
+                   await updateUserProgressInFirestore(imageIds, chestType); // Gọi lại hàm
+                } catch(creationError) {
+                    console.error("Error creating user document:", creationError);
+                }
             } else {
-                 console.error("Lỗi khi cập nhật tiến trình người dùng:", e);
+                 console.error("Lỗi khi ghi batch vào Firestore:", e);
             }
         }
     };
@@ -552,9 +575,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             tempPool.splice(randomIndexInPool, 1);
         }
 
-        // <<< THAY ĐỔI 3: GỌI HÀM MỚI ĐỂ LƯU DỮ LIỆU >>>
+        // <<< THAY ĐỔI 4: GỌI HÀM MỚI VÀ TRUYỀN CHESTTYPE VÀO >>>
         const imageIdsToSave = selectedOriginalIndices.map(index => index + 1);
-        updateUserProgressInFirestore(imageIdsToSave);
+        await updateUserProgressInFirestore(imageIdsToSave, chestType);
 
         setAvailableIndices(prev => ({ ...prev, [chestType]: prev[chestType].filter(idx => !selectedOriginalIndices.includes(idx)) }));
         setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
@@ -566,6 +589,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setTimeout(() => setIsProcessingClick(false), 500); 
     };
     
+    // Logic còn lại không thay đổi
     const handleCloseOverlay = (openedCount: number) => {
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
@@ -603,7 +627,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <div className="chest-gallery-container">
                 {CHEST_DATA.map((chest) => {
                     const chestKey = chest.chestType as ChestType;
-                    // Kiểm tra xem key có tồn tại trong availableIndices không
                     const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
                     return (
                         <ChestUI
@@ -611,7 +634,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                             {...chest}
                             remainingCount={remainingCount}
                             onOpen1={() => !chest.isComingSoon && handleOpenCards(1, chestKey)}
-                            onOpen10={() => !chest.isComingSoon && handleOpenCards(4, chestKey)}
+                            onOpen10={() => !chest.isComingsoon && handleOpenCards(4, chestKey)}
                         />
                     );
                 })}
