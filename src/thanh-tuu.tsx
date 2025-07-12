@@ -11,7 +11,7 @@ export type VocabularyItem = {
   maxExp: number;
 };
 
-// --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới hoặc khi có lỗi) ---
+// --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới) ---
 export const initialVocabularyData: VocabularyItem[] = [
   { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
   { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
@@ -26,7 +26,7 @@ export const initialVocabularyData: VocabularyItem[] = [
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string; // ID người dùng để biết lưu vào document nào
-  initialData: VocabularyItem[]; // Dữ liệu đã được đồng bộ hóa từ component cha
+  initialData: VocabularyItem[]; // Dữ liệu được fetch từ Firestore
 }
 
 // --- Biểu tượng (Icon) - không thay đổi ---
@@ -71,63 +71,81 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
   const [vocabulary, setVocabulary] = useState(initialData);
   const db = getFirestore();
 
-  // --- Đồng bộ state nội bộ khi prop initialData thay đổi (khi người dùng mở lại màn hình) ---
+  // --- Đồng bộ state nội bộ khi prop initialData thay đổi ---
   useEffect(() => {
       setVocabulary(initialData);
   }, [initialData]);
 
   const sortedVocabulary = [...vocabulary].sort((a, b) => {
-    // Ưu tiên các từ có thể nhận thưởng
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
     if (aIsClaimable !== bIsClaimable) {
       return (bIsClaimable ? 1 : 0) - (aIsClaimable ? 1 : 0);
     }
-    // Sau đó sắp xếp theo level giảm dần
     if (b.level !== a.level) {
       return b.level - a.level;
     }
-    // Cuối cùng là theo EXP giảm dần
     return b.exp - a.exp;
   });
 
+  // <<< SỬA LỖI LOGIC TẠI ĐÂY >>>
   const handleClaim = useCallback(async (id: number) => {
-    // Tạo danh sách mới sau khi cập nhật
+    let claimedItem: VocabularyItem | undefined;
+
     const updatedList = vocabulary.map(item => {
       if (item.id === id && item.exp >= item.maxExp) {
-        // TODO: Logic cộng thưởng (vàng, thẻ thông thạo) vào dữ liệu chính của người dùng
-        // ví dụ: gọi hàm updateCoinsInFirestore(userId, 100 * item.level);
-        
-        let remainingExp = item.exp;
+        // Tạo các biến có thể thay đổi để tính toán
         let newLevel = item.level;
-        let expForNextLevel = item.maxExp;
+        let newExp = item.exp;
+        let currentMaxExp = item.maxExp;
 
-        // Xử lý trường hợp có thể lên nhiều cấp cùng lúc
-        while (remainingExp >= expForNextLevel) {
-            remainingExp -= expForNextLevel;
-            newLevel++;
-            expForNextLevel = newLevel * 100;
+        // Dùng vòng lặp while để xử lý trường hợp lên nhiều cấp
+        while (newExp >= currentMaxExp) {
+          // TODO: Add rewards logic (gold, mastery cards) to user's main data
+          // Bạn có thể muốn cộng dồn phần thưởng ở đây
+          
+          newExp -= currentMaxExp; // Trừ đi EXP cần cho cấp hiện tại
+          newLevel += 1; // Tăng cấp
+          currentMaxExp = newLevel * 100; // Tính maxExp cho cấp mới
         }
 
-        return { ...item, level: newLevel, exp: remainingExp, maxExp: expForNextLevel };
+        // Tạo đối tượng mới với các giá trị đã được cập nhật
+        claimedItem = { 
+            ...item, 
+            level: newLevel, 
+            exp: newExp, 
+            maxExp: currentMaxExp 
+        };
+        return claimedItem;
       }
       return item;
     });
 
+    // Nếu không có gì thay đổi, không làm gì cả
+    if (!claimedItem) return;
+
     // Cập nhật state cục bộ để UI phản hồi ngay lập tức
     setVocabulary(updatedList);
+
+    // Chuẩn bị dữ liệu để lưu vào Firestore.
+    // Chúng ta chỉ cần lưu những trường thay đổi để tối ưu.
+    // Tuy nhiên, để đảm bảo tính nhất quán, lưu toàn bộ danh sách là an toàn nhất.
+    const dataToSave = {
+        vocabulary: updatedList.map(({ id, ...rest }) => rest) // Loại bỏ id tạm thời của React
+    };
 
     // Lưu danh sách đã cập nhật vào Firestore
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-      await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+      await setDoc(achievementDocRef, dataToSave, { merge: true });
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ để UI đồng bộ với DB
+      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ
       setVocabulary(vocabulary);
     }
   }, [vocabulary, userId, db]);
+
 
   const totalWords = vocabulary.length;
   const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
@@ -194,16 +212,8 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
 // --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
 function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void }) {
   const { id, word, exp, level, maxExp } = item;
-
-  // Tính toán lại EXP tiến trình cho cấp độ hiện tại
-  let cumulativeExpForPreviousLevels = 0;
-  for (let i = 1; i < level; i++) {
-      cumulativeExpForPreviousLevels += i * 100;
-  }
-  const progressExp = exp - cumulativeExpForPreviousLevels;
-
-  const progressPercentage = Math.min((progressExp / maxExp) * 100, 100);
-  const isClaimable = exp >= cumulativeExpForPreviousLevels + maxExp;
+  const progressPercentage = Math.min((exp / maxExp) * 100, 100);
+  const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
   const handleClaimClick = () => {
@@ -230,7 +240,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
-        <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{progressExp} / {maxExp} EXP</p>
+        <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
 
       <div className="col-span-6 md:col-span-3 flex items-center justify-center">
@@ -262,7 +272,7 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {isClaimable ? 'Nhận' : 'Chưa Đạt'}
+          {isClaimable ? 'Claim' : 'Chưa Đạt'}
         </button>
       </div>
     </div>
