@@ -1,5 +1,3 @@
-// FILE: AddToPlaylistModal_FIXED.tsx
-
 import { useState, useEffect } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase.js';
@@ -9,7 +7,6 @@ interface Playlist {
   id: string;
   name: string;
   cardIds: number[];
-  // <<< THAY ĐỔI 1: Thêm isPinned để đồng bộ với interface ở Gallery >>>
   isPinned?: boolean;
 }
 
@@ -30,11 +27,13 @@ export default function AddToPlaylistModal({
 }: AddToPlaylistModalProps) {
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(new Set());
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  // <<< THAY ĐỔI 1: Thêm state để quản lý các playlist mới được tạo tạm thời >>>
+  const [localPlaylists, setLocalPlaylists] = useState<Playlist[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      // Logic khởi tạo state khi modal mở, không thay đổi
+      // Logic khởi tạo state khi modal mở
       if (cardIds.length === 1) {
         const cardId = cardIds[0];
         const initialSelectedIds = new Set<string>();
@@ -48,6 +47,8 @@ export default function AddToPlaylistModal({
         setSelectedPlaylistIds(new Set());
       }
       setNewPlaylistName('');
+      // Reset cả các playlist tạm thời khi mở lại modal
+      setLocalPlaylists([]);
       setIsSaving(false);
     }
   }, [isOpen, cardIds, existingPlaylists]);
@@ -64,12 +65,28 @@ export default function AddToPlaylistModal({
     setSelectedPlaylistIds(newSelectedIds);
   };
 
-  // <<< THAY ĐỔI 2: Loại bỏ hoàn toàn hàm handleCreateNewPlaylist >>>
-  // Hàm này gây ra race condition, logic của nó sẽ được tích hợp vào handleSave
+  // <<< THAY ĐỔI 2: Tạo hàm để xử lý việc nhấn nút '+' >>>
+  // Hàm này chỉ thêm playlist vào state tạm thời trên UI, chưa lưu vào database.
+  const handleCreateNewPlaylistLocally = () => {
+    const trimmedName = newPlaylistName.trim();
+    if (trimmedName === '') return;
+
+    // Tạo một playlist mới với ID tạm thời
+    const newLocalPlaylist: Playlist = {
+      id: `local_${Date.now()}`, // ID tạm thời để phân biệt
+      name: trimmedName,
+      cardIds: [...cardIds], // Tự động thêm các card đang chọn vào playlist mới
+      isPinned: false,
+    };
+
+    // Thêm vào danh sách tạm thời và tự động chọn nó
+    setLocalPlaylists(prev => [...prev, newLocalPlaylist]);
+    setSelectedPlaylistIds(prev => new Set(prev).add(newLocalPlaylist.id));
+    setNewPlaylistName(''); // Xóa nội dung input sau khi thêm
+  };
 
   const handleSave = async () => {
-    // Nếu không có card nào để thêm và không tạo playlist mới, thì không làm gì cả
-    if ((!cardIds || cardIds.length === 0) && newPlaylistName.trim() === '') {
+    if (!cardIds || !currentUser) {
       onClose();
       return;
     }
@@ -77,58 +94,45 @@ export default function AddToPlaylistModal({
     setIsSaving(true);
     const userDocRef = doc(db, 'users', currentUser.uid);
 
-    // Bắt đầu với một bản sao của các playlist hiện có
-    let playlistsToWrite = [...existingPlaylists];
+    // <<< THAY ĐỔI 3: Cập nhật logic lưu để xử lý cả playlist cũ và mới >>>
+    const finalPlaylists: Playlist[] = [];
 
-    // <<< THAY ĐỔI 3: Tích hợp logic tạo playlist mới vào đây >>>
-    // Bước 1: Nếu người dùng có nhập tên playlist mới, tạo nó và thêm vào mảng
-    if (newPlaylistName.trim() !== '') {
-      const newPlaylist: Playlist = {
-        id: `playlist_${Date.now()}`, // Dùng ID dựa trên thời gian cho đơn giản
-        name: newPlaylistName.trim(),
-        cardIds: [...cardIds], // Thêm các card đang chọn vào playlist mới
-        isPinned: false, // Mặc định không ghim
-      };
-      playlistsToWrite.push(newPlaylist);
-      // Tự động chọn playlist vừa tạo
-      selectedPlaylistIds.add(newPlaylist.id);
-    }
+    // Bước 1: Xử lý các playlist đã có (cập nhật cardIds)
+    existingPlaylists.forEach(p => {
+        const isSelected = selectedPlaylistIds.has(p.id);
+        const cardIdSet = new Set(p.cardIds);
+        
+        cardIds.forEach(cardId => {
+            if (isSelected && !cardIdSet.has(cardId)) {
+                cardIdSet.add(cardId);
+            } else if (!isSelected && cardIdSet.has(cardId)) {
+                cardIdSet.delete(cardId);
+            }
+        });
 
-    // <<< THAY ĐỔI 4: Cập nhật logic xử lý các playlist hiện có >>>
-    // Bước 2: Duyệt qua mảng playlist (đã có thể bao gồm playlist mới) và cập nhật cardIds
-    playlistsToWrite = playlistsToWrite.map(playlist => {
-      const isSelected = selectedPlaylistIds.has(playlist.id);
-      const currentCardIds = new Set(playlist.cardIds);
-      let changed = false;
-
-      // Xử lý thêm hoặc bớt từng card
-      cardIds.forEach(cardId => {
-        const alreadyContainsCard = currentCardIds.has(cardId);
-        if (isSelected && !alreadyContainsCard) {
-          // Nếu được chọn và chưa có card -> thêm vào
-          currentCardIds.add(cardId);
-          changed = true;
-        } else if (!isSelected && alreadyContainsCard) {
-          // Nếu không được chọn và đã có card -> xóa đi
-          currentCardIds.delete(cardId);
-          changed = true;
-        }
-      });
-      
-      // Chỉ tạo object mới nếu có sự thay đổi để tối ưu hiệu suất
-      if (changed) {
-        return { ...playlist, cardIds: Array.from(currentCardIds) };
-      }
-      
-      return playlist;
+        finalPlaylists.push({ ...p, cardIds: Array.from(cardIdSet) });
     });
 
+    // Bước 2: Xử lý các playlist mới tạo (local)
+    localPlaylists.forEach(lp => {
+        // Chỉ thực sự tạo playlist nếu nó vẫn đang được chọn lúc nhấn lưu
+        if (selectedPlaylistIds.has(lp.id)) {
+            finalPlaylists.push({
+                // Tạo ID thật, vĩnh viễn cho playlist
+                id: `playlist_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                name: lp.name,
+                cardIds: lp.cardIds, // cardIds đã được gán lúc tạo local
+                isPinned: false,
+            });
+        }
+    });
+    
     // Bước 3: Ghi toàn bộ mảng đã được cập nhật lên Firestore một lần duy nhất
     try {
       await updateDoc(userDocRef, {
-        playlists: playlistsToWrite,
+        playlists: finalPlaylists,
       });
-      onClose(); // Đóng modal sau khi lưu thành công
+      onClose();
     } catch (error) {
       console.error("Lỗi khi lưu thay đổi vào playlist:", error);
       alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
@@ -139,6 +143,9 @@ export default function AddToPlaylistModal({
 
   const modalTitle = cardIds.length > 1 ? `Thêm ${cardIds.length} từ vào Playlist` : "Thêm vào Playlist";
   const canCreate = !isSaving && newPlaylistName.trim() !== '';
+
+  // Kết hợp playlist đã có và playlist mới tạo để hiển thị
+  const allPlaylists = [...existingPlaylists, ...localPlaylists];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={onClose}>
@@ -167,34 +174,32 @@ export default function AddToPlaylistModal({
                 type="text"
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
-                // <<< THAY ĐỔI 5: Cho phép nhấn Enter để lưu thay vì tạo ngay >>>
-                onKeyDown={(e) => e.key === 'Enter' && canCreate && handleSave()}
+                // <<< THAY ĐỔI 4: Nhấn Enter sẽ thêm playlist vào danh sách (giống nhấn '+') >>>
+                onKeyDown={(e) => e.key === 'Enter' && canCreate && handleCreateNewPlaylistLocally()}
                 placeholder="Tên playlist..."
                 className="flex-grow bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2 transition-all"
               />
-              {/* <<< THAY ĐỔI 6: Nút này không còn tác dụng, có thể ẩn hoặc vô hiệu hóa hoàn toàn >>>
-                  Trong trường hợp này, chúng ta vô hiệu hóa nó và không gán sự kiện onClick */}
+              {/* <<< THAY ĐỔI 5: Kích hoạt lại nút '+' và gán sự kiện >>> */}
               <button
-                disabled={true} // Nút này không còn cần thiết
-                className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md disabled:opacity-20 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-                aria-hidden="true" // Ẩn khỏi trình đọc màn hình
-                tabIndex={-1} // Loại bỏ khỏi tab order
+                onClick={handleCreateNewPlaylistLocally}
+                disabled={!canCreate}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                <span className="ml-1.5 hidden sm:inline">Tạo</span>
               </button>
             </div>
-             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">Nhập tên và nhấn 'Lưu thay đổi' để tạo.</p>
+             {/* <<< THAY ĐỔI 6: Cập nhật lại text hướng dẫn cho đúng với luồng mới >>> */}
+             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">Nhập tên và nhấn `+` để thêm playlist vào danh sách.</p>
           </div>
           
           {/* Danh sách Playlist hiện có */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Hoặc thêm vào playlist đã có</h4>
             <div className="space-y-2 max-h-64 overflow-y-auto pr-2 -mr-2 border-t border-b border-gray-200 dark:border-gray-700 py-3">
-              {existingPlaylists.length > 0 ? (
-                existingPlaylists.map(playlist => {
+              {allPlaylists.length > 0 ? (
+                allPlaylists.map(playlist => {
                   const isSelected = selectedPlaylistIds.has(playlist.id);
                   return (
                     <div 
