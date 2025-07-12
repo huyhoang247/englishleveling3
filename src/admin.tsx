@@ -40,7 +40,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
   const [isLoading, setIsLoading] = useState(true);
   const collectionsToManage = useMemo(() => ['users', 'appData'], []);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<DocumentData[]>([]); // Sẽ chứa data đầy đủ cho BXH
+  const [documents, setDocuments] = useState<DocumentData[]>([]);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [docData, setDocData] = useState<DocumentData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +66,8 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
         let docsList: DocumentData[] = [];
         if (collectionName === 'users' && mode === 'ranking') {
             docsList = docsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            docsList.sort((a, b) => (b.coin || 0) - (a.coin || 0));
+            // SỬA Ở ĐÂY: từ coin -> coins
+            docsList.sort((a, b) => (b.coins || 0) - (a.coins || 0));
         } else {
             docsList = docsSnap.docs.map(doc => ({ id: doc.id }));
         }
@@ -254,7 +255,7 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                                 <ListIcon /> <span className="hidden sm:inline">Xem theo ID</span>
                             </button>
                              <button onClick={() => handleSetUserViewMode('ranking')} className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${userViewMode === 'ranking' ? 'bg-indigo-600 text-white' : 'bg-slate-800 hover:bg-slate-700'}`}>
-                                <BarChartIcon /> <span className="hidden sm:inline">Xem BXH Coin</span>
+                                <BarChartIcon /> <span className="hidden sm:inline">Xem BXH Coins</span>
                             </button>
                         </div>
                     )}
@@ -322,7 +323,7 @@ const UserRankingView = ({ users, onUserSelect }: UserRankingViewProps) => {
                 <tr className="border-b border-slate-700">
                     <th className="p-2 font-semibold w-10">#</th>
                     <th className="p-2 font-semibold">User</th>
-                    <th className="p-2 font-semibold text-right">Coin</th>
+                    <th className="p-2 font-semibold text-right">Coins</th>
                 </tr>
             </thead>
             <tbody>
@@ -333,7 +334,8 @@ const UserRankingView = ({ users, onUserSelect }: UserRankingViewProps) => {
                             <p className="font-semibold text-cyan-300 truncate">{user.username || 'N/A'}</p>
                             <p className="text-xs text-slate-400 truncate">{user.email || 'N/A'}</p>
                         </td>
-                        <td className="p-2 text-right font-bold text-amber-300 font-mono">{user.coin?.toLocaleString() || 0}</td>
+                        {/* SỬA Ở ĐÂY: từ coin -> coins */}
+                        <td className="p-2 text-right font-bold text-amber-300 font-mono">{user.coins?.toLocaleString() || 0}</td>
                     </tr>
                 ))}
             </tbody>
