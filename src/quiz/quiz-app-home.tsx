@@ -126,6 +126,19 @@ export default function QuizAppHome() {
                   <p className="text-gray-400 text-sm mt-1">Kiểm tra kiến thức với các đề thi thử</p>
                 </div>
               </div>
+
+              <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">
+                  Sắp ra mắt
+                </div>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm">
+                  <span className="text-4xl">📖</span>
+                </div>
+                <div className="ml-5 text-left flex-grow">
+                  <h3 className="text-xl font-bold text-gray-500">Ngữ Pháp</h3>
+                  <p className="text-gray-400 text-sm mt-1">Luyện tập các chủ điểm ngữ pháp</p>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -273,8 +286,7 @@ export default function QuizAppHome() {
     <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="w-full h-full bg-white flex flex-col">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex-shrink-0"></div>
-        {/* FIX: Only allow scrolling on sub-views, preventing it on 'main' */}
-        <div className={`flex-grow ${currentView === 'main' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <div className="flex-grow overflow-y-auto">
           {currentView !== 'main' && (
             <div className="p-6 pb-0">
               <div className="flex justify-start mb-2">
@@ -289,8 +301,7 @@ export default function QuizAppHome() {
               </div>
             </div>
           )}
-           {/* FIX: Only apply bottom padding on sub-views to make space for a potential bottom navbar */}
-           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative pb-32' : ''}`}>
+           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>
             {renderContent()}
           </div>
         </div>
