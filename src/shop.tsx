@@ -293,8 +293,21 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
                     </div>
                 </div>
                 <div className="flex items-stretch gap-4">
-                    <button className={`flex-1 bg-gradient-to-r from-${config.color} via-${config.color} to-cyan-400 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg`}>MUA NGAY</button>
-                    <button className="bg-slate-700 text-white font-bold p-3 rounded-lg hover:bg-slate-600 transition-colors duration-300">TẶNG</button>
+                    <button
+                        className={`
+                            flex-1 font-bold py-3 px-6 rounded-lg transition-all duration-200 
+                            transform hover:scale-105 hover:brightness-110 active:brightness-95
+                            shadow-lg
+                            bg-${config.color}
+                            shadow-${config.color}/40
+                            ${item.rarity === 'S' ? 'text-slate-900' : 'text-white'}
+                        `}
+                    >
+                        MUA NGAY
+                    </button>
+                    <button className="bg-slate-700 text-white font-bold p-3 rounded-lg hover:bg-slate-600 transition-colors duration-300 active:bg-slate-500">
+                        TẶNG
+                    </button>
                 </div>
             </div>
           </div>
