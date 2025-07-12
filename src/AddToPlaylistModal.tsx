@@ -1,26 +1,16 @@
-// FILE: AddToPlaylistModal_REFINED.tsx
-//
-// =========================================================================
-// GIAO DIỆN ĐƯỢC THIẾT KẾ LẠI - HIỆN ĐẠI & TRỰC QUAN HƠN
-//
-// - Cải tiến 1: Phần "Tạo Playlist" được làm nổi bật và liền mạch.
-// - Cải tiến 2: Thay thế checkbox bằng các hàng có thể click, với hiệu ứng
-//              chọn/bỏ chọn rõ ràng.
-// - Cải tiến 3: Hiển thị số lượng từ trong mỗi playlist.
-// - Cải tiến 4: Sử dụng icon để tăng tính thẩm mỹ và dễ nhận diện.
-// - Lưu ý: Toàn bộ logic xử lý (state, props, useEffect) được giữ nguyên.
-// =========================================================================
+// FILE: AddToPlaylistModal_FIXED.tsx
 
 import { useState, useEffect } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase.js';
 import { User } from 'firebase/auth';
 
-// Định nghĩa lại interface Playlist ở đây để component độc lập
 interface Playlist {
   id: string;
   name: string;
   cardIds: number[];
+  // <<< THAY ĐỔI 1: Thêm isPinned để đồng bộ với interface ở Gallery >>>
+  isPinned?: boolean;
 }
 
 interface AddToPlaylistModalProps {
@@ -38,15 +28,13 @@ export default function AddToPlaylistModal({
   currentUser,
   existingPlaylists,
 }: AddToPlaylistModalProps) {
-  // =========================================================================
-  // LOGIC KHÔNG THAY ĐỔI
-  // =========================================================================
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(new Set());
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      // Logic khởi tạo state khi modal mở, không thay đổi
       if (cardIds.length === 1) {
         const cardId = cardIds[0];
         const initialSelectedIds = new Set<string>();
@@ -60,6 +48,7 @@ export default function AddToPlaylistModal({
         setSelectedPlaylistIds(new Set());
       }
       setNewPlaylistName('');
+      setIsSaving(false);
     }
   }, [isOpen, cardIds, existingPlaylists]);
 
@@ -75,61 +64,71 @@ export default function AddToPlaylistModal({
     setSelectedPlaylistIds(newSelectedIds);
   };
 
-  const handleCreateNewPlaylist = async () => {
-    if (newPlaylistName.trim() === '' || !cardIds || cardIds.length === 0) return;
-    setIsSaving(true);
-    
-    const newPlaylist: Playlist = {
-      id: Date.now().toString(),
-      name: newPlaylistName.trim(),
-      cardIds: [...cardIds], 
-    };
-
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    try {
-      await updateDoc(userDocRef, {
-        playlists: [...existingPlaylists, newPlaylist],
-      });
-      setSelectedPlaylistIds(prev => new Set(prev).add(newPlaylist.id));
-      setNewPlaylistName('');
-    } catch (error) {
-      console.error("Lỗi khi tạo playlist mới:", error);
-      alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  // <<< THAY ĐỔI 2: Loại bỏ hoàn toàn hàm handleCreateNewPlaylist >>>
+  // Hàm này gây ra race condition, logic của nó sẽ được tích hợp vào handleSave
 
   const handleSave = async () => {
-    if (!cardIds || cardIds.length === 0) return;
+    // Nếu không có card nào để thêm và không tạo playlist mới, thì không làm gì cả
+    if ((!cardIds || cardIds.length === 0) && newPlaylistName.trim() === '') {
+      onClose();
+      return;
+    }
+    
     setIsSaving(true);
     const userDocRef = doc(db, 'users', currentUser.uid);
 
-    const updatedPlaylists = existingPlaylists.map(playlist => {
+    // Bắt đầu với một bản sao của các playlist hiện có
+    let playlistsToWrite = [...existingPlaylists];
+
+    // <<< THAY ĐỔI 3: Tích hợp logic tạo playlist mới vào đây >>>
+    // Bước 1: Nếu người dùng có nhập tên playlist mới, tạo nó và thêm vào mảng
+    if (newPlaylistName.trim() !== '') {
+      const newPlaylist: Playlist = {
+        id: `playlist_${Date.now()}`, // Dùng ID dựa trên thời gian cho đơn giản
+        name: newPlaylistName.trim(),
+        cardIds: [...cardIds], // Thêm các card đang chọn vào playlist mới
+        isPinned: false, // Mặc định không ghim
+      };
+      playlistsToWrite.push(newPlaylist);
+      // Tự động chọn playlist vừa tạo
+      selectedPlaylistIds.add(newPlaylist.id);
+    }
+
+    // <<< THAY ĐỔI 4: Cập nhật logic xử lý các playlist hiện có >>>
+    // Bước 2: Duyệt qua mảng playlist (đã có thể bao gồm playlist mới) và cập nhật cardIds
+    playlistsToWrite = playlistsToWrite.map(playlist => {
       const isSelected = selectedPlaylistIds.has(playlist.id);
-      if (cardIds.length === 1) {
-        const cardId = cardIds[0];
-        const alreadyContainsCard = playlist.cardIds.includes(cardId);
+      const currentCardIds = new Set(playlist.cardIds);
+      let changed = false;
+
+      // Xử lý thêm hoặc bớt từng card
+      cardIds.forEach(cardId => {
+        const alreadyContainsCard = currentCardIds.has(cardId);
         if (isSelected && !alreadyContainsCard) {
-          return { ...playlist, cardIds: [...playlist.cardIds, cardId] };
+          // Nếu được chọn và chưa có card -> thêm vào
+          currentCardIds.add(cardId);
+          changed = true;
+        } else if (!isSelected && alreadyContainsCard) {
+          // Nếu không được chọn và đã có card -> xóa đi
+          currentCardIds.delete(cardId);
+          changed = true;
         }
-        if (!isSelected && alreadyContainsCard) {
-          return { ...playlist, cardIds: playlist.cardIds.filter(id => id !== cardId) };
-        }
-      } else {
-        if (isSelected) {
-          const combinedIds = new Set([...playlist.cardIds, ...cardIds]);
-          return { ...playlist, cardIds: Array.from(combinedIds) };
-        }
+      });
+      
+      // Chỉ tạo object mới nếu có sự thay đổi để tối ưu hiệu suất
+      if (changed) {
+        return { ...playlist, cardIds: Array.from(currentCardIds) };
       }
+      
       return playlist;
     });
 
+    // Bước 3: Ghi toàn bộ mảng đã được cập nhật lên Firestore một lần duy nhất
     try {
       await updateDoc(userDocRef, {
-        playlists: updatedPlaylists,
+        playlists: playlistsToWrite,
       });
-      onClose();
+      onClose(); // Đóng modal sau khi lưu thành công
     } catch (error) {
       console.error("Lỗi khi lưu thay đổi vào playlist:", error);
       alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
@@ -139,10 +138,8 @@ export default function AddToPlaylistModal({
   };
 
   const modalTitle = cardIds.length > 1 ? `Thêm ${cardIds.length} từ vào Playlist` : "Thêm vào Playlist";
+  const canCreate = !isSaving && newPlaylistName.trim() !== '';
 
-  // =========================================================================
-  // GIAO DIỆN MỚI
-  // =========================================================================
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60" onClick={onClose}>
       <div 
@@ -170,14 +167,18 @@ export default function AddToPlaylistModal({
                 type="text"
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateNewPlaylist()}
+                // <<< THAY ĐỔI 5: Cho phép nhấn Enter để lưu thay vì tạo ngay >>>
+                onKeyDown={(e) => e.key === 'Enter' && canCreate && handleSave()}
                 placeholder="Tên playlist..."
                 className="flex-grow bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm px-3 py-2 transition-all"
               />
+              {/* <<< THAY ĐỔI 6: Nút này không còn tác dụng, có thể ẩn hoặc vô hiệu hóa hoàn toàn >>>
+                  Trong trường hợp này, chúng ta vô hiệu hóa nó và không gán sự kiện onClick */}
               <button
-                onClick={handleCreateNewPlaylist}
-                disabled={isSaving || newPlaylistName.trim() === ''}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                disabled={true} // Nút này không còn cần thiết
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md disabled:opacity-20 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                aria-hidden="true" // Ẩn khỏi trình đọc màn hình
+                tabIndex={-1} // Loại bỏ khỏi tab order
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -185,6 +186,7 @@ export default function AddToPlaylistModal({
                 <span className="ml-1.5 hidden sm:inline">Tạo</span>
               </button>
             </div>
+             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">Nhập tên và nhấn 'Lưu thay đổi' để tạo.</p>
           </div>
           
           {/* Danh sách Playlist hiện có */}
@@ -204,20 +206,17 @@ export default function AddToPlaylistModal({
                           : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-700/50'}`
                       }
                     >
-                      {/* Icon Playlist */}
                       <div className={`flex-shrink-0 mr-4 p-2 rounded-full ${isSelected ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'}`}>
                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isSelected ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor">
                             <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5z" />
                           </svg>
                       </div>
 
-                      {/* Tên và số lượng */}
                       <div className="flex-grow">
                         <p className={`font-medium ${isSelected ? 'text-indigo-800 dark:text-indigo-200' : 'text-gray-800 dark:text-gray-200'}`}>{playlist.name}</p>
                         <p className={`text-xs ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`}>{playlist.cardIds.length} từ</p>
                       </div>
 
-                      {/* Icon Checkmark */}
                       <div className={`flex-shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all duration-200 ease-in-out
                         ${isSelected 
                           ? 'bg-indigo-600 text-white scale-100' 
