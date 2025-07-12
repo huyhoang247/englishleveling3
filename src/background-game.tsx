@@ -468,7 +468,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // <<< THÊM MỚI: Hàm để cập nhật state vocabularyData từ component con >>>
   const handleVocabularyUpdate = (updatedData: VocabularyItem[]) => {
     setVocabularyData(updatedData);
   };
@@ -867,7 +866,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <AchievementsScreen 
                         onClose={toggleAchievements} 
                         userId={auth.currentUser.uid}
-                        initialData={vocabularyData}
+                        vocabularyData={vocabularyData}
                         onClaimReward={handleRewardClaim}
                         onDataUpdate={handleVocabularyUpdate}
                     />
