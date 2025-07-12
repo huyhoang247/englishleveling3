@@ -1,4 +1,4 @@
-// src/admin.tsx
+// --- START OF FILE admin.tsx ---
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { db } from './firebase.js';
@@ -234,3 +234,5 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 };
 
 export default AdminPanel;
+
+// --- END OF FILE admin.tsx ---
