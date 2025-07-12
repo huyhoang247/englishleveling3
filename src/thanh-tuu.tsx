@@ -1,4 +1,4 @@
-
+// thanh-tuu.tsx
 
 import React, { useState, useCallback, useEffect } from 'react';
 // --- Thêm các import cần thiết cho Firestore ---
@@ -24,11 +24,13 @@ export const initialVocabularyData: VocabularyItem[] = [
   { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
 ];
 
-// --- Cập nhật Prop để nhận dữ liệu từ cha ---
+// --- CẬP NHẬT Prop để nhận dữ liệu từ cha và gửi tín hiệu nhận thưởng ---
 interface AchievementsScreenProps {
   onClose: () => void;
-  userId: string; // ID người dùng để biết lưu vào document nào
-  initialData: VocabularyItem[]; // Dữ liệu được fetch từ Firestore
+  userId: string; 
+  initialData: VocabularyItem[];
+  // <<< THÊM MỚI: Prop để xử lý việc nhận thưởng ở component cha >>>
+  onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
 }
 
 // --- Biểu tượng (Icon) - không thay đổi ---
@@ -68,12 +70,11 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData }: AchievementsScreenProps) {
-  // --- Sử dụng dữ liệu từ props thay vì dữ liệu tĩnh ---
+// <<< CẬP NHẬT: Thêm onClaimReward vào props >>>
+export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
   const db = getFirestore();
 
-  // --- Đồng bộ state nội bộ khi prop initialData thay đổi ---
   useEffect(() => {
       setVocabulary(initialData);
   }, [initialData]);
@@ -90,12 +91,19 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
     return b.exp - a.exp;
   });
 
+  // <<< CẬP NHẬT: Sửa lại hàm handleClaim để gọi callback onClaimReward >>>
   const handleClaim = useCallback(async (id: number) => {
+    // Tìm item gốc để xác định phần thưởng
+    const originalItem = vocabulary.find(item => item.id === id);
+    if (!originalItem || originalItem.exp < originalItem.maxExp) return;
+    
+    // Phần thưởng từ việc lên cấp này
+    const goldReward = originalItem.level * 100;
+    const masteryCardReward = 1;
+
     // Tạo danh sách mới sau khi cập nhật
     const updatedList = vocabulary.map(item => {
-      if (item.id === id && item.exp >= item.maxExp) {
-        // TODO: Add rewards logic (gold, mastery cards) to user's main data
-        // Logic mới: Trừ đi EXP của cấp hiện tại và tăng cấp
+      if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
         const newLevel = item.level + 1;
         const newMaxExp = newLevel * 100;
@@ -106,20 +114,24 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
 
     // Cập nhật state cục bộ để UI phản hồi ngay lập tức
     setVocabulary(updatedList);
+    
+    // <<< THAY ĐỔI QUAN TRỌNG: Gọi callback để component cha xử lý lưu trữ phần thưởng >>>
+    onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
 
-    // Lưu danh sách đã cập nhật vào Firestore
+    // Lưu danh sách tiến trình thành tựu đã cập nhật vào Firestore
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
       await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ
+      // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
       setVocabulary(vocabulary);
     }
-  }, [vocabulary, userId, db]);
+  }, [vocabulary, userId, db, onClaimReward]); // Thêm onClaimReward vào dependencies
 
   const totalWords = vocabulary.length;
+  // Con số này vẫn dùng để hiển thị, không ảnh hưởng đến logic lưu trữ
   const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
 
   return (
@@ -155,7 +167,6 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
             </div>
           </div>
         </section>
-
 
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
