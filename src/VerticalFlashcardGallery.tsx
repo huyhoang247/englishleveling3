@@ -1,16 +1,19 @@
+
+
 // --- START OF FILE VerticalFlashcardGallery.tsx ---
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal.tsx';
+import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
-import { doc, updateDoc, onSnapshot, collection, query, orderBy, limit, getDocs, startAfter, DocumentData } from 'firebase/firestore';
+// <<< THAY ĐỔI 1: IMPORT THÊM `query` VÀ `orderBy` >>>
+import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
-import detailedMeaningsText from './vocabulary-definitions.ts';
-import { defaultVocabulary } from './list-vocabulary.ts';
-import { exampleData } from './example-data.ts';
+import detailedMeaningsText from './vocabulary-definitions.ts'; // <-- IMPORT DỮ LIỆU TỪ FILE MỚI
+import { defaultVocabulary } from './list-vocabulary.ts'; // <-- IMPORT DANH SÁCH TỪ VỰNG
+import { exampleData } from './example-data.ts'; // <-- IMPORT DỮ LIỆU VÍ DỤ TỪ FILE MỚI
 
 // --- Interfaces and Data ---
 interface Playlist {
@@ -48,11 +51,6 @@ interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
 }
-interface OpenedCardData {
-  id: number;
-  collectedAt: Date;
-}
-
 
 /**
  * Helper function to capitalize the first letter of a string.
@@ -74,6 +72,12 @@ const generatePlaceholderUrls = (count: number, text: string, color: string): st
 };
 
 // --- LOGIC MỚI: XỬ LÝ ĐỊNH NGHĨA CHI TIẾT ---
+
+/**
+ * Phân tích khối văn bản định nghĩa thành một Map để tra cứu.
+ * @param text - Chuỗi văn bản chứa các định nghĩa (đã được import).
+ * @returns Một Map với key là từ tiếng Anh (viết hoa chữ cái đầu) và value là định nghĩa đầy đủ.
+ */
 const parseDetailedMeanings = (text: string): Map<string, string> => {
     const meaningsMap = new Map<string, string>();
     const lines = text.trim().split('\n');
@@ -88,11 +92,15 @@ const parseDetailedMeanings = (text: string): Map<string, string> => {
     return meaningsMap;
 };
 
+// Parse dữ liệu text thành Map để tra cứu hiệu quả (O(1))
 const detailedMeaningsMap = parseDetailedMeanings(detailedMeaningsText);
 
 // --- START: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
+
+// Cập nhật số lượng flashcard dựa trên danh sách từ vựng đã nhập từ list-vocabulary.ts
 const numberOfSampleFlashcards = defaultVocabulary.length;
 
+// Tạo các mảng URL cho ảnh dựa trên số lượng từ vựng mới
 const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
@@ -101,21 +109,27 @@ const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcard
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
+// Tạo Map chứa toàn bộ dữ liệu flashcard, ánh xạ trực tiếp từ defaultVocabulary
 const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
     Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
         const cardId = i + 1;
         const rawWord = defaultVocabulary[i];
-        const capitalizedWord = capitalizeFirstLetter(rawWord);
+        const capitalizedWord = capitalizeFirstLetter(rawWord); // <-- CHUYỂN ĐỔI CHỮ CÁI ĐẦU THÀNH IN HOA
+
+        // Tra cứu định nghĩa chi tiết bằng từ đã được viết hoa
         const detailedMeaning = detailedMeaningsMap.get(capitalizedWord);
+
+        // Tạo dữ liệu từ vựng cho flashcard
         const vocab: VocabularyData = {
-            word: capitalizedWord,
-            meaning: detailedMeaning || `Meaning of ${capitalizedWord}`,
+            word: capitalizedWord, // <-- SỬ DỤNG TỪ ĐÃ VIẾT HOA
+            meaning: detailedMeaning || `Meaning of ${capitalizedWord}`, // Fallback nếu không có định nghĩa
             example: `Example sentence for ${capitalizedWord}.`,
             phrases: [`Phrase A ${cardId}`, `Phrase B ${cardId}`],
             popularity: cardId % 3 === 0 ? "Cao" : (cardId % 2 === 0 ? "Trung bình" : "Thấp"),
             synonyms: [`Synonym 1.${cardId}`, `Synonym 2.${cardId}`],
             antonyms: [`Antonym 1.${cardId}`, `Antonym 2.${cardId}`]
         };
+
         const imageUrls: StyledImageUrls = {
             default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${cardId}`,
             anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
@@ -142,6 +156,7 @@ const animations = `
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
 `;
 
+// Tách FlashcardItem ra component riêng và memoize nó.
 interface FlashcardItemProps {
   card: Flashcard;
   isFavorite: boolean;
@@ -189,18 +204,21 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
   const mainContainerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState('collection');
-  const [loading, setLoading] = useState(true);
-  
-  // States cho Modals và UI
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+  const [activeTab, setActiveTab] = useState('collection');
   const [showSettings, setShowSettings] = useState(false);
   const [layoutMode, setLayoutMode] = useState('single');
   const [visualStyle, setVisualStyle] = useState('default');
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
   const [showVocabDetail, setShowVocabDetail] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [openedImageIds, setOpenedImageIds] = useState<number[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('all');
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedCardForPlaylist, setSelectedCardForPlaylist] = useState<number[] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
   const [activeScreen, setActiveScreen] = useState('home');
   const [toggleSidebar, setToggleSidebar] = useState<(() => void) | null>(null);
   const [showAllPlaylistsModal, setShowAllPlaylistsModal] = useState(false);
@@ -208,203 +226,109 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false);
 
-  // Data states
-  const [openedCardsData, setOpenedCardsData] = useState<OpenedCardData[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [totalFlashcardsInCollection, setTotalFlashcardsInCollection] = useState(0);
-
-  // State mới cho pagination bằng nút bấm
-  const [isFetchingPage, setIsFetchingPage] = useState(false);
-  // Lưu "con trỏ" cho trang trước đó. Key là số trang.
-  const [pageStartCursors, setPageStartCursors] = useState<Map<number, DocumentData | null>>(new Map([[1, null]]));
-
-  // Trang hiện tại cho mỗi tab
-  const [currentPageCollection, setCurrentPageCollection] = useState(1);
-  const [currentPageFavorites, setCurrentPageFavorites] = useState(1);
-  const itemsPerPage = 50; // Dùng chung cho cả 2 tab
-
   // --- Derived State ---
-  const allFavoriteCardIds = useMemo(() => new Set(playlists.flatMap(p => p.cardIds)), [playlists]);
-  const favoriteCount = allFavoriteCardIds.size;
-  const totalPagesCollection = Math.ceil(totalFlashcardsInCollection / itemsPerPage);
+  const allFavoriteCardIds = useMemo(() => {
+    return new Set(playlists.flatMap(p => p.cardIds));
+  }, [playlists]);
 
-  
   // --- Effects ---
-  const fetchCollectionPage = useCallback(async (pageNumber: number) => {
-    if (!currentUser || isFetchingPage) return;
-
-    const startAfterDoc = pageStartCursors.get(pageNumber);
-    if (pageNumber > 1 && startAfterDoc === undefined) {
-      console.error(`Cannot fetch page ${pageNumber}, cursor not found.`);
+  // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN LOGIC LẤY DỮ LIỆU ĐỂ SẮP XẾP BẰNG FIRESTORE >>>
+  useEffect(() => {
+    // Nếu không có người dùng, reset state và thoát
+    if (!currentUser) {
+      setLoading(false);
+      setOpenedImageIds([]);
+      setPlaylists([]);
       return;
     }
-    
-    setIsFetchingPage(true);
-    setLoading(pageNumber === 1 && openedCardsData.length === 0);
 
-    try {
-        const openedVocabColRef = collection(db, 'users', currentUser.uid, 'openedVocab');
-        const q = startAfterDoc
-            ? query(openedVocabColRef, orderBy("collectedAt", "desc"), startAfter(startAfterDoc), limit(itemsPerPage))
-            : query(openedVocabColRef, orderBy("collectedAt", "desc"), limit(itemsPerPage));
-        
-        const documentSnapshots = await getDocs(q);
+    setLoading(true);
+    let unsubscribePlaylists: () => void;
+    let unsubscribeOpenedCards: () => void;
 
-        const newCards = documentSnapshots.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: Number(doc.id),
-                collectedAt: data.collectedAt?.toDate() || new Date(0)
-            };
-        });
-
-        setOpenedCardsData(newCards);
-
-        if (documentSnapshots.docs.length > 0) {
-            const lastDoc = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-            setPageStartCursors(prev => new Map(prev).set(pageNumber + 1, lastDoc));
-        }
-        
-        setCurrentPageCollection(pageNumber);
-
-    } catch (error) {
-        console.error(`Error fetching page ${pageNumber}:`, error);
-    } finally {
-        setIsFetchingPage(false);
-        setLoading(false);
-    }
-  }, [currentUser, isFetchingPage, pageStartCursors, itemsPerPage, openedCardsData.length]);
-
-  // Lắng nghe thay đổi tổng thể và fetch trang đầu tiên
-  useEffect(() => {
-    let unsubscribeUserDoc: () => void;
-    if (!currentUser) {
-        setLoading(false);
-        setOpenedCardsData([]);
-        setPlaylists([]);
-        setTotalFlashcardsInCollection(0);
-        setCurrentPageCollection(1);
-        setPageStartCursors(new Map([[1, null]]));
-        return;
-    }
-    
-    let currentTotal = totalFlashcardsInCollection;
-    
+    // --- Lắng nghe thay đổi của Playlists (Không đổi) ---
     const userDocRef = doc(db, 'users', currentUser.uid);
-    unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
+    unsubscribePlaylists = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
-        const newTotal = userData.totalVocabCollected || 0;
-        if (newTotal !== currentTotal) {
-            currentTotal = newTotal;
-            setTotalFlashcardsInCollection(newTotal);
-            setCurrentPageCollection(1);
-            setPageStartCursors(new Map([[1, null]]));
-            fetchCollectionPage(1); 
-        }
       } else {
         setPlaylists([]);
-        setTotalFlashcardsInCollection(0);
       }
     }, (error) => {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user playlists:", error);
+    });
+
+    // --- Lắng nghe thay đổi của bộ sưu tập thẻ VỚI SẮP XẾP ---
+    const openedVocabColRef = collection(db, 'users', currentUser.uid, 'openedVocab');
+    
+    // TẠO QUERY MỚI: Sắp xếp theo trường 'collectedAt' giảm dần (mới nhất trước)
+    const q = query(openedVocabColRef, orderBy('collectedAt', 'desc'));
+
+    // SỬ DỤNG QUERY `q` THAY VÌ `openedVocabColRef`
+    unsubscribeOpenedCards = onSnapshot(q, (querySnapshot) => {
+      const ids: number[] = [];
+      // Vì đã orderBy, querySnapshot.forEach sẽ duyệt qua các doc theo đúng thứ tự
+      querySnapshot.forEach(doc => {
+        const id = Number(doc.id);
+        if (!isNaN(id)) {
+          ids.push(id);
+        }
+      });
+      setOpenedImageIds(ids); // `ids` bây giờ đã được sắp xếp đúng thứ tự
+      setLoading(false); 
+    }, (error) => {
+      console.error("Error fetching ordered cards from subcollection:", error);
+      // QUAN TRỌNG: Nếu có lỗi này, rất có thể bạn chưa tạo Index trong Firestore.
+      // Firestore sẽ cung cấp một link trong console log lỗi để bạn click vào và tự động tạo index.
+      setOpenedImageIds([]); 
+      setLoading(false);
     });
     
-    fetchCollectionPage(1);
-
+    // Cleanup function để hủy cả hai listener khi component unmount
     return () => {
-      if(unsubscribeUserDoc) unsubscribeUserDoc();
+      if (unsubscribePlaylists) unsubscribePlaylists();
+      if (unsubscribeOpenedCards) unsubscribeOpenedCards();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
 
-  const handlePageChangeCollection = (pageNumber: number) => {
-      if (pageNumber < 1 || pageNumber > totalPagesCollection || pageNumber === currentPageCollection) return;
-      fetchCollectionPage(pageNumber);
-      if (mainContainerRef.current) {
-        mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-      }
-  };
-
-
-  // --- Logic hiển thị thẻ ---
-  const favoriteCards = useMemo(() => {
+  const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
-        const card = ALL_CARDS_MAP.get(id);
+        const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
         if (!card) return undefined;
-        return { card, isFavorite: true };
+        return {
+            card,
+            isFavorite: allFavoriteCardIds.has(id)
+        };
     };
 
     let cardIdsToShow: number[] = [];
-    if (selectedPlaylistId === 'all') {
-        cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
-    } else {
-        const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
-        cardIdsToShow = selectedPlaylist ? [...selectedPlaylist.cardIds].sort((a,b) => b-a) : [];
+
+    if (activeTab === 'collection') {
+        // <<< THAY ĐỔI 3: BỎ `.reverse()` VÌ DỮ LIỆU ĐÃ ĐƯỢC SẮP XẾP TỪ FIRESTORE >>>
+        cardIdsToShow = openedImageIds;
+    } else if (activeTab === 'favorite') {
+        if (selectedPlaylistId === 'all') {
+            cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
+        } else {
+            const selectedPlaylist = playlists.find(p => p.id === selectedPlaylistId);
+            cardIdsToShow = selectedPlaylist ? [...selectedPlaylist.cardIds].sort((a,b) => b-a) : [];
+        }
     }
+    
     return cardIdsToShow
         .map(id => getDisplayCard(id))
         .filter((item): item is DisplayCard => item !== undefined);
-  }, [allFavoriteCardIds, playlists, selectedPlaylistId]);
 
-  const totalPagesFavorites = Math.ceil(favoriteCards.length / itemsPerPage);
-  const startIndexFavorites = (currentPageFavorites - 1) * itemsPerPage;
-  const endIndexFavorites = startIndexFavorites + itemsPerPage;
-  const favoritesForCurrentPage = favoriteCards.slice(startIndexFavorites, endIndexFavorites);
+  }, [activeTab, openedImageIds, allFavoriteCardIds, playlists, selectedPlaylistId]);
 
-  const displayCards = useMemo((): DisplayCard[] => {
-    if (activeTab === 'collection') {
-       return openedCardsData.map(item => ({
-        card: ALL_CARDS_MAP.get(item.id)!,
-        isFavorite: allFavoriteCardIds.has(item.id)
-      })).filter(dc => dc.card);
-    }
-    return favoritesForCurrentPage;
-  }, [activeTab, openedCardsData, allFavoriteCardIds, favoritesForCurrentPage]);
-  
-  const handlePageChangeFavorites = useCallback((pageNumber: number) => {
-    if (pageNumber < 1 || pageNumber > totalPagesFavorites) return;
-    setCurrentPageFavorites(pageNumber);
-    if (mainContainerRef.current) {
-      mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-    }
-  }, [totalPagesFavorites]);
-  
-  const paginationItems = useMemo(() => {
-    const siblingCount = 1;
-    const totalPages = activeTab === 'collection' ? totalPagesCollection : totalPagesFavorites;
-    const currentPage = activeTab === 'collection' ? currentPageCollection : currentPageFavorites;
-
-    const totalPageNumbers = siblingCount + 5;
-    if (totalPages <= 1) return [];
-    if (totalPageNumbers >= totalPages) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-    const shouldShowLeftDots = leftSiblingIndex > 2;
-    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-    const range = (start: number, end: number) => Array.from({ length: end - start + 1 }, (_, idx) => idx + start);
-
-    if (!shouldShowLeftDots && shouldShowRightDots) {
-      let leftItemCount = 3 + 2 * siblingCount;
-      let leftRange = range(1, leftItemCount);
-      return [...leftRange, '...', totalPages];
-    }
-    if (shouldShowLeftDots && !shouldShowRightDots) {
-      let rightItemCount = 3 + 2 * siblingCount;
-      let rightRange = range(totalPages - rightItemCount + 1, totalPages);
-      return [1, '...', ...rightRange];
-    }
-    if (shouldShowLeftDots && shouldShowRightDots) {
-      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
-      return [1, '...', ...middleRange, '...', totalPages];
-    }
-    return [];
-  }, [activeTab, totalPagesCollection, totalPagesFavorites, currentPageCollection, currentPageFavorites]);
-  
+  const totalPages = Math.ceil(filteredFlashcardsByTab.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const flashcardsForCurrentPage = filteredFlashcardsByTab.slice(startIndex, endIndex);
+  const totalFlashcardsInCollection = openedImageIds.length;
+  const favoriteCount = allFavoriteCardIds.size;
 
   // --- Handlers ---
   const handleShowHome = useCallback(() => setActiveScreen('home'), []);
@@ -415,12 +339,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const handleShowPerformance = useCallback(() => setActiveScreen('performance'), []);
   const handleShowSettings = useCallback(() => setActiveScreen('settings'), []);
   const handleShowHelp = useCallback(() => setActiveScreen('help'), []);
-  
-  const handleTabChange = (tab: 'collection' | 'favorite') => {
-      setActiveTab(tab);
-      setCurrentPageFavorites(1);
-  };
-  
+
   const closePlaylistModal = useCallback(() => { setIsPlaylistModalOpen(false); setSelectedCardForPlaylist(null); }, []);
   const closeVocabDetail = useCallback(() => { setShowVocabDetail(false); setSelectedCard(null); showNavBar(); }, [showNavBar]);
 
@@ -448,6 +367,54 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         default: return card.imageUrl.default;
     }
   }, []);
+
+  const handlePageChange = useCallback((pageNumber: number) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
+    if (mainContainerRef.current) {
+      mainContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [totalPages]);
+
+  const paginationItems = useMemo(() => {
+    const siblingCount = 1;
+    const totalPageNumbers = siblingCount + 5;
+
+    if (totalPageNumbers >= totalPages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
+    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+
+    const range = (start: number, end: number) => {
+      let length = end - start + 1;
+      return Array.from({ length }, (_, idx) => idx + start);
+    };
+
+    if (!shouldShowLeftDots && shouldShowRightDots) {
+      let leftItemCount = 3 + 2 * siblingCount;
+      let leftRange = range(1, leftItemCount);
+      return [...leftRange, '...', totalPages];
+    }
+
+    if (shouldShowLeftDots && !shouldShowRightDots) {
+      let rightItemCount = 3 + 2 * siblingCount;
+      let rightRange = range(totalPages - rightItemCount + 1, totalPages);
+      return [1, '...', ...rightRange];
+    }
+
+    if (shouldShowLeftDots && shouldShowRightDots) {
+      let middleRange = range(leftSiblingIndex, rightSiblingIndex);
+      return [1, '...', ...middleRange, '...', totalPages];
+    }
+
+    return [];
+
+  }, [currentPage, totalPages]);
 
   const scrollbarHide = `
     .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -527,6 +494,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
+
   if (loading) {
     return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
@@ -550,6 +518,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
         {activeScreen === 'home' && (
           <>
+            {/* Header and Tabs */}
             <div className="w-full max-w-6xl py-6 mx-auto">
               <div className="flex justify-between items-center mb-4 px-4">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
@@ -568,12 +537,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               </div>
 
               <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
-                <button onClick={() => handleTabChange('collection')} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                <button onClick={() => { setActiveTab('collection'); handlePageChange(1); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
                   <span>Collection</span>
                   <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
                 </button>
-                <button onClick={() => handleTabChange('favorite')} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                <button onClick={() => { setActiveTab('favorite'); handlePageChange(1); setSelectedPlaylistId('all'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
                   <span>Favorite</span>
                   <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
@@ -589,7 +558,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
                     <div className="flex items-center space-x-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                       <button
-                        onClick={() => { setSelectedPlaylistId('all'); setCurrentPageFavorites(1); }}
+                        onClick={() => { setSelectedPlaylistId('all'); handlePageChange(1); }}
                         className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
                           ${selectedPlaylistId === 'all'
                             ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
@@ -607,7 +576,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                       {pillsToDisplay.map(p => (
                         <button
                           key={p.id}
-                          onClick={() => { setSelectedPlaylistId(p.id); setCurrentPageFavorites(1); }}
+                          onClick={() => { setSelectedPlaylistId(p.id); handlePageChange(1); }}
                           className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border truncate max-w-[250px]
                             ${selectedPlaylistId === p.id
                               ? 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/50 dark:text-pink-300 dark:border-pink-700 font-bold shadow-sm'
@@ -639,19 +608,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
               )}
             </div>
 
-            <div className="min-h-0 relative">
-                {isFetchingPage && activeTab === 'collection' && (
-                    <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-10" style={{animation: 'fadeIn 0.3s'}}>
-                       <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                       </svg>
-                    </div>
-                )}
+            <div className="min-h-0">
               <div className="w-full max-w-6xl mx-auto">
-                {displayCards.length > 0 ? (
+                {flashcardsForCurrentPage.length > 0 ? (
                   <div className={`grid gap-4 px-4 ${layoutMode === 'single' ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {displayCards.map(({ card, isFavorite }) => (
+                    {flashcardsForCurrentPage.map(({ card, isFavorite }) => (
                       <FlashcardItem
                         key={card.id}
                         card={card}
@@ -671,7 +632,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 )}
 
-                {paginationItems.length > 0 && (
+                {totalPages > 1 && (
                   <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
                       {paginationItems.map((item, index) =>
@@ -680,13 +641,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         ) : (
                           <button
                             key={item}
-                            onClick={() => activeTab === 'collection' ? handlePageChangeCollection(item) : handlePageChangeFavorites(item)}
-                            disabled={isFetchingPage && activeTab === 'collection'}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 
-                              ${(activeTab === 'collection' ? currentPageCollection : currentPageFavorites) === item 
-                                ? 'bg-indigo-600 text-white shadow-md' 
-                                : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}
-                              ${isFetchingPage && activeTab === 'collection' ? 'cursor-wait opacity-50' : ''}`}
+                            onClick={() => handlePageChange(item)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === item ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                           >
                             {item}
                           </button>
@@ -695,13 +651,53 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                     </nav>
                   </div>
                 )}
-
               </div>
             </div>
 
+            {/* Modals and other UI */}
             {showSettings && (
               <>
-                {/* Modal Settings... */}
+                <div className="fixed inset-0 bg-black bg-opacity-40 z-40 transition-opacity duration-300" style={{ animation: 'modalBackdropIn 0.3s ease-out forwards' }} onClick={() => setShowSettings(false)}></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={(e) => {if(e.target === e.currentTarget) setShowSettings(false)}}>
+                  <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col" style={{ animation: 'scaleIn 0.3s ease-out forwards' }} id="settings-panel">
+                    <div className="bg-indigo-600 p-5 flex-shrink-0 border-b-2 border-indigo-500/50">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold text-white flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>Cài đặt hiển thị</h3>
+                        <button onClick={() => setShowSettings(false)} className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                      </div>
+                    </div>
+                    <div className="p-6 overflow-y-auto max-h-[70vh] flex-grow">
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>Bố cục hiển thị</h4>
+                        <div className="flex space-x-2">
+                          <div className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${layoutMode === 'single' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600'}`} onClick={() => setLayoutMode('single')}>
+                            <div className="w-8 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm mb-1"></div>
+                            <span className={`text-xs ${layoutMode === 'single' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>1 Cột</span>
+                          </div>
+                          <div className={`flex-1 p-2 border-2 rounded-lg cursor-pointer transition-all flex flex-col items-center ${layoutMode === 'double' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-600'}`} onClick={() => setLayoutMode('double')}>
+                            <div className="flex space-x-1 mb-1"><div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div><div className="w-4 h-12 bg-indigo-200 dark:bg-indigo-700 rounded-md shadow-sm"></div></div>
+                            <span className={`text-xs ${layoutMode === 'double' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>2 Cột</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" /></svg>Phong cách hiển thị</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'default' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200'}`} onClick={() => setVisualStyle('default')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" /></svg></div><span className={`text-xs ${visualStyle === 'default' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Mặc định</span></div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'anime' ? 'border-pink-500 bg-pink-50 dark:border-pink-900' : 'border-gray-200 dark:border-gray-700 hover:border-pink-200'}`} onClick={() => setVisualStyle('anime')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span></div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'comic' ? 'border-blue-500 bg-blue-50 dark:border-blue-900' : 'border-gray-200 dark:border-gray-700 hover:border-blue-200'}`} onClick={() => setVisualStyle('comic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /></svg></div><span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span></div>
+                          <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'realistic' ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200'}`} onClick={() => setVisualStyle('realistic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="sticky bottom-0 left-0 right-0 mt-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 p-4 flex space-x-3 flex-shrink-0">
+                      <button className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg" onClick={() => setShowSettings(false)}>Hủy</button>
+                      <button className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg flex items-center justify-center" onClick={() => setShowSettings(false)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>Áp dụng
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
 
@@ -719,7 +715,107 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
             {showAllPlaylistsModal && (
               <>
-                {/* Modal All Playlists... */}
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => { if (!playlistToDelete) setShowAllPlaylistsModal(false); }} style={{ animation: 'modalBackdropIn 0.3s' }}></div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget && !playlistToDelete) setShowAllPlaylistsModal(false) }}>
+                  <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-xl flex flex-col max-h-[80vh] relative" style={{ animation: 'modalIn 0.3s' }}>
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Chọn một Playlist</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Ghim (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 inline-block -mt-1 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                      ) tối đa 2 playlist để luôn hiển thị.</p>
+                    </div>
+
+                    <div className="p-4 flex-shrink-0">
+                        <div className="relative">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Tìm tên playlist..."
+                                value={playlistSearch}
+                                onChange={(e) => setPlaylistSearch(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="overflow-y-auto px-4 pb-4 flex-grow">
+                      <ul className="space-y-1">
+                        {playlists
+                          .filter(p => p.name.toLowerCase().includes(playlistSearch.toLowerCase()))
+                          .map(p => (
+                            <li key={p.id}>
+                              <div
+                                onClick={() => {
+                                  setSelectedPlaylistId(p.id);
+                                  handlePageChange(1);
+                                  setShowAllPlaylistsModal(false);
+                                  setPlaylistSearch('');
+                                }}
+                                className={`w-full flex items-center text-left p-3 rounded-lg transition-colors duration-200 group cursor-pointer
+                                  ${selectedPlaylistId === p.id
+                                    ? 'bg-pink-100 dark:bg-pink-900/60'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`
+                                }
+                              >
+                                <div className="flex-grow pr-4">
+                                  <p className={`font-medium truncate ${selectedPlaylistId === p.id ? 'text-pink-800 dark:text-pink-200' : 'text-gray-800 dark:text-gray-200'}`}>{p.name}</p>
+                                  <span className={`text-xs ${selectedPlaylistId === p.id ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`}>{p.cardIds.length} từ vựng</span>
+                                </div>
+                                <div className="flex items-center flex-shrink-0 space-x-1">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleTogglePin(p.id); }}
+                                      disabled={(!p.isPinned && pinnedCount >= 2) || isUpdatingPlaylists}
+                                      className="p-2 rounded-full transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed group-hover:bg-gray-200 dark:group-hover:bg-gray-700"
+                                      aria-label={p.isPinned ? "Bỏ ghim playlist" : "Ghim playlist"}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-200 ${p.isPinned ? 'text-yellow-400 scale-110' : 'text-gray-400 dark:text-gray-500 group-hover:text-yellow-500'}`} viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setPlaylistToDelete(p); }}
+                                        disabled={isUpdatingPlaylists}
+                                        className="p-2 rounded-full transition-colors duration-200 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        aria-label={`Xoá playlist ${p.name}`}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-red-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+
+                    {playlistToDelete && (
+                        <div className="absolute inset-0 bg-gray-900/60 dark:bg-black/70 z-10 flex items-center justify-center p-4 rounded-2xl" style={{ animation: 'fadeIn 0.2s' }}>
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm text-center p-6" style={{ animation: 'scaleIn 0.2s' }}>
+                                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50 mb-4">
+                                    <svg className="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Xoá Playlist</h3>
+                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                    Bạn có chắc chắn muốn xoá playlist <strong className="font-semibold text-gray-800 dark:text-white">"{playlistToDelete.name}"</strong>? <br/>Hành động này không thể hoàn tác.
+                                </p>
+                                <div className="mt-6 flex justify-center space-x-4">
+                                    <button type="button" onClick={() => setPlaylistToDelete(null)} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        Huỷ
+                                    </button>
+                                    <button type="button" onClick={handleConfirmDelete} disabled={isUpdatingPlaylists} className="flex-1 rounded-lg border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        {isUpdatingPlaylists ? 'Đang xoá...' : 'Xác nhận Xoá'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                  </div>
+                </div>
               </>
             )}
           </>
@@ -740,4 +836,3 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </SidebarLayout>
   );
 }
-// --- END OF FILE VerticalFlashcardGallery.tsx ---
