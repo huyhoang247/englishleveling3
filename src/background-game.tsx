@@ -114,7 +114,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(0);
-  const [masteryCards, setMasteryCards] = useState(0); // <<< THÊM MỚI: State cho Mastery Cards
+  const [masteryCards, setMasteryCards] = useState(0);
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -155,6 +155,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
+  // <<< START: HÀM ĐÃ ĐƯỢC SỬA LỖI >>>
   const fetchVocabularyData = async (userId: string) => {
     try {
         const completedWordsCol = collection(db, 'users', userId, 'completedWords');
@@ -165,6 +166,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             getDoc(achievementDocRef),
         ]);
 
+        // 1. Tính tổng EXP thô từ `completedWords`
         const wordToExpMap = new Map<string, number>();
         completedWordsSnap.forEach(wordDoc => {
             const word = wordDoc.id;
@@ -173,9 +175,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             Object.values(gameModes).forEach((mode: any) => {
                 totalCorrectCount += mode.correctCount || 0;
             });
-            wordToExpMap.set(word, totalCorrectCount * 100); 
+            wordToExpMap.set(word, totalCorrectCount * 100);
         });
 
+        // 2. Lấy dữ liệu thành tựu đã lưu (level, exp...)
         const existingAchievements = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
         const existingAchievementsMap = new Map<string, VocabularyItem>(
             existingAchievements.map((item: VocabularyItem) => [item.word, item])
@@ -184,49 +187,49 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const syncedVocabularyData: VocabularyItem[] = [];
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
 
+        // 3. LOGIC SỬA LỖI: Đồng bộ tổng EXP kiếm được với cấp độ đã lưu
+        // Thay vì tự động lên cấp, chúng ta chỉ tính toán lại EXP hiện tại dựa trên cấp độ đã lưu
         wordToExpMap.forEach((totalExp, word) => {
             const existingItem = existingAchievementsMap.get(word);
 
             if (existingItem) {
+                // Từ này đã tồn tại trong danh sách thành tựu
+                // Tính xem cần bao nhiêu EXP để đạt đến cấp độ hiện tại
                 let expSpentToReachCurrentLevel = 0;
                 for (let i = 1; i < existingItem.level; i++) {
                     expSpentToReachCurrentLevel += i * 100;
                 }
+                // EXP hiện tại của từ = Tổng EXP kiếm được - EXP đã dùng để lên các cấp trước
                 const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
+
                 syncedVocabularyData.push({
                     ...existingItem,
-                    exp: currentProgressExp,
-                    maxExp: existingItem.level * 100,
+                    exp: currentProgressExp, // Gán EXP mới. EXP này CÓ THỂ LỚN HƠN maxExp
+                    maxExp: existingItem.level * 100, // maxExp của cấp hiện tại
                 });
-
             } else {
-                let level = 1;
-                let expProgress = totalExp;
-                let maxExpForLevel = 100;
-
-                while (expProgress >= maxExpForLevel) {
-                    expProgress -= maxExpForLevel;
-                    level++;
-                    maxExpForLevel = level * 100;
-                }
+                // Đây là một từ hoàn toàn mới, chưa có trong thành tựu
+                // Chỉ cần thêm vào với cấp 1 và tổng EXP của nó.
+                // KHÔNG dùng vòng lặp while để lên cấp nữa.
                 syncedVocabularyData.push({
                     id: idCounter++,
                     word: word,
-                    exp: expProgress,
-                    level: level,
-                    maxExp: maxExpForLevel,
+                    exp: totalExp, // Gán thẳng tổng EXP kiếm được
+                    level: 1,
+                    maxExp: 100, // maxExp cho cấp 1
                 });
             }
         });
         
-        console.log("Vocabulary achievements data synced and processed correctly.");
+        console.log("Vocabulary achievements data synced correctly (without auto-leveling).");
         setVocabularyData(syncedVocabularyData);
 
     } catch (error) {
         console.error("Error fetching and syncing vocabulary achievements data:", error);
-        setVocabularyData(initialVocabularyData);
+        setVocabularyData(initialVocabularyData); // Fallback
     }
   };
+  // <<< END: HÀM ĐÃ ĐƯỢC SỬA LỖI >>>
 
   const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
@@ -240,19 +243,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(userData.coins || 0);
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
-        setMasteryCards(userData.masteryCards || 0); // <<< THÊM MỚI
+        setMasteryCards(userData.masteryCards || 0);
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
-          masteryCards: 0, // <<< THÊM MỚI
+          masteryCards: 0,
           createdAt: new Date(),
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setMasteryCards(0); // <<< THÊM MỚI
+        setMasteryCards(0);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -306,7 +309,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
   
-  // <<< THÊM MỚI: Hàm để cập nhật Mastery Cards trên Firestore >>>
   const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update mastery cards: User not authenticated.");
@@ -322,7 +324,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           const currentCards = userDoc.data().masteryCards || 0;
           const newCards = currentCards + amount;
           transaction.update(userDocRef, { masteryCards: newCards });
-          setMasteryCards(newCards); // Cập nhật state ở component cha
+          setMasteryCards(newCards);
         }
       });
       console.log(`Mastery Cards updated in Firestore for user ${userId}.`);
@@ -397,7 +399,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
-        setMasteryCards(0); // <<< THÊM MỚI: Reset state khi logout
+        setMasteryCards(0);
         setJackpotPool(0);
         setIsLoadingUserData(true);
         setVocabularyData(null);
@@ -464,18 +466,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
   
-  // <<< THÊM MỚI: Hàm xử lý nhận thưởng, sẽ được truyền xuống AchievementsScreen >>>
   const handleRewardClaim = (reward: { gold: number; masteryCards: number }) => {
     if (!auth.currentUser) return;
     
     console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
 
-    // Cập nhật Vàng. `startCoinCountAnimation` sẽ gọi `updateCoinsInFirestore` bên trong nó.
     if (reward.gold > 0) {
         startCoinCountAnimation(reward.gold);
     }
 
-    // Cập nhật Thẻ Thông Thạo
     if (reward.masteryCards > 0) {
         updateMasteryCardsInFirestore(auth.currentUser.uid, reward.masteryCards);
     }
