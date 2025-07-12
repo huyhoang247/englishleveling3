@@ -3,8 +3,8 @@
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
-// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` >>>
-import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc } from 'firebase/firestore';
+// <<< THAY ĐỔI 1: IMPORT THÊM `increment` >>>
+import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 
@@ -98,7 +98,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
-  // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN LOGIC LẤY DỮ LIỆU >>>
+  // <<< THAY ĐỔI 2: KHÔNG CÓ THAY ĐỔI Ở ĐÂY, LOGIC VẪN ĐÚNG >>>
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
@@ -183,7 +183,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
-  // <<< THAY ĐỔI 3: CẬP NHẬT `checkAnswer` ĐỂ GHI VÀO SUBCOLLECTION >>>
+  // <<< THAY ĐỔI 3: CẬP NHẬT `checkAnswer` ĐỂ GHI NHẬN SỐ LẦN HOÀN THÀNH >>>
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
@@ -199,17 +199,25 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         try {
             // Chuẩn bị các tham chiếu
             const userDocRef = doc(db, 'users', user.uid);
-            // Dùng chính từ vựng làm ID cho document trong subcollection
             const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
             
-            // Sử dụng WriteBatch để đảm bảo cả hai thao tác đều thành công hoặc thất bại cùng nhau
+            // Sử dụng WriteBatch để đảm bảo các thao tác đều thành công hoặc thất bại cùng nhau
             const batch = writeBatch(db);
 
-            // Thao tác 1: Thêm từ đã hoàn thành vào subcollection
-            batch.set(completedWordRef, { 
-                completedAt: new Date(),
-                gameMode: "fill-word-1" 
-            });
+            // Thao tác 1: Cập nhật hoặc tạo mới document cho từ đã hoàn thành.
+            // Sử dụng `set` với `{ merge: true }` và `increment`
+            // - { merge: true } sẽ tạo document nếu chưa có, hoặc cập nhật nếu đã có.
+            // - increment(1) sẽ tăng giá trị `correctCount` lên 1 một cách an toàn trên server.
+            // - Chúng ta dùng dot notation để truy cập vào trường lồng nhau.
+            const gameModeId = "fill-word-1";
+            batch.set(completedWordRef, {
+                lastCompletedAt: new Date(),
+                gameModes: {
+                    [gameModeId]: {
+                        correctCount: increment(1)
+                    }
+                }
+            }, { merge: true }); // Quan trọng: merge để không ghi đè các game mode khác
 
             // Thao tác 2: Cập nhật số coin của người dùng
             batch.update(userDocRef, { 'coins': updatedCoins });
