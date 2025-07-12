@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback } from 'react';
 
 // --- Định nghĩa Type cho dữ liệu ---
@@ -48,11 +46,16 @@ const MasteryCardIcon = ({ className = '' }: { className?: string }) => (
     </svg>
 );
 
-const GoldIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M10.868 2.884c.321-.662 1.215-.662 1.536 0l1.83 3.755 4.145.604c.73.107 1.022.998.494 1.507l-2.998 2.922.708 4.129c.125.727-.635 1.285-1.29.938l-3.706-1.948-3.706 1.948c-.655.347-1.415-.211-1.29-.938l.708-4.129-2.998-2.922c-.528-.509-.236-1.4.494-1.507l4.145-.604 1.83-3.755z" clipRule="evenodd" />
-  </svg>
+// --- CẬP NHẬT: Thay thế GoldIcon SVG bằng thẻ <img> ---
+const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
+    <img
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+        alt="Vàng"
+        className={className}
+        {...props}
+    />
 );
+
 
 const BookOpenIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -196,7 +199,8 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
             <div className="h-6 w-px bg-slate-600"></div>
 
             <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}>
-                <GoldIcon className="w-5 h-5 text-yellow-300 flex-shrink-0" />
+                {/* CẬP NHẬT: Xóa class 'text-yellow-300' vì không cần thiết cho thẻ <img> */}
+                <GoldIcon className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">{goldReward}</span>
             </div>
         </div>
