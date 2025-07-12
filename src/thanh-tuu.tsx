@@ -1,3 +1,5 @@
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 // --- Thêm các import cần thiết cho Firestore ---
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -88,60 +90,56 @@ export default function AchievementsScreen({ onClose, userId, initialData }: Ach
     return b.exp - a.exp;
   });
 
-  // <<< SỬA LỖI LOGIC TẠI ĐÂY >>>
+  // <<< SỬA LỖI LOGIC TRIỆT ĐỂ TẠI ĐÂY >>>
   const handleClaim = useCallback(async (id: number) => {
-    let claimedItem: VocabularyItem | undefined;
+    let itemToUpdate: VocabularyItem | undefined = vocabulary.find(item => item.id === id);
 
-    const updatedList = vocabulary.map(item => {
-      if (item.id === id && item.exp >= item.maxExp) {
-        // Tạo các biến có thể thay đổi để tính toán
-        let newLevel = item.level;
-        let newExp = item.exp;
-        let currentMaxExp = item.maxExp;
+    if (!itemToUpdate || itemToUpdate.exp < itemToUpdate.maxExp) {
+      return; // Không làm gì nếu không tìm thấy hoặc không đủ điều kiện
+    }
 
-        // Dùng vòng lặp while để xử lý trường hợp lên nhiều cấp
-        while (newExp >= currentMaxExp) {
-          // TODO: Add rewards logic (gold, mastery cards) to user's main data
-          // Bạn có thể muốn cộng dồn phần thưởng ở đây
-          
-          newExp -= currentMaxExp; // Trừ đi EXP cần cho cấp hiện tại
-          newLevel += 1; // Tăng cấp
-          currentMaxExp = newLevel * 100; // Tính maxExp cho cấp mới
-        }
+    // --- Tính toán local để cập nhật UI ngay lập tức ---
+    let newLevel = itemToUpdate.level;
+    let newExp = itemToUpdate.exp;
+    let currentMaxExp = itemToUpdate.maxExp;
 
-        // Tạo đối tượng mới với các giá trị đã được cập nhật
-        claimedItem = { 
-            ...item, 
-            level: newLevel, 
-            exp: newExp, 
-            maxExp: currentMaxExp 
-        };
-        return claimedItem;
-      }
-      return item;
-    });
-
-    // Nếu không có gì thay đổi, không làm gì cả
-    if (!claimedItem) return;
-
-    // Cập nhật state cục bộ để UI phản hồi ngay lập tức
-    setVocabulary(updatedList);
-
-    // Chuẩn bị dữ liệu để lưu vào Firestore.
-    // Chúng ta chỉ cần lưu những trường thay đổi để tối ưu.
-    // Tuy nhiên, để đảm bảo tính nhất quán, lưu toàn bộ danh sách là an toàn nhất.
-    const dataToSave = {
-        vocabulary: updatedList.map(({ id, ...rest }) => rest) // Loại bỏ id tạm thời của React
+    // Dùng vòng lặp while để xử lý trường hợp lên nhiều cấp
+    while (newExp >= currentMaxExp) {
+      // TODO: Add rewards logic for each level up
+      newExp -= currentMaxExp;
+      newLevel += 1;
+      currentMaxExp = newLevel * 100;
+    }
+    
+    // Tạo đối tượng đã cập nhật hoàn toàn cho state local
+    const updatedItemForState = { 
+        ...itemToUpdate, 
+        level: newLevel, 
+        exp: newExp, 
+        maxExp: currentMaxExp 
     };
 
-    // Lưu danh sách đã cập nhật vào Firestore
+    const updatedListForState = vocabulary.map(item => 
+      item.id === id ? updatedItemForState : item
+    );
+
+    // Cập nhật state cục bộ để UI phản hồi ngay lập tức
+    setVocabulary(updatedListForState);
+
+    // --- Chuẩn bị dữ liệu để LƯU VÀO FIRESTORE ---
+    // Tạo một danh sách mới từ state, nhưng chỉ giữ lại các trường cần thiết.
+    // QUAN TRỌNG: KHÔNG LƯU `exp` và `maxExp` để `fetchVocabularyData` toàn quyền tính toán.
+    const listToSave = updatedListForState.map(({ id, word, level }) => ({ word, level }));
+
+
+    // Lưu danh sách đã được đơn giản hóa vào Firestore
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-      await setDoc(achievementDocRef, dataToSave, { merge: true });
-      console.log("Vocabulary mastery progress saved to Firestore.");
+      await setDoc(achievementDocRef, { vocabulary: listToSave }, { merge: true });
+      console.log("Vocabulary mastery progress (level only) saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Optional: Nếu lưu thất bại, có thể khôi phục lại state cũ
+      // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
       setVocabulary(vocabulary);
     }
   }, [vocabulary, userId, db]);
