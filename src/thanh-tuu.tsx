@@ -117,14 +117,16 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalWords}</p>
-              <p className="text-sm text-slate-400">Từ đã học</p>
+              {/* --- CẬP NHẬT TEXT --- */}
+              <p className="text-sm text-slate-400">Vocabulary</p>
             </div>
           </div>
           <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalMasteryCards}</p>
-              <p className="text-sm text-slate-400">Thẻ thông thạo</p>
+              {/* --- CẬP NHẬT TEXT --- */}
+              <p className="text-sm text-slate-400">Mastery</p>
             </div>
           </div>
         </section>
@@ -190,7 +192,8 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
 
       <div className="col-span-6 md:col-span-3 flex items-center justify-center">
         <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
-            <div className="flex items-center gap-1.5" title="1 Thẻ thông thạo">
+            {/* --- CẬP NHẬT TEXT --- */}
+            <div className="flex items-center gap-1.5" title="1 Mastery">
                 <MasteryCardIcon className="w-6 h-6 flex-shrink-0" />
                 <span className="text-sm font-semibold text-slate-200">x1</span>
             </div>
@@ -204,7 +207,6 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
         </div>
       </div>
 
-      {/* --- PHIÊN BẢN NÚT ĐÃ ĐƯỢC CẬP NHẬT --- */}
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
@@ -218,11 +220,10 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {isClaimable ? 'Nhận' : 'Chưa Đạt'}
+          {/* --- CẬP NHẬT TEXT --- */}
+          {isClaimable ? 'Claim' : 'Chưa Đạt'}
         </button>
       </div>
-      {/* --- KẾT THÚC CẬP NHẬT --- */}
-
     </div>
   );
 }
