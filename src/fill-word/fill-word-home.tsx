@@ -205,7 +205,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       setUsedWords(prev => new Set(prev).add(currentWord.word)); setShowConfetti(true);
       
       if (user) {
-        const coinReward = 2 * newStreak; 
+        const coinReward = masteryCount * newStreak; 
         const updatedCoins = coins + coinReward; 
         setCoins(updatedCoins); 
         startCoinCountAnimation(coins, updatedCoins);
@@ -238,7 +238,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       setIsCorrect(false); 
       setStreak(0); 
     }
-  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation]);
+  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation, masteryCount]);
   
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setUserInput(''); setFeedback(''); setIsCorrect(null);
