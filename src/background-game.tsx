@@ -155,6 +155,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
+  // <<< SỬA ĐỔI LOGIC BẮT ĐẦU TỪ ĐÂY >>>
   const fetchVocabularyData = async (userId: string) => {
     try {
         const completedWordsCol = collection(db, 'users', userId, 'completedWords');
@@ -176,31 +177,34 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             wordToExpMap.set(word, totalCorrectCount * 100); 
         });
 
-        const existingAchievements = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
-        const existingAchievementsMap = new Map<string, VocabularyItem>(
-            existingAchievements.map((item: VocabularyItem) => [item.word, item])
-        );
-
-        const syncedVocabularyData: VocabularyItem[] = [];
+        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() 
+            ? achievementDocSnap.data().vocabulary || [] 
+            : [];
+            
+        const finalVocabularyData: VocabularyItem[] = [];
+        const processedWords = new Set<string>();
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
 
+        // 1. Cập nhật những từ có trong `completedWords`
         wordToExpMap.forEach((totalExp, word) => {
-            const existingItem = existingAchievementsMap.get(word);
+            const existingItem = existingAchievements.find(item => item.word === word);
 
             if (existingItem) {
+                // Từ này đã tồn tại, đồng bộ EXP
                 let expSpentToReachCurrentLevel = 0;
                 for (let i = 1; i < existingItem.level; i++) {
                     expSpentToReachCurrentLevel += i * 100;
                 }
                 const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-                syncedVocabularyData.push({
+                
+                finalVocabularyData.push({
                     ...existingItem,
                     exp: currentProgressExp,
                     maxExp: existingItem.level * 100,
                 });
-
             } else {
-                syncedVocabularyData.push({
+                // Từ này mới, tạo achievement mới
+                finalVocabularyData.push({
                     id: idCounter++,
                     word: word,
                     exp: totalExp,
@@ -208,16 +212,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     maxExp: 100,
                 });
             }
+            processedWords.add(word);
+        });
+
+        // 2. Thêm lại những từ chỉ có trong `achievements` (không có trong `completedWords`)
+        existingAchievements.forEach(item => {
+            if (!processedWords.has(item.word)) {
+                // Từ này không có trong lần fetch `completedWords` gần nhất, nhưng
+                // nó đã là một thành tựu. Giữ nguyên nó để không bị mất dữ liệu.
+                finalVocabularyData.push(item);
+            }
         });
         
-        console.log("Vocabulary achievements data synced and processed correctly.");
-        setVocabularyData(syncedVocabularyData);
+        console.log("Vocabulary achievements data synced and merged correctly.");
+        setVocabularyData(finalVocabularyData);
 
     } catch (error) {
         console.error("Error fetching and syncing vocabulary achievements data:", error);
         setVocabularyData(initialVocabularyData);
     }
   };
+  // <<< KẾT THÚC SỬA ĐỔI >>>
 
   const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
@@ -468,7 +483,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // <<< THÊM MỚI: Hàm để cập nhật state vocabularyData từ component con >>>
   const handleVocabularyUpdate = (updatedData: VocabularyItem[]) => {
     setVocabularyData(updatedData);
   };
