@@ -155,7 +155,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     };
   }, []);
 
-  // <<< SỬA ĐỔI LOGIC BẮT ĐẦU TỪ ĐÂY >>>
   const fetchVocabularyData = async (userId: string) => {
     try {
         const completedWordsCol = collection(db, 'users', userId, 'completedWords');
@@ -232,7 +231,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setVocabularyData(initialVocabularyData);
     }
   };
-  // <<< KẾT THÚC SỬA ĐỔI >>>
 
   const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
@@ -877,7 +875,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {/* FIX: Ensure vocabularyData is an array before rendering */}
                 {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
                     <AchievementsScreen 
                         onClose={toggleAchievements} 
@@ -885,6 +882,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         initialData={vocabularyData}
                         onClaimReward={handleRewardClaim}
                         onDataUpdate={handleVocabularyUpdate}
+                        masteryCardsCount={masteryCards}
                     />
                 )}
             </ErrorBoundary>
