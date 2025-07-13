@@ -2001,7 +2001,507 @@ const quizData = [
     "question": "Từ \"Secure\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Nguy hiểm", "An toàn", "Lỏng lẻo", "Mở"],
     "correctAnswer": "An toàn"
-  }
+  },
+  {
+    "question": "Từ \"Extreme\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bình thường", "Vừa phải", "Cực đoan", "Trung lập"],
+    "correctAnswer": "Cực đoan"
+  },
+  {
+    "question": "Từ \"Curve\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đường thẳng", "Đường gãy", "Đường cong", "Đường xiên"],
+    "correctAnswer": "Đường cong"
+  },
+  {
+    "question": "Từ \"Matrix\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ma trận", "Mạng lưới", "Phối hợp", "Hợp đồng"],
+    "correctAnswer": "Ma trận"
+  },
+  {
+    "question": "Từ \"Frankly\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giấu giếm", "Lén lút", "Thẳng thắn", "Khách quan"],
+    "correctAnswer": "Thẳng thắn"
+  },
+  {
+    "question": "Từ \"Efficient\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lãng phí", "Hiệu quả", "Chậm chạp", "Tẻ nhạt"],
+    "correctAnswer": "Hiệu quả"
+  },
+  {
+    "question": "Từ \"Broad\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hẹp", "Rộng", "Sâu", "Ngắn"],
+    "correctAnswer": "Rộng"
+  },
+  {
+    "question": "Từ \"Effectively\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Không hiệu quả", "Thủ công", "Một cách hiệu quả", "Nhanh chóng"],
+    "correctAnswer": "Một cách hiệu quả"
+  },
+  {
+    "question": "Từ \"Saved\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã mất", "Đã lưu lại", "Đã bán", "Đã ăn"],
+    "correctAnswer": "Đã lưu lại"
+  },
+  {
+    "question": "Từ \"Component\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thành phần", "Dự án", "Quy trình", "Bản đồ"],
+    "correctAnswer": "Thành phần"
+  },
+  {
+    "question": "Từ \"Patterns\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hỗn loạn", "Mẫu", "Sự ngẫu nhiên", "Hỗn hợp"],
+    "correctAnswer": "Mẫu"
+  },
+  {
+    "question": "Từ \"Gain\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mất", "Giảm", "Thu được", "Lơ đãng"],
+    "correctAnswer": "Thu được"
+  },
+  {
+    "question": "Từ \"Theme\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chủ đề", "Thể loại", "Cốt truyện", "Nhân vật"],
+    "correctAnswer": "Chủ đề"
+  },
+  {
+    "question": "Từ \"Prepare\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bỏ qua", "Chuẩn bị", "Từ chối", "Kết thúc"],
+    "correctAnswer": "Chuẩn bị"
+  },
+  {
+    "question": "Từ \"Gene\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Di truyền", "Gen", "Protein", "Tế bào"],
+    "correctAnswer": "Gen"
+  },
+  {
+    "question": "Từ \"Literature\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Khoa học", "Nghệ thuật", "Văn học", "Toán học"],
+    "correctAnswer": "Văn học"
+  },
+  {
+    "question": "Từ \"Neighborhood\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thành phố", "Quận", "Khu phố", "Thôn xóm"],
+    "correctAnswer": "Khu phố"
+  },
+  {
+    "question": "Từ \"Survive\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sống sót", "Chết", "Ngủ", "Đi bộ"],
+    "correctAnswer": "Sống sót"
+  },
+  {
+    "question": "Từ \"Korea\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhật Bản", "Trung Quốc", "Hàn Quốc", "Việt Nam"],
+    "correctAnswer": "Hàn Quốc"
+  },
+  {
+    "question": "Từ \"Fell\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lên", "Rơi", "Nhảy", "Bay"],
+    "correctAnswer": "Rơi"
+  },
+  {
+    "question": "Từ \"Restaurant\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Khách sạn", "Nhà hàng", "Siêu thị", "Bệnh viện"],
+    "correctAnswer": "Nhà hàng"
+  },
+  {
+    "question": "Từ \"Connections\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự chia cách", "Sự kết nối", "Sự trao đổi", "Sự tương tác"],
+    "correctAnswer": "Sự kết nối"
+  },
+  {
+    "question": "Từ \"Seek\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tìm kiếm", "Tránh né", "Dừng lại", "Giấu giếm"],
+    "correctAnswer": "Tìm kiếm"
+  },
+  {
+    "question": "Từ \"Remind\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhắc nhở", "Quên lãng", "Lấy lại", "Thương tiếc"],
+    "correctAnswer": "Nhắc nhở"
+  },
+  {
+    "question": "Từ \"Item\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Món đồ", "Công việc", "Giao dịch", "Kỷ niệm"],
+    "correctAnswer": "Món đồ"
+  },
+  {
+    "question": "Từ \"Cards\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thẻ", "Sổ", "Hộp", "Bản đồ"],
+    "correctAnswer": "Thẻ"
+  },
+  {
+    "question": "Từ \"Framework\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phần mềm", "Khung", "Bộ máy", "Lược đồ"],
+    "correctAnswer": "Khung"
+  },
+  {
+    "question": "Từ \"Bridge\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cầu", "Đảo", "Dòng sông", "Cửa"],
+    "correctAnswer": "Cầu"
+  },
+  {
+    "question": "Từ \"Coast\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bờ biển", "Núi", "Đồi", "Sông"],
+    "correctAnswer": "Bờ biển"
+  },
+  {
+    "question": "Từ \"Weapons\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vũ khí", "Công cụ", "Phương tiện", "Trang phục"],
+    "correctAnswer": "Vũ khí"
+  },
+  {
+    "question": "Từ \"Quarter\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một phần tư", "Một phần ba", "Một nửa", "Một phần năm"],
+    "correctAnswer": "Một phần tư"
+  },
+  {
+    "question": "Từ \"Exchange\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trao đổi", "Chuyển tiếp", "Giữ lại", "Kết nối"],
+    "correctAnswer": "Trao đổi"
+  },
+  {
+    "question": "Từ \"Express\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Biểu đạt", "Nhập khẩu", "Vận chuyển", "Đường sắt nhanh"],
+    "correctAnswer": "Biểu đạt"
+  },
+  {
+    "question": "Từ \"Lake\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hồ", "Sông", "Biển", "Ao"],
+    "correctAnswer": "Hồ"
+  },
+  {
+    "question": "Từ \"Facility\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cơ sở", "Tiện nghi", "Công cụ", "Dịch vụ"],
+    "correctAnswer": "Cơ sở"
+  },
+  {
+    "question": "Từ \"Rare\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hiếm", "Phổ biến", "Thông thường", "Thường ngày"],
+    "correctAnswer": "Hiếm"
+  },
+  {
+    "question": "Từ \"Fruit\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trái cây", "Rau", "Đồ uống", "Thịt"],
+    "correctAnswer": "Trái cây"
+  },
+  {
+    "question": "Từ \"Originally\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ban đầu", "Hiện nay", "Cuối cùng", "Sau này"],
+    "correctAnswer": "Ban đầu"
+  },
+  {
+    "question": "Từ \"Hill\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đồi", "Núi", "Đường", "Thung lũng"],
+    "correctAnswer": "Đồi"
+  },
+  {
+    "question": "Từ \"Architecture\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Kiến trúc", "Nghệ thuật", "Hệ thống", "Mô hình"],
+    "correctAnswer": "Kiến trúc"
+  },
+  {
+    "question": "Từ \"Lunch\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bữa trưa", "Bữa sáng", "Bữa tối", "Bữa ăn nhẹ"],
+    "correctAnswer": "Bữa trưa"
+  },
+  {
+    "question": "Từ \"Sequence\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hỗn loạn", "Trình tự", "Phản chiếu", "Đột phá"],
+    "correctAnswer": "Trình tự"
+  },
+  {
+    "question": "Từ \"Revolution\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự quay vòng", "Sự tiến triển", "Cách mạng", "Sự dừng lại"],
+    "correctAnswer": "Cách mạng"
+  },
+  {
+    "question": "Từ \"Priority\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ưu tiên", "Quan tâm", "Phụ thuộc", "Giải pháp"],
+    "correctAnswer": "Ưu tiên"
+  },
+  {
+    "question": "Từ \"Enormous\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhỏ nhắn", "Khổng lồ", "Phức tạp", "Rất ít"],
+    "correctAnswer": "Khổng lồ"
+  },
+  {
+    "question": "Từ \"Reflect\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phản chiếu", "Thực hiện", "Đánh lừa", "Phản đối"],
+    "correctAnswer": "Phản chiếu"
+  },
+  {
+    "question": "Từ \"Evolution\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cách mạng", "Tiến hóa", "Sự suy thoái", "Quá trình lặp lại"],
+    "correctAnswer": "Tiến hóa"
+  },
+  {
+    "question": "Từ \"Writer\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Người viết", "Người đọc", "Người diễn thuyết", "Người mua sắm"],
+    "correctAnswer": "Người viết"
+  },
+  {
+    "question": "Từ \"Messages\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tin nhắn", "Âm thanh", "Hình ảnh", "Sự im lặng"],
+    "correctAnswer": "Tin nhắn"
+  },
+  {
+    "question": "Từ \"Plenty\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vừa đủ", "Thiếu thốn", "Nhiều", "Ít ỏi"],
+    "correctAnswer": "Nhiều"
+  },
+  {
+    "question": "Từ \"Expert\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Người mới bắt đầu", "Chuyên gia", "Người làm việc tạm thời", "Người lạ"],
+    "correctAnswer": "Chuyên gia"
+  },
+  {
+    "question": "Từ \"Occur\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Xảy ra", "Phá hủy", "Ngăn chặn", "Ẩn nấp"],
+    "correctAnswer": "Xảy ra"
+  },
+  {
+    "question": "Từ \"April\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tháng Tư", "Tháng Ba", "Tháng Năm", "Tháng Hai"],
+    "correctAnswer": "Tháng Tư"
+  },
+  {
+    "question": "Từ \"Log\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhật ký", "Bức tranh", "Chìa khóa", "Đồ uống"],
+    "correctAnswer": "Nhật ký"
+  },
+  {
+    "question": "Từ \"Operation\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Làm việc", "Phẫu thuật", "Tách rời", "Bùng nổ"],
+    "correctAnswer": "Phẫu thuật"
+  },
+  {
+    "question": "Từ \"Perform\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nghe", "Biểu diễn", "Mua", "Lắng nghe"],
+    "correctAnswer": "Biểu diễn"
+  },
+  {
+    "question": "Từ \"Capture\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bỏ lỡ", "Đánh mất", "Bắt giữ", "Phóng thích"],
+    "correctAnswer": "Bắt giữ"
+  },
+  {
+    "question": "Từ \"Frequency\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tần số", "Khoảng cách", "Tốc độ", "Khối lượng"],
+    "correctAnswer": "Tần số"
+  },
+  {
+    "question": "Từ \"Birds\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Động vật có vú", "Cá", "Chim", "Côn trùng"],
+    "correctAnswer": "Chim"
+  },
+  {
+    "question": "Từ \"Celebrate\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đánh giá", "Chia sẻ", "Kỷ niệm", "Từ chối"],
+    "correctAnswer": "Kỷ niệm"
+  },
+  {
+    "question": "Từ \"Salt\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đường", "Muối", "Nước", "Bột ngọt"],
+    "correctAnswer": "Muối"
+  },
+  {
+    "question": "Từ \"Nervous\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vui vẻ", "Lo lắng", "Bình tĩnh", "Thư giãn"],
+    "correctAnswer": "Lo lắng"
+  },
+  {
+    "question": "Từ \"Chemical\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hóa chất", "Sinh học", "Vật lý", "Địa chất"],
+    "correctAnswer": "Hóa chất"
+  },
+  {
+    "question": "Từ \"Invite\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cấm", "Mời", "Buộc", "Chối từ"],
+    "correctAnswer": "Mời"
+  },
+  {
+    "question": "Từ \"Score\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Điểm số", "Bài hát", "Bản nhạc", "Câu chuyện"],
+    "correctAnswer": "Điểm số"
+  },
+  {
+    "question": "Từ \"Prayer\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ca hát", "Cầu nguyện", "Lời chào", "Lời chúc"],
+    "correctAnswer": "Cầu nguyện"
+  },
+  {
+    "question": "Từ \"Camp\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trại", "Nhà nghỉ", "Trường học", "Căn cứ quân sự"],
+    "correctAnswer": "Trại"
+  },
+  {
+    "question": "Từ \"Launched\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hủy bỏ", "Ra mắt", "Kết thúc", "Dừng lại"],
+    "correctAnswer": "Ra mắt"
+  },
+  {
+    "question": "Từ \"Coach\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Huấn luyện viên", "Người lái xe", "Bác sĩ", "Giáo viên"],
+    "correctAnswer": "Huấn luyện viên"
+  },
+  {
+    "question": "Từ \"Electric\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cơ học", "Điện", "Nhiệt", "Hóa học"],
+    "correctAnswer": "Điện"
+  },
+  {
+    "question": "Từ \"Fail\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thành công", "Thất bại", "Tiến bộ", "Thành tựu"],
+    "correctAnswer": "Thất bại"
+  },
+  {
+    "question": "Từ \"Relative\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Họ hàng", "Tương đối", "Bạn bè", "Người quen"],
+    "correctAnswer": "Họ hàng"
+  },
+  {
+    "question": "Từ \"Command\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hỏi", "Chỉ huy", "Cứu trợ", "Nói chuyện"],
+    "correctAnswer": "Chỉ huy"
+  },
+  {
+    "question": "Từ \"Zone\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Khu vực", "Thành phố", "Vùng đất", "Quận"],
+    "correctAnswer": "Khu vực"
+  },
+  {
+    "question": "Từ \"Diseases\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bệnh tật", "Tai nạn", "Chấn thương", "Rối loạn"],
+    "correctAnswer": "Bệnh tật"
+  },
+  {
+    "question": "Từ \"Forced\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tự do", "Ép buộc", "Tình cờ", "Vô tình"],
+    "correctAnswer": "Ép buộc"
+  },
+  {
+    "question": "Từ \"Mode\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phương tiện", "Chế độ", "Cách thức", "Kiểu"],
+    "correctAnswer": "Chế độ"
+  },
+  {
+    "question": "Từ \"Units\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đơn vị", "Nhóm", "Số lượng", "Bộ phận"],
+    "correctAnswer": "Đơn vị"
+  },
+  {
+    "question": "Từ \"Excuse\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lý do", "Cách giải thích", "Lời biện hộ", "Lời chào"],
+    "correctAnswer": "Lời biện hộ"
+  },
+  {
+    "question": "Từ \"Dean\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trưởng khoa", "Hiệu trưởng", "Giám đốc", "Giáo sư"],
+    "correctAnswer": "Trưởng khoa"
+  },
+  {
+    "question": "Từ \"Dreams\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giấc mơ", "Âm mưu", "Huyền thoại", "Ảo tưởng"],
+    "correctAnswer": "Giấc mơ"
+  },
+  {
+    "question": "Từ \"Assistant\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đối thủ", "Trợ lý", "Người hướng dẫn", "Khách mời"],
+    "correctAnswer": "Trợ lý"
+  },
+  {
+    "question": "Từ \"Wood\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nước", "Gỗ", "Lửa", "Đá"],
+    "correctAnswer": "Gỗ"
+  },
+  {
+    "question": "Từ \"Sentence\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Câu", "Đoạn văn", "Câu chuyện", "Từ"],
+    "correctAnswer": "Câu"
+  },
+  {
+    "question": "Từ \"Letting\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cho thuê", "Ngăn cản", "Lặp lại", "Phớt lờ"],
+    "correctAnswer": "Cho thuê"
+  },
+  {
+    "question": "Từ \"Display\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ẩn giấu", "Trưng bày", "Sửa chữa", "Cướp bóc"],
+    "correctAnswer": "Trưng bày"
+  },
+  {
+    "question": "Từ \"Stone\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nước", "Gỗ", "Đá", "Kim loại"],
+    "correctAnswer": "Đá"
+  },
+  {
+    "question": "Từ \"Rural\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thành thị", "Công nghiệp", "Nông thôn", "Hiện đại"],
+    "correctAnswer": "Nông thôn"
+  },
+  {
+    "question": "Từ \"Veterans\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Học sinh", "Chiến binh trẻ", "Cựu chiến binh", "Người già"],
+    "correctAnswer": "Cựu chiến binh"
+  },
+  {
+    "question": "Từ \"Transfer\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chuyển giao", "Gặp gỡ", "Phát triển", "Lặp lại"],
+    "correctAnswer": "Chuyển giao"
+  },
+  {
+    "question": "Từ \"Tour\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chuyến du lịch", "Lịch trình làm việc", "Buổi biểu diễn", "Hành trình mạo hiểm"],
+    "correctAnswer": "Chuyến du lịch"
+  },
+  {
+    "question": "Từ \"Classic\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cổ điển", "Hiện đại", "Lạ lẫm", "Bất thường"],
+    "correctAnswer": "Cổ điển"
+  },
+  {
+    "question": "Từ \"String\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Dây", "Sợi kim loại", "Sợi len", "Chuỗi"],
+    "correctAnswer": "Dây"
+  },
+  {
+    "question": "Từ \"Struggling\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thành công", "Khó khăn", "Dễ dàng", "Vui vẻ"],
+    "correctAnswer": "Khó khăn"
+  },
+  {
+    "question": "Từ \"Christmas\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tết Nguyên Đán", "Lễ Phục Sinh", "Giáng sinh", "Lễ hội mùa hè"],
+    "correctAnswer": "Giáng sinh"
+  },
+  {
+    "question": "Từ \"Roughly\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chính xác", "Xấp xỉ", "Cẩn thận", "Nhanh chóng"],
+    "correctAnswer": "Xấp xỉ"
+  },
+  {
+    "question": "Từ \"Depth\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chiều cao", "Chiều dài", "Độ sâu", "Chiều rộng"],
+    "correctAnswer": "Độ sâu"
+  },
+  {
+    "question": "Từ \"Pair\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đôi", "Một", "Ba", "Nhiều"],
+    "correctAnswer": "Đôi"
+  },
+  {
+    "question": "Từ \"Storage\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lưu trữ", "Sử dụng", "Mua bán", "Xoá bỏ"],
+    "correctAnswer": "Lưu trữ"
+  },
+  {
+    "question": "Từ \"Sum\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hiệu", "Tích", "Tổng", "Phần trăm"],
+    "correctAnswer": "Tổng"
+  },
+  {
+    "question": "Từ \"Host\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chủ nhà", "Khách mời", "Người đến thăm", "Người hướng dẫn"],
+    "correctAnswer": "Chủ nhà"
+  } 
 
 
 
