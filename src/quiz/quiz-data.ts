@@ -63,7 +63,7 @@ const quizData = [
     "correctAnswer": "Đo lường"
   },
   {
-    "question": "Từ \"Cross\" trong tiếng Anh có nghĩa là gì?",
+    "question": "Từ "Cross" trong tiếng Anh có nghĩa là gì?",
     "options": ["Theo dõi", "Băng qua", "Gặp gỡ", "Tránh"],
     "correctAnswer": "Băng qua"
   },
