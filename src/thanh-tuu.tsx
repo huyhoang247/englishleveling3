@@ -1,6 +1,6 @@
 // src/thanh-tuu.tsx
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react'; // <<< CẬP NHẬT: Thêm useMemo
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
@@ -67,14 +67,13 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
         <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v14.25a.75.75 0 01-1 .707A9.735 9.735 0 0118 21a9.707 9.707 0 01-5.25-1.533" />
     </svg>
 );
-// <<< THÊM MỚI: Biểu tượng cho nút Claim All >>>
 const GiftIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M12.75 3.75a.75.75 0 00-1.5 0v2.25h1.5V3.75z" />
-        <path fillRule="evenodd" d="M7.5 3.75a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM4.5 9.75a.75.75 0 01.75-.75h13.5a.75.75 0 010 1.5H5.25a.75.75 0 01-.75-.75zM12 7.5a.75.75 0 00-1.5 0v1.5h1.5V7.5z" />
-        <path d="M3 13.5a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" />
-        <path fillRule="evenodd" d="M12 15a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V15.75a.75.75 0 01.75-.75z" />
-        <path d="M5.25 12.75a.75.75 0 01.75-.75h.01a.75.75 0 01.75.75v8.25a.75.75 0 01-.75.75h-.01a.75.75 0 01-.75-.75V12.75zM18.75 12a.75.75 0 00-.75.75v8.25c0 .414.336.75.75.75h.01a.75.75 0 00.75-.75V12.75a.75.75 0 00-.75-.75h-.01z" />
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <polyline points="20 12 20 22 4 22 4 12" />
+      <rect x="2" y="7" width="20" height="5" />
+      <line x1="12" y1="22" x2="12" y2="7" />
+      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
     </svg>
 );
 
@@ -84,7 +83,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   const [vocabulary, setVocabulary] = useState(initialData);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
-  // <<< THÊM MỚI: State cho chức năng Claim All >>>
   const [isClaimingAll, setIsClaimingAll] = useState(false);
   const db = getFirestore();
 
@@ -144,7 +142,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     }
   }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
 
-  // <<< THÊM MỚI: Logic cho nút Claim All >>>
   const handleClaimAll = useCallback(async () => {
     if (isClaiming || isClaimingAll) return;
 
@@ -185,7 +182,14 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
   
   const totalWords = vocabulary.length;
-  const claimableCount = vocabulary.filter(item => item.exp >= item.maxExp).length;
+  
+  // <<< CẬP NHẬT: Tính toán tổng phần thưởng để hiển thị trên nút Claim All >>>
+  const totalClaimableRewards = useMemo(() => {
+    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
+    const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
+    const masteryCards = claimableItems.length;
+    return { gold, masteryCards };
+  }, [vocabulary]);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
@@ -221,21 +225,41 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </div>
         </section>
 
-        {/* <<< THÊM MỚI: Nút Claim All >>> */}
+        {/* <<< CẬP NHẬT: Thiết kế lại hoàn toàn nút Claim All để hiển thị phần thưởng >>> */}
         <div className="mb-6 flex justify-center">
             <button
                 onClick={handleClaimAll}
-                disabled={claimableCount === 0 || isClaimingAll || isClaiming}
+                disabled={totalClaimableRewards.masteryCards === 0 || isClaimingAll || isClaiming}
                 className={`
-                    flex items-center justify-center gap-3 w-full max-w-xs px-6 py-3 rounded-xl font-bold text-lg transition-all duration-300 border-2
-                    ${claimableCount > 0 && !isClaimingAll && !isClaiming
+                    flex items-center justify-between w-full max-w-md px-4 py-3 rounded-xl transition-all duration-300 border-2
+                    ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming
                         ? 'bg-gradient-to-r from-purple-500 to-indigo-600 border-purple-400 text-white hover:from-purple-600 hover:to-indigo-700 shadow-lg shadow-purple-500/20 transform hover:scale-105 cursor-pointer'
                         : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
                     }
                 `}
             >
-                <GiftIcon className="w-6 h-6" />
-                {isClaimingAll ? 'Đang xử lý...' : `Nhận Tất Cả (${claimableCount})`}
+                {/* Phần bên trái: Hành động */}
+                <div className="flex items-center gap-3">
+                    <GiftIcon className={`w-7 h-7 ${totalClaimableRewards.masteryCards > 0 ? 'text-white' : 'text-slate-500'}`} />
+                    <span className="font-bold text-lg">
+                        {isClaimingAll ? 'Đang xử lý...' : `Nhận Tất Cả`}
+                    </span>
+                </div>
+
+                {/* Phần bên phải: Phần thưởng (chỉ hiển thị khi có thể nhận) */}
+                {totalClaimableRewards.masteryCards > 0 && !isClaimingAll && (
+                    <div className="flex items-center gap-4">
+                        <div className="h-8 w-px bg-white/20"></div>
+                        <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Mastery`}>
+                            <MasteryCardIcon className="w-7 h-7" />
+                            <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
+                        </div>
+                         <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
+                            <GoldIcon className="w-6 h-6" />
+                            <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
+                        </div>
+                    </div>
+                )}
             </button>
         </div>
 
