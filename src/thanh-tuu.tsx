@@ -70,6 +70,13 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
+  // FIX: Add a safety check to prevent crashing if initialData is not an array.
+  if (!Array.isArray(initialData)) {
+    // This can happen briefly during loading or if there's an unexpected data state.
+    // Returning null is safe and prevents the UI from breaking.
+    return null; 
+  }
+
   const db = getFirestore();
 
   // Sắp xếp dữ liệu trực tiếp từ prop 'initialData'
