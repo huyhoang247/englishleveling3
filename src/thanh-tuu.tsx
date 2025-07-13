@@ -14,7 +14,6 @@ export type VocabularyItem = {
 
 // --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới) ---
 export const initialVocabularyData: VocabularyItem[] = [
-  // ... (Dữ liệu mẫu của bạn ở đây, tôi sẽ không lặp lại để tiết kiệm không gian)
   { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
   { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
   { id: 3, word: 'Luminous', exp: 30, level: 2, maxExp: 100 },
@@ -26,7 +25,6 @@ export const initialVocabularyData: VocabularyItem[] = [
   ...Array.from({ length: 40 }, (_, i) => ({ id: i + 8, word: `Word ${i + 1}`, exp: Math.floor(Math.random() * 200), level: Math.floor(Math.random() * 5) + 1, maxExp: (Math.floor(Math.random() * 5) + 1) * 100 })),
 ];
 
-
 // --- CẬP NHẬT Prop để nhận dữ liệu từ cha và gửi tín hiệu nhận thưởng ---
 interface AchievementsScreenProps {
   onClose: () => void;
@@ -37,8 +35,7 @@ interface AchievementsScreenProps {
   masteryCardsCount: number;
 }
 
-// --- Các biểu tượng (Icons) không thay đổi ---
-// ... (Tất cả các component Icon của bạn ở đây: XIcon, TrophyIcon, etc.)
+// --- Biểu tượng (Icon) ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <line x1="18" y1="6" x2="6" y2="18" />
@@ -100,7 +97,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   const [claimingId, setClaimingId] = useState<number | null>(null);
   const [isClaimingAll, setIsClaimingAll] = useState(false);
   
-  // <<< CẬP NHẬT: Thêm state và hằng số cho phân trang >>>
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
 
@@ -122,7 +118,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     return b.exp - a.exp;
   }), [vocabulary]);
 
-  // <<< CẬP NHẬT: Logic để tính toán dữ liệu cho trang hiện tại >>>
   const totalPages = Math.ceil(sortedVocabulary.length / ITEMS_PER_PAGE);
   
   const paginatedVocabulary = useMemo(() => {
@@ -131,19 +126,15 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return sortedVocabulary.slice(startIndex, endIndex);
   }, [sortedVocabulary, currentPage]);
 
-  // <<< CẬP NHẬT: Tự động điều chỉnh trang nếu trang hiện tại không hợp lệ (ví dụ sau khi nhận thưởng) >>>
   useEffect(() => {
     if(currentPage > totalPages && totalPages > 0) {
         setCurrentPage(totalPages);
     } else if (totalPages === 0 && sortedVocabulary.length > 0) {
-        // Trường hợp đặc biệt khi trang cuối cùng bị xóa hết
         setCurrentPage(1);
     }
   }, [currentPage, totalPages, sortedVocabulary.length]);
 
-
   const handleClaim = useCallback(async (id: number) => {
-    // ... (logic của handleClaim không thay đổi)
     if (isClaiming || isClaimingAll) return;
 
     const originalItem = vocabulary.find(item => item.id === id);
@@ -184,7 +175,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
 
   const handleClaimAll = useCallback(async () => {
-    // ... (logic của handleClaimAll không thay đổi)
     if (isClaiming || isClaimingAll) return;
 
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
@@ -244,15 +234,67 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
         </button>
 
         <header className="text-center mb-6">
-            {/* ... Header không thay đổi ... */}
+          <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
+            Thành Tựu
+          </h1>
         </header>
 
         <section className="mb-6 flex flex-row justify-center items-center gap-4">
-            {/* ... Section không thay đổi ... */}
+          <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
+            <div>
+              <p className="text-xl font-bold text-white">{totalWords}</p>
+              <p className="text-sm text-slate-400">Vocabulary</p>
+            </div>
+          </div>
+          <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
+            <div>
+              <p className="text-xl font-bold text-white">{masteryCardsCount}</p>
+              <p className="text-sm text-slate-400">Mastery</p>
+            </div>
+          </div>
         </section>
 
         <div className="mb-6 flex justify-center">
-            {/* ... Nút Claim All không thay đổi ... */}
+            <button
+                onClick={handleClaimAll}
+                disabled={totalClaimableRewards.masteryCards === 0 || isClaimingAll || isClaiming}
+                className={`
+                    w-full max-w-md rounded-xl transition-all duration-300
+                    ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming
+                        ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border border-purple-500/60 shadow-lg shadow-purple-600/30 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/40 cursor-pointer'
+                        : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
+                    }
+                `}
+            >
+                <div className="flex items-center justify-between w-full p-3">
+                    <div className="flex items-center gap-3">
+                        <GiftIcon className={`w-8 h-8 transition-colors duration-300 ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming ? 'text-purple-300' : 'text-slate-600'}`} />
+                        <span className="font-bold text-lg">
+                            {isClaimingAll ? 'Đang xử lý...' : 'Nhận Tất Cả'}
+                        </span>
+                    </div>
+
+                    {totalClaimableRewards.masteryCards > 0 && !isClaimingAll ? (
+                        <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
+                            <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
+                                <MasteryCardIcon className="w-7 h-7" />
+                                <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
+                            </div>
+                            <div className="h-6 w-px bg-white/20"></div>
+                            <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
+                                <GoldIcon className="w-6 h-6" />
+                                <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        !isClaimingAll && (
+                          <span className="text-sm font-medium text-slate-500 pr-2">Chưa có thưởng</span>
+                        )
+                    )}
+                </div>
+            </button>
         </div>
 
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
@@ -265,7 +307,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </div>
 
           <div className="flex flex-col gap-2">
-            {/* <<< CẬP NHẬT: Lặp qua danh sách đã phân trang và tính lại rank >>> */}
             {paginatedVocabulary.map((item, index) => (
               <VocabularyRow
                 key={`${item.id}-${item.level}`}
@@ -285,7 +326,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </div>
         </main>
         
-        {/* <<< CẬP NHẬT: Thêm component điều khiển phân trang >>> */}
         <div className="mt-6">
              <PaginationControls 
                 currentPage={currentPage}
@@ -302,7 +342,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   );
 }
 
-// --- Component VocabularyRow không thay đổi ---
+// --- Thành phần cho mỗi hàng (card) trong bảng ---
 function VocabularyRow({
   item,
   rank,
@@ -311,7 +351,6 @@ function VocabularyRow({
   isAnyClaiming,
   isClaimingAll
 }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isBeingClaimed: boolean, isAnyClaiming: boolean, isClaimingAll: boolean }) {
-  // ... (Nội dung component này giữ nguyên)
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
@@ -381,7 +420,7 @@ function VocabularyRow({
   );
 }
 
-// <<< CẬP NHẬT: Component mới cho điều khiển phân trang >>>
+// --- Component điều khiển phân trang ---
 const PaginationControls = ({
     currentPage,
     totalPages,
@@ -395,35 +434,41 @@ const PaginationControls = ({
         return null; // Không hiển thị phân trang nếu chỉ có 1 hoặc không có trang nào
     }
     
-    // Logic để tạo danh sách các trang hiển thị một cách thông minh
     const getPageNumbers = () => {
-        const pageNumbers = [];
-        const pageRange = 2; // Số trang hiển thị bên cạnh trang hiện tại
-        const ellipsis = '...';
+        const pageNumbers: (number | string)[] = [];
+        const pageRangeDisplayed = 5; // Tổng số nút trang muốn hiển thị (ví dụ: 1 ... 5 6 7 ... 10)
+        const marginPagesDisplayed = 1; // Số trang ở đầu và cuối luôn hiển thị
 
-        if (totalPages <= 5) { // Hiển thị tất cả nếu ít trang
+        if (totalPages <= pageRangeDisplayed) {
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
             }
-        } else {
-            pageNumbers.push(1); // Luôn hiển thị trang đầu tiên
-            
-            if (currentPage > pageRange + 1) {
-                pageNumbers.push(ellipsis);
-            }
+            return pageNumbers;
+        }
 
-            let start = Math.max(2, currentPage - pageRange + 1);
-            let end = Math.min(totalPages - 1, currentPage + pageRange - 1);
-            
-            for (let i = start; i <= end; i++) {
-                pageNumbers.push(i);
+        const mainPages = new Set<number>();
+        // Các trang xung quanh trang hiện tại
+        for (let i = -2; i <= 2; i++) {
+            const page = currentPage + i;
+            if (page > 0 && page <= totalPages) {
+                mainPages.add(page);
             }
-
-            if (currentPage < totalPages - pageRange) {
-                pageNumbers.push(ellipsis);
+        }
+        // Các trang ở lề
+        for (let i = 1; i <= marginPagesDisplayed; i++) {
+            mainPages.add(i);
+            mainPages.add(totalPages - i + 1);
+        }
+        
+        const sortedPages = Array.from(mainPages).sort((a,b) => a - b);
+        let lastPage: number | null = null;
+        
+        for (const page of sortedPages) {
+            if (lastPage !== null && page - lastPage > 1) {
+                pageNumbers.push('...');
             }
-
-            pageNumbers.push(totalPages); // Luôn hiển thị trang cuối cùng
+            pageNumbers.push(page);
+            lastPage = page;
         }
         
         return pageNumbers;
@@ -437,6 +482,7 @@ const PaginationControls = ({
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous Page"
             >
                 <ChevronLeftIcon className="w-5 h-5" />
             </button>
@@ -453,11 +499,12 @@ const PaginationControls = ({
                                 : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
                             }
                         `}
+                        aria-current={currentPage === page ? 'page' : undefined}
                     >
                         {page}
                     </button>
                 ) : (
-                    <span key={index} className="px-4 py-2 text-sm text-slate-500">
+                    <span key={index} className="px-2 py-2 text-sm text-slate-500" aria-hidden="true">
                         {page}
                     </span>
                 )
@@ -467,6 +514,7 @@ const PaginationControls = ({
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next Page"
             >
                 <ChevronRightIcon className="w-5 h-5" />
             </button>
