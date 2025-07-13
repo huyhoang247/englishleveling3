@@ -29,8 +29,9 @@ interface AchievementsScreenProps {
   userId: string;
   initialData: VocabularyItem[];
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
-  // <<< THÊM MỚI: Callback để cập nhật dữ liệu ở component cha >>>
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
+  // <<< THÊM MỚI: Prop để nhận số Thẻ Thông Thạo từ component cha >>>
+  masteryCardsCount: number;
 }
 
 // --- Biểu tượng (Icon) - không thay đổi ---
@@ -70,7 +71,7 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
+export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate, masteryCardsCount }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
   const db = getFirestore();
 
@@ -126,11 +127,9 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
       onDataUpdate(vocabulary); // Rollback state ở cha
     }
-  }, [vocabulary, userId, db, onClaimReward, onDataUpdate]); // Thêm onDataUpdate vào dependencies
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate]);
 
   const totalWords = vocabulary.length;
-  // Con số này vẫn dùng để hiển thị, không ảnh hưởng đến logic lưu trữ
-  const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
@@ -160,7 +159,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
-              <p className="text-xl font-bold text-white">{totalMasteryCards}</p>
+              <p className="text-xl font-bold text-white">{masteryCardsCount}</p>
               <p className="text-sm text-slate-400">Mastery</p>
             </div>
           </div>
