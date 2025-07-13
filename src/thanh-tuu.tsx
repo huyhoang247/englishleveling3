@@ -1,6 +1,6 @@
 // src/thanh-tuu.tsx
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react'; // Removed useState
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
@@ -23,16 +23,17 @@ export const initialVocabularyData: VocabularyItem[] = [
   { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
 ];
 
-// --- CẬP NHẬT Prop để nhận dữ liệu từ cha ---
+// --- CẬP NHẬT Prop ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
-  vocabularyData: VocabularyItem[]; // Sử dụng prop này làm nguồn dữ liệu chính
+  // --- CHANGE 1: Renamed for clarity, but the type is the same. This is our single source of truth.
+  initialData: VocabularyItem[]; 
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
 }
 
-// --- Biểu tượng (Icon) - không thay đổi ---
+// --- Icons (Không thay đổi) ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <line x1="18" y1="6" x2="6" y2="18" />
@@ -69,12 +70,12 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, vocabularyData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
-  // Xóa bỏ state cục bộ 'vocabulary' và useEffect đi kèm.
+export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
+  // --- CHANGE 2: Removed the local 'vocabulary' state and the corresponding useEffect.
   const db = getFirestore();
 
-  // Sắp xếp trực tiếp từ prop `vocabularyData`
-  const sortedVocabulary = [...vocabularyData].sort((a, b) => {
+  // --- CHANGE 3: Use the 'initialData' prop directly for all calculations.
+  const sortedVocabulary = [...initialData].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
     if (aIsClaimable !== bIsClaimable) {
@@ -87,15 +88,15 @@ export default function AchievementsScreen({ onClose, userId, vocabularyData, on
   });
 
   const handleClaim = useCallback(async (id: number) => {
-    // Tìm item trong `vocabularyData` (prop) thay vì state cục bộ
-    const originalItem = vocabularyData.find(item => item.id === id);
+    // --- CHANGE 4: Logic now reads from 'initialData' prop directly.
+    const originalItem = initialData.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
     
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
 
-    // Tạo danh sách mới bằng cách map qua `vocabularyData` (prop)
-    const updatedList = vocabularyData.map(item => {
+    // --- CHANGE 5: Create updated list based on 'initialData' prop.
+    const updatedList = initialData.map(item => {
       if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
         const newLevel = item.level + 1;
@@ -105,27 +106,25 @@ export default function AchievementsScreen({ onClose, userId, vocabularyData, on
       return item;
     });
 
-    // Cập nhật state ở component cha NGAY LẬP TỨC để đồng bộ hóa giao diện
+    // This immediately tells the parent to update the "single source of truth".
     onDataUpdate(updatedList);
     
-    // Gọi callback để component cha xử lý lưu trữ phần thưởng
     onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
 
-    // Lưu danh sách tiến trình thành tựu đã cập nhật vào Firestore
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
       await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Nếu lỗi, rollback bằng cách gọi onDataUpdate với dữ liệu cũ
-      onDataUpdate(vocabularyData);
+      // If saving fails, revert the parent's state back to what it was.
+      onDataUpdate(initialData); 
     }
-  }, [vocabularyData, userId, db, onClaimReward, onDataUpdate]);
+  }, [initialData, userId, db, onClaimReward, onDataUpdate]); // --- CHANGE 6: Dependency array now uses 'initialData'.
 
-  // Tính toán trực tiếp từ prop `vocabularyData`
-  const totalWords = vocabularyData.length;
-  const totalMasteryCards = vocabularyData.reduce((sum, item) => sum + (item.level - 1), 0);
+  // --- CHANGE 7: Calculations also use 'initialData' prop.
+  const totalWords = initialData.length;
+  const totalMasteryCards = initialData.reduce((sum, item) => sum + (item.level - 1), 0);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
@@ -185,7 +184,7 @@ export default function AchievementsScreen({ onClose, userId, vocabularyData, on
   );
 }
 
-// --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
+// --- VocabularyRow Component (No changes needed here) ---
 function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
