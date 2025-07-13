@@ -3001,6 +3001,506 @@ const quizData = [
     "question": "Từ \"December\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Tháng Mười Một", "Tháng Mười Hai", "Tháng Mười", "Tháng Chín"],
     "correctAnswer": "Tháng Mười Hai"
+  },
+  {
+    "question": "Từ \"Latest\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cũ nhất", "Mới nhất", "Trung bình", "Lâu đời"],
+    "correctAnswer": "Mới nhất"
+  },
+  {
+    "question": "Từ \"Angry\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vui vẻ", "Buồn", "Tức giận", "Ngạc nhiên"],
+    "correctAnswer": "Tức giận"
+  },
+  {
+    "question": "Từ \"London\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thủ đô của Pháp", "Thành phố New York", "Luân Đôn", "Tokyo"],
+    "correctAnswer": "Luân Đôn"
+  },
+  {
+    "question": "Từ \"Flip\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lật", "Ném", "Xoay", "Chạy"],
+    "correctAnswer": "Lật"
+  },
+  {
+    "question": "Từ \"Immune\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Dễ bị bệnh", "Miễn dịch", "Độc hại", "Yếu ớt"],
+    "correctAnswer": "Miễn dịch"
+  },
+  {
+    "question": "Từ \"Childhood\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tuổi trẻ", "Tuổi trưởng thành", "Thời thơ ấu", "Tuổi già"],
+    "correctAnswer": "Thời thơ ấu"
+  },
+  {
+    "question": "Từ \"Spectrum\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nguyên nhân", "Quang cảnh", "Âm lượng", "Phổ"],
+    "correctAnswer": "Phổ"
+  },
+  {
+    "question": "Từ \"Cute\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đáng sợ", "Dễ thương", "Xinh đẹp", "Thông minh"],
+    "correctAnswer": "Dễ thương"
+  },
+  {
+    "question": "Từ \"Coverage\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bao phủ", "Chi phí", "Khoảng cách", "Dịch vụ"],
+    "correctAnswer": "Bao phủ"
+  },
+  {
+    "question": "Từ \"Vulnerable\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["An toàn", "Bảo vệ", "Dễ bị tổn thương", "Mạnh mẽ"],
+    "correctAnswer": "Dễ bị tổn thương"
+  },
+  {
+    "question": "Từ \"Doors\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cửa", "Cửa sổ", "Tường", "Sân"],
+    "correctAnswer": "Cửa"
+  },
+  {
+    "question": "Từ \"Minister\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thủ tướng", "Bộ trưởng", "Tổng thống", "Thị trưởng"],
+    "correctAnswer": "Bộ trưởng"
+  },
+  {
+    "question": "Từ \"Plastic\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Gỗ", "Kim loại", "Nhựa", "Vải"],
+    "correctAnswer": "Nhựa"
+  },
+  {
+    "question": "Từ \"Scary\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đáng sợ", "Dễ thương", "Hài hước", "Vui vẻ"],
+    "correctAnswer": "Đáng sợ"
+  },
+  {
+    "question": "Từ \"Replace\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giữ lại", "Thay thế", "Bỏ qua", "Lặp lại"],
+    "correctAnswer": "Thay thế"
+  },
+  {
+    "question": "Từ \"Saving\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tiêu xài", "Tiết kiệm", "Đầu tư", "Chi tiêu"],
+    "correctAnswer": "Tiết kiệm"
+  },
+  {
+    "question": "Từ \"Traveling\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Du lịch", "Ở nhà", "Làm việc", "Học tập"],
+    "correctAnswer": "Du lịch"
+  },
+  {
+    "question": "Từ \"Engineers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nghệ sĩ", "Nhà khoa học", "Kỹ sư", "Giáo viên"],
+    "correctAnswer": "Kỹ sư"
+  },
+  {
+    "question": "Từ \"Acid\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bazơ", "Axit", "Muối", "Nước giải khát"],
+    "correctAnswer": "Axit"
+  },
+  {
+    "question": "Từ \"November\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tháng Mười", "Tháng Mười Hai", "Tháng Mười Một", "Tháng Chín"],
+    "correctAnswer": "Tháng Mười Một"
+  },
+  {
+    "question": "Từ \"Associate\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tách rời", "Liên kết", "Cắt", "Bỏ qua"],
+    "correctAnswer": "Liên kết"
+  },
+  {
+    "question": "Từ \"Programming\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Học tập", "Nấu ăn", "Lập trình", "Viết lách"],
+    "correctAnswer": "Lập trình"
+  },
+  {
+    "question": "Từ \"Bread\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bánh mì", "Nước", "Sữa", "Trứng"],
+    "correctAnswer": "Bánh mì"
+  },
+  {
+    "question": "Từ \"Repeat\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Xóa", "Tạm dừng", "Lặp lại", "Thay đổi"],
+    "correctAnswer": "Lặp lại"
+  },
+  {
+    "question": "Từ \"Acknowledge\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phủ nhận", "Nhận ra", "Thừa nhận", "Bỏ qua"],
+    "correctAnswer": "Thừa nhận"
+  },
+  {
+    "question": "Từ \"Risks\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lợi ích", "Rủi ro", "Thành công", "Thách thức"],
+    "correctAnswer": "Rủi ro"
+  },
+  {
+    "question": "Từ \"Farmers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thợ xây", "Nông dân", "Giáo viên", "Bác sĩ"],
+    "correctAnswer": "Nông dân"
+  },
+  {
+    "question": "Từ \"Proper\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sai sót", "Không đúng", "Phù hợp", "Kém cỏi"],
+    "correctAnswer": "Phù hợp"
+  },
+  {
+    "question": "Từ \"Resolution\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mục tiêu", "Sự rời bỏ", "Giải pháp", "Nỗi buồn"],
+    "correctAnswer": "Giải pháp"
+  },
+  {
+    "question": "Từ \"Experiments\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thí nghiệm", "Lý thuyết", "Khoa học", "Bài học"],
+    "correctAnswer": "Thí nghiệm"
+  },
+  {
+    "question": "Từ \"Figures\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Con số", "Hình vẽ", "Âm thanh", "Từ ngữ"],
+    "correctAnswer": "Con số"
+  },
+  {
+    "question": "Từ \"Molecules\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phân tử", "Nguyên tử", "Hạt nhân", "Tế bào"],
+    "correctAnswer": "Phân tử"
+  },
+  {
+    "question": "Từ \"Naturally\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhân tạo", "Tự nhiên", "Giả tạo", "Ngoại lai"],
+    "correctAnswer": "Tự nhiên"
+  },
+  {
+    "question": "Từ \"Favor\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ghét", "Ưa thích", "Phớt lờ", "Sợ hãi"],
+    "correctAnswer": "Ưa thích"
+  },
+  {
+    "question": "Từ \"Enemy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bạn", "Kẻ thù", "Đồng minh", "Người quen"],
+    "correctAnswer": "Kẻ thù"
+  },
+  {
+    "question": "Từ \"Flavor\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hương vị", "Mùi hương", "Âm thanh", "Hình dáng"],
+    "correctAnswer": "Hương vị"
+  },
+  {
+    "question": "Từ \"Output\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đầu vào", "Đầu ra", "Trung gian", "Kết quả"],
+    "correctAnswer": "Đầu ra"
+  },
+  {
+    "question": "Từ \"Horse\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ngựa", "Heo", "Chó", "Mèo"],
+    "correctAnswer": "Ngựa"
+  },
+  {
+    "question": "Từ \"Stable\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chuồng ngựa", "Tòa nhà", "Nhà hàng", "Sân chơi"],
+    "correctAnswer": "Chuồng ngựa"
+  },
+  {
+    "question": "Từ \"October\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tháng Một", "Tháng Mười", "Tháng Chín", "Tháng Hai"],
+    "correctAnswer": "Tháng Mười"
+  },
+  {
+    "question": "Từ “Discovery” có nghĩa là gì?",
+    "options": ["Sự phát triển", "Sự khám phá", "Sự hủy diệt", "Sự hoài nghi"],
+    "correctAnswer": "Sự khám phá"
+  },
+  {
+    "question": "Từ “Scared” có nghĩa là gì?",
+    "options": ["Hạnh phúc", "Sợ hãi", "Bình tĩnh", "Mệt mỏi"],
+    "correctAnswer": "Sợ hãi"
+  },
+  {
+    "question": "Từ “Highlight” có nghĩa là gì?",
+    "options": ["Làm mờ đi", "Nổi bật", "Bỏ qua", "Giảm nhẹ"],
+    "correctAnswer": "Nổi bật"
+  },
+  {
+    "question": "Từ “Raising” có nghĩa là gì?",
+    "options": ["Hạ thấp", "Giảm bớt", "Nâng lên", "Phân chia"],
+    "correctAnswer": "Nâng lên"
+  },
+  {
+    "question": "Từ “Linear” có nghĩa là gì?",
+    "options": ["Hình tròn", "Tuyến tính", "Góc nghiêng", "Bất quy tắc"],
+    "correctAnswer": "Tuyến tính"
+  },
+  {
+    "question": "Từ “Contribute” có nghĩa là gì?",
+    "options": ["Cản trở", "Đóng góp", "Phá hủy", "Lấy đi"],
+    "correctAnswer": "Đóng góp"
+  },
+  {
+    "question": "Từ “Eastern” có nghĩa là gì?",
+    "options": ["Miền Nam", "Miền Tây", "Miền Đông", "Miền Bắc"],
+    "correctAnswer": "Miền Đông"
+  },
+  {
+    "question": "Từ “Mail” thường được hiểu là gì?",
+    "options": ["Thư", "Điện thoại", "Xe hơi", "Máy tính"],
+    "correctAnswer": "Thư"
+  },
+  {
+    "question": "Từ “Producing” có nghĩa là gì?",
+    "options": ["Hủy hoại", "Sản xuất", "Thu thập", "Lưu trữ"],
+    "correctAnswer": "Sản xuất"
+  },
+  {
+    "question": "Từ “Pure” có nghĩa là gì?",
+    "options": ["Nhân tạo", "Tinh khiết", "Hỗn hợp", "Rối rắm"],
+    "correctAnswer": "Tinh khiết"
+  },
+  {
+    "question": "Từ “Considering” có nghĩa là gì?",
+    "options": ["Bỏ qua", "Xem xét", "Giữ lại", "Chỉ trích"],
+    "correctAnswer": "Xem xét"
+  },
+  {
+    "question": "Từ “Technique” có nghĩa là gì?",
+    "options": ["Kỹ thuật", "Học tập", "Thảo luận", "Tình huống"],
+    "correctAnswer": "Kỹ thuật"
+  },
+  {
+    "question": "Từ “Staying” có nghĩa là gì?",
+    "options": ["Rời đi", "Ở lại", "Bắt đầu", "Kết thúc"],
+    "correctAnswer": "Ở lại"
+  },
+  {
+    "question": "Từ “Increases” có nghĩa là gì?",
+    "options": ["Giảm xuống", "Tăng lên", "Ổn định", "Biến mất"],
+    "correctAnswer": "Tăng lên"
+  },
+  {
+    "question": "Từ “Laid” có nghĩa là gì?",
+    "options": ["Đặt xuống", "Nâng lên", "Cầm", "Bỏ qua"],
+    "correctAnswer": "Đặt xuống"
+  },
+  {
+    "question": "Từ “August” có thể hiểu theo nghĩa nào dưới đây?",
+    "options": ["Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10"],
+    "correctAnswer": "Tháng 8"
+  },
+  {
+    "question": "Từ “Properly” có nghĩa là gì?",
+    "options": ["Đúng cách", "Sai cách", "Nhanh chóng", "Chậm chạp"],
+    "correctAnswer": "Đúng cách"
+  },
+  {
+    "question": "Từ “Offers” có nghĩa là gì?",
+    "options": ["Từ chối", "Cung cấp", "Xóa bỏ", "Giấu đi"],
+    "correctAnswer": "Cung cấp"
+  },
+  {
+    "question": "Từ “Discover” có nghĩa là gì?",
+    "options": ["Khám phá", "Phá hủy", "Che giấu", "Xác nhận"],
+    "correctAnswer": "Khám phá"
+  },
+  {
+    "question": "Từ “Finance” có nghĩa là gì?",
+    "options": ["Văn hóa", "Tài chính", "Giáo dục", "Y tế"],
+    "correctAnswer": "Tài chính"
+  },
+  {
+    "question": "Từ \"Tested\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chưa thử", "Đã thử", "Bỏ qua", "Đang thử"],
+    "correctAnswer": "Đã thử"
+  },
+  {
+    "question": "Từ \"Impacts\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tác động", "Phản ứng", "Giải pháp", "Hệ quả"],
+    "correctAnswer": "Tác động"
+  },
+  {
+    "question": "Từ \"Leg\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cánh", "Chân", "Đầu", "Tay"],
+    "correctAnswer": "Chân"
+  },
+  {
+    "question": "Từ \"Physically\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tinh thần", "Thể xác", "Về mặt thể chất", "Về mặt tâm lý"],
+    "correctAnswer": "Về mặt thể chất"
+  },
+  {
+    "question": "Từ \"Cat\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Con chó", "Con mèo", "Con cá", "Con chim"],
+    "correctAnswer": "Con mèo"
+  },
+  {
+    "question": "Từ \"Lens\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Gương", "Mắt kính", "Thấu kính", "Khung ảnh"],
+    "correctAnswer": "Thấu kính"
+  },
+  {
+    "question": "Từ \"Soldiers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thủy thủ", "Lính", "Chiến lược gia", "Công binh"],
+    "correctAnswer": "Lính"
+  },
+  {
+    "question": "Từ \"Placed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Được lấy ra", "Được xếp đặt", "Được đặt", "Được phá hủy"],
+    "correctAnswer": "Được đặt"
+  },
+  {
+    "question": "Từ \"Carefully\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cẩn thận", "Nhanh chóng", "Một cách ngẫu nhiên", "Lạnh lùng"],
+    "correctAnswer": "Cẩn thận"
+  },
+  {
+    "question": "Từ \"Divide\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tăng", "Chia", "Hợp nhất", "Giảm"],
+    "correctAnswer": "Chia"
+  },
+  {
+    "question": "Từ \"Hanging\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Treo", "Ngồi", "Nằm", "Chạy"],
+    "correctAnswer": "Treo"
+  },
+  {
+    "question": "Từ \"Cup\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ly", "Chén", "Cốc", "Bình"],
+    "correctAnswer": "Cốc"
+  },
+  {
+    "question": "Từ \"Podcast\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bản tin truyền hình", "Chương trình phát thanh qua Internet", "Sách nói", "Video clip"],
+    "correctAnswer": "Chương trình phát thanh qua Internet"
+  },
+  {
+    "question": "Từ \"Exposed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bị ẩn", "Bị bảo vệ", "Bị che giấu", "Bị lộ"],
+    "correctAnswer": "Bị lộ"
+  },
+  {
+    "question": "Từ \"Consumers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhà sản xuất", "Người bán hàng", "Người tiêu dùng", "Người mua bán"],
+    "correctAnswer": "Người tiêu dùng"
+  },
+  {
+    "question": "Từ \"Vast\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hẹp", "Nhỏ bé", "Rộng lớn", "Hạn chế"],
+    "correctAnswer": "Rộng lớn"
+  },
+  {
+    "question": "Từ \"Formed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phá hủy", "Hủy bỏ", "Được hình thành", "Được chia nhỏ"],
+    "correctAnswer": "Được hình thành"
+  },
+  {
+    "question": "Từ \"Likes\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ghét", "Thích", "Để ý", "Quên"],
+    "correctAnswer": "Thích"
+  },
+  {
+    "question": "Từ \"Studied\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã bỏ qua", "Đã đọc", "Đã nghiên cứu", "Đã giải thích"],
+    "correctAnswer": "Đã nghiên cứu"
+  },
+  {
+    "question": "Từ \"Portion\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Toàn bộ", "Phần", "Đoạn văn", "Khoảng cách"],
+    "correctAnswer": "Phần"
+  },
+  {
+    "question": "Từ “Ring” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Loa", "Dây", "Nhẫn", "Bánh"],
+    "correctAnswer": "Nhẫn"
+  },
+  {
+    "question": "Từ “Located” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Di chuyển", "Tìm kiếm", "Nằm ở", "Phát hiện"],
+    "correctAnswer": "Nằm ở"
+  },
+  {
+    "question": "Từ “Computers” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Điện thoại", "Máy in", "Máy tính", "Tivi"],
+    "correctAnswer": "Máy tính"
+  },
+  {
+    "question": "Từ “Properties” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hành động", "Sự kiện", "Đặc tính", "Giá trị"],
+    "correctAnswer": "Đặc tính"
+  },
+  {
+    "question": "Từ “Database” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tài liệu", "Hệ thống", "Cơ sở dữ liệu", "Mạng máy tính"],
+    "correctAnswer": "Cơ sở dữ liệu"
+  },
+  {
+    "question": "Từ “Represents” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phản ánh", "So sánh", "Đại diện", "Thể hiện"],
+    "correctAnswer": "Đại diện"
+  },
+  {
+    "question": "Từ “Shooting” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhảy", "Chạy", "Bắn", "Hát"],
+    "correctAnswer": "Bắn"
+  },
+  {
+    "question": "Từ “Brief” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Rườm rà", "Phức tạp", "Ngắn gọn", "Chi tiết"],
+    "correctAnswer": "Ngắn gọn"
+  },
+  {
+    "question": "Từ “Resistance” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sức mạnh", "Hỗ trợ", "Kháng cự", "Năng lượng"],
+    "correctAnswer": "Kháng cự"
+  },
+  {
+    "question": "Từ “Accurate” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mơ hồ", "Lầm lì", "Chính xác", "Gần đúng"],
+    "correctAnswer": "Chính xác"
+  },
+  {
+    "question": "Từ “Generate” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hủy bỏ", "Lặp lại", "Tạo ra", "Phá hủy"],
+    "correctAnswer": "Tạo ra"
+  },
+  {
+    "question": "Từ “Congratulations” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Xin lỗi", "Tạm biệt", "Chúc mừng", "Chào hỏi"],
+    "correctAnswer": "Chúc mừng"
+  },
+  {
+    "question": "Từ “Collect” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phân phát", "Rải rác", "Thu thập", "Xóa bỏ"],
+    "correctAnswer": "Thu thập"
+  },
+  {
+    "question": "Từ “Positions” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Số lượng", "Khu vực", "Vị trí", "Kỹ năng"],
+    "correctAnswer": "Vị trí"
+  },
+  {
+    "question": "Từ “Minimum” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tối đa", "Trung bình", "Tối thiểu", "Vô hạn"],
+    "correctAnswer": "Tối thiểu"
+  },
+  {
+    "question": "Từ “Suppose” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Khẳng định", "Chứng minh", "Giả sử", "Phủ nhận"],
+    "correctAnswer": "Giả sử"
+  },
+  {
+    "question": "Từ “Wherever” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tại đây", "Chỉ riêng", "Bất cứ nơi nào", "Cứ chừng"],
+    "correctAnswer": "Bất cứ nơi nào"
+  },
+  {
+    "question": "Từ “Failed” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thành công", "Hoàn thành", "Thất bại", "Khởi đầu"],
+    "correctAnswer": "Thất bại"
+  },
+  {
+    "question": "Từ “Soft” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cứng", "Sần sùi", "Mềm mại", "Sắc bén"],
+    "correctAnswer": "Mềm mại"
+  },
+  {
+    "question": "Từ “Minds” trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cảm xúc", "Thân thể", "Trí óc", "Hành động"],
+    "correctAnswer": "Trí óc"
   }
 
 
