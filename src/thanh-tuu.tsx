@@ -1,6 +1,6 @@
 // src/thanh-tuu.tsx
 
-import React, { useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
@@ -27,8 +27,9 @@ export const initialVocabularyData: VocabularyItem[] = [
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
-  initialData: VocabularyItem[]; // Dữ liệu giờ là nguồn sự thật duy nhất
+  initialData: VocabularyItem[];
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
+  // <<< THÊM MỚI: Callback để cập nhật dữ liệu ở component cha >>>
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
 }
 
@@ -70,12 +71,14 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
-  // <<< XÓA BỎ STATE CỤC BỘ >>>
-  // Component này sẽ không giữ state của riêng nó nữa, mà phụ thuộc hoàn toàn vào `initialData` từ props.
+  const [vocabulary, setVocabulary] = useState(initialData);
   const db = getFirestore();
 
-  // <<< THAY ĐỔI: Sử dụng `initialData` trực tiếp để sắp xếp >>>
-  const sortedVocabulary = [...initialData].sort((a, b) => {
+  useEffect(() => {
+      setVocabulary(initialData);
+  }, [initialData]);
+
+  const sortedVocabulary = [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
     if (aIsClaimable !== bIsClaimable) {
@@ -88,15 +91,16 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   });
 
   const handleClaim = useCallback(async (id: number) => {
-    // <<< THAY ĐỔI: Sử dụng `initialData` để tìm và cập nhật >>>
-    const originalItem = initialData.find(item => item.id === id);
+    // Tìm item gốc để xác định phần thưởng
+    const originalItem = vocabulary.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
     
+    // Phần thưởng từ việc lên cấp này
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
 
-    // <<< THAY ĐỔI: Tạo danh sách mới dựa trên `initialData` >>>
-    const updatedList = initialData.map(item => {
+    // Tạo danh sách mới sau khi cập nhật
+    const updatedList = vocabulary.map(item => {
       if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
         const newLevel = item.level + 1;
@@ -119,14 +123,14 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Nếu lưu thất bại, khôi phục lại state cũ (là `initialData` trước khi claim)
-      onDataUpdate(initialData); // Rollback state ở cha
+      // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
+      onDataUpdate(vocabulary); // Rollback state ở cha
     }
-  }, [initialData, userId, db, onClaimReward, onDataUpdate]); // <<< THAY ĐỔI: Cập nhật dependencies
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate]); // Thêm onDataUpdate vào dependencies
 
-  // <<< THAY ĐỔI: Sử dụng `initialData` để tính toán >>>
-  const totalWords = initialData.length;
-  const totalMasteryCards = initialData.reduce((sum, item) => sum + (item.level - 1), 0);
+  const totalWords = vocabulary.length;
+  // Con số này vẫn dùng để hiển thị, không ảnh hưởng đến logic lưu trữ
+  const totalMasteryCards = vocabulary.reduce((sum, item) => sum + (item.level - 1), 0);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
@@ -173,7 +177,11 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 
           <div className="flex flex-col gap-2">
             {sortedVocabulary.map((item, index) => (
-              <VocabularyRow key={item.id} item={item} rank={index + 1} onClaim={handleClaim} />
+              <VocabularyRow
+                key={`${item.id}-${item.level}`}
+                item={item}
+                rank={index + 1}
+                onClaim={handleClaim} />
             ))}
           </div>
         </main>
