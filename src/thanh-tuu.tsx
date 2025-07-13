@@ -1,6 +1,6 @@
 // src/thanh-tuu.tsx
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react'; // <<< CẬP NHẬT: Thêm useMemo
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
@@ -183,7 +183,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   
   const totalWords = vocabulary.length;
   
-  // <<< CẬP NHẬT: Tính toán tổng phần thưởng để hiển thị trên nút Claim All >>>
   const totalClaimableRewards = useMemo(() => {
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
@@ -208,15 +207,18 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </h1>
         </header>
 
-        <section className="mb-6 flex flex-col sm:flex-row justify-center items-center gap-4">
-          <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+        {/* <<< CẬP NHẬT: Thay đổi flex-col sm:flex-row thành flex flex-row để luôn nằm trên 1 hàng >>> */}
+        <section className="mb-6 flex flex-row justify-center items-center gap-4">
+          {/* <<< CẬP NHẬT: Thay w-full thành flex-1 sm:w-52 để co giãn hợp lý >>> */}
+          <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{totalWords}</p>
               <p className="text-sm text-slate-400">Vocabulary</p>
             </div>
           </div>
-          <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
+          {/* <<< CẬP NHẬT: Thay w-full thành flex-1 sm:w-52 để co giãn hợp lý >>> */}
+          <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
               <p className="text-xl font-bold text-white">{masteryCardsCount}</p>
@@ -225,7 +227,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </div>
         </section>
 
-        {/* <<< CẬP NHẬT: Thiết kế lại hoàn toàn nút Claim All để hiển thị phần thưởng >>> */}
         <div className="mb-6 flex justify-center">
             <button
                 onClick={handleClaimAll}
@@ -238,7 +239,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
                     }
                 `}
             >
-                {/* Phần bên trái: Hành động */}
                 <div className="flex items-center gap-3">
                     <GiftIcon className={`w-7 h-7 ${totalClaimableRewards.masteryCards > 0 ? 'text-white' : 'text-slate-500'}`} />
                     <span className="font-bold text-lg">
@@ -246,7 +246,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
                     </span>
                 </div>
 
-                {/* Phần bên phải: Phần thưởng (chỉ hiển thị khi có thể nhận) */}
                 {totalClaimableRewards.masteryCards > 0 && !isClaimingAll && (
                     <div className="flex items-center gap-4">
                         <div className="h-8 w-px bg-white/20"></div>
