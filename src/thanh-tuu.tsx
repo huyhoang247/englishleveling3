@@ -33,7 +33,7 @@ interface AchievementsScreenProps {
   masteryCardsCount: number;
 }
 
-// --- Biểu tượng (Icon) - không thay đổi ---
+// --- Biểu tượng (Icon) ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <line x1="18" y1="6" x2="6" y2="18" />
@@ -67,14 +67,25 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
         <path d="M12.75 4.533A9.707 9.707 0 0118 3a9.735 9.735 0 013.25.555.75.75 0 01.5.707v14.25a.75.75 0 01-1 .707A9.735 9.735 0 0118 21a9.707 9.707 0 01-5.25-1.533" />
     </svg>
 );
+// <<< THÊM MỚI: Biểu tượng cho nút Claim All >>>
+const GiftIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M12.75 3.75a.75.75 0 00-1.5 0v2.25h1.5V3.75z" />
+        <path fillRule="evenodd" d="M7.5 3.75a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM4.5 9.75a.75.75 0 01.75-.75h13.5a.75.75 0 010 1.5H5.25a.75.75 0 01-.75-.75zM12 7.5a.75.75 0 00-1.5 0v1.5h1.5V7.5z" />
+        <path d="M3 13.5a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" />
+        <path fillRule="evenodd" d="M12 15a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V15.75a.75.75 0 01.75-.75z" />
+        <path d="M5.25 12.75a.75.75 0 01.75-.75h.01a.75.75 0 01.75.75v8.25a.75.75 0 01-.75.75h-.01a.75.75 0 01-.75-.75V12.75zM18.75 12a.75.75 0 00-.75.75v8.25c0 .414.336.75.75.75h.01a.75.75 0 00.75-.75V12.75a.75.75 0 00-.75-.75h-.01z" />
+    </svg>
+);
 
 
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate, masteryCardsCount }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
-  // <<< THÊM MỚI: State để quản lý trạng thái "đang nhận thưởng" >>>
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
+  // <<< THÊM MỚI: State cho chức năng Claim All >>>
+  const [isClaimingAll, setIsClaimingAll] = useState(false);
   const db = getFirestore();
 
   useEffect(() => {
@@ -94,21 +105,17 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   });
 
   const handleClaim = useCallback(async (id: number) => {
-    // <<< THÊM MỚI: Ngăn chặn việc click nhiều lần khi đang xử lý >>>
-    if (isClaiming) return;
+    if (isClaiming || isClaimingAll) return;
 
-    // Tìm item gốc để xác định phần thưởng
     const originalItem = vocabulary.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
 
-    setIsClaiming(true); // Bắt đầu quá trình, khóa các nút khác
-    setClaimingId(id);   // Đánh dấu item đang được xử lý để cập nhật UI
+    setIsClaiming(true);
+    setClaimingId(id);
 
-    // Phần thưởng từ việc lên cấp này
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
 
-    // Tạo danh sách mới sau khi cập nhật
     const updatedList = vocabulary.map(item => {
       if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
@@ -119,33 +126,66 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
 
-    // Cập nhật state ở component cha NGAY LẬP TỨC để đồng bộ hóa giao diện
     onDataUpdate(updatedList);
-    
-    // Gọi callback để component cha xử lý lưu trữ phần thưởng
     onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
 
-    // Lưu danh sách tiến trình thành tựu đã cập nhật vào Firestore
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
       await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
-      onDataUpdate(vocabulary); // Rollback state ở cha
+      onDataUpdate(vocabulary);
     } finally {
-      // <<< THÊM MỚI: Thêm delay và reset trạng thái >>>
-      // Thêm một khoảng trễ nhỏ trước khi cho phép nhận tiếp để UX mượt hơn
-      // và đảm bảo không có hành động nào quá nhanh.
       setTimeout(() => {
         setIsClaiming(false);
         setClaimingId(null);
-      }, 500); // 0.5 giây delay
+      }, 500);
     }
-  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming]);
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
 
+  // <<< THÊM MỚI: Logic cho nút Claim All >>>
+  const handleClaimAll = useCallback(async () => {
+    if (isClaiming || isClaimingAll) return;
+
+    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
+    if (claimableItems.length === 0) return;
+    
+    setIsClaimingAll(true);
+
+    let totalGoldReward = 0;
+    let totalMasteryCardReward = 0;
+    const claimableIds = new Set(claimableItems.map(item => item.id));
+
+    const updatedList = vocabulary.map(item => {
+      if (claimableIds.has(item.id)) {
+        totalGoldReward += item.level * 100;
+        totalMasteryCardReward += 1;
+        const expRemaining = item.exp - item.maxExp;
+        const newLevel = item.level + 1;
+        const newMaxExp = newLevel * 100;
+        return { ...item, level: newLevel, exp: expRemaining, maxExp: newMaxExp };
+      }
+      return item;
+    });
+
+    onClaimReward({ gold: totalGoldReward, masteryCards: totalMasteryCardReward });
+    onDataUpdate(updatedList);
+
+    try {
+      const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+      await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+      console.log("Batch vocabulary mastery progress saved to Firestore.");
+    } catch (error) {
+      console.error("Error saving batch vocabulary progress:", error);
+      onDataUpdate(vocabulary); // Rollback
+    } finally {
+      setIsClaimingAll(false);
+    }
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
+  
   const totalWords = vocabulary.length;
+  const claimableCount = vocabulary.filter(item => item.exp >= item.maxExp).length;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
@@ -158,13 +198,13 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           <XIcon className="w-6 h-6 text-slate-300" />
         </button>
 
-        <header className="text-center mb-8">
+        <header className="text-center mb-6">
           <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
             Thành Tựu
           </h1>
         </header>
 
-        <section className="mb-8 flex flex-row justify-center items-center gap-4">
+        <section className="mb-6 flex flex-col sm:flex-row justify-center items-center gap-4">
           <div className="flex w-full sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
             <div>
@@ -180,6 +220,24 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
             </div>
           </div>
         </section>
+
+        {/* <<< THÊM MỚI: Nút Claim All >>> */}
+        <div className="mb-6 flex justify-center">
+            <button
+                onClick={handleClaimAll}
+                disabled={claimableCount === 0 || isClaimingAll || isClaiming}
+                className={`
+                    flex items-center justify-center gap-3 w-full max-w-xs px-6 py-3 rounded-xl font-bold text-lg transition-all duration-300 border-2
+                    ${claimableCount > 0 && !isClaimingAll && !isClaiming
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 border-purple-400 text-white hover:from-purple-600 hover:to-indigo-700 shadow-lg shadow-purple-500/20 transform hover:scale-105 cursor-pointer'
+                        : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                    }
+                `}
+            >
+                <GiftIcon className="w-6 h-6" />
+                {isClaimingAll ? 'Đang xử lý...' : `Nhận Tất Cả (${claimableCount})`}
+            </button>
+        </div>
 
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
@@ -199,6 +257,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
                 onClaim={handleClaim}
                 isBeingClaimed={claimingId === item.id}
                 isAnyClaiming={isClaiming}
+                isClaimingAll={isClaimingAll}
               />
             ))}
           </div>
@@ -212,22 +271,22 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   );
 }
 
-// --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
+// --- Thành phần cho mỗi hàng (card) trong bảng ---
 function VocabularyRow({
   item,
   rank,
   onClaim,
   isBeingClaimed,
-  isAnyClaiming
-}: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isBeingClaimed: boolean, isAnyClaiming: boolean }) {
+  isAnyClaiming,
+  isClaimingAll
+}: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isBeingClaimed: boolean, isAnyClaiming: boolean, isClaimingAll: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
   const handleClaimClick = () => {
-    // Vẫn giữ kiểm tra isClaimable nhưng isAnyClaiming sẽ vô hiệu hóa nút
-    if (!isClaimable || isAnyClaiming) return;
+    if (!isClaimable || isAnyClaiming || isClaimingAll) return;
     onClaim(id);
   };
   
@@ -273,18 +332,16 @@ function VocabularyRow({
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
-          // <<< CẬP NHẬT: Vô hiệu hóa nút nếu không thể nhận hoặc đang có một tiến trình khác chạy >>>
-          disabled={!isClaimable || isAnyClaiming}
+          disabled={!isClaimable || isAnyClaiming || isClaimingAll}
           className={`
             flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border
-            ${isClaimable && !isAnyClaiming
+            ${isClaimable && !isAnyClaiming && !isClaimingAll
               ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
               : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'
             }
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {/* <<< CẬP NHẬT: Thay đổi text của nút dựa trên trạng thái >>> */}
           {isBeingClaimed ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'}
         </button>
       </div>
