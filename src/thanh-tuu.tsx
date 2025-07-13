@@ -227,40 +227,48 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </div>
         </section>
 
+        {/* <<< BẮT ĐẦU KHỐI ĐƯỢC THIẾT KẾ LẠI >>> */}
         <div className="mb-6 flex justify-center">
             <button
                 onClick={handleClaimAll}
                 disabled={totalClaimableRewards.masteryCards === 0 || isClaimingAll || isClaiming}
                 className={`
-                    flex items-center justify-between w-full max-w-md px-4 py-3 rounded-xl transition-all duration-300 border-2
+                    w-full max-w-md rounded-xl transition-all duration-300
                     ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming
-                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 border-purple-400 text-white hover:from-purple-600 hover:to-indigo-700 shadow-lg shadow-purple-500/20 transform hover:scale-105 cursor-pointer'
-                        : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                        ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border border-purple-500/60 shadow-lg shadow-purple-600/30 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/40 cursor-pointer'
+                        : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
                     }
                 `}
             >
-                <div className="flex items-center gap-3">
-                    <GiftIcon className={`w-7 h-7 ${totalClaimableRewards.masteryCards > 0 ? 'text-white' : 'text-slate-500'}`} />
-                    <span className="font-bold text-lg">
-                        {isClaimingAll ? 'Đang xử lý...' : `Nhận Tất Cả`}
-                    </span>
-                </div>
-
-                {totalClaimableRewards.masteryCards > 0 && !isClaimingAll && (
-                    <div className="flex items-center gap-4">
-                        <div className="h-8 w-px bg-white/20"></div>
-                        <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Mastery`}>
-                            <MasteryCardIcon className="w-7 h-7" />
-                            <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
-                        </div>
-                         <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
-                            <GoldIcon className="w-6 h-6" />
-                            <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
-                        </div>
+                <div className="flex items-center justify-between w-full p-3">
+                    <div className="flex items-center gap-3">
+                        <GiftIcon className={`w-8 h-8 transition-colors duration-300 ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming ? 'text-purple-300' : 'text-slate-600'}`} />
+                        <span className="font-bold text-lg">
+                            {isClaimingAll ? 'Đang xử lý...' : 'Nhận Tất Cả'}
+                        </span>
                     </div>
-                )}
+
+                    {totalClaimableRewards.masteryCards > 0 && !isClaimingAll ? (
+                        <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
+                            <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
+                                <MasteryCardIcon className="w-7 h-7" />
+                                <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
+                            </div>
+                            <div className="h-6 w-px bg-white/20"></div>
+                            <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
+                                <GoldIcon className="w-6 h-6" />
+                                <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        !isClaimingAll && (
+                          <span className="text-sm font-medium text-slate-500 pr-2">Chưa có thưởng</span>
+                        )
+                    )}
+                </div>
             </button>
         </div>
+        {/* <<< KẾT THÚC KHỐI ĐƯỢC THIẾT KẾ LẠI >>> */}
 
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
