@@ -1,5 +1,4 @@
-import { useState, useEffect, memo } from 'react';
-// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` và `increment` >>> (Đã có sẵn, không đổi)
+import { useState, useEffect, memo, useCallback } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
@@ -52,7 +51,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
   );
 };
 
-// <<< THAY ĐỔI 2: THÊM COMPONENT `MasteryDisplay` >>>
+// MasteryDisplay Component
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
 const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
     <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -107,11 +106,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [selectedOption, setSelectedOption] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [coins, setCoins] = useState(0);
+  // <<< THAY ĐỔI 1: THÊM STATE `displayedCoins` >>>
+  const [displayedCoins, setDisplayedCoins] = useState(0);
   const [streak, setStreak] = useState(0);
-  // <<< THAY ĐỔI 3: THÊM STATE CHO `masteryCount` >>>
   const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
-  const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const TOTAL_TIME = 30;
@@ -129,26 +128,26 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => unsubscribe();
   }, []);
 
-  // <<< THAY ĐỔI 4: CẬP NHẬT `fetchData` ĐỂ LẤY `masteryCount` >>>
+  // <<< THAY ĐỔI 2: CẬP NHẬT `fetchData` ĐỂ SET `displayedCoins` >>>
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         try {
-          // Lấy coins và masteryCount từ document chính của user
           const userRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(userRef);
 
           if (docSnap.exists()) {
-            setCoins(docSnap.data().coins || 0);
+            const userCoins = docSnap.data().coins || 0;
+            setCoins(userCoins);
+            setDisplayedCoins(userCoins); // Set initial display coins
             setMasteryCount(docSnap.data().masteryCards || 0);
           } else {
-            // Nếu user chưa có document, tạo mới với 0 coins và 0 mastery
             await setDoc(userRef, { coins: 0, masteryCards: 0 });
             setCoins(0);
+            setDisplayedCoins(0);
             setMasteryCount(0);
           }
 
-          // Lấy danh sách từ vựng từ subcollection 'openedVocab'
           const vocabColRef = collection(db, 'users', user.uid, 'openedVocab');
           const vocabSnapshot = await getDocs(vocabColRef);
           
@@ -164,12 +163,13 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         } catch (error) {
           console.error("Lỗi khi tải dữ liệu người dùng:", error);
           setCoins(0);
+          setDisplayedCoins(0);
           setMasteryCount(0);
           setUserVocabulary([]);
         }
       } else {
-        // Nếu không có người dùng, reset state
         setCoins(0);
+        setDisplayedCoins(0);
         setMasteryCount(0);
         setUserVocabulary([]);
       }
@@ -224,7 +224,23 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, filteredQuizData.length]);
   
-  // <<< THAY ĐỔI 5: CẬP NHẬT `handleAnswer` ĐỂ TÍNH COIN VÀ GHI BATCH >>>
+  // <<< THAY ĐỔI 3: THÊM HÀM `startCoinCountAnimation` >>>
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+    let step = Math.ceil((endValue - startValue) / 30) || 1;
+    let current = startValue;
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= endValue) {
+        setDisplayedCoins(endValue);
+        clearInterval(interval);
+      } else {
+        setDisplayedCoins(current);
+      }
+    }, 30);
+  }, []);
+  
+  // <<< THAY ĐỔI 4: CẬP NHẬT `handleAnswer` ĐỂ SỬ DỤNG ANIMATION MỚI >>>
   const handleAnswer = async (selectedAnswer) => {
     if (answered || filteredQuizData.length === 0) return;
     setSelectedOption(selectedAnswer);
@@ -239,14 +255,12 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       const newStreak = streak + 1;
       setStreak(newStreak);
 
-      // Công thức tính coin mới: masteryCount * newStreak
       const coinsToAdd = masteryCount * newStreak;
 
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
-        setCoins(totalCoins);
-        setCoinAnimation(true);
-        setTimeout(() => setCoinAnimation(false), 1500);
+        startCoinCountAnimation(coins, totalCoins); // Bắt đầu animation
+        setCoins(totalCoins); // Cập nhật state thật
       }
 
       if (newStreak >= 1) {
@@ -254,22 +268,18 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         setTimeout(() => setStreakAnimation(false), 1500);
       }
 
-      // Tìm từ vựng khớp với câu hỏi để cập nhật vào Firestore
       const matchedWord = userVocabulary.find(vocabWord =>
         new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
       );
 
-      // Nếu có người dùng, có từ vựng khớp và có thưởng coin, tiến hành ghi dữ liệu
       if (user && matchedWord && coinsToAdd > 0) {
         try {
           const batch = writeBatch(db);
           const gameModeId = "quiz-1";
           
-          // Thao tác 1: Cập nhật số coin của người dùng
           const userDocRef = doc(db, 'users', user.uid);
           batch.update(userDocRef, { coins: coins + coinsToAdd });
 
-          // Thao tác 2: Cập nhật số lần trả lời đúng cho từ vựng này
           const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
           batch.set(completedWordRef, {
             lastCompletedAt: new Date(),
@@ -278,7 +288,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 correctCount: increment(1)
               }
             }
-          }, { merge: true }); // Dùng merge để không ghi đè các game mode khác
+          }, { merge: true });
 
           await batch.commit();
           console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
@@ -336,10 +346,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         >
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
-
-        {/* <<< THAY ĐỔI 6: THÊM `MasteryDisplay` VÀO HEADER >>> */}
+        
+        {/* <<< THAY ĐỔI 5: CẬP NHẬT `CoinDisplay` VÀ THÊM `MasteryDisplay` >>> */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+          <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
           <MasteryDisplay masteryCount={masteryCount} />
         </div>
@@ -384,9 +394,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                     <div className="flex items-center">
                       <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="h-5 w-5 text-orange-500 mr-1" />
-                      <span className="font-medium text-gray-700">Coins kiếm được trong lần này:</span>
+                      <span className="font-medium text-gray-700">Tổng số coins của bạn:</span>
                     </div>
-                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+                    {/* <<< THAY ĐỔI 6: CẬP NHẬT `CoinDisplay` TRONG MÀN HÌNH KẾT QUẢ >>> */}
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                   </div>
 
                   <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
