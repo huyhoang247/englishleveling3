@@ -3,7 +3,7 @@
 import React, { useCallback } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-// --- Định nghĩa Type cho dữ liệu ---
+// --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
 export type VocabularyItem = {
   id: number;
   word: string;
@@ -12,7 +12,7 @@ export type VocabularyItem = {
   maxExp: number;
 };
 
-// --- Dữ liệu mẫu (sử dụng khi không có dữ liệu thật) ---
+// --- Dữ liệu mẫu (Export để component cha có thể sử dụng cho người dùng mới) ---
 export const initialVocabularyData: VocabularyItem[] = [
   { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
   { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
@@ -23,16 +23,16 @@ export const initialVocabularyData: VocabularyItem[] = [
   { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
 ];
 
-// --- Định nghĩa Props cho component ---
+// --- CẬP NHẬT Prop để nhận dữ liệu từ cha và gửi tín hiệu nhận thưởng ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
-  initialData: VocabularyItem[];
+  initialData: VocabularyItem[]; // Dữ liệu giờ là nguồn sự thật duy nhất
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
 }
 
-// --- Các component Icon (không thay đổi) ---
+// --- Biểu tượng (Icon) - không thay đổi ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <line x1="18" y1="6" x2="6" y2="18" />
@@ -70,16 +70,11 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate }: AchievementsScreenProps) {
-  // FIX: Add a safety check to prevent crashing if initialData is not an array.
-  if (!Array.isArray(initialData)) {
-    // This can happen briefly during loading or if there's an unexpected data state.
-    // Returning null is safe and prevents the UI from breaking.
-    return null; 
-  }
-
+  // <<< XÓA BỎ STATE CỤC BỘ >>>
+  // Component này sẽ không giữ state của riêng nó nữa, mà phụ thuộc hoàn toàn vào `initialData` từ props.
   const db = getFirestore();
 
-  // Sắp xếp dữ liệu trực tiếp từ prop 'initialData'
+  // <<< THAY ĐỔI: Sử dụng `initialData` trực tiếp để sắp xếp >>>
   const sortedVocabulary = [...initialData].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
@@ -93,15 +88,14 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   });
 
   const handleClaim = useCallback(async (id: number) => {
-    // Tìm item gốc từ prop 'initialData'
+    // <<< THAY ĐỔI: Sử dụng `initialData` để tìm và cập nhật >>>
     const originalItem = initialData.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
     
-    // Phần thưởng từ việc lên cấp này
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
 
-    // Tạo danh sách mới sau khi cập nhật, dựa trên 'initialData'
+    // <<< THAY ĐỔI: Tạo danh sách mới dựa trên `initialData` >>>
     const updatedList = initialData.map(item => {
       if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
@@ -112,7 +106,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
 
-    // Cập nhật state ở component cha NGAY LẬP TỨC
+    // Cập nhật state ở component cha NGAY LẬP TỨC để đồng bộ hóa giao diện
     onDataUpdate(updatedList);
     
     // Gọi callback để component cha xử lý lưu trữ phần thưởng
@@ -125,12 +119,12 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
-      // Nếu lưu thất bại, khôi phục lại state cũ ở cha
-      onDataUpdate(initialData); 
+      // Nếu lưu thất bại, khôi phục lại state cũ (là `initialData` trước khi claim)
+      onDataUpdate(initialData); // Rollback state ở cha
     }
-  }, [initialData, userId, db, onClaimReward, onDataUpdate]); // Cập nhật dependency
+  }, [initialData, userId, db, onClaimReward, onDataUpdate]); // <<< THAY ĐỔI: Cập nhật dependencies
 
-  // Tính toán các giá trị tổng từ 'initialData'
+  // <<< THAY ĐỔI: Sử dụng `initialData` để tính toán >>>
   const totalWords = initialData.length;
   const totalMasteryCards = initialData.reduce((sum, item) => sum + (item.level - 1), 0);
 
