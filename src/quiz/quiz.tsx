@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react';
-// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` và `increment` >>>
+// <<< THAY ĐỔI 1: IMPORT THÊM `writeBatch` và `increment` >>> (Đã có sẵn, không đổi)
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
@@ -52,6 +52,20 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
   );
 };
 
+// <<< THAY ĐỔI 2: THÊM COMPONENT `MasteryDisplay` >>>
+const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
+    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+       <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style>
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+      <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div>
+      <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div>
+      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
+    </div>
+));
+
+
 // Countdown Timer Component
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => {
   const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress);
@@ -94,6 +108,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [answered, setAnswered] = useState(false);
   const [coins, setCoins] = useState(0);
   const [streak, setStreak] = useState(0);
+  // <<< THAY ĐỔI 3: THÊM STATE CHO `masteryCount` >>>
+  const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState(false);
   const [user, setUser] = useState(null);
@@ -113,20 +129,23 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => unsubscribe();
   }, []);
 
+  // <<< THAY ĐỔI 4: CẬP NHẬT `fetchData` ĐỂ LẤY `masteryCount` >>>
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         try {
-          // Lấy coins từ document chính của user
+          // Lấy coins và masteryCount từ document chính của user
           const userRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(userRef);
 
           if (docSnap.exists()) {
             setCoins(docSnap.data().coins || 0);
+            setMasteryCount(docSnap.data().masteryCards || 0);
           } else {
-            // Nếu user chưa có document, tạo mới với 0 coins
-            await setDoc(userRef, { coins: 0 });
+            // Nếu user chưa có document, tạo mới với 0 coins và 0 mastery
+            await setDoc(userRef, { coins: 0, masteryCards: 0 });
             setCoins(0);
+            setMasteryCount(0);
           }
 
           // Lấy danh sách từ vựng từ subcollection 'openedVocab'
@@ -145,11 +164,13 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         } catch (error) {
           console.error("Lỗi khi tải dữ liệu người dùng:", error);
           setCoins(0);
+          setMasteryCount(0);
           setUserVocabulary([]);
         }
       } else {
         // Nếu không có người dùng, reset state
         setCoins(0);
+        setMasteryCount(0);
         setUserVocabulary([]);
       }
     };
@@ -202,10 +223,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }, 1000);
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, filteredQuizData.length]);
-
-  // <<< THAY ĐỔI 2: XÓA HÀM `updateCoinsInFirestore` VÌ LOGIC SẼ ĐƯỢC GỘP VÀO `handleAnswer` >>>
   
-  // <<< THAY ĐỔI 3: CẬP NHẬT `handleAnswer` ĐỂ GHI DỮ LIỆU BẰNG BATCH >>>
+  // <<< THAY ĐỔI 5: CẬP NHẬT `handleAnswer` ĐỂ TÍNH COIN VÀ GHI BATCH >>>
   const handleAnswer = async (selectedAnswer) => {
     if (answered || filteredQuizData.length === 0) return;
     setSelectedOption(selectedAnswer);
@@ -220,12 +239,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       const newStreak = streak + 1;
       setStreak(newStreak);
 
-      let coinsToAdd = 0;
-      if (newStreak >= 20) { coinsToAdd = 20; } 
-      else if (newStreak >= 10) { coinsToAdd = 15; } 
-      else if (newStreak >= 5) { coinsToAdd = 10; } 
-      else if (newStreak >= 3) { coinsToAdd = 5; } 
-      else if (newStreak >= 1) { coinsToAdd = 1; }
+      // Công thức tính coin mới: masteryCount * newStreak
+      const coinsToAdd = masteryCount * newStreak;
 
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
@@ -322,9 +337,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
 
-        <div className="flex items-center gap-3">
+        {/* <<< THAY ĐỔI 6: THÊM `MasteryDisplay` VÀO HEADER >>> */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+          <MasteryDisplay masteryCount={masteryCount} />
         </div>
       </header>
       
