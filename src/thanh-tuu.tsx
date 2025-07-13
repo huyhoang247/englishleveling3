@@ -30,7 +30,6 @@ interface AchievementsScreenProps {
   initialData: VocabularyItem[];
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
-  // <<< THÊM MỚI: Prop để nhận số Thẻ Thông Thạo từ component cha >>>
   masteryCardsCount: number;
 }
 
@@ -73,6 +72,9 @@ const BookOpenIcon = ({ className = '' }: { className?: string }) => (
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate, masteryCardsCount }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
+  // <<< THÊM MỚI: State để quản lý trạng thái "đang nhận thưởng" >>>
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimingId, setClaimingId] = useState<number | null>(null);
   const db = getFirestore();
 
   useEffect(() => {
@@ -92,10 +94,16 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   });
 
   const handleClaim = useCallback(async (id: number) => {
+    // <<< THÊM MỚI: Ngăn chặn việc click nhiều lần khi đang xử lý >>>
+    if (isClaiming) return;
+
     // Tìm item gốc để xác định phần thưởng
     const originalItem = vocabulary.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
-    
+
+    setIsClaiming(true); // Bắt đầu quá trình, khóa các nút khác
+    setClaimingId(id);   // Đánh dấu item đang được xử lý để cập nhật UI
+
     // Phần thưởng từ việc lên cấp này
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
@@ -126,8 +134,16 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       console.error("Error saving vocabulary progress:", error);
       // Nếu lưu thất bại, khôi phục lại state cũ để đảm bảo tính nhất quán
       onDataUpdate(vocabulary); // Rollback state ở cha
+    } finally {
+      // <<< THÊM MỚI: Thêm delay và reset trạng thái >>>
+      // Thêm một khoảng trễ nhỏ trước khi cho phép nhận tiếp để UX mượt hơn
+      // và đảm bảo không có hành động nào quá nhanh.
+      setTimeout(() => {
+        setIsClaiming(false);
+        setClaimingId(null);
+      }, 500); // 0.5 giây delay
     }
-  }, [vocabulary, userId, db, onClaimReward, onDataUpdate]);
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming]);
 
   const totalWords = vocabulary.length;
 
@@ -180,7 +196,10 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
                 key={`${item.id}-${item.level}`}
                 item={item}
                 rank={index + 1}
-                onClaim={handleClaim} />
+                onClaim={handleClaim}
+                isBeingClaimed={claimingId === item.id}
+                isAnyClaiming={isClaiming}
+              />
             ))}
           </div>
         </main>
@@ -194,14 +213,21 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 }
 
 // --- Thành phần cho mỗi hàng (card) trong bảng (không thay đổi) ---
-function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void }) {
+function VocabularyRow({
+  item,
+  rank,
+  onClaim,
+  isBeingClaimed,
+  isAnyClaiming
+}: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isBeingClaimed: boolean, isAnyClaiming: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
   const handleClaimClick = () => {
-    if (!isClaimable) return;
+    // Vẫn giữ kiểm tra isClaimable nhưng isAnyClaiming sẽ vô hiệu hóa nút
+    if (!isClaimable || isAnyClaiming) return;
     onClaim(id);
   };
   
@@ -247,17 +273,19 @@ function VocabularyRow({ item, rank, onClaim }: { item: VocabularyItem, rank: nu
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
-          disabled={!isClaimable}
+          // <<< CẬP NHẬT: Vô hiệu hóa nút nếu không thể nhận hoặc đang có một tiến trình khác chạy >>>
+          disabled={!isClaimable || isAnyClaiming}
           className={`
             flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border
-            ${isClaimable
+            ${isClaimable && !isAnyClaiming
               ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer'
-              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'
             }
           `}
         >
           <TrophyIcon className="w-4 h-4" />
-          {isClaimable ? 'Nhận' : 'Chưa Đạt'}
+          {/* <<< CẬP NHẬT: Thay đổi text của nút dựa trên trạng thái >>> */}
+          {isBeingClaimed ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'}
         </button>
       </div>
     </div>
