@@ -468,6 +468,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
+  // <<< THÊM MỚI: Hàm để cập nhật state vocabularyData từ component con >>>
   const handleVocabularyUpdate = (updatedData: VocabularyItem[]) => {
     setVocabularyData(updatedData);
   };
@@ -862,11 +863,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isAchievementsOpen && auth.currentUser && vocabularyData && (
+                {/* FIX: Ensure vocabularyData is an array before rendering */}
+                {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
                     <AchievementsScreen 
                         onClose={toggleAchievements} 
                         userId={auth.currentUser.uid}
-                        vocabularyData={vocabularyData}
+                        initialData={vocabularyData}
                         onClaimReward={handleRewardClaim}
                         onDataUpdate={handleVocabularyUpdate}
                     />
