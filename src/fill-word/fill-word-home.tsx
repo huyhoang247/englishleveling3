@@ -3,7 +3,6 @@
 // Các import cơ bản từ React và các thư viện khác
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
-// <<< THAY ĐỔI 1: IMPORT THÊM `increment` >>>
 import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
@@ -43,6 +42,18 @@ const StreakDisplay: React.FC<{ displayedStreak: number; isAnimating: boolean; }
       <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter ml-1">{displayedStreak}</div>
       <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
       <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
+    </div>
+));
+// <<< THAY ĐỔI 1: TẠO COMPONENT `MasteryDisplay` >>>
+const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
+    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+       <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style>
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+      <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div>
+      <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div>
+      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
     </div>
 ));
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => {
@@ -91,6 +102,8 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [streak, setStreak] = useState(0);
+  // <<< THAY ĐỔI 2: THÊM STATE CHO `masteryCount` >>>
+  const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const TOTAL_TIME = 60;
@@ -98,11 +111,11 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
-  // <<< THAY ĐỔI 2: KHÔNG CÓ THAY ĐỔI Ở ĐÂY, LOGIC VẪN ĐÚNG >>>
+  // <<< THAY ĐỔI 3: CẬP NHẬT LOGIC LẤY DỮ LIỆU >>>
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
-        setLoading(false); setVocabularyList([]); setCoins(0); setUsedWords(new Set()); setCurrentWord(null); setError("Vui lòng đăng nhập để chơi.");
+        setLoading(false); setVocabularyList([]); setCoins(0); setUsedWords(new Set()); setCurrentWord(null); setMasteryCount(0); setError("Vui lòng đăng nhập để chơi.");
         return;
       }
       try {
@@ -119,8 +132,9 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
           getDocs(collection(db, 'users', user.uid, 'completedWords'))
         ]);
 
-        // Xử lý coins từ document chính
+        // Xử lý coins và masteryCount từ document chính
         const fetchedCoins = userDocSnap.exists() ? (userDocSnap.data().coins || 0) : 0;
+        const fetchedMasteryCount = userDocSnap.exists() ? (userDocSnap.data().masteryCards || 0) : 0;
         
         // Xử lý danh sách từ vựng cần chơi
         const vocabularyWithImages: VocabularyItem[] = [];
@@ -146,6 +160,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         // Cập nhật state
         setVocabularyList(vocabularyWithImages);
         setCoins(fetchedCoins);
+        setMasteryCount(fetchedMasteryCount);
         setDisplayedCoins(fetchedCoins);
         setUsedWords(fetchedCompletedWords);
 
@@ -183,7 +198,6 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
-  // <<< THAY ĐỔI 3: CẬP NHẬT `checkAnswer` ĐỂ GHI NHẬN SỐ LẦN HOÀN THÀNH >>>
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
@@ -197,17 +211,9 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
         startCoinCountAnimation(coins, updatedCoins);
         
         try {
-            // Chuẩn bị các tham chiếu
             const userDocRef = doc(db, 'users', user.uid);
             const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
-            
-            // Sử dụng WriteBatch để đảm bảo các thao tác đều thành công hoặc thất bại cùng nhau
             const batch = writeBatch(db);
-
-            // Thao tác 1: Cập nhật hoặc tạo mới document cho từ đã hoàn thành.
-            // Sử dụng `set` với `{ merge: true }` và `increment`
-            // - { merge: true } sẽ tạo document nếu chưa có, hoặc cập nhật nếu đã có.
-            // - increment(1) sẽ tăng giá trị `correctCount` lên 1 một cách an toàn trên server.
             const gameModeId = "fill-word-1";
             batch.set(completedWordRef, {
                 lastCompletedAt: new Date(),
@@ -216,9 +222,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
                         correctCount: increment(1)
                     }
                 }
-            }, { merge: true }); // Quan trọng: merge để không ghi đè các game mode khác
-
-            // Thao tác 2: Cập nhật số coin của người dùng
+            }, { merge: true });
             batch.update(userDocRef, { 'coins': updatedCoins });
             
             await batch.commit();
@@ -265,9 +269,11 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
 
-        <div className="flex items-center gap-3">
+        {/* <<< THAY ĐỔI 4: THÊM `MasteryDisplay` VÀO HEADER >>> */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
+          <MasteryDisplay masteryCount={masteryCount} />
         </div>
       </header>
       
