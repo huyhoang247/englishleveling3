@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increm
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
-import detailedMeaningsText from './vocabulary-definitions.ts'; // Import the definitions
+import detailedMeaningsText from '../vocabulary-definitions.ts'; // Import the definitions
 
 // Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
