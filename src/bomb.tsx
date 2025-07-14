@@ -167,40 +167,43 @@ export default function App() {
               {board.flat().map((cell) => <Cell key={`${cell.y}-${cell.x}`} cellData={cell} />)}
             </div>
           </div>
-          
-          {/* --- THAY ĐỔI: Xóa toàn bộ lớp phủ Game Over --- */}
-
-          {/* --- THAY ĐỔI: Pop-up xác nhận lên tầng được thiết kế lại --- */}
-          {exitConfirmationPos && (
-             <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 text-center">
-                    <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
-                        <StairsIcon className="h-9 w-9 text-white" />
-                    </div>
-
-                    <h3 className="text-2xl font-bold text-white">Tầng Hoàn Tất!</h3>
-                    <p className="mt-2 text-slate-400">Bạn muốn lên tầng {currentFloor + 1}?</p>
-
-                    <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
-                        <button 
-                            onClick={goToNextFloor} 
-                            className="w-full inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 transform hover:scale-[1.02]"
-                        >
-                            Lên tầng
-                        </button>
-                        <button 
-                            onClick={() => setExitConfirmationPos(null)} 
-                            className="w-full inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 transform hover:scale-[1.02]"
-                        >
-                            Ở lại
-                        </button>
-                    </div>
-                </div>
-             </div>
-          )}
+          {/* --- THAY ĐỔI: Xóa popup ra khỏi đây --- */}
         </div>
         <footer className="mt-8 text-center text-slate-500 text-sm">Tạo bởi Gemini với React & Tailwind CSS.</footer>
       </div>
+
+      {/* --- THAY ĐỔI: Di chuyển popup ra ngoài để làm overlay toàn màn hình --- */}
+      {exitConfirmationPos && (
+        // --- THAY ĐỔI: Sử dụng 'fixed' để phủ toàn bộ màn hình ---
+         <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
+                    <StairsIcon className="h-9 w-9 text-white" />
+                </div>
+
+                <h3 className="text-2xl font-bold text-white">Tầng Hoàn Tất!</h3>
+                <p className="mt-2 text-slate-400">Bạn muốn lên tầng {currentFloor + 1}?</p>
+
+                {/* --- THAY ĐỔI: Bố cục nút nhỏ gọn trên một hàng --- */}
+                <div className="mt-8 grid grid-cols-2 gap-4">
+                    <button 
+                        onClick={() => setExitConfirmationPos(null)} 
+                        // --- THAY ĐỔI: Giảm padding và bỏ w-full để nút nhỏ gọn hơn ---
+                        className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200"
+                    >
+                        Ở lại
+                    </button>
+                    <button 
+                        onClick={goToNextFloor} 
+                        // --- THAY ĐỔI: Giảm padding và bỏ w-full để nút nhỏ gọn hơn ---
+                        className="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200"
+                    >
+                        Lên tầng
+                    </button>
+                </div>
+            </div>
+         </div>
+      )}
     </main>
   );
 }
