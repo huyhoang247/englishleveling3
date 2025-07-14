@@ -427,27 +427,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   useEffect(() => {
     if (displayedCoins === coins) return;
-    if (Math.abs(coins - displayedCoins) > 10) {
-        setDisplayedCoins(coins);
-        return;
-    }
-    const coinElement = document.querySelector('.coin-counter');
-    if (coinElement) {
-      coinElement.classList.add('number-changing');
-      const animationEndHandler = () => {
-        coinElement.classList.remove('number-changing');
-        coinElement.removeEventListener('animationend', animationEndHandler);
-      };
-      coinElement.addEventListener('animationend', animationEndHandler);
-      return () => {
-        if (coinElement) {
-            coinElement.removeEventListener('animationend', animationEndHandler);
-             coinElement.classList.remove('number-changing');
-        }
-      };
-    }
-     return () => {};
-  }, [displayedCoins, coins]);
+
+    // Khi state `coins` thay đổi, cập nhật ngay `displayedCoins` để giao diện đồng bộ
+    const timeoutId = setTimeout(() => {
+      setDisplayedCoins(coins);
+    }, 100); // Một khoảng trễ nhỏ để tránh xung đột
+
+    return () => clearTimeout(timeoutId);
+    
+  }, [coins]);
 
   const renderCharacter = () => {
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
@@ -473,6 +461,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
 
     if (reward.gold > 0) {
+        // Chỉ cần gọi hàm cập nhật Firestore. Hàm này sẽ tự động cập nhật state `coins`.
         updateCoinsInFirestore(auth.currentUser.uid, reward.gold);
     }
 
