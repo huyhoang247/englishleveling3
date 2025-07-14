@@ -883,6 +883,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClaimReward={handleRewardClaim}
                         onDataUpdate={handleVocabularyUpdate}
                         masteryCardsCount={masteryCards}
+                        displayedCoins={displayedCoins}
                     />
                 )}
             </ErrorBoundary>
