@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-// --- Các component Icon SVG & IMG ---
+// --- Các component Icon SVG & IMG (Không thay đổi) ---
 const BombIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="13" r="9" /><path d="m19.5 9.5 1.8-1.8a2.4 2.4 0 0 0 0-3.4l-1.6-1.6a2.4 2.4 0 0 0-3.4 0l-1.8 1.8" /><path d="m22 2-1.5 1.5" /><path d="M13 13h-2" /><path d="M13 13v-2" /><path d="m13 13 2.1-2.1" /></svg> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const HorizontalBombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Horizontal Bomb" className={className} /> );
-// --- THAY ĐỔI: Thêm icon cho bom dấu cộng ---
-const PlusBombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_0000000028806230a8033487a73aca79.png" alt="Plus Bomb" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
@@ -17,10 +15,11 @@ const XIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width
 
 // --- Cấu hình game ---
 const BOARD_SIZE = 6;
-// --- THAY ĐỔI: Sử dụng tổng số bom và loại bỏ số lượng riêng lẻ ---
-const NUM_BOMBS = 4; 
+// --- THAY ĐỔI: Quay lại cấu hình bom riêng biệt ---
+const NUM_HORIZONTAL_BOMBS = 2;
+const NUM_VERTICAL_BOMBS = 2;
 const NUM_COINS = 4;
-const TOTAL_BOMBS = NUM_BOMBS;
+const TOTAL_BOMBS = NUM_HORIZONTAL_BOMBS + NUM_VERTICAL_BOMBS;
 
 export default function App() {
   const [currentFloor, setCurrentFloor] = useState(1);
@@ -29,49 +28,33 @@ export default function App() {
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
 
-  // --- THAY ĐỔI: Logic tạo bàn được cập nhật để đặt bom ngẫu nhiên ---
+  // --- THAY ĐỔI: Khôi phục logic tạo bàn ban đầu ---
   function createBoard() {
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineHorizontal: false, isMineVertical: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
     
-    // Hàm phụ để tìm ô trống và đặt item
-    const placeItem = (callback) => { 
+    const placeItem = (itemType) => { 
         let placed = false; 
         while(!placed) { 
             const x = Math.floor(Math.random() * BOARD_SIZE); 
             const y = Math.floor(Math.random() * BOARD_SIZE); 
             const cell = newBoard[y][x]; 
-            // Kiểm tra xem ô có trống không
             if (!cell.isMineHorizontal && !cell.isMineVertical && !cell.isCoin && !cell.isExit) { 
-                callback(cell); // Gọi hàm callback để thực hiện việc đặt
+                cell[itemType] = true; 
                 placed = true; 
             } 
         } 
     };
     
-    // Đặt bom với loại ngẫu nhiên
-    for (let i = 0; i < NUM_BOMBS; i++) {
-        placeItem((cell) => {
-            const bombType = Math.floor(Math.random() * 3); // 0: Ngang, 1: Dọc, 2: Dấu cộng
-            if (bombType === 0) {
-                cell.isMineHorizontal = true;
-            } else if (bombType === 1) {
-                cell.isMineVertical = true;
-            } else { // bombType === 2
-                cell.isMineHorizontal = true;
-                cell.isMineVertical = true;
-            }
-        });
-    }
-
-    // Đặt coin và lối ra
-    for (let i = 0; i < NUM_COINS; i++) placeItem((cell) => cell.isCoin = true);
-    placeItem((cell) => cell.isExit = true);
+    // Đặt 2 bom ngang và 2 bom dọc
+    for (let i = 0; i < NUM_HORIZONTAL_BOMBS; i++) placeItem('isMineHorizontal');
+    for (let i = 0; i < NUM_VERTICAL_BOMBS; i++) placeItem('isMineVertical');
+    for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
+    placeItem('isExit');
     
     return newBoard;
   }
   
-  // Các hàm logic game khác (explode, handleCellClick, v.v.) không cần thay đổi
-  // vì logic hiện tại đã xử lý tốt các trường hợp isMineHorizontal và isMineVertical
+  // Các hàm logic game khác không đổi
   function explode(board, type, index) {
     let newCoins = 0;
     for (let i = 0; i < BOARD_SIZE; i++) {
@@ -142,7 +125,7 @@ export default function App() {
     setExitConfirmationPos(null);
   }
 
-  // --- THAY ĐỔI: Component Cell cập nhật logic hiển thị bom ---
+  // Component Cell (không đổi)
   const Cell = ({ cellData }) => {
     const { isRevealed, isMineHorizontal, isMineVertical, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { 
@@ -166,17 +149,15 @@ export default function App() {
         specificCellStyle = cellStyle.revealed;
         let iconContent = null; 
 
-        // Ưu tiên kiểm tra trường hợp đặc biệt nhất trước (bom dấu cộng)
-        if (isMineHorizontal && isMineVertical) {
-            iconContent = <PlusBombIcon className={imageIconClass} />;
-        } else if (isMineVertical) { // Sau đó là bom chỉ có chiều dọc
+        // Nếu một ô vô tình được đặt cả hai loại bom, ưu tiên hiển thị bom dọc
+        if (isMineVertical) {
             iconContent = (
               <div className={`${iconClass} relative`}>
                 <BombIcon className={`${iconClass} text-white`} />
                 <ArrowVerticalIcon className="absolute inset-0 m-auto w-2/3 h-2/3 text-red-500 opacity-80" />
               </div>
             );
-        } else if (isMineHorizontal) { // Rồi đến bom chỉ có chiều ngang
+        } else if (isMineHorizontal) {
             iconContent = <HorizontalBombIcon className={imageIconClass} />;
         } else if (isExit) {
             iconContent = <StairsIcon className={imageIconClass} />;
@@ -208,7 +189,7 @@ export default function App() {
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
-        {/* Header và Bảng điều khiển */}
+        {/* Header và Bảng điều khiển (không đổi) */}
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
           <p className="text-slate-400 mt-2">Dọn bàn và lên tầng cao nhất!</p>
@@ -220,7 +201,7 @@ export default function App() {
             <div className="flex justify-center"><button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors"><RefreshCwIcon className="w-6 h-6" /></button></div>
         </div>
 
-        {/* Bàn chơi */}
+        {/* Bàn chơi (không đổi) */}
         <div className="relative">
           <div className="w-full aspect-square">
             <div className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px' }}>
@@ -231,7 +212,7 @@ export default function App() {
         <footer className="mt-8 text-center text-slate-500 text-sm">Tạo bởi Gemini với React & Tailwind CSS.</footer>
       </div>
 
-      {/* Pop-up xác nhận lên tầng */}
+      {/* Pop-up xác nhận lên tầng (không đổi) */}
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
