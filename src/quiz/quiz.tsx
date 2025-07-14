@@ -116,15 +116,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const TOTAL_TIME = 30;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [shuffledOptions, setShuffledOptions] = useState([]);
-  
-  // <<< THAY ĐỔI 1: THÊM STATE ĐỂ QUẢN LÝ VIỆC HIỂN THỊ NÚT "TIẾP THEO" >>>
   const [showNextButton, setShowNextButton] = useState(false);
-  
   const [loading, setLoading] = useState(true);
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
   const [completedQuizWords, setCompletedQuizWords] = useState<Set<string>>(new Set());
   const [filteredQuizData, setFilteredQuizData] = useState([]);
   const [playableQuestions, setPlayableQuestions] = useState([]);
+  
+  // State cho tính năng gợi ý
+  const HINT_COST = 200;
+  const [hintUsed, setHintUsed] = useState(false);
+  const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -218,7 +220,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setAnswered(true);
     setSelectedOption(null);
     setStreak(0);
-    // <<< THAY ĐỔI 2: HIỂN THỊ NÚT NGAY KHI HẾT GIỜ >>>
     setShowNextButton(true);
   };
 
@@ -255,16 +256,15 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }, 30);
   }, []);
   
-  // <<< THAY ĐỔI 3: CẬP NHẬT LOGIC `handleAnswer` ĐỂ SỬ DỤNG TIMER >>>
   const handleAnswer = async (selectedAnswer) => {
     if (answered || playableQuestions.length === 0) return;
     setSelectedOption(selectedAnswer);
-    setAnswered(true); // Khóa các lựa chọn ngay lập tức
+    setAnswered(true);
     const currentQuizItem = playableQuestions[currentQuestion];
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
 
     if (isCorrect) {
-      setShowConfetti(true); // Bắt đầu hiệu ứng
+      setShowConfetti(true);
       
       setScore(score + 1);
       const newStreak = streak + 1;
@@ -303,7 +303,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         }
       }
       
-      // Bắt đầu timer. Sau 4 giây, ẩn confetti và hiện nút "Tiếp theo"
       setTimeout(() => {
         setShowConfetti(false);
         setShowNextButton(true);
@@ -311,19 +310,46 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
     } else {
       setStreak(0);
-      // Nếu sai, hiện nút "Tiếp theo" ngay lập tức
       setShowNextButton(true);
     }
   };
 
-  // <<< THAY ĐỔI 4: RESET TRẠNG THÁI NÚT KHI QUA CÂU MỚI HOẶC CHƠI LẠI >>>
+  const handleHintClick = async () => {
+    if (hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0) {
+      return;
+    }
+    setHintUsed(true);
+    const newCoins = coins - HINT_COST;
+    startCoinCountAnimation(coins, newCoins);
+    setCoins(newCoins);
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        await updateDoc(userDocRef, { coins: increment(-HINT_COST) });
+      } catch (error) {
+        console.error("Lỗi khi cập nhật vàng cho gợi ý:", error);
+        setCoins(coins);
+        startCoinCountAnimation(newCoins, coins);
+        setHintUsed(false);
+        return;
+      }
+    }
+    const currentQuizItem = playableQuestions[currentQuestion];
+    const correctAnswer = currentQuizItem.correctAnswer;
+    const incorrectOptions = shuffledOptions.filter(opt => opt !== correctAnswer);
+    const optionsToHide = shuffleArray(incorrectOptions).slice(0, 2);
+    setHiddenOptions(optionsToHide);
+  };
+
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
-      setShowNextButton(false); // Ẩn nút cho câu hỏi mới
+      setShowNextButton(false);
+      setHintUsed(false);
+      setHiddenOptions([]);
     } else {
       setShowScore(true);
     }
@@ -343,7 +369,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setAnswered(false);
     setStreak(0);
     setTimeLeft(TOTAL_TIME);
-    setShowNextButton(false); // Ẩn nút khi chơi lại
+    setShowNextButton(false);
+    setHintUsed(false);
+    setHiddenOptions([]);
   };
 
   const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
@@ -437,7 +465,19 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                         </div>
                       </div>
                     </div>
-                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+                    <div className="flex items-center gap-2">
+                       <button
+                          onClick={handleHintClick}
+                          disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0}
+                          className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30"
+                          aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}
+                        >
+                          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000944c623081c4672d72472f68.png" alt="Hint" className="w-4 h-4" />
+                          <span className="text-yellow-300">{HINT_COST}</span>
+                          <div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div>
+                        </button>
+                      <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+                    </div>
                   </div>
 
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6">
@@ -461,6 +501,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                     {shuffledOptions.map((option, index) => {
                       const isCorrect = option === playableQuestions[currentQuestion]?.correctAnswer;
                       const isSelected = option === selectedOption;
+                      const isHiddenByHint = hiddenOptions.includes(option);
 
                       let bgColor = "bg-white";
                       let borderColor = "border-gray-200";
@@ -477,9 +518,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       return (
                         <button
                           key={option}
-                          onClick={() => !answered && handleAnswer(option)}
-                          disabled={answered || playableQuestions.length === 0}
-                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered && playableQuestions.length > 0 ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                          onClick={() => !answered && !isHiddenByHint && handleAnswer(option)}
+                          disabled={answered || playableQuestions.length === 0 || isHiddenByHint}
+                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 hover:shadow-sm ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-300 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`}
                         >
                           <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
                             {optionLabels[index]}
@@ -497,15 +538,14 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           }
         </div>
       </main>
-
-      {/* <<< THAY ĐỔI 5: SỬ DỤNG `showNextButton` ĐỂ ĐIỀU KHIỂN NÚT >>> */}
+      
       {showNextButton && (playableQuestions.length > 0) && (
         <div className="fixed bottom-6 right-6 z-50">
           <button
             onClick={handleNextQuestion}
             className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
           >
-            {currentQuestion < playableQuestions.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
+            {currentQuestion < playableQuestions.length - 1 ? 'Next' : 'Xem kết quả'}
           </button>
         </div>
       )}
