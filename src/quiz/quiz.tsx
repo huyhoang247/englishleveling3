@@ -89,7 +89,7 @@ const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 
 // Function to shuffle an array
-const shuffleArray = (array) => {
+const shuffleArray = (array: any[]) => {
   const shuffledArray = [...array];
   for (let i = shuffledArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -109,7 +109,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // --- STATE QUẢN LÝ PHIÊN CHƠI QUIZ ---
-  const [quizSessionQuestions, setQuizSessionQuestions] = useState([]);
+  const [quizSessionQuestions, setQuizSessionQuestions] = useState<any[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -118,7 +118,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [streak, setStreak] = useState(0);
   const TOTAL_TIME = 30;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
-  const [shuffledOptions, setShuffledOptions] = useState([]);
+  const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
 
   // --- STATE QUẢN LÝ HIỆU ỨNG & GIAO DIỆN ---
   const [displayedCoins, setDisplayedCoins] = useState(0);
@@ -177,37 +177,33 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
   // Logic bắt đầu và chuẩn bị phiên chơi mới
   const startNewQuizSession = useCallback(() => {
-    // Lọc các câu hỏi phù hợp với từ vựng
     const vocabFiltered = userVocabulary.length > 0
       ? quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)))
       : quizData;
     
     setMatchingQuestionsCount(vocabFiltered.length);
 
-    // Lọc tiếp để loại bỏ những câu đã hoàn thành
     const remainingQuestions = vocabFiltered.filter(q => !completedQuestions.has(q.question));
     
     if (vocabFiltered.length > 0 && remainingQuestions.length === 0) {
       setAllQuestionsDone(true);
-      setQuizSessionQuestions([]); // Đảm bảo không có câu hỏi nào trong phiên
+      setQuizSessionQuestions([]);
       return;
     }
     setAllQuestionsDone(false);
 
-    // Chốt danh sách câu hỏi cho phiên này
     setQuizSessionQuestions(shuffleArray(remainingQuestions));
     
-    // Reset lại state của phiên chơi
     setCurrentQuestion(0);
     setScore(0);
     setShowScore(false);
     setSelectedOption(null);
     setAnswered(false);
-    setStreak(0); // Reset streak cho mỗi phiên mới
+    setStreak(0);
     setTimeLeft(TOTAL_TIME);
   }, [userVocabulary, completedQuestions]);
 
-  // Tự động bắt đầu phiên mới khi dữ liệu đã sẵn sàng hoặc khi người dùng quay lại
+  // Tự động bắt đầu phiên mới khi dữ liệu đã sẵn sàng
   useEffect(() => {
     if (!isLoading && user) {
       startNewQuizSession();
@@ -216,7 +212,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
 
   useEffect(() => {
-    // Sử dụng `quizSessionQuestions`
     if (quizSessionQuestions[currentQuestion]?.options) {
       setShuffledOptions(shuffleArray(quizSessionQuestions[currentQuestion].options));
     } else {
@@ -264,7 +259,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }, 30);
   }, []);
   
-  const handleAnswer = async (selectedAnswer) => {
+  const handleAnswer = async (selectedAnswer: string) => {
     if (answered || quizSessionQuestions.length === 0) return;
     
     setSelectedOption(selectedAnswer);
@@ -291,11 +286,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         setTimeout(() => setStreakAnimation(false), 1500);
       }
       
-      // Cập nhật state completedQuestions ở client ngay lập tức
-      // Việc này không ảnh hưởng đến phiên chơi hiện tại, nhưng sẽ có hiệu lực ở phiên tiếp theo
       setCompletedQuestions(prev => new Set(prev).add(currentQuizItem.question));
 
-      // Ghi vào Firestore trong nền
       if (user) {
         try {
           const batch = writeBatch(db);
@@ -303,7 +295,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           
           const userDocRef = doc(db, 'users', user.uid);
           if (coinsToAdd > 0) {
-            batch.update(userDocRef, { coins: coins + coinsToAdd });
+            batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
 
           const matchedWord = userVocabulary.find(vocabWord =>
@@ -384,7 +376,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       
       <main className="flex-grow overflow-y-auto flex justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
-          { allQuestionsDone ? (
+          {allQuestionsDone ? (
             <div className="p-10 text-center flex flex-col items-center justify-center h-full">
               <h2 className="text-2xl font-bold text-indigo-800 mb-4">Xin chúc mừng!</h2>
               <p className="text-gray-600">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. Hãy lật thêm thẻ mới để mở khóa thêm nhiều câu hỏi!</p>
@@ -465,7 +457,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   Làm lại quiz
                 </button>
               </div>
-            ) : (
+          ) : (
               <>
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
                   <div className="flex justify-between items-center mb-4">
@@ -557,7 +549,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   </div>
                 </div>
               </>
-            )
           )}
         </div>
       </main>
@@ -572,7 +563,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           </button>
         </div>
       )}
-
     </div>
   );
 }
