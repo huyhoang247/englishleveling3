@@ -168,10 +168,10 @@ const ScopedStyles = () => (
             z-index: 1000;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Canh nội dung lên trên */
+            align-items: center; /* Đã thay đổi: Canh nội dung vào giữa */
             animation: vocabulary-chest-fade-in 0.5s ease;
             overflow: hidden;
-            padding: 70px 15px 80px; /* Thêm padding trên để chừa chỗ cho header, dưới cho footer */
+            padding: 70px 15px 80px; /* Giữ padding để chừa chỗ cho header & footer */
             box-sizing: border-box;
         }
         .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
@@ -256,7 +256,7 @@ const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onC
     return (
         <>
             <div style={{ textAlign: 'center' }}>
-                <div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw', marginBottom: '20px' }}>
+                <div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}>
                     <Card cardData={card} isFlipping={isFlipping} flipDelay={0} />
                 </div>
             </div>
