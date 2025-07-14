@@ -1,4 +1,4 @@
-// lat-the.tsx (Phiên bản cuối cùng, đã được đóng gói và độc lập hoàn toàn)
+// lat-the.tsx (Phiên bản đã cập nhật)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -9,7 +9,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. COMPONENT CSS ĐÃ ĐƯỢC ĐÓNG GÓI ================================
+// === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
@@ -41,40 +41,54 @@ const ScopedStyles = () => (
         
         /* Tiền tố hóa TẤT CẢ các style khác với .vocabulary-chest-root */
         
-        /* === HEADER === */
+        /* === HEADER (ĐÃ CẬP NHẬT) === */
         .vocabulary-chest-root .main-header {
             position: sticky;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 12px 25px;
+            padding: 8px 16px; /* Giảm padding để phù hợp với nút mới */
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start; /* THAY ĐỔI: Canh lề nút sang trái */
             align-items: center;
             background-color: rgba(16, 22, 46, 0.7);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10; /* Chỉ cần cao hơn content bên trong nó */
+            z-index: 10; 
             box-sizing: border-box;
             flex-shrink: 0; 
         }
-
-        .vocabulary-chest-root .header-title {
-            font-size: 1.25rem; font-weight: 600; color: #e0e0e0;
-            margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        
+        /* CSS CHO NÚT HOME MỚI (Dựa trên thanh-tuu.tsx) */
+        .vocabulary-chest-root .vocab-screen-home-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background-color: rgba(30, 41, 59, 0.8); /* slate-800/80 */
+            border: 1px solid rgb(51, 65, 85); /* slate-700 */
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+            color: #cbd5e1; /* slate-300 */
         }
-
-        .vocabulary-chest-root .vocab-screen-close-btn {
-            width: 44px; height: 44px; background: transparent; border: none;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-            transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.9;
-            margin: -10px; padding: 10px;
+        .vocabulary-chest-root .vocab-screen-home-btn:hover {
+            background-color: rgb(51, 65, 85); /* slate-700 */
         }
-        .vocabulary-chest-root .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
-        .vocabulary-chest-root .vocab-screen-close-btn img {
-            width: 24px; height: 24px;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+        .vocabulary-chest-root .vocab-screen-home-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        .vocabulary-chest-root .vocab-screen-home-btn span {
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 600; /* font-semibold */
+        }
+        /* Ẩn chữ trên màn hình nhỏ, tương tự sm:inline */
+        @media (max-width: 640px) {
+            .vocabulary-chest-root .vocab-screen-home-btn span {
+                display: none;
+            }
         }
         
         /* === CONTAINER RƯƠNG === */
@@ -170,6 +184,13 @@ const ScopedStyles = () => (
 // ========================================================================
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
+
+// THÊM ICON HOME TỪ thanh-tuu.tsx
+const HomeIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
+    </svg>
+);
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
@@ -532,8 +553,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    const totalAvailable = availableIndices.basic.length + availableIndices.elementary.length + availableIndices.intermediate.length + availableIndices.advanced.length;
-
     return (
         <div className="vocabulary-chest-root">
             <ScopedStyles />
@@ -545,9 +564,14 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             {!showSingleOverlay && !showFourOverlay && !isLoading && (
                 <>
                     <header className="main-header">
-                        <h1 className="header-title">Chọn Rương ({`Còn ${totalAvailable.toLocaleString()} ảnh`})</h1>
-                        <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
+                        {/* NÚT HOME MỚI THAY THẾ CHO TIÊU ĐỀ VÀ NÚT CLOSE */}
+                        <button 
+                            onClick={onClose} 
+                            className="vocab-screen-home-btn" 
+                            title="Quay lại Trang Chính"
+                        >
+                            <HomeIcon />
+                            <span>Trang Chính</span>
                         </button>
                     </header>
 
