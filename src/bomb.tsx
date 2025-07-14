@@ -28,7 +28,7 @@ export default function App() {
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
 
-  // Các hàm logic game (createBoard, explode, v.v.) không đổi
+  // Các hàm logic game (createBoard, explode, handleCellClick, v.v.) không đổi
   function createBoard() {
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineHorizontal: false, isMineVertical: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
     const placeItem = (itemType) => { let placed = false; while(!placed) { const x = Math.floor(Math.random() * BOARD_SIZE); const y = Math.floor(Math.random() * BOARD_SIZE); const cell = newBoard[y][x]; if (!cell.isMineHorizontal && !cell.isMineVertical && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; } } };
@@ -48,41 +48,30 @@ export default function App() {
     }
     setCoinsFound(prev => prev + newCoins);
   }
-  
-  // --- THAY ĐỔI: Logic xử lý click bom được thiết kế lại ---
   function handleCellClick(x, y) {
     const cell = board[y][x];
     if (cell.isFlagged) return;
-
     if (cell.isRevealed && cell.isExit) {
         setExitConfirmationPos({ x, y });
         return;
     }
-
     if (!cell.isRevealed) {
         const newBoard = JSON.parse(JSON.stringify(board));
         const clickedCell = newBoard[y][x];
-
-        // Nếu ô được click là bom
         if (clickedCell.isMineHorizontal || clickedCell.isMineVertical) {
             const explosionsToRun = new Set();
-            
-            // Chỉ thêm lệnh nổ dựa trên thuộc tính của chính quả bom được click
             if (clickedCell.isMineHorizontal) {
                 explosionsToRun.add(`row-${y}`);
             }
             if (clickedCell.isMineVertical) {
                 explosionsToRun.add(`col-${x}`);
             }
-            
-            // Thực hiện các vụ nổ đã được lên lịch (tối đa 2: một hàng và một cột)
             explosionsToRun.forEach(explosionKey => {
                 const [type, indexStr] = explosionKey.split('-');
                 const index = parseInt(indexStr, 10);
                 explode(newBoard, type, index);
             });
-            
-        } else { // Nếu ô được click không phải là bom
+        } else {
             clickedCell.isRevealed = true;
             if (clickedCell.isCoin) {
                 setCoinsFound(prev => prev + 1);
@@ -91,8 +80,6 @@ export default function App() {
         setBoard(newBoard);
     }
   }
-
-  // handleRightClick, goToNextFloor, resetGame không đổi
   function handleRightClick(e, x, y) {
     e.preventDefault();
     if (board[y][x].isRevealed) return;
@@ -121,7 +108,7 @@ export default function App() {
     setExitConfirmationPos(null);
   }
 
-  // Component Cell (không đổi)
+  // --- THAY ĐỔI: Component Cell được thiết kế lại để chống "bể bố cục" ---
   const Cell = ({ cellData }) => {
     const { isRevealed, isMineHorizontal, isMineVertical, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { base: 'w-full h-full rounded-lg transition-all duration-200 relative', hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md', revealed: 'bg-slate-800/80 cursor-default border border-slate-700', exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' };
@@ -137,24 +124,34 @@ export default function App() {
         content = <div className={wrapperClass}><FlagIcon className={`${iconClass} text-red-500`} /></div>;
     } 
     else if (isRevealed) {
-      if (isMineVertical) {
+        specificCellStyle = cellStyle.revealed; // Mặc định là style ô đã mở
+        let iconContent = null; // Nội dung thực tế của icon, có thể là null
+
+        if (isMineVertical) {
+            iconContent = (
+              <div className={`${iconClass} relative`}>
+                <BombIcon className={`${iconClass} text-white`} />
+                {isMineHorizontal && <ArrowHorizontalIcon className="absolute inset-0 m-auto w-2/3 h-2/3 text-red-500 opacity-80" />}
+                <ArrowVerticalIcon className="absolute inset-0 m-auto w-2/3 h-2/3 text-red-500 opacity-80" />
+              </div>
+            );
+        } else if (isMineHorizontal) {
+            iconContent = <HorizontalBombIcon className={imageIconClass} />;
+        } else if (isExit) {
+            iconContent = <StairsIcon className={`${iconClass} text-green-400`} />;
+            specificCellStyle = cellStyle.exitRevealed; // Ghi đè style nếu là ô exit
+        } else if (isCoin) { 
+            iconContent = <CircleDollarSignIcon className={imageIconClass} />;
+        }
+        
+        // **QUAN TRỌNG**: Luôn render div wrapper.
+        // Nếu không có icon (ô trống), wrapper sẽ rỗng, nhưng vẫn chiếm không gian.
+        // Điều này đảm bảo cấu trúc HTML là như nhau cho mọi ô đã mở.
         content = (
-          <div className={`${wrapperClass} relative`}>
-            <BombIcon className={`${iconClass} text-white`} />
-            {isMineHorizontal && <ArrowHorizontalIcon className="absolute inset-0 m-auto w-2/3 h-2/3 text-red-500 opacity-80" />}
-            <ArrowVerticalIcon className="absolute inset-0 m-auto w-2/3 h-2/3 text-red-500 opacity-80" />
-          </div>
+            <div className={wrapperClass}>
+                {iconContent}
+            </div>
         );
-      } else if (isMineHorizontal) {
-        content = <div className={wrapperClass}><HorizontalBombIcon className={imageIconClass} /></div>;
-      } 
-      else if (isExit) {
-        content = <div className={wrapperClass}><StairsIcon className={`${iconClass} text-green-400`} /></div>;
-        specificCellStyle = cellStyle.exitRevealed; 
-      } 
-      else if (isCoin) { 
-        content = <div className={wrapperClass}><CircleDollarSignIcon className={imageIconClass} /></div>;
-      }
     }
     
     return ( 
