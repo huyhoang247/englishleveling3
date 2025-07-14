@@ -654,8 +654,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       </main>
       
       {showNextButton && (playableQuestions.length > 0) && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-4">
-          {/* Nút Chi tiết - Thiết kế lại */}
+        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3">
+          {/* Nút Chi tiết - Hành động phụ (Giữ nguyên thiết kế tròn, tinh tế) */}
           <div className="group relative">
              <button
               onClick={handleDetailClick}
@@ -671,20 +671,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
             </div>
           </div>
           
-          {/* Nút Next / Xem kết quả - Thiết kế lại */}
-           <div className="group relative">
-            <button
-              onClick={handleNextQuestion}
-              className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full text-white shadow-lg transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl active:scale-100"
-              aria-label={currentQuestion < playableQuestions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}
-            >
-              <ArrowRightIcon className="w-7 h-7" />
-            </button>
-             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-              {currentQuestion < playableQuestions.length - 1 ? 'Tiếp theo' : 'Xem kết quả'}
-              <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xmlSpace="preserve"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
-            </div>
-          </div>
+          {/* Nút Next / Xem kết quả - Hành động chính (Thiết kế kiểu viên thuốc) */}
+          <button
+            onClick={handleNextQuestion}
+            className="flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl active:scale-100"
+            aria-label={currentQuestion < playableQuestions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}
+          >
+            <span>
+              {currentQuestion < playableQuestions.length - 1 ? 'Next' : 'Xem kết quả'}
+            </span>
+            <ArrowRightIcon className="w-5 h-5" />
+          </button>
         </div>
       )}
 
