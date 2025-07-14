@@ -276,11 +276,11 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
       
       {/* ===== HEADER MỚI ===== */}
-      <header className="w-full max-w-5xl flex items-center justify-between p-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
+      <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
           {/* Nút Home bên trái */}
           <button
             onClick={onClose}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
             aria-label="Quay lại Trang Chính"
             title="Quay lại Trang Chính"
           >
