@@ -1,5 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Bomb, CircleDollarSign, Flag, RefreshCw, Award, XCircle } from 'lucide-react';
+
+// --- Các component Icon SVG thay thế cho lucide-react ---
+// Chúng ta định nghĩa các icon SVG trực tiếp trong code
+// để không cần dùng thư viện bên ngoài.
+
+const BombIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="11" cy="13" r="9" /><path d="m19.5 9.5 1.8-1.8a2.4 2.4 0 0 0 0-3.4l-1.6-1.6a2.4 2.4 0 0 0-3.4 0l-1.8 1.8" /><path d="m22 2-1.5 1.5" /><path d="M13 13h-2" /><path d="M13 13v-2" /><path d="m13 13 2.1-2.1" />
+  </svg>
+);
+
+const CircleDollarSignIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 18V6" />
+  </svg>
+);
+
+const FlagIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" />
+  </svg>
+);
+
+const RefreshCwIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" />
+  </svg>
+);
+
+const AwardIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+  </svg>
+);
+
+const XCircleIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" />
+  </svg>
+);
+
 
 // --- Cấu hình game (phiên bản 6x6) ---
 const BOARD_SIZE = 6;
@@ -162,8 +202,10 @@ export default function App() {
   const Cell = ({ cellData }) => {
     const { x, y, isRevealed, isMine, isCoin, isFlagged, neighboringMines } = cellData;
 
+    // SỬA LỖI: Tách style của khung và style của nội dung
     const cellStyle = {
-      base: 'w-full h-full flex items-center justify-center font-bold text-2xl rounded-lg transition-all duration-200',
+      // base chỉ còn là khung, không chứa flexbox nữa
+      base: 'w-full h-full rounded-lg transition-all duration-200',
       hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md',
       revealed: 'bg-slate-800/80 cursor-default border border-slate-700',
     };
@@ -176,24 +218,28 @@ export default function App() {
 
     let content = null;
     if (isFlagged) {
-      content = <Flag className="w-2/3 h-2/3 text-red-500" />;
+      content = <FlagIcon className="w-2/3 h-2/3 text-red-500" />;
     } else if (isRevealed) {
       if (isMine) {
-        content = <Bomb className="w-3/4 h-3/4 text-white animate-pulse" />;
+        content = <BombIcon className="w-3/4 h-3/4 text-white animate-pulse" />;
       } else if (isCoin) {
-        content = <CircleDollarSign className="w-3/4 h-3/4 text-yellow-400" />;
+        content = <CircleDollarSignIcon className="w-3/4 h-3/4 text-yellow-400" />;
       } else if (neighboringMines > 0) {
-        content = <span className={numberColors[neighboringMines]}>{neighboringMines}</span>;
+        content = <span className={`${numberColors[neighboringMines]} font-bold text-2xl`}>{neighboringMines}</span>;
       }
     }
 
     return (
       <div
-        className={`${cellStyle.base} ${isRevealed ? cellStyle.revealed : cellStyle.hidden}`}
+        className={`${cellStyle.base} ${isRevealed ? cellStyle.revealed : cellStyle.hidden} relative`}
         onClick={() => handleCellClick(x, y)}
         onContextMenu={(e) => handleRightClick(e, x, y)}
       >
-        {content}
+        {/* SỬA LỖI: Thêm một lớp tuyệt đối để chứa nội dung. */}
+        {/* Lớp này sẽ căn giữa nội dung mà không làm ảnh hưởng đến kích thước của ô cha. */}
+        <div className="absolute inset-0 flex items-center justify-center">
+            {content}
+        </div>
       </div>
     );
   };
@@ -212,15 +258,15 @@ export default function App() {
         {/* Bảng điều khiển */}
         <div className="bg-slate-800/50 p-4 rounded-xl mb-6 shadow-lg border border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-3 text-2xl">
-                <Bomb className="w-7 h-7 text-slate-400" />
+                <BombIcon className="w-7 h-7 text-slate-400" />
                 <span className="font-mono w-8 text-left">{NUM_MINES - flagsPlaced}</span>
             </div>
              <div className="flex items-center gap-3 text-2xl">
-                <CircleDollarSign className="w-7 h-7 text-yellow-400" />
+                <CircleDollarSignIcon className="w-7 h-7 text-yellow-400" />
                 <span className="font-mono w-8 text-left">{coinsFound}</span>
             </div>
             <button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors">
-                <RefreshCw className="w-6 h-6" />
+                <RefreshCwIcon className="w-6 h-6" />
             </button>
         </div>
 
@@ -249,13 +295,13 @@ export default function App() {
               <div className="text-center bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700 animate-fade-in">
                 {gameWon ? (
                   <>
-                    <Award className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                    <AwardIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
                     <h2 className="text-3xl font-bold text-green-400 mb-2">BẠN ĐÃ THẮNG!</h2>
                     <p className="text-slate-300">Bạn đã tìm thấy tất cả các ô an toàn.</p>
                   </>
                 ) : (
                   <>
-                    <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <XCircleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h2 className="text-3xl font-bold text-red-500 mb-2">GAME OVER</h2>
                     <p className="text-slate-300">Rất tiếc, bạn đã nhấn phải mìn.</p>
                   </>
