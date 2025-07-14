@@ -402,6 +402,38 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType, price: number } | null>(null);
 
+    // NEW: Local state for animated coin display
+    const [localDisplayedCoins, setLocalDisplayedCoins] = useState(displayedCoins);
+
+    // NEW: Sync local state with prop
+    useEffect(() => {
+        setLocalDisplayedCoins(displayedCoins);
+    }, [displayedCoins]);
+
+    // NEW: Coin animation function (from quiz.tsx)
+    const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+        if (startValue === endValue) return;
+
+        const isCountingUp = endValue > startValue;
+        const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+        let current = startValue;
+
+        const interval = setInterval(() => {
+          if (isCountingUp) {
+            current += step;
+          } else {
+            current -= step;
+          }
+
+          if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+            setLocalDisplayedCoins(endValue);
+            clearInterval(interval);
+          } else {
+            setLocalDisplayedCoins(current);
+          }
+        }, 30);
+    }, []);
+
     useEffect(() => {
         const fetchOpenedItems = async () => {
             setIsLoading(true);
@@ -546,6 +578,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setIsProcessingClick(true);
         setLastOpenedChest({ count, type: chestType, price }); 
 
+        // UPDATED: Start animation and update parent state
+        const newCoinTotal = displayedCoins - price;
+        startCoinCountAnimation(displayedCoins, newCoinTotal);
         onUpdateCoins(-price);
 
         let tempPool = [...targetPool];
@@ -597,7 +632,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                  <header className="main-header">
                     <button 
                         onClick={onClose} 
-                        // <<< THAY ĐỔI: Thêm lớp 'is-hidden' một cách có điều kiện >>>
                         className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} 
                         title="Quay lại Trang Chính"
                     >
@@ -605,7 +639,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         <span>Trang Chính</span>
                     </button>
                     
-                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                    {/* UPDATED: Use local state for animated display */}
+                    <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
                 </header>
             )}
 
