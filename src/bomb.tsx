@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-// --- Các component Icon SVG (Không thay đổi) ---
+// --- Các component Icon SVG & IMG ---
 const BombIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="13" r="9" /><path d="m19.5 9.5 1.8-1.8a2.4 2.4 0 0 0 0-3.4l-1.6-1.6a2.4 2.4 0 0 0-3.4 0l-1.8 1.8" /><path d="m22 2-1.5 1.5" /><path d="M13 13h-2" /><path d="M13 13v-2" /><path d="m13 13 2.1-2.1" /></svg> );
-// --- THAY ĐỔI: Thay thế SVG bằng thẻ <img> cho icon Coin ---
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
+// --- THAY ĐỔI: Thêm component cho icon bom ngang mới ---
+const HorizontalBombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Horizontal Bomb" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 2H12l-2.5 2.5L5 9l-3 3v10h10v-5l4-4 4-4-2-2z"/><path d="m16 14-4 4v-5"/><path d="m6 14 4-4H5"/></svg> );
@@ -137,10 +138,26 @@ export default function App() {
     let specificCellStyle = '';
     if (isFlagged) { content = <FlagIcon className="w-2/3 h-2/3 text-red-500" />; } 
     else if (isRevealed) {
-      if (isMineHorizontal || isMineVertical) { content = (<div className="relative w-full h-full flex items-center justify-center"><BombIcon className="w-3/4 h-3/4 text-white" />{isMineHorizontal && <ArrowHorizontalIcon className="absolute w-1/2 h-1/2 text-red-500 opacity-80" />}{isMineVertical && <ArrowVerticalIcon className="absolute w-1/2 h-1/2 text-red-500 opacity-80" />}</div>); } 
-      else if (isExit) { content = <StairsIcon className="w-3/4 h-3/4 text-green-400" />; specificCellStyle = cellStyle.exitRevealed; } 
-      // --- THAY ĐỔI: Bỏ class màu chữ `text-yellow-400` không cần thiết ---
-      else if (isCoin) { content = <CircleDollarSignIcon className="w-3/4 h-3/4" />; }
+      // --- THAY ĐỔI: Cập nhật logic hiển thị bom ---
+      if (isMineVertical) { // Ưu tiên bom dọc và bom kết hợp (hiển thị kiểu cũ)
+        content = (
+          <div className="relative w-full h-full flex items-center justify-center">
+            <BombIcon className="w-3/4 h-3/4 text-white" />
+            {isMineHorizontal && <ArrowHorizontalIcon className="absolute w-1/2 h-1/2 text-red-500 opacity-80" />}
+            <ArrowVerticalIcon className="absolute w-1/2 h-1/2 text-red-500 opacity-80" />
+          </div>
+        );
+      } else if (isMineHorizontal) { // Bom chỉ ngang (hiển thị icon mới)
+        content = <HorizontalBombIcon className="w-3/4 h-3/4" />;
+      } 
+      else if (isExit) { 
+        content = <StairsIcon className="w-3/4 h-3/4 text-green-400" />; 
+        specificCellStyle = cellStyle.exitRevealed; 
+      } 
+      else if (isCoin) { 
+        // --- THAY ĐỔI: Giảm kích thước icon coin trong ô ---
+        content = <CircleDollarSignIcon className="w-2/3 h-2/3" />; 
+      }
     }
     return ( <div className={`${cellStyle.base} ${isRevealed ? (specificCellStyle || cellStyle.revealed) : cellStyle.hidden}`} onClick={() => handleCellClick(cellData.x, cellData.y)} onContextMenu={(e) => handleRightClick(e, cellData.x, cellData.y)}><div className="absolute inset-0 flex items-center justify-center">{content}</div></div> );
   };
@@ -156,8 +173,8 @@ export default function App() {
         {/* Bảng điều khiển */}
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-2">
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><BombIcon className="w-6 h-6 sm:w-7 sm:h-7 text-slate-400" /><span className="font-mono w-8 text-left">{TOTAL_BOMBS - flagsPlaced}</span></div>
-            {/* --- THAY ĐỔI: Bỏ class màu chữ `text-yellow-400` không cần thiết --- */}
-            <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><CircleDollarSignIcon className="w-6 h-6 sm:w-7 sm:h-7" /><span className="font-mono w-8 text-left">{coinsFound}</span></div>
+            {/* --- THAY ĐỔI: Giảm kích thước icon coin trên bảng điều khiển --- */}
+            <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm:h-6" /><span className="font-mono w-8 text-left">{coinsFound}</span></div>
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><TrophyIcon className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" /><span className="font-mono w-8 text-left">{currentFloor}</span></div>
             <div className="flex justify-center"><button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors"><RefreshCwIcon className="w-6 h-6" /></button></div>
         </div>
