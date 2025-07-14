@@ -90,6 +90,7 @@ const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
 const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg> );
+const ArrowRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg> );
 
 // Function to shuffle an array
 const shuffleArray = (array) => {
@@ -653,20 +654,37 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       </main>
       
       {showNextButton && (playableQuestions.length > 0) && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-4">
-          <button
-            onClick={handleDetailClick}
-            disabled={!currentQuestionWord || !definitionsMap[currentQuestionWord.toLowerCase()]}
-            className="px-6 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            Chi tiết
-          </button>
-          <button
-            onClick={handleNextQuestion}
-            className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
-          >
-            {currentQuestion < playableQuestions.length - 1 ? 'Next' : 'Xem kết quả'}
-          </button>
+        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-4">
+          {/* Nút Chi tiết - Thiết kế lại */}
+          <div className="group relative">
+             <button
+              onClick={handleDetailClick}
+              disabled={!currentQuestionWord || !definitionsMap[currentQuestionWord.toLowerCase()]}
+              className="w-14 h-14 flex items-center justify-center bg-white rounded-full shadow-lg border-2 border-indigo-200 text-indigo-600 transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:border-indigo-400 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              aria-label="Xem chi tiết"
+            >
+              <BookmarkIcon className="w-6 h-6" />
+            </button>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+              Chi tiết
+              <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xmlSpace="preserve"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+            </div>
+          </div>
+          
+          {/* Nút Next / Xem kết quả - Thiết kế lại */}
+           <div className="group relative">
+            <button
+              onClick={handleNextQuestion}
+              className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full text-white shadow-lg transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl active:scale-100"
+              aria-label={currentQuestion < playableQuestions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}
+            >
+              <ArrowRightIcon className="w-7 h-7" />
+            </button>
+             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+              {currentQuestion < playableQuestions.length - 1 ? 'Tiếp theo' : 'Xem kết quả'}
+              <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xmlSpace="preserve"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+            </div>
+          </div>
         </div>
       )}
 
