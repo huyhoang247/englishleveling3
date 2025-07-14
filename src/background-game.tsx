@@ -1,4 +1,4 @@
-// --- START OF FILE: background-game.tsx ---
+// --- START OF FILE: background-game.tsx (FULL CODE) ---
 
 // src/background-game.tsx
 
@@ -861,7 +861,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isVocabularyChestOpen && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser ? currentUser.uid : null} onCoinReward={startCoinCountAnimation} onGemReward={handleGemReward} displayedCoins={displayedCoins} />)}</ErrorBoundary>
+            <ErrorBoundary>{isVocabularyChestOpen && currentUser && (
+                <VocabularyChestScreen 
+                    onClose={toggleVocabularyChest} 
+                    currentUserId={currentUser.uid} 
+                    onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)}
+                    onGemReward={handleGemReward} 
+                    displayedCoins={displayedCoins} 
+                />
+            )}</ErrorBoundary>
         </div>
         
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
