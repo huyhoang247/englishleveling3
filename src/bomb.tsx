@@ -108,10 +108,16 @@ export default function App() {
     setExitConfirmationPos(null);
   }
 
-  // --- THAY ĐỔI: Component Cell được thiết kế lại để chống "bể bố cục" ---
+  // Component Cell
   const Cell = ({ cellData }) => {
     const { isRevealed, isMineHorizontal, isMineVertical, isCoin, isFlagged, isExit } = cellData;
-    const cellStyle = { base: 'w-full h-full rounded-lg transition-all duration-200 relative', hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md', revealed: 'bg-slate-800/80 cursor-default border border-slate-700', exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' };
+    const cellStyle = { 
+        base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
+        // --- THAY ĐỔI: Thêm border-transparent vào ô chưa mở ---
+        hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
+        revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' 
+    };
     
     let content = null;
     let specificCellStyle = '';
@@ -124,8 +130,8 @@ export default function App() {
         content = <div className={wrapperClass}><FlagIcon className={`${iconClass} text-red-500`} /></div>;
     } 
     else if (isRevealed) {
-        specificCellStyle = cellStyle.revealed; // Mặc định là style ô đã mở
-        let iconContent = null; // Nội dung thực tế của icon, có thể là null
+        specificCellStyle = cellStyle.revealed;
+        let iconContent = null; 
 
         if (isMineVertical) {
             iconContent = (
@@ -139,14 +145,11 @@ export default function App() {
             iconContent = <HorizontalBombIcon className={imageIconClass} />;
         } else if (isExit) {
             iconContent = <StairsIcon className={`${iconClass} text-green-400`} />;
-            specificCellStyle = cellStyle.exitRevealed; // Ghi đè style nếu là ô exit
+            specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCoin) { 
             iconContent = <CircleDollarSignIcon className={imageIconClass} />;
         }
         
-        // **QUAN TRỌNG**: Luôn render div wrapper.
-        // Nếu không có icon (ô trống), wrapper sẽ rỗng, nhưng vẫn chiếm không gian.
-        // Điều này đảm bảo cấu trúc HTML là như nhau cho mọi ô đã mở.
         content = (
             <div className={wrapperClass}>
                 {iconContent}
