@@ -11,7 +11,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (Không thay đổi) =======================================
+// === 1. CSS STYLES (Phần Header đã được cập nhật) ========================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -37,51 +37,70 @@ const GlobalStyles = () => (
             box-sizing: border-box;
         }
         
-        /* === HEADER CỐ ĐỊNH === */
+        /* === HEADER CỐ ĐỊNH (THIẾT KẾ MỚI) === */
         .main-header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 12px 25px;
+            /* Thay đổi 1: Giảm padding dọc để header ngắn hơn */
+            padding: 8px 25px; 
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: rgba(16, 22, 46, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            /* Thay đổi 2: Tăng nhẹ độ trong suốt và blur để tinh tế hơn */
+            background-color: rgba(16, 22, 46, 0.75); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            /* Thay đổi 3: Làm đường viền dưới mỏng và mờ hơn */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
             z-index: 100;
             box-sizing: border-box;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, background-color 0.3s ease, backdrop-filter 0.3s ease;
         }
 
         .header-title {
-            font-size: 1.25rem;
-            font-weight: 600;
+            /* Thay đổi 4: Giảm kích thước font và làm shadow nhẹ hơn */
+            font-size: 1.1rem; 
+            font-weight: 500; /* Chuyển từ semi-bold sang medium */
             color: #e0e0e0;
             margin: 0;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3); 
         }
 
         .vocab-screen-close-btn {
-            width: 44px; height: 44px; background: transparent; border: none;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-            transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.9;
-            margin: -10px; padding: 10px;
+            /* Thay đổi 5: Giảm nhẹ kích thước nút để cân đối với header mới */
+            width: 38px; height: 38px; 
+            background: transparent; 
+            border: none;
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease; 
+            opacity: 0.8; /* Giảm opacity mặc định */
+            border-radius: 50%; /* Thêm bo tròn để đẹp hơn khi hover */
+            margin: 0; 
+            padding: 0;
         }
-        .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
+        .vocab-screen-close-btn:hover { 
+            transform: scale(1.1); 
+            opacity: 1; 
+            background-color: rgba(255, 255, 255, 0.1);
+        }
         .vocab-screen-close-btn img {
-            width: 24px; height: 24px;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+            width: 22px; /* Kích thước icon cũng giảm nhẹ */
+            height: 22px;
+            /* Thay đổi 6: Shadow của icon cũng nhẹ hơn */
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); 
         }
         
         /* === CONTAINER RƯƠNG === */
         .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
             gap: 30px; width: 100%; max-width: 1300px; overflow-y: auto;
-            padding: 20px 20px 100px; max-height: calc(100vh - 101px); box-sizing: border-box;
-            margin-top: 61px;
+            padding: 20px 20px 100px; max-height: calc(100vh - 61px); /* Cập nhật chiều cao sau khi header ngắn lại */ box-sizing: border-box;
+            margin-top: 53px; /* Cập nhật margin top cho phù hợp với header mới (chiều cao 38px + padding 8*2) */
         }
 
         /* Tùy chỉnh thanh cuộn */
@@ -224,7 +243,7 @@ const GlobalStyles = () => (
 
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON VÀ DATA (Không thay đổi) =======================
+// === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
