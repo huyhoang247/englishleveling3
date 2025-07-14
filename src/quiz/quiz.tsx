@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increm
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
-import detailedMeaningsText from '../vocabulary-definitions.ts'; // Import the definitions
+import detailedMeaningsText from './vocabulary-definitions.ts'; // Import the definitions
 
 // Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
@@ -89,6 +89,7 @@ const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http
 const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> );
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
+const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg> );
 
 // Function to shuffle an array
 const shuffleArray = (array) => {
@@ -100,8 +101,6 @@ const shuffleArray = (array) => {
   return shuffledArray;
 };
 
-// --- START: NEWLY ADDED CODE ---
-
 // Interface for a single definition entry
 interface Definition {
     vietnamese: string;
@@ -109,44 +108,44 @@ interface Definition {
     explanation: string;
 }
 
-// Detail Popup Component
+// Detail Popup Component (Redesigned)
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => {
     if (!data) return null;
     return (
         <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in"
             onClick={onClose}
         >
             <div 
-                className="bg-gray-50 rounded-2xl shadow-xl w-full max-w-lg p-6 relative transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale"
+                className="bg-[#f8f9fa] rounded-2xl w-full max-w-md p-6 relative transform transition-all duration-300 scale-95 opacity-0 animate-scale-up"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button 
-                    onClick={onClose}
-                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                    aria-label="Đóng"
-                >
-                    <XIcon className="w-5 h-5 text-gray-600" />
-                </button>
-                <h3 className="text-2xl font-bold text-indigo-700 mb-2 capitalize">{data.english}</h3>
-                <p className="text-md text-gray-500 font-medium mb-4">({data.vietnamese})</p>
-                <div className="border-t border-gray-200 pt-4 max-h-[60vh] overflow-y-auto">
-                     <p className="text-gray-700 leading-relaxed text-base">{data.explanation}</p>
+                {/* Chip */}
+                <div className="inline-flex items-center bg-blue-100 text-blue-800 text-base font-semibold px-4 py-1.5 rounded-full mb-4">
+                    <BookmarkIcon className="w-4 h-4 mr-2" />
+                    <span className="capitalize">{data.english}</span>
                 </div>
+                
+                {/* Definition */}
+                <p className="text-xl text-gray-800 leading-relaxed">
+                    <span className="font-semibold">{data.vietnamese}</span> ({data.english}) là {data.explanation}
+                </p>
             </div>
              <style jsx>{`
-                @keyframes fade-in-scale {
+                @keyframes fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scale-up {
                     from { transform: scale(0.95); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
                 }
-                .animate-fade-in-scale {
-                    animation: fade-in-scale 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-                }
+                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+                .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
             `}</style>
         </div>
     );
 };
-// --- END: NEWLY ADDED CODE ---
 
 
 export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
@@ -177,7 +176,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [hintUsed, setHintUsed] = useState(false);
   const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
   
-  // --- START: NEWLY ADDED CODE ---
   // State for detail popup
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [detailData, setDetailData] = useState<Definition | null>(null);
@@ -204,7 +202,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     });
     return definitions;
   }, []);
-  // --- END: NEWLY ADDED CODE ---
 
 
   useEffect(() => {
@@ -294,7 +291,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }
   }, [currentQuestion, playableQuestions]);
 
-  // --- START: NEWLY ADDED CODE ---
   // Effect to find the vocabulary word for the current question
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
@@ -307,7 +303,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           setCurrentQuestionWord(null);
       }
   }, [currentQuestion, playableQuestions, userVocabulary]);
-  // --- END: NEWLY ADDED CODE ---
   
   const handleTimeUp = () => {
     if (answered) return;
@@ -476,7 +471,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setHiddenOptions([]);
   };
 
-  // --- START: NEWLY ADDED CODE ---
   const handleDetailClick = () => {
       if (currentQuestionWord) {
           const definition = definitionsMap[currentQuestionWord.toLowerCase()];
@@ -488,7 +482,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           }
       }
   };
-  // --- END: NEWLY ADDED CODE ---
 
   const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
   
@@ -500,14 +493,12 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
       
-      {/* --- START: NEWLY ADDED CODE --- */}
       {showDetailPopup && (
           <DetailPopup 
               data={detailData}
               onClose={() => setShowDetailPopup(false)}
           />
       )}
-      {/* --- END: NEWLY ADDED CODE --- */}
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button
@@ -664,7 +655,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         </div>
       </main>
       
-      {/* --- START: MODIFIED CODE BLOCK --- */}
       {showNextButton && (playableQuestions.length > 0) && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-4">
           <button
@@ -682,7 +672,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           </button>
         </div>
       )}
-      {/* --- END: MODIFIED CODE BLOCK --- */}
 
     </div>
   );
