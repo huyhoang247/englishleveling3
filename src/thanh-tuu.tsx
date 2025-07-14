@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import CoinDisplay from './coin-display.tsx'; // <--- IMPORT CoinDisplay
 
 // --- Định nghĩa Type cho dữ liệu (Không thay đổi) ---
 export type VocabularyItem = {
@@ -25,7 +26,7 @@ export const initialVocabularyData: VocabularyItem[] = [
   ...Array.from({ length: 40 }, (_, i) => ({ id: i + 8, word: `Word ${i + 1}`, exp: Math.floor(Math.random() * 200), level: Math.floor(Math.random() * 5) + 1, maxExp: (Math.floor(Math.random() * 5) + 1) * 100 })),
 ];
 
-// --- CẬP NHẬT Prop để nhận dữ liệu từ cha và gửi tín hiệu nhận thưởng ---
+// --- CẬP NHẬT Prop để nhận displayedCoins ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
@@ -33,7 +34,16 @@ interface AchievementsScreenProps {
   onClaimReward: (reward: { gold: number; masteryCards: number }) => void;
   onDataUpdate: (updatedData: VocabularyItem[]) => void;
   masteryCardsCount: number;
+  displayedCoins: number; // <--- THÊM PROP NÀY
 }
+
+// --- THÊM ICON HOME ---
+const HomeIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
+    </svg>
+);
+
 
 // --- Biểu tượng (Icon) ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => (
@@ -91,7 +101,7 @@ const ChevronRightIcon = ({ className = '' }: { className?: string }) => (
 
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate, masteryCardsCount }: AchievementsScreenProps) {
+export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, onDataUpdate, masteryCardsCount, displayedCoins }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
@@ -223,22 +233,35 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   }, [vocabulary]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans p-4 sm:p-8 flex justify-center overflow-y-auto">
-      <div className="w-full max-w-4xl mx-auto relative">
-        <button
-          onClick={onClose}
-          className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 z-10 w-10 h-10 rounded-full bg-slate-700/80 hover:bg-slate-600 border border-slate-500 flex items-center justify-center transition-all"
-          aria-label="Đóng"
-        >
-          <XIcon className="w-6 h-6 text-slate-300" />
-        </button>
-
-        <header className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 pb-2">
+    <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
+      
+      {/* ===== HEADER MỚI ===== */}
+      <header className="w-full max-w-5xl flex items-center justify-between p-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
+          {/* Nút Home bên trái */}
+          <button
+            onClick={onClose}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+            aria-label="Quay lại Trang Chính"
+            title="Quay lại Trang Chính"
+          >
+            <HomeIcon className="w-5 h-5 text-slate-300" />
+            <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
+          </button>
+          
+          {/* Tiêu đề ở giữa */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 absolute left-1/2 -translate-x-1/2">
             Thành Tựu
           </h1>
-        </header>
 
+          {/* CoinDisplay bên phải */}
+          <div className="flex items-center gap-2">
+            {/* Sử dụng CoinDisplay và truyền isStatsFullscreen={false} để nó luôn hiển thị */}
+            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+          </div>
+      </header>
+
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6 overflow-y-auto">
+        
         <section className="mb-6 flex flex-row justify-center items-center gap-4">
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
