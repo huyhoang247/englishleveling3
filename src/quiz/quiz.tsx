@@ -243,11 +243,21 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
-    let step = Math.ceil((endValue - startValue) / 30) || 1;
+
+    const isCountingUp = endValue > startValue;
+    // Calculate the step. It should always be positive. The direction is handled later.
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
+
     const interval = setInterval(() => {
-      current += step;
-      if (current >= endValue) {
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
+      }
+
+      // Check if we've reached or passed the target
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
         setDisplayedCoins(endValue);
         clearInterval(interval);
       } else {
