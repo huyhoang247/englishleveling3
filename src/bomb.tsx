@@ -200,10 +200,10 @@ export default function App() {
 
         {/* --- Bảng điều khiển ĐÃ CẬP NHẬT --- */}
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-3">
-            {/* Tầng (Thiết kế mới, vị trí đầu tiên) */}
+            {/* Tầng */}
             <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
                 <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Tầng</span>
-                <span className="text-2xl font-bold text-white tracking-tight leading-none">{currentFloor}</span>
+                <span className="font-mono text-xl font-semibold text-white leading-tight">{currentFloor}</span>
             </div>
             {/* Bom */}
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
