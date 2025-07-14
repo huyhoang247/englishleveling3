@@ -1,3 +1,5 @@
+// --- START OF FILE: lat-the.tsx (FULL CODE) ---
+
 // lat-the.tsx (Phiên bản đã cập nhật và sửa lỗi)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
@@ -7,7 +9,7 @@ import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } fr
 import { defaultImageUrls } from './image-url.ts'; 
 import ImagePreloader from './ImagePreloader.tsx'; 
 import { defaultVocabulary } from './list-vocabulary.ts';
-import CoinDisplay from './coin-display.tsx'; // <-- THÊM IMPORT
+import CoinDisplay from './coin-display.tsx';
 
 // ========================================================================
 // === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
@@ -60,8 +62,6 @@ const ScopedStyles = () => (
             box-sizing: border-box;
             flex-shrink: 0; 
         }
-        
-        /* === (ĐÃ XÓA CSS THỪA CHO COIN DISPLAY) === */
         
         /* CSS CHO NÚT HOME MỚI (Dựa trên thanh-tuu.tsx) */
         .vocabulary-chest-root .vocab-screen-home-btn {
@@ -351,11 +351,11 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
 };
 
 const CHEST_DEFINITIONS = {
-    basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 2980, isComingSoon: false, range: [0, 2399] as const, },
-    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 2980, isComingSoon: false, range: [2400, 4099] as const, },
-    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 2980, isComingSoon: false, range: [4100, 6499] as const, },
-    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2O2_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 2980, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
-    master: { id: 'master_vocab_chest', chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 320, price10: 2980, isComingSoon: true, range: [null, null] as const, },
+    basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, },
+    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 1200, isComingSoon: false, range: [2400, 4099] as const, },
+    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 1200, isComingSoon: false, range: [4100, 6499] as const, },
+    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2O2_38_14%20PM.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 1200, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
+    master: { id: 'master_vocab_chest', chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%2017%2C%202025%2C%2002_38_14%20PM.png", infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 320, price10: 1200, isComingSoon: true, range: [null, null] as const, },
 };
 
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
@@ -367,14 +367,14 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 interface VocabularyChestScreenProps { 
     onClose: () => void; 
     currentUserId: string | null; 
-    onCoinReward: (amount: number) => void; 
+    onUpdateCoins: (amount: number) => void; // THAY ĐỔI: Nhận hàm cập nhật coin
     onGemReward: (amount: number) => void;
     displayedCoins: number; 
 }
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
 const PRELOAD_POOL_SIZE = 20;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward, displayedCoins }) => {
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -382,7 +382,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
     const [isProcessingClick, setIsProcessingClick] = useState(false);
-    const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
+    // THAY ĐỔI: Lưu thêm giá tiền để mở lại
+    const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType, price: number } | null>(null);
 
     useEffect(() => {
         const fetchOpenedItems = async () => {
@@ -511,8 +512,15 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    const handleOpenCards = async (count: 1 | 4, chestType: ChestType) => {
+    // THAY ĐỔI: Hàm nhận thêm giá tiền để kiểm tra và trừ coin
+    const handleOpenCards = async (count: 1 | 4, chestType: ChestType, price: number) => {
         if (isProcessingClick) return;
+
+        // BƯỚC 1: Kiểm tra đủ coin
+        if (displayedCoins < price) {
+            alert(`Bạn không đủ coin! Cần ${price.toLocaleString()}, bạn đang có ${displayedCoins.toLocaleString()}.`);
+            return;
+        }
         
         const targetPool = availableIndices[chestType];
         if (targetPool.length < count) {
@@ -521,7 +529,10 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
 
         setIsProcessingClick(true);
-        setLastOpenedChest({ count, type: chestType });
+        setLastOpenedChest({ count, type: chestType, price }); // Lưu lại cả giá tiền
+
+        // BƯỚC 2: Trừ coin ngay lập tức
+        onUpdateCoins(-price);
 
         let tempPool = [...targetPool];
         const selectedCards: ImageCard[] = [];
@@ -548,17 +559,19 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setTimeout(() => setIsProcessingClick(false), 500); 
     };
     
+    // THAY ĐỔI: Xóa bỏ thưởng coin
     const handleCloseOverlay = (openedCount: number) => {
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
         setCardsForPopup([]);
-        onCoinReward(10 * openedCount);
+        // onCoinReward(10 * openedCount); // Đã xóa
         onGemReward(1 * openedCount);
     };
     
+    // THAY ĐỔI: Mở lại bằng cách gọi handleOpenCards với thông tin đã lưu
     const handleOpenAgain = () => {
         if (lastOpenedChest) {
-            handleOpenCards(lastOpenedChest.count, lastOpenedChest.type);
+            handleOpenCards(lastOpenedChest.count, lastOpenedChest.type, lastOpenedChest.price);
         }
     };
     
@@ -582,22 +595,35 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                             <span>Trang Chính</span>
                         </button>
                         
-                        {/* <-- SỬ DỤNG COMPONENT COIN DISPLAY --> */}
                         <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
 
                     </header>
 
                     <div className="chest-gallery-container">
                         {CHEST_DATA.map((chest) => {
+                            if (chest.isComingSoon) {
+                                return (
+                                    <ChestUI
+                                        key={chest.id}
+                                        {...chest}
+                                        price10={chest.price10 ?? 0}
+                                        remainingCount={0}
+                                        onOpen1={() => {}}
+                                        onOpen10={() => {}}
+                                    />
+                                );
+                            }
                             const chestKey = chest.chestType as ChestType;
-                            const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
+                            const remainingCount = availableIndices[chestKey]?.length ?? 0;
                             return (
                                 <ChestUI
                                     key={chest.id}
                                     {...chest}
+                                    price10={chest.price10 ?? 0}
                                     remainingCount={remainingCount}
-                                    onOpen1={() => !chest.isComingSoon && handleOpenCards(1, chestKey)}
-                                    onOpen10={() => !chest.isComingSoon && handleOpenCards(4, chestKey)}
+                                    // THAY ĐỔI: Truyền giá tiền vào hàm xử lý
+                                    onOpen1={() => handleOpenCards(1, chestKey, chest.price1)}
+                                    onOpen10={() => chest.price10 && handleOpenCards(4, chestKey, chest.price10)}
                                 />
                             );
                         })}
@@ -625,3 +651,4 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
+// --- END OF FILE: lat-the.tsx ---
