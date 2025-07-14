@@ -28,7 +28,7 @@ export default function App() {
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
 
-  // Các hàm logic game (createBoard, explode, handleCellClick, v.v.) không đổi
+  // Các hàm logic game (createBoard, explode, v.v.) không đổi
   function createBoard() {
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineHorizontal: false, isMineVertical: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
     const placeItem = (itemType) => { let placed = false; while(!placed) { const x = Math.floor(Math.random() * BOARD_SIZE); const y = Math.floor(Math.random() * BOARD_SIZE); const cell = newBoard[y][x]; if (!cell.isMineHorizontal && !cell.isMineVertical && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; } } };
@@ -48,42 +48,51 @@ export default function App() {
     }
     setCoinsFound(prev => prev + newCoins);
   }
+  
+  // --- THAY ĐỔI: Logic xử lý click bom được thiết kế lại ---
   function handleCellClick(x, y) {
     const cell = board[y][x];
     if (cell.isFlagged) return;
+
     if (cell.isRevealed && cell.isExit) {
         setExitConfirmationPos({ x, y });
         return;
     }
+
     if (!cell.isRevealed) {
         const newBoard = JSON.parse(JSON.stringify(board));
-        if (cell.isMineHorizontal || cell.isMineVertical) {
-            const initialBombs = new Map();
+        const clickedCell = newBoard[y][x];
+
+        // Nếu ô được click là bom
+        if (clickedCell.isMineHorizontal || clickedCell.isMineVertical) {
             const explosionsToRun = new Set();
-            for(let i=0; i<BOARD_SIZE; i++){
-                const rowCell = newBoard[y][i];
-                const colCell = newBoard[i][x];
-                if(rowCell.isMineHorizontal || rowCell.isMineVertical) initialBombs.set(`${rowCell.y}-${rowCell.x}`, rowCell);
-                if(colCell.isMineHorizontal || colCell.isMineVertical) initialBombs.set(`${colCell.y}-${colCell.x}`, colCell);
+            
+            // Chỉ thêm lệnh nổ dựa trên thuộc tính của chính quả bom được click
+            if (clickedCell.isMineHorizontal) {
+                explosionsToRun.add(`row-${y}`);
             }
-            initialBombs.forEach((bomb) => {
-                if (bomb.isMineHorizontal) explosionsToRun.add(`row-${bomb.y}`);
-                if (bomb.isMineVertical) explosionsToRun.add(`col-${bomb.x}`);
-            });
+            if (clickedCell.isMineVertical) {
+                explosionsToRun.add(`col-${x}`);
+            }
+            
+            // Thực hiện các vụ nổ đã được lên lịch (tối đa 2: một hàng và một cột)
             explosionsToRun.forEach(explosionKey => {
                 const [type, indexStr] = explosionKey.split('-');
                 const index = parseInt(indexStr, 10);
                 explode(newBoard, type, index);
             });
-        } else {
-            newBoard[y][x].isRevealed = true;
-            if (newBoard[y][x].isCoin) {
+            
+        } else { // Nếu ô được click không phải là bom
+            clickedCell.isRevealed = true;
+            if (clickedCell.isCoin) {
                 setCoinsFound(prev => prev + 1);
             }
         }
         setBoard(newBoard);
     }
   }
+
+  // handleRightClick, goToNextFloor, resetGame không đổi
   function handleRightClick(e, x, y) {
     e.preventDefault();
     if (board[y][x].isRevealed) return;
@@ -112,7 +121,7 @@ export default function App() {
     setExitConfirmationPos(null);
   }
 
-  // --- THAY ĐỔI: Component Cell được cập nhật để chứa icon trong wrapper ---
+  // Component Cell (không đổi)
   const Cell = ({ cellData }) => {
     const { isRevealed, isMineHorizontal, isMineVertical, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { base: 'w-full h-full rounded-lg transition-all duration-200 relative', hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md', revealed: 'bg-slate-800/80 cursor-default border border-slate-700', exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' };
@@ -164,20 +173,19 @@ export default function App() {
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
-        {/* Header và Bảng điều khiển */}
+        {/* Header và Bảng điều khiển (không đổi) */}
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
           <p className="text-slate-400 mt-2">Dọn bàn và lên tầng cao nhất!</p>
         </div>
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-2">
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><BombIcon className="w-6 h-6 sm:w-7 sm:h-7 text-slate-400" /><span className="font-mono w-8 text-left">{TOTAL_BOMBS - flagsPlaced}</span></div>
-            {/* Sử dụng icon coin nhỏ hơn trên bảng điều khiển */}
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" /><span className="font-mono w-8 text-left">{coinsFound}</span></div>
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center"><TrophyIcon className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" /><span className="font-mono w-8 text-left">{currentFloor}</span></div>
             <div className="flex justify-center"><button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors"><RefreshCwIcon className="w-6 h-6" /></button></div>
         </div>
 
-        {/* Bàn chơi */}
+        {/* Bàn chơi (không đổi) */}
         <div className="relative">
           <div className="w-full aspect-square">
             <div className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px' }}>
