@@ -87,9 +87,10 @@ const XIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg> );
 const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> );
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
+const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
 
 // Function to shuffle an array
-const shuffleArray = (array: any[]) => {
+const shuffleArray = (array) => {
   const shuffledArray = [...array];
   for (let i = shuffledArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -100,33 +101,28 @@ const shuffleArray = (array: any[]) => {
 
 
 export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
-  // --- STATE QUẢN LÝ DỮ LIỆU NỀN ---
-  const [user, setUser] = useState(null);
-  const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
-  const [completedQuestions, setCompletedQuestions] = useState<Set<string>>(new Set());
-  const [coins, setCoins] = useState(0);
-  const [masteryCount, setMasteryCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // --- STATE QUẢN LÝ PHIÊN CHƠI QUIZ ---
-  const [quizSessionQuestions, setQuizSessionQuestions] = useState<any[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [answered, setAnswered] = useState(false);
+  const [coins, setCoins] = useState(0);
+  const [displayedCoins, setDisplayedCoins] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [masteryCount, setMasteryCount] = useState(0);
+  const [streakAnimation, setStreakAnimation] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const TOTAL_TIME = 30;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
-  const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
-
-  // --- STATE QUẢN LÝ HIỆU ỨNG & GIAO DIỆN ---
-  const [displayedCoins, setDisplayedCoins] = useState(0);
-  const [streakAnimation, setStreakAnimation] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [matchingQuestionsCount, setMatchingQuestionsCount] = useState(0);
-  const [allQuestionsDone, setAllQuestionsDone] = useState(false);
-
+  const [shuffledOptions, setShuffledOptions] = useState([]);
+  
+  // <<< THAY ĐỔI 1: THÊM STATE ĐỂ LƯU TIẾN TRÌNH >>>
+  const [loading, setLoading] = useState(true);
+  const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
+  const [completedQuizWords, setCompletedQuizWords] = useState<Set<string>>(new Set());
+  const [filteredQuizData, setFilteredQuizData] = useState([]); // Tất cả câu hỏi khớp với từ vựng người dùng
+  const [playableQuestions, setPlayableQuestions] = useState([]); // Các câu hỏi chưa được trả lời
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -135,89 +131,95 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => unsubscribe();
   }, []);
 
-  // Tách riêng logic tải dữ liệu ban đầu
+  // <<< THAY ĐỔI 2: CẬP NHẬT `fetchData` ĐỂ ĐỌC CẢ `completedWords` >>>
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        const [docSnap, vocabSnapshot, completedQuizSnapshot] = await Promise.all([
-          getDoc(userRef),
-          getDocs(collection(db, 'users', user.uid, 'openedVocab')),
-          getDocs(collection(db, 'users', user.uid, 'completedQuizQuestions'))
-        ]);
+      if (user) {
+        setLoading(true);
+        try {
+          // Lấy dữ liệu user, từ vựng đã mở, và từ đã hoàn thành song song
+          const [userDocSnap, vocabSnapshot, completedWordsSnapshot] = await Promise.all([
+            getDoc(doc(db, 'users', user.uid)),
+            getDocs(collection(db, 'users', user.uid, 'openedVocab')),
+            getDocs(collection(db, 'users', user.uid, 'completedWords'))
+          ]);
 
-        if (docSnap.exists()) {
-          const userCoins = docSnap.data().coins || 0;
-          setCoins(userCoins);
-          setDisplayedCoins(userCoins);
-          setMasteryCount(docSnap.data().masteryCards || 0);
+          // Xử lý thông tin user (coins, mastery)
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            const userCoins = userData.coins || 0;
+            setCoins(userCoins);
+            setDisplayedCoins(userCoins);
+            setMasteryCount(userData.masteryCards || 0);
+          } else {
+            await setDoc(doc(db, 'users', user.uid), { coins: 0, masteryCards: 0 });
+            setCoins(0); setDisplayedCoins(0); setMasteryCount(0);
+          }
+
+          // Xử lý từ vựng đã mở
+          const vocabList: string[] = [];
+          vocabSnapshot.forEach((vocabDoc) => {
+            const word = vocabDoc.data().word;
+            if (word) vocabList.push(word);
+          });
+          setUserVocabulary(vocabList);
+
+          // Xử lý từ vựng đã hoàn thành
+          const completedSet = new Set<string>();
+          completedWordsSnapshot.forEach((completedDoc) => {
+            // Chỉ thêm vào nếu nó đã được hoàn thành trong chế độ quiz
+            if (completedDoc.data()?.gameModes?.['quiz-1']) {
+              completedSet.add(completedDoc.id); // doc.id chính là từ đã hoàn thành
+            }
+          });
+          setCompletedQuizWords(completedSet);
+
+        } catch (error) {
+          console.error("Lỗi khi tải dữ liệu người dùng:", error);
+          setCoins(0); setDisplayedCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedQuizWords(new Set());
+        } finally {
+            setLoading(false);
         }
-
-        const vocabList: string[] = [];
-        vocabSnapshot.forEach((doc) => vocabList.push(doc.data().word));
-        setUserVocabulary(vocabList);
-
-        const fetchedCompletedQuestions = new Set<string>();
-        completedQuizSnapshot.forEach((doc) => fetchedCompletedQuestions.add(doc.id));
-        setCompletedQuestions(fetchedCompletedQuestions);
-
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu người dùng:", error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        setLoading(false);
+        setCoins(0); setDisplayedCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedQuizWords(new Set());
       }
     };
+
     fetchData();
   }, [user]);
 
-  // Logic bắt đầu và chuẩn bị phiên chơi mới
-  const startNewQuizSession = useCallback(() => {
-    const vocabFiltered = userVocabulary.length > 0
-      ? quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)))
-      : quizData;
-    
-    setMatchingQuestionsCount(vocabFiltered.length);
-
-    const remainingQuestions = vocabFiltered.filter(q => !completedQuestions.has(q.question));
-    
-    if (vocabFiltered.length > 0 && remainingQuestions.length === 0) {
-      setAllQuestionsDone(true);
-      setQuizSessionQuestions([]);
-      return;
-    }
-    setAllQuestionsDone(false);
-
-    setQuizSessionQuestions(shuffleArray(remainingQuestions));
-    
-    setCurrentQuestion(0);
-    setScore(0);
-    setShowScore(false);
-    setSelectedOption(null);
-    setAnswered(false);
-    setStreak(0);
-    setTimeLeft(TOTAL_TIME);
-  }, [userVocabulary, completedQuestions]);
-
-  // Tự động bắt đầu phiên mới khi dữ liệu đã sẵn sàng
+  // <<< THAY ĐỔI 3: LỌC CÂU HỎI DỰA TRÊN TỪ VỰNG VÀ TIẾN TRÌNH >>>
   useEffect(() => {
-    if (!isLoading && user) {
-      startNewQuizSession();
-    }
-  }, [isLoading, user, startNewQuizSession]);
-
-
-  useEffect(() => {
-    if (quizSessionQuestions[currentQuestion]?.options) {
-      setShuffledOptions(shuffleArray(quizSessionQuestions[currentQuestion].options));
+    if (userVocabulary.length > 0) {
+      // Bước 1: Lọc tất cả câu hỏi khớp với từ vựng của người dùng
+      const allMatchingQuestions = quizData.filter(question =>
+        userVocabulary.some(vocabWord =>
+          new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
+        )
+      );
+      setFilteredQuizData(allMatchingQuestions);
+      
+      // Bước 2: Từ danh sách trên, lọc ra những câu chưa hoàn thành
+      const remainingQuestions = allMatchingQuestions.filter(q => {
+          // Kiểm tra xem câu hỏi này có chứa từ nào đã hoàn thành không
+          return ![...completedQuizWords].some(completedWord => 
+              new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
+          );
+      });
+      setPlayableQuestions(shuffleArray(remainingQuestions));
     } else {
-      setShuffledOptions([]);
+      setFilteredQuizData([]);
+      setPlayableQuestions([]);
     }
-  }, [currentQuestion, quizSessionQuestions]);
+  }, [userVocabulary, completedQuizWords]);
+
+
+  useEffect(() => {
+    if (playableQuestions[currentQuestion]?.options) {
+      setShuffledOptions(shuffleArray(playableQuestions[currentQuestion].options));
+    }
+  }, [currentQuestion, playableQuestions]);
   
   const handleTimeUp = () => {
     if (answered) return;
@@ -227,7 +229,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   };
 
   useEffect(() => {
-    if (showScore || answered || quizSessionQuestions.length === 0) {
+    if (showScore || answered || playableQuestions.length === 0) {
       return;
     }
     setTimeLeft(TOTAL_TIME);
@@ -242,7 +244,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       });
     }, 1000);
     return () => clearInterval(timerId);
-  }, [currentQuestion, answered, showScore, quizSessionQuestions.length]);
+  }, [currentQuestion, answered, showScore, playableQuestions.length]);
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -259,12 +261,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }, 30);
   }, []);
   
-  const handleAnswer = async (selectedAnswer: string) => {
-    if (answered || quizSessionQuestions.length === 0) return;
-    
+  const handleAnswer = async (selectedAnswer) => {
+    if (answered || playableQuestions.length === 0) return;
     setSelectedOption(selectedAnswer);
     setAnswered(true);
-    const currentQuizItem = quizSessionQuestions[currentQuestion];
+    const currentQuizItem = playableQuestions[currentQuestion];
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
 
     if (isCorrect) {
@@ -275,20 +276,23 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       setStreak(newStreak);
 
       const coinsToAdd = masteryCount * newStreak;
+
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
         startCoinCountAnimation(coins, totalCoins);
         setCoins(totalCoins);
       }
-      
+
       if (newStreak >= 1) {
         setStreakAnimation(true);
         setTimeout(() => setStreakAnimation(false), 1500);
       }
-      
-      setCompletedQuestions(prev => new Set(prev).add(currentQuizItem.question));
 
-      if (user) {
+      const matchedWord = userVocabulary.find(vocabWord =>
+        new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
+      );
+
+      if (user && matchedWord) {
         try {
           const batch = writeBatch(db);
           const gameModeId = "quiz-1";
@@ -298,21 +302,18 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
 
-          const matchedWord = userVocabulary.find(vocabWord =>
-            new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
-          );
-          if (matchedWord) {
-            const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
-            batch.set(completedWordRef, {
-              lastCompletedAt: new Date(),
-              gameModes: { [gameModeId]: { correctCount: increment(1) } }
-            }, { merge: true });
-          }
-          
-          const completedQuizRef = doc(db, 'users', user.uid, 'completedQuizQuestions', currentQuizItem.question);
-          batch.set(completedQuizRef, { completedAt: new Date() });
+          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
+          batch.set(completedWordRef, {
+            lastCompletedAt: new Date(),
+            gameModes: {
+              [gameModeId]: {
+                correctCount: increment(1)
+              }
+            }
+          }, { merge: true });
 
           await batch.commit();
+          console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
         } catch (error) {
           console.error("Lỗi khi thực hiện batch write:", error);
         }
@@ -322,9 +323,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }
   };
 
+
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
-    if (nextQuestion < quizSessionQuestions.length) {
+    if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
@@ -334,26 +336,29 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   };
 
   const resetQuiz = () => {
-    startNewQuizSession();
+    // Khi reset, ta cần lấy lại danh sách câu hỏi có thể chơi
+    const remainingQuestions = filteredQuizData.filter(q => {
+        return ![...completedQuizWords].some(completedWord => 
+            new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
+        );
+    });
+    setPlayableQuestions(shuffleArray(remainingQuestions));
+    setCurrentQuestion(0);
+    setScore(0);
+    setShowScore(false);
+    setSelectedOption(null);
+    setAnswered(false);
+    setStreak(0);
+    setTimeLeft(TOTAL_TIME);
   };
+
+  // <<< THAY ĐỔI 4: SỬ DỤNG `playableQuestions` THAY CHO `filteredQuizData` TRONG LOGIC GAME >>>
+  const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
   
-  const quizProgress = quizSessionQuestions.length > 0 ? ((currentQuestion + 1) / quizSessionQuestions.length) * 100 : 0;
-
-  if (isLoading) {
-    return (
-        <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-            <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
-                <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
-                    <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
-                </button>
-            </header>
-            <main className="flex-grow flex items-center justify-center">
-                <div className="text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>
-            </main>
-        </div>
-    );
+  if (loading) {
+    return <div className="flex items-center justify-center h-full text-xl font-semibold text-indigo-700">Đang tải dữ liệu Quiz...</div>;
   }
-
+  
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
@@ -376,77 +381,34 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       
       <main className="flex-grow overflow-y-auto flex justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
-          {allQuestionsDone ? (
-            <div className="p-10 text-center flex flex-col items-center justify-center h-full">
-              <h2 className="text-2xl font-bold text-indigo-800 mb-4">Xin chúc mừng!</h2>
-              <p className="text-gray-600">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. Hãy lật thêm thẻ mới để mở khóa thêm nhiều câu hỏi!</p>
-            </div>
-          ) : quizSessionQuestions.length === 0 ? (
-            <div className="p-10 text-center flex flex-col items-center justify-center h-full">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy câu hỏi</h2>
-              <p className="text-gray-600">Không có câu hỏi nào phù hợp với vốn từ vựng của bạn, hoặc bạn đã hoàn thành tất cả. Hãy học thêm từ mới!</p>
-            </div>
-          ) : showScore ? (
+          {/* <<< THAY ĐỔI 5: CẬP NHẬT GIAO DIỆN CHO CÁC TRƯỜNG HỢP KHÁC NHAU >>> */}
+          {showScore ? (
               <div className="p-10 text-center">
                 <div className="mb-8">
                   <div className="bg-indigo-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
                     <AwardIcon className="w-16 h-16 text-indigo-600" />
                   </div>
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Quả Quiz</h2>
-                  <p className="text-gray-500">Bạn đã hoàn thành bài kiểm tra!</p>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Kết Thúc Lượt Chơi</h2>
+                  <p className="text-gray-500">Bạn đã hoàn thành lượt kiểm tra này!</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-lg font-medium text-gray-700">Điểm số của bạn:</span>
-                    <span className="text-2xl font-bold text-indigo-600">{score}/{quizSessionQuestions.length}</span>
+                    <span className="text-lg font-medium text-gray-700">Điểm trong phiên này:</span>
+                    <span className="text-2xl font-bold text-indigo-600">{score}/{playableQuestions.length}</span>
                   </div>
 
                   <div className="mb-3">
+                     <p className="text-left mb-1 text-sm text-gray-600 font-medium">
+                      Tiến độ tổng thể: {filteredQuizData.length - playableQuestions.length + score} / {filteredQuizData.length}
+                    </p>
                     <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        style={{ width: `${quizSessionQuestions.length > 0 ? (score / quizSessionQuestions.length) * 100 : 0}%` }}
+                        style={{ width: `${(filteredQuizData.length - playableQuestions.length + score) / filteredQuizData.length * 100}%` }}
                       ></div>
                     </div>
-                    <p className="text-right mt-1 text-sm text-gray-600 font-medium">
-                      {quizSessionQuestions.length > 0 ? Math.round((score / quizSessionQuestions.length) * 100) : 0}%
-                    </p>
                   </div>
-
-                  <div className="flex items-center justify-between mt-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center">
-                      <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="h-5 w-5 text-orange-500 mr-1" />
-                      <span className="font-medium text-gray-700">Tổng số coins của bạn:</span>
-                    </div>
-                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-                  </div>
-
-                  <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <img src={getStreakIconUrl(streak)} alt="Streak Icon" className="h-6 w-6 text-orange-500 mr-2" />
-                        <span className="font-medium text-gray-700">Chuỗi đúng dài nhất:</span>
-                      </div>
-                      <StreakDisplay displayedStreak={streak} isAnimating={false} />
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700">Câu hỏi khớp với từ vựng của bạn:</span>
-                      <span className="font-bold text-blue-600">{matchingQuestionsCount}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 text-sm italic mt-4">
-                    {score === quizSessionQuestions.length ?
-                      "Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi." :
-                      score > quizSessionQuestions.length / 2 ?
-                        "Kết quả tốt! Bạn có thể cải thiện thêm." :
-                        "Hãy thử lại để cải thiện điểm số của bạn."
-                    }
-                  </p>
                 </div>
 
                 <button
@@ -454,9 +416,20 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
                   <RefreshIcon className="mr-2 h-5 w-5" />
-                  Làm lại quiz
+                  Chơi tiếp
                 </button>
               </div>
+          ) : filteredQuizData.length === 0 ? (
+            <div className="p-10 text-center flex flex-col items-center justify-center h-full">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Không có câu hỏi phù hợp</h2>
+              <p className="text-gray-600">Bạn cần mở thêm thẻ từ vựng để có câu hỏi trong mục này.</p>
+            </div>
+          ) : playableQuestions.length === 0 ? (
+            <div className="p-10 text-center flex flex-col items-center justify-center h-full">
+               <TrophyIcon className="w-20 h-20 text-yellow-500 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Xin chúc mừng!</h2>
+              <p className="text-gray-600">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. Hãy quay lại sau khi học thêm từ vựng mới nhé!</p>
+            </div>
           ) : (
               <>
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
@@ -465,16 +438,14 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                         <div className="flex items-center">
                           <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
-                            {currentQuestion + 1}
+                            {filteredQuizData.length - playableQuestions.length + currentQuestion + 1}
                           </span>
                           <span className="mx-0.5 text-white/70 text-xs">/</span>
-                          <span className="text-xs text-white/50">{quizSessionQuestions.length}</span>
+                          <span className="text-xs text-white/50">{filteredQuizData.length}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
-                    </div>
+                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                   </div>
 
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6">
@@ -487,21 +458,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   </div>
 
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1">
-                    <div className="absolute -top-10 -left-10 w-20 h-20 bg-white/30 rounded-full blur-xl"></div>
-                    <div className="absolute top-2 right-2 w-8 h-8 rounded-full border-2 border-white/20"></div>
-                    <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-white/20"></div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="bg-indigo-500/30 p-1.5 rounded-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-                      </div>
-                      <h3 className="text-xs uppercase tracking-wider text-white/70 font-medium">Câu hỏi</h3>
-                    </div>
                     <h2 className="text-xl font-bold text-white leading-tight">
-                      {quizSessionQuestions[currentQuestion]?.question}
+                      {playableQuestions[currentQuestion]?.question}
                     </h2>
                   </div>
                 </div>
@@ -509,7 +467,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
                     {shuffledOptions.map((option, index) => {
-                      const isCorrect = option === quizSessionQuestions[currentQuestion]?.correctAnswer;
+                      const isCorrect = option === playableQuestions[currentQuestion]?.correctAnswer;
                       const isSelected = option === selectedOption;
 
                       let bgColor = "bg-white";
@@ -519,23 +477,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
                       if (answered) {
                         if (isCorrect) {
-                          bgColor = "bg-green-50";
-                          borderColor = "border-green-500";
-                          textColor = "text-green-800";
-                          labelBg = "bg-green-500 text-white";
+                           bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white";
                         } else if (isSelected) {
-                          bgColor = "bg-red-50";
-                          borderColor = "border-red-500";
-                          textColor = "text-red-800";
-                          labelBg = "bg-red-500 text-white";
+                           bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white";
                         }
                       }
                       return (
                         <button
                           key={option}
                           onClick={() => !answered && handleAnswer(option)}
-                          disabled={answered}
-                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
+                          disabled={answered || playableQuestions.length === 0}
+                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition hover:shadow-sm ${!answered && playableQuestions.length > 0 ? "hover:border-indigo-300 hover:bg-indigo-50" : ""}`}
                         >
                           <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
                             {optionLabels[index]}
@@ -549,20 +501,22 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                   </div>
                 </div>
               </>
-          )}
+            )
+          }
         </div>
       </main>
 
-      {answered && !showScore && quizSessionQuestions.length > 0 && (
+      {answered && (playableQuestions.length > 0) && (
         <div className="fixed bottom-6 right-6 z-50">
           <button
             onClick={handleNextQuestion}
             className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
           >
-            {currentQuestion < quizSessionQuestions.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
+            {currentQuestion < playableQuestions.length - 1 ? 'Câu hỏi tiếp theo' : 'Xem kết quả'}
           </button>
         </div>
       )}
+
     </div>
   );
 }
