@@ -288,11 +288,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
             <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
           </button>
           
-          {/* Tiêu đề ở giữa */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300 absolute left-1/2 -translate-x-1/2">
-            Thành Tựu
-          </h1>
-
           {/* CoinDisplay bên phải */}
           <div className="flex items-center gap-2">
             {/* Sử dụng CoinDisplay và truyền localDisplayedCoins */}
