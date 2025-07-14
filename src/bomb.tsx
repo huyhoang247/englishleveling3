@@ -170,21 +170,31 @@ export default function App() {
           
           {/* --- THAY ĐỔI: Xóa toàn bộ lớp phủ Game Over --- */}
 
-          {/* Pop-up xác nhận lên tầng không đổi */}
+          {/* --- THAY ĐỔI: Pop-up xác nhận lên tầng được thiết kế lại --- */}
           {exitConfirmationPos && (
-             <div 
-                className="absolute z-10 p-4 bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-2xl border border-slate-600 flex flex-col items-center gap-3 animate-fade-in"
-                style={{
-                    left: `${(exitConfirmationPos.x + 0.5) / BOARD_SIZE * 100}%`,
-                    top: `${(exitConfirmationPos.y + 0.5) / BOARD_SIZE * 100}%`,
-                    transform: 'translate(-50%, -50%)',
-                    width: '180px',
-                }}
-             >
-                <p className="text-slate-200 font-semibold text-center">Lên tầng {currentFloor + 1}?</p>
-                <div className="flex justify-center gap-4 w-full">
-                    <button onClick={() => setExitConfirmationPos(null)} className="flex-1 p-2 bg-red-600/80 hover:bg-red-500 rounded-lg transition-colors flex justify-center items-center" aria-label="Ở lại"><XIcon className="w-6 h-6 text-white"/></button>
-                    <button onClick={goToNextFloor} className="flex-1 p-2 bg-green-600/80 hover:bg-green-500 rounded-lg transition-colors flex justify-center items-center" aria-label="Lên tầng"><CheckIcon className="w-6 h-6 text-white"/></button>
+             <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 text-center">
+                    <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
+                        <StairsIcon className="h-9 w-9 text-white" />
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-white">Tầng Hoàn Tất!</h3>
+                    <p className="mt-2 text-slate-400">Bạn muốn lên tầng {currentFloor + 1}?</p>
+
+                    <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+                        <button 
+                            onClick={goToNextFloor} 
+                            className="w-full inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 transform hover:scale-[1.02]"
+                        >
+                            Lên tầng
+                        </button>
+                        <button 
+                            onClick={() => setExitConfirmationPos(null)} 
+                            className="w-full inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 transform hover:scale-[1.02]"
+                        >
+                            Ở lại
+                        </button>
+                    </div>
                 </div>
              </div>
           )}
@@ -197,4 +207,4 @@ export default function App() {
 
 // Font & Style (không đổi)
 const fontLink = document.createElement('link'); fontLink.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"; fontLink.rel = "stylesheet"; document.head.appendChild(fontLink);
-const style = document.createElement('style'); style.innerHTML = `body{font-family:'Poppins',sans-serif}@keyframes fade-in{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}.animate-fade-in{animation:fade-in .4s cubic-bezier(.25,.46,.45,.94) forwards}`; document.head.appendChild(style);
+const style = document.createElement('style'); style.innerHTML = `body{font-family:'Poppins',sans-serif}@keyframes fade-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.animate-fade-in{animation:fade-in .3s cubic-bezier(.25,.46,.45,.94) forwards}`; document.head.appendChild(style);
