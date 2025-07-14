@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-// --- Các component Icon SVG & IMG (Không thay đổi) ---
+// --- Các component Icon SVG & IMG ---
 const BombIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="13" r="9" /><path d="m19.5 9.5 1.8-1.8a2.4 2.4 0 0 0 0-3.4l-1.6-1.6a2.4 2.4 0 0 0-3.4 0l-1.8 1.8" /><path d="m22 2-1.5 1.5" /><path d="M13 13h-2" /><path d="M13 13v-2" /><path d="m13 13 2.1-2.1" /></svg> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const HorizontalBombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Horizontal Bomb" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
-const StairsIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 2H12l-2.5 2.5L5 9l-3 3v10h10v-5l4-4 4-4-2-2z"/><path d="m16 14-4 4v-5"/><path d="m6 14 4-4H5"/></svg> );
+// --- THAY ĐỔI: Thay thế SVG bằng thẻ <img> cho icon Lối lên tầng ---
+const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 const TrophyIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.87 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.13 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> );
 const ArrowHorizontalIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12H3"/><path d="m12 5-7 7 7 7"/></svg> );
 const ArrowVerticalIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 21V3"/><path d="m5 12 7-7 7 7"/></svg> );
@@ -113,7 +114,6 @@ export default function App() {
     const { isRevealed, isMineHorizontal, isMineVertical, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { 
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
-        // --- THAY ĐỔI: Thêm border-transparent vào ô chưa mở ---
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
         exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' 
@@ -144,7 +144,8 @@ export default function App() {
         } else if (isMineHorizontal) {
             iconContent = <HorizontalBombIcon className={imageIconClass} />;
         } else if (isExit) {
-            iconContent = <StairsIcon className={`${iconClass} text-green-400`} />;
+            // --- THAY ĐỔI: Sử dụng icon image cho lối ra ---
+            iconContent = <StairsIcon className={imageIconClass} />;
             specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCoin) { 
             iconContent = <CircleDollarSignIcon className={imageIconClass} />;
@@ -196,12 +197,13 @@ export default function App() {
         <footer className="mt-8 text-center text-slate-500 text-sm">Tạo bởi Gemini với React & Tailwind CSS.</footer>
       </div>
 
-      {/* Pop-up xác nhận lên tầng (không đổi) */}
+      {/* Pop-up xác nhận lên tầng */}
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
-                    <StairsIcon className="h-9 w-9 text-white" />
+                    {/* --- THAY ĐỔI: Sử dụng icon image trong popup --- */}
+                    <StairsIcon className="h-9 w-9 object-contain" />
                 </div>
                 <h3 className="text-2xl font-bold text-white">Tầng Hoàn Tất!</h3>
                 <p className="mt-2 text-slate-400">Bạn muốn lên tầng {currentFloor + 1}?</p>
