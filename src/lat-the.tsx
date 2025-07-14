@@ -58,7 +58,7 @@ const ScopedStyles = () => (
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 10; 
+            z-index: 1010; /* Tăng z-index để nổi lên trên overlay */
             box-sizing: border-box;
             flex-shrink: 0; 
         }
@@ -72,12 +72,18 @@ const ScopedStyles = () => (
             border-radius: 8px;
             background-color: rgba(30, 41, 59, 0.8); /* slate-800/80 */
             border: 1px solid rgb(51, 65, 85); /* slate-700 */
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, opacity 0.3s ease, visibility 0.3s; /* <<< THAY ĐỔI: Thêm transition cho opacity và visibility */
             cursor: pointer;
             color: #cbd5e1; /* slate-300 */
         }
         .vocabulary-chest-root .vocab-screen-home-btn:hover {
             background-color: rgb(51, 65, 85); /* slate-700 */
+        }
+        /* <<< THÊM MỚI: Lớp để ẩn nút Home >>> */
+        .vocabulary-chest-root .vocab-screen-home-btn.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
         }
         .vocabulary-chest-root .vocab-screen-home-btn svg {
             width: 20px;
@@ -155,7 +161,19 @@ const ScopedStyles = () => (
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .vocabulary-chest-root .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: vocabulary-chest-fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
+        .vocabulary-chest-root .card-opening-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(10, 10, 20, 0.95);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Canh nội dung lên trên */
+            animation: vocabulary-chest-fade-in 0.5s ease;
+            overflow: hidden;
+            padding: 70px 15px 80px; /* Thêm padding trên để chừa chỗ cho header, dưới cho footer */
+            box-sizing: border-box;
+        }
         .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
         .vocabulary-chest-root .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .vocabulary-chest-root .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
@@ -367,7 +385,7 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 interface VocabularyChestScreenProps { 
     onClose: () => void; 
     currentUserId: string | null; 
-    onUpdateCoins: (amount: number) => void; // THAY ĐỔI: Nhận hàm cập nhật coin
+    onUpdateCoins: (amount: number) => void; 
     onGemReward: (amount: number) => void;
     displayedCoins: number; 
 }
@@ -382,7 +400,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [showFourOverlay, setShowFourOverlay] = useState(false);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
     const [isProcessingClick, setIsProcessingClick] = useState(false);
-    // THAY ĐỔI: Lưu thêm giá tiền để mở lại
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType, price: number } | null>(null);
 
     useEffect(() => {
@@ -512,11 +529,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    // THAY ĐỔI: Hàm nhận thêm giá tiền để kiểm tra và trừ coin
     const handleOpenCards = async (count: 1 | 4, chestType: ChestType, price: number) => {
         if (isProcessingClick) return;
 
-        // BƯỚC 1: Kiểm tra đủ coin
         if (displayedCoins < price) {
             alert(`Bạn không đủ coin! Cần ${price.toLocaleString()}, bạn đang có ${displayedCoins.toLocaleString()}.`);
             return;
@@ -529,9 +544,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
 
         setIsProcessingClick(true);
-        setLastOpenedChest({ count, type: chestType, price }); // Lưu lại cả giá tiền
+        setLastOpenedChest({ count, type: chestType, price }); 
 
-        // BƯỚC 2: Trừ coin ngay lập tức
         onUpdateCoins(-price);
 
         let tempPool = [...targetPool];
@@ -559,16 +573,13 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setTimeout(() => setIsProcessingClick(false), 500); 
     };
     
-    // THAY ĐỔI: Xóa bỏ thưởng coin
     const handleCloseOverlay = (openedCount: number) => {
         setShowSingleOverlay(false);
         setShowFourOverlay(false);
         setCardsForPopup([]);
-        // onCoinReward(10 * openedCount); // Đã xóa
         onGemReward(1 * openedCount);
     };
     
-    // THAY ĐỔI: Mở lại bằng cách gọi handleOpenCards với thông tin đã lưu
     const handleOpenAgain = () => {
         if (lastOpenedChest) {
             handleOpenCards(lastOpenedChest.count, lastOpenedChest.type, lastOpenedChest.price);
@@ -582,53 +593,51 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             
             {isLoading && <LoadingOverlay isVisible={true} />}
 
-            {/* Phần nội dung chính của component */}
+            {!isLoading && (
+                 <header className="main-header">
+                    <button 
+                        onClick={onClose} 
+                        // <<< THAY ĐỔI: Thêm lớp 'is-hidden' một cách có điều kiện >>>
+                        className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} 
+                        title="Quay lại Trang Chính"
+                    >
+                        <HomeIcon />
+                        <span>Trang Chính</span>
+                    </button>
+                    
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                </header>
+            )}
+
             {!showSingleOverlay && !showFourOverlay && !isLoading && (
-                <>
-                    <header className="main-header">
-                        <button 
-                            onClick={onClose} 
-                            className="vocab-screen-home-btn" 
-                            title="Quay lại Trang Chính"
-                        >
-                            <HomeIcon />
-                            <span>Trang Chính</span>
-                        </button>
-                        
-                        <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-
-                    </header>
-
-                    <div className="chest-gallery-container">
-                        {CHEST_DATA.map((chest) => {
-                            if (chest.isComingSoon) {
-                                return (
-                                    <ChestUI
-                                        key={chest.id}
-                                        {...chest}
-                                        price10={chest.price10 ?? 0}
-                                        remainingCount={0}
-                                        onOpen1={() => {}}
-                                        onOpen10={() => {}}
-                                    />
-                                );
-                            }
-                            const chestKey = chest.chestType as ChestType;
-                            const remainingCount = availableIndices[chestKey]?.length ?? 0;
+                <div className="chest-gallery-container">
+                    {CHEST_DATA.map((chest) => {
+                        if (chest.isComingSoon) {
                             return (
                                 <ChestUI
                                     key={chest.id}
                                     {...chest}
                                     price10={chest.price10 ?? 0}
-                                    remainingCount={remainingCount}
-                                    // THAY ĐỔI: Truyền giá tiền vào hàm xử lý
-                                    onOpen1={() => handleOpenCards(1, chestKey, chest.price1)}
-                                    onOpen10={() => chest.price10 && handleOpenCards(4, chestKey, chest.price10)}
+                                    remainingCount={0}
+                                    onOpen1={() => {}}
+                                    onOpen10={() => {}}
                                 />
                             );
-                        })}
-                    </div>
-                </>
+                        }
+                        const chestKey = chest.chestType as ChestType;
+                        const remainingCount = availableIndices[chestKey]?.length ?? 0;
+                        return (
+                            <ChestUI
+                                key={chest.id}
+                                {...chest}
+                                price10={chest.price10 ?? 0}
+                                remainingCount={remainingCount}
+                                onOpen1={() => handleOpenCards(1, chestKey, chest.price1)}
+                                onOpen10={() => chest.price10 && handleOpenCards(4, chestKey, chest.price10)}
+                            />
+                        );
+                    })}
+                </div>
             )}
 
             {/* Các Overlay được hiển thị bên trong Lớp Gốc */}
