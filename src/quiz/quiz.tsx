@@ -400,7 +400,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         </div>
       </header>
       
-      <main className="flex-grow overflow-y-auto flex justify-center p-4 pb-28"> {/* Added padding-bottom */}
+      <main className="flex-grow overflow-y-auto flex justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {showScore ? (
               <div className="p-10 text-center">
@@ -466,6 +466,16 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                       <button
+                          onClick={handleHintClick}
+                          disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0}
+                          className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30"
+                          aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}
+                        >
+                          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000944c623081c4672d72472f68.png" alt="Hint" className="w-4 h-4" />
+                          <span className="text-yellow-300">{HINT_COST}</span>
+                          <div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div>
+                        </button>
                       <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                     </div>
                   </div>
@@ -529,33 +539,16 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         </div>
       </main>
       
-      {/* Action Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none z-10">
-        <div className="flex justify-end items-center gap-4 w-full max-w-2xl mx-auto pointer-events-auto">
-          {/* Hint Button */}
-          {!answered && !showScore && playableQuestions.length > 0 && (
-             <button
-                onClick={handleHintClick}
-                disabled={hintUsed || coins < HINT_COST}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-lg"
-                aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}
-              >
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000944c623081c4672d72472f68.png" alt="Hint" className="w-5 h-5" />
-                <span>Gợi ý</span>
-              </button>
-          )}
-
-          {/* Next Button */}
-          {showNextButton && (playableQuestions.length > 0) && (
-            <button
-              onClick={handleNextQuestion}
-              className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
-            >
-              {currentQuestion < playableQuestions.length - 1 ? 'Next' : 'Xem kết quả'}
-            </button>
-          )}
+      {showNextButton && (playableQuestions.length > 0) && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={handleNextQuestion}
+            className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
+          >
+            {currentQuestion < playableQuestions.length - 1 ? 'Next' : 'Xem kết quả'}
+          </button>
         </div>
-      </footer>
+      )}
 
     </div>
   );
