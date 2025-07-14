@@ -1,4 +1,4 @@
-// lat-the.tsx (Full Code with Refined Header CSS)
+// lat-the.tsx (Full, Unabridged Code with Flexbox Layout and Centered Header Title)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
@@ -11,7 +11,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật Header) ================================
+// === 1. CSS STYLES (Đã cập nhật) =======================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -45,30 +45,29 @@ const GlobalStyles = () => (
             width: 100%;
         }
 
-        /* === HEADER CỐ ĐỊNH - THIẾT KẾ LẠI TINH TẾ HƠN (ĐÃ CẬP NHẬT) === */
+        /* === HEADER CỐ ĐỊNH - SỬA LẠI === */
         .main-header {
-            position: sticky;
+            /* position: fixed; <-- ĐÃ XÓA */
+            position: sticky;   /* <-- ĐÃ THÊM: "Dính" ở trên cùng khi cuộn */
             top: 0;
             left: 0;
             width: 100%;
-            /* GIẢM PADDING: Làm header ngắn hơn */
-            padding: 8px 20px;
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: rgba(16, 22, 46, 0.75); /* Hơi đậm hơn một chút */
-            backdrop-filter: blur(10px); /* Tăng hiệu ứng blur */
-            -webkit-backdrop-filter: blur(10px);
+            background-color: rgba(16, 22, 46, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
             box-sizing: border-box;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
+            transition: opacity 0.3s ease;
+            flex-shrink: 0; /* <-- ĐÃ THÊM: Đảm bảo header không bị co lại */
         }
 
         .header-title {
-            /* GIẢM FONT: Cân đối với header mới */
-            font-size: 1.1rem;
+            font-size: 1.25rem;
             font-weight: 600;
             color: #e0e0e0;
             margin: 0;
@@ -76,32 +75,14 @@ const GlobalStyles = () => (
         }
 
         .vocab-screen-close-btn {
-            /* THAY ĐỔI KÍCH THƯỚC: Gọn gàng hơn, hình tròn */
-            width: 36px; 
-            height: 36px; 
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%; /* Bo tròn */
-            cursor: pointer; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center;
-            transition: all 0.2s ease;
-            opacity: 0.85;
-            /* Bỏ margin/padding cũ để dễ kiểm soát */
-            margin: 0;
-            padding: 0;
+            width: 44px; height: 44px; background: transparent; border: none;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.9;
+            margin: -10px; padding: 10px;
         }
-        .vocab-screen-close-btn:hover { 
-            transform: scale(1.1); 
-            opacity: 1; 
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
+        .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
         .vocab-screen-close-btn img {
-            /* Giảm kích thước icon một chút */
-            width: 20px; 
-            height: 20px;
+            width: 24px; height: 24px;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
         }
         
@@ -426,7 +407,7 @@ const CHEST_DEFINITIONS = {
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (JSX không đổi) =================================
+// === 3. COMPONENT CHÍNH (Đã cập nhật JSX) ================================
 // ========================================================================
 
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
@@ -637,7 +618,15 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <div className="page-wrapper">
                 {!showSingleOverlay && !showFourOverlay && (
                     <header className="main-header">
+                        {/* === THAY ĐỔI ===
+                            Thêm một div trống bên trái.
+                            Nó có cùng chiều rộng (44px) với nút đóng bên phải.
+                            Với justify-content: space-between, điều này sẽ căn giữa tiêu đề một cách hoàn hảo.
+                        */}
+                        <div style={{ width: '44px', flexShrink: 0 }} />
+
                         <h1 className="header-title">Chọn Rương ({`Còn ${totalAvailable.toLocaleString()} ảnh`})</h1>
+                        
                         <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
                         </button>
