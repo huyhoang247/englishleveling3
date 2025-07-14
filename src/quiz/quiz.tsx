@@ -117,11 +117,11 @@ const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> =
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-xl w-full max-w-md p-5 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up"
+                className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Tag like in the image */}
-                <div className="inline-flex items-center bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-4">
+                <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4">
                     {/* Price Tag Icon */}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
@@ -130,7 +130,7 @@ const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> =
                 </div>
 
                 {/* Definition text like in the image */}
-                <p className="text-gray-800 text-base leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic">
                    {`${data.vietnamese} (${data.english}) là ${data.explanation}`}
                 </p>
             </div>
