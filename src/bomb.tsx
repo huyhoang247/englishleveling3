@@ -1,34 +1,45 @@
 import React, { useState, useEffect } from 'react';
 
 // --- Các component Icon SVG & IMG ---
-const BombIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="13" r="9" /><path d="m19.5 9.5 1.8-1.8a2.4 2.4 0 0 0 0-3.4l-1.6-1.6a2.4 2.4 0 0 0-3.4 0l-1.8 1.8" /><path d="m22 2-1.5 1.5" /><path d="M13 13h-2" /><path d="M13 13v-2" /><path d="m13 13 2.1-2.1" /></svg> );
+const BombIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="13" r="9" /><path d="m19.5 9.5 1.8-1.8a2.4 2.4 0 0 0 0-3.4l-1.6-1.6a2.4 2.4 0 0 0-3.4 0l-1.8 1.8" /><path d="m22 2-1.5 1.5" /><path d="M13 13h-2" /><path d="M13 13v-2" /><path d="m13 13 2.1-2.1" /></svg> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
-// --- THAY ĐỔI: Xóa các icon bom không còn dùng ---
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 const TrophyIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.87 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.13 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> );
-const CheckIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 6 9 17l-5-5"/></svg> );
-const XIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> );
-
 
 // --- Cấu hình game ---
 const BOARD_SIZE = 6;
-// --- THAY ĐỔI: Cấu hình cho bom ngẫu nhiên và coin ---
 const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
+// --- THAY ĐỔI: Thêm hằng số cho độ trễ của hiệu ứng ---
+const EXPLOSION_STEP_DELAY = 120; // ms
+
+// --- THAY ĐỔI: Hàm tiện ích tạo độ trễ ---
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 export default function App() {
-  const [currentFloor, setCurrentFloor] = useState(1);
   const [board, setBoard] = useState(() => createBoard());
   const [coinsFound, setCoinsFound] = useState(0);
   const [flagsPlaced, setFlagsPlaced] = useState(0);
+  const [currentFloor, setCurrentFloor] = useState(1);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
+  // --- THAY ĐỔI: Thêm trạng thái để khóa input trong lúc nổ ---
+  const [isExploding, setIsExploding] = useState(false);
 
-  // --- THAY ĐỔI: Logic tạo bàn được cập nhật ---
+  // --- THAY ĐỔI: Cập nhật hàm tạo board để thêm thuộc tính explosionStep ---
   function createBoard() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
+    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({
+        x: colIndex,
+        y: rowIndex,
+        isMineRandom: false,
+        isCoin: false,
+        isExit: false,
+        isRevealed: false,
+        isFlagged: false,
+        explosionStep: 0, // 0: bình thường, 1: đang nổ
+    })));
     
     const placeItem = (itemType) => { 
         let placed = false; 
@@ -50,77 +61,104 @@ export default function App() {
     return newBoard;
   }
   
-  // --- THAY ĐỔI: Hàm explode không còn dùng, logic nổ được tích hợp vào handleCellClick ---
+  // --- THAY ĐỔI: Toàn bộ hàm handleCellClick được làm lại với async/await để tạo hiệu ứng ---
+  async function handleCellClick(x, y) {
+    // Khóa input nếu đang nổ hoặc ô đã được xử lý
+    if (isExploding || board[y][x].isFlagged || board[y][x].isRevealed) return;
 
-  // --- THAY ĐỔI: Logic xử lý click được thiết kế lại hoàn toàn cho bom ngẫu nhiên và dây chuyền ---
-  function handleCellClick(x, y) {
-    const cell = board[y][x];
-    if (cell.isFlagged || cell.isRevealed) return;
+    const initialCell = board[y][x];
 
-    if (cell.isRevealed && cell.isExit) {
+    // Xử lý cửa ra
+    if (initialCell.isExit) {
+        // Cần phải mở ô cửa ra trước
+        if (!initialCell.isRevealed) {
+            setBoard(prev => {
+                const newBoard = JSON.parse(JSON.stringify(prev));
+                newBoard[y][x].isRevealed = true;
+                return newBoard;
+            });
+        }
         setExitConfirmationPos({ x, y });
         return;
     }
-    
-    const newBoard = JSON.parse(JSON.stringify(board));
-    const clickedCell = newBoard[y][x];
+
+    let tempBoard = JSON.parse(JSON.stringify(board));
+    const clickedCell = tempBoard[y][x];
 
     if (clickedCell.isMineRandom) {
-        const explosionsQueue = [{x, y}]; // Hàng đợi các quả bom cần kích nổ
-        let newCoinsFromExplosion = 0;
+        setIsExploding(true); // Bắt đầu chuỗi nổ, khóa input
 
-        // Xử lý nổ dây chuyền
+        const explosionsQueue = [{x, y}];
+        const explodedCells = new Set(); // Theo dõi các ô đã nổ để tránh lặp lại
+
+        // Xử lý nổ dây chuyền tuần tự
         while (explosionsQueue.length > 0) {
             const currentBombPos = explosionsQueue.shift();
-            const bombCell = newBoard[currentBombPos.y][currentBombPos.x];
+            const bombKey = `${currentBombPos.y}-${currentBombPos.x}`;
 
-            // Bỏ qua nếu quả bom này đã được xử lý trong cùng một chuỗi
-            if (bombCell.isRevealed) continue;
-
-            // Mở ô chứa bom hiện tại
-            bombCell.isRevealed = true;
+            if (explodedCells.has(bombKey)) continue;
+            explodedCells.add(bombKey);
             
-            // Lấy danh sách tất cả các ô chưa được mở
+            // Bước 1: Kích hoạt hiệu ứng nổ cho quả bom hiện tại
+            tempBoard[currentBombPos.y][currentBombPos.x].explosionStep = 1;
+            setBoard(JSON.parse(JSON.stringify(tempBoard)));
+            await delay(EXPLOSION_STEP_DELAY);
+
+            // Bước 2: Tìm 4 ô ngẫu nhiên để phá hủy
             const unrevealedCells = [];
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (!newBoard[r][c].isRevealed) {
-                        unrevealedCells.push(newBoard[r][c]);
+                    const cellKey = `${r}-${c}`;
+                    if (!tempBoard[r][c].isRevealed && !explodedCells.has(cellKey)) {
+                        unrevealedCells.push(tempBoard[r][c]);
                     }
                 }
             }
+            
+            const cellsToExplode = unrevealedCells.sort(() => 0.5 - Math.random()).slice(0, 4);
 
-            // Xáo trộn danh sách và lấy 4 ô đầu tiên để làm nổ
-            const shuffled = unrevealedCells.sort(() => 0.5 - Math.random());
-            const cellsToExplode = shuffled.slice(0, 4);
+            // Bước 3: Kích hoạt hiệu ứng nổ cho các ô bị ảnh hưởng
+            for (const targetCell of cellsToExplode) {
+                const targetKey = `${targetCell.y}-${targetCell.x}`;
+                if (explodedCells.has(targetKey)) continue;
+                explodedCells.add(targetKey);
 
-            cellsToExplode.forEach(targetCell => {
-                targetCell.isRevealed = true;
+                tempBoard[targetCell.y][targetCell.x].explosionStep = 1;
+                
                 if (targetCell.isCoin) {
-                    newCoinsFromExplosion++;
+                    setCoinsFound(prev => prev + 1);
                 }
-                // Nếu ô bị nổ cũng là một quả bom, thêm nó vào hàng đợi để nổ dây chuyền
                 if (targetCell.isMineRandom) {
                     explosionsQueue.push({x: targetCell.x, y: targetCell.y});
                 }
-            });
+                
+                setBoard(JSON.parse(JSON.stringify(tempBoard)));
+                await delay(EXPLOSION_STEP_DELAY);
+            }
         }
         
-        setCoinsFound(prev => prev + newCoinsFromExplosion);
+        // Bước 4: Dọn dẹp - Chuyển tất cả các ô đã nổ sang trạng thái 'revealed'
+        tempBoard.forEach(row => row.forEach(cell => {
+            if (cell.explosionStep === 1) {
+                cell.isRevealed = true;
+                cell.explosionStep = 0; // Reset lại hiệu ứng
+            }
+        }));
+        setBoard(tempBoard);
+        setIsExploding(false); // Kết thúc chuỗi nổ, mở khóa input
 
     } else { // Nếu ô được click không phải là bom
-        clickedCell.isRevealed = true;
         if (clickedCell.isCoin) {
             setCoinsFound(prev => prev + 1);
         }
+        clickedCell.isRevealed = true;
+        setBoard(tempBoard);
     }
-    setBoard(newBoard);
   }
 
-  // Các hàm khác không đổi
   function handleRightClick(e, x, y) {
     e.preventDefault();
-    if (board[y][x].isRevealed) return;
+    if (isExploding || board[y][x].isRevealed) return;
     const newBoard = JSON.parse(JSON.stringify(board));
     const cell = newBoard[y][x];
     if (!cell.isFlagged && flagsPlaced < TOTAL_BOMBS) {
@@ -132,28 +170,34 @@ export default function App() {
     }
     setBoard(newBoard);
   }
-  function goToNextFloor() {
-    setCurrentFloor(prev => prev + 1);
-    setBoard(createBoard());
-    setFlagsPlaced(0);
-    setExitConfirmationPos(null);
-  }
+
   function resetGame() {
     setCurrentFloor(1);
     setCoinsFound(0);
     setBoard(createBoard());
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
+    setIsExploding(false);
   }
 
-  // --- THAY ĐỔI: Component Cell cập nhật logic hiển thị bom ---
+  function goToNextFloor() {
+    setCurrentFloor(prev => prev + 1);
+    setBoard(createBoard());
+    setFlagsPlaced(0);
+    setExitConfirmationPos(null);
+    setIsExploding(false);
+  }
+
+  // --- THAY ĐỔI: Component Cell cập nhật logic hiển thị cho hiệu ứng nổ ---
   const Cell = ({ cellData }) => {
-    const { isRevealed, isMineRandom, isCoin, isFlagged, isExit } = cellData;
-    const cellStyle = { 
-        base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
-        hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
-        revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
-        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' 
+    const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, explosionStep } = cellData;
+    const cellStyle = {
+        base: 'w-full h-full rounded-lg transition-all duration-200 relative',
+        hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent',
+        revealed: 'bg-slate-800/80 cursor-default border border-slate-700',
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
+        // Thêm style cho hiệu ứng nổ
+        exploding: 'bg-orange-500/50 border-orange-400 scale-110 animate-ping'
     };
     
     let content = null;
@@ -162,8 +206,14 @@ export default function App() {
     const wrapperClass = "w-[70%] h-[70%]";
     const iconClass = "w-full h-full";
     const imageIconClass = `${iconClass} object-contain`;
-
-    if (isFlagged) {
+    
+    // Ưu tiên hiển thị hiệu ứng nổ
+    if (explosionStep === 1) {
+        specificCellStyle = cellStyle.exploding;
+        content = <div className={wrapperClass}><BombIcon className={`${iconClass} text-white`} /></div>;
+    }
+    else if (isFlagged) {
+        specificCellStyle = cellStyle.hidden; // Giữ nền của ô chưa mở
         content = <div className={wrapperClass}><FlagIcon className={`${iconClass} text-red-500`} /></div>;
     } 
     else if (isRevealed) {
@@ -188,7 +238,7 @@ export default function App() {
     
     return ( 
       <div 
-        className={`${cellStyle.base} ${isRevealed ? (specificCellStyle || cellStyle.revealed) : cellStyle.hidden}`} 
+        className={`${cellStyle.base} ${specificCellStyle || (isRevealed ? cellStyle.revealed : cellStyle.hidden)}`}
         onClick={() => handleCellClick(cellData.x, cellData.y)} 
         onContextMenu={(e) => handleRightClick(e, cellData.x, cellData.y)}
       >
@@ -198,11 +248,11 @@ export default function App() {
       </div> 
     );
   };
-
+  
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
-        {/* Header và Bảng điều khiển (không đổi) */}
+        {/* Header và Bảng điều khiển */}
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
           <p className="text-slate-400 mt-2">Dọn bàn và lên tầng cao nhất!</p>
@@ -214,8 +264,10 @@ export default function App() {
             <div className="flex justify-center"><button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors"><RefreshCwIcon className="w-6 h-6" /></button></div>
         </div>
 
-        {/* Bàn chơi (không đổi) */}
+        {/* Bàn chơi */}
         <div className="relative">
+          {/* --- THAY ĐỔI: Thêm lớp overlay để chặn click chuột khi đang nổ --- */}
+          {isExploding && <div className="absolute inset-0 z-10 cursor-not-allowed"></div>}
           <div className="w-full aspect-square">
             <div className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px' }}>
               {board.flat().map((cell) => <Cell key={`${cell.y}-${cell.x}`} cellData={cell} />)}
@@ -225,7 +277,7 @@ export default function App() {
         <footer className="mt-8 text-center text-slate-500 text-sm">Tạo bởi Gemini với React & Tailwind CSS.</footer>
       </div>
 
-      {/* Pop-up xác nhận lên tầng (không đổi) */}
+      {/* Pop-up xác nhận lên tầng */}
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
