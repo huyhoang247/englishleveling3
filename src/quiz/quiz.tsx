@@ -1,10 +1,11 @@
-import { useState, useEffect, memo, useCallback } from 'react';
+import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
+import detailedMeaningsText from './vocabulary-definitions.ts'; // Import the definitions
 
 // Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
@@ -99,6 +100,54 @@ const shuffleArray = (array) => {
   return shuffledArray;
 };
 
+// --- START: NEWLY ADDED CODE ---
+
+// Interface for a single definition entry
+interface Definition {
+    vietnamese: string;
+    english: string;
+    explanation: string;
+}
+
+// Detail Popup Component
+const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => {
+    if (!data) return null;
+    return (
+        <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+            onClick={onClose}
+        >
+            <div 
+                className="bg-gray-50 rounded-2xl shadow-xl w-full max-w-lg p-6 relative transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button 
+                    onClick={onClose}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    aria-label="Đóng"
+                >
+                    <XIcon className="w-5 h-5 text-gray-600" />
+                </button>
+                <h3 className="text-2xl font-bold text-indigo-700 mb-2 capitalize">{data.english}</h3>
+                <p className="text-md text-gray-500 font-medium mb-4">({data.vietnamese})</p>
+                <div className="border-t border-gray-200 pt-4 max-h-[60vh] overflow-y-auto">
+                     <p className="text-gray-700 leading-relaxed text-base">{data.explanation}</p>
+                </div>
+            </div>
+             <style jsx>{`
+                @keyframes fade-in-scale {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                .animate-fade-in-scale {
+                    animation: fade-in-scale 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+                }
+            `}</style>
+        </div>
+    );
+};
+// --- END: NEWLY ADDED CODE ---
+
 
 export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -123,10 +172,40 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [filteredQuizData, setFilteredQuizData] = useState([]);
   const [playableQuestions, setPlayableQuestions] = useState([]);
   
-  // State cho tính năng gợi ý
+  // State for hint feature
   const HINT_COST = 200;
   const [hintUsed, setHintUsed] = useState(false);
   const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
+  
+  // --- START: NEWLY ADDED CODE ---
+  // State for detail popup
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [detailData, setDetailData] = useState<Definition | null>(null);
+  const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
+
+  // Parse definitions from the imported text file
+  const definitionsMap = useMemo(() => {
+    const definitions: { [key: string]: Definition } = {};
+    const lines = detailedMeaningsText.trim().split('\n');
+    lines.forEach(line => {
+        if (line.trim() === '') return;
+        const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
+        if (match) {
+            const vietnameseWord = match[1].trim();
+            const englishWord = match[2].trim();
+            const explanation = match[3].trim();
+            
+            definitions[englishWord.toLowerCase()] = {
+                vietnamese: vietnameseWord,
+                english: englishWord,
+                explanation: explanation,
+            };
+        }
+    });
+    return definitions;
+  }, []);
+  // --- END: NEWLY ADDED CODE ---
+
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -214,6 +293,21 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       setShuffledOptions(shuffleArray(playableQuestions[currentQuestion].options));
     }
   }, [currentQuestion, playableQuestions]);
+
+  // --- START: NEWLY ADDED CODE ---
+  // Effect to find the vocabulary word for the current question
+  useEffect(() => {
+      if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
+          const currentQuizItem = playableQuestions[currentQuestion];
+          const matchedWord = userVocabulary.find(vocabWord =>
+              new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
+          );
+          setCurrentQuestionWord(matchedWord || null);
+      } else {
+          setCurrentQuestionWord(null);
+      }
+  }, [currentQuestion, playableQuestions, userVocabulary]);
+  // --- END: NEWLY ADDED CODE ---
   
   const handleTimeUp = () => {
     if (answered) return;
@@ -245,7 +339,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     if (startValue === endValue) return;
 
     const isCountingUp = endValue > startValue;
-    // Calculate the step. It should always be positive. The direction is handled later.
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
 
@@ -256,7 +349,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         current -= step;
       }
 
-      // Check if we've reached or passed the target
       if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
         setDisplayedCoins(endValue);
         clearInterval(interval);
@@ -384,6 +476,20 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setHiddenOptions([]);
   };
 
+  // --- START: NEWLY ADDED CODE ---
+  const handleDetailClick = () => {
+      if (currentQuestionWord) {
+          const definition = definitionsMap[currentQuestionWord.toLowerCase()];
+          if (definition) {
+              setDetailData(definition);
+              setShowDetailPopup(true);
+          } else {
+             console.warn(`Definition not found for word: ${currentQuestionWord}`);
+          }
+      }
+  };
+  // --- END: NEWLY ADDED CODE ---
+
   const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
   
   if (loading) {
@@ -394,6 +500,15 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
       
+      {/* --- START: NEWLY ADDED CODE --- */}
+      {showDetailPopup && (
+          <DetailPopup 
+              data={detailData}
+              onClose={() => setShowDetailPopup(false)}
+          />
+      )}
+      {/* --- END: NEWLY ADDED CODE --- */}
+
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button
           onClick={onGoBack}
@@ -549,8 +664,16 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         </div>
       </main>
       
+      {/* --- START: MODIFIED CODE BLOCK --- */}
       {showNextButton && (playableQuestions.length > 0) && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-4">
+          <button
+            onClick={handleDetailClick}
+            disabled={!currentQuestionWord || !definitionsMap[currentQuestionWord.toLowerCase()]}
+            className="px-6 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            Chi tiết
+          </button>
           <button
             onClick={handleNextQuestion}
             className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition-transform duration-200 ease-in-out hover:scale-105 active:scale-100 shadow-lg hover:shadow-xl"
@@ -559,6 +682,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           </button>
         </div>
       )}
+      {/* --- END: MODIFIED CODE BLOCK --- */}
 
     </div>
   );
