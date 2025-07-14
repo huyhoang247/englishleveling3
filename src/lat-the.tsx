@@ -1,4 +1,4 @@
-// lat-the.tsx (Full, Unabridged Code with Flexbox Layout and Centered Header Title)
+// lat-the.tsx (Full, Unabridged Code with Flexbox Layout - Final Version)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
@@ -33,7 +33,7 @@ const GlobalStyles = () => (
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 0; /* <-- THAY ĐỔI: Bỏ khoảng đệm của toàn trang */
             box-sizing: border-box;
         }
         
@@ -615,18 +615,11 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <GlobalStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
             
+            {/* <<< THAY ĐỔI 2: ÁP DỤNG CẤU TRÚC JSX MỚI >>> */}
             <div className="page-wrapper">
                 {!showSingleOverlay && !showFourOverlay && (
                     <header className="main-header">
-                        {/* === THAY ĐỔI ===
-                            Thêm một div trống bên trái.
-                            Nó có cùng chiều rộng (44px) với nút đóng bên phải.
-                            Với justify-content: space-between, điều này sẽ căn giữa tiêu đề một cách hoàn hảo.
-                        */}
-                        <div style={{ width: '44px', flexShrink: 0 }} />
-
                         <h1 className="header-title">Chọn Rương ({`Còn ${totalAvailable.toLocaleString()} ảnh`})</h1>
-                        
                         <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
                         </button>
