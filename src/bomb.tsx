@@ -232,6 +232,3 @@ export default function App() {
   );
 }
 
-// Font & Style (không đổi)
-const fontLink = document.createElement('link'); fontLink.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"; fontLink.rel = "stylesheet"; document.head.appendChild(fontLink);
-const style = document.createElement('style'); style.innerHTML = `body{font-family:'Poppins',sans-serif}@keyframes fade-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.animate-fade-in{animation:fade-in .3s cubic-bezier(.25,.46,.45,.94) forwards}`; document.head.appendChild(style);
