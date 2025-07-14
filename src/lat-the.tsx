@@ -1,4 +1,4 @@
-// lat-the.tsx (Phiên bản đã cập nhật)
+// lat-the.tsx (Phiên bản đã cập nhật và sửa lỗi)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -7,6 +7,7 @@ import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } fr
 import { defaultImageUrls } from './image-url.ts'; 
 import ImagePreloader from './ImagePreloader.tsx'; 
 import { defaultVocabulary } from './list-vocabulary.ts';
+import CoinDisplay from './coin-display.tsx'; // <-- THÊM IMPORT
 
 // ========================================================================
 // === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
@@ -47,9 +48,9 @@ const ScopedStyles = () => (
             top: 0;
             left: 0;
             width: 100%;
-            padding: 8px 16px; /* Giảm padding để phù hợp với nút mới */
+            padding: 8px 16px;
             display: flex;
-            justify-content: flex-start; /* THAY ĐỔI: Canh lề nút sang trái */
+            justify-content: space-between; /* Canh lề các mục */
             align-items: center;
             background-color: rgba(16, 22, 46, 0.7);
             backdrop-filter: blur(8px);
@@ -59,6 +60,8 @@ const ScopedStyles = () => (
             box-sizing: border-box;
             flex-shrink: 0; 
         }
+        
+        /* === (ĐÃ XÓA CSS THỪA CHO COIN DISPLAY) === */
         
         /* CSS CHO NÚT HOME MỚI (Dựa trên thanh-tuu.tsx) */
         .vocabulary-chest-root .vocab-screen-home-btn {
@@ -361,11 +364,17 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // === 3. COMPONENT CHÍNH =================================================
 // ========================================================================
 
-interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
+interface VocabularyChestScreenProps { 
+    onClose: () => void; 
+    currentUserId: string | null; 
+    onCoinReward: (amount: number) => void; 
+    onGemReward: (amount: number) => void;
+    displayedCoins: number; 
+}
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
 const PRELOAD_POOL_SIZE = 20;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward, displayedCoins }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -564,7 +573,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             {!showSingleOverlay && !showFourOverlay && !isLoading && (
                 <>
                     <header className="main-header">
-                        {/* NÚT HOME MỚI THAY THẾ CHO TIÊU ĐỀ VÀ NÚT CLOSE */}
                         <button 
                             onClick={onClose} 
                             className="vocab-screen-home-btn" 
@@ -573,6 +581,10 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                             <HomeIcon />
                             <span>Trang Chính</span>
                         </button>
+                        
+                        {/* <-- SỬ DỤNG COMPONENT COIN DISPLAY --> */}
+                        <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+
                     </header>
 
                     <div className="chest-gallery-container">
