@@ -1,8 +1,6 @@
-// lat-the.tsx (Full Code with Refined Header Design)
+// lat-the.tsx (Phiên bản cuối cùng, đã được đóng gói và độc lập hoàn toàn)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
-
-// <<< THAY ĐỔI 1: IMPORT THÊM CÁC HÀM TỪ FIRESTORE (Không đổi) >>>
 import { db } from './firebase.js'; 
 import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
@@ -11,135 +9,91 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật Header) ================================
+// === 1. COMPONENT CSS ĐÃ ĐƯỢC ĐÓNG GÓI ================================
 // ========================================================================
-const GlobalStyles = () => (
+const ScopedStyles = () => (
     <style>{`
-        /* --- Cài đặt chung & Nền --- */
-        body {
+        /* --- LỚP GỐC: Thiết lập môi trường độc lập --- */
+        .vocabulary-chest-root {
+            /* Kích thước & Vị trí */
+            width: 100%;
+            height: 100%;
+            position: absolute; /* Quan trọng để tách biệt khỏi luồng layout cha */
+            top: 0;
+            left: 0;
+            
+            /* Nền & Giao diện */
             background-color: #0a0a14;
             background-image: radial-gradient(circle at center, #16213e, #0a0a14);
             color: #e0e0e0;
             font-family: 'Roboto', sans-serif;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        #root {
-            width: 100%;
-            height: 100vh;
+            
+            /* Bố cục nội bộ */
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start; /* Header ở trên, content ở dưới */
             align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            
+            /* Đảm bảo nó che phủ mọi thứ bên dưới */
+            z-index: 100; 
+            overflow: hidden; /* Ngăn cuộn ở cấp cao nhất của component */
         }
         
-        .page-wrapper {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 100%;
-        }
-
-        /* <<< THAY ĐỔI 2: HEADER ĐƯỢC THIẾT KẾ LẠI >>> */
-        /* === HEADER CỐ ĐỊNH - PHIÊN BẢN TINH TẾ === */
-        .main-header {
+        /* Tiền tố hóa TẤT CẢ các style khác với .vocabulary-chest-root */
+        
+        /* === HEADER === */
+        .vocabulary-chest-root .main-header {
             position: sticky;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 10px 24px;
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            
-            /* Hiệu ứng nền thủy tinh mờ với gradient */
-            background: linear-gradient(180deg, rgba(28, 38, 70, 0.85), rgba(16, 22, 46, 0.75));
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            
-            /* Đường viền và bóng đổ mềm mại */
-            border-bottom: 1px solid rgba(199, 210, 254, 0.2); /* c7d2fe với alpha */
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
-            
-            z-index: 100;
+            background-color: rgba(16, 22, 46, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10; /* Chỉ cần cao hơn content bên trong nó */
             box-sizing: border-box;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            flex-shrink: 0;
+            flex-shrink: 0; 
         }
 
-        /* Container cho tiêu đề và tiêu đề phụ */
-        .header-content {
-            display: flex;
-            align-items: baseline;
-            gap: 12px;
+        .vocabulary-chest-root .header-title {
+            font-size: 1.25rem; font-weight: 600; color: #e0e0e0;
+            margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
 
-        .header-title {
-            font-size: 1.15rem; /* Hơi nhỏ lại cho thanh lịch */
-            font-weight: 600;
-            color: #f0f0f0; /* Sáng hơn một chút */
-            margin: 0;
-            letter-spacing: 0.5px;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+        .vocabulary-chest-root .vocab-screen-close-btn {
+            width: 44px; height: 44px; background: transparent; border: none;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.9;
+            margin: -10px; padding: 10px;
         }
-
-        .header-subtitle {
-            font-size: 0.85rem;
-            font-weight: 400;
-            color: #a7b6d4; /* Một màu xám-xanh nhạt */
-            margin: 0;
-            opacity: 0.9;
-        }
-
-        /* Nút đóng được thiết kế lại */
-        .vocab-screen-close-btn {
-            width: 40px; 
-            height: 40px;
-            background-color: transparent;
-            border: none;
-            border-radius: 50%; /* Bo tròn */
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-            padding: 0;
-            margin: -8px; /* Bù lại padding để vùng click lớn hơn */
-        }
-        .vocab-screen-close-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: scale(1.1);
-        }
-        .vocab-screen-close-btn img {
-            width: 20px; /* Icon nhỏ hơn một chút */
-            height: 20px;
+        .vocabulary-chest-root .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
+        .vocabulary-chest-root .vocab-screen-close-btn img {
+            width: 24px; height: 24px;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
-            transition: filter 0.2s ease;
-        }
-        .vocab-screen-close-btn:hover img {
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)) brightness(1.1);
         }
         
-        /* === CONTAINER RƯƠNG (Không đổi) === */
-        .chest-gallery-container {
+        /* === CONTAINER RƯƠNG === */
+        .vocabulary-chest-root .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
             gap: 30px; width: 100%; max-width: 1300px; 
             padding: 20px 20px 100px; box-sizing: border-box;
-            flex-grow: 1;
-            overflow-y: auto;
+            flex-grow: 1;      /* Chiếm hết không gian còn lại */
+            overflow-y: auto;  /* Tạo thanh cuộn cho riêng nó */
         }
 
-        .chest-gallery-container::-webkit-scrollbar { width: 8px; }
-        .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
-        .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
-        .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
+        /* Tùy chỉnh thanh cuộn */
+        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { width: 8px; }
+        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
+        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
 
-        /* === GIAO DIỆN RƯƠNG BÁU (Không đổi) === */
-        .chest-ui-container {
+        /* === GIAO DIỆN RƯƠNG BÁU === */
+        .vocabulary-chest-root .chest-ui-container {
             width: 100%; max-width: 380px; min-width: 300px;
             background-color: #1a1f36; border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2);
@@ -147,118 +101,82 @@ const GlobalStyles = () => (
             transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
             position: relative; border: none;
         }
-        .chest-ui-container.is-coming-soon { filter: grayscale(80%); opacity: 0.7; }
-        .chest-ui-container::before {
+        .vocabulary-chest-root .chest-ui-container.is-coming-soon { filter: grayscale(80%); opacity: 0.7; }
+        .vocabulary-chest-root .chest-ui-container::before {
             content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px;
             background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
         }
-        .chest-ui-container:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3);
-        }
-        .chest-header { 
-            padding: 12px 20px; background-color: rgba(42, 49, 78, 0.7);
-            font-size: 0.9rem; font-weight: 600; color: #c7d2fe;
-            text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .chest-body { 
-            background: linear-gradient(170deg, #43335b, #2c2240);
-            padding: 20px; position: relative; flex-grow: 1; 
-            display: flex; flex-direction: column; align-items: center; overflow: hidden;
-        }
-        .chest-body::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0;
-        }
-        .chest-body > * { position: relative; z-index: 1; }
-        
-        .chest-top-section { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
-        .chest-level-info { display: flex; align-items: center; gap: 8px; }
-        .chest-level-name {
-            background-color: rgba(0, 0, 0, 0.25); color: #c7d2fe;
-            padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;
-            font-weight: 600; border: 1px solid rgba(129, 140, 248, 0.4);
-        }
-        .chest-help-icon {
-            width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 50%;
-            color: #c7d2fe; font-weight: bold; display: flex;
-            justify-content: center; align-items: center; cursor: pointer;
-            font-size: 0.85rem; transition: background-color 0.2s; padding: 0;
-        }
-        .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.4); }
-        .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
-        .chest-image { flex: 1; min-width: 0; height: auto; }
-        .info-bubble { 
-            flex: 2; background-color: rgba(10, 10, 20, 0.6); color: #d1d5db;
-            padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.85rem; text-align: left; 
-        }
-        .remaining-count-text { color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-        .highlight-yellow { color: #facc15; font-weight: bold; }
-        .action-button-group { display: flex; gap: 10px; width: 100%; }
-        .chest-button {
-            flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s; color: #ffffff; 
-            font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; 
-            justify-content: center; gap: 8px;
-        }
-        .chest-button:disabled { cursor: not-allowed; background: linear-gradient(to top, #52525b, #71717a); }
-        .chest-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
-        .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
-        .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
-        .button-price {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            font-size: 0.85rem; color: white; font-weight: 600;
-            background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px;
-            text-shadow: none;
-        }
-        .price-icon { width: 16px; height: 16px; }
+        .vocabulary-chest-root .chest-ui-container:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3); }
+        .vocabulary-chest-root .chest-header { padding: 12px 20px; background-color: rgba(42, 49, 78, 0.7); font-size: 0.9rem; font-weight: 600; color: #c7d2fe; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+        .vocabulary-chest-root .chest-body { background: linear-gradient(170deg, #43335b, #2c2240); padding: 20px; position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+        .vocabulary-chest-root .chest-body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0; }
+        .vocabulary-chest-root .chest-body > * { position: relative; z-index: 1; }
+        .vocabulary-chest-root .chest-top-section { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        .vocabulary-chest-root .chest-level-info { display: flex; align-items: center; gap: 8px; }
+        .vocabulary-chest-root .chest-level-name { background-color: rgba(0, 0, 0, 0.25); color: #c7d2fe; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(129, 140, 248, 0.4); }
+        .vocabulary-chest-root .chest-help-icon { width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 50%; color: #c7d2fe; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; padding: 0; }
+        .vocabulary-chest-root .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.4); }
+        .vocabulary-chest-root .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
+        .vocabulary-chest-root .chest-image { flex: 1; min-width: 0; height: auto; }
+        .vocabulary-chest-root .info-bubble { flex: 2; background-color: rgba(10, 10, 20, 0.6); color: #d1d5db; padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.85rem; text-align: left; }
+        .vocabulary-chest-root .remaining-count-text { color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .vocabulary-chest-root .highlight-yellow { color: #facc15; font-weight: bold; }
+        .vocabulary-chest-root .action-button-group { display: flex; gap: 10px; width: 100%; }
+        .vocabulary-chest-root .chest-button { flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s; color: #ffffff; font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .vocabulary-chest-root .chest-button:disabled { cursor: not-allowed; background: linear-gradient(to top, #52525b, #71717a); }
+        .vocabulary-chest-root .chest-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
+        .vocabulary-chest-root .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
+        .vocabulary-chest-root .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
+        .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
+        .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay, Card & Loading Styles (Không đổi) --- */
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+        /* --- Overlay, Card & Loading Styles (Cũng cần được scope) --- */
+        @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes vocabulary-chest-spin { to { transform: rotate(360deg); } }
+        @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+        @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
-        .overlay-content { width: 100%; max-width: 900px; }
-        .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
-        .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
-        .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
-        .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
-        .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
-        .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
+        .vocabulary-chest-root .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: vocabulary-chest-fade-in 0.5s ease; overflow: hidden; padding: 20px 15px; box-sizing: border-box; }
+        .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
+        .vocabulary-chest-root .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
+        .vocabulary-chest-root .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
+        .vocabulary-chest-root .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
+        .vocabulary-chest-root .footer-btn.primary { border-color: #a78bfa; color: #a78bfa; }
+        .vocabulary-chest-root .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
+        .vocabulary-chest-root .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         
-        .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
-        .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; }
-        .card-container.is-flipping .card-inner { animation-name: flip-in; animation-duration: 0.8s; animation-fill-mode: forwards; animation-timing-function: ease-in-out; }
+        .vocabulary-chest-root .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
+        .vocabulary-chest-root .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; }
+        .vocabulary-chest-root .card-container.is-flipping .card-inner { animation-name: vocabulary-chest-flip-in; animation-duration: 0.8s; animation-fill-mode: forwards; animation-timing-function: ease-in-out; }
         
-        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
-        .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
-        .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(42, 49, 78, 0.85); border: 1px solid rgba(255, 255, 255, 0.18); }
-        .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
-        .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
-        
-        @keyframes deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .card-wrapper.dealt-in { animation: deal-in 0.5s ease-out forwards; }
+        .vocabulary-chest-root .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
+        .vocabulary-chest-root .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
+        .vocabulary-chest-root .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(42, 49, 78, 0.85); border: 1px solid rgba(255, 255, 255, 0.18); }
+        .vocabulary-chest-root .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
+        .vocabulary-chest-root .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
+        .vocabulary-chest-root .card-wrapper.dealt-in { animation: vocabulary-chest-deal-in 0.5s ease-out forwards; }
+
+        /* Loading Overlay cũng cần được scope */
+        .vocabulary-chest-root .loading-spinner-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; animation: vocabulary-chest-fade-in 0.3s ease-out; }
+        .vocabulary-chest-root .loading-spinner { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #a78bfa; border-radius: 50%; animation: vocabulary-chest-spin 1s linear infinite; }
+        .vocabulary-chest-root .loading-text { color: #e0e0e0; margin-top: 20px; font-size: 1rem; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
     `}
     </style>
 );
 
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON VÀ DATA (Không thay đổi) =======================
+// === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 2000, animation: 'fade-in 0.3s ease-out' }}>
-            <div style={{ width: '50px', height: '50px', border: '5px solid rgba(255, 255, 255, 0.2)', borderTopColor: '#a78bfa', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-            <p style={{ color: '#e0e0e0', marginTop: '20px', fontSize: '1rem', fontWeight: 500, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Loading...</p>
+        <div className="loading-spinner-container">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Loading...</p>
         </div>
     );
 };
@@ -419,13 +337,11 @@ const CHEST_DEFINITIONS = {
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (Đã cập nhật JSX Header) ========================
+// === 3. COMPONENT CHÍNH =================================================
 // ========================================================================
 
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
-
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
-
 const PRELOAD_POOL_SIZE = 20;
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onCoinReward, onGemReward }) => {
@@ -615,50 +531,45 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             handleOpenCards(lastOpenedChest.count, lastOpenedChest.type);
         }
     };
-
-    if (isLoading) {
-        return <LoadingOverlay isVisible={true} />;
-    }
     
     const totalAvailable = availableIndices.basic.length + availableIndices.elementary.length + availableIndices.intermediate.length + availableIndices.advanced.length;
 
     return (
-        <>
-            <GlobalStyles />
+        <div className="vocabulary-chest-root">
+            <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
             
-            <div className="page-wrapper">
-                {/* <<< THAY ĐỔI 3: ÁP DỤNG JSX MỚI CHO HEADER >>> */}
-                {!showSingleOverlay && !showFourOverlay && (
+            {isLoading && <LoadingOverlay isVisible={true} />}
+
+            {/* Phần nội dung chính của component */}
+            {!showSingleOverlay && !showFourOverlay && !isLoading && (
+                <>
                     <header className="main-header">
-                        <div className="header-content">
-                            <h1 className="header-title">Chọn Rương</h1>
-                            <span className="header-subtitle">{`Còn ${totalAvailable.toLocaleString()} thẻ`}</span>
-                        </div>
+                        <h1 className="header-title">Chọn Rương ({`Còn ${totalAvailable.toLocaleString()} ảnh`})</h1>
                         <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
                         </button>
                     </header>
-                )}
 
-                <div className="chest-gallery-container">
-                    {CHEST_DATA.map((chest) => {
-                        const chestKey = chest.chestType as ChestType;
-                        const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
-                        return (
-                            <ChestUI
-                                key={chest.id}
-                                {...chest}
-                                remainingCount={remainingCount}
-                                onOpen1={() => !chest.isComingSoon && handleOpenCards(1, chestKey)}
-                                onOpen10={() => !chest.isComingsoon && handleOpenCards(4, chestKey)}
-                            />
-                        );
-                    })}
-                </div>
-            </div>
+                    <div className="chest-gallery-container">
+                        {CHEST_DATA.map((chest) => {
+                            const chestKey = chest.chestType as ChestType;
+                            const remainingCount = chest.isComingSoon || !availableIndices[chestKey] ? 0 : availableIndices[chestKey].length;
+                            return (
+                                <ChestUI
+                                    key={chest.id}
+                                    {...chest}
+                                    remainingCount={remainingCount}
+                                    onOpen1={() => !chest.isComingSoon && handleOpenCards(1, chestKey)}
+                                    onOpen10={() => !chest.isComingSoon && handleOpenCards(4, chestKey)}
+                                />
+                            );
+                        })}
+                    </div>
+                </>
+            )}
 
-            {/* Các Overlay được giữ ở ngoài cùng để che toàn bộ màn hình */}
+            {/* Các Overlay được hiển thị bên trong Lớp Gốc */}
             {showSingleOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
@@ -673,7 +584,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }
 
