@@ -49,17 +49,14 @@ export default function App() {
   
   function handleCellClick(x, y) {
     const cell = board[y][x];
-    if (cell.isFlagged || cell.isRevealed) return;
+    if (cell.isFlagged || (cell.isRevealed && !cell.isExit) ) return;
 
-    if (cell.isExit && !cell.isRevealed) { // Chỉ mở popup khi click vào ô Exit chưa được mở
-      const newBoard = JSON.parse(JSON.stringify(board));
-      newBoard[y][x].isRevealed = true;
-      setBoard(newBoard);
-      setExitConfirmationPos({ x, y });
-      return;
-    }
-
-    if(cell.isExit && cell.isRevealed){
+    if (cell.isExit) { // Xử lý click vào ô Exit (dù đã mở hay chưa)
+      if (!cell.isRevealed) {
+        const newBoard = JSON.parse(JSON.stringify(board));
+        newBoard[y][x].isRevealed = true;
+        setBoard(newBoard);
+      }
       setExitConfirmationPos({ x, y });
       return;
     }
@@ -203,6 +200,11 @@ export default function App() {
 
         {/* --- Bảng điều khiển ĐÃ CẬP NHẬT --- */}
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-3">
+            {/* Tầng (Thiết kế mới, vị trí đầu tiên) */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
+                <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Tầng</span>
+                <span className="text-2xl font-bold text-white tracking-tight leading-none">{currentFloor}</span>
+            </div>
             {/* Bom */}
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
                 <BombIcon className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
@@ -212,11 +214,6 @@ export default function App() {
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
                 <CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                 <span className="font-mono w-8 text-left">{coinsFound}</span>
-            </div>
-            {/* Tầng (Thiết kế mới) */}
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
-                <span className="text-2xl font-bold text-white tracking-tight leading-none">{currentFloor}</span>
-                <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Tầng</span>
             </div>
             {/* Reset */}
             <div className="flex justify-center">
