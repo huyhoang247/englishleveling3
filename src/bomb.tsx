@@ -20,7 +20,7 @@ const getLevelConfig = (level) => {
     return {
         coinsRequired,
         totalCoinsOnBoard: coinsRequired + Math.min(4, 1 + Math.floor(level / 2)),
-        penalty: Math.max(1, Math.floor(level / 2)), // Hình phạt vàng khi trúng bom
+        penalty: Math.max(1, Math.floor(level / 2)),
     };
 };
 
@@ -32,7 +32,7 @@ export default function App() {
   const [coinsTotal, setCoinsTotal] = useState(0);
   const [coinsOnThisLevel, setCoinsOnThisLevel] = useState(0);
   const [flagsPlaced, setFlagsPlaced] = useState(0);
-  const [isShaking, setIsShaking] = useState(false); // State cho hiệu ứng rung
+  const [isShaking, setIsShaking] = useState(false);
 
   function createBoard(currentLevel) {
     const { totalCoinsOnBoard } = getLevelConfig(currentLevel);
@@ -77,36 +77,32 @@ export default function App() {
     setBoard(newBoard);
   }
   
-  function triggerLinedExplosion(currentBoard, x, y, bombType) {
-    if (bombType === 'horizontal') {
-        for (let i = 0; i < BOARD_SIZE; i++) revealCell(currentBoard, i, y, true);
-    } else if (bombType === 'vertical') {
-        for (let i = 0; i < BOARD_SIZE; i++) revealCell(currentBoard, x, i, true);
-    }
-  }
-
-  function revealCell(currentBoard, x, y, fromExplosion = false) {
+  // SỬA LỖI: Hàm này được viết lại hoàn toàn để đơn giản và an toàn hơn
+  function revealCell(currentBoard, x, y) {
     if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) return;
     const cell = currentBoard[y][x];
     if (cell.isRevealed) return;
 
-    // LOGIC MỚI: Xử lý khi nhấn phải bom
-    if (cell.bombType !== 'none' && !fromExplosion) {
-        // Áp dụng hình phạt
+    cell.isRevealed = true;
+
+    if (cell.bombType !== 'none') {
         setCoinsOnThisLevel(prev => Math.max(0, prev - config.penalty));
         setCoinsTotal(prev => Math.max(0, prev - config.penalty));
         
-        // Kích hoạt hiệu ứng rung
         setIsShaking(true);
         setTimeout(() => setIsShaking(false), 400);
 
-        // Vẫn tiết lộ ô bom và kích hoạt nổ
-        cell.isRevealed = true;
-        triggerLinedExplosion(currentBoard, x, y, cell.bombType);
+        if (cell.bombType === 'horizontal') {
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                if (i !== x) revealCell(currentBoard, i, y); // Nổ lan các ô khác trên hàng
+            }
+        } else { // Vertical
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                if (i !== y) revealCell(currentBoard, x, i); // Nổ lan các ô khác trên cột
+            }
+        }
         return;
     }
-
-    cell.isRevealed = true;
 
     if (cell.isCoin) {
       setCoinsOnThisLevel(prev => prev + 1);
@@ -117,12 +113,12 @@ export default function App() {
     if (cell.isStairs) {
       return;
     }
-
-    if (cell.bombType === 'none') {
-        for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-                setTimeout(() => revealCell(currentBoard, x + dx, y + dy), 25);
-            }
+    
+    // Nếu là ô trống, mở rộng ra các ô xung quanh
+    for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            setTimeout(() => revealCell(currentBoard, x + dx, y + dy), 25);
         }
     }
   }
@@ -262,28 +258,11 @@ document.head.appendChild(fontLink);
 const style = document.createElement('style');
 style.innerHTML = `
   body { font-family: 'Poppins', sans-serif; }
-  @keyframes fade-in {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-  }
+  @keyframes fade-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
   .animate-fade-in { animation: fade-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-  
-  /* Hiệu ứng rung màn hình */
   @keyframes screen-shake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(3px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(3px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(1px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -2px) rotate(-1deg); }
+    0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); }
   }
-  .animate-screen-shake {
-    animation: screen-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-  }
+  .animate-screen-shake { animation: screen-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 `;
 document.head.appendChild(style);
