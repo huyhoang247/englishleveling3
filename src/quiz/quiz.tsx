@@ -117,12 +117,14 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [shuffledOptions, setShuffledOptions] = useState([]);
   
-  // <<< THAY ĐỔI 1: THÊM STATE ĐỂ LƯU TIẾN TRÌNH >>>
+  // <<< THAY ĐỔI 1: THÊM STATE ĐỂ QUẢN LÝ VIỆC HIỂN THỊ NÚT "TIẾP THEO" >>>
+  const [showNextButton, setShowNextButton] = useState(false);
+  
   const [loading, setLoading] = useState(true);
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
   const [completedQuizWords, setCompletedQuizWords] = useState<Set<string>>(new Set());
-  const [filteredQuizData, setFilteredQuizData] = useState([]); // Tất cả câu hỏi khớp với từ vựng người dùng
-  const [playableQuestions, setPlayableQuestions] = useState([]); // Các câu hỏi chưa được trả lời
+  const [filteredQuizData, setFilteredQuizData] = useState([]);
+  const [playableQuestions, setPlayableQuestions] = useState([]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -131,20 +133,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     return () => unsubscribe();
   }, []);
 
-  // <<< THAY ĐỔI 2: CẬP NHẬT `fetchData` ĐỂ ĐỌC CẢ `completedWords` >>>
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         setLoading(true);
         try {
-          // Lấy dữ liệu user, từ vựng đã mở, và từ đã hoàn thành song song
           const [userDocSnap, vocabSnapshot, completedWordsSnapshot] = await Promise.all([
             getDoc(doc(db, 'users', user.uid)),
             getDocs(collection(db, 'users', user.uid, 'openedVocab')),
             getDocs(collection(db, 'users', user.uid, 'completedWords'))
           ]);
 
-          // Xử lý thông tin user (coins, mastery)
           if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
             const userCoins = userData.coins || 0;
@@ -156,7 +155,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
             setCoins(0); setDisplayedCoins(0); setMasteryCount(0);
           }
 
-          // Xử lý từ vựng đã mở
           const vocabList: string[] = [];
           vocabSnapshot.forEach((vocabDoc) => {
             const word = vocabDoc.data().word;
@@ -164,12 +162,10 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
           });
           setUserVocabulary(vocabList);
 
-          // Xử lý từ vựng đã hoàn thành
           const completedSet = new Set<string>();
           completedWordsSnapshot.forEach((completedDoc) => {
-            // Chỉ thêm vào nếu nó đã được hoàn thành trong chế độ quiz
             if (completedDoc.data()?.gameModes?.['quiz-1']) {
-              completedSet.add(completedDoc.id); // doc.id chính là từ đã hoàn thành
+              completedSet.add(completedDoc.id);
             }
           });
           setCompletedQuizWords(completedSet);
@@ -189,10 +185,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     fetchData();
   }, [user]);
 
-  // <<< THAY ĐỔI 3: LỌC CÂU HỎI DỰA TRÊN TỪ VỰNG VÀ TIẾN TRÌNH >>>
   useEffect(() => {
     if (userVocabulary.length > 0) {
-      // Bước 1: Lọc tất cả câu hỏi khớp với từ vựng của người dùng
       const allMatchingQuestions = quizData.filter(question =>
         userVocabulary.some(vocabWord =>
           new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
@@ -200,9 +194,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       );
       setFilteredQuizData(allMatchingQuestions);
       
-      // Bước 2: Từ danh sách trên, lọc ra những câu chưa hoàn thành
       const remainingQuestions = allMatchingQuestions.filter(q => {
-          // Kiểm tra xem câu hỏi này có chứa từ nào đã hoàn thành không
           return ![...completedQuizWords].some(completedWord => 
               new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
           );
@@ -226,6 +218,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setAnswered(true);
     setSelectedOption(null);
     setStreak(0);
+    // <<< THAY ĐỔI 2: HIỂN THỊ NÚT NGAY KHI HẾT GIỜ >>>
+    setShowNextButton(true);
   };
 
   useEffect(() => {
@@ -261,28 +255,26 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     }, 30);
   }, []);
   
+  // <<< THAY ĐỔI 3: CẬP NHẬT LOGIC `handleAnswer` ĐỂ SỬ DỤNG TIMER >>>
   const handleAnswer = async (selectedAnswer) => {
     if (answered || playableQuestions.length === 0) return;
     setSelectedOption(selectedAnswer);
-    setAnswered(true);
+    setAnswered(true); // Khóa các lựa chọn ngay lập tức
     const currentQuizItem = playableQuestions[currentQuestion];
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
 
     if (isCorrect) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 4000);
+      setShowConfetti(true); // Bắt đầu hiệu ứng
+      
       setScore(score + 1);
       const newStreak = streak + 1;
       setStreak(newStreak);
-
       const coinsToAdd = masteryCount * newStreak;
-
       if (coinsToAdd > 0) {
         const totalCoins = coins + coinsToAdd;
         startCoinCountAnimation(coins, totalCoins);
         setCoins(totalCoins);
       }
-
       if (newStreak >= 1) {
         setStreakAnimation(true);
         setTimeout(() => setStreakAnimation(false), 1500);
@@ -291,52 +283,53 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       const matchedWord = userVocabulary.find(vocabWord =>
         new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
       );
-
       if (user && matchedWord) {
         try {
           const batch = writeBatch(db);
           const gameModeId = "quiz-1";
-          
           const userDocRef = doc(db, 'users', user.uid);
           if (coinsToAdd > 0) {
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
-
           const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
           batch.set(completedWordRef, {
             lastCompletedAt: new Date(),
-            gameModes: {
-              [gameModeId]: {
-                correctCount: increment(1)
-              }
-            }
+            gameModes: { [gameModeId]: { correctCount: increment(1) } }
           }, { merge: true });
-
           await batch.commit();
           console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
         } catch (error) {
           console.error("Lỗi khi thực hiện batch write:", error);
         }
       }
+      
+      // Bắt đầu timer. Sau 4 giây, ẩn confetti và hiện nút "Tiếp theo"
+      setTimeout(() => {
+        setShowConfetti(false);
+        setShowNextButton(true);
+      }, 4000); 
+
     } else {
       setStreak(0);
+      // Nếu sai, hiện nút "Tiếp theo" ngay lập tức
+      setShowNextButton(true);
     }
   };
 
-
+  // <<< THAY ĐỔI 4: RESET TRẠNG THÁI NÚT KHI QUA CÂU MỚI HOẶC CHƠI LẠI >>>
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion);
       setSelectedOption(null);
       setAnswered(false);
+      setShowNextButton(false); // Ẩn nút cho câu hỏi mới
     } else {
       setShowScore(true);
     }
   };
 
   const resetQuiz = () => {
-    // Khi reset, ta cần lấy lại danh sách câu hỏi có thể chơi
     const remainingQuestions = filteredQuizData.filter(q => {
         return ![...completedQuizWords].some(completedWord => 
             new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
@@ -350,9 +343,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     setAnswered(false);
     setStreak(0);
     setTimeLeft(TOTAL_TIME);
+    setShowNextButton(false); // Ẩn nút khi chơi lại
   };
 
-  // <<< THAY ĐỔI 4: SỬ DỤNG `playableQuestions` THAY CHO `filteredQuizData` TRONG LOGIC GAME >>>
   const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
   
   if (loading) {
@@ -381,7 +374,6 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       
       <main className="flex-grow overflow-y-auto flex justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
-          {/* <<< THAY ĐỔI 5: CẬP NHẬT GIAO DIỆN CHO CÁC TRƯỜNG HỢP KHÁC NHAU >>> */}
           {showScore ? (
               <div className="p-10 text-center">
                 <div className="mb-8">
@@ -506,7 +498,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         </div>
       </main>
 
-      {answered && (playableQuestions.length > 0) && (
+      {/* <<< THAY ĐỔI 5: SỬ DỤNG `showNextButton` ĐỂ ĐIỀU KHIỂN NÚT >>> */}
+      {showNextButton && (playableQuestions.length > 0) && (
         <div className="fixed bottom-6 right-6 z-50">
           <button
             onClick={handleNextQuestion}
