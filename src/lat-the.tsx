@@ -1,8 +1,8 @@
-// lat-the.tsx (Full, Unabridged Code with Flexbox Layout - Final Version)
+// lat-the.tsx (Full Code with Refined Header Design)
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 
-// <<< THAY ĐỔI 1: IMPORT THÊM CÁC HÀM TỪ FIRESTORE >>>
+// <<< THAY ĐỔI 1: IMPORT THÊM CÁC HÀM TỪ FIRESTORE (Không đổi) >>>
 import { db } from './firebase.js'; 
 import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
@@ -11,7 +11,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 
 // ========================================================================
-// === 1. CSS STYLES (Đã cập nhật) =======================================
+// === 1. CSS STYLES (Đã cập nhật Header) ================================
 // ========================================================================
 const GlobalStyles = () => (
     <style>{`
@@ -33,78 +33,112 @@ const GlobalStyles = () => (
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 0; /* <-- THAY ĐỔI: Bỏ khoảng đệm của toàn trang */
+            padding: 20px;
             box-sizing: border-box;
         }
         
-        /* <<< THAY ĐỔI 1: THÊM WRAPPER CHO LAYOUT FLEXBOX >>> */
         .page-wrapper {
             display: flex;
             flex-direction: column;
-            height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+            height: 100vh;
             width: 100%;
         }
 
-        /* === HEADER CỐ ĐỊNH - SỬA LẠI === */
+        /* <<< THAY ĐỔI 2: HEADER ĐƯỢC THIẾT KẾ LẠI >>> */
+        /* === HEADER CỐ ĐỊNH - PHIÊN BẢN TINH TẾ === */
         .main-header {
-            /* position: fixed; <-- ĐÃ XÓA */
-            position: sticky;   /* <-- ĐÃ THÊM: "Dính" ở trên cùng khi cuộn */
+            position: sticky;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 12px 25px;
+            padding: 10px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: rgba(16, 22, 46, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            
+            /* Hiệu ứng nền thủy tinh mờ với gradient */
+            background: linear-gradient(180deg, rgba(28, 38, 70, 0.85), rgba(16, 22, 46, 0.75));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            
+            /* Đường viền và bóng đổ mềm mại */
+            border-bottom: 1px solid rgba(199, 210, 254, 0.2); /* c7d2fe với alpha */
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
+            
             z-index: 100;
             box-sizing: border-box;
-            transition: opacity 0.3s ease;
-            flex-shrink: 0; /* <-- ĐÃ THÊM: Đảm bảo header không bị co lại */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        /* Container cho tiêu đề và tiêu đề phụ */
+        .header-content {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
         }
 
         .header-title {
-            font-size: 1.25rem;
+            font-size: 1.15rem; /* Hơi nhỏ lại cho thanh lịch */
             font-weight: 600;
-            color: #e0e0e0;
+            color: #f0f0f0; /* Sáng hơn một chút */
             margin: 0;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
         }
 
-        .vocab-screen-close-btn {
-            width: 44px; height: 44px; background: transparent; border: none;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-            transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0.9;
-            margin: -10px; padding: 10px;
+        .header-subtitle {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #a7b6d4; /* Một màu xám-xanh nhạt */
+            margin: 0;
+            opacity: 0.9;
         }
-        .vocab-screen-close-btn:hover { transform: scale(1.15); opacity: 1; }
+
+        /* Nút đóng được thiết kế lại */
+        .vocab-screen-close-btn {
+            width: 40px; 
+            height: 40px;
+            background-color: transparent;
+            border: none;
+            border-radius: 50%; /* Bo tròn */
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            padding: 0;
+            margin: -8px; /* Bù lại padding để vùng click lớn hơn */
+        }
+        .vocab-screen-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
         .vocab-screen-close-btn img {
-            width: 24px; height: 24px;
+            width: 20px; /* Icon nhỏ hơn một chút */
+            height: 20px;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+            transition: filter 0.2s ease;
+        }
+        .vocab-screen-close-btn:hover img {
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)) brightness(1.1);
         }
         
-        /* === CONTAINER RƯƠNG - SỬA LẠI === */
+        /* === CONTAINER RƯƠNG (Không đổi) === */
         .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
             gap: 30px; width: 100%; max-width: 1300px; 
             padding: 20px 20px 100px; box-sizing: border-box;
-            /* margin-top: 61px; <-- ĐÃ XÓA */
-            /* max-height: calc(100vh - 101px); <-- ĐÃ XÓA */
-            
-            flex-grow: 1;      /* <-- ĐÃ THÊM: Chiếm hết không gian còn lại */
-            overflow-y: auto;  /* <-- GIỮ LẠI: Tạo thanh cuộn cho riêng nó */
+            flex-grow: 1;
+            overflow-y: auto;
         }
 
-        /* Tùy chỉnh thanh cuộn */
         .chest-gallery-container::-webkit-scrollbar { width: 8px; }
         .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
         .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
         .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
 
-        /* === GIAO DIỆN RƯƠNG BÁU === */
+        /* === GIAO DIỆN RƯƠNG BÁU (Không đổi) === */
         .chest-ui-container {
             width: 100%; max-width: 380px; min-width: 300px;
             background-color: #1a1f36; border-radius: 16px;
@@ -113,10 +147,7 @@ const GlobalStyles = () => (
             transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
             position: relative; border: none;
         }
-        .chest-ui-container.is-coming-soon {
-            filter: grayscale(80%);
-            opacity: 0.7;
-        }
+        .chest-ui-container.is-coming-soon { filter: grayscale(80%); opacity: 0.7; }
         .chest-ui-container::before {
             content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px;
             background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3));
@@ -143,26 +174,13 @@ const GlobalStyles = () => (
         }
         .chest-body > * { position: relative; z-index: 1; }
         
-        .chest-top-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .chest-level-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .chest-top-section { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        .chest-level-info { display: flex; align-items: center; gap: 8px; }
         .chest-level-name {
             background-color: rgba(0, 0, 0, 0.25); color: #c7d2fe;
             padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;
             font-weight: 600; border: 1px solid rgba(129, 140, 248, 0.4);
         }
-
         .chest-help-icon {
             width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 50%;
@@ -171,7 +189,6 @@ const GlobalStyles = () => (
             font-size: 0.85rem; transition: background-color 0.2s; padding: 0;
         }
         .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.4); }
-        
         .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
         .chest-image { flex: 1; min-width: 0; height: auto; }
         .info-bubble { 
@@ -181,7 +198,6 @@ const GlobalStyles = () => (
         }
         .remaining-count-text { color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         .highlight-yellow { color: #facc15; font-weight: bold; }
-        
         .action-button-group { display: flex; gap: 10px; width: 100%; }
         .chest-button {
             flex: 1; padding: 12px; border-radius: 10px; border: none; cursor: pointer;
@@ -190,14 +206,10 @@ const GlobalStyles = () => (
             box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; align-items: center; 
             justify-content: center; gap: 8px;
         }
-        .chest-button:disabled {
-            cursor: not-allowed;
-            background: linear-gradient(to top, #52525b, #71717a);
-        }
+        .chest-button:disabled { cursor: not-allowed; background: linear-gradient(to top, #52525b, #71717a); }
         .chest-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
         .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
         .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
-        
         .button-price {
             display: flex; align-items: center; justify-content: center; gap: 6px;
             font-size: 0.85rem; color: white; font-weight: 600;
@@ -206,7 +218,7 @@ const GlobalStyles = () => (
         }
         .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay, Card & Loading Styles --- */
+        /* --- Overlay, Card & Loading Styles (Không đổi) --- */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
@@ -407,7 +419,7 @@ const CHEST_DEFINITIONS = {
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (Đã cập nhật JSX) ================================
+// === 3. COMPONENT CHÍNH (Đã cập nhật JSX Header) ========================
 // ========================================================================
 
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string | null; onCoinReward: (amount: number) => void; onGemReward: (amount: number) => void; }
@@ -615,11 +627,14 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <GlobalStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
             
-            {/* <<< THAY ĐỔI 2: ÁP DỤNG CẤU TRÚC JSX MỚI >>> */}
             <div className="page-wrapper">
+                {/* <<< THAY ĐỔI 3: ÁP DỤNG JSX MỚI CHO HEADER >>> */}
                 {!showSingleOverlay && !showFourOverlay && (
                     <header className="main-header">
-                        <h1 className="header-title">Chọn Rương ({`Còn ${totalAvailable.toLocaleString()} ảnh`})</h1>
+                        <div className="header-content">
+                            <h1 className="header-title">Chọn Rương</h1>
+                            <span className="header-subtitle">{`Còn ${totalAvailable.toLocaleString()} thẻ`}</span>
+                        </div>
                         <button onClick={onClose} className="vocab-screen-close-btn" title="Đóng">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Close" />
                         </button>
