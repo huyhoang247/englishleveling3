@@ -90,8 +90,6 @@ const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
 const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg> );
-const BookOpenIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>);
-
 
 // Function to shuffle an array
 const shuffleArray = (array) => {
@@ -110,54 +108,37 @@ interface Definition {
     explanation: string;
 }
 
-// Detail Popup Component (Upgraded Design)
+// Detail Popup Component (Redesigned to match image)
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => {
     if (!data) return null;
     return (
-        <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in-backdrop"
+        <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in"
             onClick={onClose}
         >
-            <div 
-                className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl w-full max-w-lg p-8 relative transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale"
+            <div
+                className="bg-white rounded-xl w-full max-w-md p-5 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button 
-                    onClick={onClose}
-                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100/80 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
-                    aria-label="Đóng"
-                >
-                    <XIcon className="w-5 h-5 text-gray-700" />
-                </button>
-                
-                <div className="text-center mb-6">
-                    <h2 className="text-4xl font-extrabold capitalize bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-500 mb-1">
-                        {data.english}
-                    </h2>
-                    <p className="text-lg italic text-gray-500">({data.vietnamese})</p>
+                {/* Tag like in the image */}
+                <div className="inline-flex items-center bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-4">
+                    {/* Price Tag Icon */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    </svg>
+                    <span>{data.english}</span>
                 </div>
 
-                <div className="my-6 border-t border-gray-200"></div>
-
-                <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <BookOpenIcon className="w-5 h-5 text-indigo-500" />
-                        <h3 className="text-base font-semibold text-gray-800 tracking-wider uppercase">Giải thích chi tiết</h3>
-                    </div>
-                    <p className="text-gray-700 leading-relaxed text-base">{data.explanation}</p>
-                </div>
+                {/* Definition text like in the image */}
+                <p className="text-gray-800 text-base leading-relaxed">
+                   {`${data.vietnamese} (${data.english}) là ${data.explanation}`}
+                </p>
             </div>
              <style jsx>{`
-                @keyframes fade-in-backdrop {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes fade-in-scale {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-                .animate-fade-in-backdrop { animation: fade-in-backdrop 0.3s ease-out forwards; }
-                .animate-fade-in-scale { animation: fade-in-scale 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+                .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
             `}</style>
         </div>
     );
@@ -207,7 +188,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         if (match) {
             const vietnameseWord = match[1].trim();
             const englishWord = match[2].trim();
-            const explanation = `Là ${match[3].trim()}`;
+            const explanation = match[3].trim();
             
             definitions[englishWord.toLowerCase()] = {
                 vietnamese: vietnameseWord,
