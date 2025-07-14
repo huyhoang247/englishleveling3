@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // --- Các component Icon SVG thay thế cho lucide-react ---
-// Chúng ta định nghĩa các icon SVG trực tiếp trong code
-// để không cần dùng thư viện bên ngoài.
+// (Không có thay đổi ở đây, giữ nguyên)
 
 const BombIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -66,7 +65,7 @@ export default function App() {
         isCoin: false,
         isRevealed: false,
         isFlagged: false,
-        neighboringMines: 0,
+        neighboringMines: 0, // Thuộc tính này không còn được sử dụng, nhưng để lại cũng không sao
       }))
     );
 
@@ -92,24 +91,9 @@ export default function App() {
       }
     }
 
-    // 4. Tính số mìn lân cận cho mỗi ô
-    for (let y = 0; y < BOARD_SIZE; y++) {
-      for (let x = 0; x < BOARD_SIZE; x++) {
-        if (newBoard[y][x].isMine) continue;
-        let mineCount = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue;
-            const newY = y + dy;
-            const newX = x + dx;
-            if (newY >= 0 && newY < BOARD_SIZE && newX >= 0 && newX < BOARD_SIZE && newBoard[newY][newX].isMine) {
-              mineCount++;
-            }
-          }
-        }
-        newBoard[y][x].neighboringMines = mineCount;
-      }
-    }
+    // --- THAY ĐỔI ---: Xóa bỏ hoàn toàn khối lệnh tính số mìn lân cận.
+    // Việc tính toán này không còn cần thiết nữa.
+    
     return newBoard;
   }
 
@@ -145,14 +129,8 @@ export default function App() {
       setCoinsFound(prev => prev + 1);
     }
     
-    if (cell.neighboringMines === 0 && !cell.isMine) {
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue;
-          revealCell(currentBoard, x + dx, y + dy);
-        }
-      }
-    }
+    // --- THAY ĐỔI ---: Xóa bỏ khối lệnh if kiểm tra neighboringMines và gọi đệ quy.
+    // Giờ đây, hàm sẽ chỉ mở duy nhất ô được click.
   }
 
   // --- Xử lý khi người dùng click chuột phải (đặt cờ) ---
@@ -200,21 +178,16 @@ export default function App() {
 
   // --- Component Cell (mỗi ô trên bàn chơi) ---
   const Cell = ({ cellData }) => {
-    const { x, y, isRevealed, isMine, isCoin, isFlagged, neighboringMines } = cellData;
+    // --- THAY ĐỔI ---: Xóa `neighboringMines` khỏi destructuring vì không còn dùng.
+    const { x, y, isRevealed, isMine, isCoin, isFlagged } = cellData;
 
-    // SỬA LỖI: Tách style của khung và style của nội dung
     const cellStyle = {
-      // base chỉ còn là khung, không chứa flexbox nữa
       base: 'w-full h-full rounded-lg transition-all duration-200',
       hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md',
       revealed: 'bg-slate-800/80 cursor-default border border-slate-700',
     };
-
-    const numberColors = [
-      '', 'text-blue-400', 'text-green-400', 'text-red-400',
-      'text-purple-400', 'text-yellow-400', 'text-cyan-400',
-      'text-orange-400', 'text-pink-400'
-    ];
+    
+    // --- THAY ĐỔI ---: Xóa mảng `numberColors` vì không còn hiển thị số.
 
     let content = null;
     if (isFlagged) {
@@ -224,9 +197,9 @@ export default function App() {
         content = <BombIcon className="w-3/4 h-3/4 text-white animate-pulse" />;
       } else if (isCoin) {
         content = <CircleDollarSignIcon className="w-3/4 h-3/4 text-yellow-400" />;
-      } else if (neighboringMines > 0) {
-        content = <span className={`${numberColors[neighboringMines]} font-bold text-2xl`}>{neighboringMines}</span>;
-      }
+      } 
+      // --- THAY ĐỔI ---: Xóa khối `else if (neighboringMines > 0)`
+      // Nếu ô được mở không phải mìn hay vàng, `content` sẽ là `null`, kết quả là một ô trống.
     }
 
     return (
@@ -235,8 +208,6 @@ export default function App() {
         onClick={() => handleCellClick(x, y)}
         onContextMenu={(e) => handleRightClick(e, x, y)}
       >
-        {/* SỬA LỖI: Thêm một lớp tuyệt đối để chứa nội dung. */}
-        {/* Lớp này sẽ căn giữa nội dung mà không làm ảnh hưởng đến kích thước của ô cha. */}
         <div className="absolute inset-0 flex items-center justify-center">
             {content}
         </div>
@@ -245,6 +216,7 @@ export default function App() {
   };
 
   // --- Giao diện chính ---
+  // (Không có thay đổi ở đây, giữ nguyên)
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
@@ -272,13 +244,12 @@ export default function App() {
 
         {/* Bàn chơi */}
         <div className="relative">
-          {/* Vùng chứa này sẽ đảm bảo bàn cờ luôn là hình vuông */}
           <div className="w-full aspect-square">
             <div 
               className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" 
               style={{ 
                   gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
-                  gap: '6px', // Tăng khoảng cách để ô tách biệt
+                  gap: '6px',
               }}
             >
               {board.map((row, rowIndex) =>
@@ -289,7 +260,6 @@ export default function App() {
             </div>
           </div>
           
-          {/* Lớp phủ khi game kết thúc */}
           {gameOver && (
             <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-xl backdrop-blur-sm">
               <div className="text-center bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700 animate-fade-in">
@@ -327,6 +297,7 @@ export default function App() {
 }
 
 // --- Thêm Font và Style vào trang ---
+// (Không có thay đổi ở đây, giữ nguyên)
 const fontLink = document.createElement('link');
 fontLink.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap";
 fontLink.rel = "stylesheet";
