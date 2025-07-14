@@ -110,6 +110,39 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
 
+  // --- START: LOGIC ANIMATION COIN ---
+  const [localDisplayedCoins, setLocalDisplayedCoins] = useState(displayedCoins);
+
+  useEffect(() => {
+    // Đồng bộ state cục bộ với prop từ cha khi nó thay đổi
+    setLocalDisplayedCoins(displayedCoins);
+  }, [displayedCoins]);
+
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+
+    const isCountingUp = endValue > startValue;
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+
+    const interval = setInterval(() => {
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
+      }
+
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setLocalDisplayedCoins(endValue);
+        clearInterval(interval);
+      } else {
+        setLocalDisplayedCoins(current);
+      }
+    }, 30);
+  }, []);
+  // --- END: LOGIC ANIMATION COIN ---
+
+
   const db = getFirestore();
 
   useEffect(() => {
@@ -155,6 +188,11 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
+    
+    // Bắt đầu animation trước khi gửi event lên cha
+    startCoinCountAnimation(localDisplayedCoins, localDisplayedCoins + goldReward);
+    
+    onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
 
     const updatedList = vocabulary.map(item => {
       if (item.id === id) {
@@ -167,8 +205,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     });
 
     onDataUpdate(updatedList);
-    onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
-
+    
     try {
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
       await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
@@ -182,7 +219,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
         setClaimingId(null);
       }, 500);
     }
-  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
 
   const handleClaimAll = useCallback(async () => {
     if (isClaiming || isClaimingAll) return;
@@ -207,6 +244,9 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       }
       return item;
     });
+    
+    // Bắt đầu animation trước khi gửi event lên cha
+    startCoinCountAnimation(localDisplayedCoins, localDisplayedCoins + totalGoldReward);
 
     onClaimReward({ gold: totalGoldReward, masteryCards: totalMasteryCardReward });
     onDataUpdate(updatedList);
@@ -221,7 +261,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     } finally {
       setIsClaimingAll(false);
     }
-  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll]);
+  }, [vocabulary, userId, db, onClaimReward, onDataUpdate, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
   
   const totalWords = vocabulary.length;
   
@@ -255,8 +295,8 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 
           {/* CoinDisplay bên phải */}
           <div className="flex items-center gap-2">
-            {/* Sử dụng CoinDisplay và truyền isStatsFullscreen={false} để nó luôn hiển thị */}
-            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+            {/* Sử dụng CoinDisplay và truyền localDisplayedCoins */}
+            <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
           </div>
       </header>
 
