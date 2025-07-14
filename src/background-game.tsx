@@ -334,56 +334,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-    // --- ⭐ HÀM startCoinCountAnimation ĐƯỢC CẬP NHẬT ⭐ ---
-    const startCoinCountAnimation = (reward: number) => {
-        if (reward <= 0) {
-            // Xử lý trường hợp trừ tiền (ví dụ mua đồ)
-            if (auth.currentUser) {
-                updateCoinsInFirestore(auth.currentUser.uid, reward);
-            }
-            return;
-        }
-
-        // Đích đến là số coin thực tế trong state + phần thưởng
-        const targetCoins = coins + reward;
-        let animationFrameId: number;
-
-        const animate = (timestamp: number) => {
-            // Lấy giá trị đang hiển thị hiện tại từ state
-            // Quan trọng: Phải lấy giá trị mới nhất từ state bên trong vòng lặp animation
-            setDisplayedCoins(currentDisplayed => {
-                // Nếu đã đạt hoặc vượt mục tiêu thì dừng lại
-                if (currentDisplayed >= targetCoins) {
-                    cancelAnimationFrame(animationFrameId);
-                    // Cập nhật state `coins` và Firestore sau khi animation kết thúc
-                    if (auth.currentUser) {
-                        updateCoinsInFirestore(auth.currentUser.uid, reward);
-                    }
-                    return targetCoins;
-                }
-
-                // Tính toán bước nhảy linh động (ease-out)
-                // Bước nhảy sẽ bằng khoảng 10% của khoảng cách còn lại tới đích
-                const difference = targetCoins - currentDisplayed;
-                let step = Math.max(1, Math.floor(difference / 10));
-
-                // Nếu gần tới đích, giảm tốc độ để tránh vượt lố và tạo cảm giác mượt mà
-                if (difference < 50) {
-                    step = 1;
-                }
-
-                const newDisplayedCoins = Math.min(currentDisplayed + step, targetCoins);
-                
-                // Lên lịch cho khung hình tiếp theo
-                animationFrameId = requestAnimationFrame(animate);
-
-                return newDisplayedCoins;
-            });
-        };
-
-        // Bắt đầu animation
-        animationFrameId = requestAnimationFrame(animate);
-    };
+   const startCoinCountAnimation = (reward: number) => {
+      const oldCoins = coins;
+      const newCoins = oldCoins + reward;
+      let step = Math.ceil(reward / 30);
+      let current = oldCoins;
+      const countInterval = setInterval(() => {
+          current += step;
+          if (current >= newCoins) {
+              setDisplayedCoins(newCoins);
+              clearInterval(countInterval);
+              if (auth.currentUser) {
+                 updateCoinsInFirestore(auth.currentUser.uid, reward);
+              }
+          } else {
+              setDisplayedCoins(current);
+          }
+      }, 50);
+  };
 
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -459,8 +427,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   useEffect(() => {
     if (displayedCoins === coins) return;
-    // Đồng bộ ngay lập tức nếu chênh lệch lớn (ví dụ: khi mua hàng hoặc lúc mới tải)
-    if (Math.abs(coins - displayedCoins) > 1) { // Giảm ngưỡng để bắt kịp nhanh hơn
+    if (Math.abs(coins - displayedCoins) > 10) {
         setDisplayedCoins(coins);
         return;
     }
@@ -506,7 +473,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
 
     if (reward.gold > 0) {
-        startCoinCountAnimation(reward.gold);
+        updateCoinsInFirestore(auth.currentUser.uid, reward.gold);
     }
 
     if (reward.masteryCards > 0) {
