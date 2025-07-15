@@ -74,7 +74,7 @@ export default function QuizAppHome() {
   if (currentView === 'quiz') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
-        <QuizApp onGoBack={goBack} />
+        <QuizApp onGoBack={goBack} practiceId={selectedPractice} />
       </div>
     );
   }
@@ -217,7 +217,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 1</h3>
-                    <p className="text-xs text-gray-500">5 câu hỏi • Thời gian: 5 phút</p>
+                    <p className="text-xs text-gray-500">Luyện tập trắc nghiệm câu hỏi</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,7 +235,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 2</h3>
-                    <p className="text-xs text-gray-500">7 câu hỏi • Thời gian: 7 phút</p>
+                    <p className="text-xs text-gray-500">Luyện tập điền từ vào câu ví dụ</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
