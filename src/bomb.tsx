@@ -153,7 +153,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
 
   const [currentFloor, setCurrentFloor] = useState(1);
   const [board, setBoard] = useState(() => createBoard());
-  const [coinsFound, setCoinsFound] = useState(0);
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
 
@@ -161,26 +160,25 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
   };
 
-  // HÀM MỚI ĐỂ THU THẬP TẤT CẢ COIN ĐANG HIỆN
-  const collectAllVisibleCoins = () => {
-    const rewardPerCoin = Math.max(1, masteryCards) * currentFloor; // Đảm bảo thưởng ít nhất 1 coin nếu mastery = 0
-    let totalReward = 0;
-    const newBoard = board.map(row => 
-        row.map(cell => {
-            if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
-                totalReward += rewardPerCoin;
-                return { ...cell, isCollected: true };
-            }
-            return cell;
-        })
-    );
-    if(totalReward > 0) {
-        setCoinsFound(prev => prev + totalReward);
-        setBoard(newBoard);
-        // Gọi hàm callback để cập nhật coin trong Firestore
-        onUpdateCoins(totalReward);
-    }
-  };
+  // Hàm thu thập coin được bọc trong `useCallback` để tối ưu
+  const collectAllVisibleCoins = useCallback(() => {
+      const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+      let totalReward = 0;
+      const newBoard = board.map(row => 
+          row.map(cell => {
+              if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
+                  totalReward += rewardPerCoin;
+                  return { ...cell, isCollected: true };
+              }
+              return cell;
+          })
+      );
+      if(totalReward > 0) {
+          setBoard(newBoard);
+          // Chỉ gọi hàm callback để cập nhật coin tổng trên header
+          onUpdateCoins(totalReward);
+      }
+  }, [board, masteryCards, currentFloor, onUpdateCoins]);
 
   const handleCellClick = useCallback((x, y) => {
     const cell = board[y][x];
@@ -232,7 +230,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       // Chỉ mở ô, không cộng tiền nữa
       updateCell(x, y, { isRevealed: true });
     }
-  }, [board, masteryCards, currentFloor]);
+  }, [board, collectAllVisibleCoins]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
@@ -257,11 +255,13 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
 
   const resetGame = () => {
     setCurrentFloor(1);
-    setCoinsFound(0);
     setFlagsPlaced(0);
     setBoard(createBoard());
     setExitConfirmationPos(null);
   };
+
+  // Tính giá trị của một ô coin cho tầng hiện tại để hiển thị
+  const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
 
   return (
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
@@ -306,7 +306,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
             </div>
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
                 <CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-                <span className="font-mono w-8 text-left">{coinsFound}</span>
+                <span className="font-mono w-8 text-left">{rewardPerCoin}</span>
             </div>
             <div className="flex justify-center">
                 <button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors">
