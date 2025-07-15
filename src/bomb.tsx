@@ -314,9 +314,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
               <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* --- START: MODIFIED FOR COIN ANIMATION --- */}
             <CoinDisplay displayedCoins={animatedDisplayedCoins} isStatsFullscreen={false} />
-            {/* --- END: MODIFIED FOR COIN ANIMATION --- */}
             <MasteryDisplay masteryCount={masteryCards} />
           </div>
         </div>
@@ -324,45 +322,40 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       
       {/* --- Thêm pt-24 (padding-top) để đẩy nội dung xuống dưới header --- */}
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
-        {/* Header cũ đã được chuyển lên trên */}
 
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
           <p className="text-slate-400 mt-2">Mở các ô và thu thập tiền thưởng!</p>
         </div>
 
-        {/* --- KHỐI MÃ MỚI ĐÃ ĐƯỢC THIẾT KẾ LẠI VÀ ĐIỀU CHỈNH CHO VỪA VẶN --- */}
-        <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-stretch gap-3">
-            {/* Tầng */}
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
-                <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Tầng</span>
-                <span className="font-mono text-xl font-semibold text-white leading-tight">{currentFloor}</span>
+        {/* --- KHỐI THÔNG SỐ GAME ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
+        <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-3 gap-2 sm:gap-3">
+          {/* Tầng */}
+          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center" title={`Tầng hiện tại: ${currentFloor}`}>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider self-start mb-1">Tầng</span>
+            <div className="flex items-center justify-between w-full">
+              <span className="font-mono text-xl sm:text-2xl font-bold text-white">{currentFloor}</span>
+              <StairsIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain opacity-70" />
             </div>
+          </div>
 
-            {/* Bom còn lại */}
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full" title="Số bom còn lại trên bản đồ">
-                <span className="text-[10px] font-semibold text-red-400 uppercase tracking-widest">Bom</span>
-                <div className="flex items-center gap-2 mt-0.5">
-                    <BombIcon className="w-5 h-5 object-contain" />
-                    <span className="font-mono text-xl font-semibold text-white leading-tight">{TOTAL_BOMBS - flagsPlaced}</span>
-                </div>
+          {/* Bom */}
+          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center" title="Số bom còn lại">
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider self-start mb-1">Bom</span>
+            <div className="flex items-center justify-between w-full">
+              <span className="font-mono text-xl sm:text-2xl font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
+              <BombIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
             </div>
-
-            {/* Giá trị Coin / Rewards */}
-            <div className="flex flex-col items-center justify-center px-1 py-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full" title={`Mỗi coin ở tầng này trị giá ${rewardPerCoin}`}>
-                <span className="text-[10px] font-semibold text-yellow-500 uppercase tracking-wider whitespace-nowrap">Rewards</span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                    <CircleDollarSignIcon className="w-4 h-4 object-contain" />
-                    <span className="font-mono text-xl font-semibold text-white leading-tight">{rewardPerCoin}</span>
-                </div>
+          </div>
+          
+          {/* Rewards */}
+          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center" title={`Phần thưởng mỗi coin: ${rewardPerCoin}`}>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider self-start mb-1">Rewards</span>
+            <div className="flex items-center justify-between w-full">
+              <span className="font-mono text-xl sm:text-2xl font-bold text-white">{rewardPerCoin}</span>
+              <CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm-h-6 object-contain" />
             </div>
-            
-            {/* Nút Reset */}
-            <div className="flex items-center justify-center">
-                <button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors" title="Chơi lại từ đầu">
-                    <RefreshCwIcon className="w-6 h-6" />
-                </button>
-            </div>
+          </div>
         </div>
 
         <div className="relative">
