@@ -388,7 +388,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
       
-      <div className="w-full flex items-center justify-between py-1 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
+      <div className="w-full flex items-center justify-between py-2.5 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
         <button
           onClick={onClose}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
