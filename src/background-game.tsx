@@ -1,5 +1,3 @@
-// --- START OF FILE: background-game.tsx (FULL CODE) ---
-
 // src/background-game.tsx
 
 import React, { useState, useEffect, useRef, Component } from 'react';
@@ -23,6 +21,7 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
+import MinerChallenge from './bomb.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 
@@ -126,6 +125,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
+  const [isMinerChallengeOpen, setIsMinerChallengeOpen] = useState(false);
   const [isTowerGameOpen, setIsTowerGameOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
@@ -440,7 +440,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, [coins]);
 
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
@@ -486,6 +486,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsGoldMineOpen(false);
             setIsInventoryOpen(false);
             setIsLuckyGameOpen(false);
+            setIsMinerChallengeOpen(false);
             setIsBlacksmithOpen(false);
             setIsTowerGameOpen(false);
             setIsShopOpen(false);
@@ -508,6 +509,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsStatsFullscreen(false);
              setIsGoldMineOpen(false);
              setIsInventoryOpen(false);
+             setIsMinerChallengeOpen(false);
              setIsLuckyGameOpen(false);
              setIsBlacksmithOpen(false);
              setIsTowerGameOpen(false);
@@ -531,6 +533,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
@@ -554,6 +557,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
@@ -578,6 +582,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
@@ -591,6 +596,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
+  const toggleMinerChallenge = () => {
+    if (isLoading) return;
+    setIsMinerChallengeOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
+        setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
   const toggleBlacksmith = () => {
     if (isLoading) return;
     setIsBlacksmithOpen(prev => {
@@ -601,6 +629,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsTowerGameOpen(false);
         setIsShopOpen(false);
@@ -624,6 +653,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsShopOpen(false);
@@ -647,6 +677,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
@@ -670,6 +701,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
@@ -693,6 +725,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
@@ -717,6 +750,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
+        setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
         setIsTowerGameOpen(false);
@@ -734,7 +768,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -746,6 +780,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowRank={toggleRank}
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
+          onShowMinerChallenge={toggleMinerChallenge}
           onShowAchievements={toggleAchievements}
           onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
@@ -853,6 +888,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
+        </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>{isMinerChallengeOpen && <MinerChallenge onClose={toggleMinerChallenge} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}</ErrorBoundary>
