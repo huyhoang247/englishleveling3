@@ -331,7 +331,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <p className="text-slate-400 mt-2">Mở các ô và thu thập tiền thưởng!</p>
         </div>
 
-        {/* --- KHỐI MÃ MỚI ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
+        {/* --- KHỐI MÃ MỚI ĐÃ ĐƯỢC THIẾT KẾ LẠI VÀ ĐIỀU CHỈNH CHO VỪA VẶN --- */}
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-stretch gap-3">
             {/* Tầng */}
             <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
@@ -348,9 +348,9 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                 </div>
             </div>
 
-            {/* Giá trị Coin */}
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full" title={`Mỗi coin ở tầng này trị giá ${rewardPerCoin}`}>
-                <span className="text-[10px] font-semibold text-yellow-500 uppercase tracking-widest">Thưởng/Coin</span>
+            {/* Giá trị Coin / Rewards */}
+            <div className="flex flex-col items-center justify-center px-1 py-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full" title={`Mỗi coin ở tầng này trị giá ${rewardPerCoin}`}>
+                <span className="text-[10px] font-semibold text-yellow-500 uppercase tracking-wider whitespace-nowrap">Rewards</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                     <CircleDollarSignIcon className="w-4 h-4 object-contain" />
                     <span className="font-mono text-xl font-semibold text-white leading-tight">{rewardPerCoin}</span>
