@@ -9,10 +9,10 @@ interface SidebarLayoutProps {
   children: React.ReactNode;
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
-  // NEW props to handle toggling specific screens in the parent
+  // Props to handle toggling specific screens in the parent
   onShowStats?: () => void; // Handler for showing Stats
   onShowRank?: () => void;   // Handler for showing Rank
-  onShowSettings?: () => void;
+  onShowMinerChallenge?: () => void; // NEW: Handler for Miner Challenge
   // onShowHelp?: () => void; // REMOVED
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
   onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
@@ -54,6 +54,15 @@ const DatabaseIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
         <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
         <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+    </svg>
+);
+
+// NEW: Icon for Miner Challenge
+const BombIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <circle cx="12" cy="13" r="8" />
+      <path d="M12 9h.01" />
+      <path d="M19 10.5V8.3a2.3 2.3 0 0 0-2-2.3l-2.6-.4a2.3 2.3 0 0 1-2-2.3V2.1" />
     </svg>
 );
 
@@ -193,7 +202,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowSettings, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -217,8 +226,8 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine },
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
+    { id: 'minerChallenge', label: 'Miner Challenge', icon: BombIcon, onClick: onShowMinerChallenge },
     { id: 'achievements', label: 'Thành Tựu', icon: TrophyIcon, onClick: onShowAchievements },
-    { id: 'settings', label: 'Cài đặt', icon: SettingsIcon, onClick: onShowSettings },
     // { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp }, // REMOVED
     // NEW: Admin Panel menu item, placed after Help
     { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
