@@ -1,3 +1,5 @@
+// --- START OF FILE bomb.tsx ---
+
 import React, { useState, memo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
@@ -120,9 +122,11 @@ interface MinerChallengeProps {
   displayedCoins: number;
   masteryCards: number; // Đây là cấp độ Mastery
   onUpdateCoins: (amount: number) => void;
+  initialPickaxes: number;
+  onUpdatePickaxes: (newCount: number) => void;
 }
 
-export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins }: MinerChallengeProps) {
+export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins, initialPickaxes, onUpdatePickaxes }: MinerChallengeProps) {
   const createBoard = () => {
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
     const placeItem = (itemType) => { 
@@ -145,7 +149,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
   
-  const [pickaxes, setPickaxes] = useState(MAX_PICKAXES);
+  const [pickaxes, setPickaxes] = useState(initialPickaxes);
 
   const [coins, setCoins] = useState(displayedCoins);
   const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(displayedCoins);
@@ -206,7 +210,9 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
         console.log("Hết cuốc!");
         return;
       }
-      setPickaxes(prev => prev - 1);
+      const newPickaxeCount = pickaxes - 1;
+      setPickaxes(newPickaxeCount);
+      onUpdatePickaxes(newPickaxeCount);
     }
 
     if (cell.isExit) {
@@ -243,7 +249,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     } else {
       updateCell(x, y, { isRevealed: true });
     }
-  }, [board, collectAllVisibleCoins, pickaxes]);
+  }, [board, collectAllVisibleCoins, pickaxes, onUpdatePickaxes]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
@@ -271,6 +277,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setBoard(createBoard());
     setExitConfirmationPos(null);
     setPickaxes(MAX_PICKAXES);
+    onUpdatePickaxes(MAX_PICKAXES);
   };
 
   const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
