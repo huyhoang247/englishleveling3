@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import CoinDisplay from './coin-display.tsx'; // Import CoinDisplay
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import CoinDisplay from './coin-display.tsx';
 
 // SVG Icons
-// Modified CoinsIcon to accept a src prop for image URL
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -10,7 +9,7 @@ const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => 
         src={src}
         alt="Coin Icon"
         className={className}
-        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }} // Fallback
+        onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }}
       />
     );
   }
@@ -76,15 +75,15 @@ interface Item {
 interface LuckyChestGameProps {
   onClose: () => void;
   isStatsFullscreen: boolean;
-  currentCoins: number; // Thêm prop để nhận số xu hiện tại
-  onUpdateCoins: (amount: number) => void; // Thêm prop để cập nhật số xu
-  currentJackpotPool: number; // NEW: Prop for global jackpot pool
-  onUpdateJackpotPool: (amount: number, resetToDefault?: boolean) => void; // NEW: Prop to update global jackpot pool
+  currentCoins: number;
+  onUpdateCoins: (amount: number) => void;
+  currentJackpotPool: number;
+  onUpdateJackpotPool: (amount: number, resetToDefault?: boolean) => void;
 }
 
 // Reward Popup Component
 interface RewardPopupProps {
-  item: Item; // This item will now have the correct 'value' for jackpot wins
+  item: Item;
   jackpotWon: boolean;
   onClose: () => void;
 }
@@ -109,7 +108,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
             <h2 className="text-3xl font-black mb-2 uppercase tracking-wider text-white drop-shadow">JACKPOT!</h2>
-            {/* Display item.value which now holds the actual jackpot amount won */}
             <p className="text-xl font-semibold mb-4 text-white">Bạn đã trúng {item.value.toLocaleString()} xu từ Pool!</p>
             <p className="text-sm mt-3 opacity-90 text-yellow-100">🌟 Chúc mừng người chơi siêu may mắn! 🌟</p>
           </>
@@ -141,20 +139,17 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1); // For visual highlighting during spin
-  const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1); // Actual item index won
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1);
   const [hasSpun, setHasSpun] = useState(false);
-  const [rewardHistory, setRewardHistory] = useState<Item[]>([]); // Changed from inventory
+  const [rewardHistory, setRewardHistory] = useState<Item[]>([]);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin'); // State for tabs
-
-  // New states for popup
+  const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin');
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
-  // List of available items
-  const items: Item[] = [
+  const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
     { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
     { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
@@ -171,19 +166,18 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     { icon: TrophyIcon, name: 'Cúp bạc', value: 400, rarity: 'rare', color: 'text-gray-500' },
     { icon: HeartIcon, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
     { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
-  ];
+  ], []);
 
-  // Positions of items on the visual wheel
-  const itemPositionsOnWheel = [
+  const itemPositionsOnWheel = useMemo(() => [
     { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
     { row: 1, col: 3 }, { row: 2, col: 3 },
     { row: 3, col: 3 }, { row: 3, col: 2 }, { row: 3, col: 1 }, { row: 3, col: 0 },
     { row: 2, col: 0 }, { row: 1, col: 0 }
-  ];
+  ], []);
+
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
-  // Get background color based on item rarity
-  const getRarityBg = (rarity: Item['rarity']) => {
+  const getRarityBg = useCallback((rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-gray-100 border-gray-300';
       case 'uncommon': return 'bg-green-100 border-green-300';
@@ -193,14 +187,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       case 'jackpot': return 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-400 border-4 border-yellow-200 shadow-lg shadow-yellow-500/50';
       default: return 'bg-gray-100 border-gray-300';
     }
-  };
+  }, []);
 
-  // Function to handle the spinning mechanism
-  const spinChest = () => {
+  const spinChest = useCallback(() => {
     if (isSpinning || currentCoins < 100) return;
 
     onUpdateCoins(-100);
-
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     onUpdateJackpotPool(randomCoinsToAdd);
 
@@ -217,24 +209,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
-        const otherItemIndicesOnWheel: number[] = [];
-        for (let i = 0; i < NUM_WHEEL_SLOTS; i++) {
-            if (i !== jackpotItemArrayIndex) {
-                otherItemIndicesOnWheel.push(i);
-            }
-        }
-
+        const otherItemIndicesOnWheel = Array.from({ length: NUM_WHEEL_SLOTS }, (_, i) => i)
+                                             .filter(i => i !== jackpotItemArrayIndex);
         if (otherItemIndicesOnWheel.length > 0) {
             targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
-        } else if (NUM_WHEEL_SLOTS === 1 && jackpotItemArrayIndex === 0) {
-            targetLandedItemIndex = jackpotItemArrayIndex;
         } else {
-            const allWheelIndices = Array.from(Array(NUM_WHEEL_SLOTS).keys());
-             if (allWheelIndices.length > 0) {
-                targetLandedItemIndex = allWheelIndices[Math.floor(Math.random() * allWheelIndices.length)];
-            } else {
-                targetLandedItemIndex = 0; // Absolute fallback
-            }
+            targetLandedItemIndex = 0;
         }
     }
 
@@ -242,9 +222,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
     const numFullRotations = 2;
     const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
-
     let currentVisualStepIndex = 0;
-    let currentSpeed = 50;
     const finalPauseDuration = 700;
 
     const spinAnimation = () => {
@@ -256,6 +234,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         const fastSpeed = 50;
         const moderateSpeed = 120;
         const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
+        let currentSpeed;
 
         if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
           currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
@@ -264,7 +243,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         } else {
           currentSpeed = fastSpeed;
         }
-
+        
         currentVisualStepIndex++;
         setTimeout(spinAnimation, currentSpeed);
       } else {
@@ -284,10 +263,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             setJackpotAnimation(true);
             onUpdateCoins(actualWonAmount);
             onUpdateJackpotPool(0, true);
-            
-            setTimeout(() => {
-              setJackpotAnimation(false);
-            }, 3000);
+            setTimeout(() => setJackpotAnimation(false), 3000);
           } else {
             onUpdateCoins(wonItem.value);
           }
@@ -298,10 +274,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       }
     };
     spinAnimation();
-  };
+  }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
 
-  // Renders the wheel grid
-  const renderGrid = () => {
+  const renderGrid = useCallback(() => {
     const grid: ({ item: Item; isWheelItem: boolean; isSelected: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
 
     itemPositionsOnWheel.forEach((pos, indexOnWheel) => {
@@ -404,19 +379,18 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         )}
       </div>
     );
-  };
+  }, [isSpinning, hasSpun, finalLandedItemIndex, selectedIndex, items, itemPositionsOnWheel, getRarityBg]);
 
+  const memoizedGrid = useMemo(() => renderGrid(), [renderGrid]);
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
       
-      {/* --- START: NEW TOP HEADER --- */}
       <div className="w-full flex items-center justify-between py-2 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
-        {/* Player's current coins are always visible */}
         <CoinDisplay 
           displayedCoins={currentCoins}
           isStatsFullscreen={isStatsFullscreen}
         />
-        {/* Title has been removed */}
         <button
           onClick={onClose}
           className="w-10 h-10 flex items-center justify-center bg-black/30 rounded-full transition-all duration-300 hover:bg-red-500/50 hover:scale-110"
@@ -429,11 +403,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           />
         </button>
       </div>
-      {/* --- END: NEW TOP HEADER --- */}
 
-      <div className="max-w-md w-full px-4 pt-6"> {/* Added padding here */}
+      <div className="max-w-md w-full px-4 pt-6">
         <div className="text-center mb-6">
-          {/* Conditional rendering for Jackpot Pool - Only shown in Spin tab */}
           {activeTab === 'spin' && (
             <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${
               jackpotAnimation
@@ -459,14 +431,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           )}
         </div>
 
-        {/* Conditional Tab Content */}
         {activeTab === 'spin' && (
           <>
             <div className="flex justify-center mb-6">
-              {renderGrid()}
+              {memoizedGrid}
             </div>
 
-            <div className="flex justify-center mb-6">
+            <div className="flex flex-col items-center justify-center mb-6">
               <button
                 onClick={spinChest}
                 disabled={isSpinning || currentCoins < 100}
@@ -542,7 +513,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                     <div className={`text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
                       {item.name}
                     </div>
-                    {itemRarity !== 'jackpot' && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
+                    {itemRarity !== 'jackpot' && item.value > 0 && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
                     {itemRarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
                   </div>
                 );
@@ -559,7 +530,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         )}
       </div>
 
-      {/* Reward Popup */}
       {showRewardPopup && wonRewardDetails && (
         <RewardPopup
           item={wonRewardDetails}
@@ -568,7 +538,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         />
       )}
 
-      {/* --- START: NEW FLOATING FOOTER FOR NAVIGATION --- */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-auto">
         <div className="flex bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg ring-1 ring-white/10">
           <button
@@ -593,92 +562,28 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           </button>
         </div>
       </div>
-      {/* --- END: NEW FLOATING FOOTER --- */}
-
 
       <style jsx global>{`
-        @keyframes fade-in-up {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
-
-        @keyframes celebrate {
-          0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
-          50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); }
-          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
-        }
+        @keyframes celebrate { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); } }
         .animate-celebrate { animation: celebrate 0.8s ease-in-out forwards; }
-
-        @keyframes shine {
-          0% { transform: translateX(-100%) skewX(-20deg); }
-          100% { transform: translateX(100%) skewX(100%) skewX(-20deg); }
-        }
+        @keyframes shine { 0% { transform: translateX(-100%) skewX(-20deg); } 100% { transform: translateX(100%) skewX(100%) skewX(-20deg); } }
         .animate-shine { animation: shine 1.5s linear infinite; }
-
-        /* Popup specific animations */
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out forwards;
-        }
-
-        @keyframes pop-in {
-          0% { transform: scale(0.8); opacity: 0; }
-          70% { transform: scale(1.05); opacity: 1; }
-          100% { transform: scale(1); }
-        }
-        .animate-pop-in {
-          animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-        .animate-float {
-          animation: float 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce-once {
-          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-          40% { transform: translateY(-15px); }
-          60% { transform: translateY(-7px); }
-        }
-        .animate-bounce-once {
-          animation: bounce-once 0.8s ease-in-out;
-        }
-
-        body {
-          font-family: 'Inter', sans-serif; /* Example font */
-        }
-
-        /* Custom scrollbar for reward history */
-        .scrollbar-thin {
-          scrollbar-width: thin;
-          scrollbar-color: #a855f7 /* thumb */ #3b0764 /* track, semi-transparent purple-800 */;
-        }
-        .scrollbar-thin::-webkit-scrollbar {
-          height: 8px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: rgba(59, 7, 100, 0.5); /* purple-800 with opacity */
-          border-radius: 10px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-          background-color: #a855f7; /* purple-400 */
-          border-radius: 10px;
-          border: 2px solid rgba(59, 7, 100, 0.5); /* track color for border */
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        @keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 70% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
+        .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 2s ease-in-out infinite; }
+        @keyframes bounce-once { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
+        .animate-bounce-once { animation: bounce-once 0.8s ease-in-out; }
+        body { font-family: 'Inter', sans-serif; }
+        .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #a855f7 #3b0764; }
+        .scrollbar-thin::-webkit-scrollbar { height: 8px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: rgba(59, 7, 100, 0.5); border-radius: 10px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #a855f7; border-radius: 10px; border: 2px solid rgba(59, 7, 100, 0.5); }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       `}</style>
     </div>
   );
