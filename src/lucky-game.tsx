@@ -386,14 +386,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
       
-      <div className="w-full flex items-center justify-between py-2 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
+      <div className="w-full flex items-center justify-between py-1 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
         <CoinDisplay 
           displayedCoins={currentCoins}
           isStatsFullscreen={isStatsFullscreen}
         />
         <button
           onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center bg-black/30 rounded-full transition-all duration-300 hover:bg-red-500/50 hover:scale-110"
+          className="w-10 h-10 flex items-center justify-center bg-transparent rounded-full transition-all duration-300 hover:bg-red-500/50 hover:scale-110"
         >
           <img
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
@@ -542,7 +542,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="flex bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg ring-1 ring-white/10">
           <button
             onClick={() => setActiveTab('spin')}
-            className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+            className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
               activeTab === 'spin'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
                 : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white'
@@ -552,7 +552,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+            className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
               activeTab === 'history'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
                 : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white'
