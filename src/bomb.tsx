@@ -31,9 +31,6 @@ const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubus
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
-// --- START: THÊM ICON PICKAXE MỚI ---
-const PickaxeIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png" alt="Pickaxe" className={className} /> );
-// --- END: THÊM ICON PICKAXE MỚI ---
 
 // --- MasteryDisplay Component (Copied from quiz.tsx) ---
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
@@ -54,10 +51,6 @@ const BOARD_SIZE = 6;
 const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
-// --- START: THÊM CẤU HÌNH PICKAXE ---
-const MAX_PICKAXES = 50;
-// --- END: THÊM CẤU HÌNH PICKAXE ---
-
 
 // --- CSS TÙY CHỈNH CHO HIỆU ỨNG NẢY NHẸ ---
 const CustomAnimationStyles = () => (
@@ -162,9 +155,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   const [board, setBoard] = useState(() => createBoard());
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
-  // --- START: THÊM STATE CHO PICKAXE ---
-  const [pickaxes, setPickaxes] = useState(MAX_PICKAXES);
-  // --- END: THÊM STATE CHO PICKAXE ---
   
   // --- START: ADDED FOR COIN ANIMATION ---
   const [coins, setCoins] = useState(displayedCoins);
@@ -227,25 +217,13 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   const handleCellClick = useCallback((x, y) => {
     const cell = board[y][x];
 
-    // LOGIC MỚI: NẾU CLICK VÀO COIN ĐÃ MỞ, THU THẬP TẤT CẢ (không tốn cuốc)
+    // LOGIC MỚI: NẾU CLICK VÀO COIN ĐÃ MỞ, THU THẬP TẤT CẢ
     if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
         collectAllVisibleCoins();
         return;
     }
     
-    // Không làm gì nếu ô đã mở (và không phải cửa ra) hoặc đã cắm cờ (không tốn cuốc)
     if (cell.isFlagged || (cell.isRevealed && !cell.isExit)) return;
-
-    // --- START: LOGIC TIÊU THỤ PICKAXE ---
-    // Nếu click vào một ô chưa mở, kiểm tra xem còn cuốc không
-    if (!cell.isRevealed) {
-        if (pickaxes <= 0) {
-            // Có thể thêm hiệu ứng rung lắc ở đây để báo hết cuốc
-            return;
-        }
-        setPickaxes(prev => prev - 1); // Trừ 1 cuốc
-    }
-    // --- END: LOGIC TIÊU THỤ PICKAXE ---
 
     if (cell.isExit) {
       if (!cell.isRevealed) {
@@ -276,15 +254,17 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
         cellsToExplode.forEach(targetCell => {
           if (!targetCell.isRevealed) {
             targetCell.isRevealed = true;
+            // Bỏ logic cộng tiền ở đây
             if (targetCell.isMineRandom) explosionsQueue.push({ x: targetCell.x, y: targetCell.y });
           }
         });
       }
       setBoard(newBoard);
     } else {
+      // Chỉ mở ô, không cộng tiền nữa
       updateCell(x, y, { isRevealed: true });
     }
-  }, [board, collectAllVisibleCoins, pickaxes]); // Thêm pickaxes vào dependency array
+  }, [board, collectAllVisibleCoins]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
@@ -305,9 +285,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setBoard(createBoard());
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
-    // --- START: HỒI LẠI PICKAXES KHI LÊN TẦNG MỚI ---
-    setPickaxes(MAX_PICKAXES);
-    // --- END: HỒI LẠI PICKAXES KHI LÊN TẦNG MỚI ---
   };
 
   const resetGame = () => {
@@ -315,9 +292,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setFlagsPlaced(0);
     setBoard(createBoard());
     setExitConfirmationPos(null);
-    // --- START: HỒI LẠI PICKAXES KHI CHƠI LẠI ---
-    setPickaxes(MAX_PICKAXES);
-    // --- END: HỒI LẠI PICKAXES KHI CHƠI LẠI ---
   };
 
   // Tính giá trị của một ô coin cho tầng hiện tại để hiển thị
@@ -333,15 +307,14 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <button
               onClick={onClose}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-              aria-label="Về nhà"
-              title="Về nhà"
+              aria-label="Home"
+              title="Home"
           >
               <HomeIcon className="w-5 h-5 text-slate-300" />
-              <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
+              <span className="hidden sm:inline text-sm font-semibold text-slate-300">Home</span>
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
             <CoinDisplay displayedCoins={animatedDisplayedCoins} isStatsFullscreen={false} />
-            <MasteryDisplay masteryCount={masteryCards} />
           </div>
         </div>
       </header>
@@ -350,36 +323,44 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
 
         <div className="text-center mb-6">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
-          <p className="text-slate-400 mt-2">Dùng cuốc để mở ô và thu thập tiền thưởng!</p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Miner Challenge</h1>
+          <p className="text-slate-400 mt-2">Uncover cells and collect rewards!</p>
         </div>
 
-        {/* --- KHỐI THÔNG SỐ GAME ĐÃ ĐƯỢC THIẾT KẾ LẠI, TINH GỌN HƠN --- */}
-        <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-3 gap-2 sm:gap-3">
-          {/* Tầng */}
-          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center items-center" title={`Tầng hiện tại: ${currentFloor}`}>
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tầng</span>
-            <span className="font-mono text-lg sm:text-xl font-bold text-white">{currentFloor}</span>
-          </div>
-
-          {/* --- START: THAY THẾ BOM BẰNG PICKAXE --- */}
-          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center items-center" title={`Số cuốc còn lại: ${pickaxes}`}>
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Cuốc</span>
-            <div className="flex items-center justify-center gap-2">
-              <span className="font-mono text-base sm:text-lg font-bold text-white">{pickaxes}/{MAX_PICKAXES}</span>
-              <PickaxeIcon className="w-5 h-5 object-contain" />
+        {/* --- COMPACT 2x2 GAME STATS BLOCK --- */}
+        <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
+            {/* Floor */}
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
+                <StairsIcon className="w-6 h-6 object-contain opacity-70" />
+                <div className="flex flex-col text-left">
+                    <span className="text-xs font-semibold text-slate-400 uppercase">Floor</span>
+                    <span className="font-mono text-lg font-bold text-white">{currentFloor}</span>
+                </div>
             </div>
-          </div>
-          {/* --- END: THAY THẾ BOM BẰNG PICKAXE --- */}
-          
-          {/* Rewards */}
-          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center items-center" title={`Phần thưởng mỗi coin: ${rewardPerCoin}`}>
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Rewards</span>
-            <div className="flex items-center justify-center gap-2">
-              <span className="font-mono text-lg sm:text-xl font-bold text-white">{rewardPerCoin}</span>
-              <CircleDollarSignIcon className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
+            {/* Pickaxe */}
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxe Level: ${masteryCards}`}>
+                <img src={masteryIconUrl} alt="Pickaxe" className="w-6 h-6" />
+                <div className="flex flex-col text-left">
+                    <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
+                    <span className="font-mono text-lg font-bold text-white">{masteryCards}</span>
+                </div>
             </div>
-          </div>
+            {/* Bombs */}
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title="Bombs Remaining">
+                <BombIcon className="w-6 h-6 object-contain" />
+                <div className="flex flex-col text-left">
+                    <span className="text-xs font-semibold text-slate-400 uppercase">Bombs</span>
+                    <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
+                </div>
+            </div>
+            {/* Rewards */}
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin: ${rewardPerCoin}`}>
+                <CircleDollarSignIcon className="w-6 h-6 object-contain" />
+                <div className="flex flex-col text-left">
+                    <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
+                    <span className="font-mono text-lg font-bold text-white">{rewardPerCoin}</span>
+                </div>
+            </div>
         </div>
 
         <div className="relative">
@@ -396,7 +377,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
             </div>
           </div>
         </div>
-        <footer className="mt-8 text-center text-slate-500 text-sm">Tạo bởi Gemini với React & Tailwind CSS.</footer>
+        <footer className="mt-8 text-center text-slate-500 text-sm">Created by Gemini with React & Tailwind CSS.</footer>
       </div>
 
       {exitConfirmationPos && (
@@ -405,11 +386,11 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
                     <StairsIcon className="h-9 w-9 object-contain" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">Tầng Hoàn Tất!</h3>
-                <p className="mt-2 text-slate-400">Bạn muốn lên tầng {currentFloor + 1}?</p>
+                <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
+                <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
                 <div className="mt-8 grid grid-cols-2 gap-4">
-                    <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600">Ở lại</button>
-                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-700">Lên tầng</button>
+                    <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600">Stay</button>
+                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-700">Next Floor</button>
                 </div>
             </div>
          </div>
