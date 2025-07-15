@@ -678,13 +678,12 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                       let borderColor = "border-gray-200";
                       let textColor = "text-gray-700";
                       let labelBg = "bg-gray-100";
-                      let iconColor = "text-gray-400";
 
                       if (answered) {
                         if (isCorrect) {
-                           bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white"; iconColor = "text-green-600";
+                           bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white";
                         } else if (isSelected) {
-                           bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white"; iconColor = "text-red-600";
+                           bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white";
                         }
                       }
                       return (
@@ -692,14 +691,14 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                           key={option}
                           onClick={() => !answered && !isHiddenByHint && handleAnswer(option)}
                           disabled={answered || playableQuestions.length === 0 || isHiddenByHint}
-                          className={`w-full text-left p-3 rounded-lg border-2 ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 group ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-400 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`}
+                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 hover:shadow-sm ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-300 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`}
                         >
-                          <div className={`flex items-center justify-center w-8 h-8 rounded-md mr-4 text-sm font-bold flex-shrink-0 ${labelBg}`}>
+                          <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
                             {optionLabels[index]}
                           </div>
-                          <span className="flex-grow font-medium">{option}</span>
-                          {answered && isCorrect && <CheckIcon className={`h-6 w-6 ml-2 flex-shrink-0 ${iconColor}`} />}
-                          {answered && isSelected && !isCorrect && <XIcon className={`h-6 w-6 ml-2 flex-shrink-0 ${iconColor}`} />}
+                          <span className="flex-grow">{option}</span>
+                          {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />}
+                          {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />}
                         </button>
                       );
                     })}
