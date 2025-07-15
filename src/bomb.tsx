@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, memo } from 'react';
 
 // --- Các component Icon SVG & IMG ---
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
@@ -10,154 +10,26 @@ const TrophyIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" 
 const CheckIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 6 9 17l-5-5"/></svg> );
 const XIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> );
 
-
 // --- Cấu hình game ---
 const BOARD_SIZE = 6;
 const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
 
-// --- CSS TÙY CHỈNH CHO HIỆU ỨNG NẢY NHẸ ---
+// --- CSS TÙY CHỈNH: Đưa ra ngoài component để không bị tạo lại mỗi lần re-render ---
 const CustomAnimationStyles = () => (
   <style>{`
     @keyframes gentle-bounce-inline {
-      0%, 100% {
-        transform: translateY(-10%);
-        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-      }
-      50% {
-        transform: translateY(0);
-        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-      }
+      0%, 100% { transform: translateY(-10%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+      50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
     }
-    .animate-gentle-bounce-inline {
-      animation: gentle-bounce-inline 1s infinite;
-    }
+    .animate-gentle-bounce-inline { animation: gentle-bounce-inline 1s infinite; }
   `}</style>
 );
 
-
-export default function App() {
-  const [currentFloor, setCurrentFloor] = useState(1);
-  const [board, setBoard] = useState(() => createBoard());
-  const [coinsFound, setCoinsFound] = useState(0);
-  const [flagsPlaced, setFlagsPlaced] = useState(0);
-  const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
-
-  function createBoard() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
-    
-    const placeItem = (itemType) => { 
-        let placed = false; 
-        while(!placed) { 
-            const x = Math.floor(Math.random() * BOARD_SIZE); 
-            const y = Math.floor(Math.random() * BOARD_SIZE); 
-            const cell = newBoard[y][x]; 
-            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { 
-                cell[itemType] = true; 
-                placed = true; 
-            } 
-        } 
-    };
-    
-    for (let i = 0; i < NUM_RANDOM_BOMBS; i++) placeItem('isMineRandom');
-    for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
-    placeItem('isExit');
-    
-    return newBoard;
-  }
-  
-  function handleCellClick(x, y) {
-    const cell = board[y][x];
-    if (cell.isFlagged || (cell.isRevealed && !cell.isExit) ) return;
-
-    if (cell.isExit) { // Xử lý click vào ô Exit (dù đã mở hay chưa)
-      if (!cell.isRevealed) {
-        const newBoard = JSON.parse(JSON.stringify(board));
-        newBoard[y][x].isRevealed = true;
-        setBoard(newBoard);
-      }
-      setExitConfirmationPos({ x, y });
-      return;
-    }
-    
-    const newBoard = JSON.parse(JSON.stringify(board));
-    const clickedCell = newBoard[y][x];
-
-    if (clickedCell.isMineRandom) {
-        const explosionsQueue = [{x, y}]; 
-        let newCoinsFromExplosion = 0;
-
-        while (explosionsQueue.length > 0) {
-            const currentBombPos = explosionsQueue.shift();
-            const bombCell = newBoard[currentBombPos.y][currentBombPos.x];
-
-            if (bombCell.isRevealed) continue;
-            bombCell.isRevealed = true;
-            
-            const unrevealedCells = [];
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (!newBoard[r][c].isRevealed) {
-                        unrevealedCells.push(newBoard[r][c]);
-                    }
-                }
-            }
-
-            const shuffled = unrevealedCells.sort(() => 0.5 - Math.random());
-            const cellsToExplode = shuffled.slice(0, 4);
-
-            cellsToExplode.forEach(targetCell => {
-                targetCell.isRevealed = true;
-                if (targetCell.isCoin) {
-                    newCoinsFromExplosion++;
-                }
-                if (targetCell.isMineRandom) {
-                    explosionsQueue.push({x: targetCell.x, y: targetCell.y});
-                }
-            });
-        }
-        
-        setCoinsFound(prev => prev + newCoinsFromExplosion);
-
-    } else { 
-        clickedCell.isRevealed = true;
-        if (clickedCell.isCoin) {
-            setCoinsFound(prev => prev + 1);
-        }
-    }
-    setBoard(newBoard);
-  }
-
-  function handleRightClick(e, x, y) {
-    e.preventDefault();
-    if (board[y][x].isRevealed) return;
-    const newBoard = JSON.parse(JSON.stringify(board));
-    const cell = newBoard[y][x];
-    if (!cell.isFlagged && flagsPlaced < TOTAL_BOMBS) {
-        cell.isFlagged = true;
-        setFlagsPlaced(prev => prev + 1);
-    } else if (cell.isFlagged) {
-        cell.isFlagged = false;
-        setFlagsPlaced(prev => prev - 1);
-    }
-    setBoard(newBoard);
-  }
-  function goToNextFloor() {
-    setCurrentFloor(prev => prev + 1);
-    setBoard(createBoard());
-    setFlagsPlaced(0);
-    setExitConfirmationPos(null);
-  }
-  function resetGame() {
-    setCurrentFloor(1);
-    setCoinsFound(0);
-    setBoard(createBoard());
-    setFlagsPlaced(0);
-    setExitConfirmationPos(null);
-  }
-
-  const Cell = ({ cellData }) => {
+// --- COMPONENT CELL ĐÃ ĐƯỢC TỐI ƯU ---
+const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
+    // console.log(`Rendering Cell ${cellData.x}, ${cellData.y}`); // Bỏ comment để thấy sự khác biệt
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { 
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
@@ -188,58 +60,175 @@ export default function App() {
             specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCoin) { 
             finalWrapperClass = "w-[60%] h-[60%]";
-            // THAY ĐỔI: Sử dụng class CSS được định nghĩa inline
             iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
         }
         
-        content = (
-            <div className={finalWrapperClass}>
-                {iconContent}
-            </div>
-        );
+        content = ( <div className={finalWrapperClass}> {iconContent} </div> );
     }
     
     return ( 
       <div 
         className={`${cellStyle.base} ${isRevealed ? (specificCellStyle || cellStyle.revealed) : cellStyle.hidden}`} 
-        onClick={() => handleCellClick(cellData.x, cellData.y)} 
-        onContextMenu={(e) => handleRightClick(e, cellData.x, cellData.y)}
+        onClick={() => onCellClick(cellData.x, cellData.y)} 
+        onContextMenu={(e) => onRightClick(e, cellData.x, cellData.y)}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
-          {content}
-        </div>
+        <div className="absolute inset-0 flex items-center justify-center"> {content} </div>
       </div> 
     );
+});
+
+
+export default function App() {
+  const [currentFloor, setCurrentFloor] = useState(1);
+  const [board, setBoard] = useState(() => createBoard());
+  const [coinsFound, setCoinsFound] = useState(0);
+  const [flagsPlaced, setFlagsPlaced] = useState(0);
+  const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
+
+  function createBoard() {
+    return Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
+    // ... logic đặt bom, coin, exit sẽ chạy trong useEffect để tránh lỗi StrictMode
+  }
+
+  // Chạy một lần duy nhất khi component được mount hoặc khi tầng thay đổi
+  useEffect(() => {
+    let newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
+    
+    const placeItem = (itemType) => { 
+        let placed = false; 
+        while(!placed) { 
+            const x = Math.floor(Math.random() * BOARD_SIZE); 
+            const y = Math.floor(Math.random() * BOARD_SIZE); 
+            const cell = newBoard[y][x]; 
+            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { 
+                cell[itemType] = true; 
+                placed = true; 
+            } 
+        } 
+    };
+    
+    for (let i = 0; i < NUM_RANDOM_BOMBS; i++) placeItem('isMineRandom');
+    for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
+    placeItem('isExit');
+    
+    setBoard(newBoard);
+  }, [currentFloor]);
+  
+  // CÁCH CẬP NHẬT STATE MỚI, HIỆU NĂNG HƠN
+  const updateCell = (x, y, newProps) => {
+    setBoard(prevBoard => 
+      prevBoard.map((row, rowIndex) => 
+        rowIndex !== y ? row : row.map((cell, colIndex) => 
+          colIndex !== x ? cell : { ...cell, ...newProps }
+        )
+      )
+    );
   };
+
+  function handleCellClick(x, y) {
+    const cell = board[y][x];
+    if (cell.isFlagged || (cell.isRevealed && !cell.isExit) ) return;
+
+    if (cell.isExit) {
+      if (!cell.isRevealed) {
+        updateCell(x, y, { isRevealed: true });
+      }
+      setExitConfirmationPos({ x, y });
+      return;
+    }
+    
+    if (cell.isMineRandom) {
+      // Logic bom nổ dây chuyền cần cách tiếp cận khác vì nó sửa nhiều ô cùng lúc
+      const newBoard = JSON.parse(JSON.stringify(board)); // Tạm thời giữ cách cũ cho logic phức tạp này
+      const explosionsQueue = [{x, y}];
+      let newCoinsFromExplosion = 0;
+
+      while (explosionsQueue.length > 0) {
+        const currentBombPos = explosionsQueue.shift();
+        const bombCell = newBoard[currentBombPos.y][currentBombPos.x];
+        if (bombCell.isRevealed) continue;
+        bombCell.isRevealed = true;
+        
+        const unrevealedCells = [];
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            if (!newBoard[r][c].isRevealed) {
+              unrevealedCells.push(newBoard[r][c]);
+            }
+          }
+        }
+
+        const cellsToExplode = unrevealedCells.sort(() => 0.5 - Math.random()).slice(0, 4);
+        cellsToExplode.forEach(targetCell => {
+          targetCell.isRevealed = true;
+          if (targetCell.isCoin) newCoinsFromExplosion++;
+          if (targetCell.isMineRandom) explosionsQueue.push({x: targetCell.x, y: targetCell.y});
+        });
+      }
+      setCoinsFound(prev => prev + newCoinsFromExplosion);
+      setBoard(newBoard); // Cập nhật toàn bộ board sau khi xử lý nổ
+    } else {
+      updateCell(x, y, { isRevealed: true });
+      if (cell.isCoin) {
+          setCoinsFound(prev => prev + 1);
+      }
+    }
+  }
+
+  function handleRightClick(e, x, y) {
+    e.preventDefault();
+    const cell = board[y][x];
+    if (cell.isRevealed) return;
+
+    if (!cell.isFlagged && flagsPlaced < TOTAL_BOMBS) {
+        updateCell(x, y, { isFlagged: true });
+        setFlagsPlaced(prev => prev + 1);
+    } else if (cell.isFlagged) {
+        updateCell(x, y, { isFlagged: false });
+        setFlagsPlaced(prev => prev - 1);
+    }
+  }
+
+  function goToNextFloor() {
+    setCurrentFloor(prev => prev + 1);
+    setFlagsPlaced(0);
+    setExitConfirmationPos(null);
+  }
+  function resetGame() {
+    if (currentFloor === 1) {
+       // Nếu đang ở tầng 1, chỉ cần trigger useEffect để tạo lại board
+       setBoard(createBoard()); // Tạo board rỗng để trigger useEffect
+    } else {
+       // Nếu ở tầng khác, quay về tầng 1 sẽ trigger useEffect
+       setCurrentFloor(1);
+    }
+    setCoinsFound(0);
+    setFlagsPlaced(0);
+    setExitConfirmationPos(null);
+  }
 
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <CustomAnimationStyles />
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
-        {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
           <p className="text-slate-400 mt-2">Dọn bàn và lên tầng cao nhất!</p>
         </div>
 
-        {/* Bảng điều khiển */}
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-3">
-            {/* Tầng */}
             <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
                 <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Tầng</span>
                 <span className="font-mono text-xl font-semibold text-white leading-tight">{currentFloor}</span>
             </div>
-            {/* Bom */}
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
                 <BombIcon className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
                 <span className="font-mono w-8 text-left">{TOTAL_BOMBS - flagsPlaced}</span>
             </div>
-            {/* Tiền */}
             <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
                 <CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                 <span className="font-mono w-8 text-left">{coinsFound}</span>
             </div>
-            {/* Reset */}
             <div className="flex justify-center">
                 <button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors">
                     <RefreshCwIcon className="w-6 h-6" />
@@ -247,18 +236,16 @@ export default function App() {
             </div>
         </div>
 
-        {/* Bàn chơi */}
         <div className="relative">
           <div className="w-full aspect-square">
             <div className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px' }}>
-              {board.flat().map((cell) => <Cell key={`${cell.y}-${cell.x}`} cellData={cell} />)}
+              {board.flat().map((cell) => <Cell key={`${cell.y}-${cell.x}`} cellData={cell} onCellClick={handleCellClick} onRightClick={handleRightClick} />)}
             </div>
           </div>
         </div>
         <footer className="mt-8 text-center text-slate-500 text-sm">Tạo bởi Gemini với React & Tailwind CSS.</footer>
       </div>
 
-      {/* Pop-up xác nhận lên tầng */}
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
@@ -268,8 +255,8 @@ export default function App() {
                 <h3 className="text-2xl font-bold text-white">Tầng Hoàn Tất!</h3>
                 <p className="mt-2 text-slate-400">Bạn muốn lên tầng {currentFloor + 1}?</p>
                 <div className="mt-8 grid grid-cols-2 gap-4">
-                    <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200">Ở lại</button>
-                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200">Lên tầng</button>
+                    <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600">Ở lại</button>
+                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-700">Lên tầng</button>
                 </div>
             </div>
          </div>
