@@ -331,21 +331,35 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <p className="text-slate-400 mt-2">Mở các ô và thu thập tiền thưởng!</p>
         </div>
 
-        <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-3">
+        {/* --- KHỐI MÃ MỚI ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
+        <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-stretch gap-3">
+            {/* Tầng */}
             <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
                 <span className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest">Tầng</span>
                 <span className="font-mono text-xl font-semibold text-white leading-tight">{currentFloor}</span>
             </div>
-            <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
-                <BombIcon className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
-                <span className="font-mono w-8 text-left">{TOTAL_BOMBS - flagsPlaced}</span>
+
+            {/* Bom còn lại */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full" title="Số bom còn lại trên bản đồ">
+                <span className="text-[10px] font-semibold text-red-400 uppercase tracking-widest">Bom</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                    <BombIcon className="w-5 h-5 object-contain" />
+                    <span className="font-mono text-xl font-semibold text-white leading-tight">{TOTAL_BOMBS - flagsPlaced}</span>
+                </div>
             </div>
-            <div className="flex items-center gap-2 text-xl sm:text-2xl justify-center">
-                <CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
-                <span className="font-mono w-8 text-left">{rewardPerCoin}</span>
+
+            {/* Giá trị Coin */}
+            <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full" title={`Mỗi coin ở tầng này trị giá ${rewardPerCoin}`}>
+                <span className="text-[10px] font-semibold text-yellow-500 uppercase tracking-widest">Thưởng/Coin</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                    <CircleDollarSignIcon className="w-4 h-4 object-contain" />
+                    <span className="font-mono text-xl font-semibold text-white leading-tight">{rewardPerCoin}</span>
+                </div>
             </div>
-            <div className="flex justify-center">
-                <button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors">
+            
+            {/* Nút Reset */}
+            <div className="flex items-center justify-center">
+                <button onClick={resetGame} className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors" title="Chơi lại từ đầu">
                     <RefreshCwIcon className="w-6 h-6" />
                 </button>
             </div>
