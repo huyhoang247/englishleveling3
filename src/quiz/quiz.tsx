@@ -306,8 +306,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                   return [{
                       question: questionText,
                       vietnamese: randomSentence.vietnamese,
-                      options: [word, ...incorrectOptions], // Sẽ shuffle sau
-                      correctAnswer: word,
+                      options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], // Sẽ shuffle sau
+                      correctAnswer: word.toLowerCase(),
                       word: word,
                   }];
               }
@@ -521,7 +521,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                         incorrectOptions.push(randomWord);
                     }
                 }
-                return [{ question: questionText, vietnamese: randomSentence.vietnamese, options: [word, ...incorrectOptions], correctAnswer: word, word: word }];
+                return [{ question: questionText, vietnamese: randomSentence.vietnamese, options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], correctAnswer: word.toLowerCase(), word: word }];
             }
             return [];
         });
