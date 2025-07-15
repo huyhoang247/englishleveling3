@@ -115,6 +115,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 
   useEffect(() => {
     // Đồng bộ state cục bộ với prop từ cha khi nó thay đổi
+    // Điều này đảm bảo giá trị luôn đúng sau khi cha đã cập nhật xong từ server.
     setLocalDisplayedCoins(displayedCoins);
   }, [displayedCoins]);
 
@@ -189,11 +190,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
     
-    // Bắt đầu animation trước khi gửi event lên cha
-    startCoinCountAnimation(localDisplayedCoins, localDisplayedCoins + goldReward);
-    
-    onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
-
     const updatedList = vocabulary.map(item => {
       if (item.id === id) {
         const expRemaining = item.exp - item.maxExp;
@@ -204,14 +200,23 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
 
+    // --- OPTIMISTIC UI UPDATE ---
+    // 1. Bắt đầu animation coin ngay lập tức trên giao diện local
+    startCoinCountAnimation(localDisplayedCoins, localDisplayedCoins + goldReward);
+    // 2. Báo cho component cha biết để nó xử lý lưu trữ coin và card thật
+    onClaimReward({ gold: goldReward, masteryCards: masteryCardReward });
+    // 3. Cập nhật danh sách từ vựng trên UI ngay lập tức
     onDataUpdate(updatedList);
     
     try {
+      // 4. Lưu trạng thái mới của danh sách vào Firestore trong nền
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
       await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
       console.log("Vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving vocabulary progress:", error);
+      // --- ROLLBACK ---
+      // Nếu lưu thất bại, trả lại dữ liệu cũ cho UI để người dùng không bị mất tiến trình
       onDataUpdate(vocabulary);
     } finally {
       setTimeout(() => {
@@ -245,19 +250,20 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
     
-    // Bắt đầu animation trước khi gửi event lên cha
+    // --- OPTIMISTIC UI UPDATE ---
     startCoinCountAnimation(localDisplayedCoins, localDisplayedCoins + totalGoldReward);
-
     onClaimReward({ gold: totalGoldReward, masteryCards: totalMasteryCardReward });
     onDataUpdate(updatedList);
 
     try {
+      // Lưu trong nền
       const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
       await setDoc(achievementDocRef, { vocabulary: updatedList }, { merge: true });
       console.log("Batch vocabulary mastery progress saved to Firestore.");
     } catch (error) {
       console.error("Error saving batch vocabulary progress:", error);
-      onDataUpdate(vocabulary); // Rollback
+      // --- ROLLBACK ---
+      onDataUpdate(vocabulary); 
     } finally {
       setIsClaimingAll(false);
     }
