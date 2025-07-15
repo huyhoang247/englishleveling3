@@ -62,6 +62,8 @@ const GiftIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+
 // Interface for item properties
 interface Item {
   icon: React.FC<{ className?: string }> | string; // icon can be a component or a string (URL)
@@ -387,21 +389,19 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
       
       <div className="w-full flex items-center justify-between py-1 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+          aria-label="Quay lại Trang Chính"
+          title="Quay lại Trang Chính"
+        >
+          <HomeIcon className="w-5 h-5 text-slate-300" />
+          <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
+        </button>
         <CoinDisplay 
           displayedCoins={currentCoins}
           isStatsFullscreen={isStatsFullscreen}
         />
-        <button
-          onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center bg-transparent rounded-full transition-all duration-300 hover:bg-red-500/50 hover:scale-110"
-        >
-          <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
-            alt="Close icon"
-            className="w-5 h-5"
-            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/ffffff/000000?text=X'; }}
-          />
-        </button>
       </div>
 
       <div className="max-w-md w-full px-4 pt-6">
