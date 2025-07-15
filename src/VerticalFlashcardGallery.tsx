@@ -1,3 +1,5 @@
+
+
 // --- START OF FILE VerticalFlashcardGallery.tsx ---
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
@@ -5,6 +7,7 @@ import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
+// <<< THAY ĐỔI 1: IMPORT THÊM `query` VÀ `orderBy` >>>
 import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
@@ -229,7 +232,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
+  // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN LOGIC LẤY DỮ LIỆU ĐỂ SẮP XẾP BẰNG FIRESTORE >>>
   useEffect(() => {
+    // Nếu không có người dùng, reset state và thoát
     if (!currentUser) {
       setLoading(false);
       setOpenedImageIds([]);
@@ -241,6 +246,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     let unsubscribePlaylists: () => void;
     let unsubscribeOpenedCards: () => void;
 
+    // --- Lắng nghe thay đổi của Playlists (Không đổi) ---
     const userDocRef = doc(db, 'users', currentUser.uid);
     unsubscribePlaylists = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -253,25 +259,33 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       console.error("Error fetching user playlists:", error);
     });
 
+    // --- Lắng nghe thay đổi của bộ sưu tập thẻ VỚI SẮP XẾP ---
     const openedVocabColRef = collection(db, 'users', currentUser.uid, 'openedVocab');
+    
+    // TẠO QUERY MỚI: Sắp xếp theo trường 'collectedAt' giảm dần (mới nhất trước)
     const q = query(openedVocabColRef, orderBy('collectedAt', 'desc'));
 
+    // SỬ DỤNG QUERY `q` THAY VÌ `openedVocabColRef`
     unsubscribeOpenedCards = onSnapshot(q, (querySnapshot) => {
       const ids: number[] = [];
+      // Vì đã orderBy, querySnapshot.forEach sẽ duyệt qua các doc theo đúng thứ tự
       querySnapshot.forEach(doc => {
         const id = Number(doc.id);
         if (!isNaN(id)) {
           ids.push(id);
         }
       });
-      setOpenedImageIds(ids);
+      setOpenedImageIds(ids); // `ids` bây giờ đã được sắp xếp đúng thứ tự
       setLoading(false); 
     }, (error) => {
       console.error("Error fetching ordered cards from subcollection:", error);
+      // QUAN TRỌNG: Nếu có lỗi này, rất có thể bạn chưa tạo Index trong Firestore.
+      // Firestore sẽ cung cấp một link trong console log lỗi để bạn click vào và tự động tạo index.
       setOpenedImageIds([]); 
       setLoading(false);
     });
     
+    // Cleanup function để hủy cả hai listener khi component unmount
     return () => {
       if (unsubscribePlaylists) unsubscribePlaylists();
       if (unsubscribeOpenedCards) unsubscribeOpenedCards();
@@ -281,7 +295,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
-        const card = ALL_CARDS_MAP.get(id);
+        const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
         if (!card) return undefined;
         return {
             card,
@@ -292,6 +306,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     let cardIdsToShow: number[] = [];
 
     if (activeTab === 'collection') {
+        // <<< THAY ĐỔI 3: BỎ `.reverse()` VÌ DỮ LIỆU ĐÃ ĐƯỢC SẮP XẾP TỪ FIRESTORE >>>
         cardIdsToShow = openedImageIds;
     } else if (activeTab === 'favorite') {
         if (selectedPlaylistId === 'all') {
@@ -497,40 +512,18 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
+      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         <style>{animations}</style>
         <style>{scrollbarHide}</style>
 
         {activeScreen === 'home' && (
           <>
-            {/* <<< HEADER MỚI: Không dính, cuộn cùng trang >>> */}
-            <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-              <div className="flex items-center justify-between h-20 max-w-6xl mx-auto px-4">
-                
-                {/* --- BÊN TRÁI: TIÊU ĐỀ --- */}
-                <div className="flex items-center">
-                  <h1 className="text-xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
-                </div>
-
-                {/* --- TRUNG TÂM: CÁC TAB CHÍNH --- */}
-                <div className="absolute left-1/2 -translate-x-1/2">
-                   <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 shadow-sm border border-gray-200 dark:border-gray-700">
-                      <button onClick={() => { setActiveTab('collection'); handlePageChange(1); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
-                        <span>Collection</span>
-                        <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
-                      </button>
-                      <button onClick={() => { setActiveTab('favorite'); handlePageChange(1); setSelectedPlaylistId('all'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
-                        <span>Favorite</span>
-                        <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
-                      </button>
-                    </div>
-                </div>
-
-                {/* --- BÊN PHẢI: CÁC NÚT HÀNH ĐỘNG --- */}
+            {/* Header and Tabs */}
+            <div className="w-full max-w-6xl py-6 mx-auto">
+              <div className="flex justify-between items-center mb-4 px-4">
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Flashcard Gallery</h1>
                 <div className="flex items-center space-x-2">
-                  <button onClick={() => toggleSidebar?.()} className="relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 ring-2 ring-transparent hover:ring-indigo-100 dark:hover:ring-indigo-800" aria-label="Toggle Sidebar">
+                  <button onClick={() => toggleSidebar?.()} className="relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 transition-all duration-300 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800" aria-label="Toggle Sidebar">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400 transition-all duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
@@ -542,12 +535,22 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </div>
                 </div>
               </div>
-            </header>
-            
-            {/* <<< KHU VỰC ĐIỀU KHIỂN PHỤ (PLAYLIST) NẰM NGAY DƯỚI HEADER >>> */}
-            <div className="w-full max-w-6xl mx-auto pt-6">
+
+              <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
+                <button onClick={() => { setActiveTab('collection'); handlePageChange(1); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'collection' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h10M7 13h6" /></svg>
+                  <span>Collection</span>
+                  <span className={`inline-flex items-center justify-center ${activeTab === 'collection' ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{totalFlashcardsInCollection}</span>
+                </button>
+                <button onClick={() => { setActiveTab('favorite'); handlePageChange(1); setSelectedPlaylistId('all'); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'favorite' ? 'bg-pink-50 dark:bg-pink-900 text-pink-700 dark:text-pink-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${activeTab === 'favorite' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 24 24" fill={activeTab === 'favorite' ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                  <span>Favorite</span>
+                  <span className={`inline-flex items-center justify-center ${activeTab === 'favorite' ? 'bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} text-xs font-medium px-1.5 py-0.5 rounded-full ml-1`}>{favoriteCount}</span>
+                </button>
+              </div>
+
               {activeTab === 'favorite' && (
-                <div className="px-4 mb-4">
+                <div className="px-4 mb-6">
                   <div className="w-full">
                     <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3">
                       Đang xem trong Playlist
@@ -630,7 +633,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                 )}
 
                 {totalPages > 1 && (
-                  <div className="bg-transparent p-4 flex justify-center mt-4 pb-24 px-4">
+                  <div className="bg-white dark:bg-gray-900 p-4 flex justify-center shadow-lg mt-4 pb-24 px-4">
                     <nav className="flex items-center space-x-1 sm:space-x-2" aria-label="Pagination">
                       {paginationItems.map((item, index) =>
                         typeof item === 'string' ? (
@@ -639,7 +642,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                           <button
                             key={item}
                             onClick={() => handlePageChange(item)}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === item ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-700'}`}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${currentPage === item ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                           >
                             {item}
                           </button>
