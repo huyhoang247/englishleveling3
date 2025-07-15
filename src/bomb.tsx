@@ -1,6 +1,24 @@
 import React, { useState, memo, useCallback } from 'react';
 
 // --- Các component Icon SVG & IMG ---
+const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`lucide-icon ${className}`}
+    {...props}
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
@@ -80,7 +98,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     );
 });
 
-export default function App() {
+export default function App({ onClose }) {
   const createBoard = () => {
     // THÊM `isCollected: false` VÀO TRẠNG THÁI MẶC ĐỊNH CỦA Ô
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
@@ -215,8 +233,17 @@ export default function App() {
   };
 
   return (
-    <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
+    <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <CustomAnimationStyles />
+      
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-30 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700"
+        aria-label="Close"
+      >
+        <XIcon className="w-6 h-6" />
+      </button>
+
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
