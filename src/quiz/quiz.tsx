@@ -4,6 +4,8 @@ import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increm
 
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
+import { exampleData } from '../example-data.ts';
+import { defaultVocabulary } from '../list-vocabulary.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
 import detailedMeaningsText from '../vocabulary-definitions.ts'; // Import the definitions
 
@@ -109,6 +111,16 @@ interface Definition {
     explanation: string;
 }
 
+// Unified interface for all quiz question types
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  word: string; // The target vocabulary word
+  vietnameseTranslation?: string; // For Practice 2
+}
+
+
 // Detail Popup Component (Redesigned to match image)
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => {
     if (!data) return null;
@@ -146,7 +158,7 @@ const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> =
 };
 
 
-export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
+export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void; practiceId: number; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -166,8 +178,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   const [loading, setLoading] = useState(true);
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
   const [completedQuizWords, setCompletedQuizWords] = useState<Set<string>>(new Set());
-  const [filteredQuizData, setFilteredQuizData] = useState([]);
-  const [playableQuestions, setPlayableQuestions] = useState([]);
+  const [filteredQuizData, setFilteredQuizData] = useState<QuizQuestion[]>([]);
+  const [playableQuestions, setPlayableQuestions] = useState<QuizQuestion[]>([]);
   
   // State for hint feature
   const HINT_COST = 200;
@@ -240,7 +252,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
           const completedSet = new Set<string>();
           completedWordsSnapshot.forEach((completedDoc) => {
-            if (completedDoc.data()?.gameModes?.['quiz-1']) {
+            const gameModes = completedDoc.data()?.gameModes;
+            // A word is considered completed if it's done in ANY quiz mode
+            if (gameModes && Object.keys(gameModes).some(key => key.startsWith('quiz-'))) {
               completedSet.add(completedDoc.id);
             }
           });
@@ -262,25 +276,65 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   }, [user]);
 
   useEffect(() => {
-    if (userVocabulary.length > 0) {
-      const allMatchingQuestions = quizData.filter(question =>
-        userVocabulary.some(vocabWord =>
-          new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
-        )
-      );
-      setFilteredQuizData(allMatchingQuestions);
-      
-      const remainingQuestions = allMatchingQuestions.filter(q => {
-          return ![...completedQuizWords].some(completedWord => 
-              new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
-          );
-      });
-      setPlayableQuestions(shuffleArray(remainingQuestions));
-    } else {
+    if (userVocabulary.length === 0 || loading) {
       setFilteredQuizData([]);
       setPlayableQuestions([]);
+      return;
     }
-  }, [userVocabulary, completedQuizWords]);
+
+    let allQuestionsForVocab: QuizQuestion[] = [];
+
+    if (practiceId === 1) {
+      // Logic for Practice 1 (from quiz-data.ts)
+      allQuestionsForVocab = quizData
+        .map(q => {
+          const matchedWord = userVocabulary.find(vocabWord =>
+            new RegExp(`\\b${vocabWord}\\b`, 'i').test(q.question)
+          );
+          if (matchedWord) {
+            return {
+              ...q, // id, question, options, correctAnswer
+              word: matchedWord,
+            };
+          }
+          return null;
+        })
+        .filter((q): q is QuizQuestion => q !== null && userVocabulary.includes(q.word));
+
+    } else if (practiceId === 2) {
+      // Logic for Practice 2 (from example-data.ts)
+      userVocabulary.forEach(vocabWord => {
+        const matchingSentences = exampleData.filter(sentence =>
+          new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english)
+        );
+
+        if (matchingSentences.length > 0) {
+          const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
+          
+          const incorrectOptions = shuffleArray(defaultVocabulary)
+            .filter(w => w.toLowerCase() !== vocabWord.toLowerCase())
+            .slice(0, 3);
+          
+          const questionText = randomSentence.english.replace(new RegExp(`\\b${vocabWord}\\b`, 'gi'), '___');
+
+          allQuestionsForVocab.push({
+            question: questionText,
+            vietnameseTranslation: randomSentence.vietnamese,
+            options: shuffleArray([...incorrectOptions, vocabWord]),
+            correctAnswer: vocabWord,
+            word: vocabWord,
+          });
+        }
+      });
+    }
+
+    setFilteredQuizData(allQuestionsForVocab);
+    
+    // Filter out completed questions for both practices
+    const remainingQuestions = allQuestionsForVocab.filter(q => !completedQuizWords.has(q.word));
+    
+    setPlayableQuestions(shuffleArray(remainingQuestions));
+  }, [userVocabulary, completedQuizWords, practiceId, loading]);
 
 
   useEffect(() => {
@@ -292,15 +346,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   // Effect to find the vocabulary word for the current question
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
-          const currentQuizItem = playableQuestions[currentQuestion];
-          const matchedWord = userVocabulary.find(vocabWord =>
-              new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
-          );
-          setCurrentQuestionWord(matchedWord || null);
+          setCurrentQuestionWord(playableQuestions[currentQuestion].word);
       } else {
           setCurrentQuestionWord(null);
       }
-  }, [currentQuestion, playableQuestions, userVocabulary]);
+  }, [currentQuestion, playableQuestions]);
   
   const handleTimeUp = () => {
     if (answered) return;
@@ -375,24 +425,22 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         setTimeout(() => setStreakAnimation(false), 1500);
       }
 
-      const matchedWord = userVocabulary.find(vocabWord =>
-        new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
-      );
-      if (user && matchedWord) {
+      const wordToComplete = currentQuizItem.word;
+      if (user && wordToComplete) {
         try {
           const batch = writeBatch(db);
-          const gameModeId = "quiz-1";
+          const gameModeId = `quiz-${practiceId}`;
           const userDocRef = doc(db, 'users', user.uid);
           if (coinsToAdd > 0) {
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
-          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
+          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordToComplete);
           batch.set(completedWordRef, {
             lastCompletedAt: new Date(),
             gameModes: { [gameModeId]: { correctCount: increment(1) } }
           }, { merge: true });
           await batch.commit();
-          console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
+          console.log(`Batch write thành công cho từ '${wordToComplete}' và cập nhật coins.`);
         } catch (error) {
           console.error("Lỗi khi thực hiện batch write:", error);
         }
@@ -451,12 +499,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   };
 
   const resetQuiz = () => {
-    const remainingQuestions = filteredQuizData.filter(q => {
-        return ![...completedQuizWords].some(completedWord => 
-            new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
-        );
-    });
+    // Re-filter from the full set of questions for this practice, excluding newly completed words
+    const newlyCompletedWords = new Set([...completedQuizWords, ...playableQuestions.slice(0, currentQuestion + 1).map(q => q.word)]);
+    const remainingQuestions = filteredQuizData.filter(q => !newlyCompletedWords.has(q.word));
     setPlayableQuestions(shuffleArray(remainingQuestions));
+
     setCurrentQuestion(0);
     setScore(0);
     setShowScore(false);
@@ -529,7 +576,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                 <div className="bg-gray-50 rounded-xl p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-lg font-medium text-gray-700">Điểm trong phiên này:</span>
-                    <span className="text-2xl font-bold text-indigo-600">{score}/{playableQuestions.length}</span>
+                    <span className="text-2xl font-bold text-indigo-600">{score}/{playableQuestions.length > 0 ? currentQuestion + 1 : 0}</span>
                   </div>
 
                   <div className="mb-3">
@@ -607,6 +654,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                     <h2 className="text-xl font-bold text-white leading-tight">
                       {playableQuestions[currentQuestion]?.question}
                     </h2>
+                    {playableQuestions[currentQuestion]?.vietnameseTranslation && (
+                      <p className="text-base text-white/80 italic mt-2">
+                        {playableQuestions[currentQuestion].vietnameseTranslation}
+                      </p>
+                    )}
                   </div>
                 </div>
 
