@@ -20,6 +20,7 @@ import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
+// Đảm bảo import VocabularyItem từ thanh-tuu
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 
@@ -185,12 +186,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const processedWords = new Set<string>();
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
 
-        // 1. Cập nhật những từ có trong `completedWords`
         wordToExpMap.forEach((totalExp, word) => {
             const existingItem = existingAchievements.find(item => item.word === word);
 
             if (existingItem) {
-                // Từ này đã tồn tại, đồng bộ EXP
                 let expSpentToReachCurrentLevel = 0;
                 for (let i = 1; i < existingItem.level; i++) {
                     expSpentToReachCurrentLevel += i * 100;
@@ -203,7 +202,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     maxExp: existingItem.level * 100,
                 });
             } else {
-                // Từ này mới, tạo achievement mới
                 finalVocabularyData.push({
                     id: idCounter++,
                     word: word,
@@ -215,11 +213,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             processedWords.add(word);
         });
 
-        // 2. Thêm lại những từ chỉ có trong `achievements` (không có trong `completedWords`)
         existingAchievements.forEach(item => {
             if (!processedWords.has(item.word)) {
-                // Từ này không có trong lần fetch `completedWords` gần nhất, nhưng
-                // nó đã là một thành tựu. Giữ nguyên nó để không bị mất dữ liệu.
                 finalVocabularyData.push(item);
             }
         });
@@ -246,14 +241,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
         setMasteryCards(userData.masteryCards || 0);
-        setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50); // Mặc định 50 nếu chưa có
+        setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
           masteryCards: 0,
-          pickaxes: 50, // Thêm trường pickaxe cho người dùng mới
+          pickaxes: 50,
           createdAt: new Date(),
         });
         setCoins(0);
@@ -359,25 +354,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-   const startCoinCountAnimation = (reward: number) => {
-      const oldCoins = coins;
-      const newCoins = oldCoins + reward;
-      let step = Math.ceil(reward / 30);
-      let current = oldCoins;
-      const countInterval = setInterval(() => {
-          current += step;
-          if (current >= newCoins) {
-              setDisplayedCoins(newCoins);
-              clearInterval(countInterval);
-              if (auth.currentUser) {
-                 updateCoinsInFirestore(auth.currentUser.uid, reward);
-              }
-          } else {
-              setDisplayedCoins(current);
-          }
-      }, 50);
-  };
-
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
@@ -453,12 +429,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   useEffect(() => {
     if (displayedCoins === coins) return;
-
-    // Khi state `coins` thay đổi, cập nhật ngay `displayedCoins` để giao diện đồng bộ
     const timeoutId = setTimeout(() => {
       setDisplayedCoins(coins);
-    }, 100); // Một khoảng trễ nhỏ để tránh xung đột
-
+    }, 100);
     return () => clearTimeout(timeoutId);
     
   }, [coins]);
@@ -468,37 +441,59 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
-      <div
-        className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20"
-      >
-        <DotLottieReact
-          src={lottieAssets.characterRun}
-          loop
-          autoplay={!isPaused}
-          className="w-full h-full"
-        />
+      <div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20">
+        <DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isPaused} className="w-full h-full" />
       </div>
     );
   };
   
-  const handleRewardClaim = (reward: { gold: number; masteryCards: number }) => {
-    if (!auth.currentUser) return;
-    
-    console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
-
-    if (reward.gold > 0) {
-        // Chỉ cần gọi hàm cập nhật Firestore. Hàm này sẽ tự động cập nhật state `coins`.
-        updateCoinsInFirestore(auth.currentUser.uid, reward.gold);
+  // HÀM NHẬN THƯỞNG ĐÃ ĐƯỢC NÂNG CẤP
+  const handleRewardClaim = async (
+    reward: { gold: number; masteryCards: number },
+    updatedVocabulary: VocabularyItem[]
+  ) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      console.error("Cannot claim reward: User not authenticated.");
+      // Ném lỗi để component con có thể bắt và xử lý
+      throw new Error("User not authenticated");
     }
+  
+    const userDocRef = doc(db, 'users', userId);
+    const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+  
+    // Bọc tất cả các thao tác ghi trong một giao dịch
+    await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userDocRef);
 
-    if (reward.masteryCards > 0) {
-        updateMasteryCardsInFirestore(auth.currentUser.uid, reward.masteryCards);
-    }
+      if (!userDoc.exists()) {
+        throw "User document does not exist!";
+      }
+
+      // 1. Cập nhật Vàng và Thẻ Thông Thạo
+      const currentCoins = userDoc.data().coins || 0;
+      const currentCards = userDoc.data().masteryCards || 0;
+      const newCoins = currentCoins + reward.gold;
+      const newCards = currentCards + reward.masteryCards;
+
+      transaction.update(userDocRef, { 
+        coins: newCoins,
+        masteryCards: newCards 
+      });
+
+      // 2. Cập nhật danh sách thành tựu
+      transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
+    });
+
+    console.log("Reward claimed and achievements updated successfully in a single transaction.");
+
+    // 3. Cập nhật state của React SAU KHI transaction thành công
+    // Điều này đảm bảo UI luôn đồng bộ với dữ liệu đã được lưu thành công
+    setCoins(prev => prev + reward.gold);
+    setMasteryCards(prev => prev + reward.masteryCards);
+    setVocabularyData(updatedVocabulary);
   };
 
-  const handleVocabularyUpdate = (updatedData: VocabularyItem[]) => {
-    setVocabularyData(updatedData);
-  };
 
   const toggleStatsFullscreen = () => {
     if (isLoading) return;
@@ -947,8 +942,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleAchievements} 
                         userId={auth.currentUser.uid}
                         initialData={vocabularyData}
-                        onClaimReward={handleRewardClaim}
-                        onDataUpdate={handleVocabularyUpdate}
+                        onClaimReward={handleRewardClaim} // SỬ DỤNG HÀM MỚI
                         masteryCardsCount={masteryCards}
                         displayedCoins={displayedCoins}
                     />
