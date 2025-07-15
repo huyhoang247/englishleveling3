@@ -123,9 +123,10 @@ interface MinerChallengeProps {
   onClose: () => void;
   displayedCoins: number;
   masteryCards: number;
+  onUpdateCoins: (amount: number) => void;
 }
 
-export default function App({ onClose, displayedCoins, masteryCards }: MinerChallengeProps) {
+export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins }: MinerChallengeProps) {
   const createBoard = () => {
     // THÊM `isCollected: false` VÀO TRẠNG THÁI MẶC ĐỊNH CỦA Ô
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
@@ -162,19 +163,22 @@ export default function App({ onClose, displayedCoins, masteryCards }: MinerChal
 
   // HÀM MỚI ĐỂ THU THẬP TẤT CẢ COIN ĐANG HIỆN
   const collectAllVisibleCoins = () => {
-    let coinsToCollect = 0;
+    const rewardPerCoin = Math.max(1, masteryCards) * currentFloor; // Đảm bảo thưởng ít nhất 1 coin nếu mastery = 0
+    let totalReward = 0;
     const newBoard = board.map(row => 
         row.map(cell => {
             if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
-                coinsToCollect++;
+                totalReward += rewardPerCoin;
                 return { ...cell, isCollected: true };
             }
             return cell;
         })
     );
-    if(coinsToCollect > 0) {
-        setCoinsFound(prev => prev + coinsToCollect);
+    if(totalReward > 0) {
+        setCoinsFound(prev => prev + totalReward);
         setBoard(newBoard);
+        // Gọi hàm callback để cập nhật coin trong Firestore
+        onUpdateCoins(totalReward);
     }
   };
 
@@ -228,7 +232,7 @@ export default function App({ onClose, displayedCoins, masteryCards }: MinerChal
       // Chỉ mở ô, không cộng tiền nữa
       updateCell(x, y, { isRevealed: true });
     }
-  }, [board]);
+  }, [board, masteryCards, currentFloor]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
