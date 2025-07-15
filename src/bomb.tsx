@@ -1,4 +1,5 @@
 import React, { useState, memo, useCallback } from 'react';
+import CoinDisplay from './coin-display.tsx';
 
 // --- Các component Icon SVG & IMG ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -31,6 +32,26 @@ const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" wi
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 
+// --- MasteryDisplay Component (Styled for Dark Theme) ---
+const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
+    <div className="bg-gradient-to-br from-indigo-500 to-purple-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+      <style jsx>{`
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+      `}</style>
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+      <div className="relative mr-0.5 flex items-center justify-center">
+        <img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" />
+      </div>
+      <div className="font-bold text-purple-200 text-xs tracking-wide">
+        {masteryCount.toLocaleString()}
+      </div>
+      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
+    </div>
+));
+
 // --- Cấu hình game ---
 const BOARD_SIZE = 6;
 const NUM_RANDOM_BOMBS = 4;
@@ -59,9 +80,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
-        // --- THAY ĐỔI Ở ĐÂY ---
-        // Đã thay đổi viền xanh lá thành viền màu hổ phách và thêm hiệu ứng đổ bóng nhẹ
-        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-amber-400 shadow-md shadow-amber-400/30',
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
         collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer' // Style mới cho coin có thể click
     };
     
@@ -106,7 +125,13 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     );
 });
 
-export default function App({ onClose }) {
+interface MinerChallengeProps {
+  onClose: () => void;
+  displayedCoins: number;
+  masteryCards: number;
+}
+
+export default function App({ onClose, displayedCoins, masteryCards }: MinerChallengeProps) {
   const createBoard = () => {
     // THÊM `isCollected: false` VÀO TRẠNG THÁI MẶC ĐỊNH CỦA Ô
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
@@ -246,7 +271,7 @@ export default function App({ onClose }) {
       
       {/* --- HEADER RIÊNG BIỆT VỚI HIỆU ỨNG KÍNH MỜ --- */}
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
-        <div className="w-full max-w-md mx-auto flex items-center justify-start py-3 px-4">
+        <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
               onClick={onClose}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
@@ -256,6 +281,10 @@ export default function App({ onClose }) {
               <HomeIcon className="w-5 h-5 text-slate-300" />
               <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
           </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+            <MasteryDisplay masteryCount={masteryCards} />
+          </div>
         </div>
       </header>
       
