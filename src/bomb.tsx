@@ -31,8 +31,10 @@ const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubus
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
+const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
 
-// --- MasteryDisplay Component (Copied from quiz.tsx) ---
+
+// --- MasteryDisplay Component (For Header) ---
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
 const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
     <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -51,6 +53,7 @@ const BOARD_SIZE = 6;
 const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
+const MAX_PICKAXES = 50; // Giới hạn tối đa cho Pickaxe
 
 // --- CSS TÙY CHỈNH CHO HIỆU ỨNG NẢY NHẸ ---
 const CustomAnimationStyles = () => (
@@ -63,24 +66,19 @@ const CustomAnimationStyles = () => (
   `}</style>
 );
 
-// --- COMPONENT CELL ĐÃ ĐƯỢC CẬP NHẬT LOGIC HIỂN THỊ COIN ---
+// --- COMPONENT CELL ---
 const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
-    
-    // Kiểm tra xem ô này có phải là một đồng xu có thể thu thập được không
     const isCollectableCoin = isRevealed && isCoin && !isCollected;
-
     const cellStyle = { 
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
         exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
-        collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer' // Style mới cho coin có thể click
+        collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer'
     };
-    
     let content = null;
     let specificCellStyle = '';
-
     const wrapperClass = "w-[70%] h-[70%]";
     const iconClass = "w-full h-full";
     const imageIconClass = `${iconClass} object-contain`;
@@ -91,7 +89,6 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     else if (isRevealed) {
         specificCellStyle = cellStyle.revealed;
         if(isCollectableCoin) specificCellStyle += ` ${cellStyle.collectableCoin}`;
-
         let iconContent = null; 
         let finalWrapperClass = wrapperClass;
 
@@ -100,11 +97,10 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
         } else if (isExit) {
             iconContent = <StairsIcon className={imageIconClass} />;
             specificCellStyle = cellStyle.exitRevealed; 
-        } else if (isCollectableCoin) { // CHỈ HIỂN THỊ COIN KHI CHƯA THU THẬP
+        } else if (isCollectableCoin) {
             finalWrapperClass = "w-[60%] h-[60%]";
             iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
         }
-        
         content = ( <div className={finalWrapperClass}> {iconContent} </div> );
     }
     
@@ -122,32 +118,25 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
 interface MinerChallengeProps {
   onClose: () => void;
   displayedCoins: number;
-  masteryCards: number;
+  masteryCards: number; // Đây là cấp độ Mastery
   onUpdateCoins: (amount: number) => void;
 }
 
 export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins }: MinerChallengeProps) {
   const createBoard = () => {
-    // THÊM `isCollected: false` VÀO TRẠNG THÁI MẶC ĐỊNH CỦA Ô
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
-    
     const placeItem = (itemType) => { 
         let placed = false; 
         while(!placed) { 
             const x = Math.floor(Math.random() * BOARD_SIZE); 
             const y = Math.floor(Math.random() * BOARD_SIZE); 
             const cell = newBoard[y][x]; 
-            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { 
-                cell[itemType] = true; 
-                placed = true; 
-            } 
+            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; } 
         } 
     };
-    
     for (let i = 0; i < NUM_RANDOM_BOMBS; i++) placeItem('isMineRandom');
     for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
     placeItem('isExit');
-    
     return newBoard;
   };
 
@@ -156,24 +145,19 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
   
-  // --- START: ADDED FOR COIN ANIMATION ---
+  // --- STATE RIÊNG CHO PICKAXE TIÊU HAO ---
+  const [pickaxes, setPickaxes] = useState(MAX_PICKAXES);
+
   const [coins, setCoins] = useState(displayedCoins);
   const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(displayedCoins);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
-
     const isCountingUp = endValue > startValue;
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
-
     const interval = setInterval(() => {
-      if (isCountingUp) {
-        current += step;
-      } else {
-        current -= step;
-      }
-
+      if (isCountingUp) { current += step; } else { current -= step; }
       if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
         setAnimatedDisplayedCoins(endValue);
         clearInterval(interval);
@@ -182,13 +166,11 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       }
     }, 30);
   }, []);
-  // --- END: ADDED FOR COIN ANIMATION ---
 
   const updateCell = (x, y, newProps) => {
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
   };
 
-  // --- START: MODIFIED FOR COIN ANIMATION ---
   const collectAllVisibleCoins = useCallback(() => {
       const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
       let totalReward = 0;
@@ -204,26 +186,31 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       if(totalReward > 0) {
           const newTotalCoins = coins + totalReward;
           setBoard(newBoard);
-          // Cập nhật state nội bộ
           setCoins(newTotalCoins);
-          // Bắt đầu animation từ giá trị cũ đến giá trị mới
           startCoinCountAnimation(coins, newTotalCoins);
-          // Thông báo cho component cha để cập nhật tổng vàng thực tế
           onUpdateCoins(totalReward);
       }
   }, [board, masteryCards, currentFloor, onUpdateCoins, coins, startCoinCountAnimation]);
-  // --- END: MODIFIED FOR COIN ANIMATION ---
 
   const handleCellClick = useCallback((x, y) => {
     const cell = board[y][x];
 
-    // LOGIC MỚI: NẾU CLICK VÀO COIN ĐÃ MỞ, THU THẬP TẤT CẢ
     if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
         collectAllVisibleCoins();
         return;
     }
     
     if (cell.isFlagged || (cell.isRevealed && !cell.isExit)) return;
+
+    // --- LOGIC MỚI: KIỂM TRA VÀ TRỪ PICKAXE ---
+    if (!cell.isRevealed) {
+      if (pickaxes <= 0) {
+        console.log("Hết cuốc!"); // Thêm thông báo hoặc hiệu ứng sau
+        return;
+      }
+      setPickaxes(prev => prev - 1);
+    }
+    // --- KẾT THÚC LOGIC PICKAXE ---
 
     if (cell.isExit) {
       if (!cell.isRevealed) {
@@ -236,41 +223,35 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     if (cell.isMineRandom) {
       const newBoard = JSON.parse(JSON.stringify(board));
       const explosionsQueue = [{ x, y }];
-
       while (explosionsQueue.length > 0) {
         const currentBombPos = explosionsQueue.shift();
         const bombCell = newBoard[currentBombPos.y][currentBombPos.x];
         if (bombCell.isRevealed) continue;
         bombCell.isRevealed = true;
-        
         const unrevealedCells = [];
         for (let r = 0; r < BOARD_SIZE; r++) {
           for (let c = 0; c < BOARD_SIZE; c++) {
             if (!newBoard[r][c].isRevealed) unrevealedCells.push(newBoard[r][c]);
           }
         }
-
         const cellsToExplode = unrevealedCells.sort(() => 0.5 - Math.random()).slice(0, 4);
         cellsToExplode.forEach(targetCell => {
           if (!targetCell.isRevealed) {
             targetCell.isRevealed = true;
-            // Bỏ logic cộng tiền ở đây
             if (targetCell.isMineRandom) explosionsQueue.push({ x: targetCell.x, y: targetCell.y });
           }
         });
       }
       setBoard(newBoard);
     } else {
-      // Chỉ mở ô, không cộng tiền nữa
       updateCell(x, y, { isRevealed: true });
     }
-  }, [board, collectAllVisibleCoins]);
+  }, [board, collectAllVisibleCoins, pickaxes]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
     const cell = board[y][x];
     if (cell.isRevealed) return;
-
     if (!cell.isFlagged && flagsPlaced < TOTAL_BOMBS) {
         updateCell(x, y, { isFlagged: true });
         setFlagsPlaced(prev => prev + 1);
@@ -292,16 +273,16 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setFlagsPlaced(0);
     setBoard(createBoard());
     setExitConfirmationPos(null);
+    setPickaxes(MAX_PICKAXES); // Hồi lại cuốc khi chơi lại từ đầu
   };
 
-  // Tính giá trị của một ô coin cho tầng hiện tại để hiển thị
   const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
 
   return (
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
       <CustomAnimationStyles />
       
-      {/* --- HEADER RIÊNG BIỆT VỚI HIỆU ỨNG KÍNH MỜ --- */}
+      {/* --- HEADER VỚI COIN VÀ MASTERY --- */}
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
@@ -315,11 +296,11 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
             <CoinDisplay displayedCoins={animatedDisplayedCoins} isStatsFullscreen={false} />
+            <MasteryDisplay masteryCount={masteryCards} />
           </div>
         </div>
       </header>
       
-      {/* --- Thêm pt-24 (padding-top) để đẩy nội dung xuống dưới header --- */}
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
 
         <div className="text-center mb-6">
@@ -327,7 +308,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <p className="text-slate-400 mt-2">Uncover cells and collect rewards!</p>
         </div>
 
-        {/* --- COMPACT 2x2 GAME STATS BLOCK --- */}
+        {/* --- BẢNG THỐNG KÊ VỚI PICKAXE TIÊU HAO --- */}
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             {/* Floor */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
@@ -338,11 +319,11 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                 </div>
             </div>
             {/* Pickaxe */}
-            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxe Level: ${masteryCards}`}>
-                <img src={masteryIconUrl} alt="Pickaxe" className="w-6 h-6" />
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
+                <img src={pickaxeIconUrl} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
-                    <span className="font-mono text-lg font-bold text-white">{masteryCards}</span>
+                    <span className="font-mono text-lg font-bold text-white">{pickaxes} / {MAX_PICKAXES}</span>
                 </div>
             </div>
             {/* Bombs */}
@@ -354,7 +335,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                 </div>
             </div>
             {/* Rewards */}
-            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin: ${rewardPerCoin}`}>
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
                 <CircleDollarSignIcon className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
