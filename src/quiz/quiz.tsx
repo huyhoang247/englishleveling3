@@ -177,9 +177,12 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
   const [showNextButton, setShowNextButton] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
-  const [completedQuizWords, setCompletedQuizWords] = useState<Set<string>>(new Set());
+  const [completedWords, setCompletedWords] = useState<Map<string, any>>(new Map()); // <<< THAY ĐỔI: Dùng Map để lưu chi tiết
   const [filteredQuizData, setFilteredQuizData] = useState<QuizQuestion[]>([]);
   const [playableQuestions, setPlayableQuestions] = useState<QuizQuestion[]>([]);
+  
+  // <<< THAY ĐỔI >>>: State mới để theo dõi tiến trình riêng biệt
+  const [initialCompletedCount, setInitialCompletedCount] = useState(0);
   
   // State for hint feature
   const HINT_COST = 200;
@@ -250,25 +253,22 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
           });
           setUserVocabulary(vocabList);
 
-          const completedSet = new Set<string>();
+          // <<< THAY ĐỔI >>>: Lưu toàn bộ dữ liệu gameModes vào Map
+          const completedMap = new Map<string, any>();
           completedWordsSnapshot.forEach((completedDoc) => {
-            const gameModes = completedDoc.data()?.gameModes;
-            // A word is considered completed if it's done in ANY quiz mode
-            if (gameModes && Object.keys(gameModes).some(key => key.startsWith('quiz-'))) {
-              completedSet.add(completedDoc.id);
-            }
+            completedMap.set(completedDoc.id, completedDoc.data().gameModes || {});
           });
-          setCompletedQuizWords(completedSet);
+          setCompletedWords(completedMap);
 
         } catch (error) {
           console.error("Lỗi khi tải dữ liệu người dùng:", error);
-          setCoins(0); setDisplayedCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedQuizWords(new Set());
+          setCoins(0); setDisplayedCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedWords(new Map());
         } finally {
             setLoading(false);
         }
       } else {
         setLoading(false);
-        setCoins(0); setDisplayedCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedQuizWords(new Set());
+        setCoins(0); setDisplayedCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedWords(new Map());
       }
     };
 
@@ -281,28 +281,23 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
       setPlayableQuestions([]);
       return;
     }
-
+    
+    const gameModeId = `quiz-${practiceId}`;
     let allQuestionsForVocab: QuizQuestion[] = [];
 
     if (practiceId === 1) {
-      // Logic for Practice 1 (from quiz-data.ts)
       allQuestionsForVocab = quizData
         .map(q => {
           const matchedWord = userVocabulary.find(vocabWord =>
             new RegExp(`\\b${vocabWord}\\b`, 'i').test(q.question)
           );
           if (matchedWord) {
-            return {
-              ...q, // id, question, options, correctAnswer
-              word: matchedWord,
-            };
+            return { ...q, word: matchedWord };
           }
           return null;
         })
-        .filter((q): q is QuizQuestion => q !== null && userVocabulary.includes(q.word));
-
+        .filter((q): q is QuizQuestion => q !== null);
     } else if (practiceId === 2) {
-      // Logic for Practice 2 (from example-data.ts)
       userVocabulary.forEach(vocabWord => {
         const matchingSentences = exampleData.filter(sentence =>
           new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english)
@@ -310,13 +305,10 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
 
         if (matchingSentences.length > 0) {
           const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-          
           const incorrectOptions = shuffleArray(defaultVocabulary)
             .filter(w => w.toLowerCase() !== vocabWord.toLowerCase())
             .slice(0, 3);
-          
           const questionText = randomSentence.english.replace(new RegExp(`\\b${vocabWord}\\b`, 'gi'), '___');
-
           allQuestionsForVocab.push({
             question: questionText,
             vietnameseTranslation: randomSentence.vietnamese,
@@ -330,11 +322,19 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
 
     setFilteredQuizData(allQuestionsForVocab);
     
-    // Filter out completed questions for both practices
-    const remainingQuestions = allQuestionsForVocab.filter(q => !completedQuizWords.has(q.word));
+    // <<< THAY ĐỔI >>>: Lọc câu hỏi dựa trên chế độ chơi hiện tại
+    const remainingQuestions = allQuestionsForVocab.filter(q => {
+        const completedModes = completedWords.get(q.word);
+        return !completedModes || !completedModes[gameModeId];
+    });
     
     setPlayableQuestions(shuffleArray(remainingQuestions));
-  }, [userVocabulary, completedQuizWords, practiceId, loading]);
+
+    // <<< THAY ĐỔI >>>: Tính toán số câu đã hoàn thành ban đầu CHO CHẾ ĐỘ NÀY
+    const initiallyCompleted = allQuestionsForVocab.length - remainingQuestions.length;
+    setInitialCompletedCount(initiallyCompleted);
+
+  }, [userVocabulary, completedWords, practiceId, loading]);
 
 
   useEffect(() => {
@@ -343,7 +343,6 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
     }
   }, [currentQuestion, playableQuestions]);
 
-  // Effect to find the vocabulary word for the current question
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
           setCurrentQuestionWord(playableQuestions[currentQuestion].word);
@@ -499,10 +498,29 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
   };
 
   const resetQuiz = () => {
-    // Re-filter from the full set of questions for this practice, excluding newly completed words
-    const newlyCompletedWords = new Set([...completedQuizWords, ...playableQuestions.slice(0, currentQuestion + 1).map(q => q.word)]);
-    const remainingQuestions = filteredQuizData.filter(q => !newlyCompletedWords.has(q.word));
+    const gameModeId = `quiz-${practiceId}`;
+    const wordsCompletedInThisSession = playableQuestions
+        .slice(0, currentQuestion + 1)
+        .map(q => q.word);
+
+    // Thêm các từ vừa hoàn thành vào Map tạm thời để lọc
+    const updatedCompletedWords = new Map(completedWords);
+    wordsCompletedInThisSession.forEach(word => {
+        const existingModes = updatedCompletedWords.get(word) || {};
+        updatedCompletedWords.set(word, { ...existingModes, [gameModeId]: true });
+    });
+    setCompletedWords(updatedCompletedWords);
+    
+    // Lọc lại danh sách câu hỏi có thể chơi
+    const remainingQuestions = filteredQuizData.filter(q => {
+        const completedModes = updatedCompletedWords.get(q.word);
+        return !completedModes || !completedModes[gameModeId];
+    });
+
     setPlayableQuestions(shuffleArray(remainingQuestions));
+    
+    const newInitialCompletedCount = filteredQuizData.length - remainingQuestions.length;
+    setInitialCompletedCount(newInitialCompletedCount);
 
     setCurrentQuestion(0);
     setScore(0);
@@ -528,7 +546,11 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
       }
   };
 
-  const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
+  // <<< THAY ĐỔI >>>: Công thức tính tiến trình mới, chỉ dựa trên chế độ chơi hiện tại
+  const quizProgress = filteredQuizData.length > 0
+    ? ((initialCompletedCount + score) / filteredQuizData.length) * 100
+    : 0;
+
   
   if (loading) {
     return <div className="flex items-center justify-center h-full text-xl font-semibold text-indigo-700">Đang tải dữ liệu Quiz...</div>;
@@ -576,17 +598,19 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
                 <div className="bg-gray-50 rounded-xl p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-lg font-medium text-gray-700">Điểm trong phiên này:</span>
-                    <span className="text-2xl font-bold text-indigo-600">{score}/{playableQuestions.length > 0 ? currentQuestion + 1 : 0}</span>
+                    {/* <<< THAY ĐỔI >>>: Hiển thị điểm số của phiên chơi hiện tại */}
+                    <span className="text-2xl font-bold text-indigo-600">{score}/{playableQuestions.length}</span>
                   </div>
 
                   <div className="mb-3">
+                     {/* <<< THAY ĐỔI >>>: Hiển thị tiến trình tổng của chế độ chơi hiện tại */}
                      <p className="text-left mb-1 text-sm text-gray-600 font-medium">
-                      Tiến độ tổng thể: {filteredQuizData.length - playableQuestions.length + score} / {filteredQuizData.length}
+                      Tiến độ tổng thể: {initialCompletedCount + score} / {filteredQuizData.length}
                     </p>
                     <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        style={{ width: `${(filteredQuizData.length - playableQuestions.length + score) / filteredQuizData.length * 100}%` }}
+                        style={{ width: `${quizProgress}%` }} // Dùng quizProgress đã được tính lại
                       ></div>
                     </div>
                   </div>
@@ -618,11 +642,12 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
                     <div className="relative">
                       <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                         <div className="flex items-center">
+                          {/* <<< THAY ĐỔI >>>: Hiển thị tiến trình của phiên chơi hiện tại */}
                           <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
-                            {filteredQuizData.length - playableQuestions.length + currentQuestion + 1}
+                            {currentQuestion + 1}
                           </span>
                           <span className="mx-0.5 text-white/70 text-xs">/</span>
-                          <span className="text-xs text-white/50">{filteredQuizData.length}</span>
+                          <span className="text-xs text-white/50">{playableQuestions.length}</span>
                         </div>
                       </div>
                     </div>
@@ -707,7 +732,6 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
       
       {showNextButton && (playableQuestions.length > 0) && (
         <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3">
-          {/* Nút Chi tiết - Hành động phụ (Giữ nguyên thiết kế tròn, tinh tế) */}
           <div className="group relative">
              <button
               onClick={handleDetailClick}
@@ -723,7 +747,6 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
             </div>
           </div>
           
-          {/* Nút Next / Xem kết quả - Hành động chính (Thiết kế kiểu viên thuốc) */}
           <button
             onClick={handleNextQuestion}
             className="flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl active:scale-100"
