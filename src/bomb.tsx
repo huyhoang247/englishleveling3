@@ -31,7 +31,8 @@ const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubus
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
-const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
+// --- URL ICON MỚI CHO PICKAXE ---
+const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 
 
 // --- MasteryDisplay Component (For Header) ---
@@ -304,7 +305,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <p className="text-slate-400 mt-2">Uncover cells and collect rewards!</p>
         </div>
 
-        {/* --- BẢNG THỐNG KÊ (ĐÃ CẬP NHẬT GIAO DIỆN PICKAXE) --- */}
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             {/* Floor */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
@@ -319,12 +319,10 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                 <img src={pickaxeIconUrl} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
-                    {/* --- START: GIAO DIỆN SỐ LƯỢNG MỚI --- */}
                     <div className="flex items-baseline" style={{ gap: '2px' }}>
                       <span className="font-mono text-lg font-bold text-white">{pickaxes}</span>
                       <span className="font-mono text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
                     </div>
-                    {/* --- END: GIAO DIỆN SỐ LƯỢNG MỚI --- */}
                 </div>
             </div>
             {/* Bombs */}
