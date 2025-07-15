@@ -407,16 +407,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 pt-2 flex flex-col items-center font-sans pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
       
       {/* --- START: NEW TOP HEADER --- */}
-      <div className="w-full max-w-md flex items-center justify-between p-3 mb-4 bg-black/40 backdrop-blur-md rounded-lg border-b border-white/10">
+      <div className="w-full flex items-center justify-between py-2 px-4 bg-black/40 backdrop-blur-md border-b border-white/10">
         {/* Player's current coins are always visible */}
         <CoinDisplay 
           displayedCoins={currentCoins}
           isStatsFullscreen={isStatsFullscreen}
         />
-        <h2 className="text-white text-xl font-bold">Vòng Quay May Mắn</h2>
+        {/* Title has been removed */}
         <button
           onClick={onClose}
           className="w-10 h-10 flex items-center justify-center bg-black/30 rounded-full transition-all duration-300 hover:bg-red-500/50 hover:scale-110"
@@ -431,7 +431,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       </div>
       {/* --- END: NEW TOP HEADER --- */}
 
-      <div className="max-w-md w-full">
+      <div className="max-w-md w-full px-4 pt-6"> {/* Added padding here */}
         <div className="text-center mb-6">
           {/* Conditional rendering for Jackpot Pool - Only shown in Spin tab */}
           {activeTab === 'spin' && (
