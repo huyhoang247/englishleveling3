@@ -31,7 +31,6 @@ const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubus
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
-// --- URL ICON MỚI CHO PICKAXE ---
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 
 
@@ -299,11 +298,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       </header>
       
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
-
-        <div className="text-center mb-6">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Miner Challenge</h1>
-          <p className="text-slate-400 mt-2">Uncover cells and collect rewards!</p>
-        </div>
 
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             {/* Floor */}
