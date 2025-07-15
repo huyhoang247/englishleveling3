@@ -32,25 +32,19 @@ const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" wi
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 
-// --- MasteryDisplay Component (Styled for Dark Theme) ---
+// --- MasteryDisplay Component (Copied from quiz.tsx) ---
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
 const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
-    <div className="bg-gradient-to-br from-indigo-500 to-purple-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-      <style jsx>{`
-        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-      `}</style>
+    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+       <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style>
       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-      <div className="relative mr-0.5 flex items-center justify-center">
-        <img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" />
-      </div>
-      <div className="font-bold text-purple-200 text-xs tracking-wide">
-        {masteryCount.toLocaleString()}
-      </div>
+      <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div>
+      <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount.toLocaleString()}</div>
       <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
       <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
     </div>
 ));
+
 
 // --- Cấu hình game ---
 const BOARD_SIZE = 6;
