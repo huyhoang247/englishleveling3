@@ -22,12 +22,11 @@ export const initialVocabularyData: VocabularyItem[] = [
   ...Array.from({ length: 40 }, (_, i) => ({ id: i + 8, word: `Word ${i + 1}`, exp: Math.floor(Math.random() * 200), level: Math.floor(Math.random() * 5) + 1, maxExp: (Math.floor(Math.random() * 5) + 1) * 100 })),
 ];
 
-// --- CẬP NHẬT SIGNATURE CỦA PROPS ---
+// --- Cập nhật Signature của Props ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
   initialData: VocabularyItem[];
-  // onClaimReward bây giờ nhận cả danh sách đã cập nhật
   onClaimReward: (reward: { gold: number; masteryCards: number }, updatedData: VocabularyItem[]) => Promise<void>;
   masteryCardsCount: number;
   displayedCoins: number;
@@ -133,7 +132,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       setTimeout(() => {
         setIsClaiming(false);
         setClaimingId(null);
-      }, 500);
+      }, 300); // Giữ delay ngắn để cải thiện UX
     }
   }, [vocabulary, onClaimReward, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
 
