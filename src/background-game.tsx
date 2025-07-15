@@ -296,9 +296,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
           transaction.set(userDocRef, {
-            coins: Math.max(0, amount), gems: gems, createdAt: new Date()
+            coins: coins, gems: gems, createdAt: new Date()
           });
-          setCoins(Math.max(0, amount));
         } else {
           const currentCoins = userDoc.data().coins || 0;
           const newCoins = currentCoins + amount;
@@ -324,7 +323,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
           transaction.set(userDocRef, { masteryCards: amount });
-          setMasteryCards(amount);
         } else {
           const currentCards = userDoc.data().masteryCards || 0;
           const newCards = currentCards + amount;
@@ -430,17 +428,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
 
   useEffect(() => {
-    // Luôn giữ `displayedCoins` đồng bộ với `coins`.
-    // Điều này đảm bảo sau mọi hoạt động (kể cả animation ở component con),
-    // giá trị hiển thị cuối cùng luôn là giá trị thật.
-    if (displayedCoins !== coins) {
-      const timeoutId = setTimeout(() => {
-        setDisplayedCoins(coins);
-      }, 500); // Trễ một chút để không xung đột với animation của con
+    if (displayedCoins === coins) return;
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [coins, displayedCoins]);
+    // Khi state `coins` thay đổi, cập nhật ngay `displayedCoins` để giao diện đồng bộ
+    const timeoutId = setTimeout(() => {
+      setDisplayedCoins(coins);
+    }, 100); // Một khoảng trễ nhỏ để tránh xung đột
+
+    return () => clearTimeout(timeoutId);
+    
+  }, [coins]);
 
   const renderCharacter = () => {
     const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen;
@@ -465,8 +462,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     
     console.log(`Claiming rewards: ${reward.gold} gold, ${reward.masteryCards} mastery card(s).`);
 
-    // Hàm này được gọi từ component con. Nó chỉ cần kích hoạt việc lưu trữ dữ liệu thật.
     if (reward.gold > 0) {
+        // Chỉ cần gọi hàm cập nhật Firestore. Hàm này sẽ tự động cập nhật state `coins`.
         updateCoinsInFirestore(auth.currentUser.uid, reward.gold);
     }
 
