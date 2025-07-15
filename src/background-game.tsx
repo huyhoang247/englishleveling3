@@ -890,7 +890,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isMinerChallengeOpen && <MinerChallenge onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards} />}</ErrorBoundary>
+            <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
+                <MinerChallenge 
+                    onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards} 
+                    onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}</ErrorBoundary>
