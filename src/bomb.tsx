@@ -239,22 +239,27 @@ export default function App({ onClose }) {
   };
 
   return (
-    <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
+    <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
       <CustomAnimationStyles />
       
-      <div className="w-full max-w-xs sm:max-w-sm mx-auto">
-        {/* --- HEADER MỚI --- */}
-        <header className="w-full flex items-center justify-start mb-4">
-            <button
-                onClick={onClose}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-                aria-label="Về nhà"
-                title="Về nhà"
-            >
-                <HomeIcon className="w-5 h-5 text-slate-300" />
-                <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
-            </button>
-        </header>
+      {/* --- HEADER RIÊNG BIỆT VỚI HIỆU ỨNG KÍNH MỜ --- */}
+      <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
+        <div className="w-full max-w-xs sm:max-w-sm mx-auto flex items-center justify-start py-3">
+          <button
+              onClick={onClose}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+              aria-label="Về nhà"
+              title="Về nhà"
+          >
+              <HomeIcon className="w-5 h-5 text-slate-300" />
+              <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
+          </button>
+        </div>
+      </header>
+      
+      {/* --- Thêm pt-24 (padding-top) để đẩy nội dung xuống dưới header --- */}
+      <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
+        {/* Header cũ đã được chuyển lên trên */}
 
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
