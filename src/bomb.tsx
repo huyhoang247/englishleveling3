@@ -328,32 +328,29 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <p className="text-slate-400 mt-2">Mở các ô và thu thập tiền thưởng!</p>
         </div>
 
-        {/* --- KHỐI THÔNG SỐ GAME ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
+        {/* --- KHỐI THÔNG SỐ GAME ĐÃ ĐƯỢC THIẾT KẾ LẠI, TINH GỌN HƠN --- */}
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-3 gap-2 sm:gap-3">
           {/* Tầng */}
-          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center" title={`Tầng hiện tại: ${currentFloor}`}>
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider self-start mb-1">Tầng</span>
-            <div className="flex items-center justify-between w-full">
-              <span className="font-mono text-xl sm:text-2xl font-bold text-white">{currentFloor}</span>
-              <StairsIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain opacity-70" />
-            </div>
+          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center items-center" title={`Tầng hiện tại: ${currentFloor}`}>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Tầng</span>
+            <span className="font-mono text-lg sm:text-xl font-bold text-white">{currentFloor}</span>
           </div>
 
           {/* Bom */}
-          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center" title="Số bom còn lại">
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider self-start mb-1">Bom</span>
-            <div className="flex items-center justify-between w-full">
-              <span className="font-mono text-xl sm:text-2xl font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
-              <BombIcon className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center items-center" title="Số bom còn lại">
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Bom</span>
+            <div className="flex items-center justify-center gap-2">
+              <span className="font-mono text-lg sm:text-xl font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
+              <BombIcon className="w-5 h-5 object-contain" />
             </div>
           </div>
           
           {/* Rewards */}
-          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center" title={`Phần thưởng mỗi coin: ${rewardPerCoin}`}>
-            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider self-start mb-1">Rewards</span>
-            <div className="flex items-center justify-between w-full">
-              <span className="font-mono text-xl sm:text-2xl font-bold text-white">{rewardPerCoin}</span>
-              <CircleDollarSignIcon className="w-5 h-5 sm:w-6 sm-h-6 object-contain" />
+          <div className="bg-slate-900/50 rounded-lg p-2 flex flex-col justify-center items-center" title={`Phần thưởng mỗi coin: ${rewardPerCoin}`}>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Rewards</span>
+            <div className="flex items-center justify-center gap-2">
+              <span className="font-mono text-lg sm:text-xl font-bold text-white">{rewardPerCoin}</span>
+              <CircleDollarSignIcon className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
             </div>
           </div>
         </div>
