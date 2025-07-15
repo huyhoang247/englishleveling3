@@ -1,5 +1,3 @@
-// --- START OF FILE bomb.tsx ---
-
 import React, { useState, memo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
