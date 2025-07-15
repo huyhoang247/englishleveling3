@@ -59,7 +59,9 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
-        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
+        // --- THAY ĐỔI Ở ĐÂY ---
+        // Đã thay đổi viền xanh lá thành viền màu hổ phách và thêm hiệu ứng đổ bóng nhẹ
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-amber-400 shadow-md shadow-amber-400/30',
         collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer' // Style mới cho coin có thể click
     };
     
