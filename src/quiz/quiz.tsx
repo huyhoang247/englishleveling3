@@ -264,40 +264,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     fetchData();
   }, [user, selectedPractice]);
 
-  const generatePractice2Questions = useCallback(() => {
-    const questions = [];
-    // Only use vocab words that haven't been completed in this mode
-    const availableVocab = userVocabulary.filter(word => !completedQuizWords.has(word.toLowerCase()));
-
-    for (const word of availableVocab) {
-        const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-        const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
-
-        if (matchingSentences.length > 0) {
-            const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-            const questionText = randomSentence.english.replace(wordRegex, '___');
-            
-            const incorrectOptions = [];
-            const lowerCaseCorrectWord = word.toLowerCase();
-            while (incorrectOptions.length < 3) {
-                const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
-                if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
-                    incorrectOptions.push(randomWord);
-                }
-            }
-            
-            questions.push({
-                question: questionText,
-                vietnamese: randomSentence.vietnamese,
-                options: shuffleArray([word, ...incorrectOptions]),
-                correctAnswer: word,
-                word: word,
-            });
-        }
-    }
-    return questions;
-  }, [userVocabulary, completedQuizWords]);
-
   const generatePractice1Questions = useCallback(() => {
       const allMatchingQuestions = quizData.filter(question =>
           userVocabulary.some(vocabWord =>
@@ -312,20 +278,59 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       return { allMatchingQuestions, remainingQuestions };
   }, [userVocabulary, completedQuizWords]);
 
-
+  // =================================================================
+  // == START: BLOCK ĐÃ SỬA LỖI LOGIC
+  // =================================================================
   useEffect(() => {
       if (loading) return;
 
       if (selectedPractice === 2) {
-          const questions = generatePractice2Questions();
-          setFilteredQuizData(questions);
-          setPlayableQuestions(shuffleArray(questions));
+          // Bước 1: Tạo ra TẤT CẢ các câu hỏi có thể có cho Practice 2, dựa trên toàn bộ từ vựng đã mở của người dùng, không quan tâm đã hoàn thành hay chưa.
+          const allPossibleQuestions = userVocabulary.flatMap(word => {
+              const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+              const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
+
+              if (matchingSentences.length > 0) {
+                  const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
+                  const questionText = randomSentence.english.replace(wordRegex, '___');
+                  
+                  const incorrectOptions = [];
+                  const lowerCaseCorrectWord = word.toLowerCase();
+                  while (incorrectOptions.length < 3) {
+                      const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
+                      if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
+                          incorrectOptions.push(randomWord);
+                      }
+                  }
+                  
+                  return [{
+                      question: questionText,
+                      vietnamese: randomSentence.vietnamese,
+                      options: [word, ...incorrectOptions], // Sẽ shuffle sau
+                      correctAnswer: word,
+                      word: word,
+                  }];
+              }
+              return [];
+          });
+
+          // Bước 2: Từ danh sách TẤT CẢ câu hỏi, lọc ra những câu CHƯA hoàn thành.
+          const remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
+
+          // Bước 3: Gán state tương tự như Practice 1
+          setFilteredQuizData(allPossibleQuestions); // Đây là tổng số câu hỏi, dùng cho progress bar
+          setPlayableQuestions(shuffleArray(remainingQuestions)); // Đây là những câu hỏi người dùng sẽ chơi trong phiên này
       } else {
+          // Logic cho Practice 1 giữ nguyên
           const { allMatchingQuestions, remainingQuestions } = generatePractice1Questions();
           setFilteredQuizData(allMatchingQuestions);
           setPlayableQuestions(shuffleArray(remainingQuestions));
       }
-  }, [selectedPractice, loading, generatePractice1Questions, generatePractice2Questions]);
+  // Cập nhật dependency array để phản ánh đúng logic mới
+  }, [selectedPractice, loading, userVocabulary, completedQuizWords, generatePractice1Questions]);
+  // =================================================================
+  // == END: BLOCK ĐÃ SỬA LỖI LOGIC
+  // =================================================================
 
 
   useEffect(() => {
@@ -501,7 +506,27 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   const resetQuiz = () => {
     let newPlayableQuestions = [];
     if (selectedPractice === 2) {
-        newPlayableQuestions = generatePractice2Questions();
+        // We need to re-generate the playable questions, not use the old generatePractice2Questions()
+        const allPossibleQuestions = userVocabulary.flatMap(word => {
+            const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+            const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
+            if (matchingSentences.length > 0) {
+                const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
+                const questionText = randomSentence.english.replace(wordRegex, '___');
+                const incorrectOptions = [];
+                const lowerCaseCorrectWord = word.toLowerCase();
+                while (incorrectOptions.length < 3) {
+                    const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
+                    if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
+                        incorrectOptions.push(randomWord);
+                    }
+                }
+                return [{ question: questionText, vietnamese: randomSentence.vietnamese, options: [word, ...incorrectOptions], correctAnswer: word, word: word }];
+            }
+            return [];
+        });
+        const remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
+        newPlayableQuestions = remainingQuestions;
     } else {
         const { remainingQuestions } = generatePractice1Questions();
         newPlayableQuestions = remainingQuestions;
