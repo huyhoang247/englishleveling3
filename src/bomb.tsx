@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 
 // --- Các component Icon SVG & IMG ---
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
@@ -6,9 +6,6 @@ const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubus
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
-const TrophyIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.87 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.13 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> );
-const CheckIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 6 9 17l-5-5"/></svg> );
-const XIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> );
 
 // --- Cấu hình game ---
 const BOARD_SIZE = 6;
@@ -16,7 +13,7 @@ const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
 
-// --- CSS TÙY CHỈNH: Đưa ra ngoài component để không bị tạo lại mỗi lần re-render ---
+// --- CSS TÙY CHỈNH CHO HIỆU ỨNG NẢY NHẸ ---
 const CustomAnimationStyles = () => (
   <style>{`
     @keyframes gentle-bounce-inline {
@@ -29,7 +26,6 @@ const CustomAnimationStyles = () => (
 
 // --- COMPONENT CELL ĐÃ ĐƯỢC TỐI ƯU ---
 const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
-    // console.log(`Rendering Cell ${cellData.x}, ${cellData.y}`); // Bỏ comment để thấy sự khác biệt
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { 
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
@@ -77,22 +73,10 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     );
 });
 
-
 export default function App() {
-  const [currentFloor, setCurrentFloor] = useState(1);
-  const [board, setBoard] = useState(() => createBoard());
-  const [coinsFound, setCoinsFound] = useState(0);
-  const [flagsPlaced, setFlagsPlaced] = useState(0);
-  const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
-
-  function createBoard() {
-    return Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
-    // ... logic đặt bom, coin, exit sẽ chạy trong useEffect để tránh lỗi StrictMode
-  }
-
-  // Chạy một lần duy nhất khi component được mount hoặc khi tầng thay đổi
-  useEffect(() => {
-    let newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
+  // HÀM TẠO BÀN CỜ HOÀN CHỈNH
+  const createBoard = () => {
+    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
     
     const placeItem = (itemType) => { 
         let placed = false; 
@@ -111,10 +95,16 @@ export default function App() {
     for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
     placeItem('isExit');
     
-    setBoard(newBoard);
-  }, [currentFloor]);
-  
-  // CÁCH CẬP NHẬT STATE MỚI, HIỆU NĂNG HƠN
+    return newBoard;
+  };
+
+  const [currentFloor, setCurrentFloor] = useState(1);
+  const [board, setBoard] = useState(() => createBoard()); // Khởi tạo state với bàn cờ hoàn chỉnh
+  const [coinsFound, setCoinsFound] = useState(0);
+  const [flagsPlaced, setFlagsPlaced] = useState(0);
+  const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
+
+  // Hàm cập nhật state hiệu năng cao cho một ô
   const updateCell = (x, y, newProps) => {
     setBoard(prevBoard => 
       prevBoard.map((row, rowIndex) => 
@@ -125,9 +115,9 @@ export default function App() {
     );
   };
 
-  function handleCellClick(x, y) {
+  const handleCellClick = useCallback((x, y) => {
     const cell = board[y][x];
-    if (cell.isFlagged || (cell.isRevealed && !cell.isExit) ) return;
+    if (cell.isFlagged || (cell.isRevealed && !cell.isExit)) return;
 
     if (cell.isExit) {
       if (!cell.isRevealed) {
@@ -138,9 +128,8 @@ export default function App() {
     }
     
     if (cell.isMineRandom) {
-      // Logic bom nổ dây chuyền cần cách tiếp cận khác vì nó sửa nhiều ô cùng lúc
-      const newBoard = JSON.parse(JSON.stringify(board)); // Tạm thời giữ cách cũ cho logic phức tạp này
-      const explosionsQueue = [{x, y}];
+      const newBoard = JSON.parse(JSON.stringify(board));
+      const explosionsQueue = [{ x, y }];
       let newCoinsFromExplosion = 0;
 
       while (explosionsQueue.length > 0) {
@@ -160,22 +149,24 @@ export default function App() {
 
         const cellsToExplode = unrevealedCells.sort(() => 0.5 - Math.random()).slice(0, 4);
         cellsToExplode.forEach(targetCell => {
-          targetCell.isRevealed = true;
-          if (targetCell.isCoin) newCoinsFromExplosion++;
-          if (targetCell.isMineRandom) explosionsQueue.push({x: targetCell.x, y: targetCell.y});
+          if (!targetCell.isRevealed) {
+            targetCell.isRevealed = true;
+            if (targetCell.isCoin) newCoinsFromExplosion++;
+            if (targetCell.isMineRandom) explosionsQueue.push({ x: targetCell.x, y: targetCell.y });
+          }
         });
       }
       setCoinsFound(prev => prev + newCoinsFromExplosion);
-      setBoard(newBoard); // Cập nhật toàn bộ board sau khi xử lý nổ
+      setBoard(newBoard);
     } else {
       updateCell(x, y, { isRevealed: true });
       if (cell.isCoin) {
-          setCoinsFound(prev => prev + 1);
+        setCoinsFound(prev => prev + 1);
       }
     }
-  }
+  }, [board]);
 
-  function handleRightClick(e, x, y) {
+  const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
     const cell = board[y][x];
     if (cell.isRevealed) return;
@@ -187,25 +178,22 @@ export default function App() {
         updateCell(x, y, { isFlagged: false });
         setFlagsPlaced(prev => prev - 1);
     }
-  }
+  }, [board, flagsPlaced]);
 
-  function goToNextFloor() {
+  const goToNextFloor = () => {
     setCurrentFloor(prev => prev + 1);
+    setBoard(createBoard()); // Đơn giản hóa: chỉ cần tạo bàn cờ mới
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
-  }
-  function resetGame() {
-    if (currentFloor === 1) {
-       // Nếu đang ở tầng 1, chỉ cần trigger useEffect để tạo lại board
-       setBoard(createBoard()); // Tạo board rỗng để trigger useEffect
-    } else {
-       // Nếu ở tầng khác, quay về tầng 1 sẽ trigger useEffect
-       setCurrentFloor(1);
-    }
+  };
+
+  const resetGame = () => {
+    setCurrentFloor(1);
     setCoinsFound(0);
     setFlagsPlaced(0);
+    setBoard(createBoard()); // Đơn giản hóa: chỉ cần tạo bàn cờ mới
     setExitConfirmationPos(null);
-  }
+  };
 
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
@@ -239,7 +227,14 @@ export default function App() {
         <div className="relative">
           <div className="w-full aspect-square">
             <div className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px' }}>
-              {board.flat().map((cell) => <Cell key={`${cell.y}-${cell.x}`} cellData={cell} onCellClick={handleCellClick} onRightClick={handleRightClick} />)}
+              {board.flat().map((cell) => (
+                <Cell 
+                  key={`${cell.y}-${cell.x}`} 
+                  cellData={cell} 
+                  onCellClick={handleCellClick} 
+                  onRightClick={handleRightClick} 
+                />
+              ))}
             </div>
           </div>
         </div>
