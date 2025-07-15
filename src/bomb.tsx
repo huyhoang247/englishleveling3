@@ -17,6 +17,26 @@ const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
 
+// --- CSS TÙY CHỈNH CHO HIỆU ỨNG NẢY NHẸ ---
+const CustomAnimationStyles = () => (
+  <style>{`
+    @keyframes gentle-bounce-inline {
+      0%, 100% {
+        transform: translateY(-10%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+      }
+      50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      }
+    }
+    .animate-gentle-bounce-inline {
+      animation: gentle-bounce-inline 1s infinite;
+    }
+  `}</style>
+);
+
+
 export default function App() {
   const [currentFloor, setCurrentFloor] = useState(1);
   const [board, setBoard] = useState(() => createBoard());
@@ -137,7 +157,6 @@ export default function App() {
     setExitConfirmationPos(null);
   }
 
-  // --- CELL COMPONENT ĐÃ CẬP NHẬT ---
   const Cell = ({ cellData }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { 
@@ -168,9 +187,9 @@ export default function App() {
             iconContent = <StairsIcon className={imageIconClass} />;
             specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCoin) { 
-            // Coin nhỏ hơn và có hiệu ứng nảy
             finalWrapperClass = "w-[60%] h-[60%]";
-            iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-bounce`} />;
+            // THAY ĐỔI: Sử dụng class CSS được định nghĩa inline
+            iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
         }
         
         content = (
@@ -192,10 +211,10 @@ export default function App() {
       </div> 
     );
   };
-  // --- KẾT THÚC CẬP NHẬT CELL COMPONENT ---
 
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
+      <CustomAnimationStyles />
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
@@ -203,7 +222,7 @@ export default function App() {
           <p className="text-slate-400 mt-2">Dọn bàn và lên tầng cao nhất!</p>
         </div>
 
-        {/* --- Bảng điều khiển ĐÃ CẬP NHẬT --- */}
+        {/* Bảng điều khiển */}
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-3">
             {/* Tầng */}
             <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-slate-600 h-full">
