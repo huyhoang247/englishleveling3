@@ -2,29 +2,8 @@ import React, { useState, memo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
-const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide-icon ${className}`}
-    {...props}
-  >
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-const HomeIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
-    </svg>
-);
+const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
@@ -62,19 +41,21 @@ const CustomAnimationStyles = () => (
     }
     .animate-gentle-bounce-inline { animation: gentle-bounce-inline 1s infinite; }
 
-    @keyframes cell-shake-animation {
-      10%, 90% { transform: translateX(-2px); }
-      20%, 80% { transform: translateX(3px); }
-      30%, 50%, 70% { transform: translateX(-5px); }
-      40%, 60% { transform: translateX(5px); }
+    /* THAY ĐỔI Ở ĐÂY: Animation đã được làm nhẹ nhàng hơn */
+    @keyframes gentle-shake-animation {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
     }
     .cell-shake {
-      animation: cell-shake-animation ${OPEN_CELL_DELAY}ms cubic-bezier(.36,.07,.19,.97) both;
+      /* THAY ĐỔI Ở ĐÂY: Sử dụng animation mới */
+      animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
     }
   `}</style>
 );
 
-// --- COMPONENT CELL (ĐÃ CẬP NHẬT ĐỂ NHẬN PROP isAnimating) ---
+// --- COMPONENT CELL ---
 const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
     const isCollectableCoin = isRevealed && isCoin && !isCollected;
