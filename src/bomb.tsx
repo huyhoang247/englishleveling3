@@ -24,14 +24,19 @@ const CustomAnimationStyles = () => (
   `}</style>
 );
 
-// --- COMPONENT CELL ĐÃ ĐƯỢC TỐI ƯU ---
+// --- COMPONENT CELL ĐÃ ĐƯỢC CẬP NHẬT LOGIC HIỂN THỊ COIN ---
 const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
-    const { isRevealed, isMineRandom, isCoin, isFlagged, isExit } = cellData;
+    const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
+    
+    // Kiểm tra xem ô này có phải là một đồng xu có thể thu thập được không
+    const isCollectableCoin = isRevealed && isCoin && !isCollected;
+
     const cellStyle = { 
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
-        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600' 
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
+        collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer' // Style mới cho coin có thể click
     };
     
     let content = null;
@@ -46,6 +51,8 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     } 
     else if (isRevealed) {
         specificCellStyle = cellStyle.revealed;
+        if(isCollectableCoin) specificCellStyle += ` ${cellStyle.collectableCoin}`;
+
         let iconContent = null; 
         let finalWrapperClass = wrapperClass;
 
@@ -54,7 +61,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
         } else if (isExit) {
             iconContent = <StairsIcon className={imageIconClass} />;
             specificCellStyle = cellStyle.exitRevealed; 
-        } else if (isCoin) { 
+        } else if (isCollectableCoin) { // CHỈ HIỂN THỊ COIN KHI CHƯA THU THẬP
             finalWrapperClass = "w-[60%] h-[60%]";
             iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
         }
@@ -64,7 +71,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
     
     return ( 
       <div 
-        className={`${cellStyle.base} ${isRevealed ? (specificCellStyle || cellStyle.revealed) : cellStyle.hidden}`} 
+        className={`${cellStyle.base} ${isRevealed ? specificCellStyle : cellStyle.hidden}`} 
         onClick={() => onCellClick(cellData.x, cellData.y)} 
         onContextMenu={(e) => onRightClick(e, cellData.x, cellData.y)}
       >
@@ -74,9 +81,9 @@ const Cell = memo(({ cellData, onCellClick, onRightClick }) => {
 });
 
 export default function App() {
-  // HÀM TẠO BÀN CỜ HOÀN CHỈNH
   const createBoard = () => {
-    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, })));
+    // THÊM `isCollected: false` VÀO TRẠNG THÁI MẶC ĐỊNH CỦA Ô
+    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
     
     const placeItem = (itemType) => { 
         let placed = false; 
@@ -99,24 +106,42 @@ export default function App() {
   };
 
   const [currentFloor, setCurrentFloor] = useState(1);
-  const [board, setBoard] = useState(() => createBoard()); // Khởi tạo state với bàn cờ hoàn chỉnh
+  const [board, setBoard] = useState(() => createBoard());
   const [coinsFound, setCoinsFound] = useState(0);
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
 
-  // Hàm cập nhật state hiệu năng cao cho một ô
   const updateCell = (x, y, newProps) => {
-    setBoard(prevBoard => 
-      prevBoard.map((row, rowIndex) => 
-        rowIndex !== y ? row : row.map((cell, colIndex) => 
-          colIndex !== x ? cell : { ...cell, ...newProps }
-        )
-      )
+    setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
+  };
+
+  // HÀM MỚI ĐỂ THU THẬP TẤT CẢ COIN ĐANG HIỆN
+  const collectAllVisibleCoins = () => {
+    let coinsToCollect = 0;
+    const newBoard = board.map(row => 
+        row.map(cell => {
+            if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
+                coinsToCollect++;
+                return { ...cell, isCollected: true };
+            }
+            return cell;
+        })
     );
+    if(coinsToCollect > 0) {
+        setCoinsFound(prev => prev + coinsToCollect);
+        setBoard(newBoard);
+    }
   };
 
   const handleCellClick = useCallback((x, y) => {
     const cell = board[y][x];
+
+    // LOGIC MỚI: NẾU CLICK VÀO COIN ĐÃ MỞ, THU THẬP TẤT CẢ
+    if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
+        collectAllVisibleCoins();
+        return;
+    }
+    
     if (cell.isFlagged || (cell.isRevealed && !cell.isExit)) return;
 
     if (cell.isExit) {
@@ -130,7 +155,6 @@ export default function App() {
     if (cell.isMineRandom) {
       const newBoard = JSON.parse(JSON.stringify(board));
       const explosionsQueue = [{ x, y }];
-      let newCoinsFromExplosion = 0;
 
       while (explosionsQueue.length > 0) {
         const currentBombPos = explosionsQueue.shift();
@@ -141,9 +165,7 @@ export default function App() {
         const unrevealedCells = [];
         for (let r = 0; r < BOARD_SIZE; r++) {
           for (let c = 0; c < BOARD_SIZE; c++) {
-            if (!newBoard[r][c].isRevealed) {
-              unrevealedCells.push(newBoard[r][c]);
-            }
+            if (!newBoard[r][c].isRevealed) unrevealedCells.push(newBoard[r][c]);
           }
         }
 
@@ -151,18 +173,15 @@ export default function App() {
         cellsToExplode.forEach(targetCell => {
           if (!targetCell.isRevealed) {
             targetCell.isRevealed = true;
-            if (targetCell.isCoin) newCoinsFromExplosion++;
+            // Bỏ logic cộng tiền ở đây
             if (targetCell.isMineRandom) explosionsQueue.push({ x: targetCell.x, y: targetCell.y });
           }
         });
       }
-      setCoinsFound(prev => prev + newCoinsFromExplosion);
       setBoard(newBoard);
     } else {
+      // Chỉ mở ô, không cộng tiền nữa
       updateCell(x, y, { isRevealed: true });
-      if (cell.isCoin) {
-        setCoinsFound(prev => prev + 1);
-      }
     }
   }, [board]);
 
@@ -182,7 +201,7 @@ export default function App() {
 
   const goToNextFloor = () => {
     setCurrentFloor(prev => prev + 1);
-    setBoard(createBoard()); // Đơn giản hóa: chỉ cần tạo bàn cờ mới
+    setBoard(createBoard());
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
   };
@@ -191,7 +210,7 @@ export default function App() {
     setCurrentFloor(1);
     setCoinsFound(0);
     setFlagsPlaced(0);
-    setBoard(createBoard()); // Đơn giản hóa: chỉ cần tạo bàn cờ mới
+    setBoard(createBoard());
     setExitConfirmationPos(null);
   };
 
@@ -201,7 +220,7 @@ export default function App() {
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
-          <p className="text-slate-400 mt-2">Dọn bàn và lên tầng cao nhất!</p>
+          <p className="text-slate-400 mt-2">Mở các ô và thu thập tiền thưởng!</p>
         </div>
 
         <div className="bg-slate-800/50 p-3 sm:p-4 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-4 items-center gap-3">
