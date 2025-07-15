@@ -244,7 +244,7 @@ export default function App({ onClose }) {
       
       {/* --- HEADER RIÊNG BIỆT VỚI HIỆU ỨNG KÍNH MỜ --- */}
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
-        <div className="w-full max-w-xs sm:max-w-sm mx-auto flex items-center justify-between py-3 px-4">
+        <div className="w-full max-w-md mx-auto flex items-center justify-start py-3 px-4">
           <button
               onClick={onClose}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
