@@ -351,7 +351,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
             </div>
           </div>
         </div>
-        <footer className="mt-8 text-center text-slate-500 text-sm">Created by Gemini with React & Tailwind CSS.</footer>
       </div>
 
       {exitConfirmationPos && (
