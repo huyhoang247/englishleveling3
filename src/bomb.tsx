@@ -19,6 +19,12 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
+// --- ICON HOME MỚI ---
+const HomeIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
+    </svg>
+);
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
@@ -236,15 +242,20 @@ export default function App({ onClose }) {
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
       <CustomAnimationStyles />
       
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-30 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700"
-        aria-label="Close"
-      >
-        <XIcon className="w-6 h-6" />
-      </button>
-
       <div className="w-full max-w-xs sm:max-w-sm mx-auto">
+        {/* --- HEADER MỚI --- */}
+        <header className="w-full flex items-center justify-start mb-4">
+            <button
+                onClick={onClose}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+                aria-label="Về nhà"
+                title="Về nhà"
+            >
+                <HomeIcon className="w-5 h-5 text-slate-300" />
+                <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
+            </button>
+        </header>
+
         <div className="text-center mb-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-red-500">Chain Reaction</h1>
           <p className="text-slate-400 mt-2">Mở các ô và thu thập tiền thưởng!</p>
