@@ -1,3 +1,5 @@
+// --- START OF FILE quiz.tsx ---
+
 import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
@@ -434,10 +436,20 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
           const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordToComplete);
-          batch.set(completedWordRef, {
-            lastCompletedAt: new Date(),
-            gameModes: { [gameModeId]: { correctCount: increment(1) } }
-          }, { merge: true });
+          
+          // ======================= START: SỬA LỖI GHI ĐÈ DỮ LIỆU =======================
+          // Sử dụng "dot notation" để cập nhật trường lồng nhau một cách an toàn.
+          // `set` với `merge: true` sẽ tạo tài liệu/trường nếu chưa có, hoặc chỉ cập nhật
+          // trường cụ thể đó (`gameModes.quiz-1` hoặc `gameModes.quiz-2`) mà không ghi đè
+          // lên các gameModes khác đã tồn tại.
+          const updatePayload = {
+            'lastCompletedAt': new Date(),
+            [`gameModes.${gameModeId}.correctCount`]: increment(1)
+          };
+          
+          batch.set(completedWordRef, updatePayload, { merge: true });
+          // ======================== END: SỬA LỖI GHI ĐÈ DỮ LIỆU ========================
+
           await batch.commit();
           console.log(`Batch write thành công cho từ '${wordToComplete}' và cập nhật coins.`);
         } catch (error) {
@@ -763,3 +775,5 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
     </div>
   );
 }
+
+// --- END OF FILE quiz.tsx ---
