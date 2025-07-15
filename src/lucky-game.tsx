@@ -410,7 +410,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 pt-2 flex flex-col items-center font-sans pb-24">
       
       {/* --- START: NEW TOP HEADER --- */}
-      <div className="w-full max-w-md flex items-center justify-between p-3 mb-4">
+      <div className="w-full max-w-md flex items-center justify-between p-3 mb-4 bg-black/40 backdrop-blur-md rounded-lg border-b border-white/10">
         {/* Player's current coins are always visible */}
         <CoinDisplay 
           displayedCoins={currentCoins}
