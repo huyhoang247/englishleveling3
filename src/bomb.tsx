@@ -1,10 +1,12 @@
 import React, { useState, memo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
-// --- Các component Icon SVG & IMG (Không thay đổi) ---
+// --- Các component Icon SVG & IMG (Không thay đổi ngoại trừ thêm AtomicBombIcon) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
+// --- THÊM MỚI: Icon cho bom nguyên tử ---
+const AtomicBombIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}> <path d="M14.1 3.5C13 2.5 11.1 2 10.1 2 6.2 2 3.1 5.1 3.1 9c0 2.2.9 4.2 2.4 5.6" stroke="yellow" /> <path d="M10.2 21.5c1.1 1 2.9 1.5 4 1.5 3.9 0 7-3.1 7-7 0-2.2-.9-4.2-2.4-5.6" stroke="yellow" /> <path d="M12 12a1 1 0 100-2 1 1 0 000 2z" fill="yellow" stroke="yellow"/> <path d="M12 12l3.4-6.1M12 12l-3.4 6.1M12 12l6.1 3.4M12 12l-6.1-3.4M12 12l6.1-3.4M12 12l-6.1 3.4M12 12l3.4 6.1M12 12l-3.4-6.1" stroke="orange" strokeLinecap="round"/> <circle cx="12" cy="12" r="11" stroke="red" strokeWidth="2"/> </svg>);
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
@@ -24,13 +26,15 @@ const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount
     </div>
 ));
 
-// --- Cấu hình game ---
+// --- Cấu hình game (THÊM MỚI CẤU HÌNH BOM NGUYÊN TỬ) ---
 const BOARD_SIZE = 6;
 const NUM_RANDOM_BOMBS = 4;
+const NUM_ATOMIC_BOMBS = 1; // THÊM MỚI
 const NUM_COINS = 6;
-const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
+const TOTAL_BOMBS = NUM_RANDOM_BOMBS; // Chỉ cắm cờ cho bom thường
 const MAX_PICKAXES = 50;
 const OPEN_CELL_DELAY = 400; // Thời gian delay khi mở ô (ms)
+const REWARD_PENALTY_RATE = 0.7; // Tỷ lệ phạt khi trúng bom nguyên tử (giảm còn 70%)
 
 // --- CSS CHO HIỆU ỨNG RUNG Ô VÀ CÁC HIỆU ỨNG KHÁC ---
 const CustomAnimationStyles = () => (
@@ -40,8 +44,6 @@ const CustomAnimationStyles = () => (
       50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
     }
     .animate-gentle-bounce-inline { animation: gentle-bounce-inline 1s infinite; }
-
-    /* THAY ĐỔI Ở ĐÂY: Animation đã được làm nhẹ nhàng hơn */
     @keyframes gentle-shake-animation {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-3px); }
@@ -49,15 +51,14 @@ const CustomAnimationStyles = () => (
       75% { transform: translateX(-3px); }
     }
     .cell-shake {
-      /* THAY ĐỔI Ở ĐÂY: Sử dụng animation mới */
       animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
     }
   `}</style>
 );
 
-// --- COMPONENT CELL ---
+// --- COMPONENT CELL (CẬP NHẬT ĐỂ HIỂN THỊ BOM NGUYÊN TỬ) ---
 const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
-    const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
+    const { isRevealed, isMineRandom, isAtomicBomb, isCoin, isFlagged, isExit, isCollected } = cellData;
     const isCollectableCoin = isRevealed && isCoin && !isCollected;
     const cellStyle = { 
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
@@ -81,7 +82,9 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
         let iconContent = null; 
         let finalWrapperClass = wrapperClass;
 
-        if (isMineRandom) {
+        if (isAtomicBomb) { // THÊM MỚI: Logic hiển thị bom nguyên tử
+            iconContent = <AtomicBombIcon className={iconClass} />;
+        } else if (isMineRandom) {
             iconContent = <BombIcon className={imageIconClass} />;
         } else if (isExit) {
             iconContent = <StairsIcon className={imageIconClass} />;
@@ -114,18 +117,24 @@ interface MinerChallengeProps {
 }
 
 export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins, initialPickaxes, onUpdatePickaxes }: MinerChallengeProps) {
+  // --- THÊM STATE MỚI: Theo dõi mức phạt phần thưởng ---
+  const [rewardPenalty, setRewardPenalty] = useState(1.0);
+
   const createBoard = () => {
-    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
+    // THÊM MỚI: isAtomicBomb vào cell
+    const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isAtomicBomb: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
     const placeItem = (itemType) => { 
         let placed = false; 
         while(!placed) { 
             const x = Math.floor(Math.random() * BOARD_SIZE); 
             const y = Math.floor(Math.random() * BOARD_SIZE); 
             const cell = newBoard[y][x]; 
-            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; } 
+            // CẬP NHẬT: Đảm bảo không đặt chồng lên bom nguyên tử
+            if (!cell.isMineRandom && !cell.isAtomicBomb && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; } 
         } 
     };
     for (let i = 0; i < NUM_RANDOM_BOMBS; i++) placeItem('isMineRandom');
+    for (let i = 0; i < NUM_ATOMIC_BOMBS; i++) placeItem('isAtomicBomb'); // THÊM MỚI: Đặt bom nguyên tử
     for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
     placeItem('isExit');
     return newBoard;
@@ -162,8 +171,10 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
   };
   
+  // --- CẬP NHẬT: Áp dụng mức phạt khi thu thập vàng ---
   const collectAllVisibleCoins = useCallback(() => {
-      const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+      // Tính toán phần thưởng đã bao gồm mức phạt
+      const rewardPerCoin = Math.floor(Math.max(1, masteryCards) * currentFloor * rewardPenalty);
       let totalReward = 0;
       const newBoard = board.map(row => 
           row.map(cell => {
@@ -181,8 +192,9 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           startCoinCountAnimation(coins, newTotalCoins);
           onUpdateCoins(totalReward);
       }
-  }, [board, masteryCards, currentFloor, onUpdateCoins, coins, startCoinCountAnimation]);
+  }, [board, masteryCards, currentFloor, onUpdateCoins, coins, startCoinCountAnimation, rewardPenalty]); // Thêm rewardPenalty vào dependencies
 
+  // --- CẬP NHẬT: Xử lý khi mở trúng bom nguyên tử ---
   const processCellOpening = (x: number, y: number) => {
     const cell = board[y][x];
 
@@ -193,6 +205,14 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       const newPickaxeCount = pickaxes - 1;
       setPickaxes(newPickaxeCount);
       onUpdatePickaxes(newPickaxeCount);
+    }
+
+    // THÊM MỚI: Logic xử lý bom nguyên tử
+    if (cell.isAtomicBomb) {
+        updateCell(x, y, { isRevealed: true });
+        setRewardPenalty(prevPenalty => prevPenalty * REWARD_PENALTY_RATE);
+        // Có thể thêm hiệu ứng rung màn hình hoặc âm thanh ở đây
+        return;
     }
 
     if (cell.isExit) {
@@ -259,7 +279,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     e.preventDefault();
     if (isOpening) return;
     const cell = board[y][x];
-    if (cell.isRevealed) return;
+    if (cell.isRevealed || cell.isAtomicBomb) return; // Không cho cắm cờ bom nguyên tử
     if (!cell.isFlagged && flagsPlaced < TOTAL_BOMBS) {
         updateCell(x, y, { isFlagged: true });
         setFlagsPlaced(prev => prev + 1);
@@ -274,8 +294,10 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setBoard(createBoard());
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
+    // Lưu ý: rewardPenalty KHÔNG được reset ở đây để nó cộng dồn
   };
   
+  // --- CẬP NHẬT: Reset cả mức phạt ---
   const resetGame = () => {
     setCurrentFloor(1);
     setFlagsPlaced(0);
@@ -283,9 +305,12 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setExitConfirmationPos(null);
     setPickaxes(MAX_PICKAXES);
     onUpdatePickaxes(MAX_PICKAXES);
+    setRewardPenalty(1.0); // Reset mức phạt
   };
 
-  const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+  // --- CẬP NHẬT: Tính toán phần thưởng cuối cùng để hiển thị ---
+  const baseRewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+  const finalRewardPerCoin = Math.floor(baseRewardPerCoin * rewardPenalty);
 
   return (
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
@@ -310,6 +335,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       </header>
       
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
+        {/* --- CẬP NHẬT: Hiển thị UI cho mức phạt --- */}
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
                 <StairsIcon className="w-6 h-6 object-contain opacity-70" />
@@ -335,11 +361,16 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                     <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
                 </div>
             </div>
-            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
+            <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor}) x Reward Rate ${Math.round(rewardPenalty * 100)}%`}>
                 <CircleDollarSignIcon className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
-                    <span className="font-mono text-lg font-bold text-white">{rewardPerCoin}</span>
+                    <div className="flex items-baseline space-x-2">
+                        <span className="font-mono text-lg font-bold text-white">{finalRewardPerCoin}</span>
+                        <span className={`font-mono text-xs font-bold ${rewardPenalty < 1.0 ? 'text-red-400' : 'text-green-400'}`}>
+                            ({Math.round(rewardPenalty * 100)}%)
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
