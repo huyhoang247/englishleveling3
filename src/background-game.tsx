@@ -1,4 +1,4 @@
-// src/background-game.tsx
+// --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import CharacterCard from './stats/stats-main.tsx';
@@ -116,6 +116,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(0);
   const [masteryCards, setMasteryCards] = useState(0);
+  const [pickaxes, setPickaxes] = useState(0);
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -247,18 +248,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDisplayedCoins(userData.coins || 0);
         setGems(userData.gems || 0);
         setMasteryCards(userData.masteryCards || 0);
+        setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50); // Mặc định 50 nếu chưa có
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
           masteryCards: 0,
+          pickaxes: 50, // Thêm trường pickaxe cho người dùng mới
           createdAt: new Date(),
         });
         setCoins(0);
         setDisplayedCoins(0);
         setGems(0);
         setMasteryCards(0);
+        setPickaxes(50);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -336,6 +340,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
+  const updatePickaxesInFirestore = async (userId: string, newAmount: number) => {
+      if (!userId) {
+          console.error("Cannot update pickaxes: User not authenticated.");
+          return;
+      }
+      const userDocRef = doc(db, 'users', userId);
+      try {
+          await runTransaction(db, async (transaction) => {
+              const userDoc = await transaction.get(userDocRef);
+              if (!userDoc.exists()) {
+                  transaction.set(userDocRef, { pickaxes: newAmount });
+              } else {
+                  transaction.update(userDocRef, { pickaxes: newAmount });
+              }
+          });
+          setPickaxes(newAmount);
+      } catch (error) {
+          console.error("Firestore Transaction failed for pickaxes: ", error);
+      }
+  };
+
    const startCoinCountAnimation = (reward: number) => {
       const oldCoins = coins;
       const newCoins = oldCoins + reward;
@@ -403,6 +428,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setDisplayedCoins(0);
         setGems(0);
         setMasteryCards(0);
+        setPickaxes(0);
         setJackpotPool(0);
         setIsLoadingUserData(true);
         setVocabularyData(null);
@@ -894,6 +920,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 <MinerChallenge 
                     onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards} 
                     onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                    initialPickaxes={pickaxes}
+                    onUpdatePickaxes={(newCount) => updatePickaxesInFirestore(auth.currentUser!.uid, newCount)}
                 />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
