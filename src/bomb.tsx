@@ -137,6 +137,7 @@ export default function App() {
     setExitConfirmationPos(null);
   }
 
+  // --- CELL COMPONENT ĐÃ CẬP NHẬT ---
   const Cell = ({ cellData }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit } = cellData;
     const cellStyle = { 
@@ -159,6 +160,7 @@ export default function App() {
     else if (isRevealed) {
         specificCellStyle = cellStyle.revealed;
         let iconContent = null; 
+        let finalWrapperClass = wrapperClass;
 
         if (isMineRandom) {
             iconContent = <BombIcon className={imageIconClass} />;
@@ -166,11 +168,13 @@ export default function App() {
             iconContent = <StairsIcon className={imageIconClass} />;
             specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCoin) { 
-            iconContent = <CircleDollarSignIcon className={imageIconClass} />;
+            // Coin nhỏ hơn và có hiệu ứng nảy
+            finalWrapperClass = "w-[60%] h-[60%]";
+            iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-bounce`} />;
         }
         
         content = (
-            <div className={wrapperClass}>
+            <div className={finalWrapperClass}>
                 {iconContent}
             </div>
         );
@@ -188,6 +192,7 @@ export default function App() {
       </div> 
     );
   };
+  // --- KẾT THÚC CẬP NHẬT CELL COMPONENT ---
 
   return (
     <main className="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-poppins">
