@@ -155,12 +155,40 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   const [board, setBoard] = useState(() => createBoard());
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
+  
+  // --- START: ADDED FOR COIN ANIMATION ---
+  const [coins, setCoins] = useState(displayedCoins);
+  const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(displayedCoins);
+
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+
+    const isCountingUp = endValue > startValue;
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+
+    const interval = setInterval(() => {
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
+      }
+
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setAnimatedDisplayedCoins(endValue);
+        clearInterval(interval);
+      } else {
+        setAnimatedDisplayedCoins(current);
+      }
+    }, 30);
+  }, []);
+  // --- END: ADDED FOR COIN ANIMATION ---
 
   const updateCell = (x, y, newProps) => {
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
   };
 
-  // Hàm thu thập coin được bọc trong `useCallback` để tối ưu
+  // --- START: MODIFIED FOR COIN ANIMATION ---
   const collectAllVisibleCoins = useCallback(() => {
       const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
       let totalReward = 0;
@@ -174,11 +202,17 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           })
       );
       if(totalReward > 0) {
+          const newTotalCoins = coins + totalReward;
           setBoard(newBoard);
-          // Chỉ gọi hàm callback để cập nhật coin tổng trên header
+          // Cập nhật state nội bộ
+          setCoins(newTotalCoins);
+          // Bắt đầu animation từ giá trị cũ đến giá trị mới
+          startCoinCountAnimation(coins, newTotalCoins);
+          // Thông báo cho component cha để cập nhật tổng vàng thực tế
           onUpdateCoins(totalReward);
       }
-  }, [board, masteryCards, currentFloor, onUpdateCoins]);
+  }, [board, masteryCards, currentFloor, onUpdateCoins, coins, startCoinCountAnimation]);
+  // --- END: MODIFIED FOR COIN ANIMATION ---
 
   const handleCellClick = useCallback((x, y) => {
     const cell = board[y][x];
@@ -280,7 +314,9 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
               <span className="hidden sm:inline text-sm font-semibold text-slate-300">Về nhà</span>
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
-            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+            {/* --- START: MODIFIED FOR COIN ANIMATION --- */}
+            <CoinDisplay displayedCoins={animatedDisplayedCoins} isStatsFullscreen={false} />
+            {/* --- END: MODIFIED FOR COIN ANIMATION --- */}
             <MasteryDisplay masteryCount={masteryCards} />
           </div>
         </div>
