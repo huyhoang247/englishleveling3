@@ -145,7 +145,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
   
-  // --- STATE RIÊNG CHO PICKAXE TIÊU HAO ---
   const [pickaxes, setPickaxes] = useState(MAX_PICKAXES);
 
   const [coins, setCoins] = useState(displayedCoins);
@@ -202,15 +201,13 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     
     if (cell.isFlagged || (cell.isRevealed && !cell.isExit)) return;
 
-    // --- LOGIC MỚI: KIỂM TRA VÀ TRỪ PICKAXE ---
     if (!cell.isRevealed) {
       if (pickaxes <= 0) {
-        console.log("Hết cuốc!"); // Thêm thông báo hoặc hiệu ứng sau
+        console.log("Hết cuốc!");
         return;
       }
       setPickaxes(prev => prev - 1);
     }
-    // --- KẾT THÚC LOGIC PICKAXE ---
 
     if (cell.isExit) {
       if (!cell.isRevealed) {
@@ -273,7 +270,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     setFlagsPlaced(0);
     setBoard(createBoard());
     setExitConfirmationPos(null);
-    setPickaxes(MAX_PICKAXES); // Hồi lại cuốc khi chơi lại từ đầu
+    setPickaxes(MAX_PICKAXES);
   };
 
   const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
@@ -282,7 +279,6 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
       <CustomAnimationStyles />
       
-      {/* --- HEADER VỚI COIN VÀ MASTERY --- */}
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
@@ -308,7 +304,7 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
           <p className="text-slate-400 mt-2">Uncover cells and collect rewards!</p>
         </div>
 
-        {/* --- BẢNG THỐNG KÊ VỚI PICKAXE TIÊU HAO --- */}
+        {/* --- BẢNG THỐNG KÊ (ĐÃ CẬP NHẬT GIAO DIỆN PICKAXE) --- */}
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             {/* Floor */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
@@ -323,7 +319,12 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
                 <img src={pickaxeIconUrl} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
-                    <span className="font-mono text-lg font-bold text-white">{pickaxes} / {MAX_PICKAXES}</span>
+                    {/* --- START: GIAO DIỆN SỐ LƯỢNG MỚI --- */}
+                    <div className="flex items-baseline" style={{ gap: '2px' }}>
+                      <span className="font-mono text-lg font-bold text-white">{pickaxes}</span>
+                      <span className="font-mono text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
+                    </div>
+                    {/* --- END: GIAO DIỆN SỐ LƯỢNG MỚI --- */}
                 </div>
             </div>
             {/* Bombs */}
