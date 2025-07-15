@@ -1,5 +1,3 @@
-// --- START OF FILE quiz.tsx ---
-
 import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
@@ -179,17 +177,24 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
   const [showNextButton, setShowNextButton] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
-  const [completedWords, setCompletedWords] = useState<Map<string, any>>(new Map());
+  const [completedWords, setCompletedWords] = useState<Map<string, any>>(new Map()); // <<< THAY ĐỔI: Dùng Map để lưu chi tiết
   const [filteredQuizData, setFilteredQuizData] = useState<QuizQuestion[]>([]);
   const [playableQuestions, setPlayableQuestions] = useState<QuizQuestion[]>([]);
+  
+  // <<< THAY ĐỔI >>>: State mới để theo dõi tiến trình riêng biệt
   const [initialCompletedCount, setInitialCompletedCount] = useState(0);
+  
+  // State for hint feature
   const HINT_COST = 200;
   const [hintUsed, setHintUsed] = useState(false);
   const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
+  
+  // State for detail popup
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [detailData, setDetailData] = useState<Definition | null>(null);
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
 
+  // Parse definitions from the imported text file
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -248,6 +253,7 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
           });
           setUserVocabulary(vocabList);
 
+          // <<< THAY ĐỔI >>>: Lưu toàn bộ dữ liệu gameModes vào Map
           const completedMap = new Map<string, any>();
           completedWordsSnapshot.forEach((completedDoc) => {
             completedMap.set(completedDoc.id, completedDoc.data().gameModes || {});
@@ -316,14 +322,15 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
 
     setFilteredQuizData(allQuestionsForVocab);
     
+    // <<< THAY ĐỔI >>>: Lọc câu hỏi dựa trên chế độ chơi hiện tại
     const remainingQuestions = allQuestionsForVocab.filter(q => {
         const completedModes = completedWords.get(q.word);
-        // Câu hỏi có thể chơi nếu chưa có chế độ chơi này, hoặc có nhưng chưa hoàn thành
         return !completedModes || !completedModes[gameModeId];
     });
     
     setPlayableQuestions(shuffleArray(remainingQuestions));
 
+    // <<< THAY ĐỔI >>>: Tính toán số câu đã hoàn thành ban đầu CHO CHẾ ĐỘ NÀY
     const initiallyCompleted = allQuestionsForVocab.length - remainingQuestions.length;
     setInitialCompletedCount(initiallyCompleted);
 
@@ -372,11 +379,18 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
+
     const isCountingUp = endValue > startValue;
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
+
     const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
+      }
+
       if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
         setDisplayedCoins(endValue);
         clearInterval(interval);
@@ -416,49 +430,16 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
           const batch = writeBatch(db);
           const gameModeId = `quiz-${practiceId}`;
           const userDocRef = doc(db, 'users', user.uid);
-          
           if (coinsToAdd > 0) {
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
-          
           const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordToComplete);
-
-          // ======================= START: SỬA LỖI LOGIC GHI DATABASE =======================
-          
-          // Kiểm tra xem từ này đã tồn tại trong DB chưa (dựa vào state đã fetch)
-          const wordExistsInDb = completedWords.has(wordToComplete);
-
-          if (wordExistsInDb) {
-            // Nếu từ đã tồn tại, dùng 'update' để tăng count một cách an toàn
-            // Dot notation sẽ đảm bảo chỉ trường correctCount của gameMode hiện tại được cập nhật
-            batch.update(completedWordRef, {
-              'lastCompletedAt': new Date(),
-              [`gameModes.${gameModeId}.correctCount`]: increment(1)
-            });
-          } else {
-            // Nếu từ chưa tồn tại, dùng 'set' để tạo mới tài liệu
-            // Khởi tạo count là 1, không dùng increment
-            batch.set(completedWordRef, {
-              lastCompletedAt: new Date(),
-              gameModes: {
-                [gameModeId]: { correctCount: 1 }
-              }
-            });
-          }
-          // ======================== END: SỬA LỖI LOGIC GHI DATABASE ========================
-
+          batch.set(completedWordRef, {
+            lastCompletedAt: new Date(),
+            gameModes: { [gameModeId]: { correctCount: increment(1) } }
+          }, { merge: true });
           await batch.commit();
-          
-          // Cập nhật state ở client ngay lập tức để UI phản ánh đúng
-          const updatedWordData = completedWords.get(wordToComplete) || {};
-          const updatedGameModes = {
-             ...(updatedWordData.gameModes || {}),
-             [gameModeId]: true // Đánh dấu là đã hoàn thành trong session này để lọc
-          };
-          setCompletedWords(prev => new Map(prev).set(wordToComplete, updatedGameModes));
-
-          console.log(`Batch write thành công cho từ '${wordToComplete}'.`);
-
+          console.log(`Batch write thành công cho từ '${wordToComplete}' và cập nhật coins.`);
         } catch (error) {
           console.error("Lỗi khi thực hiện batch write:", error);
         }
@@ -518,8 +499,21 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
 
   const resetQuiz = () => {
     const gameModeId = `quiz-${practiceId}`;
+    const wordsCompletedInThisSession = playableQuestions
+        .slice(0, currentQuestion + 1)
+        .map(q => q.word);
+
+    // Thêm các từ vừa hoàn thành vào Map tạm thời để lọc
+    const updatedCompletedWords = new Map(completedWords);
+    wordsCompletedInThisSession.forEach(word => {
+        const existingModes = updatedCompletedWords.get(word) || {};
+        updatedCompletedWords.set(word, { ...existingModes, [gameModeId]: true });
+    });
+    setCompletedWords(updatedCompletedWords);
+    
+    // Lọc lại danh sách câu hỏi có thể chơi
     const remainingQuestions = filteredQuizData.filter(q => {
-        const completedModes = completedWords.get(q.word);
+        const completedModes = updatedCompletedWords.get(q.word);
         return !completedModes || !completedModes[gameModeId];
     });
 
@@ -552,6 +546,7 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
       }
   };
 
+  // <<< THAY ĐỔI >>>: Công thức tính tiến trình mới, chỉ dựa trên chế độ chơi hiện tại
   const quizProgress = filteredQuizData.length > 0
     ? ((initialCompletedCount + score) / filteredQuizData.length) * 100
     : 0;
@@ -603,17 +598,19 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
                 <div className="bg-gray-50 rounded-xl p-6 mb-8">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-lg font-medium text-gray-700">Điểm trong phiên này:</span>
+                    {/* <<< THAY ĐỔI >>>: Hiển thị điểm số của phiên chơi hiện tại */}
                     <span className="text-2xl font-bold text-indigo-600">{score}/{playableQuestions.length}</span>
                   </div>
 
                   <div className="mb-3">
+                     {/* <<< THAY ĐỔI >>>: Hiển thị tiến trình tổng của chế độ chơi hiện tại */}
                      <p className="text-left mb-1 text-sm text-gray-600 font-medium">
                       Tiến độ tổng thể: {initialCompletedCount + score} / {filteredQuizData.length}
                     </p>
                     <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        style={{ width: `${quizProgress}%` }}
+                        style={{ width: `${quizProgress}%` }} // Dùng quizProgress đã được tính lại
                       ></div>
                     </div>
                   </div>
@@ -645,6 +642,7 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
                     <div className="relative">
                       <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                         <div className="flex items-center">
+                          {/* <<< THAY ĐỔI >>>: Hiển thị tiến trình của phiên chơi hiện tại */}
                           <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
                             {currentQuestion + 1}
                           </span>
@@ -765,5 +763,3 @@ export default function QuizApp({ onGoBack, practiceId }: { onGoBack: () => void
     </div>
   );
 }
-
-// --- END OF FILE quiz.tsx ---
