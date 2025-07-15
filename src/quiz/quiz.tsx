@@ -5,7 +5,9 @@ import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increm
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
-import detailedMeaningsText from '../vocabulary-definitions.ts'; // Import the definitions
+import detailedMeaningsText from '../vocabulary-definitions.ts';
+import { exampleData } from '../example-data.ts'; // Import for Practice 2
+import { defaultVocabulary } from '../list-vocabulary.ts'; // Import for Practice 2
 
 // Map options to A, B, C, D
 const optionLabels = ['A', 'B', 'C', 'D'];
@@ -146,7 +148,7 @@ const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> =
 };
 
 
-export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
+export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -240,8 +242,9 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
           const completedSet = new Set<string>();
           completedWordsSnapshot.forEach((completedDoc) => {
-            if (completedDoc.data()?.gameModes?.['quiz-1']) {
-              completedSet.add(completedDoc.id);
+            const gameModeId = selectedPractice === 1 ? "quiz-1" : `quiz-${selectedPractice}`;
+            if (completedDoc.data()?.gameModes?.[gameModeId]) {
+              completedSet.add(completedDoc.id.toLowerCase());
             }
           });
           setCompletedQuizWords(completedSet);
@@ -259,28 +262,70 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, selectedPractice]);
 
-  useEffect(() => {
-    if (userVocabulary.length > 0) {
+  const generatePractice2Questions = useCallback(() => {
+    const questions = [];
+    // Only use vocab words that haven't been completed in this mode
+    const availableVocab = userVocabulary.filter(word => !completedQuizWords.has(word.toLowerCase()));
+
+    for (const word of availableVocab) {
+        const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+        const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
+
+        if (matchingSentences.length > 0) {
+            const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
+            const questionText = randomSentence.english.replace(wordRegex, '___');
+            
+            const incorrectOptions = [];
+            const lowerCaseCorrectWord = word.toLowerCase();
+            while (incorrectOptions.length < 3) {
+                const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
+                if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
+                    incorrectOptions.push(randomWord);
+                }
+            }
+            
+            questions.push({
+                question: questionText,
+                vietnamese: randomSentence.vietnamese,
+                options: shuffleArray([word, ...incorrectOptions]),
+                correctAnswer: word,
+                word: word,
+            });
+        }
+    }
+    return questions;
+  }, [userVocabulary, completedQuizWords]);
+
+  const generatePractice1Questions = useCallback(() => {
       const allMatchingQuestions = quizData.filter(question =>
-        userVocabulary.some(vocabWord =>
-          new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
-        )
+          userVocabulary.some(vocabWord =>
+              new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question)
+          )
       );
-      setFilteredQuizData(allMatchingQuestions);
-      
       const remainingQuestions = allMatchingQuestions.filter(q => {
-          return ![...completedQuizWords].some(completedWord => 
-              new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
+          return !userVocabulary.some(vocabWord =>
+              completedQuizWords.has(vocabWord.toLowerCase()) && new RegExp(`\\b${vocabWord}\\b`, 'i').test(q.question)
           );
       });
-      setPlayableQuestions(shuffleArray(remainingQuestions));
-    } else {
-      setFilteredQuizData([]);
-      setPlayableQuestions([]);
-    }
+      return { allMatchingQuestions, remainingQuestions };
   }, [userVocabulary, completedQuizWords]);
+
+
+  useEffect(() => {
+      if (loading) return;
+
+      if (selectedPractice === 2) {
+          const questions = generatePractice2Questions();
+          setFilteredQuizData(questions);
+          setPlayableQuestions(shuffleArray(questions));
+      } else {
+          const { allMatchingQuestions, remainingQuestions } = generatePractice1Questions();
+          setFilteredQuizData(allMatchingQuestions);
+          setPlayableQuestions(shuffleArray(remainingQuestions));
+      }
+  }, [selectedPractice, loading, generatePractice1Questions, generatePractice2Questions]);
 
 
   useEffect(() => {
@@ -293,14 +338,18 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
           const currentQuizItem = playableQuestions[currentQuestion];
-          const matchedWord = userVocabulary.find(vocabWord =>
-              new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
-          );
-          setCurrentQuestionWord(matchedWord || null);
+          if (selectedPractice === 2) {
+              setCurrentQuestionWord(currentQuizItem.word);
+          } else {
+              const matchedWord = userVocabulary.find(vocabWord =>
+                  new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
+              );
+              setCurrentQuestionWord(matchedWord || null);
+          }
       } else {
           setCurrentQuestionWord(null);
       }
-  }, [currentQuestion, playableQuestions, userVocabulary]);
+  }, [currentQuestion, playableQuestions, userVocabulary, selectedPractice]);
   
   const handleTimeUp = () => {
     if (answered) return;
@@ -375,18 +424,17 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
         setTimeout(() => setStreakAnimation(false), 1500);
       }
 
-      const matchedWord = userVocabulary.find(vocabWord =>
-        new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question)
-      );
+      const matchedWord = currentQuestionWord;
+
       if (user && matchedWord) {
         try {
           const batch = writeBatch(db);
-          const gameModeId = "quiz-1";
+          const gameModeId = `quiz-${selectedPractice}`;
           const userDocRef = doc(db, 'users', user.uid);
           if (coinsToAdd > 0) {
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
-          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord);
+          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord.toLowerCase());
           batch.set(completedWordRef, {
             lastCompletedAt: new Date(),
             gameModes: { [gameModeId]: { correctCount: increment(1) } }
@@ -451,12 +499,15 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
   };
 
   const resetQuiz = () => {
-    const remainingQuestions = filteredQuizData.filter(q => {
-        return ![...completedQuizWords].some(completedWord => 
-            new RegExp(`\\b${completedWord}\\b`, 'i').test(q.question)
-        );
-    });
-    setPlayableQuestions(shuffleArray(remainingQuestions));
+    let newPlayableQuestions = [];
+    if (selectedPractice === 2) {
+        newPlayableQuestions = generatePractice2Questions();
+    } else {
+        const { remainingQuestions } = generatePractice1Questions();
+        newPlayableQuestions = remainingQuestions;
+    }
+    setPlayableQuestions(shuffleArray(newPlayableQuestions));
+
     setCurrentQuestion(0);
     setScore(0);
     setShowScore(false);
@@ -481,7 +532,8 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
       }
   };
 
-  const quizProgress = filteredQuizData.length > 0 ? ((filteredQuizData.length - playableQuestions.length + currentQuestion) / filteredQuizData.length) * 100 : 0;
+  const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
+  const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
   
   if (loading) {
     return <div className="flex items-center justify-center h-full text-xl font-semibold text-indigo-700">Đang tải dữ liệu Quiz...</div>;
@@ -534,12 +586,12 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
 
                   <div className="mb-3">
                      <p className="text-left mb-1 text-sm text-gray-600 font-medium">
-                      Tiến độ tổng thể: {filteredQuizData.length - playableQuestions.length + score} / {filteredQuizData.length}
+                      Tiến độ tổng thể: {totalCompletedBeforeSession + score} / {filteredQuizData.length}
                     </p>
                     <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        style={{ width: `${(filteredQuizData.length - playableQuestions.length + score) / filteredQuizData.length * 100}%` }}
+                        style={{ width: `${(totalCompletedBeforeSession + score) / (filteredQuizData.length || 1) * 100}%` }}
                       ></div>
                     </div>
                   </div>
@@ -572,7 +624,7 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                         <div className="flex items-center">
                           <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
-                            {filteredQuizData.length - playableQuestions.length + currentQuestion + 1}
+                            {totalCompletedBeforeSession + currentQuestion + 1}
                           </span>
                           <span className="mx-0.5 text-white/70 text-xs">/</span>
                           <span className="text-xs text-white/50">{filteredQuizData.length}</span>
@@ -607,6 +659,11 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                     <h2 className="text-xl font-bold text-white leading-tight">
                       {playableQuestions[currentQuestion]?.question}
                     </h2>
+                    {playableQuestions[currentQuestion]?.vietnamese && (
+                      <p className="text-white/80 text-sm mt-2 italic">
+                        {playableQuestions[currentQuestion]?.vietnamese}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -621,12 +678,13 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                       let borderColor = "border-gray-200";
                       let textColor = "text-gray-700";
                       let labelBg = "bg-gray-100";
+                      let iconColor = "text-gray-400";
 
                       if (answered) {
                         if (isCorrect) {
-                           bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white";
+                           bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white"; iconColor = "text-green-600";
                         } else if (isSelected) {
-                           bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white";
+                           bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white"; iconColor = "text-red-600";
                         }
                       }
                       return (
@@ -634,14 +692,14 @@ export default function QuizApp({ onGoBack }: { onGoBack: () => void; }) {
                           key={option}
                           onClick={() => !answered && !isHiddenByHint && handleAnswer(option)}
                           disabled={answered || playableQuestions.length === 0 || isHiddenByHint}
-                          className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 hover:shadow-sm ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-300 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`}
+                          className={`w-full text-left p-3 rounded-lg border-2 ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 group ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-400 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`}
                         >
-                          <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-md mr-4 text-sm font-bold flex-shrink-0 ${labelBg}`}>
                             {optionLabels[index]}
                           </div>
-                          <span className="flex-grow">{option}</span>
-                          {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />}
-                          {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />}
+                          <span className="flex-grow font-medium">{option}</span>
+                          {answered && isCorrect && <CheckIcon className={`h-6 w-6 ml-2 flex-shrink-0 ${iconColor}`} />}
+                          {answered && isSelected && !isCorrect && <XIcon className={`h-6 w-6 ml-2 flex-shrink-0 ${iconColor}`} />}
                         </button>
                       );
                     })}
