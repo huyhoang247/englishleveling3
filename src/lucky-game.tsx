@@ -422,26 +422,27 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 flex flex-col items-center font-sans">
-      {/* Header containing Close button and Tabs */}
-      <div className="w-full max-w-md flex justify-between items-center mb-4">
-        {/* Tab Navigation */}
-        <div className="flex">
+      
+      {/* --- START: NEW ELEGANT HEADER --- */}
+      <div className="w-full max-w-md bg-black/20 backdrop-blur-sm rounded-full p-1.5 flex justify-between items-center shadow-lg ring-1 ring-white/10 mb-4">
+        {/* Tab Navigation Group */}
+        <div className="flex bg-black/30 rounded-full">
           <button
             onClick={() => setActiveTab('spin')}
-            className={`px-4 py-2 rounded-l-xl text-md font-bold transition-all duration-300 ${
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
               activeTab === 'spin'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
+                : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white'
             }`}
           >
             Quay
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-r-xl text-md font-bold transition-all duration-300 ${
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
               activeTab === 'history'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
+                : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white'
             }`}
           >
             Lịch sử
@@ -451,16 +452,17 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center transition-all duration-200 hover:scale-110"
+          className="w-10 h-10 flex items-center justify-center bg-black/30 rounded-full transition-all duration-300 hover:bg-red-500/50 hover:scale-110"
         >
           <img
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
             alt="Close icon"
-            className="w-5 h-5 text-indigo-300"
-            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/cccccc/000000?text=X'; }}
+            className="w-5 h-5" // Giữ kích thước icon ổn định
+            onError={(e) => { e.currentTarget.src = 'https://placehold.co/20x20/ffffff/000000?text=X'; }}
           />
         </button>
       </div>
+      {/* --- END: NEW ELEGANT HEADER --- */}
 
       <div className="max-w-md w-full">
         <div className="text-center mb-6">
