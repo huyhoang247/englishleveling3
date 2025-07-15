@@ -890,7 +890,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isMinerChallengeOpen && <MinerChallenge onClose={toggleMinerChallenge} />}</ErrorBoundary>
+            <ErrorBoundary>{isMinerChallengeOpen && <MinerChallenge onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isTowerGameOpen && <TowerExplorerGame onClose={toggleTowerGame} />}</ErrorBoundary>
@@ -939,4 +939,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-// --- END OF FILE: background-game.tsx ---
