@@ -102,6 +102,41 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
   )
 }
 
+// [THÊM MỚI] --- Component Modal Lịch Sử Chiến Đấu ---
+const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
+    return (
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
+        onClick={onClose}
+      >
+        <div
+          className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+          <div className="p-4 border-b border-slate-700">
+            <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">LỊCH SỬ CHIẾN ĐẤU</h3>
+          </div>
+          <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+            {log.length > 0 ? log.map((entry, index) => (
+              <p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2">
+                {entry}
+              </p>
+            )) : (
+              <p className="text-slate-400 text-center italic">Chưa có hoạt động nào.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
 // --- Component Chính Của Game ---
 export default function BossBattle() {
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
@@ -111,6 +146,8 @@ export default function BossBattle() {
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [showStats, setShowStats] = useState(false);
+  // [THÊM MỚI] State để quản lý modal Lịch sử chiến đấu
+  const [showLogModal, setShowLogModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
   const [isShaking, setIsShaking] = useState(false);
   const [playerCoins, setPlayerCoins] = useState(0);
@@ -223,6 +260,8 @@ export default function BossBattle() {
     setBattleState('idle');
     setDamages([]);
     setShowStats(false);
+    // [THÊM MỚI] Reset cả state của modal log
+    setShowLogModal(false);
     setTimeout(() => addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
@@ -258,7 +297,10 @@ export default function BossBattle() {
         .bg-pos-100 { background-position: 100% 0%; }
       `}</style>
 
+      {/* [CẬP NHẬT] Render các modal */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
+      {showLogModal && <LogModal log={combatLog} onClose={() => setShowLogModal(false)} />}
+
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
@@ -276,12 +318,19 @@ export default function BossBattle() {
 
         <main className={`w-full h-full flex flex-col justify-center items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             
-            <div className="w-full flex justify-center mb-4">
+            {/* [CẬP NHẬT] Thêm nút View Log */}
+            <div className="w-full flex justify-center items-center gap-4 mb-4">
                 <button
                     onClick={() => setShowStats(true)}
                     className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
                 >
                     View Stats
+                </button>
+                <button
+                    onClick={() => setShowLogModal(true)}
+                    className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
+                >
+                    View Log
                 </button>
             </div>
 
