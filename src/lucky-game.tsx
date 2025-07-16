@@ -165,15 +165,16 @@ const SpinningWheelGrid = React.memo(({
   });
 
   return (
-    <div className="grid grid-cols-4 gap-3 p-4 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
+    // CHANGE: Adjusted grid gap and padding for a more compact look
+    <div className="grid grid-cols-4 gap-2 p-3 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
       {grid.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
           // Center Piece
           if (rowIndex === 1 && colIndex === 1) {
             return (
-              <div key={`chest-pedestal`} className="col-span-2 row-span-2 flex items-center justify-center rounded-full bg-slate-800 relative shadow-inner-strong">
+              <div key={`chest-pedestal`} className="col-span-2 row-span-2 flex items-center justify-center rounded-full bg-slate-800/80 relative shadow-inner-strong">
                 <div className="absolute inset-0 bg-radial-glow animate-glow-pulse z-0"></div>
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" alt="Treasure Chest" className={`w-28 h-28 transform transition-transform duration-500 z-10 drop-shadow-2xl ${isSpinning ? 'animate-bounce-subtle' : ''}`} onError={(e) => { e.currentTarget.src = 'https://placehold.co/112x112/cccccc/000000?text=Lỗi'; }}/>
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" alt="Treasure Chest" className={`w-24 h-24 transform transition-transform duration-500 z-10 drop-shadow-2xl ${isSpinning ? 'animate-bounce-subtle' : ''}`} onError={(e) => { e.currentTarget.src = 'https://placehold.co/96x96/cccccc/000000?text=Lỗi'; }}/>
               </div>
             );
           }
@@ -194,25 +195,30 @@ const SpinningWheelGrid = React.memo(({
 
             return (
               <div key={`item-border-${rowIndex}-${colIndex}`} style={{ '--rarity-color': rarityColor } as React.CSSProperties} className={`group item-cell-shape aspect-square p-[2px] shadow-lg relative transition-all duration-200 ${isSelected ? `scale-110 z-20 shadow-2xl ${rarityGlow} animate-pulse-bright` : ''} ${isLandedOn ? 'scale-110 z-30' : 'hover:scale-105 hover:z-20'} ${isHighlighted ? 'bg-gradient-to-br from-[var(--rarity-color)] via-slate-500 to-[var(--rarity-color)]' : 'bg-gradient-to-br from-slate-600 to-slate-800'}`}>
-                <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center p-1 relative overflow-hidden">
                     {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
                     {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
-                    {/* CHANGE: Added py-1 and removed h-full to prevent content from being clipped by the parent's clip-path. */}
-                    <div className="relative z-10 flex flex-col items-center justify-center py-1">
+                    
+                    {/* CHANGE: Main content container for proper sizing and spacing */}
+                    <div className="flex flex-col items-center justify-center flex-grow">
                         {typeof item.icon === 'string' ? (
-                          <img src={item.icon} alt={item.name} className="w-12 h-12 md:w-14 md:h-14 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
+                          // CHANGE: Reduced icon size
+                          <img src={item.icon} alt={item.name} className="w-10 h-10 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
                         ) : (
-                          <item.icon className={`w-12 h-12 md:w-14 md:h-14 ${item.color} drop-shadow-lg transition-transform`} />
+                          // CHANGE: Reduced icon size
+                          <item.icon className={`w-10 h-10 ${item.color} drop-shadow-lg transition-transform`} />
                         )}
-                        {item.value > 0 && (
-                            // CHANGE: Adjusted margin-top for better spacing.
-                            <div className="flex items-center mt-1.5 bg-black/50 rounded-full px-2.5 py-1">
-                                <span className="text-sm font-bold text-yellow-300">{item.value.toLocaleString()}</span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1.5" />
-                            </div>
-                        )}
-                        {item.rarity === 'jackpot' && ( <span className="mt-1.5 text-sm font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse"> Jackpot </span> )}
                     </div>
+                    
+                    {/* CHANGE: Redesigned value display to match image */}
+                    {item.value > 0 && (
+                        <div className="flex items-center mt-1 bg-black/50 rounded-full px-2 py-0.5">
+                            <span className="text-xs font-bold text-white">{item.name}</span>
+                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
+                        </div>
+                    )}
+                    {item.rarity === 'jackpot' && ( <span className="mt-1 text-xs font-black text-white uppercase tracking-wider drop-shadow-lg"> Jackpot </span> )}
+
                     <div className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}></div>
                 </div>
               </div>
@@ -241,18 +247,19 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
   const items: Item[] = useMemo(() => [
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150 Xu', value: 150, rarity: 'common', color: '' },
+    // CHANGE: Updated item names and jackpot icon to match the image
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150', value: 150, rarity: 'common', color: '' },
     { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
     { icon: GemIcon, name: 'Ngọc quý', value: 0, rarity: 'rare', color: 'text-blue-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300 Xu', value: 300, rarity: 'uncommon', color: '' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300', value: 300, rarity: 'uncommon', color: '' },
     { icon: ShieldIcon, name: 'Khiên bảo vệ', value: 0, rarity: 'rare', color: 'text-green-400' },
     { icon: StarIcon, name: 'Sao may mắn', value: 0, rarity: 'epic', color: 'text-purple-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500 Xu', value: 500, rarity: 'rare', color: '' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500', value: 500, rarity: 'rare', color: '' },
     { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400' },
     { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '' },
     { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: '' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100', value: 100, rarity: 'common', color: '' },
   ], []);
 
   const itemPositionsOnWheel = useMemo(() => [
@@ -323,7 +330,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           } else {
             onUpdateCoins(wonItem.value);
           }
-          setWonRewardDetails({ ...wonItem, value: actualWonAmount });
+          const displayName = (wonItem.value > 0 && wonItem.rarity !== 'jackpot') ? `${wonItem.value} xu` : wonItem.name;
+          setWonRewardDetails({ ...wonItem, name: displayName, value: actualWonAmount });
           setShowRewardPopup(true);
         }, finalPauseDuration);
       }
@@ -374,8 +382,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               />
             </div>
             <div className="flex flex-col items-center justify-center mb-6">
-              <button onClick={spinChest} disabled={isSpinning || currentCoins < 100} className={` px-3 py-2 text-sm rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75 inline-flex items-center justify-center relative group ${isSpinning || currentCoins < 100 ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400' }`}>
-                {isSpinning ? ( <span className="flex items-center"> <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg> Đang quay... </span> ) : ( <div className="flex items-center justify-center"> <span className="font-semibold tracking-wide"> QUAY </span> <span className={`h-4 w-px mx-1.5 transition-colors duration-200 ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}`}></span> <span className="flex items-center"> {currentCoins < 100 ? (<span className="font-medium">Hết xu</span>) : (<> <span className="font-medium">100</span> <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 inline-block ml-1"/> </> )} </span> </div> )}
+              {/* CHANGE: Updated spin button style to be larger and more prominent */}
+              <button onClick={spinChest} disabled={isSpinning || currentCoins < 100} className={`w-48 h-12 text-lg rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75 inline-flex items-center justify-center relative group ${isSpinning || currentCoins < 100 ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400' }`}>
+                {isSpinning ? ( <span className="flex items-center"> <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg> Đang quay... </span> ) : ( <div className="flex items-center justify-center w-full"> <span className="font-semibold tracking-wide"> QUAY </span> <span className={`h-5 w-px mx-3 transition-colors duration-200 ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}`}></span> <span className="flex items-center"> {currentCoins < 100 ? (<span className="font-medium">Hết xu</span>) : (<> <span className="font-medium">100</span> <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5 inline-block ml-1.5"/> </> )} </span> </div> )}
               </button>
               {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>)}
             </div>
@@ -425,7 +434,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
         }
         .shadow-inner-strong { box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5); }
-        .bg-radial-glow { background: radial-gradient(circle, rgba(79, 70, 229, 0.3) 0%, rgba(15, 23, 42, 0) 70%); }
+        .bg-radial-glow { background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%); }
         @keyframes glow-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
         .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
