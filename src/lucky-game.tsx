@@ -197,14 +197,16 @@ const SpinningWheelGrid = React.memo(({
                 <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
                     {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
                     {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
-                    <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                    {/* CHANGE: Added py-1 and removed h-full to prevent content from being clipped by the parent's clip-path. */}
+                    <div className="relative z-10 flex flex-col items-center justify-center py-1">
                         {typeof item.icon === 'string' ? (
                           <img src={item.icon} alt={item.name} className="w-12 h-12 md:w-14 md:h-14 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
                         ) : (
                           <item.icon className={`w-12 h-12 md:w-14 md:h-14 ${item.color} drop-shadow-lg transition-transform`} />
                         )}
                         {item.value > 0 && (
-                            <div className="flex items-center mt-2 bg-black/50 rounded-full px-2.5 py-1">
+                            // CHANGE: Adjusted margin-top for better spacing.
+                            <div className="flex items-center mt-1.5 bg-black/50 rounded-full px-2.5 py-1">
                                 <span className="text-sm font-bold text-yellow-300">{item.value.toLocaleString()}</span>
                                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1.5" />
                             </div>
@@ -440,7 +442,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 70% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
         .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { translateY(0px); } }
         .animate-float { animation: float 2s ease-in-out infinite; }
         @keyframes bounce-once { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
         .animate-bounce-once { animation: bounce-once 0.8s ease-in-out; }
