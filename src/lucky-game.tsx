@@ -198,7 +198,6 @@ const SpinningWheelGrid = React.memo(({
                     {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
                     {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
                     
-                    {/* CHANGE: Unified rendering, reduced icon and text size, adjusted spacing */}
                     <div className="flex flex-col items-center justify-center h-full gap-0.5">
                         {/* Icon - Always shows - Reduced size */}
                         {typeof item.icon === 'string' ? (
@@ -207,12 +206,9 @@ const SpinningWheelGrid = React.memo(({
                             <item.icon className={`w-8 h-8 ${item.color} drop-shadow-lg`} />
                         )}
 
-                        {/* Text - Shows for coins and jackpot - Reduced size */}
+                        {/* Text - Shows for coins only */}
                         {item.value > 0 && (
                             <span className="text-xs font-bold text-amber-300">{item.name}</span>
-                        )}
-                        {item.rarity === 'jackpot' && (
-                            <span className="text-xs font-black uppercase text-yellow-300">JACKPOT</span>
                         )}
                     </div>
 
