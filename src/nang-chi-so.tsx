@@ -211,7 +211,7 @@ export default function App() {
           {/* --- HERO GRAPHIC ĐÃ ĐƯỢC THAY THẾ --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <img 
-              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000ea0061f7986f3f95c048609d.png" 
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
               alt="Hero Stone Icon"
               className="w-full h-full object-contain"
             />
