@@ -195,29 +195,31 @@ const SpinningWheelGrid = React.memo(({
           if (cell && cell.isWheelItem) {
             const item = cell.item;
             const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
-            const isSelectedDuringSpin = isSpinning && selectedIndex === wheelIndexOfCurrentCell;
+            const isSelected = isSpinning && selectedIndex === wheelIndexOfCurrentCell;
             const isLandedOn = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
 
             const rarityColor = getRarityColor(item.rarity);
             const rarityGlow = getRarityGlow(item.rarity);
+            
+            const isHighlighted = isSelected || isLandedOn;
 
             return (
+              // Outer 'border' element
               <div
-                key={`item-${rowIndex}-${colIndex}`}
+                key={`item-border-${rowIndex}-${colIndex}`}
                 style={{ '--rarity-color': rarityColor } as React.CSSProperties}
-                className={`group item-cell-shape aspect-square p-0.5 bg-gradient-to-br from-slate-700/50 to-slate-900/50 shadow-lg relative transition-all duration-200
-                  ${isSelectedDuringSpin ? `scale-110 z-20 shadow-2xl ${rarityGlow} animate-pulse-bright` : ''}
+                className={`
+                  group item-cell-shape aspect-square p-[2px] shadow-lg relative transition-all duration-200
+                  ${isSelected ? `scale-110 z-20 shadow-2xl ${rarityGlow} animate-pulse-bright` : ''}
                   ${isLandedOn ? 'scale-110 z-30' : 'hover:scale-105 hover:z-20'}
+                  ${isHighlighted ? 'bg-gradient-to-br from-[var(--rarity-color)] via-slate-500 to-[var(--rarity-color)]' : 'bg-gradient-to-br from-slate-600 to-slate-800'}
                 `}
               >
-                <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center p-1 relative overflow-hidden">
+                {/* Inner 'content' element */}
+                <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
                     {/* Landed Effect */}
-                    {isLandedOn && (
-                       <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div>
-                    )}
-                     {isLandedOn && item.rarity === 'jackpot' && (
-                       <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div>
-                    )}
+                    {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
+                    {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
 
                     {/* Content */}
                     <div className="relative z-10 flex flex-col items-center justify-center h-full">
@@ -232,15 +234,8 @@ const SpinningWheelGrid = React.memo(({
                                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
                             </div>
                         )}
-                        {item.rarity === 'jackpot' && (
-                            <span className="mt-1 text-[11px] font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse">
-                                Jackpot
-                            </span>
-                        )}
+                        {item.rarity === 'jackpot' && ( <span className="mt-1 text-[11px] font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse"> Jackpot </span> )}
                     </div>
-
-                    {/* Rarity Border */}
-                    <div className="absolute inset-0 item-cell-shape border-2 border-transparent" style={{borderColor: isSelectedDuringSpin || isLandedOn ? rarityColor : 'transparent'}}></div>
                     
                     {/* Hover Aura */}
                     <div 
@@ -505,14 +500,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                     ) : (
                                         <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
                                     )}
-                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>
-                                        {item.name}
-                                    </div>
+                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>{item.name}</div>
                                     {item.rarity !== 'jackpot' && item.value > 0 && 
-                                      <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}
-                                        <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" />
-                                      </div>
-                                    }
+                                      <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" /></div>}
                                     {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-400 mt-0.5">POOL WIN!</div>}
                                 </div>
                             ))}
@@ -520,45 +510,18 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                         {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-400 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
                     </>
                 ) : (
-                    <div className="text-center text-white">
-                        <p className="text-lg">Chưa có phần thưởng nào trong lịch sử.</p>
-                        <p className="text-sm opacity-80 mt-2">Hãy quay để bắt đầu nhận thưởng!</p>
-                    </div>
+                    <div className="text-center text-white"> <p className="text-lg">Chưa có phần thưởng nào trong lịch sử.</p> <p className="text-sm opacity-80 mt-2">Hãy quay để bắt đầu nhận thưởng!</p> </div>
                 )}
             </div>
         )}
       </div>
 
-      {showRewardPopup && wonRewardDetails && (
-        <RewardPopup
-          item={wonRewardDetails}
-          jackpotWon={jackpotWon}
-          onClose={() => setShowRewardPopup(false)}
-        />
-      )}
+      {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
 
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-auto">
         <div className="flex bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg ring-1 ring-white/10">
-          <button
-            onClick={() => setActiveTab('spin')}
-            className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-              activeTab === 'spin'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
-                : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            Quay
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-              activeTab === 'history'
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
-                : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            Lịch sử
-          </button>
+          <button onClick={() => setActiveTab('spin')} className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${ activeTab === 'spin' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md' : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white' }`}> Quay </button>
+          <button onClick={() => setActiveTab('history')} className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${ activeTab === 'history' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md' : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white' }`}> Lịch sử </button>
         </div>
       </div>
 
@@ -571,38 +534,17 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         .item-cell-shape {
           clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
         }
-        .shadow-inner-strong {
-            box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5);
-        }
-        .bg-radial-glow {
-            background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%);
-        }
-        @keyframes glow-pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
+        .shadow-inner-strong { box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5); }
+        .bg-radial-glow { background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%); }
+        @keyframes glow-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
         .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
-        @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
+        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
-        @keyframes pulse-bright {
-          0%, 100% { box-shadow: 0 0 20px 5px var(--rarity-color); }
-          50% { box-shadow: 0 0 35px 10px var(--rarity-color); }
-        }
+        @keyframes pulse-bright { 0%, 100% { box-shadow: 0 0 20px 5px var(--rarity-color); } 50% { box-shadow: 0 0 35px 10px var(--rarity-color); } }
         .animate-pulse-bright { animation: pulse-bright 1s ease-in-out infinite; }
-        @keyframes landed-flash {
-            0% { transform: scale(0); opacity: 0.7; }
-            80% { transform: scale(1.5); opacity: 0.2; }
-            100% { transform: scale(2); opacity: 0; }
-        }
+        @keyframes landed-flash { 0% { transform: scale(0); opacity: 0.7; } 80% { transform: scale(1.5); opacity: 0.2; } 100% { transform: scale(2); opacity: 0; } }
         .animate-landed-flash { animation: landed-flash 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        @keyframes jackpot-celebrate {
-          0% { box-shadow: inset 0 0 0 0px var(--jackpot-color); }
-          25% { box-shadow: inset 0 0 0 4px var(--jackpot-color), 0 0 20px 5px var(--jackpot-color); }
-          100% { box-shadow: inset 0 0 0 0px var(--jackpot-color); }
-        }
+        @keyframes jackpot-celebrate { 0% { box-shadow: inset 0 0 0 0px var(--jackpot-color); } 25% { box-shadow: inset 0 0 0 4px var(--jackpot-color), 0 0 20px 5px var(--jackpot-color); } 100% { box-shadow: inset 0 0 0 0px var(--jackpot-color); } }
         .animate-jackpot-celebrate { animation: jackpot-celebrate 0.8s ease-in-out; }
         
         /* Other required animations */
