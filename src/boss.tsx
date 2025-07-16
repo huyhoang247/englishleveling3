@@ -49,32 +49,52 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
-// --- [MỚI] Component Popup Chỉ Số ---
-const StatsPopup = ({ player, boss }: { player: typeof PLAYER_INITIAL_STATS, boss: typeof BOSS_INITIAL_STATS }) => {
+// --- [CẬP NHẬT] Component Modal Chỉ Số (với Overlay và Nút Đóng) ---
+const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_STATS, boss: typeof BOSS_INITIAL_STATS, onClose: () => void }) => {
   return (
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-72 bg-slate-900/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale text-white">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 p-4">
-        {/* Cột Player */}
-        <div className="flex flex-col items-center gap-1">
-          <h3 className="text-lg font-bold text-blue-300 text-shadow-sm">HERO</h3>
-          <p className="text-sm">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
-          <p className="text-sm">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
-        </div>
-        
-        {/* Dải phân cách */}
-        <div className="h-16 w-px bg-slate-600/70"></div>
+    // Lớp Overlay bao trùm
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
+      onClick={onClose} // Bấm ra ngoài để đóng
+    >
+      {/* Hộp nội dung popup, chặn sự kiện click lan ra ngoài */}
+      <div 
+        className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white"
+        onClick={(e) => e.stopPropagation()} // Ngăn việc bấm vào popup làm nó tự đóng
+      >
+        {/* Nút Đóng */}
+        <button 
+          onClick={onClose}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10"
+          aria-label="Đóng"
+        >
+          ✕
+        </button>
 
-        {/* Cột Boss */}
-        <div className="flex flex-col items-center gap-1">
-          <h3 className="text-lg font-bold text-red-400 text-shadow-sm">BOSS</h3>
-          <p className="text-sm">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
-          <p className="text-sm">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
+        <div className="p-5 pt-6">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            {/* Cột Player */}
+            <div className="flex flex-col items-center gap-1.5">
+              <h3 className="text-lg font-bold text-blue-300 text-shadow-sm">HERO</h3>
+              <p className="text-md">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
+              <p className="text-md">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
+            </div>
+            
+            {/* Dải phân cách */}
+            <div className="h-16 w-px bg-slate-600/70"></div>
+
+            {/* Cột Boss */}
+            <div className="flex flex-col items-center gap-1.5">
+              <h3 className="text-lg font-bold text-red-400 text-shadow-sm">BOSS</h3>
+              <p className="text-md">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
+              <p className="text-md">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
-
 
 // --- Component Chính Của Game ---
 export default function BossBattle() {
@@ -195,6 +215,7 @@ export default function BossBattle() {
     setGameOver(null);
     setBattleState('idle');
     setDamages([]);
+    setShowStats(false); // Đảm bảo popup tắt khi chơi lại
     setTimeout(() => addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
@@ -212,9 +233,11 @@ export default function BossBattle() {
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
         .animate-breathing { animation: breathing 5s ease-in-out infinite; }
         @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
-        /* [MỚI] Animation cho popup chỉ số */
-        @keyframes fade-in-scale { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-        .animate-fade-in-scale { animation: fade-in-scale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        /* [CẬP NHẬT] Animations cho Modal */
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+        @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; }
         .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; }
         .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
         .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); }
@@ -227,6 +250,9 @@ export default function BossBattle() {
         .bg-pos-100 { background-position: 100% 0%; }
       `}</style>
       
+      {/* [MỚI] Gọi Modal ở cấp cao nhất để nó có thể che toàn màn hình */}
+      {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
+      
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
         <header className="fixed top-0 left-0 w-full z-20 p-3 md:p-4 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
@@ -236,45 +262,35 @@ export default function BossBattle() {
           </div>
         </header>
 
-        <main className={`relative w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+        <main className={`w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             {damages.map(d => (
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
 
             <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
             
-            {/* --- [THAY ĐỔI] KHU VỰC ĐẤU TRƯỜNG --- */}
-            {/* Thêm `relative` để làm container cho popup */}
-            <div className="relative w-full max-w-4xl mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end">
-                    {/* Player Character (chỉ hình ảnh) */}
-                    <div className="flex flex-col items-center justify-end">
-                        <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
-                            <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
-                        </div>
-                        {/* Khối chỉ số cũ đã được XÓA */}
-                    </div>
-                    
-                    {/* VS Icon */}
-                    <div className="hidden md:flex justify-center items-center pb-12">
-                        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
-                    </div>
-
-                    {/* Boss Panel (đầy đủ thông tin) */}
-                    <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
-                      <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
-                      <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
-                          <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
-                      </div>
-                      <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                      {/* Khối chỉ số cũ đã được XÓA */}
+            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
+                {/* Player Character */}
+                <div className="flex flex-col items-center justify-end">
+                    <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
+                        <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
                     </div>
                 </div>
+                
+                {/* VS Icon */}
+                <div className="hidden md:flex justify-center items-center pb-12">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
+                </div>
 
-                {/* --- [MỚI] POPUP CHỈ SỐ --- */}
-                {showStats && <StatsPopup player={playerStats} boss={bossStats} />}
+                {/* Boss Panel */}
+                <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
+                  <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
+                  <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
+                      <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
+                  </div>
+                  <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                </div>
             </div>
-
 
             {/* --- KHU VỰC ĐIỀU KHIỂN VÀ LOG --- */}
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
@@ -287,10 +303,10 @@ export default function BossBattle() {
                 </button>
                 )}
                 <button
-                    onClick={() => setShowStats(!showStats)}
+                    onClick={() => setShowStats(true)} // [THAY ĐỔI] Luôn mở popup, việc đóng do modal tự xử lý
                     className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
                 >
-                {showStats ? 'Ẩn Chỉ Số' : 'Hiện Chỉ Số'}
+                  Hiện Chỉ Số
                 </button>
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
                     {combatLog.map((entry, index) => (
