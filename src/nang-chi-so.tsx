@@ -36,32 +36,37 @@ const calculateUpgradeCost = (level) => {
   return cost;
 };
 
-// --- COMPONENT STAT CARD ĐƯỢC THIẾT KẾ LẠI HOÀN TOÀN ---
+// --- COMPONENT STAT CARD VỚI HIỆU ỨNG VIỀN CHUYỂN ĐỘNG KHI HOVER ---
 const StatCard = ({ stat, onUpgrade }) => {
   const { id, name, level, icon, baseValue, upgradeBonus, color } = stat;
   const totalValue = baseValue + level * upgradeBonus;
   const upgradeCost = calculateUpgradeCost(level);
 
   return (
-    <div className="relative group w-28 sm:w-32 md:w-36">
-      {/* Lớp viền phát sáng */}
-      <div className={`absolute -inset-0.5 bg-gradient-to-r ${color} rounded-xl blur opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt`}></div>
-      {/* Thân card */}
-      <div className="relative bg-slate-900/80 backdrop-blur-sm border border-slate-700 rounded-xl p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white">
-        <div className={`w-10 h-10 ${id === 'hp' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
-        <div className="flex-grow flex flex-col items-center gap-1">
-          <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-          <p className="text-2xl font-black text-shadow-cyan">+{totalValue.toLocaleString()}</p>
-          <p className="text-xs text-slate-400">Level {level}</p>
+    // Div cha này sẽ tạo ra viền gradient. Nó có padding nhỏ và nền gradient.
+    // Animation viền sẽ được kích hoạt khi hover lên group này.
+    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px 
+                    transition-all duration-300 
+                    hover:shadow-lg hover:shadow-cyan-500/10`}>
+        {/* Lớp nền cho animation viền */}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
+        
+        {/* Div con này là nội dung của card. Nó có màu nền riêng để che đi gradient. */}
+        <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
+            <div className={`w-10 h-10 ${id === 'hp' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
+            <div className="flex-grow flex flex-col items-center gap-1">
+            <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
+            <p className="text-2xl font-black text-shadow-cyan">+{totalValue.toLocaleString()}</p>
+            <p className="text-xs text-slate-400">Level {level}</p>
+            </div>
+            <button
+            onClick={() => onUpgrade(stat.id)}
+            className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-2 flex items-center justify-center gap-2 shadow-lg transition-all duration-200 active:scale-95"
+            >
+            <div className="w-5 h-5 text-yellow-400">{icons.coin}</div>
+            <span className="font-bold text-yellow-300">{upgradeCost.toLocaleString()}</span>
+            </button>
         </div>
-        <button
-          onClick={() => onUpgrade(stat.id)}
-          className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-2 flex items-center justify-center gap-2 shadow-lg transition-all duration-200 active:scale-95"
-        >
-          <div className="w-5 h-5 text-yellow-400">{icons.coin}</div>
-          <span className="font-bold text-yellow-300">{upgradeCost.toLocaleString()}</span>
-        </button>
-      </div>
     </div>
   );
 };
@@ -112,14 +117,16 @@ export default function App() {
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
           
-          /* Hiệu ứng Tilt cho card */
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
+          /* --- HIỆU ỨNG VIỀN GRADIENT CHUYỂN ĐỘNG --- */
+          @keyframes animate-gradient-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
           }
-          @keyframes tilt {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
+          
+          .animate-border-flow {
+            background-size: 400% 400%;
+            animation: animate-gradient-border 3s linear infinite;
           }
 
           /* Hiệu ứng thở cho hero */
@@ -174,7 +181,7 @@ export default function App() {
 
           <h1 className="text-4xl sm:text-5xl text-center text-shadow my-2">NÂNG CẤP CHỈ SỐ</h1>
 
-          {/* --- HERO GRAPHIC MỚI --- */}
+          {/* --- HERO GRAPHIC --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -199,7 +206,7 @@ export default function App() {
             </svg>
           </div>
 
-          {/* --- THANH TIẾN TRÌNH "SOULFORGE" MỚI --- */}
+          {/* --- THANH TIẾN TRÌNH "SOULFORGE" --- */}
           <div className="w-full px-2 mt-2 mb-8">
             <div className="relative w-full h-10 flex items-center justify-center">
               {/* Thanh nền */}
