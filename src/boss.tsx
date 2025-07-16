@@ -10,7 +10,6 @@ const PLAYER_INITIAL_STATS = {
   def: 5,
 };
 
-// Tên của Boss đã được cập nhật
 const BOSS_INITIAL_STATS = {
   maxHp: 300,
   hp: 300,
@@ -121,7 +120,6 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
             ✕
           </button>
           <div className="p-4 border-b border-slate-700">
-            {/* [CẬP NHẬT] Thay đổi tiêu đề của modal log */}
             <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3>
           </div>
           <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
@@ -337,7 +335,6 @@ export default function BossBattle() {
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
                   <div className="w-40 h-40 md:w-56 md:h-56">
-                      {/* [CẬP NHẬT] Thay đổi URL hình ảnh của Boss */}
                       <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
@@ -345,12 +342,17 @@ export default function BossBattle() {
             </div>
 
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+                {/* [CẬP NHẬT] Nút "Fight" đã được thiết kế lại */}
                 {battleState === 'idle' && (
                 <button
                     onClick={startGame}
-                    className="px-10 py-4 bg-gradient-to-r from-red-600 via-purple-600 to-red-600 bg-size-200 bg-pos-0 hover:bg-pos-100 rounded-lg font-bold text-xl transition-all duration-300 shadow-lg border-2 border-transparent hover:border-white/50 active:scale-95 text-shadow"
+                    className="px-8 py-3 bg-gradient-to-r from-red-600 via-purple-700 to-red-600 bg-size-200 bg-pos-0 hover:bg-pos-100 rounded-lg font-bold text-lg tracking-wider uppercase
+                               transition-all duration-300
+                               border-2 border-red-500/40 hover:border-red-400
+                               shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]
+                               active:scale-95 text-shadow"
                 >
-                    BẮT ĐẦU CHIẾN ĐẤU
+                    Fight
                 </button>
                 )}
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
