@@ -25,13 +25,6 @@ const icons = {
       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png" 
       alt="DEF Icon" 
     />
-  ),
-  boost: (
-    <img 
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000219c61f77d5434ce861ab4e3.png" 
-      alt="Boost Rate Icon" 
-      className="w-full h-full"
-    />
   )
 };
 
@@ -63,17 +56,17 @@ const calculateTotalStatValue = (currentLevel, baseBonus) => {
 };
 
 const formatNumber = (num) => {
-  if (num < 1000) return Math.floor(num).toString();
+  if (num < 1000) return num.toString();
   if (num < 1000000) {
       const thousands = num / 1000;
-      return `${thousands % 1 === 0 ? Math.floor(thousands) : thousands.toFixed(1)}K`;
+      return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`;
   }
   if (num < 1000000000) {
       const millions = num / 1000000;
-      return `${millions % 1 === 0 ? Math.floor(millions) : millions.toFixed(1)}M`;
+      return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`;
   }
   const billions = num / 1000000000;
-  return `${billions % 1 === 0 ? Math.floor(billions) : billions.toFixed(1)}B`;
+  return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`;
 };
 
 
@@ -117,8 +110,6 @@ export default function App() {
     { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
-  // --- STATE MỚI: Quản lý trạng thái kích hoạt của Boost ---
-  const [isBoostActive, setIsBoostActive] = useState(true);
 
   const handleUpgrade = (statId) => {
     const statIndex = stats.findIndex(s => s.id === statId);
@@ -138,41 +129,25 @@ export default function App() {
     }
   };
 
-  // --- HÀM MỚI: Bật/tắt Boost Rate ---
-  const handleToggleBoost = () => {
-    setIsBoostActive(prev => !prev);
-  };
-
-  // --- TÍNH TOÁN CÁC CHỈ SỐ BAO GỒM CẢ BOOST RATE ---
+  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
+  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
+  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
+  
   const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
   const maxProgress = 50;
   const prestigeLevel = Math.floor(totalLevels / maxProgress);
   const currentProgress = totalLevels % maxProgress;
   const progressPercent = (currentProgress / maxProgress) * 100;
-  
-  const stage = prestigeLevel + 1;
-  const boostRate = stage * 30 * 0.001; // Stage * 30 * 0.1%
-
-  const baseTotalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
-  const baseTotalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
-  const baseTotalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
-
-  // --- ÁP DỤNG BOOST RATE DỰA TRÊN TRẠNG THÁI isBoostActive ---
-  const boostMultiplier = isBoostActive ? 1 + boostRate : 1;
-  const totalHp = baseTotalHp * boostMultiplier;
-  const totalAtk = baseTotalAtk * boostMultiplier;
-  const totalDef = baseTotalDef * boostMultiplier;
-
 
   return (
     <>
+      {/* --- CSS ĐÃ CẬP NHẬT HIỆU ỨNG PHÁT SÁNG --- */}
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
           .font-lilita { font-family: 'Lilita One', cursive; }
           .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
-          .text-shadow-yellow { filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.7)); }
           
           @keyframes animate-gradient-border {
             0% { background-position: 0% 50%; }
@@ -183,6 +158,8 @@ export default function App() {
             background-size: 400% 400%;
             animation: animate-gradient-border 3s linear infinite;
           }
+
+          /* Hiệu ứng thở cho hero (ĐÃ ĐỔI SANG MÀU TRẮNG) */
           .animate-breathing {
             animation: breathing 5s ease-in-out infinite;
           }
@@ -190,6 +167,8 @@ export default function App() {
             0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); }
             50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.7));}
           }
+
+          /* Vignette & Glow Background (ĐÃ ĐỔI SANG MÀU TRẮNG) */
           .main-bg::before, .main-bg::after {
             content: '';
             position: absolute;
@@ -229,6 +208,7 @@ export default function App() {
               </div>
           </header>
 
+          {/* --- HERO GRAPHIC ĐÃ ĐƯỢC THAY THẾ --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <img 
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
@@ -237,36 +217,12 @@ export default function App() {
             />
           </div>
 
-          {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG (đã được thiết kế lại) --- */}
+          {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG --- */}
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6">{icons.heart}</div>
               <span className="text-lg font-bold">{formatNumber(totalHp)}</span>
             </div>
-
-            {/* --- NÚT BẤM KÍCH HOẠT BOOST RATE --- */}
-            <div className="relative group">
-              <button
-                onClick={handleToggleBoost}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isBoostActive
-                    ? 'bg-yellow-400/20 border-2 border-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
-                    : 'bg-slate-700 border-2 border-slate-600'
-                }`}
-              >
-                <div className={`w-6 h-6 transition-all duration-300 ${isBoostActive ? 'text-shadow-yellow' : 'opacity-40'}`}>
-                  {icons.boost}
-                </div>
-              </button>
-              {/* Tooltip hiển thị khi hover */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-                              invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all
-                              bg-slate-800 text-white text-xs font-bold rounded-md py-1 px-3 shadow-lg whitespace-nowrap">
-                Stage Boost: +{(boostRate * 100).toFixed(1)}%
-                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
-              </div>
-            </div>
-
             <div className="flex items-center gap-2">
               <div className="w-6 h-6">{icons.sword}</div>
               <span className="text-lg font-bold">{formatNumber(totalAtk)}</span>
@@ -280,7 +236,7 @@ export default function App() {
           {/* --- THANH TIẾN TRÌNH --- */}
           <div className="w-full px-2 mb-8">
             <div className="flex justify-between items-baseline mb-2 px-1">
-              <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {stage}</span>
+              <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
               <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
             </div>
             <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
