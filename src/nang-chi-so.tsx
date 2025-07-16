@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 
-// --- ICONS ĐƯỢC CẬP NHẬT ---
+// --- ICONS ĐƯỢC CẬP NHẬT (ICON COIN ĐÃ THAY ĐỔI) ---
 // Sử dụng "currentColor" để dễ dàng thay đổi màu sắc bằng Tailwind's text-color classes
 const icons = {
   coin: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="8"></circle>
-      <path d="M12 18V6"></path>
-      <path d="M16 14c-2 0-3-1-3-3s1-3 3-3"></path>
-    </svg>
+    // Thay thế SVG bằng thẻ <img> với URL được cung cấp
+    <img 
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" 
+      alt="Gold Coin Icon" 
+    />
   ),
   heart: (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
@@ -86,7 +86,7 @@ const StatCard = ({ stat, onUpgrade }) => {
                 className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95"
             >
                 {/* Icon được đặt trong div để kiểm soát kích thước và căn chỉnh tốt hơn */}
-                <div className="w-5 h-5 flex-shrink-0 text-yellow-400">{icons.coin}</div>
+                <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
                 {/* Giảm kích thước font và thay đổi gap để vừa vặn hơn */}
                 <span className="text-base font-bold text-yellow-300">{formattedCost}</span>
             </button>
@@ -115,8 +115,6 @@ export default function App() {
 
     if (gold >= upgradeCost) {
       setGold(prevGold => prevGold - upgradeCost);
-      // Giả sử ta muốn test số tiền lớn, hãy nâng cấp thử level 17
-      // const newLevel = statToUpgrade.level === 0 ? 17 : statToUpgrade.level + 1;
       const newStats = [...stats];
       newStats[statIndex] = { ...newStats[statIndex], level: newStats[statIndex].level + 1 };
       setStats(newStats);
@@ -200,7 +198,7 @@ export default function App() {
           
           <header className="w-full flex justify-end mb-4">
               <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg py-2 px-4 flex items-center gap-2 shadow-lg">
-                  <div className="w-6 h-6 text-yellow-400">{icons.coin}</div>
+                  <div className="w-6 h-6">{icons.coin}</div>
                   <span className="text-xl text-yellow-300 text-shadow-sm">{gold.toLocaleString()}</span>
               </div>
           </header>
@@ -234,9 +232,9 @@ export default function App() {
 
           {/* --- THANH TIẾN TRÌNH (ĐÃ ĐƯỢC CẬP NHẬT) --- */}
           <div className="w-full px-2 mt-2 mb-8">
-            {/* Tiêu đề cho thanh tiến trình */}
+            {/* Tiêu đề cho thanh tiến trình (MÀU CHỮ STAGE ĐÃ THAY ĐỔI) */}
             <div className="flex justify-between items-baseline mb-2 px-1">
-              <span className="text-md font-bold text-cyan-300 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
+              <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
               <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
             </div>
 
