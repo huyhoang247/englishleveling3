@@ -128,7 +128,7 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
                 {entry}
               </p>
             )) : (
-              <p className="text-slate-400 text-center italic">Chưa có hoạt động nào.</p>
+              <p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>
             )}
           </div>
         </div>
@@ -141,6 +141,8 @@ export default function BossBattle() {
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
   const [bossStats, setBossStats] = useState(BOSS_INITIAL_STATS);
   const [combatLog, setCombatLog] = useState<string[]>([]);
+  // [THÊM MỚI] State để lưu lịch sử trận đấu trước
+  const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
   const [turnCounter, setTurnCounter] = useState(0);
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
@@ -192,6 +194,8 @@ export default function BossBattle() {
 
   const runBattleTurn = () => {
     const currentTurn = turnCounter + 1;
+    setTurnCounter(currentTurn);
+
     const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
     const newBossHp = bossStats.hp - playerDmg;
     addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, currentTurn);
@@ -225,7 +229,6 @@ export default function BossBattle() {
         setPlayerStats(prev => ({ ...prev, hp: newPlayerHp }));
       }
     }, 400);
-    setTurnCounter(prev => prev + 1);
   };
 
   const endGame = (result: 'win' | 'lose') => {
@@ -234,10 +237,11 @@ export default function BossBattle() {
     setGameOver(result);
     if (result === 'win') {
       const coinsEarned = 100 + Math.floor(Math.random() * 51);
-      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, turnCounter + 1);
+      // Cập nhật state bất đồng bộ, dùng callback để đảm bảo log được thêm vào sau khi state đã cập nhật
+      setCombatLog(prevLog => [`[Lượt ${turnCounter + 1}] ${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, ...prevLog]);
       setPlayerCoins(prevCoins => prevCoins + coinsEarned);
     } else {
-      addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter + 1);
+      setCombatLog(prevLog => [`[Lượt ${turnCounter + 1}] Bạn đã gục ngã... THẤT BẠI!`, ...prevLog]);
     }
   };
 
@@ -249,6 +253,9 @@ export default function BossBattle() {
 
   const resetGame = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    // [CẬP NHẬT] Lưu log của trận vừa xong vào previousCombatLog
+    setPreviousCombatLog(combatLog);
+
     setPlayerStats(PLAYER_INITIAL_STATS);
     setBossStats(BOSS_INITIAL_STATS);
     setCombatLog([]);
@@ -261,9 +268,55 @@ export default function BossBattle() {
     setTimeout(() => addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
+  // [THÊM MỚI] Hàm để bỏ qua trận đấu
+  const skipBattle = () => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+
+    let tempPlayerHp = playerStats.hp;
+    let tempBossHp = bossStats.hp;
+    let tempTurn = turnCounter;
+    let tempCombatLog = [...combatLog];
+    let winner: 'win' | 'lose' | null = null;
+
+    while (winner === null) {
+        tempTurn++;
+        // Player's turn
+        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
+        tempBossHp -= playerDmg;
+        tempCombatLog.unshift(`[Lượt ${tempTurn}] Anh Hùng tấn công, gây ${playerDmg} sát thương.`);
+        if (tempBossHp <= 0) {
+            winner = 'win';
+            break;
+        }
+
+        // Boss's turn
+        let bossDmg;
+        if (tempTurn % 3 === 0) {
+            bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
+            tempCombatLog.unshift(`[Lượt ${tempTurn}] ${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`);
+        } else {
+            bossDmg = calculateDamage(bossStats.atk, playerStats.def);
+            tempCombatLog.unshift(`[Lượt ${tempTurn}] ${bossStats.name} phản công, gây ${bossDmg} sát thương.`);
+        }
+        tempPlayerHp -= bossDmg;
+        if (tempPlayerHp <= 0) {
+            winner = 'lose';
+            break;
+        }
+    }
+
+    setPlayerStats(prev => ({ ...prev, hp: Math.max(0, tempPlayerHp) }));
+    setBossStats(prev => ({ ...prev, hp: Math.max(0, tempBossHp) }));
+    setCombatLog(tempCombatLog);
+    setTurnCounter(tempTurn);
+    endGame(winner);
+  }
+
+
   return (
     <>
       <style>{`
+        /* ... CSS không thay đổi ... */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .font-sans { font-family: sans-serif; }
@@ -273,8 +326,6 @@ export default function BossBattle() {
         .animate-float-up { animation: float-up 1.5s ease-out forwards; }
         @keyframes screen-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
-        .animate-breathing { animation: breathing 5s ease-in-out infinite; }
-        @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -286,31 +337,13 @@ export default function BossBattle() {
         .scrollbar-thin::-webkit-scrollbar { width: 8px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; }
-        
-        /* CSS cho hiệu ứng shine trên nút */
-        .btn-shine::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 75%;
-          height: 100%;
-          background: linear-gradient(
-            to right,
-            transparent 0%,
-            rgba(255, 255, 255, 0.25) 50%,
-            transparent 100%
-          );
-          transform: skewX(-25deg);
-          transition: left 0.6s ease;
-        }
-        .btn-shine:hover::before {
-          left: 125%;
-        }
+        .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; }
+        .btn-shine:hover::before { left: 125%; }
       `}</style>
 
+      {/* [CẬP NHẬT] Modal log giờ sẽ hiển thị log của trận đấu trước đó */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
-      {showLogModal && <LogModal log={combatLog} onClose={() => setShowLogModal(false)} />}
+      {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
@@ -328,19 +361,32 @@ export default function BossBattle() {
 
         <main className={`w-full h-full flex flex-col justify-center items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             
-            <div className="w-full flex justify-center items-center gap-4 mb-4">
+            {/* [CẬP NHẬT] Hiển thị nút "View Log" hoặc "Skip Battle" tùy theo trạng thái */}
+            <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
                 <button
                     onClick={() => setShowStats(true)}
                     className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
                 >
                     View Stats
                 </button>
-                <button
-                    onClick={() => setShowLogModal(true)}
-                    className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
-                >
-                    View Log
-                </button>
+
+                {battleState === 'idle' && (
+                  <button
+                      onClick={() => setShowLogModal(true)}
+                      className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
+                  >
+                      View Log
+                  </button>
+                )}
+
+                {battleState === 'fighting' && (
+                  <button
+                      onClick={skipBattle}
+                      className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300"
+                  >
+                      Skip Battle
+                  </button>
+                )}
             </div>
 
             {damages.map(d => (
@@ -372,7 +418,6 @@ export default function BossBattle() {
                 </button>
                 )}
 
-                {/* [CẬP NHẬT] Khu vực log chỉ hiển thị khi trận đấu đang diễn ra hoặc đã kết thúc */}
                 {battleState !== 'idle' && (
                   <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                       {combatLog.map((entry, index) => (
