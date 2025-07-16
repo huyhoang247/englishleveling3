@@ -263,7 +263,6 @@ export default function BossBattle() {
 
   return (
     <>
-      {/* [CẬP NHẬT] Thêm class CSS cho hiệu ứng "shine" của nút */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
@@ -349,7 +348,6 @@ export default function BossBattle() {
             ))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                {/* Boss Panel */}
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
                   <div className="w-40 h-40 md:w-56 md:h-56">
@@ -360,7 +358,6 @@ export default function BossBattle() {
             </div>
 
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                {/* [CẬP NHẬT] Nút "Fight" được thiết kế lại hoàn toàn */}
                 {battleState === 'idle' && (
                 <button
                     onClick={startGame}
@@ -374,7 +371,8 @@ export default function BossBattle() {
                     Fight
                 </button>
                 )}
-                <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
+                {/* [CẬP NHẬT] Thêm class `font-sans` để sử dụng font chữ dễ đọc cho tiếng Việt */}
+                <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                     {combatLog.map((entry, index) => (
                         <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
                         {entry}
@@ -390,7 +388,7 @@ export default function BossBattle() {
                 >
                     {gameOver === 'win' ? "CHIẾN THẮNG!" : "THẤT BẠI"}
                 </h2>
-                <p className="text-xl mb-8 text-slate-200 text-shadow-sm">
+                <p className="text-xl mb-8 text-slate-200 text-shadow-sm font-sans">
                     {gameOver === 'win' ? "Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!" : "Thế giới chìm trong bóng tối vĩnh hằng..."}
                 </p>
                 <button
