@@ -138,7 +138,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-// --- REDESIGNED CHILD COMPONENT: SpinningWheelGrid ---
+// --- REFINED CHILD COMPONENT: SpinningWheelGrid ---
 interface SpinningWheelGridProps {
   items: Item[];
   itemPositionsOnWheel: { row: number; col: number }[];
@@ -171,7 +171,7 @@ const SpinningWheelGrid = React.memo(({
     <div className="grid grid-cols-4 gap-3 p-3 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
       {grid.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
-          // --- REDESIGNED Center Piece ---
+          // Center Piece
           if (rowIndex === 1 && colIndex === 1) {
             return (
               <div
@@ -205,13 +205,13 @@ const SpinningWheelGrid = React.memo(({
               <div
                 key={`item-${rowIndex}-${colIndex}`}
                 style={{ '--rarity-color': rarityColor } as React.CSSProperties}
-                className={`item-cell-shape aspect-square p-0.5 bg-gradient-to-br from-slate-700/50 to-slate-900/50 shadow-lg relative transition-all duration-200
+                className={`group item-cell-shape aspect-square p-0.5 bg-gradient-to-br from-slate-700/50 to-slate-900/50 shadow-lg relative transition-all duration-200
                   ${isSelectedDuringSpin ? `scale-110 z-20 shadow-2xl ${rarityGlow} animate-pulse-bright` : ''}
                   ${isLandedOn ? 'scale-110 z-30' : 'hover:scale-105 hover:z-20'}
                 `}
               >
                 <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center p-1 relative overflow-hidden">
-                    {/* --- Landed Effect --- */}
+                    {/* Landed Effect */}
                     {isLandedOn && (
                        <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div>
                     )}
@@ -219,7 +219,7 @@ const SpinningWheelGrid = React.memo(({
                        <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div>
                     )}
 
-                    {/* --- Content --- */}
+                    {/* Content */}
                     <div className="relative z-10 flex flex-col items-center justify-center h-full">
                         {typeof item.icon === 'string' ? (
                           <img src={item.icon} alt={item.name} className="w-8 h-8 md:w-9 md:h-9 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
@@ -239,9 +239,14 @@ const SpinningWheelGrid = React.memo(({
                         )}
                     </div>
 
-                    {/* --- Rarity Border & Shine --- */}
+                    {/* Rarity Border */}
                     <div className="absolute inset-0 item-cell-shape border-2 border-transparent" style={{borderColor: isSelectedDuringSpin || isLandedOn ? rarityColor : 'transparent'}}></div>
-                    <div className="shine-effect absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-45"></div>
+                    
+                    {/* Hover Aura */}
+                    <div 
+                      className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}
+                    ></div>
                 </div>
               </div>
             );
@@ -559,65 +564,47 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <style jsx global>{`
         body { font-family: 'Inter', sans-serif; }
-
         .bg-grid-pattern {
           background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
           background-size: 2rem 2rem;
         }
-
         .item-cell-shape {
           clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
         }
-
         .shadow-inner-strong {
             box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5);
         }
-
         .bg-radial-glow {
             background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%);
         }
-
         @keyframes glow-pulse {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.1); opacity: 0.8; }
         }
         .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
-        
         @keyframes bounce-subtle {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-5px); }
         }
         .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
-
         @keyframes pulse-bright {
           0%, 100% { box-shadow: 0 0 20px 5px var(--rarity-color); }
           50% { box-shadow: 0 0 35px 10px var(--rarity-color); }
         }
         .animate-pulse-bright { animation: pulse-bright 1s ease-in-out infinite; }
-
         @keyframes landed-flash {
             0% { transform: scale(0); opacity: 0.7; }
             80% { transform: scale(1.5); opacity: 0.2; }
             100% { transform: scale(2); opacity: 0; }
         }
         .animate-landed-flash { animation: landed-flash 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        
         @keyframes jackpot-celebrate {
           0% { box-shadow: inset 0 0 0 0px var(--jackpot-color); }
           25% { box-shadow: inset 0 0 0 4px var(--jackpot-color), 0 0 20px 5px var(--jackpot-color); }
           100% { box-shadow: inset 0 0 0 0px var(--jackpot-color); }
         }
         .animate-jackpot-celebrate { animation: jackpot-celebrate 0.8s ease-in-out; }
-
-        @keyframes shine-anim {
-            0% { transform: translateX(-150%) skewX(-45deg); }
-            100% { transform: translateX(150%) skewX(-45deg); }
-        }
-        .shine-effect {
-          animation: shine-anim 3s ease-in-out infinite;
-          animation-delay: 1.5s;
-        }
-
+        
         /* Other required animations */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
@@ -627,8 +614,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         .animate-float { animation: float 2s ease-in-out infinite; }
         @keyframes bounce-once { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
         .animate-bounce-once { animation: bounce-once 0.8s ease-in-out; }
-
-        /* Scrollbar styles */
         .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #a855f7 #3b0764; }
         .scrollbar-thin::-webkit-scrollbar { height: 8px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: rgba(59, 7, 100, 0.5); border-radius: 10px; }
