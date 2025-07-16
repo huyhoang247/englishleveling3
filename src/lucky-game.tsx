@@ -211,6 +211,9 @@ const SpinningWheelGrid = React.memo(({
                         {item.value > 0 && (
                             <span className="text-xs font-bold text-amber-300">{item.name}</span>
                         )}
+                        {item.rarity === 'jackpot' && (
+                            <span className="text-xs font-black uppercase text-yellow-300">JACKPOT</span>
+                        )}
                     </div>
 
                     <div className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}></div>
