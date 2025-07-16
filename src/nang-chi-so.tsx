@@ -206,28 +206,28 @@ export default function App() {
             </svg>
           </div>
 
-          {/* --- THANH TIẾN TRÌNH "SOULFORGE" --- */}
+          {/* --- THANH TIẾN TRÌNH "SOULFORGE" (ĐÃ ĐƯỢC THIẾT KẾ LẠI) --- */}
           <div className="w-full px-2 mt-2 mb-8">
-            <div className="relative w-full h-10 flex items-center justify-center">
-              {/* Thanh nền */}
-              <div className="absolute w-full h-3 bg-slate-900/70 border-y-2 border-slate-700"></div>
-              {/* Viên ngọc Prestige */}
-              <div className="absolute z-20 w-16 h-16 bg-slate-900 border-2 border-cyan-400 rounded-full flex flex-col items-center justify-center shadow-lg" style={{ boxShadow: '0 0 15px rgba(0, 246, 255, 0.5)' }}>
-                  <span className="text-xs text-cyan-300 -mt-1">Prestige</span>
-                  <span className="text-2xl font-bold text-white">{prestigeLevel}</span>
-              </div>
-              {/* Thanh tiến trình */}
-              <div className="absolute w-full h-3 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 rounded-r-full shadow-[0_0_10px_rgba(0,246,255,0.7)] transition-all duration-500 ease-out"
+            {/* Tiêu đề & Cấp độ tổng */}
+            <div className="flex justify-between items-baseline mb-2 px-1">
+              <h3 className="text-lg text-shadow-sm text-cyan-300 tracking-wider">SOULFORGE</h3>
+              <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
+            </div>
+
+            {/* Thanh tiến trình được thiết kế lại */}
+            <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
+                {/* Lớp nền lấp đầy */}
+                <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_12px_rgba(0,246,255,0.6)] transition-all duration-500 ease-out"
                     style={{ width: `${progressPercent}%` }}
-                  ></div>
-              </div>
-              {/* Text tiến trình */}
-              <div className="absolute z-10 bottom-full mb-1 w-full flex justify-between px-4 text-sm text-slate-400">
-                  <span>Lv. {totalLevels}</span>
-                  <span>{currentProgress} / {maxProgress}</span>
-              </div>
+                >
+                </div>
+
+                {/* Lớp văn bản */}
+                <div className="absolute inset-0 flex justify-between items-center px-4 text-sm text-white text-shadow-sm font-bold">
+                    <span>Prestige {prestigeLevel}</span>
+                    <span>{currentProgress}<span className="text-slate-300">/{maxProgress}</span></span>
+                </div>
             </div>
           </div>
 
