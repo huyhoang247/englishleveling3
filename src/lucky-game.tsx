@@ -153,7 +153,7 @@ const SpinningWheelGrid = React.memo(({
   hasSpun,
   finalLandedItemIndex,
 }: SpinningWheelGridProps) => {
-  const grid: ({ item: Item; isWheelItem: boolean } | null)[][] = Array(5).fill(null).map(() => Array(5).fill(null));
+  const grid: ({ item: Item; isWheelItem: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
 
   itemPositionsOnWheel.forEach((pos, indexOnWheel) => {
     if (indexOnWheel < items.length && items[indexOnWheel]) {
@@ -165,24 +165,22 @@ const SpinningWheelGrid = React.memo(({
   });
 
   return (
-    <div className="grid grid-cols-5 gap-3 p-4 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
+    <div className="grid grid-cols-4 gap-3 p-4 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
       {grid.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
-          // Center Piece (3x3)
-          if (rowIndex >= 1 && rowIndex <= 3 && colIndex >= 1 && colIndex <= 3) {
-            if (rowIndex === 1 && colIndex === 1) {
-              return (
-                <div key={`chest-pedestal`} className="col-span-3 row-span-3 flex items-center justify-center rounded-full bg-slate-800 relative shadow-inner-strong">
-                  <div className="absolute inset-0 bg-radial-glow animate-glow-pulse z-0"></div>
-                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" alt="Treasure Chest" className={`w-28 h-28 transform transition-transform duration-500 z-10 drop-shadow-2xl ${isSpinning ? 'animate-bounce-subtle' : ''}`} onError={(e) => { e.currentTarget.src = 'https://placehold.co/112x112/cccccc/000000?text=Lỗi'; }}/>
-                </div>
-              );
-            }
-            // The other cells in the 3x3 block are covered by the span, so return null.
+          // Center Piece
+          if (rowIndex === 1 && colIndex === 1) {
+            return (
+              <div key={`chest-pedestal`} className="col-span-2 row-span-2 flex items-center justify-center rounded-full bg-slate-800 relative shadow-inner-strong">
+                <div className="absolute inset-0 bg-radial-glow animate-glow-pulse z-0"></div>
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" alt="Treasure Chest" className={`w-28 h-28 transform transition-transform duration-500 z-10 drop-shadow-2xl ${isSpinning ? 'animate-bounce-subtle' : ''}`} onError={(e) => { e.currentTarget.src = 'https://placehold.co/112x112/cccccc/000000?text=Lỗi'; }}/>
+              </div>
+            );
+          }
+          if ((rowIndex === 1 && colIndex === 2) || (rowIndex === 2 && colIndex === 1) || (rowIndex === 2 && colIndex === 2)) {
             return null;
           }
 
-          // Outer Wheel Items
           if (cell && cell.isWheelItem) {
             const item = cell.item;
             const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
@@ -201,17 +199,17 @@ const SpinningWheelGrid = React.memo(({
                     {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
                     <div className="relative z-10 flex flex-col items-center justify-center h-full">
                         {typeof item.icon === 'string' ? (
-                          <img src={item.icon} alt={item.name} className="w-10 h-10 md:w-12 md:h-12 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/48x48/cccccc/000000?text=Lỗi'; }} />
+                          <img src={item.icon} alt={item.name} className="w-12 h-12 md:w-14 md:h-14 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
                         ) : (
-                          <item.icon className={`w-10 h-10 md:w-12 md:h-12 ${item.color} drop-shadow-lg transition-transform`} />
+                          <item.icon className={`w-12 h-12 md:w-14 md:h-14 ${item.color} drop-shadow-lg transition-transform`} />
                         )}
                         {item.value > 0 && (
-                            <div className="flex items-center mt-2 bg-black/50 rounded-full px-2 py-0.5">
+                            <div className="flex items-center mt-2 bg-black/50 rounded-full px-2.5 py-1">
                                 <span className="text-sm font-bold text-yellow-300">{item.value.toLocaleString()}</span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1" />
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1.5" />
                             </div>
                         )}
-                        {item.rarity === 'jackpot' && ( <span className="mt-1 text-xs font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse"> Jackpot </span> )}
+                        {item.rarity === 'jackpot' && ( <span className="mt-1.5 text-sm font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse"> Jackpot </span> )}
                     </div>
                     <div className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}></div>
                 </div>
@@ -241,31 +239,25 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
   const items: Item[] = useMemo(() => [
-    // 16 items for the 5x5 grid
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150 Xu', value: 150, rarity: 'common', color: '' },
     { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500 Xu', value: 500, rarity: 'rare', color: '' },
-    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
     { icon: GemIcon, name: 'Ngọc quý', value: 0, rarity: 'rare', color: 'text-blue-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '200 Xu', value: 200, rarity: 'uncommon', color: '' },
-    { icon: StarIcon, name: 'Sao may mắn', value: 0, rarity: 'epic', color: 'text-purple-400' },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300 Xu', value: 300, rarity: 'uncommon', color: '' },
     { icon: ShieldIcon, name: 'Khiên bảo vệ', value: 0, rarity: 'rare', color: 'text-green-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: '' },
+    { icon: StarIcon, name: 'Sao may mắn', value: 0, rarity: 'epic', color: 'text-purple-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500 Xu', value: 500, rarity: 'rare', color: '' },
     { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '75 Xu', value: 75, rarity: 'common', color: '' },
+    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '' },
     { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400' },
-    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
-    { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: '' },
   ], []);
 
   const itemPositionsOnWheel = useMemo(() => [
-    // Positions for a 5x5 grid (16 items)
-    { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 }, { row: 0, col: 4 },
-    { row: 1, col: 4 }, { row: 2, col: 4 }, { row: 3, col: 4 },
-    { row: 4, col: 4 }, { row: 4, col: 3 }, { row: 4, col: 2 }, { row: 4, col: 1 }, { row: 4, col: 0 },
-    { row: 3, col: 0 }, { row: 2, col: 0 }, { row: 1, col: 0 }
+    { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
+    { row: 1, col: 3 }, { row: 2, col: 3 },
+    { row: 3, col: 3 }, { row: 3, col: 2 }, { row: 3, col: 1 }, { row: 3, col: 0 },
+    { row: 2, col: 0 }, { row: 1, col: 0 }
   ], []);
 
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
@@ -352,7 +344,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
       </header>
 
-      <div className="max-w-xl w-full px-4 pt-6">
+      <div className="max-w-lg w-full px-4 pt-6">
         <div className="text-center mb-6">
           {activeTab === 'spin' && (
             <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg' }`}>
@@ -431,7 +423,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
         }
         .shadow-inner-strong { box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5); }
-        .bg-radial-glow { background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%); }
+        .bg-radial-glow { background: radial-gradient(circle, rgba(79, 70, 229, 0.3) 0%, rgba(15, 23, 42, 0) 70%); }
         @keyframes glow-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
         .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
