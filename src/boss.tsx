@@ -19,7 +19,7 @@ const BOSS_INITIAL_STATS = {
 };
 
 // --- Component Thanh Máu ---
-const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
+const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
   const percentage = Math.max(0, (current / max) * 100);
   return (
     <div className="w-full">
@@ -49,49 +49,45 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
-// --- [MỚI] Component Popup Chỉ Số Tinh Tế ---
-const StatsPopup = ({ stats, isVisible, position }: { stats: { atk: number, def: number }, isVisible: boolean, position: 'left' | 'right' }) => {
-  // Tùy chỉnh vị trí cho di động (phía trên) và desktop (bên cạnh)
-  const positionClasses = position === 'left'
-    ? 'bottom-full mb-2 md:bottom-auto md:mb-0 md:top-1/2 md:-translate-y-1/2 md:right-full md:mr-4'
-    : 'bottom-full mb-2 md:bottom-auto md:mb-0 md:top-1/2 md:-translate-y-1/2 md:left-full md:ml-4';
-
+// --- [MỚI] Component Popup Chỉ Số ---
+const StatsPopup = ({ player, boss }: { player: typeof PLAYER_INITIAL_STATS, boss: typeof BOSS_INITIAL_STATS }) => {
   return (
-    <div className={`
-      absolute w-36 bg-slate-900/80 backdrop-blur-md border border-slate-600/70 rounded-lg p-3
-      shadow-lg shadow-black/30
-      transition-all duration-300 ease-out
-      ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
-      ${positionClasses}
-      z-10 text-shadow-sm
-    `}>
-      <ul className="space-y-1 text-white">
-        <li className="flex justify-between items-center">
-          <span className="text-sm font-semibold text-slate-300">Tấn Công</span>
-          <span className="font-bold text-red-400">{stats.atk}</span>
-        </li>
-        <li className="flex justify-between items-center">
-          <span className="text-sm font-semibold text-slate-300">Phòng Ngự</span>
-          <span className="font-bold text-sky-400">{stats.def}</span>
-        </li>
-      </ul>
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-72 bg-slate-900/70 backdrop-blur-md border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale text-white">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 p-4">
+        {/* Cột Player */}
+        <div className="flex flex-col items-center gap-1">
+          <h3 className="text-lg font-bold text-blue-300 text-shadow-sm">HERO</h3>
+          <p className="text-sm">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
+          <p className="text-sm">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
+        </div>
+        
+        {/* Dải phân cách */}
+        <div className="h-16 w-px bg-slate-600/70"></div>
+
+        {/* Cột Boss */}
+        <div className="flex flex-col items-center gap-1">
+          <h3 className="text-lg font-bold text-red-400 text-shadow-sm">BOSS</h3>
+          <p className="text-sm">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
+          <p className="text-sm">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
+        </div>
+      </div>
     </div>
-  );
-};
+  )
+}
 
 
 // --- Component Chính Của Game ---
 export default function BossBattle() {
-  // --- State và Logic Game (Đã chỉnh sửa) ---
+  // --- State và Logic Game (Không thay đổi) ---
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
   const [bossStats, setBossStats] = useState(BOSS_INITIAL_STATS);
   const [combatLog, setCombatLog] = useState<string[]>([]);
   const [turnCounter, setTurnCounter] = useState(0);
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
+  const [showStats, setShowStats] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
   const [isShaking, setIsShaking] = useState(false);
-  const [hoveredStats, setHoveredStats] = useState<'player' | 'boss' | null>(null); // State mới cho popup
 
   const logContainerRef = useRef<HTMLDivElement>(null);
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -216,6 +212,9 @@ export default function BossBattle() {
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
         .animate-breathing { animation: breathing 5s ease-in-out infinite; }
         @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
+        /* [MỚI] Animation cho popup chỉ số */
+        @keyframes fade-in-scale { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+        .animate-fade-in-scale { animation: fade-in-scale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; }
         .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
         .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); }
@@ -237,54 +236,47 @@ export default function BossBattle() {
           </div>
         </header>
 
-        <main className={`w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+        <main className={`relative w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             {damages.map(d => (
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
 
             <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
-
-            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
-                {/* Player Character (với popup chỉ số) */}
-                <div
-                  className="relative flex flex-col items-center justify-end cursor-pointer"
-                  onMouseEnter={() => setHoveredStats('player')}
-                  onMouseLeave={() => setHoveredStats(null)}
-                >
-                    <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
-                        <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
+            
+            {/* --- [THAY ĐỔI] KHU VỰC ĐẤU TRƯỜNG --- */}
+            {/* Thêm `relative` để làm container cho popup */}
+            <div className="relative w-full max-w-4xl mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end">
+                    {/* Player Character (chỉ hình ảnh) */}
+                    <div className="flex flex-col items-center justify-end">
+                        <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
+                            <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
+                        </div>
+                        {/* Khối chỉ số cũ đã được XÓA */}
                     </div>
-                    <StatsPopup
-                      stats={{ atk: playerStats.atk, def: playerStats.def }}
-                      isVisible={hoveredStats === 'player'}
-                      position="right"
-                    />
-                </div>
-                
-                <div className="hidden md:flex justify-center items-center pb-12">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
+                    
+                    {/* VS Icon */}
+                    <div className="hidden md:flex justify-center items-center pb-12">
+                        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
+                    </div>
+
+                    {/* Boss Panel (đầy đủ thông tin) */}
+                    <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
+                      <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
+                      <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
+                          <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
+                      </div>
+                      <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                      {/* Khối chỉ số cũ đã được XÓA */}
+                    </div>
                 </div>
 
-                {/* Boss Panel (với popup chỉ số) */}
-                <div
-                  className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer"
-                  onMouseEnter={() => setHoveredStats('boss')}
-                  onMouseLeave={() => setHoveredStats(null)}
-                >
-                  <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
-                  <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
-                      <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
-                  </div>
-                  <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                  <StatsPopup
-                    stats={{ atk: bossStats.atk, def: bossStats.def }}
-                    isVisible={hoveredStats === 'boss'}
-                    position="left"
-                  />
-                </div>
+                {/* --- [MỚI] POPUP CHỈ SỐ --- */}
+                {showStats && <StatsPopup player={playerStats} boss={bossStats} />}
             </div>
 
 
+            {/* --- KHU VỰC ĐIỀU KHIỂN VÀ LOG --- */}
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                 {battleState === 'idle' && (
                 <button
@@ -294,7 +286,12 @@ export default function BossBattle() {
                     BẮT ĐẦU CHIẾN ĐẤU
                 </button>
                 )}
-                {/* Nút hiện chỉ số đã được loại bỏ */}
+                <button
+                    onClick={() => setShowStats(!showStats)}
+                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
+                >
+                {showStats ? 'Ẩn Chỉ Số' : 'Hiện Chỉ Số'}
+                </button>
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
                     {combatLog.map((entry, index) => (
                         <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
@@ -304,6 +301,7 @@ export default function BossBattle() {
                 </div>
             </div>
           
+            {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
             {gameOver && (
                 <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
