@@ -1,5 +1,6 @@
-import React, 'react';
-import { useState, useEffect, useRef } from 'react';
+// File: src/components/BossBattle.tsx
+
+import React, { useState, useEffect, useRef } from 'react';
 
 // --- Cấu hình nhân vật và Boss ---
 const PLAYER_INITIAL_STATS = {
@@ -17,8 +18,8 @@ const BOSS_INITIAL_STATS = {
   name: "Quái Vương Hắc Ám",
 };
 
-// --- Component Thanh Máu (Giữ nguyên) ---
-const HealthBar = ({ current, max, colorClass, label }) => {
+// --- Component Thanh Máu ---
+const HealthBar = ({ current, max, colorClass, label }: { current: number, max: number, colorClass: string, label: string }) => {
   const percentage = Math.max(0, (current / max) * 100);
   return (
     <div className="w-full">
@@ -34,8 +35,7 @@ const HealthBar = ({ current, max, colorClass, label }) => {
 };
 
 // --- Component Số Sát Thương Bay Lên ---
-const FloatingDamage = ({ damage, id, isPlayerHit }) => {
-  // isPlayerHit = true -> Sát thương bay lên ở panel người chơi
+const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
   return (
     <div
       key={id}
@@ -47,20 +47,20 @@ const FloatingDamage = ({ damage, id, isPlayerHit }) => {
 };
 
 // --- Component Chính Của Game ---
-export default function App() {
+export default function BossBattle() {
   // --- State của game ---
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
   const [bossStats, setBossStats] = useState(BOSS_INITIAL_STATS);
-  const [combatLog, setCombatLog] = useState([]);
+  const [combatLog, setCombatLog] = useState<string[]>([]);
   const [turnCounter, setTurnCounter] = useState(0);
-  const [gameOver, setGameOver] = useState(null); // null, 'win', 'lose'
-  const [battleState, setBattleState] = useState('idle'); // 'idle', 'fighting', 'finished'
+  const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
+  const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [showStats, setShowStats] = useState(false);
-  const [damages, setDamages] = useState([]); // Lưu trữ các số sát thương nổi
-  const [isShaking, setIsShaking] = useState(false); // Hiệu ứng rung màn hình
+  const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
+  const [isShaking, setIsShaking] = useState(false);
 
-  const logContainerRef = useRef(null);
-  const battleIntervalRef = useRef(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
+  const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- Tự động cuộn nhật ký chiến đấu ---
   useEffect(() => {
@@ -71,101 +71,88 @@ export default function App() {
 
   // --- Khởi tạo game ---
   useEffect(() => {
-    addLog(`Một ${bossStats.name} khổng lồ xuất hiện. Hãy chuẩn bị!`);
+    addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0);
   }, []);
 
   // --- Vòng lặp chiến đấu tự động ---
   useEffect(() => {
     if (battleState === 'fighting') {
-      battleIntervalRef.current = setInterval(runBattleTurn, 800); // Mỗi 0.8 giây một lượt
+      battleIntervalRef.current = setInterval(runBattleTurn, 800);
     }
-    // Dọn dẹp interval khi component unmount hoặc trận đấu kết thúc
-    return () => clearInterval(battleIntervalRef.current);
-  }, [battleState]);
+    return () => {
+      if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    };
+  }, [battleState, playerStats, bossStats, turnCounter]); // Thêm dependencies để đảm bảo interval dùng state mới nhất
 
   // --- Hàm thêm tin nhắn vào nhật ký ---
-  const addLog = (message) => {
-    setCombatLog(prevLog => [`[Lượt ${turnCounter + 1}] ${message}`, ...prevLog]);
+  const addLog = (message: string, turn: number) => {
+    const logEntry = turn > 0 ? `[Lượt ${turn}] ${message}` : message;
+    setCombatLog(prevLog => [logEntry, ...prevLog]);
   };
   
-  // --- Hàm thêm hiệu ứng số sát thương ---
-  const showFloatingDamage = (damage, isPlayerHit) => {
+  const showFloatingDamage = (damage: number, isPlayerHit: boolean) => {
     const id = Date.now() + Math.random();
     setDamages(prev => [...prev, { id, damage, isPlayerHit }]);
-    // Tự động xóa số sau 1.5 giây
     setTimeout(() => {
       setDamages(prev => prev.filter(d => d.id !== id));
     }, 1500);
   };
 
-  // --- Hàm tính sát thương ---
-  const calculateDamage = (attackerAtk, defenderDef) => {
-    const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4); // Sát thương dao động từ 80% - 120%
-    const finalDamage = Math.max(1, Math.floor(baseDamage - defenderDef));
-    return finalDamage;
+  const calculateDamage = (attackerAtk: number, defenderDef: number) => {
+    const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
+    return Math.max(1, Math.floor(baseDamage - defenderDef));
   };
   
-  // --- Xử lý một lượt trong trận đấu ---
   const runBattleTurn = () => {
-    setTurnCounter(prev => prev + 1);
+    // --- Lượt người chơi ---
+    const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
+    const newBossHp = bossStats.hp - playerDmg;
+    addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, turnCounter + 1);
+    showFloatingDamage(playerDmg, false);
     
-    // Sử dụng functional update để đảm bảo luôn lấy state mới nhất trong interval
-    setPlayerStats(currentPlayerStats => {
-      setBossStats(currentBossStats => {
-        // --- Lượt người chơi ---
-        const playerDmg = calculateDamage(currentPlayerStats.atk, currentBossStats.def);
-        const newBossHp = currentBossStats.hp - playerDmg;
-        addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`);
-        showFloatingDamage(playerDmg, false);
+    if (newBossHp <= 0) {
+      setBossStats(prev => ({ ...prev, hp: 0 }));
+      endGame('win');
+      return;
+    }
+    setBossStats(prev => ({ ...prev, hp: newBossHp }));
+    
+    // --- Lượt Boss (được thực hiện ngay sau đó) ---
+    setTimeout(() => {
+      let bossDmg;
+      const currentTurn = turnCounter + 1; // Sử dụng turn hiện tại
+      if (currentTurn % 3 === 0) {
+        bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
+        addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, currentTurn);
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 500);
+      } else {
+        bossDmg = calculateDamage(bossStats.atk, playerStats.def);
+        addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, currentTurn);
+      }
+      
+      showFloatingDamage(bossDmg, true);
+      const newPlayerHp = playerStats.hp - bossDmg;
 
-        if (newBossHp <= 0) {
-          endGame('win');
-          setBossStats({ ...currentBossStats, hp: 0 });
-          return currentPlayerStats; // Dừng xử lý
-        }
-        
-        let newPlayerHp = currentPlayerStats.hp;
-        
-        // --- Lượt Boss ---
-        setTimeout(() => {
-          let bossDmg;
-          // Cứ 3 lượt, Boss sẽ dùng chiêu đặc biệt
-          if ((turnCounter + 1) % 3 === 0) {
-            bossDmg = calculateDamage(currentBossStats.atk * 1.5, currentPlayerStats.def);
-            addLog(`${currentBossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`);
-            setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 500); // Tắt rung sau 0.5s
-          } else {
-            bossDmg = calculateDamage(currentBossStats.atk, currentPlayerStats.def);
-            addLog(`${currentBossStats.name} phản công, gây ${bossDmg} sát thương.`);
-          }
-          
-          showFloatingDamage(bossDmg, true);
-          newPlayerHp = currentPlayerStats.hp - bossDmg;
+      if (newPlayerHp <= 0) {
+        setPlayerStats(prev => ({ ...prev, hp: 0 }));
+        endGame('lose');
+      } else {
+        setPlayerStats(prev => ({ ...prev, hp: newPlayerHp }));
+      }
+    }, 400);
 
-          if (newPlayerHp <= 0) {
-            endGame('lose');
-            setPlayerStats({ ...currentPlayerStats, hp: 0 });
-          } else {
-            // Cập nhật máu của cả hai sau lượt của boss
-            setPlayerStats({ ...currentPlayerStats, hp: newPlayerHp });
-          }
-        }, 400); // Boss ra đòn sau người chơi một chút
-
-        return { ...currentBossStats, hp: newBossHp };
-      });
-      return currentPlayerStats; // Trả về state hiện tại, sẽ được cập nhật sau lượt của boss
-    });
+    setTurnCounter(prev => prev + 1);
   };
 
-  const endGame = (result) => {
-    clearInterval(battleIntervalRef.current);
+  const endGame = (result: 'win' | 'lose') => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setBattleState('finished');
     setGameOver(result);
     if (result === 'win') {
-      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! BẠN ĐÃ CHIẾN THẮNG!`);
+      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! BẠN ĐÃ CHIẾN THẮNG!`, turnCounter + 1);
     } else {
-      addLog("Bạn đã gục ngã... THẤT BẠI!");
+      addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter + 1);
     }
   };
   
@@ -176,19 +163,19 @@ export default function App() {
   };
 
   const resetGame = () => {
-    clearInterval(battleIntervalRef.current);
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setPlayerStats(PLAYER_INITIAL_STATS);
     setBossStats(BOSS_INITIAL_STATS);
     setCombatLog([]);
     setTurnCounter(0);
     setGameOver(null);
     setBattleState('idle');
-    setTimeout(() => addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`), 100);
+    setDamages([]);
+    setTimeout(() => addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
   return (
     <>
-      {/* Thêm keyframes cho animation */}
       <style>{`
         @keyframes float-up {
           0% { transform: translateY(0); opacity: 1; }
@@ -205,16 +192,13 @@ export default function App() {
       `}</style>
       <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-mono">
         <div className={`w-full max-w-4xl mx-auto bg-black bg-opacity-40 rounded-2xl shadow-2xl shadow-purple-500/20 border border-purple-800 p-6 relative ${isShaking ? 'animate-screen-shake' : ''}`}>
-          {/* Nơi hiển thị số sát thương */}
           {damages.map(d => (
             <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
           ))}
 
           <h1 className="text-3xl font-bold text-center mb-6 text-purple-400 tracking-wider">ĐẤU TRƯỜNG TỰ ĐỘNG</h1>
 
-          {/* --- Khu vực hiển thị nhân vật (Trái vs Phải) --- */}
           <div className="grid grid-cols-2 gap-6 mb-6">
-            {/* Panel Người Chơi (Trái) */}
             <div className="bg-gray-800 p-4 rounded-lg border border-blue-500 flex flex-col items-center">
               <h2 className="text-xl font-bold mb-3 text-blue-300">ANH HÙNG</h2>
               <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorClass="bg-green-500" label="HP" />
@@ -226,7 +210,6 @@ export default function App() {
               )}
             </div>
 
-            {/* Panel Boss (Phải) */}
             <div className="bg-gray-800 p-4 rounded-lg border border-red-500 flex flex-col items-center">
               <h2 className="text-xl font-bold mb-3 text-red-300">{bossStats.name.toUpperCase()}</h2>
               <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorClass="bg-red-500" label="HP" />
@@ -239,7 +222,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* --- Khu vực điều khiển trung tâm --- */}
           <div className="mb-6 flex flex-col items-center gap-4">
             {battleState === 'idle' && (
               <button
@@ -257,7 +239,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* --- Nhật ký chiến đấu --- */}
           <div>
             <h3 className="text-lg font-semibold text-center mb-3 text-gray-400">NHẬT KÝ CHIẾN ĐẤU</h3>
             <div ref={logContainerRef} className="h-48 bg-gray-900 bg-opacity-70 p-3 rounded-lg border border-gray-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed">
@@ -269,7 +250,6 @@ export default function App() {
             </div>
           </div>
           
-          {/* --- Màn hình kết thúc game --- */}
           {gameOver && (
             <div className="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-10">
               <h2 className={`text-6xl font-extrabold mb-4 ${gameOver === 'win' ? 'text-yellow-400' : 'text-red-600'}`}>
