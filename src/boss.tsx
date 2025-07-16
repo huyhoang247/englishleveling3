@@ -18,8 +18,8 @@ const BOSS_INITIAL_STATS = {
   name: "Quái Vương Hắc Ám",
 };
 
-// --- Component Thanh Máu (Thiết kế mới) ---
-const HealthBar = ({ current, max, colorClass, label }: { current: number, max: number, colorClass: string, label: string }) => {
+// --- Component Thanh Máu (Sửa lỗi & Cải thiện giao diện) ---
+const HealthBar = ({ current, max, colorClass }: { current: number, max: number, colorClass: string, label: string }) => {
   const percentage = Math.max(0, (current / max) * 100);
 
   const gradientClasses = {
@@ -28,21 +28,21 @@ const HealthBar = ({ current, max, colorClass, label }: { current: number, max: 
   };
 
   return (
-    <div className="w-full">
-      {/* Thanh máu nền */}
-      <div className="w-full bg-gray-800 rounded-full h-6 shadow-inner-strong border-2 border-black/30 relative overflow-hidden">
-        {/* Thanh máu hiện tại */}
+    <div className="w-full mt-1"> {/* Thêm chút khoảng cách với tiêu đề */}
+      <div className="w-full bg-gray-900/70 rounded-full h-7 shadow-inner border-2 border-black/30 relative overflow-hidden">
+        {/* Thanh máu hiện tại (lớp dưới) */}
         <div
           className={`${gradientClasses[colorClass] || colorClass} h-full rounded-full transition-all duration-500 ease-out health-bar-fill`}
           style={{ width: `${percentage}%` }}
         ></div>
-        {/* Text hiển thị trên thanh máu */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        
+        {/* Text hiển thị (lớp trên) - Đã sửa lỗi */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
            <p 
-            className="text-white text-sm font-bold tracking-wider"
-            style={{ textShadow: '1px 1px 2px #000' }}
+            className="text-white text-base font-bold tracking-wider"
+            style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}
            >
-             {label}: {Math.ceil(current)} / {max}
+             {Math.ceil(current)} / {max}
            </p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function BossBattle() {
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     };
-  }, [battleState, playerStats, bossStats, turnCounter]); // Thêm dependencies để đảm bảo interval dùng state mới nhất
+  }, [battleState, playerStats, bossStats, turnCounter]);
 
   // --- Hàm thêm tin nhắn vào nhật ký ---
   const addLog = (message: string, turn: number) => {
@@ -121,14 +121,17 @@ export default function BossBattle() {
   };
   
   const runBattleTurn = () => {
+    const currentTurn = turnCounter + 1;
+
     // --- Lượt người chơi ---
     const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
     const newBossHp = bossStats.hp - playerDmg;
-    addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, turnCounter + 1);
+    addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, currentTurn);
     showFloatingDamage(playerDmg, false);
     
     if (newBossHp <= 0) {
       setBossStats(prev => ({ ...prev, hp: 0 }));
+      setTurnCounter(prev => prev + 1);
       endGame('win');
       return;
     }
@@ -137,7 +140,6 @@ export default function BossBattle() {
     // --- Lượt Boss (được thực hiện ngay sau đó) ---
     setTimeout(() => {
       let bossDmg;
-      const currentTurn = turnCounter + 1; // Sử dụng turn hiện tại
       if (currentTurn % 3 === 0) {
         bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
         addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, currentTurn);
@@ -167,9 +169,9 @@ export default function BossBattle() {
     setBattleState('finished');
     setGameOver(result);
     if (result === 'win') {
-      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! BẠN ĐÃ CHIẾN THẮNG!`, turnCounter + 1);
+      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! BẠN ĐÃ CHIẾN THẮNG!`, turnCounter);
     } else {
-      addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter + 1);
+      addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter);
     }
   };
   
@@ -207,7 +209,6 @@ export default function BossBattle() {
         }
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
 
-        /* CSS MỚI CHO THANH MÁU */
         @keyframes shimmer {
           0% { transform: translateX(-100%) skewX(-25deg); }
           100% { transform: translateX(200%) skewX(-25deg); }
@@ -234,7 +235,7 @@ export default function BossBattle() {
 
           <div className="grid grid-cols-2 gap-6 mb-6">
             <div className="bg-gray-800 p-4 rounded-lg border border-blue-500 flex flex-col items-center">
-              <h2 className="text-xl font-bold mb-3 text-blue-300">ANH HÙNG</h2>
+              <h2 className="text-xl font-bold mb-2 text-blue-300">ANH HÙNG</h2>
               <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorClass="bg-green-500" label="HP" />
               {showStats && (
                  <div className="mt-3 text-sm text-center bg-gray-900 p-2 rounded-md w-full">
@@ -245,7 +246,7 @@ export default function BossBattle() {
             </div>
 
             <div className="bg-gray-800 p-4 rounded-lg border border-red-500 flex flex-col items-center">
-              <h2 className="text-xl font-bold mb-3 text-red-300">{bossStats.name.toUpperCase()}</h2>
+              <h2 className="text-xl font-bold mb-2 text-red-300">{bossStats.name.toUpperCase()}</h2>
               <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorClass="bg-red-500" label="HP" />
               {showStats && (
                 <div className="mt-3 text-sm text-center bg-gray-900 p-2 rounded-md w-full">
@@ -285,7 +286,7 @@ export default function BossBattle() {
           </div>
           
           {gameOver && (
-            <div className="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-10">
+            <div className="absolute inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-20">
               <h2 className={`text-6xl font-extrabold mb-4 ${gameOver === 'win' ? 'text-yellow-400' : 'text-red-600'}`}>
                 {gameOver === 'win' ? "CHIẾN THẮNG!" : "THẤT BẠI"}
               </h2>
