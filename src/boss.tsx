@@ -55,8 +55,8 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   return (
     <div
       key={id}
-      // [CẬP NHẬT] Điều chỉnh vị trí sát thương ra xa trung tâm hơn
-      className={`absolute top-1/3 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[10%]' : 'right-[10%]'}`}
+      // [CẬP NHẬT] Điều chỉnh vị trí sát thương theo yêu cầu mới
+      className={`absolute top-1/3 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{damage}
@@ -172,7 +172,7 @@ export default function BossBattle() {
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     };
-  }, [battleState, playerStats, bossStats]);
+  }, [battleState]);
 
   const addLog = (message: string, turn: number) => {
     const logEntry = turn > 0 ? `[Lượt ${turn}] ${message}` : message;
@@ -208,17 +208,19 @@ export default function BossBattle() {
             }
 
             setTimeout(() => {
-                // Phải lấy state mới nhất trong timeout
                 setPlayerStats(prevPlayerStats => {
+                    const currentBossAtk = bossStats.atk; // Lấy atk của boss từ state bên ngoài timeout
+                    const currentHeroDef = prevPlayerStats.def;
+
                     let bossDmg;
                     if (nextTurn % 3 === 0) {
-                        bossDmg = calculateDamage(prevBossStats.atk * 1.5, prevPlayerStats.def);
-                        addLog(`${prevBossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, nextTurn);
+                        bossDmg = calculateDamage(currentBossAtk * 1.5, currentHeroDef);
+                        addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, nextTurn);
                         setIsShaking(true);
                         setTimeout(() => setIsShaking(false), 500);
                     } else {
-                        bossDmg = calculateDamage(prevBossStats.atk, prevPlayerStats.def);
-                        addLog(`${prevBossStats.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
+                        bossDmg = calculateDamage(currentBossAtk, currentHeroDef);
+                        addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
                     }
                     
                     const newPlayerHp = prevPlayerStats.hp - bossDmg;
