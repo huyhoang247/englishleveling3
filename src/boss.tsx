@@ -38,6 +38,7 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
 
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
+  // ... (Không thay đổi)
   return (
     <div
       key={id}
@@ -49,7 +50,48 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
-// --- [MỚI] Component Popup Chỉ Số ---
+
+// --- [MỚI] CÁC COMPONENT CON CHO POPUP CHỈ SỐ ---
+
+// Icon cho chỉ số
+const SwordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 17.5l-10-10l3-3l10 10l-3 3z"></path><path d="M5 19l-2 2"></path><path d="M19 5l2-2"></path><path d="M15 12l5 5"></path><path d="M9 18l-4-4"></path></svg>;
+const ShieldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
+
+// Component hiển thị một dòng chỉ số (ATK/DEF)
+const StatItem = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: number, color: string }) => (
+    <div className="flex items-center justify-between bg-slate-900/50 rounded-lg p-3">
+        <div className="flex items-center gap-3">
+            <span className={color}>{icon}</span>
+            <span className="font-semibold text-lg text-slate-200">{label}</span>
+        </div>
+        <span className={`font-bold text-xl ${color}`}>{value}</span>
+    </div>
+);
+
+// Component Card hiển thị thông tin cho một nhân vật
+const CharacterStatCard = ({ name, stats, image, imageClassName, nameColor, healthBar, isPlayer }: {
+    name: string;
+    stats: { maxHp: number, hp: number, atk: number, def: number };
+    image: string;
+    imageClassName?: string;
+    nameColor: string;
+    healthBar: React.ReactNode;
+    isPlayer: boolean;
+}) => (
+    <div className="flex-1 w-full bg-slate-800/70 border border-slate-600 rounded-xl p-4 flex flex-col gap-4 shadow-lg backdrop-blur-sm">
+        <h3 className={`text-2xl font-bold text-center ${nameColor} text-shadow-sm`}>{name.toUpperCase()}</h3>
+        <div className="relative h-32 w-full flex items-center justify-center">
+             <img src={image} alt={name} className={`h-full object-contain ${isPlayer ? '-scale-x-100' : ''} ${imageClassName}`} />
+        </div>
+        {healthBar}
+        <div className="space-y-3 mt-2">
+            <StatItem icon={<SwordIcon />} label="Tấn Công" value={stats.atk} color="text-red-400" />
+            <StatItem icon={<ShieldIcon />} label="Phòng Thủ" value={stats.def} color="text-sky-400" />
+        </div>
+    </div>
+);
+
+// --- [MỚI] POPUP CHỈ SỐ ĐÃ THIẾT KẾ LẠI ---
 const StatsPopup = ({ playerStats, bossStats, onClose }: {
   playerStats: typeof PLAYER_INITIAL_STATS;
   bossStats: typeof BOSS_INITIAL_STATS;
@@ -57,33 +99,39 @@ const StatsPopup = ({ playerStats, bossStats, onClose }: {
 }) => {
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40"
-      onClick={onClose} // Đóng khi click vào lớp phủ
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center z-40 p-4"
+      onClick={onClose}
     >
       <div
-        className="bg-slate-900/90 border-2 border-cyan-400/50 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-fade-in"
-        onClick={(e) => e.stopPropagation()} // Ngăn việc đóng popup khi click vào nội dung bên trong
+        className="relative bg-slate-900/80 border-2 border-cyan-400/30 rounded-2xl shadow-2xl p-6 w-full max-w-4xl animate-fade-in"
+        onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-3xl font-bold text-center mb-6 text-cyan-300 text-shadow">THÔNG TIN CHỈ SỐ</h2>
-        <div className="grid grid-cols-2 gap-4 text-center">
-          {/* Cột Anh Hùng */}
-          <div>
-            <h3 className="text-xl font-bold text-blue-300 mb-3 text-shadow-sm">HERO</h3>
-            <div className="space-y-2 text-lg">
-              <p>HP: <span className="font-bold text-lime-400">{Math.ceil(playerStats.hp)} / {playerStats.maxHp}</span></p>
-              <p>ATK: <span className="font-bold text-red-400">{playerStats.atk}</span></p>
-              <p>DEF: <span className="font-bold text-sky-400">{playerStats.def}</span></p>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-cyan-300 text-shadow">THÔNG TIN CHIẾN BINH</h2>
+        <div className="flex flex-col md:flex-row items-stretch justify-center gap-6">
+            {/* Thẻ Hero */}
+            <CharacterStatCard 
+                name="Hero"
+                stats={playerStats}
+                image="https://i.ibb.co/L5Tj1Rq/player-knight.png"
+                nameColor="text-blue-300"
+                healthBar={<HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />}
+                isPlayer={true}
+            />
+
+            {/* Icon VS ở giữa */}
+            <div className="hidden md:flex items-center justify-center">
+                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-16 h-16 opacity-70" />
             </div>
-          </div>
-          {/* Cột Boss */}
-          <div>
-            <h3 className="text-xl font-bold text-red-400 mb-3 text-shadow-sm">{bossStats.name.toUpperCase()}</h3>
-            <div className="space-y-2 text-lg">
-              <p>HP: <span className="font-bold text-orange-500">{Math.ceil(bossStats.hp)} / {bossStats.maxHp}</span></p>
-              <p>ATK: <span className="font-bold text-red-400">{bossStats.atk}</span></p>
-              <p>DEF: <span className="font-bold text-sky-400">{bossStats.def}</span></p>
-            </div>
-          </div>
+
+            {/* Thẻ Boss */}
+            <CharacterStatCard 
+                name={bossStats.name}
+                stats={bossStats}
+                image="https://i.ibb.co/h7n4w2B/demon-king.png"
+                nameColor="text-red-400"
+                healthBar={<HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />}
+                isPlayer={false}
+            />
         </div>
         <div className="mt-8 text-center">
           <button
@@ -224,7 +272,7 @@ export default function BossBattle() {
   return (
     <>
       <style>{`
-        /* CSS không thay đổi */
+        /* CSS không thay đổi nhiều */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
@@ -245,7 +293,6 @@ export default function BossBattle() {
         .bg-size-200 { background-size: 200% auto; }
         .bg-pos-0 { background-position: 0% 0%; }
         .bg-pos-100 { background-position: 100% 0%; }
-        /* [MỚI] Animation cho popup */
         @keyframes fade-in { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
         .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
       `}</style>
@@ -267,21 +314,16 @@ export default function BossBattle() {
 
             <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
 
-            {/* --- KHU VỰC ĐẤU TRƯỜNG ĐÃ TÁI CẤU TRÚC --- */}
+            {/* --- KHU VỰC ĐẤU TRƯỜNG --- */}
             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
-                {/* Player Character (chỉ hình ảnh) */}
                 <div className="flex flex-col items-center justify-end">
                     <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
                         <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
                     </div>
                 </div>
-                
-                {/* VS Icon */}
                 <div className="hidden md:flex justify-center items-center pb-12">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
                 </div>
-
-                {/* Boss Panel (đầy đủ thông tin) */}
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
                   <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
@@ -302,10 +344,10 @@ export default function BossBattle() {
                 </button>
                 )}
                 <button
-                    onClick={() => setShowStats(!showStats)}
+                    onClick={() => setShowStats(true)}
                     className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
                 >
-                {showStats ? 'Ẩn Chỉ Số' : 'Hiện Chỉ Số'}
+                    Xem Chỉ Số
                 </button>
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
                     {combatLog.map((entry, index) => (
@@ -317,7 +359,7 @@ export default function BossBattle() {
             </div>
         </main>
 
-        {/* --- [MỚI] POPUP CHỈ SỐ --- */}
+        {/* --- POPUP CHỈ SỐ (HIỆN KHI `showStats` LÀ TRUE) --- */}
         {showStats && (
             <StatsPopup 
                 playerStats={playerStats} 
