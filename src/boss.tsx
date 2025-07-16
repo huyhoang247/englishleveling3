@@ -49,22 +49,21 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
-// --- [CẬP NHẬT] Component Modal Chỉ Số (với Overlay và Nút Đóng) ---
+// --- Component Modal Chỉ Số (với Overlay và Nút Đóng) ---
 const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_STATS, boss: typeof BOSS_INITIAL_STATS, onClose: () => void }) => {
   return (
     // Lớp Overlay bao trùm
-    <div 
+    <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
       onClick={onClose} // Bấm ra ngoài để đóng
     >
       {/* Hộp nội dung popup, chặn sự kiện click lan ra ngoài */}
-      <div 
-        // [THAY ĐỔI] Thêm font-lilita vào đây
+      <div
         className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita"
         onClick={(e) => e.stopPropagation()} // Ngăn việc bấm vào popup làm nó tự đóng
       >
         {/* Nút Đóng */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" // Dùng font-sans cho dấu 'X'
           aria-label="Đóng"
@@ -80,7 +79,7 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
             </div>
-            
+
             {/* Dải phân cách */}
             <div className="h-16 w-px bg-slate-600/70"></div>
 
@@ -136,7 +135,7 @@ export default function BossBattle() {
     const logEntry = turn > 0 ? `[Lượt ${turn}] ${message}` : message;
     setCombatLog(prevLog => [logEntry, ...prevLog]);
   };
-  
+
   const showFloatingDamage = (damage: number, isPlayerHit: boolean) => {
     const id = Date.now() + Math.random();
     setDamages(prev => [...prev, { id, damage, isPlayerHit }]);
@@ -149,21 +148,21 @@ export default function BossBattle() {
     const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
     return Math.max(1, Math.floor(baseDamage - defenderDef));
   };
-  
+
   const runBattleTurn = () => {
     const currentTurn = turnCounter + 1;
     const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
     const newBossHp = bossStats.hp - playerDmg;
     addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, currentTurn);
     showFloatingDamage(playerDmg, false);
-    
+
     if (newBossHp <= 0) {
       setBossStats(prev => ({ ...prev, hp: 0 }));
       endGame('win');
       return;
     }
     setBossStats(prev => ({ ...prev, hp: newBossHp }));
-    
+
     setTimeout(() => {
       let bossDmg;
       if (currentTurn % 3 === 0) {
@@ -175,7 +174,7 @@ export default function BossBattle() {
         bossDmg = calculateDamage(bossStats.atk, playerStats.def);
         addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, currentTurn);
       }
-      
+
       showFloatingDamage(bossDmg, true);
       const newPlayerHp = playerStats.hp - bossDmg;
 
@@ -200,7 +199,7 @@ export default function BossBattle() {
       addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter + 1);
     }
   };
-  
+
   const startGame = () => {
     if (battleState === 'idle') {
       setBattleState('fighting');
@@ -226,7 +225,7 @@ export default function BossBattle() {
         /* CSS không thay đổi */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
-        .font-sans { font-family: sans-serif; } /* [MỚI] Thêm font-sans cho ký tự đặc biệt */
+        .font-sans { font-family: sans-serif; }
         .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } }
@@ -251,17 +250,28 @@ export default function BossBattle() {
         .bg-pos-0 { background-position: 0% 0%; }
         .bg-pos-100 { background-position: 100% 0%; }
       `}</style>
-      
+
       {/* Gọi Modal ở cấp cao nhất để nó có thể che toàn màn hình */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
-      
+
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-        
+
+        {/* [THAY ĐỔI] Header được cập nhật để chứa cả nút xem chỉ số */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 md:p-4 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
-          <div className="w-full max-w-xs mx-auto md:mx-0 md:ml-4">
-            <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
-            <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
-          </div>
+            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
+                {/* Cụm thông tin Player bên trái */}
+                <div className="w-full max-w-xs">
+                    <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
+                    <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
+                </div>
+                {/* [DI CHUYỂN & CẬP NHẬT] Nút xem chỉ số đã được chuyển lên đây và đổi thành tiếng Anh */}
+                <button
+                    onClick={() => setShowStats(true)}
+                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 whitespace-nowrap"
+                >
+                    View Stats
+                </button>
+            </div>
         </header>
 
         <main className={`w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
@@ -270,7 +280,7 @@ export default function BossBattle() {
             ))}
 
             <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
-            
+
             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
                 {/* Player Character */}
                 <div className="flex flex-col items-center justify-end">
@@ -278,7 +288,7 @@ export default function BossBattle() {
                         <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
                     </div>
                 </div>
-                
+
                 {/* VS Icon */}
                 <div className="hidden md:flex justify-center items-center pb-12">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
@@ -304,13 +314,7 @@ export default function BossBattle() {
                     BẮT ĐẦU CHIẾN ĐẤU
                 </button>
                 )}
-                {/* Nút này chỉ mở popup, không cần thay đổi text */}
-                <button
-                    onClick={() => setShowStats(true)} 
-                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
-                >
-                  Hiện Chỉ Số
-                </button>
+                {/* Nút xem chỉ số đã được di chuyển lên header */}
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
                     {combatLog.map((entry, index) => (
                         <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
@@ -319,7 +323,7 @@ export default function BossBattle() {
                     ))}
                 </div>
             </div>
-          
+
             {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
             {gameOver && (
                 <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
