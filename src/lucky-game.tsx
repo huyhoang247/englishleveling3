@@ -165,7 +165,6 @@ const SpinningWheelGrid = React.memo(({
   });
 
   return (
-    // CHANGE: Adjusted grid gap and padding for a more compact look
     <div className="grid grid-cols-4 gap-2 p-3 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
       {grid.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
@@ -199,25 +198,26 @@ const SpinningWheelGrid = React.memo(({
                     {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
                     {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
                     
-                    {/* CHANGE: Main content container for proper sizing and spacing */}
-                    <div className="flex flex-col items-center justify-center flex-grow">
-                        {typeof item.icon === 'string' ? (
-                          // CHANGE: Reduced icon size
-                          <img src={item.icon} alt={item.name} className="w-10 h-10 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
-                        ) : (
-                          // CHANGE: Reduced icon size
-                          <item.icon className={`w-10 h-10 ${item.color} drop-shadow-lg transition-transform`} />
-                        )}
-                    </div>
+                    {/* CHANGE: Conditionally render the large icon. Only show it for non-coin items (value is 0) or the jackpot item. */}
+                    {(item.value === 0 || item.rarity === 'jackpot') && (
+                      <div className="flex flex-col items-center justify-center flex-grow">
+                          {typeof item.icon === 'string' ? (
+                            <img src={item.icon} alt={item.name} className="w-10 h-10 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                          ) : (
+                            <item.icon className={`w-10 h-10 ${item.color} drop-shadow-lg transition-transform`} />
+                          )}
+                      </div>
+                    )}
                     
-                    {/* CHANGE: Redesigned value display to match image */}
+                    {/* Show the pill display only for coin items */}
                     {item.value > 0 && (
-                        <div className="flex items-center mt-1 bg-black/50 rounded-full px-2 py-0.5">
+                        <div className="flex items-center bg-black/50 rounded-full px-2 py-0.5">
                             <span className="text-xs font-bold text-white">{item.name}</span>
                             <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
                         </div>
                     )}
-                    {item.rarity === 'jackpot' && ( <span className="mt-1 text-xs font-black text-white uppercase tracking-wider drop-shadow-lg"> Jackpot </span> )}
+                    
+                    {/* CHANGE: Removed the Jackpot text display from here */}
 
                     <div className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}></div>
                 </div>
@@ -247,7 +247,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
   const items: Item[] = useMemo(() => [
-    // CHANGE: Updated item names and jackpot icon to match the image
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150', value: 150, rarity: 'common', color: '' },
     { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
     { icon: GemIcon, name: 'Ngọc quý', value: 0, rarity: 'rare', color: 'text-blue-400' },
@@ -382,7 +381,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               />
             </div>
             <div className="flex flex-col items-center justify-center mb-6">
-              {/* CHANGE: Updated spin button style to be larger and more prominent */}
               <button onClick={spinChest} disabled={isSpinning || currentCoins < 100} className={`w-48 h-12 text-lg rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75 inline-flex items-center justify-center relative group ${isSpinning || currentCoins < 100 ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400' }`}>
                 {isSpinning ? ( <span className="flex items-center"> <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg> Đang quay... </span> ) : ( <div className="flex items-center justify-center w-full"> <span className="font-semibold tracking-wide"> QUAY </span> <span className={`h-5 w-px mx-3 transition-colors duration-200 ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}`}></span> <span className="flex items-center"> {currentCoins < 100 ? (<span className="font-medium">Hết xu</span>) : (<> <span className="font-medium">100</span> <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5 inline-block ml-1.5"/> </> )} </span> </div> )}
               </button>
