@@ -53,7 +53,6 @@ interface RewardPopupProps {
 
 // Reward Popup Component (No changes)
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
-    // ... (no changes in this component)
     const getRarityBgClass = (rarity: Item['rarity']) => {
         switch(rarity) {
           case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
@@ -261,6 +260,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     }
   }, []);
 
+  // --- START: HÀM spinChest ĐÃ ĐƯỢC TỐI ƯU ---
   const spinChest = useCallback(() => {
     if (isSpinning || currentCoins < 100) return;
 
@@ -275,9 +275,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     setJackpotWon(false);
     setShowRewardPopup(false);
 
+    // --- Logic chọn phần thưởng ngẫu nhiên (giữ nguyên) ---
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
 
+    // Tỉ lệ trúng Jackpot là 1%
     if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
@@ -286,39 +288,44 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         if (otherItemIndicesOnWheel.length > 0) {
             targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
         } else {
-            targetLandedItemIndex = 0;
+            targetLandedItemIndex = 0; // Fallback
         }
     }
+    
+    // --- Bắt đầu phần animation mới sử dụng requestAnimationFrame ---
 
-    setFinalLandedItemIndex(targetLandedItemIndex);
+    const DURATION = 4000; // Tổng thời gian quay, tính bằng ms (ví dụ: 4 giây)
+    const NUM_ROTATIONS = 3; // Số vòng quay đầy đủ trước khi dừng
+    const totalVisualSteps = (NUM_WHEEL_SLOTS * NUM_ROTATIONS) + targetLandedItemIndex;
+    
+    let startTime: number | null = null;
+    
+    // Hàm easing để tạo hiệu ứng chậm dần đều, rất mượt
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 4);
 
-    const numFullRotations = 2;
-    const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
-    let currentVisualStepIndex = 0;
-    const finalPauseDuration = 700;
+    const animationStep = (timestamp: number) => {
+      if (!startTime) {
+        startTime = timestamp;
+      }
+      
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / DURATION, 1); // Tiến độ từ 0 đến 1
+      const easedProgress = easeOutCubic(progress); // Áp dụng hiệu ứng giảm tốc
 
-    const spinAnimation = () => {
-      const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
+      const currentStep = Math.floor(easedProgress * totalVisualSteps);
+      const currentHighlightIndex = currentStep % NUM_WHEEL_SLOTS;
+      
       setSelectedIndex(currentHighlightIndex);
-
-      if (currentVisualStepIndex < totalVisualSteps) {
-        const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
-        const fastSpeed = 50;
-        const moderateSpeed = 120;
-        const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
-        let currentSpeed;
-
-        if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
-          currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
-        } else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) {
-          currentSpeed = moderateSpeed;
-        } else {
-          currentSpeed = fastSpeed;
-        }
-        
-        currentVisualStepIndex++;
-        setTimeout(spinAnimation, currentSpeed);
+      
+      if (progress < 1) {
+        // Nếu animation chưa kết thúc, yêu cầu frame tiếp theo
+        requestAnimationFrame(animationStep);
       } else {
+        // Animation đã hoàn thành
+        setFinalLandedItemIndex(targetLandedItemIndex);
+        setSelectedIndex(targetLandedItemIndex); // Đảm bảo ô cuối cùng được highlight chính xác
+        
+        // Dừng một chút để người chơi thấy kết quả rồi mới hiện popup
         setTimeout(() => {
           setIsSpinning(false);
           setHasSpun(true);
@@ -341,11 +348,15 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
           setWonRewardDetails({ ...wonItem, value: actualWonAmount });
           setShowRewardPopup(true);
-        }, finalPauseDuration);
+        }, 500); // 0.5 giây dừng
       }
     };
-    spinAnimation();
+
+    // Bắt đầu vòng lặp animation
+    requestAnimationFrame(animationStep);
+
   }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
+  // --- END: HÀM spinChest ĐÃ ĐƯỢC TỐI ƯU ---
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
