@@ -25,6 +25,14 @@ const icons = {
       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png" 
       alt="DEF Icon" 
     />
+  ),
+  // --- ICON MỚI CHO BOOST RATE ---
+  boost: (
+    <img 
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000219c61f77d5434ce861ab4e3.png" 
+      alt="Boost Rate Icon" 
+      className="w-full h-full"
+    />
   )
 };
 
@@ -56,7 +64,7 @@ const calculateTotalStatValue = (currentLevel, baseBonus) => {
 };
 
 const formatNumber = (num) => {
-  if (num < 1000) return num.toString();
+  if (num < 1000) return Math.floor(num).toString();
   if (num < 1000000) {
       const thousands = num / 1000;
       return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`;
@@ -129,15 +137,27 @@ export default function App() {
     }
   };
 
-  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
-  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
-  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
-  
+  // --- TÍNH TOÁN CÁC CHỈ SỐ BAO GỒM CẢ BOOST RATE ---
   const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
   const maxProgress = 50;
   const prestigeLevel = Math.floor(totalLevels / maxProgress);
   const currentProgress = totalLevels % maxProgress;
   const progressPercent = (currentProgress / maxProgress) * 100;
+  
+  // 1. Tính Stage và Boost Rate
+  const stage = prestigeLevel + 1;
+  const boostRate = stage * 30 * 0.001; // Stage * 30 * 0.1%
+
+  // 2. Tính chỉ số cơ bản (trước khi có boost)
+  const baseTotalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
+  const baseTotalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
+  const baseTotalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
+
+  // 3. Áp dụng Boost Rate để ra chỉ số cuối cùng
+  const totalHp = baseTotalHp * (1 + boostRate);
+  const totalAtk = baseTotalAtk * (1 + boostRate);
+  const totalDef = baseTotalDef * (1 + boostRate);
+
 
   return (
     <>
@@ -208,7 +228,6 @@ export default function App() {
               </div>
           </header>
 
-          {/* --- HERO GRAPHIC ĐÃ ĐƯỢC THAY THẾ --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <img 
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
@@ -217,7 +236,16 @@ export default function App() {
             />
           </div>
 
-          {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG --- */}
+          {/* --- KHU VỰC HIỂN THỊ BOOST RATE MỚI --- */}
+          <div className="w-fit bg-green-900/50 backdrop-blur-sm border border-green-500 rounded-full py-1 px-4 mb-3 flex items-center gap-2 shadow-lg">
+            <div className="w-5 h-5">{icons.boost}</div>
+            <span className="text-md font-bold text-green-300 text-shadow-sm">
+                Stage Boost: +{(boostRate * 100).toFixed(1)}%
+            </span>
+          </div>
+
+
+          {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG (đã áp dụng boost) --- */}
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6">{icons.heart}</div>
@@ -236,7 +264,7 @@ export default function App() {
           {/* --- THANH TIẾN TRÌNH --- */}
           <div className="w-full px-2 mb-8">
             <div className="flex justify-between items-baseline mb-2 px-1">
-              <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
+              <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {stage}</span>
               <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
             </div>
             <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
