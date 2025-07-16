@@ -1,6 +1,6 @@
 // File: src/components/BossBattle.tsx
 
-import React, a{ useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // --- Cấu hình nhân vật và Boss ---
 const PLAYER_INITIAL_STATS = {
@@ -220,6 +220,22 @@ export default function BossBattle() {
              transform: translateX(-50%);
              background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%);
         }
+        
+        .scrollbar-thin {
+          scrollbar-width: thin;
+          scrollbar-color: #4A5568 #2D3748;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 8px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: #2D3748;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background-color: #4A5568;
+          border-radius: 4px;
+          border: 2px solid #2D3748;
+        }
       `}</style>
       
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
@@ -289,7 +305,7 @@ export default function BossBattle() {
           {/* --- NHẬT KÝ CHIẾN ĐẤU --- */}
           <div className="w-full max-w-2xl mx-auto">
             <h3 className="text-xl font-semibold text-center mb-3 text-slate-400 tracking-wider">NHẬT KÝ CHIẾN ĐẤU</h3>
-            <div ref={logContainerRef} className="h-48 bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
+            <div ref={logContainerRef} className="h-48 bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
               {combatLog.map((entry, index) => (
                 <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
                   {entry}
