@@ -8,11 +8,6 @@ const icons = {
       <text x="12" y="16" fontSize="14" fill="#8B4513" textAnchor="middle" fontWeight="bold">C</text>
     </svg>
   ),
-  sixthSense: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">
-          <path fill="#fff" d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m48 60a20 20 0 1 1-28.28-28.28A20 20 0 0 1 176 84m-96 0a20 20 0 1 1-28.28-28.28A20 20 0 0 1 80 84m48 128a68 68 0 0 1-64.88-48h129.76A68 68 0 0 1 128 212"/>
-      </svg>
-  ),
   heart: (
     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#FF4F4F" stroke="#C00" strokeWidth="1">
       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
@@ -36,6 +31,7 @@ const icons = {
 const StatCard = ({ stat, onUpgrade }) => {
   const { name, level, icon, baseValue, cost, upgradeBonus } = stat;
   const totalValue = baseValue + level * upgradeBonus;
+  const upgradeCost = cost + level * cost * 0.2;
 
   return (
     <div className="bg-[#FDF3D9] w-28 sm:w-36 md:w-48 rounded-2xl border-4 border-[#7a4a2a] shadow-lg text-center font-bold text-[#5c381e] transform transition-transform hover:scale-105">
@@ -51,7 +47,7 @@ const StatCard = ({ stat, onUpgrade }) => {
           className="w-full bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-yellow-900 border-2 border-yellow-700 rounded-lg py-2 px-4 flex items-center justify-center gap-2 shadow-md active:shadow-inner active:translate-y-px"
         >
           <div className="w-5 h-5">{icons.coin}</div>
-          <span>{(cost + level * cost * 0.2).toLocaleString('en-US', { notation: 'compact' })}</span>
+          <span>{upgradeCost.toLocaleString()}</span>
         </button>
       </div>
     </div>
@@ -62,9 +58,9 @@ const StatCard = ({ stat, onUpgrade }) => {
 export default function App() {
   const [gold, setGold] = useState(190600);
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseValue: 0, cost: 76200, upgradeBonus: 50 },
-    { id: 'atk', name: 'ATK', level: 13, icon: icons.sword, baseValue: 832, cost: 76200, upgradeBonus: 15 },
-    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseValue: 0, cost: 76200, upgradeBonus: 5 },
+    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseValue: 0, cost: 100, upgradeBonus: 50 },
+    { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseValue: 0, cost: 100, upgradeBonus: 15 },
+    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseValue: 0, cost: 100, upgradeBonus: 5 },
   ]);
   const [message, setMessage] = useState('');
 
@@ -111,6 +107,14 @@ export default function App() {
 
       <div className="w-full min-h-screen bg-gradient-to-b from-[#4a1a8a] via-[#3a136c] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
         <div className="w-full max-w-md mx-auto">
+          
+          {/* Header hiển thị tài nguyên */}
+          <header className="w-full flex justify-end mb-4">
+              <div className="bg-black/30 rounded-full py-1 px-4 flex items-center gap-2 border-2 border-yellow-600">
+                  <div className="w-6 h-6">{icons.coin}</div>
+                  <span className="text-xl text-yellow-300 text-shadow-sm">{gold.toLocaleString()}</span>
+              </div>
+          </header>
 
           {/* Tiêu đề */}
           <h1 className="text-5xl text-center text-shadow my-4">Warrior - 1-10</h1>
@@ -153,7 +157,7 @@ export default function App() {
           </div>
 
           {/* Thanh tiến trình */}
-          <div className="w-full px-2 my-8">
+          <div className="w-full px-2 mt-4 mb-8">
             <div className="relative flex justify-between items-center text-lg mb-1 px-2">
               <span>{progress.current}</span>
               <span>{progress.max}</span>
