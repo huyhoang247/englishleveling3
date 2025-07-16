@@ -206,25 +206,25 @@ export default function App() {
             </svg>
           </div>
 
-          {/* --- THANH TIẾN TRÌNH (ĐÃ ĐƯỢC THIẾT KẾ LẠI) --- */}
+          {/* --- THANH TIẾN TRÌNH (ĐÃ ĐƯỢC CẬP NHẬT) --- */}
           <div className="w-full px-2 mt-2 mb-8">
-            {/* Cấp độ tổng */}
-            <div className="flex justify-end items-baseline mb-2 px-1">
+            {/* Tiêu đề cho thanh tiến trình */}
+            <div className="flex justify-between items-baseline mb-2 px-1">
+              <span className="text-md font-bold text-cyan-300 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
               <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
             </div>
 
             {/* Thanh tiến trình được thiết kế lại */}
             <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
-                {/* Lớp nền lấp đầy */}
+                {/* Lớp nền lấp đầy với vầng sáng được giảm bớt */}
                 <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_12px_rgba(0,246,255,0.6)] transition-all duration-500 ease-out"
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out"
                     style={{ width: `${progressPercent}%` }}
                 >
                 </div>
 
-                {/* Lớp văn bản */}
-                <div className="absolute inset-0 flex justify-between items-center px-4 text-sm text-white text-shadow-sm font-bold">
-                    <span>Stage {prestigeLevel + 1}</span>
+                {/* Lớp văn bản chỉ hiển thị số tiến trình ở bên phải */}
+                <div className="absolute inset-0 flex justify-end items-center px-4 text-sm text-white text-shadow-sm font-bold">
                     <span>{currentProgress}<span className="text-slate-300">/{maxProgress}</span></span>
                 </div>
             </div>
