@@ -59,25 +59,26 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
     >
       {/* Hộp nội dung popup, chặn sự kiện click lan ra ngoài */}
       <div 
-        className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white"
+        // [THAY ĐỔI] Thêm font-lilita vào đây
+        className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita"
         onClick={(e) => e.stopPropagation()} // Ngăn việc bấm vào popup làm nó tự đóng
       >
         {/* Nút Đóng */}
         <button 
           onClick={onClose}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" // Dùng font-sans cho dấu 'X'
           aria-label="Đóng"
         >
           ✕
         </button>
 
-        <div className="p-5 pt-6">
+        <div className="p-5 pt-8">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             {/* Cột Player */}
             <div className="flex flex-col items-center gap-1.5">
-              <h3 className="text-lg font-bold text-blue-300 text-shadow-sm">HERO</h3>
-              <p className="text-md">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
-              <p className="text-md">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
+              <h3 className="text-xl font-bold text-blue-300 text-shadow-sm tracking-wide">HERO</h3>
+              <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
+              <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
             </div>
             
             {/* Dải phân cách */}
@@ -85,9 +86,9 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
 
             {/* Cột Boss */}
             <div className="flex flex-col items-center gap-1.5">
-              <h3 className="text-lg font-bold text-red-400 text-shadow-sm">BOSS</h3>
-              <p className="text-md">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
-              <p className="text-md">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
+              <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide">BOSS</h3>
+              <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
+              <p className="text-lg">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
             </div>
           </div>
         </div>
@@ -225,6 +226,7 @@ export default function BossBattle() {
         /* CSS không thay đổi */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
+        .font-sans { font-family: sans-serif; } /* [MỚI] Thêm font-sans cho ký tự đặc biệt */
         .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } }
@@ -233,7 +235,7 @@ export default function BossBattle() {
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
         .animate-breathing { animation: breathing 5s ease-in-out infinite; }
         @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
-        /* [CẬP NHẬT] Animations cho Modal */
+        /* Animations cho Modal */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -250,7 +252,7 @@ export default function BossBattle() {
         .bg-pos-100 { background-position: 100% 0%; }
       `}</style>
       
-      {/* [MỚI] Gọi Modal ở cấp cao nhất để nó có thể che toàn màn hình */}
+      {/* Gọi Modal ở cấp cao nhất để nó có thể che toàn màn hình */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
@@ -302,8 +304,9 @@ export default function BossBattle() {
                     BẮT ĐẦU CHIẾN ĐẤU
                 </button>
                 )}
+                {/* Nút này chỉ mở popup, không cần thay đổi text */}
                 <button
-                    onClick={() => setShowStats(true)} // [THAY ĐỔI] Luôn mở popup, việc đóng do modal tự xử lý
+                    onClick={() => setShowStats(true)} 
                     className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
                 >
                   Hiện Chỉ Số
