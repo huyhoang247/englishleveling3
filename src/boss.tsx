@@ -49,6 +49,56 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
+// --- [MỚI] Component Popup Chỉ Số ---
+const StatsPopup = ({ playerStats, bossStats, onClose }: {
+  playerStats: typeof PLAYER_INITIAL_STATS;
+  bossStats: typeof BOSS_INITIAL_STATS;
+  onClose: () => void;
+}) => {
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40"
+      onClick={onClose} // Đóng khi click vào lớp phủ
+    >
+      <div
+        className="bg-slate-900/90 border-2 border-cyan-400/50 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-fade-in"
+        onClick={(e) => e.stopPropagation()} // Ngăn việc đóng popup khi click vào nội dung bên trong
+      >
+        <h2 className="text-3xl font-bold text-center mb-6 text-cyan-300 text-shadow">THÔNG TIN CHỈ SỐ</h2>
+        <div className="grid grid-cols-2 gap-4 text-center">
+          {/* Cột Anh Hùng */}
+          <div>
+            <h3 className="text-xl font-bold text-blue-300 mb-3 text-shadow-sm">HERO</h3>
+            <div className="space-y-2 text-lg">
+              <p>HP: <span className="font-bold text-lime-400">{Math.ceil(playerStats.hp)} / {playerStats.maxHp}</span></p>
+              <p>ATK: <span className="font-bold text-red-400">{playerStats.atk}</span></p>
+              <p>DEF: <span className="font-bold text-sky-400">{playerStats.def}</span></p>
+            </div>
+          </div>
+          {/* Cột Boss */}
+          <div>
+            <h3 className="text-xl font-bold text-red-400 mb-3 text-shadow-sm">{bossStats.name.toUpperCase()}</h3>
+            <div className="space-y-2 text-lg">
+              <p>HP: <span className="font-bold text-orange-500">{Math.ceil(bossStats.hp)} / {bossStats.maxHp}</span></p>
+              <p>ATK: <span className="font-bold text-red-400">{bossStats.atk}</span></p>
+              <p>DEF: <span className="font-bold text-sky-400">{bossStats.def}</span></p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-8 text-center">
+          <button
+            onClick={onClose}
+            className="px-8 py-2 bg-slate-700 hover:bg-slate-600 rounded-md font-semibold text-md transition-all duration-200 border border-slate-500 hover:border-cyan-400 active:scale-95"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // --- Component Chính Của Game ---
 export default function BossBattle() {
   // --- State và Logic Game (Không thay đổi) ---
@@ -195,11 +245,14 @@ export default function BossBattle() {
         .bg-size-200 { background-size: 200% auto; }
         .bg-pos-0 { background-position: 0% 0%; }
         .bg-pos-100 { background-position: 100% 0%; }
+        /* [MỚI] Animation cho popup */
+        @keyframes fade-in { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
       `}</style>
       
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
-        {/* --- [MỚI] HEADER CHỈ CÓ THÔNG TIN HERO --- */}
+        {/* --- HEADER CHỈ CÓ THÔNG TIN HERO --- */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 md:p-4 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
           <div className="w-full max-w-xs mx-auto md:mx-0 md:ml-4">
             <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
@@ -214,19 +267,13 @@ export default function BossBattle() {
 
             <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
 
-            {/* --- [MỚI] KHU VỰC ĐẤU TRƯỜNG ĐÃ TÁI CẤU TRÚC --- */}
+            {/* --- KHU VỰC ĐẤU TRƯỜNG ĐÃ TÁI CẤU TRÚC --- */}
             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
                 {/* Player Character (chỉ hình ảnh) */}
                 <div className="flex flex-col items-center justify-end">
                     <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
                         <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
                     </div>
-                    {showStats && (
-                        <div className="mt-2 text-md text-center bg-black/30 p-2 rounded-md w-full max-w-[200px] text-shadow-sm">
-                            <p>ATK: <span className="font-bold text-red-400">{playerStats.atk}</span></p>
-                            <p>DEF: <span className="font-bold text-sky-400">{playerStats.def}</span></p>
-                        </div>
-                    )}
                 </div>
                 
                 {/* VS Icon */}
@@ -241,15 +288,8 @@ export default function BossBattle() {
                       <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                  {showStats && (
-                    <div className="text-md text-center bg-black/30 p-2 rounded-md w-full text-shadow-sm">
-                      <p>ATK: <span className="font-bold text-red-400">{bossStats.atk}</span></p>
-                      <p>DEF: <span className="font-bold text-sky-400">{bossStats.def}</span></p>
-                    </div>
-                  )}
                 </div>
             </div>
-
 
             {/* --- KHU VỰC ĐIỀU KHIỂN VÀ LOG --- */}
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
@@ -275,27 +315,36 @@ export default function BossBattle() {
                     ))}
                 </div>
             </div>
-          
-            {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
-            {gameOver && (
-                <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
-                <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
-                    style={{ textShadow: `0 0 25px ${gameOver === 'win' ? 'rgba(252, 211, 77, 0.7)' : 'rgba(220, 38, 38, 0.7)'}` }}
-                >
-                    {gameOver === 'win' ? "CHIẾN THẮNG!" : "THẤT BẠI"}
-                </h2>
-                <p className="text-xl mb-8 text-slate-200 text-shadow-sm">
-                    {gameOver === 'win' ? "Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!" : "Thế giới chìm trong bóng tối vĩnh hằng..."}
-                </p>
-                <button
-                    onClick={resetGame}
-                    className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-2xl transition-all duration-200 shadow-2xl hover:scale-105 active:scale-100 text-shadow"
-                >
-                    Chơi Lại
-                </button>
-                </div>
-            )}
         </main>
+
+        {/* --- [MỚI] POPUP CHỈ SỐ --- */}
+        {showStats && (
+            <StatsPopup 
+                playerStats={playerStats} 
+                bossStats={bossStats} 
+                onClose={() => setShowStats(false)} 
+            />
+        )}
+      
+        {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
+        {gameOver && (
+            <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+            <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
+                style={{ textShadow: `0 0 25px ${gameOver === 'win' ? 'rgba(252, 211, 77, 0.7)' : 'rgba(220, 38, 38, 0.7)'}` }}
+            >
+                {gameOver === 'win' ? "CHIẾN THẮNG!" : "THẤT BẠI"}
+            </h2>
+            <p className="text-xl mb-8 text-slate-200 text-shadow-sm">
+                {gameOver === 'win' ? "Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!" : "Thế giới chìm trong bóng tối vĩnh hằng..."}
+            </p>
+            <button
+                onClick={resetGame}
+                className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-2xl transition-all duration-200 shadow-2xl hover:scale-105 active:scale-100 text-shadow"
+            >
+                Chơi Lại
+            </button>
+            </div>
+        )}
       </div>
     </>
   );
