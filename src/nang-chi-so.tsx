@@ -26,7 +26,7 @@ const icons = {
   )
 };
 
-// --- LOGIC TÍNH TOÁN MỚI ---
+// --- LOGIC TÍNH TOÁN ---
 
 // 1. Tính chi phí nâng cấp (dựa trên level hiện tại)
 const calculateUpgradeCost = (level) => {
@@ -36,46 +36,47 @@ const calculateUpgradeCost = (level) => {
 };
 
 // 2. Tính lượng chỉ số thưởng cho MỘT level cụ thể
-// Ví dụ: HP level 1-10 là +50, level 11-20 là +100
 const getBonusForLevel = (level, baseBonus) => {
   if (level === 0) return 0;
-  // Tier 0 (level 1-10), Tier 1 (level 11-20), v.v.
   const tier = Math.floor((level - 1) / 10);
   return baseBonus * Math.pow(2, tier);
 };
 
-// 3. Tính TỔNG giá trị chỉ số đã tích lũy đến level hiện tại (tối ưu hóa)
+// 3. Tính TỔNG giá trị chỉ số đã tích lũy đến level hiện tại
 const calculateTotalStatValue = (currentLevel, baseBonus) => {
   if (currentLevel === 0) return 0;
-
   let totalValue = 0;
   const fullTiers = Math.floor(currentLevel / 10);
   const remainingLevelsInCurrentTier = currentLevel % 10;
 
-  // Tính tổng cho các bậc đã hoàn thành (mỗi bậc 10 level)
   for (let i = 0; i < fullTiers; i++) {
     const bonusInTier = baseBonus * Math.pow(2, i);
     totalValue += 10 * bonusInTier;
   }
-
-  // Tính cho các level còn lại ở bậc hiện tại
   const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers);
   totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier;
-
   return totalValue;
 };
 
 
-// 4. Hàm định dạng số tiền cho gọn
+// 4. Hàm định dạng số cho gọn (dùng cho cả Coin và Chỉ số)
 const formatNumber = (num) => {
   if (num < 1000) return num.toString();
-  if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
-  if (num < 1000000000) return `${(num / 1000000).toFixed(1)}M`;
-  return `${(num / 1000000000).toFixed(1)}B`;
+  // Sử dụng toFixed(1) để có độ chính xác như 1.6K, toFixed(0) nếu muốn số nguyên như 1K
+  if (num < 1000000) {
+      const thousands = num / 1000;
+      return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`;
+  }
+  if (num < 1000000000) {
+      const millions = num / 1000000;
+      return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`;
+  }
+  const billions = num / 1000000000;
+  return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`;
 };
 
 
-// --- COMPONENT STAT CARD (Hiển thị LƯỢNG SẼ CỘNG THÊM) ---
+// --- COMPONENT STAT CARD (ĐÃ CẬP NHẬT HIỂN THỊ CHỈ SỐ THƯỞNG) ---
 const StatCard = ({ stat, onUpgrade }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   
@@ -93,8 +94,8 @@ const StatCard = ({ stat, onUpgrade }) => {
         <div className={`w-10 h-10 ${name === 'HP' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
           <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-          {/* Hiển thị lượng sẽ được cộng thêm */}
-          <p className="text-2xl font-black text-shadow-cyan">+{nextUpgradeBonus.toLocaleString()}</p>
+          {/* SỬ DỤNG formatNumber CHO CHỈ SỐ THƯỞNG */}
+          <p className="text-2xl font-black text-shadow-cyan">+{formatNumber(nextUpgradeBonus)}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
         <button
@@ -197,7 +198,7 @@ export default function App() {
             </svg>
           </div>
 
-          {/* --- KHU VỰC MỚI: HIỂN THỊ CHỈ SỐ TỔNG --- */}
+          {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG --- */}
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 text-red-500">{icons.heart}</div>
