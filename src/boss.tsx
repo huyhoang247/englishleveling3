@@ -55,7 +55,8 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   return (
     <div
       key={id}
-      className={`absolute top-1/3 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-1/4' : 'right-1/4'}`}
+      // [CẬP NHẬT] Thay đổi vị trí hiện sát thương để rõ ràng hơn
+      className={`absolute top-1/3 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[20%]' : 'right-[20%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{damage}
@@ -141,7 +142,6 @@ export default function BossBattle() {
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
   const [bossStats, setBossStats] = useState(BOSS_INITIAL_STATS);
   const [combatLog, setCombatLog] = useState<string[]>([]);
-  // [THÊM MỚI] State để lưu lịch sử trận đấu trước
   const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
   const [turnCounter, setTurnCounter] = useState(0);
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
@@ -193,55 +193,58 @@ export default function BossBattle() {
   };
 
   const runBattleTurn = () => {
-    const currentTurn = turnCounter + 1;
-    setTurnCounter(currentTurn);
+    // Sử dụng callback để đảm bảo turnCounter được cập nhật đúng cách trước khi sử dụng
+    setTurnCounter(currentTurn => {
+        const nextTurn = currentTurn + 1;
 
-    const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
-    const newBossHp = bossStats.hp - playerDmg;
-    addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, currentTurn);
-    showFloatingDamage(playerDmg, false);
+        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
+        const newBossHp = bossStats.hp - playerDmg;
+        addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, nextTurn);
+        showFloatingDamage(playerDmg, false); // Boss is hit, show on right
 
-    if (newBossHp <= 0) {
-      setBossStats(prev => ({ ...prev, hp: 0 }));
-      endGame('win');
-      return;
-    }
-    setBossStats(prev => ({ ...prev, hp: newBossHp }));
+        if (newBossHp <= 0) {
+            setBossStats(prev => ({ ...prev, hp: 0 }));
+            endGame('win', nextTurn);
+            return nextTurn;
+        }
+        setBossStats(prev => ({ ...prev, hp: newBossHp }));
 
-    setTimeout(() => {
-      let bossDmg;
-      if (currentTurn % 3 === 0) {
-        bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
-        addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, currentTurn);
-        setIsShaking(true);
-        setTimeout(() => setIsShaking(false), 500);
-      } else {
-        bossDmg = calculateDamage(bossStats.atk, playerStats.def);
-        addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, currentTurn);
-      }
-      showFloatingDamage(bossDmg, true);
-      const newPlayerHp = playerStats.hp - bossDmg;
+        setTimeout(() => {
+            let bossDmg;
+            if (nextTurn % 3 === 0) {
+                bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
+                addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, nextTurn);
+                setIsShaking(true);
+                setTimeout(() => setIsShaking(false), 500);
+            } else {
+                bossDmg = calculateDamage(bossStats.atk, playerStats.def);
+                addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
+            }
+            showFloatingDamage(bossDmg, true); // Player is hit, show on left
+            const newPlayerHp = playerStats.hp - bossDmg;
 
-      if (newPlayerHp <= 0) {
-        setPlayerStats(prev => ({ ...prev, hp: 0 }));
-        endGame('lose');
-      } else {
-        setPlayerStats(prev => ({ ...prev, hp: newPlayerHp }));
-      }
-    }, 400);
+            if (newPlayerHp <= 0) {
+                setPlayerStats(prev => ({ ...prev, hp: 0 }));
+                endGame('lose', nextTurn);
+            } else {
+                setPlayerStats(prev => ({ ...prev, hp: newPlayerHp }));
+            }
+        }, 400);
+
+        return nextTurn;
+    });
   };
-
-  const endGame = (result: 'win' | 'lose') => {
+  
+  const endGame = (result: 'win' | 'lose', finalTurn: number) => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setBattleState('finished');
     setGameOver(result);
     if (result === 'win') {
       const coinsEarned = 100 + Math.floor(Math.random() * 51);
-      // Cập nhật state bất đồng bộ, dùng callback để đảm bảo log được thêm vào sau khi state đã cập nhật
-      setCombatLog(prevLog => [`[Lượt ${turnCounter + 1}] ${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, ...prevLog]);
+      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, finalTurn);
       setPlayerCoins(prevCoins => prevCoins + coinsEarned);
     } else {
-      setCombatLog(prevLog => [`[Lượt ${turnCounter + 1}] Bạn đã gục ngã... THẤT BẠI!`, ...prevLog]);
+      addLog("Bạn đã gục ngã... THẤT BẠI!", finalTurn);
     }
   };
 
@@ -253,7 +256,6 @@ export default function BossBattle() {
 
   const resetGame = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    // [CẬP NHẬT] Lưu log của trận vừa xong vào previousCombatLog
     setPreviousCombatLog(combatLog);
 
     setPlayerStats(PLAYER_INITIAL_STATS);
@@ -268,19 +270,17 @@ export default function BossBattle() {
     setTimeout(() => addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
-  // [THÊM MỚI] Hàm để bỏ qua trận đấu
   const skipBattle = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
 
     let tempPlayerHp = playerStats.hp;
     let tempBossHp = bossStats.hp;
     let tempTurn = turnCounter;
-    let tempCombatLog = [...combatLog];
+    let tempCombatLog: string[] = []; // Bắt đầu log tạm thời trống để chỉ ghi các lượt skip
     let winner: 'win' | 'lose' | null = null;
 
     while (winner === null) {
         tempTurn++;
-        // Player's turn
         const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
         tempBossHp -= playerDmg;
         tempCombatLog.unshift(`[Lượt ${tempTurn}] Anh Hùng tấn công, gây ${playerDmg} sát thương.`);
@@ -289,7 +289,6 @@ export default function BossBattle() {
             break;
         }
 
-        // Boss's turn
         let bossDmg;
         if (tempTurn % 3 === 0) {
             bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
@@ -305,11 +304,11 @@ export default function BossBattle() {
         }
     }
 
+    setCombatLog(prevLog => [...tempCombatLog, ...prevLog]); // Thêm log mới vào đầu log cũ
     setPlayerStats(prev => ({ ...prev, hp: Math.max(0, tempPlayerHp) }));
     setBossStats(prev => ({ ...prev, hp: Math.max(0, tempBossHp) }));
-    setCombatLog(tempCombatLog);
     setTurnCounter(tempTurn);
-    endGame(winner);
+    endGame(winner, tempTurn);
   }
 
 
@@ -341,7 +340,6 @@ export default function BossBattle() {
         .btn-shine:hover::before { left: 125%; }
       `}</style>
 
-      {/* [CẬP NHẬT] Modal log giờ sẽ hiển thị log của trận đấu trước đó */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
 
@@ -361,7 +359,6 @@ export default function BossBattle() {
 
         <main className={`w-full h-full flex flex-col justify-center items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             
-            {/* [CẬP NHẬT] Hiển thị nút "View Log" hoặc "Skip Battle" tùy theo trạng thái */}
             <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
                 <button
                     onClick={() => setShowStats(true)}
