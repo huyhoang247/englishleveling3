@@ -259,36 +259,33 @@ export default function BossBattle() {
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
-        {/* [CẬP NHẬT] Header chỉ chứa thông tin trạng thái */}
+        {/* Header cố định chỉ chứa thông tin trạng thái */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
-                {/* Cụm thông tin Player bên trái */}
                 <div className="w-full max-w-xs">
                     <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
-                
-                {/* Hiển thị Coin */}
                 <div className="flex items-center">
                     <CoinDisplay coins={playerCoins} />
                 </div>
             </div>
         </header>
 
-        {/* [MỚI] Thanh hành động phụ, nằm ngay dưới Header */}
-        <div className="fixed top-20 left-0 w-full flex justify-center z-20 pointer-events-none">
-            <div className="pointer-events-auto transform -translate-y-1/2">
+        {/* [CẬP NHẬT] Thay đổi padding và vị trí nút */}
+        {/* Padding top của main (pt-24) đảm bảo nội dung bắt đầu bên dưới header (h-20) */}
+        <main className={`w-full h-full flex flex-col items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+            
+            {/* [THAY ĐỔI] Nút View Stats được đặt ở đây, nó sẽ cuộn cùng trang */}
+            <div className="w-full flex justify-center mb-4">
                 <button
                     onClick={() => setShowStats(true)}
-                    className="px-6 py-2 bg-slate-900/70 backdrop-blur-md hover:bg-slate-800/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600/80 hover:border-cyan-400 active:scale-95 shadow-md"
+                    className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
                 >
                     View Stats
                 </button>
             </div>
-        </div>
 
-        {/* [CẬP NHẬT] Tăng padding-top để chừa không gian cho cả header và nút mới */}
-        <main className={`w-full h-full flex flex-col justify-center items-center pt-28 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             {damages.map(d => (
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
