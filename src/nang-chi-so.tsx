@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 
-// --- ICONS ĐƯỢC CẬP NHẬT (ICON COIN ĐÃ THAY ĐỔI) ---
-// Sử dụng "currentColor" để dễ dàng thay đổi màu sắc bằng Tailwind's text-color classes
+// --- ICONS ĐƯỢC CẬP NHẬT ---
 const icons = {
   coin: (
-    // Thay thế SVG bằng thẻ <img> với URL được cung cấp
     <img 
       src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" 
       alt="Gold Coin Icon" 
@@ -28,81 +26,96 @@ const icons = {
   )
 };
 
-// Hàm tính toán chi phí nâng cấp dựa trên level hiện tại
+// --- LOGIC TÍNH TOÁN MỚI ---
+
+// 1. Tính chi phí nâng cấp (dựa trên level hiện tại)
 const calculateUpgradeCost = (level) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
-  const cost = baseCost * Math.pow(2, tier);
-  return cost;
+  return baseCost * Math.pow(2, tier);
 };
 
-// --- HÀM MỚI: Định dạng số tiền cho gọn ---
-const formatUpgradeCost = (cost) => {
-  if (cost < 1000) {
-    return cost.toLocaleString();
-  } else if (cost < 1000000) {
-    // Hiển thị dạng K (nghìn), ví dụ: 1.2K, 12.8K, 100K
-    const thousands = cost / 1000;
-    return `${parseFloat(thousands.toFixed(1))}K`;
-  } else if (cost < 1000000000) {
-    // Hiển thị dạng M (triệu), ví dụ: 1.5M, 25M
-    const millions = cost / 1000000;
-    return `${parseFloat(millions.toFixed(1))}M`;
-  } else {
-    // Hiển thị dạng B (tỷ), ví dụ: 2.3B
-    const billions = cost / 1000000000;
-    return `${parseFloat(billions.toFixed(1))}B`;
+// 2. Tính lượng chỉ số thưởng cho MỘT level cụ thể
+// Ví dụ: HP level 1-10 là +50, level 11-20 là +100
+const getBonusForLevel = (level, baseBonus) => {
+  if (level === 0) return 0;
+  // Tier 0 (level 1-10), Tier 1 (level 11-20), v.v.
+  const tier = Math.floor((level - 1) / 10);
+  return baseBonus * Math.pow(2, tier);
+};
+
+// 3. Tính TỔNG giá trị chỉ số đã tích lũy đến level hiện tại (tối ưu hóa)
+const calculateTotalStatValue = (currentLevel, baseBonus) => {
+  if (currentLevel === 0) return 0;
+
+  let totalValue = 0;
+  const fullTiers = Math.floor(currentLevel / 10);
+  const remainingLevelsInCurrentTier = currentLevel % 10;
+
+  // Tính tổng cho các bậc đã hoàn thành (mỗi bậc 10 level)
+  for (let i = 0; i < fullTiers; i++) {
+    const bonusInTier = baseBonus * Math.pow(2, i);
+    totalValue += 10 * bonusInTier;
   }
+
+  // Tính cho các level còn lại ở bậc hiện tại
+  const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers);
+  totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier;
+
+  return totalValue;
 };
 
 
-// --- COMPONENT STAT CARD VỚI NÚT BẤM ĐÃ ĐƯỢC THIẾT KẾ LẠI ---
+// 4. Hàm định dạng số tiền cho gọn
+const formatNumber = (num) => {
+  if (num < 1000) return num.toString();
+  if (num < 1000000) return `${(num / 1000).toFixed(1)}K`;
+  if (num < 1000000000) return `${(num / 1000000).toFixed(1)}M`;
+  return `${(num / 1000000000).toFixed(1)}B`;
+};
+
+
+// --- COMPONENT STAT CARD (Hiển thị LƯỢNG SẼ CỘNG THÊM) ---
 const StatCard = ({ stat, onUpgrade }) => {
-  const { id, name, level, icon, baseValue, upgradeBonus, color } = stat;
-  const totalValue = baseValue + level * upgradeBonus;
+  const { name, level, icon, baseUpgradeBonus, color } = stat;
+  
+  // Lượng chỉ số sẽ nhận được ở level tiếp theo
+  const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
   const upgradeCost = calculateUpgradeCost(level);
-  const formattedCost = formatUpgradeCost(upgradeCost);
 
   return (
-    // Div cha này sẽ tạo ra viền gradient. Nó có padding nhỏ và nền gradient.
-    // Animation viền sẽ được kích hoạt khi hover lên group này.
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px 
                     transition-all duration-300 
                     hover:shadow-lg hover:shadow-cyan-500/10`}>
-        {/* Lớp nền cho animation viền */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-        
-        {/* Div con này là nội dung của card. Nó có màu nền riêng để che đi gradient. */}
-        <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
-            <div className={`w-10 h-10 ${id === 'hp' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
-            <div className="flex-grow flex flex-col items-center gap-1">
-                <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-                <p className="text-2xl font-black text-shadow-cyan">+{totalValue.toLocaleString()}</p>
-                <p className="text-xs text-slate-400">Level {level}</p>
-            </div>
-            {/* --- NÚT NÂNG CẤP ĐÃ ĐƯỢC CẬP NHẬT --- */}
-            <button
-                onClick={() => onUpgrade(stat.id)}
-                className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95"
-            >
-                {/* Icon được đặt trong div để kiểm soát kích thước và căn chỉnh tốt hơn */}
-                <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-                {/* Giảm kích thước font và thay đổi gap để vừa vặn hơn */}
-                <span className="text-base font-bold text-yellow-300">{formattedCost}</span>
-            </button>
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
+      
+      <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
+        <div className={`w-10 h-10 ${name === 'HP' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
+        <div className="flex-grow flex flex-col items-center gap-1">
+          <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
+          {/* Hiển thị lượng sẽ được cộng thêm */}
+          <p className="text-2xl font-black text-shadow-cyan">+{nextUpgradeBonus.toLocaleString()}</p>
+          <p className="text-xs text-slate-400">Level {level}</p>
         </div>
+        <button
+          onClick={() => onUpgrade(stat.id)}
+          className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95"
+        >
+          <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
+          <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
+        </button>
+      </div>
     </div>
   );
 };
-
 
 // --- COMPONENT CHÍNH CỦA ỨNG DỤNG ---
 export default function App() {
   const [gold, setGold] = useState(190600);
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseValue: 0, upgradeBonus: 50, color: "from-red-600 to-pink-600" },
-    { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseValue: 0, upgradeBonus: 15, color: "from-sky-500 to-cyan-500" },
-    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseValue: 0, upgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
+    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
+    { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
+    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
 
@@ -125,6 +138,11 @@ export default function App() {
     }
   };
 
+  // Tính toán các giá trị tổng để hiển thị
+  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
+  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
+  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
+  
   const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
   const maxProgress = 50;
   const prestigeLevel = Math.floor(totalLevels / maxProgress);
@@ -133,59 +151,20 @@ export default function App() {
 
   return (
     <>
-      <style>
-        {`
+      <style>{/* CSS không thay đổi */ `
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
           .font-lilita { font-family: 'Lilita One', cursive; }
           .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
-          
-          /* --- HIỆU ỨNG VIỀN GRADIENT CHUYỂN ĐỘNG --- */
-          @keyframes animate-gradient-border {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          
-          .animate-border-flow {
-            background-size: 400% 400%;
-            animation: animate-gradient-border 3s linear infinite;
-          }
-
-          /* Hiệu ứng thở cho hero */
-          .animate-breathing {
-            animation: breathing 5s ease-in-out infinite;
-          }
-          @keyframes breathing {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0, 246, 255, 0.4)); }
-            50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(0, 246, 255, 0.7));}
-          }
-
-          /* Vignette & Glow Background */
-          .main-bg::before, .main-bg::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            z-index: 0;
-            pointer-events: none;
-          }
-          .main-bg::before {
-             width: 150%;
-             height: 150%;
-             top: 50%;
-             transform: translate(-50%, -50%);
-             background-image: radial-gradient(circle, transparent 40%, #110f21 80%);
-          }
-           .main-bg::after {
-             width: 100%;
-             height: 100%;
-             top: 0;
-             transform: translateX(-50%);
-             background-image: radial-gradient(ellipse at top, rgba(100, 108, 255, 0.15) 0%, transparent 50%);
-          }
-        `}
-      </style>
+          @keyframes animate-gradient-border { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+          .animate-border-flow { background-size: 400% 400%; animation: animate-gradient-border 3s linear infinite; }
+          .animate-breathing { animation: breathing 5s ease-in-out infinite; }
+          @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0, 246, 255, 0.4)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(0, 246, 255, 0.7));} }
+          .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: 0; pointer-events: none; }
+          .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
+          .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(100, 108, 255, 0.15) 0%, transparent 50%); }
+      `}</style>
 
       {message && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
@@ -205,55 +184,48 @@ export default function App() {
 
           <h1 className="text-4xl sm:text-5xl text-center text-shadow my-2">NÂNG CẤP CHỈ SỐ</h1>
 
-          {/* --- HERO GRAPHIC --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
+             {/* Hero SVG không đổi */}
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                  <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style={{stopColor: '#3b82f6', stopOpacity: 1}} />
-                    <stop offset="100%" style={{stopColor: '#1e40af', stopOpacity: 1}} />
-                  </linearGradient>
-                  <filter id="glow">
-                      <feGaussianBlur stdDeviation="3.5" result="coloredBlur"></feGaussianBlur>
-                      <feMerge>
-                          <feMergeNode in="coloredBlur"></feMergeNode>
-                          <feMergeNode in="SourceGraphic"></feMergeNode>
-                      </feMerge>
-                  </filter>
+                  <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style={{stopColor: '#3b82f6', stopOpacity: 1}} /><stop offset="100%" style={{stopColor: '#1e40af', stopOpacity: 1}} /></linearGradient>
+                  <filter id="glow"><feGaussianBlur stdDeviation="3.5" result="coloredBlur"></feGaussianBlur><feMerge><feMergeNode in="coloredBlur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
               </defs>
               <g transform="translate(0, 10)">
-                  <path d="M 100,20 L 150,70 L 140,150 L 60,150 L 50,70 Z" fill="url(#helmetGrad)" stroke="#60a5fa" strokeWidth="3" />
-                  <path d="M 100,50 L 130,75 L 100,85 L 70,75 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" filter="url(#glow)" />
-                  <path d="M 60,150 Q 100,170 140,150" fill="none" stroke="#60a5fa" strokeWidth="3" />
-                  <rect x="95" y="20" width="10" height="30" fill="#1e3a8a" stroke="#60a5fa" strokeWidth="1.5"/>
+                  <path d="M 100,20 L 150,70 L 140,150 L 60,150 L 50,70 Z" fill="url(#helmetGrad)" stroke="#60a5fa" strokeWidth="3" /><path d="M 100,50 L 130,75 L 100,85 L 70,75 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" filter="url(#glow)" /><path d="M 60,150 Q 100,170 140,150" fill="none" stroke="#60a5fa" strokeWidth="3" /><rect x="95" y="20" width="10" height="30" fill="#1e3a8a" stroke="#60a5fa" strokeWidth="1.5"/>
               </g>
             </svg>
           </div>
 
-          {/* --- THANH TIẾN TRÌNH (ĐÃ ĐƯỢC CẬP NHẬT) --- */}
-          <div className="w-full px-2 mt-2 mb-8">
-            {/* Tiêu đề cho thanh tiến trình (MÀU CHỮ STAGE ĐÃ THAY ĐỔI) */}
+          {/* --- KHU VỰC MỚI: HIỂN THỊ CHỈ SỐ TỔNG --- */}
+          <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 text-red-500">{icons.heart}</div>
+              <span className="text-lg font-bold">{formatNumber(totalHp)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 text-cyan-400">{icons.sword}</div>
+              <span className="text-lg font-bold">{formatNumber(totalAtk)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 text-cyan-400">{icons.shield}</div>
+              <span className="text-lg font-bold">{formatNumber(totalDef)}</span>
+            </div>
+          </div>
+          
+          {/* --- THANH TIẾN TRÌNH --- */}
+          <div className="w-full px-2 mb-8">
             <div className="flex justify-between items-baseline mb-2 px-1">
               <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
               <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
             </div>
-
-            {/* Thanh tiến trình được thiết kế lại */}
             <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
-                {/* Lớp nền lấp đầy với vầng sáng được giảm bớt */}
-                <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out"
-                    style={{ width: `${progressPercent}%` }}
-                >
-                </div>
-
-                {/* Lớp văn bản chỉ hiển thị số tiến trình ở bên phải */}
+                <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
                 <div className="absolute inset-0 flex justify-end items-center px-4 text-sm text-white text-shadow-sm font-bold">
                     <span>{currentProgress}<span className="text-slate-300">/{maxProgress}</span></span>
                 </div>
             </div>
           </div>
-
 
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {stats.map(stat => (
