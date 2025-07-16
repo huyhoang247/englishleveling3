@@ -28,13 +28,13 @@ const HeartIcon = ({ className }: { className?: string }) => ( <svg className={c
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
-// Interfaces (No changes)
+// Interfaces
 interface Item {
   icon: React.FC<{ className?: string }> | string;
   name: string;
   value: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
-  color: string; // Used for SVG component icons
+  color: string;
   timestamp?: number;
 }
 interface LuckyChestGameProps {
@@ -51,9 +51,23 @@ interface RewardPopupProps {
   onClose: () => void;
 }
 
-// Reward Popup Component (No changes)
+// --- UTILITY FUNCTION ---
+// Moved getRarityBg to be a top-level utility function
+const getRarityBg = (rarity: Item['rarity']) => {
+    switch(rarity) {
+      case 'common': return 'bg-slate-800/60 border-slate-700';
+      case 'uncommon': return 'bg-emerald-800/50 border-emerald-700';
+      case 'rare': return 'bg-sky-800/50 border-sky-700';
+      case 'epic': return 'bg-violet-800/50 border-violet-700';
+      case 'legendary': return 'bg-amber-700/40 border-amber-600';
+      case 'jackpot': return 'bg-gradient-to-br from-yellow-500 via-amber-600 to-red-600 border-4 border-yellow-300';
+      default: return 'bg-slate-800/60 border-slate-700';
+    }
+};
+
+// Reward Popup Component
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
-    const getRarityBgClass = (rarity: Item['rarity']) => {
+    const getPopupRarityBgClass = (rarity: Item['rarity']) => {
         switch(rarity) {
           case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
           case 'uncommon': return 'bg-green-100 border-green-300 text-green-800';
@@ -66,7 +80,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     };
     return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className={`relative p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-pop-in ${getRarityBg(item.rarity)}`}>
+      <div className={`relative p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-pop-in ${getPopupRarityBgClass(item.rarity)}`}>
         {jackpotWon ? (
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
@@ -99,7 +113,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
   );
 };
 
-// --- OPTIMIZED CHILD COMPONENT ---
+// --- CHILD COMPONENT ---
 interface SpinningWheelGridProps {
   items: Item[];
   itemPositionsOnWheel: { row: number; col: number }[];
@@ -107,7 +121,6 @@ interface SpinningWheelGridProps {
   isSpinning: boolean;
   hasSpun: boolean;
   finalLandedItemIndex: number;
-  getRarityBg: (rarity: Item['rarity']) => string;
 }
 
 const SpinningWheelGrid = React.memo(({
@@ -117,7 +130,6 @@ const SpinningWheelGrid = React.memo(({
   isSpinning,
   hasSpun,
   finalLandedItemIndex,
-  getRarityBg,
 }: SpinningWheelGridProps) => {
   const grid: ({ item: Item; isWheelItem: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
 
@@ -227,7 +239,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
-  // UPDATED: Items list now contains "pure" items (value: 0) and coin packs (value > 0).
   const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150 Xu', value: 150, rarity: 'common', color: '' },
     { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
@@ -252,20 +263,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
-  const getRarityBg = useCallback((rarity: Item['rarity']) => {
-    switch(rarity) {
-      case 'common': return 'bg-slate-800/60 border-slate-700';
-      case 'uncommon': return 'bg-emerald-800/50 border-emerald-700';
-      case 'rare': return 'bg-sky-800/50 border-sky-700';
-      case 'epic': return 'bg-violet-800/50 border-violet-700';
-      case 'legendary': return 'bg-amber-700/40 border-amber-600';
-      case 'jackpot': return 'bg-gradient-to-br from-yellow-500 via-amber-600 to-red-600 border-4 border-yellow-300';
-      default: return 'bg-slate-800/60 border-slate-700';
-    }
-  }, []);
-
   const spinChest = useCallback(() => {
-    // ... (logic remains the same)
     if (isSpinning || currentCoins < 100) return;
 
     onUpdateCoins(-100);
@@ -408,7 +406,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 isSpinning={isSpinning}
                 hasSpun={hasSpun}
                 finalLandedItemIndex={finalLandedItemIndex}
-                getRarityBg={getRarityBg}
               />
             </div>
 
@@ -425,7 +422,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                   }
                 `}
               >
-                {/* Button content remains the same */}
                 {isSpinning ? (
                   <span className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -455,7 +451,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           </>
         )}
 
-        {/* --- FIXED HISTORY TAB --- */}
         {activeTab === 'history' && (
             <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg animate-fade-in">
                 <h3 className="text-white font-bold mb-4 text-lg text-center">📜 Lịch sử nhận thưởng 📜</h3>
@@ -476,7 +471,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                     ) : (
                                         <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
                                     )}
-                                    {/* FIXED: Text color changed for better contrast */}
                                     <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>
                                         {item.name}
                                     </div>
@@ -535,7 +529,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       </div>
 
       <style jsx global>{`
-        /* --- FIXED & IMPROVED ANIMATIONS --- */
         @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
         @keyframes celebrate { 0% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 50% { transform: scale(1.15); box-shadow: 0 0 25px 15px rgba(239, 68, 68, 0.3); } 100% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } }
