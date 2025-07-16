@@ -152,20 +152,8 @@ export default function App() {
             </svg>
           </div>
 
-          {/* Tài nguyên & Nút chức năng */}
-          <div className="flex justify-between items-center gap-4 mb-4 px-2">
-            <div className="flex-1 bg-black/30 rounded-full p-2 flex items-center justify-center gap-2 border-2 border-yellow-600">
-              <div className="w-8 h-8">{icons.coin}</div>
-              <span className="text-2xl text-yellow-300 text-shadow-sm">{gold.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 })}</span>
-            </div>
-            <button className="bg-yellow-500 hover:bg-yellow-600 transition-colors border-4 border-yellow-200 rounded-2xl p-2 flex items-center gap-2 shadow-lg">
-              <div className="bg-blue-800 rounded-lg p-1">{icons.sixthSense}</div>
-              <span className="text-lg text-shadow-sm text-blue-900">Sixth Sense</span>
-            </button>
-          </div>
-
           {/* Thanh tiến trình */}
-          <div className="w-full px-2 mb-8">
+          <div className="w-full px-2 my-8">
             <div className="relative flex justify-between items-center text-lg mb-1 px-2">
               <span>{progress.current}</span>
               <span>{progress.max}</span>
