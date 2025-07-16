@@ -198,26 +198,23 @@ const SpinningWheelGrid = React.memo(({
                     {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
                     {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
                     
-                    {/* CHANGE: Conditionally render the large icon. Only show it for non-coin items (value is 0) or the jackpot item. */}
-                    {(item.value === 0 || item.rarity === 'jackpot') && (
-                      <div className="flex flex-col items-center justify-center flex-grow">
-                          {typeof item.icon === 'string' ? (
-                            <img src={item.icon} alt={item.name} className="w-10 h-10 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
-                          ) : (
-                            <item.icon className={`w-10 h-10 ${item.color} drop-shadow-lg transition-transform`} />
-                          )}
-                      </div>
-                    )}
-                    
-                    {/* Show the pill display only for coin items */}
-                    {item.value > 0 && (
-                        <div className="flex items-center bg-black/50 rounded-full px-2 py-0.5">
-                            <span className="text-xs font-bold text-white">{item.name}</span>
-                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
-                        </div>
-                    )}
-                    
-                    {/* CHANGE: Removed the Jackpot text display from here */}
+                    {/* CHANGE: Unified rendering for all items. Icon on top, text (if applicable) on bottom. */}
+                    <div className="flex flex-col items-center justify-center h-full">
+                        {/* Icon - Always shows */}
+                        {typeof item.icon === 'string' ? (
+                            <img src={item.icon} alt={item.name} className="w-10 h-10 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                        ) : (
+                            <item.icon className={`w-10 h-10 ${item.color} drop-shadow-lg`} />
+                        )}
+
+                        {/* Text - Shows for coins and jackpot */}
+                        {item.value > 0 && (
+                            <span className="mt-1 text-sm font-bold text-amber-300">{item.name}</span>
+                        )}
+                        {item.rarity === 'jackpot' && (
+                            <span className="mt-1 text-xs font-black uppercase text-yellow-300">JACKPOT</span>
+                        )}
+                    </div>
 
                     <div className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}></div>
                 </div>
