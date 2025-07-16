@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
-// SVG Icons (No changes)
+// SVG Icons
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -28,7 +28,7 @@ const HeartIcon = ({ className }: { className?: string }) => ( <svg className={c
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
-// Interfaces
+// --- Interfaces ---
 interface Item {
   icon: React.FC<{ className?: string }> | string;
   name: string;
@@ -51,8 +51,31 @@ interface RewardPopupProps {
   onClose: () => void;
 }
 
-// --- UTILITY FUNCTION ---
-// Moved getRarityBg to be a top-level utility function
+// --- UTILITY FUNCTIONS for STYLING ---
+const getRarityColor = (rarity: Item['rarity']) => {
+    switch(rarity) {
+      case 'common': return '#9ca3af'; // gray-400
+      case 'uncommon': return '#34d399'; // emerald-400
+      case 'rare': return '#38bdf8'; // sky-400
+      case 'epic': return '#a78bfa'; // violet-400
+      case 'legendary': return '#fbbf24'; // amber-400
+      case 'jackpot': return '#f59e0b'; // amber-500
+      default: return '#9ca3af';
+    }
+};
+
+const getRarityGlow = (rarity: Item['rarity']) => {
+    switch(rarity) {
+      case 'common': return 'shadow-gray-500/50';
+      case 'uncommon': return 'shadow-emerald-500/50';
+      case 'rare': return 'shadow-sky-500/50';
+      case 'epic': return 'shadow-violet-500/50';
+      case 'legendary': return 'shadow-amber-400/60';
+      case 'jackpot': return 'shadow-yellow-400/80';
+      default: return 'shadow-gray-500/50';
+    }
+}
+
 const getRarityBg = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-slate-800/60 border-slate-700';
@@ -64,6 +87,7 @@ const getRarityBg = (rarity: Item['rarity']) => {
       default: return 'bg-slate-800/60 border-slate-700';
     }
 };
+
 
 // Reward Popup Component
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
@@ -113,7 +137,8 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
   );
 };
 
-// --- CHILD COMPONENT ---
+
+// --- REDESIGNED CHILD COMPONENT: SpinningWheelGrid ---
 interface SpinningWheelGridProps {
   items: Item[];
   itemPositionsOnWheel: { row: number; col: number }[];
@@ -143,21 +168,22 @@ const SpinningWheelGrid = React.memo(({
   });
 
   return (
-    <div className="grid grid-cols-4 gap-2 p-4 bg-gradient-to-br from-slate-800 via-purple-900 to-slate-900 rounded-2xl shadow-2xl border-2 border-slate-700">
+    <div className="grid grid-cols-4 gap-3 p-3 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
       {grid.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
+          // --- REDESIGNED Center Piece ---
           if (rowIndex === 1 && colIndex === 1) {
             return (
               <div
-                key={`chest-${rowIndex}-${colIndex}`}
-                className="col-span-2 row-span-2 flex items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl shadow-lg border-4 border-yellow-300 relative overflow-hidden"
+                key={`chest-pedestal`}
+                className="col-span-2 row-span-2 flex items-center justify-center rounded-full bg-slate-800 relative shadow-inner-strong"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent"></div>
+                <div className="absolute inset-0 bg-radial-glow animate-glow-pulse z-0"></div>
                 <img
                   src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png"
                   alt="Treasure Chest"
-                  className={`w-16 h-16 transform transition-all duration-500 ${isSpinning ? 'animate-bounce scale-110' : 'scale-100'}`}
-                  onError={(e) => { e.currentTarget.src = 'https://placehold.co/64x64/cccccc/000000?text=Lỗi'; }}
+                  className={`w-20 h-20 transform transition-transform duration-500 z-10 drop-shadow-2xl ${isSpinning ? 'animate-bounce-subtle' : ''}`}
+                  onError={(e) => { e.currentTarget.src = 'https://placehold.co/80x80/cccccc/000000?text=Lỗi'; }}
                 />
               </div>
             );
@@ -167,53 +193,55 @@ const SpinningWheelGrid = React.memo(({
           }
 
           if (cell && cell.isWheelItem) {
-            const itemRarity = cell.item.rarity;
+            const item = cell.item;
             const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
             const isSelectedDuringSpin = isSpinning && selectedIndex === wheelIndexOfCurrentCell;
             const isLandedOn = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
-            const displaySelected = isSelectedDuringSpin || isLandedOn;
 
-            let selectionClasses = '';
-            if (displaySelected) {
-              if (isLandedOn) {
-                selectionClasses = itemRarity === 'jackpot'
-                  ? 'z-20 animate-celebrate shadow-2xl shadow-red-500/60'
-                  : 'scale-110 z-10 ring-4 ring-green-400 shadow-lg shadow-green-500/40';
-              } else { // isSelectedDuringSpin
-                selectionClasses = 'scale-110 z-10 ring-4 ring-yellow-400 animate-pulse shadow-lg shadow-yellow-400/40';
-              }
-            }
+            const rarityColor = getRarityColor(item.rarity);
+            const rarityGlow = getRarityGlow(item.rarity);
 
             return (
               <div
                 key={`item-${rowIndex}-${colIndex}`}
-                className={`
-                  aspect-square flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all duration-200 relative overflow-hidden group
-                  ${getRarityBg(itemRarity)}
-                  ${selectionClasses}
-                  hover:scale-105 hover:z-20
+                style={{ '--rarity-color': rarityColor } as React.CSSProperties}
+                className={`item-cell-shape aspect-square p-0.5 bg-gradient-to-br from-slate-700/50 to-slate-900/50 shadow-lg relative transition-all duration-200
+                  ${isSelectedDuringSpin ? `scale-110 z-20 shadow-2xl ${rarityGlow} animate-pulse-bright` : ''}
+                  ${isLandedOn ? 'scale-110 z-30' : 'hover:scale-105 hover:z-20'}
                 `}
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                <div className="flex flex-col items-center justify-center h-full relative z-10 text-white">
-                   {typeof cell.item.icon === 'string' ? (
-                      <img src={cell.item.icon} alt={cell.item.name} className="w-8 h-8 md:w-9 md:h-9 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
-                    ) : (
-                      <cell.item.icon className={`w-8 h-8 md:w-9 md:h-9 ${cell.item.color} drop-shadow-lg`} />
+                <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center p-1 relative overflow-hidden">
+                    {/* --- Landed Effect --- */}
+                    {isLandedOn && (
+                       <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div>
                     )}
-                    
-                    {cell.item.value > 0 && (
-                        <div className="flex items-center mt-2 bg-black/50 rounded-full px-2 py-0.5">
-                            <span className="text-xs font-bold text-yellow-300">{cell.item.value.toLocaleString()}</span>
-                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
-                        </div>
+                     {isLandedOn && item.rarity === 'jackpot' && (
+                       <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div>
                     )}
 
-                    {cell.item.rarity === 'jackpot' && (
-                        <span className="mt-1 text-[11px] font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse">
-                            Jackpot
-                        </span>
-                    )}
+                    {/* --- Content --- */}
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                        {typeof item.icon === 'string' ? (
+                          <img src={item.icon} alt={item.name} className="w-8 h-8 md:w-9 md:h-9 drop-shadow-lg transition-transform" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                        ) : (
+                          <item.icon className={`w-8 h-8 md:w-9 md:h-9 ${item.color} drop-shadow-lg transition-transform`} />
+                        )}
+                        {item.value > 0 && (
+                            <div className="flex items-center mt-2 bg-black/50 rounded-full px-2 py-0.5">
+                                <span className="text-xs font-bold text-yellow-300">{item.value.toLocaleString()}</span>
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
+                            </div>
+                        )}
+                        {item.rarity === 'jackpot' && (
+                            <span className="mt-1 text-[11px] font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse">
+                                Jackpot
+                            </span>
+                        )}
+                    </div>
+
+                    {/* --- Rarity Border & Shine --- */}
+                    <div className="absolute inset-0 item-cell-shape border-2 border-transparent" style={{borderColor: isSelectedDuringSpin || isLandedOn ? rarityColor : 'transparent'}}></div>
+                    <div className="shine-effect absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-45"></div>
                 </div>
               </div>
             );
@@ -225,6 +253,7 @@ const SpinningWheelGrid = React.memo(({
     </div>
   );
 });
+
 
 // --- MAIN PARENT COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
@@ -350,7 +379,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center font-sans pb-24">
+    <div className="min-h-screen bg-slate-900 bg-grid-pattern flex flex-col items-center font-sans pb-24">
       
       <header className="relative w-full flex items-center justify-between py-2 px-4 bg-black/40 backdrop-blur-md">
         <button
@@ -529,12 +558,67 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       </div>
 
       <style jsx global>{`
-        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
-        @keyframes celebrate { 0% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 50% { transform: scale(1.15); box-shadow: 0 0 25px 15px rgba(239, 68, 68, 0.3); } 100% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } }
-        .animate-celebrate { animation: celebrate 0.8s ease-in-out forwards; }
-        @keyframes shine { 0% { transform: translateX(-100%) skewX(-20deg); } 100% { transform: translateX(100%) skewX(100%) skewX(-20deg); } }
-        .animate-shine { animation: shine 1.5s linear infinite; }
+        body { font-family: 'Inter', sans-serif; }
+
+        .bg-grid-pattern {
+          background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+          background-size: 2rem 2rem;
+        }
+
+        .item-cell-shape {
+          clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
+        }
+
+        .shadow-inner-strong {
+            box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5);
+        }
+
+        .bg-radial-glow {
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%);
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
+        
+        @keyframes bounce-subtle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
+
+        @keyframes pulse-bright {
+          0%, 100% { box-shadow: 0 0 20px 5px var(--rarity-color); }
+          50% { box-shadow: 0 0 35px 10px var(--rarity-color); }
+        }
+        .animate-pulse-bright { animation: pulse-bright 1s ease-in-out infinite; }
+
+        @keyframes landed-flash {
+            0% { transform: scale(0); opacity: 0.7; }
+            80% { transform: scale(1.5); opacity: 0.2; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .animate-landed-flash { animation: landed-flash 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        
+        @keyframes jackpot-celebrate {
+          0% { box-shadow: inset 0 0 0 0px var(--jackpot-color); }
+          25% { box-shadow: inset 0 0 0 4px var(--jackpot-color), 0 0 20px 5px var(--jackpot-color); }
+          100% { box-shadow: inset 0 0 0 0px var(--jackpot-color); }
+        }
+        .animate-jackpot-celebrate { animation: jackpot-celebrate 0.8s ease-in-out; }
+
+        @keyframes shine-anim {
+            0% { transform: translateX(-150%) skewX(-45deg); }
+            100% { transform: translateX(150%) skewX(-45deg); }
+        }
+        .shine-effect {
+          animation: shine-anim 3s ease-in-out infinite;
+          animation-delay: 1.5s;
+        }
+
+        /* Other required animations */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes pop-in { 0% { transform: scale(0.8); opacity: 0; } 70% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
@@ -543,7 +627,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         .animate-float { animation: float 2s ease-in-out infinite; }
         @keyframes bounce-once { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
         .animate-bounce-once { animation: bounce-once 0.8s ease-in-out; }
-        body { font-family: 'Inter', sans-serif; }
+
+        /* Scrollbar styles */
         .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #a855f7 #3b0764; }
         .scrollbar-thin::-webkit-scrollbar { height: 8px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: rgba(59, 7, 100, 0.5); border-radius: 10px; }
