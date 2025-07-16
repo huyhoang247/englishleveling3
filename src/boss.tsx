@@ -1,6 +1,6 @@
 // File: src/components/BossBattle.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, a{ useState, useEffect, useRef } from 'react';
 
 // --- Cấu hình nhân vật và Boss ---
 const PLAYER_INITIAL_STATS = {
@@ -18,57 +18,32 @@ const BOSS_INITIAL_STATS = {
   name: "Quái Vương Hắc Ám",
 };
 
-// --- COMPONENT THANH MÁU ĐƯỢC THIẾT KẾ LẠI HOÀN TOÀN ---
-const HealthBar = ({ 
-  current, 
-  max, 
-  colorGradient, 
-  direction = 'right' 
-}: { 
-  current: number, 
-  max: number, 
-  colorGradient: string, 
-  direction?: 'left' | 'right' 
-}) => {
+// --- [MỚI] Component Thanh Máu được thiết kế lại ---
+const HealthBar = ({ current, max, colorGradient, shadowColor, label }: { current: number, max: number, colorGradient: string, shadowColor: string, label: string }) => {
   const percentage = Math.max(0, (current / max) * 100);
-  const clipPathStyle = direction === 'right' 
-    ? 'polygon(0 0, 100% 0, 95% 100%, 0% 100%)' 
-    : 'polygon(5% 0, 100% 0, 100% 100%, 0% 100%)';
-
   return (
-    <div className="w-full h-8 relative" style={{ clipPath: clipPathStyle }}>
-      {/* Lớp nền tối */}
-      <div className="absolute inset-0 bg-black/50"></div>
-      
-      {/* Lớp máu hiện tại */}
-      <div
-        className={`h-full transition-all duration-500 ease-out relative overflow-hidden ${colorGradient}`}
-        style={{ width: `${percentage}%` }}
-      >
-        {/* Hiệu ứng bóng sáng bên trong */}
-        <div className="absolute top-0 left-0 h-1/2 w-full bg-white/20 blur-sm"></div>
-      </div>
-
-      {/* Lớp text hiển thị */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <p 
-          className="text-white font-bold tracking-wider text-base"
-          style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}
-        >
-          {Math.ceil(current)} / {max}
-        </p>
+    <div className="w-full">
+      <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`}
+          style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}
+        ></div>
+        <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
+          <span>{label}: {Math.ceil(current)} / {max}</span>
+        </div>
       </div>
     </div>
   );
 };
 
-// --- Component Số Sát Thương Bay Lên ---
+
+// --- [MỚI] Component Số Sát Thương được thiết kế lại ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
   return (
     <div
       key={id}
-      className={`absolute top-1/2 font-bold text-3xl animate-float-up text-red-400 pointer-events-none ${isPlayerHit ? 'left-1/4' : 'right-1/4'}`}
-      style={{ textShadow: '0 0 5px #000' }}
+      className={`absolute top-1/2 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-1/4' : 'right-1/4'}`}
+      style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{damage}
     </div>
@@ -77,6 +52,7 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
 
 // --- Component Chính Của Game ---
 export default function BossBattle() {
+  // --- State của game (Không thay đổi) ---
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
   const [bossStats, setBossStats] = useState(BOSS_INITIAL_STATS);
   const [combatLog, setCombatLog] = useState<string[]>([]);
@@ -89,7 +65,8 @@ export default function BossBattle() {
 
   const logContainerRef = useRef<HTMLDivElement>(null);
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
+  
+  // --- Logic game (Không thay đổi) ---
   useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = 0;
@@ -102,7 +79,7 @@ export default function BossBattle() {
 
   useEffect(() => {
     if (battleState === 'fighting') {
-      battleIntervalRef.current = setInterval(runBattleTurn, 1000);
+      battleIntervalRef.current = setInterval(runBattleTurn, 800);
     }
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -111,7 +88,7 @@ export default function BossBattle() {
 
   const addLog = (message: string, turn: number) => {
     const logEntry = turn > 0 ? `[Lượt ${turn}] ${message}` : message;
-    setCombatLog(prevLog => [logEntry, ...prevLog].slice(0, 50)); // Giới hạn log
+    setCombatLog(prevLog => [logEntry, ...prevLog]);
   };
   
   const showFloatingDamage = (damage: number, isPlayerHit: boolean) => {
@@ -128,28 +105,21 @@ export default function BossBattle() {
   };
   
   const runBattleTurn = () => {
-    const currentTurn = turnCounter + 1;
-    setTurnCounter(currentTurn);
-
-    // Lượt người chơi
     const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
-    addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, currentTurn);
+    const newBossHp = bossStats.hp - playerDmg;
+    addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, turnCounter + 1);
     showFloatingDamage(playerDmg, false);
-    setBossStats(prev => {
-      const newHp = prev.hp - playerDmg;
-      if (newHp <= 0) {
-        endGame('win');
-        return { ...prev, hp: 0 };
-      }
-      return { ...prev, hp: newHp };
-    });
     
-    // Dừng lại nếu game đã kết thúc
-    if (bossStats.hp - playerDmg <= 0) return;
-
-    // Lượt Boss
+    if (newBossHp <= 0) {
+      setBossStats(prev => ({ ...prev, hp: 0 }));
+      endGame('win');
+      return;
+    }
+    setBossStats(prev => ({ ...prev, hp: newBossHp }));
+    
     setTimeout(() => {
       let bossDmg;
+      const currentTurn = turnCounter + 1;
       if (currentTurn % 3 === 0) {
         bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
         addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, currentTurn);
@@ -161,15 +131,17 @@ export default function BossBattle() {
       }
       
       showFloatingDamage(bossDmg, true);
-      setPlayerStats(prev => {
-        const newHp = prev.hp - bossDmg;
-        if (newHp <= 0) {
-          endGame('lose');
-          return { ...prev, hp: 0 };
-        }
-        return { ...prev, hp: newHp };
-      });
-    }, 500);
+      const newPlayerHp = playerStats.hp - bossDmg;
+
+      if (newPlayerHp <= 0) {
+        setPlayerStats(prev => ({ ...prev, hp: 0 }));
+        endGame('lose');
+      } else {
+        setPlayerStats(prev => ({ ...prev, hp: newPlayerHp }));
+      }
+    }, 400);
+
+    setTurnCounter(prev => prev + 1);
   };
 
   const endGame = (result: 'win' | 'lose') => {
@@ -184,7 +156,9 @@ export default function BossBattle() {
   };
   
   const startGame = () => {
-    if (battleState === 'idle') setBattleState('fighting');
+    if (battleState === 'idle') {
+      setBattleState('fighting');
+    }
   };
 
   const resetGame = () => {
@@ -201,15 +175,13 @@ export default function BossBattle() {
 
   return (
     <>
+      {/* --- CSS được lấy cảm hứng từ nang-chi-so.tsx --- */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
-        
-        body {
-          background-color: #0F0A19;
-          background-image: radial-gradient(circle, #1D162C 0%, #0F0A19 100%);
-        }
-        .font-russo { font-family: 'Russo One', sans-serif; }
-        
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+        .font-lilita { font-family: 'Lilita One', cursive; }
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+
         @keyframes float-up {
           0% { transform: translateY(0); opacity: 1; }
           100% { transform: translateY(-80px); opacity: 0; }
@@ -217,92 +189,129 @@ export default function BossBattle() {
         .animate-float-up { animation: float-up 1.5s ease-out forwards; }
         
         @keyframes screen-shake {
-          0%, 100% { transform: translate(0, 0); }
-          10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 2px); }
-          20%, 40%, 60%, 80% { transform: translate(5px, -2px); }
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
 
-        @keyframes glow-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(167, 139, 250, 0.3), 0 0 10px rgba(167, 139, 250, 0.2); }
-          50% { box-shadow: 0 0 35px rgba(167, 139, 250, 0.5), 0 0 15px rgba(167, 139, 250, 0.4); }
+        .animate-breathing {
+            animation: breathing 5s ease-in-out infinite;
         }
-        .glow-container { animation: glow-pulse 4s infinite ease-in-out; }
+        @keyframes breathing {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); }
+            50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));}
+        }
+
+        .main-bg::before, .main-bg::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .main-bg::before {
+             width: 150%; height: 150%; top: 50%;
+             transform: translate(-50%, -50%);
+             background-image: radial-gradient(circle, transparent 40%, #110f21 80%);
+        }
+        .main-bg::after {
+             width: 100%; height: 100%; top: 0;
+             transform: translateX(-50%);
+             background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%);
+        }
       `}</style>
       
-      <div className="text-white min-h-screen flex flex-col items-center justify-center p-4 font-russo">
-        <div className={`w-full max-w-4xl mx-auto bg-black/30 backdrop-blur-sm rounded-2xl border border-purple-800/50 p-6 relative glow-container ${isShaking ? 'animate-screen-shake' : ''}`}>
-          {damages.map(d => <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />)}
+      <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
+        <div className={`relative z-10 w-full max-w-4xl mx-auto ${isShaking ? 'animate-screen-shake' : ''}`}>
+          {damages.map(d => (
+            <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
+          ))}
 
-          <h1 className="text-4xl lg:text-5xl font-bold text-center mb-8 text-purple-300 tracking-wider uppercase" style={{textShadow: '0 0 15px rgba(192, 132, 252, 0.5)'}}>
-            Đấu Trường Tự Động
-          </h1>
+          <h1 className="text-5xl font-bold text-center mb-8 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG HUYỀN THOẠI</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Khung nhân vật */}
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-4 rounded-lg border-t-2 border-l-2 border-blue-400/50 shadow-lg">
-              <h2 className="text-2xl font-bold mb-3 text-blue-300 text-center">ANH HÙNG</h2>
-              <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-400 to-cyan-500" direction="right" />
+          {/* --- KHU VỰC HIỂN THỊ CHÍNH --- */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center mb-6">
+            {/* --- PANEL ANH HÙNG --- */}
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-4">
+              <h2 className="text-2xl font-bold text-blue-300 text-shadow">ANH HÙNG</h2>
+              <div className="w-32 h-32 animate-breathing">
+                  <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain" />
+              </div>
+              <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" label="HP" />
               {showStats && (
-                 <div className="mt-4 text-sm text-center bg-black/30 p-2 rounded-md w-full space-y-1">
-                  <p>SỨC MẠNH: <span className="font-bold text-red-400">{playerStats.atk}</span></p>
-                  <p>PHÒNG THỦ: <span className="font-bold text-sky-400">{playerStats.def}</span></p>
+                 <div className="text-md text-center bg-black/30 p-2 rounded-md w-full text-shadow-sm">
+                  <p>ATK: <span className="font-bold text-red-400">{playerStats.atk}</span></p>
+                  <p>DEF: <span className="font-bold text-sky-400">{playerStats.def}</span></p>
                 </div>
               )}
             </div>
+            
+            {/* --- ICON VS --- */}
+            <div className="hidden md:flex justify-center items-center">
+                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
+            </div>
 
-            {/* Khung Boss */}
-            <div className="bg-gradient-to-bl from-gray-900 to-gray-800 p-4 rounded-lg border-t-2 border-r-2 border-red-400/50 shadow-lg">
-              <h2 className="text-2xl font-bold mb-3 text-red-300 text-center">{bossStats.name.toUpperCase()}</h2>
-              <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-500 to-orange-400" direction="left" />
+            {/* --- PANEL BOSS --- */}
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-4">
+              <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
+              <div className="w-32 h-32 animate-breathing" style={{ animationDelay: '0.5s' }}>
+                   <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
+              </div>
+              <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" label="HP" />
               {showStats && (
-                <div className="mt-4 text-sm text-center bg-black/30 p-2 rounded-md w-full space-y-1">
-                  <p>SỨC MẠNH: <span className="font-bold text-red-400">{bossStats.atk}</span></p>
-                  <p>PHÒNG THỦ: <span className="font-bold text-sky-400">{bossStats.def}</span></p>
+                <div className="text-md text-center bg-black/30 p-2 rounded-md w-full text-shadow-sm">
+                  <p>ATK: <span className="font-bold text-red-400">{bossStats.atk}</span></p>
+                  <p>DEF: <span className="font-bold text-sky-400">{bossStats.def}</span></p>
                 </div>
               )}
             </div>
           </div>
 
+          {/* --- KHU VỰC ĐIỀU KHIỂN --- */}
           <div className="mb-6 flex flex-col items-center gap-4">
             {battleState === 'idle' && (
               <button
                 onClick={startGame}
-                className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 rounded-md font-bold text-lg uppercase tracking-wider transition-all duration-300 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/50 transform hover:scale-105"
+                className="px-10 py-4 bg-gradient-to-r from-red-600 via-purple-600 to-red-600 bg-size-200 bg-pos-0 hover:bg-pos-100 rounded-lg font-bold text-xl transition-all duration-300 shadow-lg border-2 border-transparent hover:border-white/50 active:scale-95 text-shadow"
               >
-                Bắt đầu
+                BẮT ĐẦU CHIẾN ĐẤU
               </button>
             )}
             <button
               onClick={() => setShowStats(!showStats)}
-              className="px-6 py-2 bg-transparent border-2 border-purple-500/50 hover:bg-purple-500/20 hover:border-purple-500 text-purple-300 rounded-md font-semibold text-sm uppercase tracking-wider transition-all duration-200"
+              className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
             >
               {showStats ? 'Ẩn Chỉ Số' : 'Hiện Chỉ Số'}
             </button>
           </div>
 
-          <div>
-            <h3 className="text-xl font-semibold text-center mb-3 text-gray-400 uppercase tracking-widest">Nhật Ký Chiến Đấu</h3>
-            <div ref={logContainerRef} className="h-48 bg-black/40 p-3 rounded-lg border border-gray-700 overflow-y-auto flex flex-col-reverse text-sm font-sans leading-relaxed">
+          {/* --- NHẬT KÝ CHIẾN ĐẤU --- */}
+          <div className="w-full max-w-2xl mx-auto">
+            <h3 className="text-xl font-semibold text-center mb-3 text-slate-400 tracking-wider">NHẬT KÝ CHIẾN ĐẤU</h3>
+            <div ref={logContainerRef} className="h-48 bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
               {combatLog.map((entry, index) => (
-                <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold' : 'text-gray-300'}`}>
+                <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
                   {entry}
                 </p>
               ))}
             </div>
           </div>
           
+          {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
           {gameOver && (
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-20">
-              <h2 className={`text-7xl font-extrabold mb-4 uppercase ${gameOver === 'win' ? 'text-yellow-400' : 'text-red-600'}`} style={{textShadow: `0 0 25px ${gameOver === 'win' ? 'rgba(250, 204, 21, 0.7)' : 'rgba(220, 38, 38, 0.7)'}`}}>
-                {gameOver === 'win' ? "Chiến Thắng!" : "Thất Bại"}
+            <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+              <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
+                  style={{ textShadow: `0 0 25px ${gameOver === 'win' ? 'rgba(252, 211, 77, 0.7)' : 'rgba(220, 38, 38, 0.7)'}` }}
+              >
+                {gameOver === 'win' ? "CHIẾN THẮNG!" : "THẤT BẠI"}
               </h2>
-              <p className="text-xl mb-8 font-sans">
-                {gameOver === 'win' ? "Bóng tối đã bị đẩy lùi." : "Bóng tối đã nuốt chửng bạn."}
+              <p className="text-xl mb-8 text-slate-200 text-shadow-sm">
+                {gameOver === 'win' ? "Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!" : "Thế giới chìm trong bóng tối vĩnh hằng..."}
               </p>
               <button
                 onClick={resetGame}
-                className="px-10 py-4 bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-purple-700 hover:to-indigo-600 rounded-lg font-bold text-2xl uppercase tracking-wider transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/50 transform hover:scale-105"
+                className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-2xl transition-all duration-200 shadow-2xl hover:scale-105 active:scale-100 text-shadow"
               >
                 Chơi Lại
               </button>
