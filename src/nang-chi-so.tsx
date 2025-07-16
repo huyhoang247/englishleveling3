@@ -2,19 +2,6 @@ import React, { useState } from 'react';
 
 // Helper component cho các icon SVG để code chính gọn gàng hơn
 const icons = {
-  world: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-      <path d="M2 12h20" />
-    </svg>
-  ),
-  preview: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ),
   coin: (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#FFD700" stroke="#DAA520" strokeWidth="1">
       <circle cx="12" cy="12" r="10" />
@@ -51,7 +38,7 @@ const StatCard = ({ stat, onUpgrade }) => {
   const totalValue = baseValue + level * upgradeBonus;
 
   return (
-    <div className="bg-[#FDF3D9] w-full max-w-xs sm:w-36 md:w-48 rounded-2xl border-4 border-[#7a4a2a] shadow-lg text-center font-bold text-[#5c381e] transform transition-transform hover:scale-105">
+    <div className="bg-[#FDF3D9] w-28 sm:w-36 md:w-48 rounded-2xl border-4 border-[#7a4a2a] shadow-lg text-center font-bold text-[#5c381e] transform transition-transform hover:scale-105">
       <div className="bg-[#E6A356] py-1 px-4 rounded-t-lg -m-1 mb-2 border-b-4 border-[#7a4a2a]">
         <p className="text-white text-shadow-sm">Lv.{level}</p>
       </div>
@@ -59,7 +46,7 @@ const StatCard = ({ stat, onUpgrade }) => {
         <div className="w-12 h-12">{icon}</div>
         <p className="text-xl">+{totalValue.toLocaleString()}</p>
         <p className="text-lg uppercase">{name}</p>
-        <button 
+        <button
           onClick={() => onUpgrade(stat.id)}
           className="w-full bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-yellow-900 border-2 border-yellow-700 rounded-lg py-2 px-4 flex items-center justify-center gap-2 shadow-md active:shadow-inner active:translate-y-px"
         >
@@ -88,7 +75,7 @@ export default function App() {
 
     if (gold >= upgradeCost) {
       setGold(prevGold => prevGold - upgradeCost);
-      
+
       const newStats = [...stats];
       newStats[statIndex].level += 1;
       setStats(newStats);
@@ -98,7 +85,7 @@ export default function App() {
       setTimeout(() => setMessage(''), 2000); // Ẩn thông báo sau 2 giây
     }
   };
-  
+
   // Dữ liệu cho thanh tiến trình
   const progress = { current: 1410, max: 1425, level: 1408 };
   const progressPercent = (progress.current / progress.max) * 100;
@@ -114,7 +101,7 @@ export default function App() {
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         `}
       </style>
-      
+
       {/* Thông báo */}
       {message && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
@@ -124,21 +111,10 @@ export default function App() {
 
       <div className="w-full min-h-screen bg-gradient-to-b from-[#4a1a8a] via-[#3a136c] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
         <div className="w-full max-w-md mx-auto">
-          {/* Header */}
-          <header className="flex justify-between items-center w-full mb-4">
-            <button className="bg-green-500 border-2 border-green-700 rounded-full p-2 shadow-lg hover:bg-green-600 transition-colors">
-              <div className="w-8 h-8">{icons.world}</div>
-              <span className="absolute -top-1 -right-2 bg-red-500 text-xs px-1.5 py-0.5 rounded-full animate-pulse">Mới</span>
-            </button>
-            <button className="bg-gray-600 border-2 border-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-700 transition-colors">
-              <div className="w-8 h-8">{icons.preview}</div>
-              <span className="text-sm font-bold">Xem trước</span>
-            </button>
-          </header>
 
           {/* Tiêu đề */}
           <h1 className="text-5xl text-center text-shadow my-4">Warrior - 1-10</h1>
-          
+
           {/* Nhân vật */}
           <div className="my-6 flex justify-center drop-shadow-[0_10px_15px_rgba(0,0,0,0.4)]">
              {/* SVG Heo Chiến Binh */}
@@ -147,14 +123,14 @@ export default function App() {
                     {/* Mũ */}
                     <path d="M 50,75 C 40,60 160,60 150,75 C 200,80 0,80 50,75" fill="#F0E68C" stroke="#D2B48C" strokeWidth="3"/>
                     <ellipse cx="100" cy="65" rx="40" ry="15" fill="#F5DEB3" stroke="#D2B48C" strokeWidth="3"/>
-                    
+
                     {/* Thân */}
                     <path d="M 40,90 C 10,140 190,140 160,90 C 170,70 30,70 40,90 Z" fill="#FFC0CB" stroke="#B38891" strokeWidth="3"/>
-                    
+
                     {/* Mắt */}
                     <circle cx="85" cy="100" r="5" fill="black"/>
                     <circle cx="115" cy="100" r="5" fill="black"/>
-                    
+
                     {/* Mũi */}
                     <ellipse cx="100" cy="115" rx="20" ry="12" fill="#FFA07A" stroke="#B38891" strokeWidth="2"/>
                     <circle cx="95" cy="115" r="3" fill="#8B4513"/>
@@ -205,7 +181,7 @@ export default function App() {
           </div>
 
           {/* Các thẻ nâng cấp */}
-          <div className="flex flex-col sm:flex-row justify-around items-center gap-4">
+          <div className="flex flex-row justify-center items-start gap-4">
             {stats.map(stat => (
               <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} />
             ))}
