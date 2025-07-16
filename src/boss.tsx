@@ -4,15 +4,15 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // --- Cấu hình nhân vật và Boss ---
 const PLAYER_INITIAL_STATS = {
-  maxHp: 5000,
-  hp: 5000,
+  maxHp: 100,
+  hp: 100,
   atk: 15,
   def: 5,
 };
 
 const BOSS_INITIAL_STATS = {
-  maxHp: 5000,
-  hp: 5000,
+  maxHp: 300,
+  hp: 300,
   atk: 20,
   def: 8,
   name: "BOSS",
@@ -55,7 +55,6 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   return (
     <div
       key={id}
-      // [CẬP NHẬT] Điều chỉnh vị trí sát thương theo yêu cầu mới
       className={`absolute top-1/3 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
@@ -149,7 +148,8 @@ export default function BossBattle() {
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
-  const [isShaking, setIsShaking] = useState(false);
+  // [XOÁ] State isShaking không còn cần thiết
+  // const [isShaking, setIsShaking] = useState(false);
   const [playerCoins, setPlayerCoins] = useState(0);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
@@ -195,9 +195,10 @@ export default function BossBattle() {
   const runBattleTurn = () => {
     setTurnCounter(currentTurn => {
         const nextTurn = currentTurn + 1;
-        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
         
+        // Lượt của người chơi
         setBossStats(prevBossStats => {
+            const playerDmg = calculateDamage(playerStats.atk, prevBossStats.def);
             const newBossHp = prevBossStats.hp - playerDmg;
             addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, nextTurn);
             showFloatingDamage(playerDmg, false);
@@ -207,21 +208,12 @@ export default function BossBattle() {
                 return { ...prevBossStats, hp: 0 };
             }
 
+            // Lượt của Boss (sau 400ms)
             setTimeout(() => {
                 setPlayerStats(prevPlayerStats => {
-                    const currentBossAtk = bossStats.atk; // Lấy atk của boss từ state bên ngoài timeout
-                    const currentHeroDef = prevPlayerStats.def;
-
-                    let bossDmg;
-                    if (nextTurn % 3 === 0) {
-                        bossDmg = calculateDamage(currentBossAtk * 1.5, currentHeroDef);
-                        addLog(`${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`, nextTurn);
-                        setIsShaking(true);
-                        setTimeout(() => setIsShaking(false), 500);
-                    } else {
-                        bossDmg = calculateDamage(currentBossAtk, currentHeroDef);
-                        addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
-                    }
+                    // [CẬP NHẬT] Bỏ logic tấn công đặc biệt
+                    const bossDmg = calculateDamage(bossStats.atk, prevPlayerStats.def);
+                    addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
                     
                     const newPlayerHp = prevPlayerStats.hp - bossDmg;
                     showFloatingDamage(bossDmg, true);
@@ -231,7 +223,6 @@ export default function BossBattle() {
                     }
                     return { ...prevPlayerStats, hp: newPlayerHp };
                 });
-
             }, 400);
 
             return { ...prevBossStats, hp: newBossHp };
@@ -263,7 +254,6 @@ export default function BossBattle() {
   const resetGame = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setPreviousCombatLog(combatLog);
-
     setPlayerStats(PLAYER_INITIAL_STATS);
     setBossStats(BOSS_INITIAL_STATS);
     setCombatLog([]);
@@ -295,14 +285,9 @@ export default function BossBattle() {
             break;
         }
 
-        let bossDmg;
-        if (tempTurn % 3 === 0) {
-            bossDmg = calculateDamage(bossStats.atk * 1.5, playerStats.def);
-            tempCombatLog.unshift(`[Lượt ${tempTurn}] ${bossStats.name} tung [Hủy Diệt], gây ${bossDmg} sát thương!`);
-        } else {
-            bossDmg = calculateDamage(bossStats.atk, playerStats.def);
-            tempCombatLog.unshift(`[Lượt ${tempTurn}] ${bossStats.name} phản công, gây ${bossDmg} sát thương.`);
-        }
+        // [CẬP NHẬT] Bỏ logic tấn công đặc biệt trong skip
+        const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
+        tempCombatLog.unshift(`[Lượt ${tempTurn}] ${bossStats.name} phản công, gây ${bossDmg} sát thương.`);
         tempPlayerHp -= bossDmg;
         if (tempPlayerHp <= 0) {
             winner = 'lose';
@@ -317,11 +302,10 @@ export default function BossBattle() {
     endGame(winner, tempTurn);
   }
 
-
   return (
     <>
       <style>{`
-        /* ... CSS không thay đổi ... */
+        /* ... CSS không thay đổi, có thể xóa class animate-screen-shake nếu muốn ... */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .font-sans { font-family: sans-serif; }
@@ -349,12 +333,17 @@ export default function BossBattle() {
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
 
+      {/* [XOÁ] Loại bỏ isShaking khỏi class của div main */}
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
                 <div className="w-full max-w-xs">
-                    <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
+                    {/* [CẬP NHẬT] Thêm "Floor 1" và tạo layout flex */}
+                    <div className="flex items-baseline gap-3 mb-1">
+                      <span className="text-base font-semibold text-slate-400 tracking-wider">Floor 1</span>
+                      <h3 className="text-xl font-bold text-blue-300 text-shadow">HERO</h3>
+                    </div>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
                 <div className="flex items-center">
@@ -363,7 +352,8 @@ export default function BossBattle() {
             </div>
         </header>
 
-        <main className={`w-full h-full flex flex-col justify-center items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+        {/* [XOÁ] Loại bỏ isShaking khỏi class của main */}
+        <main className="w-full h-full flex flex-col justify-center items-center pt-24 p-4">
             
             <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
                 <button
