@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// --- ICONS ĐƯỢC CẬP NHẬT ---
+// --- ICONS ĐÃ ĐƯỢC THAY THẾ BẰNG HÌNH ẢNH ---
 const icons = {
   coin: (
     <img 
@@ -9,20 +9,22 @@ const icons = {
     />
   ),
   heart: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-    </svg>
+    <img 
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000384c61f89f8572bc1cce6ca4.png" 
+      alt="HP Icon" 
+    />
   ),
   sword: (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21.71 3.29a1 1 0 0 0-1.42 0l-4.58 4.58a3 3 0 0 0-4.24 4.24l-6 6a1 1 0 0 0 0 1.42l3 3a1 1 0 0 0 1.42 0l6-6a3 3 0 0 0 4.24-4.24l4.58-4.58a1 1 0 0 0 0-1.42z" />
-        <path d="M5 19l-2 2" />
-    </svg>
+    <img 
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000002e7061f7aa3134f2cd28f2f5.png" 
+      alt="ATK Icon" 
+    />
   ),
   shield: (
-     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-    </svg>
+    <img 
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png" 
+      alt="DEF Icon" 
+    />
   )
 };
 
@@ -62,7 +64,6 @@ const calculateTotalStatValue = (currentLevel, baseBonus) => {
 // 4. Hàm định dạng số cho gọn (dùng cho cả Coin và Chỉ số)
 const formatNumber = (num) => {
   if (num < 1000) return num.toString();
-  // Sử dụng toFixed(1) để có độ chính xác như 1.6K, toFixed(0) nếu muốn số nguyên như 1K
   if (num < 1000000) {
       const thousands = num / 1000;
       return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`;
@@ -76,11 +77,10 @@ const formatNumber = (num) => {
 };
 
 
-// --- COMPONENT STAT CARD (ĐÃ CẬP NHẬT HIỂN THỊ CHỈ SỐ THƯỞNG) ---
+// --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   
-  // Lượng chỉ số sẽ nhận được ở level tiếp theo
   const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
   const upgradeCost = calculateUpgradeCost(level);
 
@@ -91,10 +91,9 @@ const StatCard = ({ stat, onUpgrade }) => {
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
       
       <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
-        <div className={`w-10 h-10 ${name === 'HP' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
+        <div className="w-10 h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
           <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-          {/* SỬ DỤNG formatNumber CHO CHỈ SỐ THƯỞNG */}
           <p className="text-2xl font-black text-shadow-cyan">+{formatNumber(nextUpgradeBonus)}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
@@ -183,11 +182,7 @@ export default function App() {
               </div>
           </header>
 
-          {/* DÒNG NÀY ĐÃ BỊ XÓA */}
-          {/* <h1 className="text-4xl sm:text-5xl text-center text-shadow my-2">NÂNG CẤP CHỈ SỐ</h1> */}
-
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
-             {/* Hero SVG không đổi */}
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <defs>
                   <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style={{stopColor: '#3b82f6', stopOpacity: 1}} /><stop offset="100%" style={{stopColor: '#1e40af', stopOpacity: 1}} /></linearGradient>
@@ -202,15 +197,15 @@ export default function App() {
           {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG --- */}
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 text-red-500">{icons.heart}</div>
+              <div className="w-6 h-6">{icons.heart}</div>
               <span className="text-lg font-bold">{formatNumber(totalHp)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 text-cyan-400">{icons.sword}</div>
+              <div className="w-6 h-6">{icons.sword}</div>
               <span className="text-lg font-bold">{formatNumber(totalAtk)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 text-cyan-400">{icons.shield}</div>
+              <div className="w-6 h-6">{icons.shield}</div>
               <span className="text-lg font-bold">{formatNumber(totalDef)}</span>
             </div>
           </div>
