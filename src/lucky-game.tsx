@@ -32,9 +32,9 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 interface Item {
   icon: React.FC<{ className?: string }> | string;
   name: string;
-  value: number; // For coin items, this is the amount. For other items, this is 0.
+  value: number;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
-  color: string;
+  color: string; // Used for SVG component icons
   timestamp?: number;
 }
 interface LuckyChestGameProps {
@@ -53,7 +53,6 @@ interface RewardPopupProps {
 
 // Reward Popup Component (No changes)
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
-    // ... (no changes in this component)
     const getRarityBgClass = (rarity: Item['rarity']) => {
         switch(rarity) {
           case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
@@ -99,7 +98,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     </div>
   );
 };
-
 
 // --- OPTIMIZED CHILD COMPONENT ---
 interface SpinningWheelGridProps {
@@ -167,7 +165,7 @@ const SpinningWheelGrid = React.memo(({
             if (displaySelected) {
               if (isLandedOn) {
                 selectionClasses = itemRarity === 'jackpot'
-                  ? 'scale-110 z-20 ring-4 ring-offset-2 ring-offset-purple-900 ring-red-500 animate-celebrate shadow-2xl shadow-red-500/60'
+                  ? 'z-20 animate-celebrate shadow-2xl shadow-red-500/60'
                   : 'scale-110 z-10 ring-4 ring-green-400 shadow-lg shadow-green-500/40';
               } else { // isSelectedDuringSpin
                 selectionClasses = 'scale-110 z-10 ring-4 ring-yellow-400 animate-pulse shadow-lg shadow-yellow-400/40';
@@ -216,7 +214,6 @@ const SpinningWheelGrid = React.memo(({
   );
 });
 
-
 // --- MAIN PARENT COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -255,7 +252,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
-  // UPDATED: New color scheme for item cells for a more sophisticated look.
   const getRarityBg = useCallback((rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return 'bg-slate-800/60 border-slate-700';
@@ -269,6 +265,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   }, []);
 
   const spinChest = useCallback(() => {
+    // ... (logic remains the same)
     if (isSpinning || currentCoins < 100) return;
 
     onUpdateCoins(-100);
@@ -343,8 +340,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             onUpdateJackpotPool(0, true);
             setTimeout(() => setJackpotAnimation(false), 3000);
           } else {
-            // UPDATED: Logic now correctly handles pure items (value: 0) and coin packs (value > 0)
-            // If it's a pure item, wonItem.value is 0, so no coins are added.
             onUpdateCoins(wonItem.value);
           }
 
@@ -373,7 +368,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           displayedCoins={currentCoins}
           isStatsFullscreen={isStatsFullscreen}
         />
-        {/* Subtle gradient border */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
       </header>
 
@@ -431,6 +425,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                   }
                 `}
               >
+                {/* Button content remains the same */}
                 {isSpinning ? (
                   <span className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -444,35 +439,25 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                     <span className="font-semibold tracking-wide">
                       QUAY
                     </span>
-                    <span className={`
-                      h-4 w-px mx-1.5 transition-colors duration-200 
-                      ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}
-                    `}></span>
+                    <span className={`h-4 w-px mx-1.5 transition-colors duration-200 ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}`}></span>
                     <span className="flex items-center">
-                      {currentCoins < 100 ? (
-                        <span className="font-medium">Hết xu</span>
-                      ) : (
-                        <>
+                      {currentCoins < 100 ? (<span className="font-medium">Hết xu</span>) : (<>
                           <span className="font-medium">100</span>
-                          <CoinsIcon
-                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
-                            className="w-4 h-4 inline-block ml-1"
-                          />
+                          <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 inline-block ml-1"/>
                         </>
                       )}
                     </span>
                   </div>
                 )}
               </button>
-              {currentCoins < 100 && !isSpinning && (
-                <p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>
-              )}
+              {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>)}
             </div>
           </>
         )}
 
+        {/* --- FIXED HISTORY TAB --- */}
         {activeTab === 'history' && (
-            <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg">
+            <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg animate-fade-in">
                 <h3 className="text-white font-bold mb-4 text-lg text-center">📜 Lịch sử nhận thưởng 📜</h3>
                 {rewardHistory.length > 0 ? (
                     <>
@@ -491,15 +476,20 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                     ) : (
                                         <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
                                     )}
-                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
+                                    {/* FIXED: Text color changed for better contrast */}
+                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>
                                         {item.name}
                                     </div>
-                                    {item.rarity !== 'jackpot' && item.value > 0 && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
-                                    {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
+                                    {item.rarity !== 'jackpot' && item.value > 0 && 
+                                      <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}
+                                        <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" />
+                                      </div>
+                                    }
+                                    {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-400 mt-0.5">POOL WIN!</div>}
                                 </div>
                             ))}
                         </div>
-                        {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
+                        {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-400 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
                     </>
                 ) : (
                     <div className="text-center text-white">
@@ -545,6 +535,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       </div>
 
       <style jsx global>{`
+        /* --- FIXED & IMPROVED ANIMATIONS --- */
         @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
         @keyframes celebrate { 0% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 50% { transform: scale(1.15); box-shadow: 0 0 25px 15px rgba(239, 68, 68, 0.3); } 100% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } }
