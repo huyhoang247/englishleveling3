@@ -10,12 +10,13 @@ const PLAYER_INITIAL_STATS = {
   def: 5,
 };
 
+// [THAY ĐỔI] Tên của Boss đã được cập nhật
 const BOSS_INITIAL_STATS = {
   maxHp: 300,
   hp: 300,
   atk: 20,
   def: 8,
-  name: "Quái Vương Hắc Ám",
+  name: "BOSS",
 };
 
 // --- Component Thanh Máu ---
@@ -124,7 +125,8 @@ export default function BossBattle() {
   }, [combatLog]);
 
   useEffect(() => {
-    addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0);
+    // [THAY ĐỔI] Cập nhật log cho tên Boss mới
+    addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0);
   }, []);
 
   useEffect(() => {
@@ -221,7 +223,7 @@ export default function BossBattle() {
     setBattleState('idle');
     setDamages([]);
     setShowStats(false);
-    setTimeout(() => addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0), 100);
+    setTimeout(() => addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
   return (
@@ -237,6 +239,7 @@ export default function BossBattle() {
         .animate-float-up { animation: float-up 1.5s ease-out forwards; }
         @keyframes screen-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
+        /* Hiệu ứng breathing đã bị loại bỏ khỏi component, nhưng vẫn giữ CSS ở đây nếu cần dùng lại */
         .animate-breathing { animation: breathing 5s ease-in-out infinite; }
         @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -259,7 +262,6 @@ export default function BossBattle() {
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
-        {/* Header cố định chỉ chứa thông tin trạng thái */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
                 <div className="w-full max-w-xs">
@@ -272,11 +274,8 @@ export default function BossBattle() {
             </div>
         </header>
 
-        {/* [CẬP NHẬT] Thay đổi padding và vị trí nút */}
-        {/* Padding top của main (pt-24) đảm bảo nội dung bắt đầu bên dưới header (h-20) */}
-        <main className={`w-full h-full flex flex-col items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+        <main className={`w-full h-full flex flex-col justify-center items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             
-            {/* [THAY ĐỔI] Nút View Stats được đặt ở đây, nó sẽ cuộn cùng trang */}
             <div className="w-full flex justify-center mb-4">
                 <button
                     onClick={() => setShowStats(true)}
@@ -290,20 +289,14 @@ export default function BossBattle() {
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
 
-            <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
-
-            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
-                <div className="flex flex-col items-center justify-end">
-                    <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
-                        <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
-                    </div>
-                </div>
-                <div className="hidden md:flex justify-center items-center pb-12">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
-                </div>
+            {/* [XOÁ] Tiêu đề "ĐẤU TRƯỜNG" và hình ảnh Player đã bị loại bỏ */}
+            {/* [CẬP NHẬT] Khu vực này giờ chỉ chứa panel của Boss, được căn giữa */}
+            <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                {/* Boss Panel */}
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
-                  <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
+                  {/* [XOÁ] Hiệu ứng breathing đã bị loại bỏ khỏi div này */}
+                  <div className="w-40 h-40 md:w-56 md:h-56">
                       <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
