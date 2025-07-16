@@ -32,7 +32,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 interface Item {
   icon: React.FC<{ className?: string }> | string;
   name: string;
-  value: number;
+  value: number; // For coin items, this is the amount. For other items, this is 0.
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
   timestamp?: number;
@@ -67,7 +67,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     };
     return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className={`relative p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-pop-in ${getRarityBgClass(item.rarity)}`}>
+      <div className={`relative p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full transform transition-all duration-300 scale-100 animate-pop-in ${getRarityBg(item.rarity)}`}>
         {jackpotWon ? (
           <>
             <div className="text-5xl mb-4 animate-bounce-once">🎊💰🎊</div>
@@ -133,7 +133,7 @@ const SpinningWheelGrid = React.memo(({
   });
 
   return (
-    <div className="grid grid-cols-4 gap-2 p-4 bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl shadow-2xl border-4 border-amber-300">
+    <div className="grid grid-cols-4 gap-2 p-4 bg-gradient-to-br from-slate-800 via-purple-900 to-slate-900 rounded-2xl shadow-2xl border-2 border-slate-700">
       {grid.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
           if (rowIndex === 1 && colIndex === 1) {
@@ -163,36 +163,48 @@ const SpinningWheelGrid = React.memo(({
             const isLandedOn = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
             const displaySelected = isSelectedDuringSpin || isLandedOn;
 
+            let selectionClasses = '';
+            if (displaySelected) {
+              if (isLandedOn) {
+                selectionClasses = itemRarity === 'jackpot'
+                  ? 'scale-110 z-20 ring-4 ring-offset-2 ring-offset-purple-900 ring-red-500 animate-celebrate shadow-2xl shadow-red-500/60'
+                  : 'scale-110 z-10 ring-4 ring-green-400 shadow-lg shadow-green-500/40';
+              } else { // isSelectedDuringSpin
+                selectionClasses = 'scale-110 z-10 ring-4 ring-yellow-400 animate-pulse shadow-lg shadow-yellow-400/40';
+              }
+            }
+
             return (
               <div
                 key={`item-${rowIndex}-${colIndex}`}
                 className={`
-                  aspect-square flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 relative overflow-hidden
+                  aspect-square flex flex-col items-center justify-center p-1.5 rounded-xl border-2 transition-all duration-200 relative overflow-hidden group
                   ${getRarityBg(itemRarity)}
-                  ${displaySelected && itemRarity !== 'jackpot' ? 'shadow-[inset_0_0_0_3px_theme(\'colors.yellow.400\')] scale-110 bg-gradient-to-br from-yellow-200 to-orange-300 z-10' : ''}
-                  ${displaySelected && itemRarity === 'jackpot' ? 'shadow-[inset_0_0_0_4px_theme(\'colors.amber.500\')] scale-110 z-20 animate-pulse' : ''}
-                  ${isSelectedDuringSpin && itemRarity !== 'jackpot' ? 'animate-pulse' : ''}
-                  ${isLandedOn && itemRarity !== 'jackpot' ? 'animate-none shadow-[inset_0_0_0_3px_theme(\'colors.green.500\')] bg-green-200' : ''}
-                  ${isLandedOn && itemRarity === 'jackpot' ? 'animate-none shadow-[inset_0_0_0_4px_theme(\'colors.red.600\')] z-20' : ''}
-                  hover:scale-105
+                  ${selectionClasses}
+                  hover:scale-105 hover:z-20
                 `}
               >
-                {displaySelected && (
-                  <div className={`absolute inset-0 ${isLandedOn ? 'bg-green-400/30' : (itemRarity === 'jackpot' ? 'bg-amber-400/60' : 'bg-yellow-300/50')} ${isSelectedDuringSpin ? 'animate-pulse' : ''}`}></div>
-                )}
-                <div className="flex items-center justify-center w-full h-full">
-                  {typeof cell.item.icon === 'string' ? (
-                    <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 md:w-12 md:h-12 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/48x48/cccccc/000000?text=Lỗi'; }} />
-                  ) : (
-                    <cell.item.icon className={`w-8 h-8 md:w-10 md:h-10 ${cell.item.color} drop-shadow-lg`} />
-                  )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                <div className="flex flex-col items-center justify-center h-full relative z-10 text-white">
+                   {typeof cell.item.icon === 'string' ? (
+                      <img src={cell.item.icon} alt={cell.item.name} className="w-8 h-8 md:w-9 md:h-9 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                    ) : (
+                      <cell.item.icon className={`w-8 h-8 md:w-9 md:h-9 ${cell.item.color} drop-shadow-lg`} />
+                    )}
+                    
+                    {cell.item.value > 0 && (
+                        <div className="flex items-center mt-2 bg-black/50 rounded-full px-2 py-0.5">
+                            <span className="text-xs font-bold text-yellow-300">{cell.item.value.toLocaleString()}</span>
+                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5 ml-1" />
+                        </div>
+                    )}
+
+                    {cell.item.rarity === 'jackpot' && (
+                        <span className="mt-1 text-[11px] font-black text-white uppercase tracking-wider drop-shadow-lg animate-pulse">
+                            Jackpot
+                        </span>
+                    )}
                 </div>
-                {cell.item.value > 0 && (
-                  <div className="absolute bottom-1 right-1 bg-slate-800 bg-opacity-70 backdrop-blur-sm text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center shadow-md">
-                    {cell.item.value.toLocaleString()}
-                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-2.5 h-2.5 ml-0.5" />
-                  </div>
-                )}
               </div>
             );
           }
@@ -218,23 +230,20 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
+  // UPDATED: Items list now contains "pure" items (value: 0) and coin packs (value > 0).
   const items: Item[] = useMemo(() => [
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
-    { icon: GemIcon, name: 'Ngọc quý', value: 300, rarity: 'rare', color: 'text-blue-500' },
-    { icon: StarIcon, name: 'Sao may mắn', value: 500, rarity: 'epic', color: 'text-purple-500' },
-    { icon: ZapIcon, name: 'Tia chớp', value: 200, rarity: 'uncommon', color: 'text-cyan-500' },
-    { icon: ShieldIcon, name: 'Khiên bảo vệ', value: 400, rarity: 'rare', color: 'text-green-500' },
-    { icon: TrophyIcon, name: 'Cúp vàng', value: 800, rarity: 'legendary', color: 'text-orange-500' },
-    { icon: HeartIcon, name: 'Trái tim', value: 250, rarity: 'uncommon', color: 'text-red-500' },
-    { icon: GiftIcon, name: 'Quà bí ẩn', value: 600, rarity: 'epic', color: 'text-pink-500' },
-    { icon: CoinsIcon, name: 'Vàng+', value: 150, rarity: 'common', color: 'text-yellow-500' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' },
-    { icon: StarIcon, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
-    { icon: ZapIcon, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
-    { icon: ShieldIcon, name: 'Khiên ma thuật', value: 700, rarity: 'epic', color: 'text-indigo-500' },
-    { icon: TrophyIcon, name: 'Cúp bạc', value: 400, rarity: 'rare', color: 'text-gray-500' },
-    { icon: HeartIcon, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
-    { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150 Xu', value: 150, rarity: 'common', color: '' },
+    { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
+    { icon: GemIcon, name: 'Ngọc quý', value: 0, rarity: 'rare', color: 'text-blue-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300 Xu', value: 300, rarity: 'uncommon', color: '' },
+    { icon: ShieldIcon, name: 'Khiên bảo vệ', value: 0, rarity: 'rare', color: 'text-green-400' },
+    { icon: StarIcon, name: 'Sao may mắn', value: 0, rarity: 'epic', color: 'text-purple-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500 Xu', value: 500, rarity: 'rare', color: '' },
+    { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400' },
+    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '' },
+    { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: '' },
   ], []);
 
   const itemPositionsOnWheel = useMemo(() => [
@@ -246,15 +255,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
+  // UPDATED: New color scheme for item cells for a more sophisticated look.
   const getRarityBg = useCallback((rarity: Item['rarity']) => {
     switch(rarity) {
-      case 'common': return 'bg-gray-100 border-gray-300';
-      case 'uncommon': return 'bg-green-100 border-green-300';
-      case 'rare': return 'bg-blue-100 border-blue-300';
-      case 'epic': return 'bg-purple-100 border-purple-300';
-      case 'legendary': return 'bg-orange-100 border-orange-300';
-      case 'jackpot': return 'bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-400 border-4 border-yellow-200 shadow-lg shadow-yellow-500/50';
-      default: return 'bg-gray-100 border-gray-300';
+      case 'common': return 'bg-slate-800/60 border-slate-700';
+      case 'uncommon': return 'bg-emerald-800/50 border-emerald-700';
+      case 'rare': return 'bg-sky-800/50 border-sky-700';
+      case 'epic': return 'bg-violet-800/50 border-violet-700';
+      case 'legendary': return 'bg-amber-700/40 border-amber-600';
+      case 'jackpot': return 'bg-gradient-to-br from-yellow-500 via-amber-600 to-red-600 border-4 border-yellow-300';
+      default: return 'bg-slate-800/60 border-slate-700';
     }
   }, []);
 
@@ -321,6 +331,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           setHasSpun(true);
           
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() };
+          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); 
           
           let actualWonAmount = wonItem.value;
 
@@ -332,12 +343,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             onUpdateJackpotPool(0, true);
             setTimeout(() => setJackpotAnimation(false), 3000);
           } else {
+            // UPDATED: Logic now correctly handles pure items (value: 0) and coin packs (value > 0)
+            // If it's a pure item, wonItem.value is 0, so no coins are added.
             onUpdateCoins(wonItem.value);
           }
-          
-          const finalWonItem = { ...wonItem, value: actualWonAmount };
-          setRewardHistory(prev => [finalWonItem, ...prev].slice(0, 10)); 
-          setWonRewardDetails(finalWonItem);
+
+          setWonRewardDetails({ ...wonItem, value: actualWonAmount });
           setShowRewardPopup(true);
         }, finalPauseDuration);
       }
@@ -470,26 +481,25 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                 <div
                                     key={`${item.name}-${item.timestamp}-${index}`}
                                     className={`
-                                        flex-shrink-0 w-28 h-28 ${getRarityBg(item.rarity)}
-                                        p-2.5 rounded-lg text-center flex items-center justify-center shadow-md relative
+                                        flex-shrink-0 w-28 h-32 ${getRarityBg(item.rarity)}
+                                        p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md
                                         hover:shadow-xl transition-all duration-200 transform hover:scale-105
                                     `}
                                 >
                                     {typeof item.icon === 'string' ? (
-                                        <img src={item.icon} alt={item.name} className="w-12 h-12 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/48x48/cccccc/000000?text=Lỗi'; }} />
+                                        <img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
                                     ) : (
-                                        <item.icon className={`w-12 h-12 ${item.color} drop-shadow-lg`} />
+                                        <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
                                     )}
-                                    {item.value > 0 && (
-                                       <div className={`absolute bottom-2 right-2 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-lg ${item.rarity === 'jackpot' ? 'bg-yellow-500/80' : 'bg-slate-800/70'}`}>
-                                            {item.value.toLocaleString()}
-                                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 ml-1" />
-                                        </div>
-                                    )}
+                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
+                                        {item.name}
+                                    </div>
+                                    {item.rarity !== 'jackpot' && item.value > 0 && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
+                                    {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
                                 </div>
                             ))}
                         </div>
-                        {rewardHistory.length >= 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
+                        {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
                     </>
                 ) : (
                     <div className="text-center text-white">
@@ -537,7 +547,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       <style jsx global>{`
         @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
-        @keyframes celebrate { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(253, 224, 71, 0.3); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); } }
+        @keyframes celebrate { 0% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 50% { transform: scale(1.15); box-shadow: 0 0 25px 15px rgba(239, 68, 68, 0.3); } 100% { transform: scale(1.1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } }
         .animate-celebrate { animation: celebrate 0.8s ease-in-out forwards; }
         @keyframes shine { 0% { transform: translateX(-100%) skewX(-20deg); } 100% { transform: translateX(100%) skewX(100%) skewX(-20deg); } }
         .animate-shine { animation: shine 1.5s linear infinite; }
