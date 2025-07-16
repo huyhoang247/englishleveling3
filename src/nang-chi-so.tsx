@@ -36,11 +36,32 @@ const calculateUpgradeCost = (level) => {
   return cost;
 };
 
-// --- COMPONENT STAT CARD VỚI HIỆU ỨNG VIỀN CHUYỂN ĐỘNG KHI HOVER ---
+// --- HÀM MỚI: Định dạng số tiền cho gọn ---
+const formatUpgradeCost = (cost) => {
+  if (cost < 1000) {
+    return cost.toLocaleString();
+  } else if (cost < 1000000) {
+    // Hiển thị dạng K (nghìn), ví dụ: 1.2K, 12.8K, 100K
+    const thousands = cost / 1000;
+    return `${parseFloat(thousands.toFixed(1))}K`;
+  } else if (cost < 1000000000) {
+    // Hiển thị dạng M (triệu), ví dụ: 1.5M, 25M
+    const millions = cost / 1000000;
+    return `${parseFloat(millions.toFixed(1))}M`;
+  } else {
+    // Hiển thị dạng B (tỷ), ví dụ: 2.3B
+    const billions = cost / 1000000000;
+    return `${parseFloat(billions.toFixed(1))}B`;
+  }
+};
+
+
+// --- COMPONENT STAT CARD VỚI NÚT BẤM ĐÃ ĐƯỢC THIẾT KẾ LẠI ---
 const StatCard = ({ stat, onUpgrade }) => {
   const { id, name, level, icon, baseValue, upgradeBonus, color } = stat;
   const totalValue = baseValue + level * upgradeBonus;
   const upgradeCost = calculateUpgradeCost(level);
+  const formattedCost = formatUpgradeCost(upgradeCost);
 
   return (
     // Div cha này sẽ tạo ra viền gradient. Nó có padding nhỏ và nền gradient.
@@ -55,16 +76,19 @@ const StatCard = ({ stat, onUpgrade }) => {
         <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
             <div className={`w-10 h-10 ${id === 'hp' ? 'text-red-500' : 'text-cyan-400'}`}>{icon}</div>
             <div className="flex-grow flex flex-col items-center gap-1">
-            <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-            <p className="text-2xl font-black text-shadow-cyan">+{totalValue.toLocaleString()}</p>
-            <p className="text-xs text-slate-400">Level {level}</p>
+                <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
+                <p className="text-2xl font-black text-shadow-cyan">+{totalValue.toLocaleString()}</p>
+                <p className="text-xs text-slate-400">Level {level}</p>
             </div>
+            {/* --- NÚT NÂNG CẤP ĐÃ ĐƯỢC CẬP NHẬT --- */}
             <button
-            onClick={() => onUpgrade(stat.id)}
-            className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-2 flex items-center justify-center gap-2 shadow-lg transition-all duration-200 active:scale-95"
+                onClick={() => onUpgrade(stat.id)}
+                className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95"
             >
-            <div className="w-5 h-5 text-yellow-400">{icons.coin}</div>
-            <span className="font-bold text-yellow-300">{upgradeCost.toLocaleString()}</span>
+                {/* Icon được đặt trong div để kiểm soát kích thước và căn chỉnh tốt hơn */}
+                <div className="w-5 h-5 flex-shrink-0 text-yellow-400">{icons.coin}</div>
+                {/* Giảm kích thước font và thay đổi gap để vừa vặn hơn */}
+                <span className="text-base font-bold text-yellow-300">{formattedCost}</span>
             </button>
         </div>
     </div>
@@ -91,6 +115,8 @@ export default function App() {
 
     if (gold >= upgradeCost) {
       setGold(prevGold => prevGold - upgradeCost);
+      // Giả sử ta muốn test số tiền lớn, hãy nâng cấp thử level 17
+      // const newLevel = statToUpgrade.level === 0 ? 17 : statToUpgrade.level + 1;
       const newStats = [...stats];
       newStats[statIndex] = { ...newStats[statIndex], level: newStats[statIndex].level + 1 };
       setStats(newStats);
