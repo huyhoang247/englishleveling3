@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// --- ICONS ĐÃ ĐƯỢC THAY THẾ BẰNG HÌNH ẢNH ---
+// --- ICONS ---
 const icons = {
   coin: (
     <img 
@@ -29,28 +29,23 @@ const icons = {
 };
 
 // --- LOGIC TÍNH TOÁN ---
-
-// 1. Tính chi phí nâng cấp (dựa trên level hiện tại)
 const calculateUpgradeCost = (level) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
   return baseCost * Math.pow(2, tier);
 };
 
-// 2. Tính lượng chỉ số thưởng cho MỘT level cụ thể
 const getBonusForLevel = (level, baseBonus) => {
   if (level === 0) return 0;
   const tier = Math.floor((level - 1) / 10);
   return baseBonus * Math.pow(2, tier);
 };
 
-// 3. Tính TỔNG giá trị chỉ số đã tích lũy đến level hiện tại
 const calculateTotalStatValue = (currentLevel, baseBonus) => {
   if (currentLevel === 0) return 0;
   let totalValue = 0;
   const fullTiers = Math.floor(currentLevel / 10);
   const remainingLevelsInCurrentTier = currentLevel % 10;
-
   for (let i = 0; i < fullTiers; i++) {
     const bonusInTier = baseBonus * Math.pow(2, i);
     totalValue += 10 * bonusInTier;
@@ -60,8 +55,6 @@ const calculateTotalStatValue = (currentLevel, baseBonus) => {
   return totalValue;
 };
 
-
-// 4. Hàm định dạng số cho gọn (dùng cho cả Coin và Chỉ số)
 const formatNumber = (num) => {
   if (num < 1000) return num.toString();
   if (num < 1000000) {
@@ -80,7 +73,6 @@ const formatNumber = (num) => {
 // --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
-  
   const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
   const upgradeCost = calculateUpgradeCost(level);
 
@@ -122,7 +114,6 @@ export default function App() {
   const handleUpgrade = (statId) => {
     const statIndex = stats.findIndex(s => s.id === statId);
     if (statIndex === -1) return;
-
     const statToUpgrade = stats[statIndex];
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
@@ -138,7 +129,6 @@ export default function App() {
     }
   };
 
-  // Tính toán các giá trị tổng để hiển thị
   const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
   const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
   const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
@@ -151,19 +141,55 @@ export default function App() {
 
   return (
     <>
-      <style>{/* CSS không thay đổi */ `
+      {/* --- CSS ĐÃ CẬP NHẬT HIỆU ỨNG PHÁT SÁNG --- */}
+      <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
           .font-lilita { font-family: 'Lilita One', cursive; }
           .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
-          @keyframes animate-gradient-border { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-          .animate-border-flow { background-size: 400% 400%; animation: animate-gradient-border 3s linear infinite; }
-          .animate-breathing { animation: breathing 5s ease-in-out infinite; }
-          @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0, 246, 255, 0.4)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(0, 246, 255, 0.7));} }
-          .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: 0; pointer-events: none; }
-          .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
-          .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(100, 108, 255, 0.15) 0%, transparent 50%); }
+          
+          @keyframes animate-gradient-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-border-flow {
+            background-size: 400% 400%;
+            animation: animate-gradient-border 3s linear infinite;
+          }
+
+          /* Hiệu ứng thở cho hero (ĐÃ ĐỔI SANG MÀU TRẮNG) */
+          .animate-breathing {
+            animation: breathing 5s ease-in-out infinite;
+          }
+          @keyframes breathing {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); }
+            50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.7));}
+          }
+
+          /* Vignette & Glow Background (ĐÃ ĐỔI SANG MÀU TRẮNG) */
+          .main-bg::before, .main-bg::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            z-index: 0;
+            pointer-events: none;
+          }
+          .main-bg::before {
+             width: 150%;
+             height: 150%;
+             top: 50%;
+             transform: translate(-50%, -50%);
+             background-image: radial-gradient(circle, transparent 40%, #110f21 80%);
+          }
+           .main-bg::after {
+             width: 100%;
+             height: 100%;
+             top: 0;
+             transform: translateX(-50%);
+             background-image: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+          }
       `}</style>
 
       {message && (
@@ -182,16 +208,13 @@ export default function App() {
               </div>
           </header>
 
+          {/* --- HERO GRAPHIC ĐÃ ĐƯỢC THAY THẾ --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                  <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style={{stopColor: '#3b82f6', stopOpacity: 1}} /><stop offset="100%" style={{stopColor: '#1e40af', stopOpacity: 1}} /></linearGradient>
-                  <filter id="glow"><feGaussianBlur stdDeviation="3.5" result="coloredBlur"></feGaussianBlur><feMerge><feMergeNode in="coloredBlur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
-              </defs>
-              <g transform="translate(0, 10)">
-                  <path d="M 100,20 L 150,70 L 140,150 L 60,150 L 50,70 Z" fill="url(#helmetGrad)" stroke="#60a5fa" strokeWidth="3" /><path d="M 100,50 L 130,75 L 100,85 L 70,75 Z" fill="#1e293b" stroke="#38bdf8" strokeWidth="2" filter="url(#glow)" /><path d="M 60,150 Q 100,170 140,150" fill="none" stroke="#60a5fa" strokeWidth="3" /><rect x="95" y="20" width="10" height="30" fill="#1e3a8a" stroke="#60a5fa" strokeWidth="1.5"/>
-              </g>
-            </svg>
+            <img 
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000ea0061f7986f3f95c048609d.png" 
+              alt="Hero Stone Icon"
+              className="w-full h-full object-contain"
+            />
           </div>
 
           {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG --- */}
