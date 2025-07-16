@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
 // SVG Icons (No changes)
@@ -53,6 +53,7 @@ interface RewardPopupProps {
 
 // Reward Popup Component (No changes)
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
+    // ... (no changes in this component)
     const getRarityBgClass = (rarity: Item['rarity']) => {
         switch(rarity) {
           case 'common': return 'bg-gray-100 border-gray-300 text-gray-800';
@@ -100,7 +101,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-// --- OPTIMIZED CHILD COMPONENT --- (No changes)
+// --- OPTIMIZED CHILD COMPONENT ---
 interface SpinningWheelGridProps {
   items: Item[];
   itemPositionsOnWheel: { row: number; col: number }[];
@@ -179,22 +180,19 @@ const SpinningWheelGrid = React.memo(({
                 {displaySelected && (
                   <div className={`absolute inset-0 ${isLandedOn ? 'bg-green-400/30' : (itemRarity === 'jackpot' ? 'bg-amber-400/60' : 'bg-yellow-300/50')} ${isSelectedDuringSpin ? 'animate-pulse' : ''}`}></div>
                 )}
-                {typeof cell.item.icon === 'string' ? (
-                  <img src={cell.item.icon} alt={cell.item.name} className="w-8 h-8 md:w-10 md:h-10 relative z-10" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
-                ) : (
-                  <cell.item.icon className={`w-6 h-6 md:w-8 md:h-8 ${cell.item.color} relative z-10`} />
-                )}
-                <div className="flex flex-col items-center mt-1 relative z-10">
-                  <span className={`text-[10px] md:text-xs font-semibold ${itemRarity === 'jackpot' ? 'text-red-700' : 'text-gray-700'} text-center leading-tight`}>
-                    {cell.item.name}
-                  </span>
-                  {cell.item.value > 0 && (
-                    <span className="text-[10px] md:text-xs text-gray-600 flex items-center">
-                      {cell.item.value.toLocaleString()}
-                      <CoinsIcon className="w-3 h-3 ml-0.5" />
-                    </span>
+                <div className="flex items-center justify-center w-full h-full">
+                  {typeof cell.item.icon === 'string' ? (
+                    <img src={cell.item.icon} alt={cell.item.name} className="w-10 h-10 md:w-12 md:h-12 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/48x48/cccccc/000000?text=Lỗi'; }} />
+                  ) : (
+                    <cell.item.icon className={`w-8 h-8 md:w-10 md:h-10 ${cell.item.color} drop-shadow-lg`} />
                   )}
                 </div>
+                {cell.item.value > 0 && (
+                  <div className="absolute bottom-1 right-1 bg-slate-800 bg-opacity-70 backdrop-blur-sm text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center shadow-md">
+                    {cell.item.value.toLocaleString()}
+                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-2.5 h-2.5 ml-0.5" />
+                  </div>
+                )}
               </div>
             );
           }
@@ -207,7 +205,7 @@ const SpinningWheelGrid = React.memo(({
 });
 
 
-// --- MAIN PARENT COMPONENT (OPTIMIZED with requestAnimationFrame) ---
+// --- MAIN PARENT COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -219,14 +217,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin');
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
-
-  // Refs for animation to avoid re-renders and keep state during animation loop
-  const animationFrameId = useRef<number>();
-  const animationState = useRef({
-    totalVisualSteps: 0,
-    currentVisualStepIndex: 0,
-    lastUpdateTime: 0,
-  });
 
   const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100 Xu', value: 100, rarity: 'common', color: 'text-yellow-500' },
@@ -241,6 +231,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: 'text-amber-400' },
     { icon: StarIcon, name: 'Sao bạc', value: 300, rarity: 'uncommon', color: 'text-gray-400' },
     { icon: ZapIcon, name: 'Sét đỏ', value: 450, rarity: 'rare', color: 'text-red-400' },
+    { icon: ShieldIcon, name: 'Khiên ma thuật', value: 700, rarity: 'epic', color: 'text-indigo-500' },
+    { icon: TrophyIcon, name: 'Cúp bạc', value: 400, rarity: 'rare', color: 'text-gray-500' },
+    { icon: HeartIcon, name: 'Trái tim vàng', value: 500, rarity: 'epic', color: 'text-yellow-400' },
+    { icon: GiftIcon, name: 'Hộp quà', value: 200, rarity: 'uncommon', color: 'text-violet-500' }
   ], []);
 
   const itemPositionsOnWheel = useMemo(() => [
@@ -264,16 +258,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     }
   }, []);
 
-  // Cleanup function to cancel animation if component unmounts
-  useEffect(() => {
-    return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-    };
-  }, []);
-
-
   const spinChest = useCallback(() => {
     if (isSpinning || currentCoins < 100) return;
 
@@ -281,14 +265,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     onUpdateJackpotPool(randomCoinsToAdd);
 
-    // Reset state for a new spin
     setIsSpinning(true);
     setSelectedIndex(-1);
+    setFinalLandedItemIndex(-1);
     setHasSpun(false);
     setJackpotWon(false);
     setShowRewardPopup(false);
 
-    // Determine the winning item
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
 
@@ -297,57 +280,47 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     } else {
         const otherItemIndicesOnWheel = Array.from({ length: NUM_WHEEL_SLOTS }, (_, i) => i)
                                              .filter(i => i !== jackpotItemArrayIndex);
-        targetLandedItemIndex = otherItemIndicesOnWheel.length > 0
-            ? otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)]
-            : 0;
+        if (otherItemIndicesOnWheel.length > 0) {
+            targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
+        } else {
+            targetLandedItemIndex = 0;
+        }
     }
 
     setFinalLandedItemIndex(targetLandedItemIndex);
 
-    // Setup animation parameters
     const numFullRotations = 2;
-    animationState.current.totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
-    animationState.current.currentVisualStepIndex = 0;
-    animationState.current.lastUpdateTime = 0;
+    const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
+    let currentVisualStepIndex = 0;
+    const finalPauseDuration = 700;
 
-    const spinAnimation = (timestamp: number) => {
-      const { totalVisualSteps, currentVisualStepIndex } = animationState.current;
-      
-      // Determine the speed based on how close we are to the end
-      const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
-      const fastSpeed = 50;
-      const moderateSpeed = 120;
-      const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
-      let currentSpeed;
+    const spinAnimation = () => {
+      const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
+      setSelectedIndex(currentHighlightIndex);
 
-      if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
-        currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
-      } else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) {
-        currentSpeed = moderateSpeed;
-      } else {
-        currentSpeed = fastSpeed;
-      }
+      if (currentVisualStepIndex < totalVisualSteps) {
+        const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
+        const fastSpeed = 50;
+        const moderateSpeed = 120;
+        const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
+        let currentSpeed;
 
-      // Check if enough time has passed to update to the next frame
-      if (timestamp - animationState.current.lastUpdateTime > currentSpeed) {
-        animationState.current.lastUpdateTime = timestamp;
+        if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
+          currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
+        } else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) {
+          currentSpeed = moderateSpeed;
+        } else {
+          currentSpeed = fastSpeed;
+        }
         
-        const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
-        setSelectedIndex(currentHighlightIndex);
-        animationState.current.currentVisualStepIndex++;
-      }
-
-      // Continue animation or stop
-      if (animationState.current.currentVisualStepIndex <= totalVisualSteps) {
-        animationFrameId.current = requestAnimationFrame(spinAnimation);
+        currentVisualStepIndex++;
+        setTimeout(spinAnimation, currentSpeed);
       } else {
-        // Animation finished, process the result after a short pause
         setTimeout(() => {
           setIsSpinning(false);
           setHasSpun(true);
           
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() };
-          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); 
           
           let actualWonAmount = wonItem.value;
 
@@ -361,16 +334,15 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           } else {
             onUpdateCoins(wonItem.value);
           }
-
-          setWonRewardDetails({ ...wonItem, value: actualWonAmount });
+          
+          const finalWonItem = { ...wonItem, value: actualWonAmount };
+          setRewardHistory(prev => [finalWonItem, ...prev].slice(0, 10)); 
+          setWonRewardDetails(finalWonItem);
           setShowRewardPopup(true);
-        }, 300); // Shorter final pause as slowdown is smoother
+        }, finalPauseDuration);
       }
     };
-    
-    // Start the animation loop
-    animationFrameId.current = requestAnimationFrame(spinAnimation);
-
+    spinAnimation();
   }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
   
   return (
@@ -390,6 +362,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           displayedCoins={currentCoins}
           isStatsFullscreen={isStatsFullscreen}
         />
+        {/* Subtle gradient border */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
       </header>
 
@@ -497,25 +470,26 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                 <div
                                     key={`${item.name}-${item.timestamp}-${index}`}
                                     className={`
-                                        flex-shrink-0 w-28 h-32 ${getRarityBg(item.rarity)}
-                                        p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md
+                                        flex-shrink-0 w-28 h-28 ${getRarityBg(item.rarity)}
+                                        p-2.5 rounded-lg text-center flex items-center justify-center shadow-md relative
                                         hover:shadow-xl transition-all duration-200 transform hover:scale-105
                                     `}
                                 >
                                     {typeof item.icon === 'string' ? (
-                                        <img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />
+                                        <img src={item.icon} alt={item.name} className="w-12 h-12 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/48x48/cccccc/000000?text=Lỗi'; }} />
                                     ) : (
-                                        <item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />
+                                        <item.icon className={`w-12 h-12 ${item.color} drop-shadow-lg`} />
                                     )}
-                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-red-700' : 'text-gray-800'} leading-tight line-clamp-2`}>
-                                        {item.name}
-                                    </div>
-                                    {item.rarity !== 'jackpot' && item.value > 0 && <div className="text-xs text-gray-700 mt-0.5">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-0.5 -mt-0.5" /></div>}
-                                    {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-600 mt-0.5">POOL WIN!</div>}
+                                    {item.value > 0 && (
+                                       <div className={`absolute bottom-2 right-2 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full flex items-center shadow-lg ${item.rarity === 'jackpot' ? 'bg-yellow-500/80' : 'bg-slate-800/70'}`}>
+                                            {item.value.toLocaleString()}
+                                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 ml-1" />
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
-                        {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
+                        {rewardHistory.length >= 10 && <p className="text-xs text-center text-gray-300 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
                     </>
                 ) : (
                     <div className="text-center text-white">
