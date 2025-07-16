@@ -36,6 +36,21 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
+// [MỚI] --- Component Hiển thị Coin ---
+const CoinDisplay = ({ coins }: { coins: number }) => {
+  return (
+    <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-yellow-500/30">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400 drop-shadow-[0_1px_2px_rgba(251,191,36,0.8)]">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+        </svg>
+        <span className="font-bold text-lg text-yellow-300 text-shadow-sm tracking-wider">
+            {coins}
+        </span>
+    </div>
+  );
+};
+
+
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
   return (
@@ -52,20 +67,17 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
 // --- Component Modal Chỉ Số (với Overlay và Nút Đóng) ---
 const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_STATS, boss: typeof BOSS_INITIAL_STATS, onClose: () => void }) => {
   return (
-    // Lớp Overlay bao trùm
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
-      onClick={onClose} // Bấm ra ngoài để đóng
+      onClick={onClose}
     >
-      {/* Hộp nội dung popup, chặn sự kiện click lan ra ngoài */}
       <div
         className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita"
-        onClick={(e) => e.stopPropagation()} // Ngăn việc bấm vào popup làm nó tự đóng
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Nút Đóng */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" // Dùng font-sans cho dấu 'X'
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans"
           aria-label="Đóng"
         >
           ✕
@@ -73,17 +85,12 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
 
         <div className="p-5 pt-8">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-            {/* Cột Player */}
             <div className="flex flex-col items-center gap-1.5">
               <h3 className="text-xl font-bold text-blue-300 text-shadow-sm tracking-wide">HERO</h3>
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
             </div>
-
-            {/* Dải phân cách */}
             <div className="h-16 w-px bg-slate-600/70"></div>
-
-            {/* Cột Boss */}
             <div className="flex flex-col items-center gap-1.5">
               <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide">BOSS</h3>
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
@@ -98,7 +105,6 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
 
 // --- Component Chính Của Game ---
 export default function BossBattle() {
-  // --- State và Logic Game (Không thay đổi) ---
   const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
   const [bossStats, setBossStats] = useState(BOSS_INITIAL_STATS);
   const [combatLog, setCombatLog] = useState<string[]>([]);
@@ -108,6 +114,8 @@ export default function BossBattle() {
   const [showStats, setShowStats] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
   const [isShaking, setIsShaking] = useState(false);
+  // [MỚI] State để lưu trữ coin của người chơi
+  const [playerCoins, setPlayerCoins] = useState(0);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -174,7 +182,6 @@ export default function BossBattle() {
         bossDmg = calculateDamage(bossStats.atk, playerStats.def);
         addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, currentTurn);
       }
-
       showFloatingDamage(bossDmg, true);
       const newPlayerHp = playerStats.hp - bossDmg;
 
@@ -185,7 +192,6 @@ export default function BossBattle() {
         setPlayerStats(prev => ({ ...prev, hp: newPlayerHp }));
       }
     }, 400);
-
     setTurnCounter(prev => prev + 1);
   };
 
@@ -194,7 +200,10 @@ export default function BossBattle() {
     setBattleState('finished');
     setGameOver(result);
     if (result === 'win') {
-      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! BẠN ĐÃ CHIẾN THẮNG!`, turnCounter + 1);
+      const coinsEarned = 100 + Math.floor(Math.random() * 51); // Thưởng 100-150 coin
+      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, turnCounter + 1);
+      // [CẬP NHẬT] Thưởng coin khi thắng
+      setPlayerCoins(prevCoins => prevCoins + coinsEarned);
     } else {
       addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter + 1);
     }
@@ -215,7 +224,8 @@ export default function BossBattle() {
     setGameOver(null);
     setBattleState('idle');
     setDamages([]);
-    setShowStats(false); // Đảm bảo popup tắt khi chơi lại
+    setShowStats(false);
+    // [CẬP NHẬT] Giữ lại coin khi chơi lại, hoặc reset nếu muốn: setPlayerCoins(0);
     setTimeout(() => addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
@@ -234,7 +244,6 @@ export default function BossBattle() {
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
         .animate-breathing { animation: breathing 5s ease-in-out infinite; }
         @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
-        /* Animations cho Modal */
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -251,50 +260,58 @@ export default function BossBattle() {
         .bg-pos-100 { background-position: 100% 0%; }
       `}</style>
 
-      {/* Gọi Modal ở cấp cao nhất để nó có thể che toàn màn hình */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
 
-        {/* [THAY ĐỔI] Header được cập nhật để chứa cả nút xem chỉ số */}
-        <header className="fixed top-0 left-0 w-full z-20 p-3 md:p-4 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
+        {/* [CẬP NHẬT] Header được thiết kế lại với Coin và nút Stats tinh tế hơn */}
+        <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
                 {/* Cụm thông tin Player bên trái */}
                 <div className="w-full max-w-xs">
                     <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
-                {/* [DI CHUYỂN & CẬP NHẬT] Nút xem chỉ số đã được chuyển lên đây và đổi thành tiếng Anh */}
-                <button
-                    onClick={() => setShowStats(true)}
-                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 whitespace-nowrap"
-                >
-                    View Stats
-                </button>
+                
+                {/* [MỚI] Cụm thông tin phụ bên phải (Stats và Coin) */}
+                <div className="flex flex-col items-end gap-2">
+                    {/* Nút View Stats được thiết kế lại thành icon với tooltip */}
+                    <div className="relative group">
+                        <button
+                            onClick={() => setShowStats(true)}
+                            className="w-10 h-10 bg-slate-800 hover:bg-cyan-500/80 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-90"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-slate-300">
+                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zm13.25 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                        <div className="absolute top-full right-0 mt-2 p-2 px-3 text-xs font-semibold text-white bg-slate-900 border border-slate-700 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap">
+                            View Stats
+                        </div>
+                    </div>
+                    {/* Hiển thị Coin */}
+                    <CoinDisplay coins={playerCoins} />
+                </div>
             </div>
         </header>
 
-        <main className={`w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+        <main className={`w-full h-full flex flex-col justify-center items-center pt-36 md:pt-40 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             {damages.map(d => (
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
 
-            <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
+            <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜG</h1>
 
             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
-                {/* Player Character */}
                 <div className="flex flex-col items-center justify-end">
                     <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
                         <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
                     </div>
                 </div>
-
-                {/* VS Icon */}
                 <div className="hidden md:flex justify-center items-center pb-12">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
                 </div>
-
-                {/* Boss Panel */}
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
                   <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
@@ -304,7 +321,6 @@ export default function BossBattle() {
                 </div>
             </div>
 
-            {/* --- KHU VỰC ĐIỀU KHIỂN VÀ LOG --- */}
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                 {battleState === 'idle' && (
                 <button
@@ -314,7 +330,6 @@ export default function BossBattle() {
                     BẮT ĐẦU CHIẾN ĐẤU
                 </button>
                 )}
-                {/* Nút xem chỉ số đã được di chuyển lên header */}
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
                     {combatLog.map((entry, index) => (
                         <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
@@ -323,8 +338,7 @@ export default function BossBattle() {
                     ))}
                 </div>
             </div>
-
-            {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
+          
             {gameOver && (
                 <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
