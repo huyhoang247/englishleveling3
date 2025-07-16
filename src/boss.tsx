@@ -36,7 +36,7 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// [MỚI] --- Component Hiển thị Coin ---
+// --- Component Hiển thị Coin ---
 const CoinDisplay = ({ coins }: { coins: number }) => {
   return (
     <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-yellow-500/30">
@@ -49,7 +49,6 @@ const CoinDisplay = ({ coins }: { coins: number }) => {
     </div>
   );
 };
-
 
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
@@ -82,7 +81,6 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
         >
           ✕
         </button>
-
         <div className="p-5 pt-8">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div className="flex flex-col items-center gap-1.5">
@@ -114,7 +112,6 @@ export default function BossBattle() {
   const [showStats, setShowStats] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
   const [isShaking, setIsShaking] = useState(false);
-  // [MỚI] State để lưu trữ coin của người chơi
   const [playerCoins, setPlayerCoins] = useState(0);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
@@ -200,9 +197,8 @@ export default function BossBattle() {
     setBattleState('finished');
     setGameOver(result);
     if (result === 'win') {
-      const coinsEarned = 100 + Math.floor(Math.random() * 51); // Thưởng 100-150 coin
+      const coinsEarned = 100 + Math.floor(Math.random() * 51);
       addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, turnCounter + 1);
-      // [CẬP NHẬT] Thưởng coin khi thắng
       setPlayerCoins(prevCoins => prevCoins + coinsEarned);
     } else {
       addLog("Bạn đã gục ngã... THẤT BẠI!", turnCounter + 1);
@@ -225,7 +221,6 @@ export default function BossBattle() {
     setBattleState('idle');
     setDamages([]);
     setShowStats(false);
-    // [CẬP NHẬT] Giữ lại coin khi chơi lại, hoặc reset nếu muốn: setPlayerCoins(0);
     setTimeout(() => addLog(`Một ${BOSS_INITIAL_STATS.name} khổng lồ xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
 
@@ -263,9 +258,9 @@ export default function BossBattle() {
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-
-        {/* [CẬP NHẬT] Header được thiết kế lại với Coin và nút Stats tinh tế hơn */}
-        <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
+        
+        {/* [CẬP NHẬT] Header chỉ chứa thông tin trạng thái */}
+        <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
                 {/* Cụm thông tin Player bên trái */}
                 <div className="w-full max-w-xs">
@@ -273,35 +268,32 @@ export default function BossBattle() {
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
                 
-                {/* [MỚI] Cụm thông tin phụ bên phải (Stats và Coin) */}
-                <div className="flex flex-col items-end gap-2">
-                    {/* Nút View Stats được thiết kế lại thành icon với tooltip */}
-                    <div className="relative group">
-                        <button
-                            onClick={() => setShowStats(true)}
-                            className="w-10 h-10 bg-slate-800 hover:bg-cyan-500/80 rounded-full flex items-center justify-center transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-90"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-slate-300">
-                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5A.75.75 0 013 10zm13.25 0a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-                            </svg>
-                        </button>
-                        <div className="absolute top-full right-0 mt-2 p-2 px-3 text-xs font-semibold text-white bg-slate-900 border border-slate-700 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap">
-                            View Stats
-                        </div>
-                    </div>
-                    {/* Hiển thị Coin */}
+                {/* Hiển thị Coin */}
+                <div className="flex items-center">
                     <CoinDisplay coins={playerCoins} />
                 </div>
             </div>
         </header>
 
-        <main className={`w-full h-full flex flex-col justify-center items-center pt-36 md:pt-40 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
+        {/* [MỚI] Thanh hành động phụ, nằm ngay dưới Header */}
+        <div className="fixed top-20 left-0 w-full flex justify-center z-20 pointer-events-none">
+            <div className="pointer-events-auto transform -translate-y-1/2">
+                <button
+                    onClick={() => setShowStats(true)}
+                    className="px-6 py-2 bg-slate-900/70 backdrop-blur-md hover:bg-slate-800/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600/80 hover:border-cyan-400 active:scale-95 shadow-md"
+                >
+                    View Stats
+                </button>
+            </div>
+        </div>
+
+        {/* [CẬP NHẬT] Tăng padding-top để chừa không gian cho cả header và nút mới */}
+        <main className={`w-full h-full flex flex-col justify-center items-center pt-28 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             {damages.map(d => (
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
 
-            <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜG</h1>
+            <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
 
             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
                 <div className="flex flex-col items-center justify-end">
