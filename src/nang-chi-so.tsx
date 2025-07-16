@@ -176,14 +176,15 @@ export default function App() {
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
         <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center">
           
-          <header className="w-full flex justify-end mb-4">
+          <header className="w-full flex justify-end mb-4 pt-8">
               <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg py-2 px-4 flex items-center gap-2 shadow-lg">
                   <div className="w-6 h-6">{icons.coin}</div>
                   <span className="text-xl text-yellow-300 text-shadow-sm">{gold.toLocaleString()}</span>
               </div>
           </header>
 
-          <h1 className="text-4xl sm:text-5xl text-center text-shadow my-2">NÂNG CẤP CHỈ SỐ</h1>
+          {/* DÒNG NÀY ĐÃ BỊ XÓA */}
+          {/* <h1 className="text-4xl sm:text-5xl text-center text-shadow my-2">NÂNG CẤP CHỈ SỐ</h1> */}
 
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
              {/* Hero SVG không đổi */}
