@@ -371,14 +371,17 @@ export default function BossBattle() {
                     Fight
                 </button>
                 )}
-                {/* [CẬP NHẬT] Thêm class `font-sans` để sử dụng font chữ dễ đọc cho tiếng Việt */}
-                <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                    {combatLog.map((entry, index) => (
-                        <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
-                        {entry}
-                        </p>
-                    ))}
-                </div>
+
+                {/* [CẬP NHẬT] Khu vực log chỉ hiển thị khi trận đấu đang diễn ra hoặc đã kết thúc */}
+                {battleState !== 'idle' && (
+                  <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                      {combatLog.map((entry, index) => (
+                          <p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>
+                          {entry}
+                          </p>
+                      ))}
+                  </div>
+                )}
             </div>
           
             {gameOver && (
