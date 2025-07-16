@@ -263,8 +263,8 @@ export default function BossBattle() {
 
   return (
     <>
+      {/* [CẬP NHẬT] Thêm class CSS cho hiệu ứng "shine" của nút */}
       <style>{`
-        /* CSS không thay đổi */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .font-sans { font-family: sans-serif; }
@@ -287,9 +287,27 @@ export default function BossBattle() {
         .scrollbar-thin::-webkit-scrollbar { width: 8px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; }
-        .bg-size-200 { background-size: 200% auto; }
-        .bg-pos-0 { background-position: 0% 0%; }
-        .bg-pos-100 { background-position: 100% 0%; }
+        
+        /* CSS cho hiệu ứng shine trên nút */
+        .btn-shine::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 75%;
+          height: 100%;
+          background: linear-gradient(
+            to right,
+            transparent 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            transparent 100%
+          );
+          transform: skewX(-25deg);
+          transition: left 0.6s ease;
+        }
+        .btn-shine:hover::before {
+          left: 125%;
+        }
       `}</style>
 
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
@@ -342,15 +360,16 @@ export default function BossBattle() {
             </div>
 
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                {/* [CẬP NHẬT] Nút "Fight" đã được thiết kế lại */}
+                {/* [CẬP NHẬT] Nút "Fight" được thiết kế lại hoàn toàn */}
                 {battleState === 'idle' && (
                 <button
                     onClick={startGame}
-                    className="px-8 py-3 bg-gradient-to-r from-red-600 via-purple-700 to-red-600 bg-size-200 bg-pos-0 hover:bg-pos-100 rounded-lg font-bold text-lg tracking-wider uppercase
+                    className="btn-shine relative overflow-hidden px-10 py-3 bg-slate-900/80 rounded-lg
+                               font-bold text-lg text-teal-300 tracking-widest uppercase
+                               border border-teal-500/40
                                transition-all duration-300
-                               border-2 border-red-500/40 hover:border-red-400
-                               shadow-lg hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]
-                               active:scale-95 text-shadow"
+                               hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)]
+                               active:scale-95"
                 >
                     Fight
                 </button>
