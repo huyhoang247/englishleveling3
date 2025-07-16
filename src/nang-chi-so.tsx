@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// Helper component cho các icon SVG để code chính gọn gàng hơn
+// Helper component cho các icon SVG
 const icons = {
   coin: (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#FFD700" stroke="#DAA520" strokeWidth="1">
@@ -27,11 +27,24 @@ const icons = {
   )
 };
 
+// Hàm tính toán chi phí nâng cấp dựa trên level hiện tại
+const calculateUpgradeCost = (level) => {
+  const baseCost = 100; // Chi phí cho 10 level đầu tiên (0-9)
+  // Xác định bậc level (mỗi bậc 10 level)
+  // level 0-9 -> tier 0
+  // level 10-19 -> tier 1
+  const tier = Math.floor(level / 10);
+  // Giá tăng gấp đôi sau mỗi bậc, dùng công thức: giá_cơ_bản * 2^(bậc)
+  const cost = baseCost * Math.pow(2, tier);
+  return cost;
+};
+
+
 // Component Card Nâng cấp
 const StatCard = ({ stat, onUpgrade }) => {
-  const { name, level, icon, baseValue, cost, upgradeBonus } = stat;
+  const { name, level, icon, baseValue, upgradeBonus } = stat;
   const totalValue = baseValue + level * upgradeBonus;
-  const upgradeCost = cost + level * cost * 0.2;
+  const upgradeCost = calculateUpgradeCost(level);
 
   return (
     <div className="bg-[#FDF3D9] w-28 sm:w-36 md:w-48 rounded-2xl border-4 border-[#7a4a2a] shadow-lg text-center font-bold text-[#5c381e] transform transition-transform hover:scale-105">
@@ -58,16 +71,17 @@ const StatCard = ({ stat, onUpgrade }) => {
 export default function App() {
   const [gold, setGold] = useState(190600);
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseValue: 0, cost: 100, upgradeBonus: 50 },
-    { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseValue: 0, cost: 100, upgradeBonus: 15 },
-    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseValue: 0, cost: 100, upgradeBonus: 5 },
+    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseValue: 0, upgradeBonus: 50 },
+    { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseValue: 0, upgradeBonus: 15 },
+    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseValue: 0, upgradeBonus: 5 },
   ]);
   const [message, setMessage] = useState('');
 
   const handleUpgrade = (statId) => {
     const statIndex = stats.findIndex(s => s.id === statId);
     const statToUpgrade = stats[statIndex];
-    const upgradeCost = statToUpgrade.cost + statToUpgrade.level * statToUpgrade.cost * 0.2;
+    // Sử dụng hàm tính toán chung
+    const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (gold >= upgradeCost) {
       setGold(prevGold => prevGold - upgradeCost);
