@@ -18,7 +18,69 @@ const BOSS_INITIAL_STATS = {
   name: "Quái Vương Hắc Ám",
 };
 
-// --- Component Thanh Máu ---
+// --- [MỚI] ICONS for Stats Popup ---
+const SwordIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m-4-6h8" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.5 3.5l-5 5M9.5 3.5l5 5" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.417l5.204-1.857A12.02 12.02 0 0012 21a12.02 12.02 0 003.796-1.583L21 20.417A12.02 12.02 0 0018.618 7.984z" />
+  </svg>
+);
+
+// --- [MỚI] Component Popup hiển thị chỉ số ---
+const StatsPopup = ({ player, boss, onClose }) => {
+    return (
+        <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <div 
+                className="w-full max-w-md bg-slate-900/80 border border-slate-700 rounded-2xl shadow-2xl p-6 relative transition-all duration-300 ease-out animate-fade-in-scale"
+                onClick={(e) => e.stopPropagation()} // Ngăn click bên trong popup đóng popup
+            >
+                <h2 className="text-3xl font-bold text-center mb-6 text-cyan-300 text-shadow">Bảng Chỉ Số</h2>
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Hero Stats */}
+                    <div className="flex flex-col items-center gap-3 bg-black/20 p-4 rounded-lg border border-blue-500/50">
+                        <h3 className="text-xl font-bold text-blue-300">HERO</h3>
+                        <p className="text-lg">HP: <span className="font-bold text-green-400">{Math.ceil(player.hp)} / {player.maxHp}</span></p>
+                        <div className="flex items-center gap-2">
+                           <SwordIcon /> <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <ShieldIcon /> <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
+                        </div>
+                    </div>
+                    {/* Boss Stats */}
+                    <div className="flex flex-col items-center gap-3 bg-black/20 p-4 rounded-lg border border-red-500/50">
+                        <h3 className="text-xl font-bold text-red-300">BOSS</h3>
+                        <p className="text-lg">HP: <span className="font-bold text-orange-400">{Math.ceil(boss.hp)} / {boss.maxHp}</span></p>
+                        <div className="flex items-center gap-2">
+                           <SwordIcon /> <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <ShieldIcon /> <p className="text-lg">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
+                        </div>
+                    </div>
+                </div>
+                <button
+                    onClick={onClose}
+                    className="mt-8 w-full px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-md font-semibold text-lg transition-all duration-200"
+                >
+                    Đóng
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
+// --- Các component khác không đổi ---
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
   const percentage = Math.max(0, (current / max) * 100);
   return (
@@ -36,7 +98,6 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
   return (
     <div
@@ -58,7 +119,7 @@ export default function BossBattle() {
   const [turnCounter, setTurnCounter] = useState(0);
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
-  const [showStats, setShowStats] = useState(false);
+  const [showStats, setShowStats] = useState(false); // State này giờ sẽ điều khiển popup
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
   const [isShaking, setIsShaking] = useState(false);
 
@@ -174,7 +235,13 @@ export default function BossBattle() {
   return (
     <>
       <style>{`
-        /* CSS không thay đổi */
+        /* Thêm animation cho popup */
+        @keyframes fade-in-scale {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in-scale { animation: fade-in-scale 0.2s ease-out forwards; }
+
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
@@ -199,13 +266,22 @@ export default function BossBattle() {
       
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
-        {/* --- [MỚI] HEADER CHỈ CÓ THÔNG TIN HERO --- */}
+        {/* --- Header không đổi --- */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 md:p-4 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg">
           <div className="w-full max-w-xs mx-auto md:mx-0 md:ml-4">
             <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">HERO</h3>
             <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
           </div>
         </header>
+
+        {/* --- [MỚI] Render Popup khi showStats là true --- */}
+        {showStats && (
+            <StatsPopup 
+                player={playerStats}
+                boss={bossStats}
+                onClose={() => setShowStats(false)}
+            />
+        )}
 
         <main className={`w-full h-full flex flex-col justify-center items-center pt-28 md:pt-32 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             {damages.map(d => (
@@ -214,44 +290,28 @@ export default function BossBattle() {
 
             <h1 className="text-5xl font-bold text-center mb-6 text-shadow tracking-wider text-cyan-300">ĐẤU TRƯỜNG</h1>
 
-            {/* --- [MỚI] KHU VỰC ĐẤU TRƯỜNG ĐÃ TÁI CẤU TRÚC --- */}
+            {/* --- KHU VỰC ĐẤU TRƯỜNG (loại bỏ phần hiển thị chỉ số cũ) --- */}
             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-end mb-6">
-                {/* Player Character (chỉ hình ảnh) */}
                 <div className="flex flex-col items-center justify-end">
                     <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing">
                         <img src="https://i.ibb.co/L5Tj1Rq/player-knight.png" alt="Anh Hùng" className="w-full h-full object-contain -scale-x-100" />
                     </div>
-                    {showStats && (
-                        <div className="mt-2 text-md text-center bg-black/30 p-2 rounded-md w-full max-w-[200px] text-shadow-sm">
-                            <p>ATK: <span className="font-bold text-red-400">{playerStats.atk}</span></p>
-                            <p>DEF: <span className="font-bold text-sky-400">{playerStats.def}</span></p>
-                        </div>
-                    )}
                 </div>
                 
-                {/* VS Icon */}
                 <div className="hidden md:flex justify-center items-center pb-12">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/versus.png" alt="VS" className="w-24 h-24 opacity-80" />
                 </div>
 
-                {/* Boss Panel (đầy đủ thông tin) */}
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
                   <div className="w-40 h-40 md:w-56 md:h-56 animate-breathing" style={{ animationDelay: '0.5s' }}>
                       <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                  {showStats && (
-                    <div className="text-md text-center bg-black/30 p-2 rounded-md w-full text-shadow-sm">
-                      <p>ATK: <span className="font-bold text-red-400">{bossStats.atk}</span></p>
-                      <p>DEF: <span className="font-bold text-sky-400">{bossStats.def}</span></p>
-                    </div>
-                  )}
                 </div>
             </div>
 
-
-            {/* --- KHU VỰC ĐIỀU KHIỂN VÀ LOG --- */}
+            {/* KHU VỰC ĐIỀU KHIỂN (nút `onClick` không đổi) */}
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                 {battleState === 'idle' && (
                 <button
@@ -262,10 +322,10 @@ export default function BossBattle() {
                 </button>
                 )}
                 <button
-                    onClick={() => setShowStats(!showStats)}
+                    onClick={() => setShowStats(true)} // [MỚI] Luôn set thành true để mở popup
                     className="px-6 py-2 bg-slate-800 hover:bg-slate-700 rounded-md font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95"
                 >
-                {showStats ? 'Ẩn Chỉ Số' : 'Hiện Chỉ Số'}
+                    Xem Chỉ Số
                 </button>
                 <div ref={logContainerRef} className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin">
                     {combatLog.map((entry, index) => (
@@ -276,9 +336,9 @@ export default function BossBattle() {
                 </div>
             </div>
           
-            {/* --- MÀN HÌNH KẾT THÚC GAME --- */}
+            {/* MÀN HÌNH KẾT THÚC GAME */}
             {gameOver && (
-                <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+                <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-50">
                 <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
                     style={{ textShadow: `0 0 25px ${gameOver === 'win' ? 'rgba(252, 211, 77, 0.7)' : 'rgba(220, 38, 38, 0.7)'}` }}
                 >
