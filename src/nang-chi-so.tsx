@@ -206,11 +206,10 @@ export default function App() {
             </svg>
           </div>
 
-          {/* --- THANH TIẾN TRÌNH "SOULFORGE" (ĐÃ ĐƯỢC THIẾT KẾ LẠI) --- */}
+          {/* --- THANH TIẾN TRÌNH (ĐÃ ĐƯỢC THIẾT KẾ LẠI) --- */}
           <div className="w-full px-2 mt-2 mb-8">
-            {/* Tiêu đề & Cấp độ tổng */}
-            <div className="flex justify-between items-baseline mb-2 px-1">
-              <h3 className="text-lg text-shadow-sm text-cyan-300 tracking-wider">SOULFORGE</h3>
+            {/* Cấp độ tổng */}
+            <div className="flex justify-end items-baseline mb-2 px-1">
               <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
             </div>
 
@@ -225,7 +224,7 @@ export default function App() {
 
                 {/* Lớp văn bản */}
                 <div className="absolute inset-0 flex justify-between items-center px-4 text-sm text-white text-shadow-sm font-bold">
-                    <span>Prestige {prestigeLevel}</span>
+                    <span>Stage {prestigeLevel + 1}</span>
                     <span>{currentProgress}<span className="text-slate-300">/{maxProgress}</span></span>
                 </div>
             </div>
