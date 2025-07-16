@@ -10,7 +10,7 @@ const PLAYER_INITIAL_STATS = {
   def: 5,
 };
 
-// [THAY ĐỔI] Tên của Boss đã được cập nhật
+// Tên của Boss đã được cập nhật
 const BOSS_INITIAL_STATS = {
   maxHp: 300,
   hp: 300,
@@ -102,7 +102,7 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
   )
 }
 
-// [THÊM MỚI] --- Component Modal Lịch Sử Chiến Đấu ---
+// --- Component Modal Lịch Sử Chiến Đấu ---
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
       <div
@@ -121,7 +121,8 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
             ✕
           </button>
           <div className="p-4 border-b border-slate-700">
-            <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">LỊCH SỬ CHIẾN ĐẤU</h3>
+            {/* [CẬP NHẬT] Thay đổi tiêu đề của modal log */}
+            <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3>
           </div>
           <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
             {log.length > 0 ? log.map((entry, index) => (
@@ -146,7 +147,6 @@ export default function BossBattle() {
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [showStats, setShowStats] = useState(false);
-  // [THÊM MỚI] State để quản lý modal Lịch sử chiến đấu
   const [showLogModal, setShowLogModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
   const [isShaking, setIsShaking] = useState(false);
@@ -162,7 +162,6 @@ export default function BossBattle() {
   }, [combatLog]);
 
   useEffect(() => {
-    // [THAY ĐỔI] Cập nhật log cho tên Boss mới
     addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0);
   }, []);
 
@@ -260,7 +259,6 @@ export default function BossBattle() {
     setBattleState('idle');
     setDamages([]);
     setShowStats(false);
-    // [THÊM MỚI] Reset cả state của modal log
     setShowLogModal(false);
     setTimeout(() => addLog(`${BOSS_INITIAL_STATS.name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
@@ -278,7 +276,6 @@ export default function BossBattle() {
         .animate-float-up { animation: float-up 1.5s ease-out forwards; }
         @keyframes screen-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .animate-screen-shake { animation: screen-shake 0.5s linear; }
-        /* Hiệu ứng breathing đã bị loại bỏ khỏi component, nhưng vẫn giữ CSS ở đây nếu cần dùng lại */
         .animate-breathing { animation: breathing 5s ease-in-out infinite; }
         @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));} }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -297,10 +294,8 @@ export default function BossBattle() {
         .bg-pos-100 { background-position: 100% 0%; }
       `}</style>
 
-      {/* [CẬP NHẬT] Render các modal */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       {showLogModal && <LogModal log={combatLog} onClose={() => setShowLogModal(false)} />}
-
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
@@ -318,7 +313,6 @@ export default function BossBattle() {
 
         <main className={`w-full h-full flex flex-col justify-center items-center pt-24 p-4 ${isShaking ? 'animate-screen-shake' : ''}`}>
             
-            {/* [CẬP NHẬT] Thêm nút View Log */}
             <div className="w-full flex justify-center items-center gap-4 mb-4">
                 <button
                     onClick={() => setShowStats(true)}
@@ -338,15 +332,13 @@ export default function BossBattle() {
                 <FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />
             ))}
 
-            {/* [XOÁ] Tiêu đề "ĐẤU TRƯỜNG" và hình ảnh Player đã bị loại bỏ */}
-            {/* [CẬP NHẬT] Khu vực này giờ chỉ chứa panel của Boss, được căn giữa */}
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 {/* Boss Panel */}
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <h2 className="text-2xl font-bold text-red-400 text-shadow">{bossStats.name.toUpperCase()}</h2>
-                  {/* [XOÁ] Hiệu ứng breathing đã bị loại bỏ khỏi div này */}
                   <div className="w-40 h-40 md:w-56 md:h-56">
-                      <img src="https://i.ibb.co/h7n4w2B/demon-king.png" alt="Boss" className="w-full h-full object-contain" />
+                      {/* [CẬP NHẬT] Thay đổi URL hình ảnh của Boss */}
+                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                 </div>
