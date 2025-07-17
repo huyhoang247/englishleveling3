@@ -13,9 +13,9 @@ const PLAYER_INITIAL_STATS = {
 };
 
 const BOSS_INITIAL_STATS = {
-  maxHp: 300,
-  hp: 300,
-  atk: 20,
+  maxHp: 3000,
+  hp: 3000,
+  atk: 200,
   def: 8,
   name: "BOSS",
 };
