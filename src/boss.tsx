@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const PLAYER_INITIAL_STATS = {
   maxHp: 100,
   hp: 100,
-  atk: 15,
+  atk: 150,
   def: 5,
   maxEnergy: 50,
   energy: 50,
@@ -38,7 +38,7 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// --- [CẬP NHẬT] Component Hiển thị Năng Lượng - Thiết kế lại cho nhỏ gọn ---
+// --- Component Hiển thị Năng Lượng - Thiết kế lại cho nhỏ gọn ---
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
       <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
@@ -136,6 +136,35 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
         </div>
       </div>
     )
+}
+
+// --- [MỚI] Component Modal Chiến Thắng ---
+const VictoryModal = ({ onRestart }: { onRestart: () => void }) => {
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
+      <div
+        className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-yellow-400 mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 2H8C4.691 2 2 4.691 2 8v8c0 3.309 2.691 6 6 6h8c3.309 0 6-2.691 6-6V8c0-3.309-2.691-6-6-6zm-4 16c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"></path><path d="M12 10c-1.103 0-2 .897-2 2s.897 2 2 2 2-.897 2-2-.897-2-2-2z"></path><path d="M15 2.05A8.956 8.956 0 0 0 12 1a9 9 0 0 0-9 9c0 1.948.624 3.738 1.666 5.176l1.321-1.321A6.96 6.96 0 0 1 5 9a7 7 0 0 1 14 0c0 1.294-.361 2.49-1.025 3.518l1.321 1.321C20.376 12.738 21 10.948 21 9a8.956 8.956 0 0 0-2.05-5.95z"></path>
+          </svg>
+          <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-3 text-shadow"
+              style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>
+              VICTORY
+          </h2>
+          <p className="font-sans text-slate-300 text-sm leading-relaxed max-w-xs">
+            The darkness has been vanquished. Your bravery will be remembered.
+          </p>
+          <hr className="w-full border-t border-yellow-500/20 my-5" />
+          <button
+              onClick={onRestart}
+              className="w-full px-8 py-3 bg-yellow-600/50 hover:bg-yellow-600 rounded-lg font-bold text-base text-yellow-50 tracking-wider uppercase border border-yellow-500 hover:border-yellow-400 transition-all duration-200 active:scale-95"
+          >
+              Play Again
+          </button>
+      </div>
+    </div>
+  );
 }
 
 // --- Component Modal Thất Bại ---
@@ -279,7 +308,9 @@ export default function BossBattle() {
   const resetGame = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setPreviousCombatLog(combatLog);
-    setPlayerStats(PLAYER_INITIAL_STATS);
+    // Tăng năng lượng khi bắt đầu lại, ví dụ +20, không vượt quá max
+    const newEnergy = Math.min(PLAYER_INITIAL_STATS.maxEnergy, playerStats.energy + 20);
+    setPlayerStats({...PLAYER_INITIAL_STATS, energy: newEnergy});
     setBossStats(BOSS_INITIAL_STATS);
     setCombatLog([]);
     setTurnCounter(0);
@@ -350,7 +381,7 @@ export default function BossBattle() {
         .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; }
         .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; }
-        .btn-shine:hover::before { left: 125%; }
+        .btn-shine:hover:not(:disabled)::before { left: 125%; }
       `}</style>
 
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
@@ -424,9 +455,9 @@ export default function BossBattle() {
                                transition-all duration-300
                                hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)]
                                active:scale-95
-                               disabled:bg-slate-700/50 disabled:text-slate-500 disabled:border-slate-600 disabled:cursor-not-allowed disabled:shadow-none"
+                               disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none"
                 >
-                    Fight
+                    Fight (10 Energy)
                 </button>
                 )}
 
@@ -442,22 +473,7 @@ export default function BossBattle() {
             </div>
           
             {gameOver === 'win' && (
-                <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
-                <h2 className="text-7xl font-extrabold mb-4 text-shadow-lg text-yellow-300"
-                    style={{ textShadow: `0 0 25px rgba(252, 211, 77, 0.7)` }}
-                >
-                    CHIẾN THẮNG!
-                </h2>
-                <p className="text-xl mb-8 text-slate-200 text-shadow-sm font-sans">
-                    Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!
-                </p>
-                <button
-                    onClick={resetGame}
-                    className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg font-bold text-2xl transition-all duration-200 shadow-2xl hover:scale-105 active:scale-100 text-shadow"
-                >
-                    Chơi Lại
-                </button>
-                </div>
+                <VictoryModal onRestart={resetGame} />
             )}
             {gameOver === 'lose' && (
                 <DefeatModal onRestart={resetGame} />
