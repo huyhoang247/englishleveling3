@@ -35,7 +35,6 @@ interface Item {
   value: number; // For coins or general value display in history
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
-  timestamp?: number;
   rewardType?: 'coin' | 'pickaxe' | 'other';
   rewardAmount?: number; // The actual amount of the reward type
 }
@@ -125,7 +124,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                     <item.icon className={`w-20 h-20 ${item.color} mx-auto drop-shadow-lg`} />
                 )}
             </div>
-
+            
             <p className="font-sans text-sm uppercase font-bold tracking-widest my-2" style={{ color: rarityColor }}>
                 {item.rarity}
             </p>
@@ -257,10 +256,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1);
   const [hasSpun, setHasSpun] = useState(false);
-  const [rewardHistory, setRewardHistory] = useState<Item[]>([]);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spin' | 'history'>('spin');
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
@@ -335,8 +332,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       } else {
         setTimeout(() => {
           setIsSpinning(false); setHasSpun(true);
-          const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() };
-          setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); 
+          const wonItem = { ...items[targetLandedItemIndex] };
           
           let actualWonValue = 0;
           
@@ -356,7 +352,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             actualWonValue = wonItem.value;
           }
           
-          setWonRewardDetails({ ...wonItem, value: actualWonValue });
+          // Clear name for all items except jackpot
+          const finalWonItem = {
+              ...wonItem,
+              value: actualWonValue,
+              name: wonItem.rarity === 'jackpot' ? wonItem.name : ''
+          };
+
+          setWonRewardDetails(finalWonItem);
           setShowRewardPopup(true);
         }, finalPauseDuration);
       }
@@ -365,7 +368,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   }, [isSpinning, currentCoins, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
   
   return (
-    <div className="min-h-screen bg-slate-900 bg-grid-pattern flex flex-col items-center font-sans pb-24">
+    <div className="min-h-screen bg-slate-900 bg-grid-pattern flex flex-col items-center font-sans pb-4">
       
       <header className="relative w-full flex items-center justify-between py-2 px-4 bg-black/40 backdrop-blur-md">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -381,7 +384,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <div className="max-w-lg w-full px-4 pt-6">
         <div className="text-center mb-6">
-          {activeTab === 'spin' && (
             <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg' }`}>
               <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider"> JACKPOT POOL </div>
               <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
@@ -391,10 +393,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               <div className="text-yellow-200 text-xs mt-2 opacity-90"> Tỉ lệ quay trúng ô JACKPOT: 1%! </div>
               {jackpotAnimation && ( <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div> )}
             </div>
-          )}
         </div>
-
-        {activeTab === 'spin' && (
+        
           <>
             <div className="flex justify-center mb-6">
               <SpinningWheelGrid
@@ -444,44 +444,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-3 font-semibold">Bạn không đủ xu để quay!</p>)}
             </div>
           </>
-        )}
-
-        {activeTab === 'history' && (
-            <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-4 shadow-lg animate-fade-in">
-                <h3 className="text-white font-bold mb-4 text-lg text-center">📜 Lịch sử nhận thưởng 📜</h3>
-                {rewardHistory.length > 0 ? (
-                    <>
-                        <div className="flex overflow-x-auto space-x-3 pb-3 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-purple-800/50">
-                            {rewardHistory.map((item, index) => (
-                                <div key={`${item.name}-${item.timestamp}-${index}`} className={`flex-shrink-0 w-28 h-32 ${getRarityBg(item.rarity)} p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105`}>
-                                    {typeof item.icon === 'string' ? (<img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />) : (<item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />)}
-                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>
-                                        {item.rewardType === 'other' ? item.name : (item.rewardType === 'coin' ? item.rewardAmount : `x${item.rewardAmount}`)}
-                                    </div>
-                                    
-                                    {item.rewardType === 'coin' && item.value > 0 && <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" /></div>}
-                                    {item.rewardType === 'pickaxe' && item.rewardAmount > 0 && <div className="text-xs text-slate-200 mt-0.5 flex items-center">{item.rewardAmount.toLocaleString()}<PickaxeIcon className="w-3 h-3 inline-block ml-1" /></div>}
-                                    {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-400 mt-0.5">POOL WIN!</div>}
-                                </div>
-                            ))}
-                        </div>
-                        {rewardHistory.length > 10 && <p className="text-xs text-center text-gray-400 mt-3">Hiển thị 10 phần thưởng mới nhất.</p>}
-                    </>
-                ) : (
-                    <div className="text-center text-white"> <p className="text-lg">Chưa có phần thưởng nào trong lịch sử.</p> <p className="text-sm opacity-80 mt-2">Hãy quay để bắt đầu nhận thưởng!</p> </div>
-                )}
-            </div>
-        )}
       </div>
 
       {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
-
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-auto">
-        <div className="flex bg-black/30 backdrop-blur-sm rounded-full p-1.5 shadow-lg ring-1 ring-white/10">
-          <button onClick={() => setActiveTab('spin')} className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${ activeTab === 'spin' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md' : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white' }`}> Quay </button>
-          <button onClick={() => setActiveTab('history')} className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 whitespace-nowrap ${ activeTab === 'history' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md' : 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white' }`}> Lịch sử </button>
-        </div>
-      </div>
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;700;800;900&display=swap');
