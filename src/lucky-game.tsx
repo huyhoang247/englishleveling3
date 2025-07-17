@@ -19,10 +19,10 @@ const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => 
     </svg>
   );
 };
-const GemIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 16.5l-6.5-6.5L10 3.5l6.5 6.5L10 16.5zM10 0.5L0.5 10l9.5 9.5 9.5-9.5L10 0.5z"></path> </svg> );
-const StarIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.176 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.927 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path> </svg> );
+
+const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
+const PickaxeIcon = ({ className }: { className?: string }) => <img src={pickaxeIconUrl} alt="Pickaxe Icon" className={className} onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=P'; }} />;
 const ZapIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"></path> </svg> );
-const ShieldIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a8 8 0 00-8 8c0 4.418 3.582 8 8 8s8-3.582 8-8a8 8 0 00-8-8zm0 14.5c-3.59 0-6.5-2.91-6.5-6.5V5.5c0-.828.672-1.5 1.5-1.5h10c.828 0 1.5.672 1.5 1.5v4.5c0 3.59-2.91 6.5-6.5 6.5z"></path> </svg> );
 const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path> </svg> );
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
@@ -32,16 +32,19 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 interface Item {
   icon: React.FC<{ className?: string }> | string;
   name: string;
-  value: number;
+  value: number; // For coins or general value display in history
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
   timestamp?: number;
+  rewardType?: 'coin' | 'pickaxe';
+  rewardAmount?: number; // The actual amount of the reward type
 }
 interface LuckyChestGameProps {
   onClose: () => void;
   isStatsFullscreen: boolean;
   currentCoins: number;
   onUpdateCoins: (amount: number) => void;
+  onUpdatePickaxes: (amount: number) => void;
   currentJackpotPool: number;
   onUpdateJackpotPool: (amount: number, resetToDefault?: boolean) => void;
 }
@@ -128,10 +131,16 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                 {item.rarity}
             </p>
 
-            {item.value > 0 && item.rarity !== 'jackpot' && (
+            {item.rewardType === 'coin' && item.value > 0 && (
                 <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-40 py-1.5 rounded-lg border border-slate-700 mb-6">
                     <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5 text-yellow-400" />
                     <span className="text-xl font-bold text-yellow-300 text-shadow-sm">+{item.value.toLocaleString()}</span>
+                </div>
+            )}
+            {item.rewardType === 'pickaxe' && item.rewardAmount && item.rewardAmount > 0 && (
+                <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-40 py-1.5 rounded-lg border border-slate-700 mb-6">
+                    <PickaxeIcon className="w-5 h-5" />
+                    <span className="text-xl font-bold text-slate-200 text-shadow-sm">+{item.rewardAmount.toLocaleString()}</span>
                 </div>
             )}
           </>
@@ -219,8 +228,8 @@ const SpinningWheelGrid = React.memo(({
                             <item.icon className={`w-8 h-8 ${item.color} drop-shadow-lg`} />
                         )}
 
-                        {item.value > 0 && (
-                            <span className="text-xs font-bold text-amber-300">{item.name}</span>
+                        {(item.value > 0 || item.rewardType === 'pickaxe') && item.rarity !== 'jackpot' && (
+                            <span className="text-xs font-bold text-center text-amber-300">{item.name}</span>
                         )}
                         {item.rarity === 'jackpot' && (
                             <span className="text-xs font-black uppercase text-yellow-300">JACKPOT</span>
@@ -242,7 +251,7 @@ const SpinningWheelGrid = React.memo(({
 
 
 // --- MAIN PARENT COMPONENT ---
-const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
+const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, onUpdatePickaxes, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1);
@@ -255,18 +264,18 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
 
   const items: Item[] = useMemo(() => [
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150', value: 150, rarity: 'common', color: '' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
     { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
-    { icon: GemIcon, name: 'Ngọc quý', value: 0, rarity: 'rare', color: 'text-blue-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300', value: 300, rarity: 'uncommon', color: '' },
-    { icon: ShieldIcon, name: 'Khiên bảo vệ', value: 0, rarity: 'rare', color: 'text-green-400' },
-    { icon: StarIcon, name: 'Sao may mắn', value: 0, rarity: 'epic', color: 'text-purple-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500', value: 500, rarity: 'rare', color: '' },
+    { icon: pickaxeIconUrl, name: '5 Cúp', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300', value: 300, rarity: 'uncommon', color: '', rewardType: 'coin', rewardAmount: 300 },
+    { icon: pickaxeIconUrl, name: '10 Cúp', value: 0, rarity: 'rare', color: '', rewardType: 'pickaxe', rewardAmount: 10 },
+    { icon: pickaxeIconUrl, name: '15 Cúp', value: 0, rarity: 'epic', color: '', rewardType: 'pickaxe', rewardAmount: 15 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500', value: 500, rarity: 'rare', color: '', rewardType: 'coin', rewardAmount: 500 },
     { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400' },
     { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '', rewardType: 'coin' },
     { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400' },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100', value: 100, rarity: 'common', color: '' },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
   const itemPositionsOnWheel = useMemo(() => [
@@ -327,25 +336,35 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           setIsSpinning(false); setHasSpun(true);
           const wonItem = { ...items[targetLandedItemIndex], timestamp: Date.now() };
           setRewardHistory(prev => [wonItem, ...prev].slice(0, 10)); 
-          let actualWonAmount = wonItem.value;
-          if (wonItem.rarity === 'jackpot') {
-            actualWonAmount = currentJackpotPool;
+          
+          let actualWonValue = 0;
+          let popupDisplayName = wonItem.name;
+
+          if (wonItem.rewardType === 'pickaxe' && wonItem.rewardAmount) {
+            onUpdatePickaxes(wonItem.rewardAmount);
+            actualWonValue = wonItem.rewardAmount;
+          } else if (wonItem.rarity === 'jackpot') {
+            actualWonValue = currentJackpotPool;
             setJackpotWon(true); setJackpotAnimation(true);
-            onUpdateCoins(actualWonAmount);
+            onUpdateCoins(actualWonValue);
             onUpdateJackpotPool(0, true);
             setTimeout(() => setJackpotAnimation(false), 3000);
-          } else {
+          } else { // Default to coin reward
             onUpdateCoins(wonItem.value);
+            actualWonValue = wonItem.value;
+            const isPureCoinReward = wonItem.value > 0 && !isNaN(parseInt(wonItem.name));
+             if (isPureCoinReward) {
+                popupDisplayName = "";
+            }
           }
-          const isPureCoinReward = wonItem.value > 0 && !isNaN(parseInt(wonItem.name));
-          const displayName = isPureCoinReward ? "" : wonItem.name;
-          setWonRewardDetails({ ...wonItem, name: displayName, value: actualWonAmount });
+          
+          setWonRewardDetails({ ...wonItem, name: popupDisplayName, value: actualWonValue });
           setShowRewardPopup(true);
         }, finalPauseDuration);
       }
     };
     spinAnimation();
-  }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
+  }, [isSpinning, currentCoins, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
   
   return (
     <div className="min-h-screen bg-slate-900 bg-grid-pattern flex flex-col items-center font-sans pb-24">
@@ -439,7 +458,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                 <div key={`${item.name}-${item.timestamp}-${index}`} className={`flex-shrink-0 w-28 h-32 ${getRarityBg(item.rarity)} p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105`}>
                                     {typeof item.icon === 'string' ? (<img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />) : (<item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />)}
                                     <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>{item.name}</div>
-                                    {item.rarity !== 'jackpot' && item.value > 0 && <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" /></div>}
+                                    
+                                    {item.rewardType === 'coin' && item.value > 0 && <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" /></div>}
+                                    {item.rewardType === 'pickaxe' && item.rewardAmount > 0 && <div className="text-xs text-slate-200 mt-0.5 flex items-center">{item.rewardAmount.toLocaleString()}<PickaxeIcon className="w-3 h-3 inline-block ml-1" /></div>}
                                     {item.rarity === 'jackpot' && <div className="text-xs font-bold text-red-400 mt-0.5">POOL WIN!</div>}
                                 </div>
                             ))}
