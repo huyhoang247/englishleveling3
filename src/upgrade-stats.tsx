@@ -223,7 +223,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-10">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
           
           {/* --- HERO GRAPHIC --- */}
           <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
