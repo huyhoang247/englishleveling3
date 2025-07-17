@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -119,6 +119,40 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
   ]);
   const [message, setMessage] = useState('');
 
+  // NEW: State for displayed gold amount for animation
+  const [displayedGold, setDisplayedGold] = useState(initialGold);
+
+  // NEW: Function to animate the gold count
+  const startGoldCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+
+    const isCountingUp = endValue > startValue;
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+
+    const interval = setInterval(() => {
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
+      }
+
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setDisplayedGold(endValue);
+        clearInterval(interval);
+      } else {
+        setDisplayedGold(current);
+      }
+    }, 25); // Animation speed
+  }, []);
+
+  // NEW: Effect to trigger the animation when initialGold prop changes
+  useEffect(() => {
+    // Animate from the currently displayed value to the new "true" value from props
+    startGoldCountAnimation(displayedGold, initialGold);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialGold]);
+
   // Handle the upgrade logic
   const handleUpgrade = (statId) => {
     const statIndex = stats.findIndex(s => s.id === statId);
@@ -213,7 +247,8 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
         <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-1 px-3 flex items-center gap-2 shadow-lg">
           <div className="w-5 h-5">{icons.coin}</div>
-          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{initialGold.toLocaleString()}</span>
+          {/* UPDATED: Use displayedGold for animation */}
+          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{Math.round(displayedGold).toLocaleString()}</span>
         </div>
       </header>
       
