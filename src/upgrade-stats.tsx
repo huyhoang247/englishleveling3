@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -111,7 +111,6 @@ interface UpgradeStatsScreenProps {
 
 // --- COMPONENT CHÍNH CỦA ỨNG DỤNG ---
 export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold }: UpgradeStatsScreenProps) {
-  // Local state for stats and messages
   const [stats, setStats] = useState([
     { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
     { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
@@ -119,12 +118,18 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
   ]);
   const [message, setMessage] = useState('');
   const [displayedGold, setDisplayedGold] = useState(initialGold);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const startGoldCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) return;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    if (startValue === endValue) {
+      return;
+    }
 
     const isCountingUp = endValue > startValue;
-    // Tinh chỉnh step để animation mượt hơn với số lớn
     const step = Math.max(1, Math.ceil(Math.abs(endValue - startValue) / 50));
     let current = startValue;
 
@@ -137,17 +142,22 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
       if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
         setDisplayedGold(endValue);
-        clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
       } else {
         setDisplayedGold(current);
       }
-    }, 15); // Tăng tần suất update để mượt hơn
+    }, 15);
+
+    intervalRef.current = interval;
   }, []);
 
   useEffect(() => {
     startGoldCountAnimation(displayedGold, initialGold);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialGold]);
+  }, [initialGold, displayedGold, startGoldCountAnimation]);
+
 
   // Handle the upgrade logic
   const handleUpgrade = (statId) => {
