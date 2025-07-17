@@ -84,7 +84,6 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
         <div className="p-5 pt-8">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div className="flex flex-col items-center gap-1.5">
-              {/* [CẬP NHẬT] Đổi "HERO" thành "YOU" */}
               <h3 className="text-xl font-bold text-blue-300 text-shadow-sm tracking-wide">YOU</h3>
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
@@ -135,7 +134,35 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
         </div>
       </div>
     )
-  }
+}
+
+// --- [MỚI] Component Modal Thất Bại ---
+const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
+      <div
+        className="relative w-80 bg-slate-900/80 border border-red-800/50 rounded-xl shadow-2xl shadow-red-900/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center gap-4"
+      >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-slate-600" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13.293 14.707a.999.999 0 0 1-1.414 0L9.464 12.293a.999.999 0 0 1 0-1.414l2.414-2.414a.999.999 0 1 1 1.414 1.414L11.586 12l2.293 2.293a.999.999 0 0 1 0 1.414zM8.5 10.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm7 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"></path>
+          </svg>
+          <h2 className="text-6xl font-extrabold text-red-500 text-shadow" style={{ textShadow: '0 0 15px rgba(220, 38, 38, 0.5)' }}>
+              DEFEAT
+          </h2>
+          <p className="font-sans text-slate-300 text-sm leading-relaxed -mt-2">
+            The darkness has consumed you. But your spirit is not yet broken.
+          </p>
+          <button
+              onClick={onRestart}
+              className="w-full mt-4 px-8 py-3 bg-red-600/80 hover:bg-red-600 rounded-lg font-bold text-lg text-white tracking-widest uppercase border border-red-500/50 transition-all duration-300 hover:shadow-[0_0_15px_theme(colors.red.600/0.6)] active:scale-95"
+          >
+              Try Again
+          </button>
+      </div>
+    </div>
+  );
+}
+
 
 // --- Component Chính Của Game ---
 export default function BossBattle() {
@@ -199,7 +226,6 @@ export default function BossBattle() {
         setBossStats(prevBossStats => {
             const playerDmg = calculateDamage(playerStats.atk, prevBossStats.def);
             const newBossHp = prevBossStats.hp - playerDmg;
-            // [CẬP NHẬT] Thay đổi log tấn công của người chơi
             addLog(`Bạn tấn công, gây ${playerDmg} sát thương.`, nextTurn);
             showFloatingDamage(playerDmg, false);
 
@@ -278,7 +304,6 @@ export default function BossBattle() {
         tempTurn++;
         const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
         tempBossHp -= playerDmg;
-        // [CẬP NHẬT] Thay đổi log tấn công trong skip battle
         tempCombatLog.unshift(`[Lượt ${tempTurn}] Bạn tấn công, gây ${playerDmg} sát thương.`);
         if (tempBossHp <= 0) {
             winner = 'win';
@@ -337,7 +362,6 @@ export default function BossBattle() {
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
                 <div className="w-full max-w-xs">
-                    {/* [CẬP NHẬT] Thay đổi layout header của người chơi */}
                     <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">FLOOR 1</h3>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
@@ -416,15 +440,16 @@ export default function BossBattle() {
                 )}
             </div>
           
-            {gameOver && (
+            {/* [CẬP NHẬT] Logic hiển thị màn hình kết thúc trận đấu */}
+            {gameOver === 'win' && (
                 <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
-                <h2 className={`text-7xl font-extrabold mb-4 text-shadow-lg ${gameOver === 'win' ? 'text-yellow-300' : 'text-red-500'}`}
-                    style={{ textShadow: `0 0 25px ${gameOver === 'win' ? 'rgba(252, 211, 77, 0.7)' : 'rgba(220, 38, 38, 0.7)'}` }}
+                <h2 className="text-7xl font-extrabold mb-4 text-shadow-lg text-yellow-300"
+                    style={{ textShadow: `0 0 25px rgba(252, 211, 77, 0.7)` }}
                 >
-                    {gameOver === 'win' ? "CHIẾN THẮNG!" : "THẤT BẠI"}
+                    CHIẾN THẮNG!
                 </h2>
                 <p className="text-xl mb-8 text-slate-200 text-shadow-sm font-sans">
-                    {gameOver === 'win' ? "Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!" : "Thế giới chìm trong bóng tối vĩnh hằng..."}
+                    Bóng tối đã bị đẩy lùi, vinh quang thuộc về bạn!
                 </p>
                 <button
                     onClick={resetGame}
@@ -433,6 +458,9 @@ export default function BossBattle() {
                     Chơi Lại
                 </button>
                 </div>
+            )}
+            {gameOver === 'lose' && (
+                <DefeatModal onRestart={resetGame} />
             )}
         </main>
       </div>
