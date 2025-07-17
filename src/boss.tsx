@@ -4,18 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // --- Cấu hình nhân vật và Boss ---
 const PLAYER_INITIAL_STATS = {
-  maxHp: 1000,
-  hp: 1000,
-  atk: 150,
+  maxHp: 10000,
+  hp: 10000,
+  atk: 1500,
   def: 5,
   maxEnergy: 50,
   energy: 50,
 };
 
 const BOSS_INITIAL_STATS = {
-  maxHp: 3000,
-  hp: 3000,
-  atk: 200,
+  maxHp: 30000,
+  hp: 30000,
+  atk: 2000,
   def: 8,
   name: "BOSS",
 };
