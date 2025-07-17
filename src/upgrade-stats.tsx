@@ -262,14 +262,14 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
       `}</style>
 
       {/* --- HEADER MỚI --- */}
-      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-3 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
+      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button
           onClick={onClose}
           className="p-2 rounded-lg text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors duration-300"
           aria-label="Quay lại"
           title="Quay lại"
         >
-          <HomeIcon className="w-6 h-6" />
+          <HomeIcon className="w-5 h-5" />
         </button>
 
         {/* Bọc CoinDisplay trong một div để ghi đè font chữ */}
