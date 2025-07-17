@@ -150,7 +150,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* --- CSS ĐÃ CẬP NHẬT HIỆU ỨNG PHÁT SÁNG --- */}
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
           .font-lilita { font-family: 'Lilita One', cursive; }
@@ -168,7 +167,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
             animation: animate-gradient-border 3s linear infinite;
           }
 
-          /* Hiệu ứng thở cho hero (ĐÃ ĐỔI SANG MÀU TRẮNG) */
           .animate-breathing {
             animation: breathing 5s ease-in-out infinite;
           }
@@ -177,7 +175,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
             50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.7));}
           }
 
-          /* Vignette & Glow Background (ĐÃ ĐỔI SANG MÀU TRẮNG) */
           .main-bg::before, .main-bg::after {
             content: '';
             position: absolute;
@@ -201,33 +198,38 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
           }
       `}</style>
 
-      <button 
-        onClick={onClose}
-        className="absolute top-4 right-4 z-50 p-2 rounded-full text-white bg-black/20 hover:bg-black/50 transition-all"
-        aria-label="Close"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
+      {/* --- HEADER MỚI --- */}
+      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
+        <button
+          onClick={onClose}
+          className="p-2 rounded-lg text-white bg-slate-800/50 hover:bg-red-500/60 transition-colors duration-300"
+          aria-label="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
 
+        <h1 className="text-2xl font-bold uppercase tracking-widest text-shadow-cyan pointer-events-none">
+          Nâng Cấp
+        </h1>
+
+        <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-2 px-4 flex items-center gap-2 shadow-lg">
+          <div className="w-6 h-6">{icons.coin}</div>
+          <span className="text-xl text-yellow-300 font-bold text-shadow-sm">{formatNumber(initialGold)}</span>
+        </div>
+      </header>
+      
       {message && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
           {message}
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-24">
           
-          <header className="w-full flex justify-end mb-4 pt-8">
-              <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg py-2 px-4 flex items-center gap-2 shadow-lg">
-                  <div className="w-6 h-6">{icons.coin}</div>
-                  <span className="text-xl text-yellow-300 text-shadow-sm">{initialGold.toLocaleString()}</span>
-              </div>
-          </header>
-
-          {/* --- HERO GRAPHIC ĐÃ ĐƯỢC THAY THẾ --- */}
+          {/* --- HERO GRAPHIC --- */}
           <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <img 
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
