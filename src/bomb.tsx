@@ -41,7 +41,6 @@ const CustomAnimationStyles = () => (
     }
     .animate-gentle-bounce-inline { animation: gentle-bounce-inline 1s infinite; }
 
-    /* THAY ĐỔI Ở ĐÂY: Animation đã được làm nhẹ nhàng hơn */
     @keyframes gentle-shake-animation {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-3px); }
@@ -49,7 +48,6 @@ const CustomAnimationStyles = () => (
       75% { transform: translateX(-3px); }
     }
     .cell-shake {
-      /* THAY ĐỔI Ở ĐÂY: Sử dụng animation mới */
       animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
     }
   `}</style>
@@ -111,9 +109,11 @@ interface MinerChallengeProps {
   onUpdateCoins: (amount: number) => void;
   initialPickaxes: number;
   onUpdatePickaxes: (newCount: number) => void;
+  initialHighestFloor: number;
+  onUpdateHighestFloor: (floor: number) => void;
 }
 
-export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins, initialPickaxes, onUpdatePickaxes }: MinerChallengeProps) {
+export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoins, initialPickaxes, onUpdatePickaxes, initialHighestFloor, onUpdateHighestFloor }: MinerChallengeProps) {
   const createBoard = () => {
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
     const placeItem = (itemType) => { 
@@ -131,7 +131,8 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     return newBoard;
   };
 
-  const [currentFloor, setCurrentFloor] = useState(1);
+  // Khởi tạo tầng hiện tại dựa trên tầng cao nhất đã hoàn thành
+  const [currentFloor, setCurrentFloor] = useState(initialHighestFloor > 0 ? initialHighestFloor + 1 : 1);
   const [board, setBoard] = useState(() => createBoard());
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
@@ -270,12 +271,35 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
   }, [board, flagsPlaced, isOpening]);
   
   const goToNextFloor = () => {
+    // Cập nhật tầng cao nhất đã hoàn thành trước khi sang tầng mới
+    onUpdateHighestFloor(currentFloor);
+
     setCurrentFloor(prev => prev + 1);
     setBoard(createBoard());
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
   };
   
+  // Hàm xử lý khi người dùng thoát game
+  const handleClose = () => {
+    let uncollectedReward = 0;
+    const rewardPerCoinOnCurrentFloor = Math.max(1, masteryCards) * currentFloor;
+
+    // Duyệt qua bàn cờ để tìm các đồng tiền đã lộ diện nhưng chưa thu thập
+    board.flat().forEach(cell => {
+      if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
+        uncollectedReward += rewardPerCoinOnCurrentFloor;
+      }
+    });
+
+    if (uncollectedReward > 0) {
+      onUpdateCoins(uncollectedReward); // Cập nhật số coin lên Firestore
+      console.log(`Automatically collected ${uncollectedReward} coins on exit.`);
+    }
+
+    onClose(); // Gọi hàm đóng giao diện game
+  };
+
   const resetGame = () => {
     setCurrentFloor(1);
     setFlagsPlaced(0);
@@ -294,7 +318,8 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
-              onClick={onClose}
+              // Gọi hàm handleClose thay vì onClose trực tiếp
+              onClick={handleClose}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
               aria-label="Home"
               title="Home"
