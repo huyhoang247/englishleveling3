@@ -20,6 +20,7 @@ import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
+import UpgradeStatsScreen from './upgrade-stats.tsx';
 // Đảm bảo import VocabularyItem từ thanh-tuu
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
@@ -131,6 +132,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [isUpgradeScreenOpen, setIsUpgradeScreenOpen] = useState(false);
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
@@ -408,6 +410,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
         setIsBackgroundPaused(false);
         setCoins(0);
         setDisplayedCoins(0);
@@ -448,7 +451,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, [coins]);
 
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen;
+    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
@@ -523,6 +526,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsVocabularyChestOpen(false);
             setIsAchievementsOpen(false);
             setIsAdminPanelOpen(false);
+            setIsUpgradeScreenOpen(false);
         } else {
             showNavBar();
         }
@@ -547,6 +551,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsVocabularyChestOpen(false);
              setIsAchievementsOpen(false);
              setIsAdminPanelOpen(false);
+             setIsUpgradeScreenOpen(false);
          } else {
              showNavBar();
          }
@@ -571,6 +576,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -595,6 +601,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -619,6 +626,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -643,6 +651,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -666,6 +675,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -690,6 +700,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -714,6 +725,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -738,6 +750,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -762,6 +775,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAdminPanelOpen(false);
+        setIsUpgradeScreenOpen(false);
       } else {
         showNavBar();
       }
@@ -787,6 +801,32 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
+        setIsUpgradeScreenOpen(false);
+      } else {
+        showNavBar();
+      }
+      return newState;
+    });
+  };
+
+  const toggleUpgradeScreen = () => {
+    if (isLoading) return;
+    setIsUpgradeScreenOpen(prev => {
+      const newState = !prev;
+      if (newState) {
+        hideNavBar();
+        setIsStatsFullscreen(false);
+        setIsRankOpen(false);
+        setIsGoldMineOpen(false);
+        setIsInventoryOpen(false);
+        setIsLuckyGameOpen(false);
+        setIsMinerChallengeOpen(false);
+        setIsBlacksmithOpen(false);
+        setIsTowerGameOpen(false);
+        setIsShopOpen(false);
+        setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false);
+        setIsAdminPanelOpen(false);
       } else {
         showNavBar();
       }
@@ -798,7 +838,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen;
+  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isTowerGameOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -811,6 +851,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowLuckyGame={toggleLuckyGame}
           onShowMinerChallenge={toggleMinerChallenge}
           onShowAchievements={toggleAchievements}
+          onShowUpgrade={toggleUpgradeScreen}
           onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
@@ -955,6 +996,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClaimReward={handleRewardClaim} // SỬ DỤNG HÀM MỚI
                         masteryCardsCount={masteryCards}
                         displayedCoins={displayedCoins}
+                    />
+                )}
+            </ErrorBoundary>
+        </div>
+        
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isUpgradeScreenOpen && auth.currentUser && (
+                    <UpgradeStatsScreen 
+                        onClose={toggleUpgradeScreen} 
+                        initialGold={coins}
+                        onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser.uid, amount)}
                     />
                 )}
             </ErrorBoundary>
