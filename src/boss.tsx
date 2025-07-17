@@ -151,6 +151,55 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     )
 }
 
+// --- Component Modal Phần Thưởng ---
+const RewardsModal = ({ onClose }: { onClose: () => void }) => {
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans"
+          aria-label="Đóng"
+        >
+          ✕
+        </button>
+        <div className="p-5 pt-8">
+          <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-4 uppercase">Rewards</h3>
+          <div className="flex flex-col items-start gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+            {/* Phần thưởng Vàng */}
+            <div className="flex items-center gap-3 w-full font-sans">
+              <div className="w-10 h-10 flex items-center justify-center bg-yellow-900/30 rounded-full border border-yellow-500/50">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1.287 15.584c-1.42.368-2.92.516-4.287.395V16.6c1.077.105 2.13.045 3.129-.169a1 1 0 0 0 .87-1.119l-.547-3.284a1 1 0 0 0-1.119-.87c-.394.065-.806.11-1.229.136V9.4c.319-.016.634-.042.946-.078a1 1 0 0 0 .973-1.018l-.138-1.65a1 1 0 0 0-1.017-.973c-.886.074-1.78.11-2.664.11S9.334 5.863 8.448 5.79a1 1 0 0 0-1.017.973l-.138 1.65a1 1 0 0 0 .973 1.018c.312.036.627.062.946.078v1.896c-.423-.026-.835-.071-1.229-.136a1 1 0 0 0-1.119.87l-.547 3.284a1 1 0 0 0 .87 1.119c1.131.238 2.306.31 3.522.188v1.376c-1.385.01-2.858-.171-4.22-.656a1 1 0 1 0-.604 1.9c1.73.613 3.598.819 5.324.793 1.726.026 3.594-.18 5.324-.793a1 1 0 1 0-.604-1.9z"></path></svg>
+              </div>
+              <span className="text-lg font-semibold text-slate-200">Gold</span>
+              <span className="text-lg font-bold text-yellow-400 ml-auto">+300</span>
+            </div>
+            {/* Phần thưởng Năng lượng */}
+            <div className="flex items-center gap-3 w-full font-sans">
+              <div className="w-10 h-10 flex items-center justify-center bg-cyan-900/30 rounded-full border border-cyan-500/50">
+                  <img
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png"
+                    alt="Energy"
+                    className="w-6 h-6"
+                  />
+              </div>
+              <span className="text-lg font-semibold text-slate-200">Energy</span>
+              <span className="text-lg font-bold text-cyan-300 ml-auto">+5</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // --- Component Modal Chiến Thắng ---
 const VictoryModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
@@ -219,6 +268,7 @@ export default function BossBattle() {
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
@@ -398,6 +448,7 @@ export default function BossBattle() {
 
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
+      {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
@@ -424,12 +475,20 @@ export default function BossBattle() {
                 </button>
 
                 {battleState === 'idle' && (
-                  <button
-                      onClick={() => setShowLogModal(true)}
-                      className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
-                  >
-                      View Log
-                  </button>
+                  <>
+                    <button
+                        onClick={() => setShowLogModal(true)}
+                        className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
+                    >
+                        View Log
+                    </button>
+                    <button
+                        onClick={() => setShowRewardsModal(true)}
+                        className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md"
+                    >
+                        Rewards
+                    </button>
+                  </>
                 )}
 
                 {battleState === 'fighting' && (
