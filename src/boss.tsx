@@ -84,7 +84,8 @@ const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_S
         <div className="p-5 pt-8">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div className="flex flex-col items-center gap-1.5">
-              <h3 className="text-xl font-bold text-blue-300 text-shadow-sm tracking-wide">HERO</h3>
+              {/* [CẬP NHẬT] Đổi "HERO" thành "YOU" */}
+              <h3 className="text-xl font-bold text-blue-300 text-shadow-sm tracking-wide">YOU</h3>
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
             </div>
@@ -148,8 +149,6 @@ export default function BossBattle() {
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
-  // [XOÁ] State isShaking không còn cần thiết
-  // const [isShaking, setIsShaking] = useState(false);
   const [playerCoins, setPlayerCoins] = useState(0);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
@@ -200,7 +199,8 @@ export default function BossBattle() {
         setBossStats(prevBossStats => {
             const playerDmg = calculateDamage(playerStats.atk, prevBossStats.def);
             const newBossHp = prevBossStats.hp - playerDmg;
-            addLog(`Anh Hùng tấn công, gây ${playerDmg} sát thương.`, nextTurn);
+            // [CẬP NHẬT] Thay đổi log tấn công của người chơi
+            addLog(`Bạn tấn công, gây ${playerDmg} sát thương.`, nextTurn);
             showFloatingDamage(playerDmg, false);
 
             if (newBossHp <= 0) {
@@ -211,7 +211,6 @@ export default function BossBattle() {
             // Lượt của Boss (sau 400ms)
             setTimeout(() => {
                 setPlayerStats(prevPlayerStats => {
-                    // [CẬP NHẬT] Bỏ logic tấn công đặc biệt
                     const bossDmg = calculateDamage(bossStats.atk, prevPlayerStats.def);
                     addLog(`${bossStats.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
                     
@@ -279,13 +278,13 @@ export default function BossBattle() {
         tempTurn++;
         const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
         tempBossHp -= playerDmg;
-        tempCombatLog.unshift(`[Lượt ${tempTurn}] Anh Hùng tấn công, gây ${playerDmg} sát thương.`);
+        // [CẬP NHẬT] Thay đổi log tấn công trong skip battle
+        tempCombatLog.unshift(`[Lượt ${tempTurn}] Bạn tấn công, gây ${playerDmg} sát thương.`);
         if (tempBossHp <= 0) {
             winner = 'win';
             break;
         }
 
-        // [CẬP NHẬT] Bỏ logic tấn công đặc biệt trong skip
         const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
         tempCombatLog.unshift(`[Lượt ${tempTurn}] ${bossStats.name} phản công, gây ${bossDmg} sát thương.`);
         tempPlayerHp -= bossDmg;
@@ -305,7 +304,7 @@ export default function BossBattle() {
   return (
     <>
       <style>{`
-        /* ... CSS không thay đổi, có thể xóa class animate-screen-shake nếu muốn ... */
+        /* ... CSS không thay đổi ... */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .font-sans { font-family: sans-serif; }
@@ -333,17 +332,13 @@ export default function BossBattle() {
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
 
-      {/* [XOÁ] Loại bỏ isShaking khỏi class của div main */}
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
                 <div className="w-full max-w-xs">
-                    {/* [CẬP NHẬT] Thêm "Floor 1" và tạo layout flex */}
-                    <div className="flex items-baseline gap-3 mb-1">
-                      <span className="text-base font-semibold text-slate-400 tracking-wider">Floor 1</span>
-                      <h3 className="text-xl font-bold text-blue-300 text-shadow">HERO</h3>
-                    </div>
+                    {/* [CẬP NHẬT] Thay đổi layout header của người chơi */}
+                    <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">FLOOR 1</h3>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
                 <div className="flex items-center">
@@ -352,7 +347,6 @@ export default function BossBattle() {
             </div>
         </header>
 
-        {/* [XOÁ] Loại bỏ isShaking khỏi class của main */}
         <main className="w-full h-full flex flex-col justify-center items-center pt-24 p-4">
             
             <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
