@@ -333,7 +333,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  const updatePickaxesInFirestore = async (userId: string, newAmount: number) => {
+  const updatePickaxesInFirestore = async (userId: string, newTotalAmount: number) => {
       if (!userId) {
           console.error("Cannot update pickaxes: User not authenticated.");
           return;
@@ -342,16 +342,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       try {
           await runTransaction(db, async (transaction) => {
               const userDoc = await transaction.get(userDocRef);
+              const finalAmount = Math.max(0, newTotalAmount);
               if (!userDoc.exists()) {
-                  transaction.set(userDocRef, { pickaxes: newAmount });
+                  transaction.set(userDocRef, { pickaxes: finalAmount });
               } else {
-                  transaction.update(userDocRef, { pickaxes: newAmount });
+                  transaction.update(userDocRef, { pickaxes: finalAmount });
               }
+              setPickaxes(finalAmount);
           });
-          setPickaxes(newAmount);
       } catch (error) {
           console.error("Firestore Transaction failed for pickaxes: ", error);
       }
+  };
+
+  const handleUpdatePickaxes = async (amountToAdd: number) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+        console.error("Cannot update pickaxes: User not authenticated.");
+        return;
+    }
+    const newTotal = pickaxes + amountToAdd;
+    await updatePickaxesInFirestore(userId, newTotal);
   };
 
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
@@ -902,7 +913,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} isStatsFullscreen={isStatsFullscreen}/>)}</ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} isStatsFullscreen={isStatsFullscreen}/>)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
