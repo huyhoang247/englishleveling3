@@ -16,6 +16,7 @@ interface SidebarLayoutProps {
   onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
   onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
   onShowAchievements?: () => void; // NEW: Handler for showing Achievements
+  onShowUpgrade?: () => void; // NEW: Handler for showing Upgrade screen
   onShowAdmin?: () => void; // NEW: Handler for showing Admin Panel
 }
 
@@ -44,6 +45,14 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 const TrophyIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+);
+
+// NEW: Icon for Upgrade
+const TrendingUpIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+        <polyline points="17 6 23 6 23 12"></polyline>
     </svg>
 );
 
@@ -201,7 +210,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowUpgrade, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -226,6 +235,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine,
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
     { id: 'minerChallenge', label: 'Miner Challenge', icon: BombIcon, onClick: onShowMinerChallenge },
     { id: 'achievements', label: 'Achievements', icon: TrophyIcon, onClick: onShowAchievements },
+    { id: 'upgrade', label: 'Upgrade', icon: TrendingUpIcon, onClick: onShowUpgrade },
     // { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp }, // REMOVED
     // NEW: Admin Panel menu item, placed after Help
     { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
@@ -260,6 +270,10 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine,
                 {menuItems.map((item, index) => {
                   // Only render the Admin item if the onShowAdmin handler is provided
                   if (item.id === 'admin' && !onShowAdmin) {
+                    return null;
+                  }
+                  // Only render the Upgrade item if the handler is provided
+                  if (item.id === 'upgrade' && !onShowUpgrade) {
                     return null;
                   }
                   
