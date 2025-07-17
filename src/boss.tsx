@@ -56,16 +56,27 @@ const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
 
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
+  // Hàm định dạng số sát thương: nếu lớn hơn hoặc bằng 1000, chuyển sang dạng "k"
+  const formatDamageText = (num: number): string => {
+    if (num >= 1000) {
+      // Chia cho 1000, làm tròn đến 1 chữ số thập phân và thêm "k"
+      // parseFloat sẽ tự động bỏ đi ".0" nếu có (ví dụ: 1000 -> 1k, 1234 -> 1.2k)
+      return `${parseFloat((num / 1000).toFixed(1))}k`;
+    }
+    return String(num);
+  };
+
   return (
     <div
       key={id}
       className={`absolute top-1/3 font-lilita text-2xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
-      -{damage}
+      -{formatDamageText(damage)}
     </div>
   );
 };
+
 
 // --- Component Modal Chỉ Số (với Overlay và Nút Đóng) ---
 const StatsModal = ({ player, boss, onClose }: { player: typeof PLAYER_INITIAL_STATS, boss: typeof BOSS_INITIAL_STATS, onClose: () => void }) => {
