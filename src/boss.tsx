@@ -6,10 +6,10 @@ import React, { useState, useEffect, useRef } from 'react';
 const PLAYER_INITIAL_STATS = {
   maxHp: 100,
   hp: 100,
-  atk: 150,
+  atk: 15,
   def: 5,
-  maxEnergy: 50, // [MỚI] Thêm chỉ số năng lượng tối đa
-  energy: 50,    // [MỚI] Thêm chỉ số năng lượng hiện tại
+  maxEnergy: 50,
+  energy: 50,
 };
 
 const BOSS_INITIAL_STATS = {
@@ -38,34 +38,33 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// --- [CẬP NHẬT] Component Hiển thị Coin (thay icon) ---
+// --- [CẬP NHẬT] Component Hiển thị Coin - nhỏ gọn hơn ---
 const CoinDisplay = ({ coins }: { coins: number }) => {
   return (
-    <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-yellow-500/30">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400 drop-shadow-[0_1px_2px_rgba(251,191,36,0.8)]">
+    <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-yellow-500/30">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-yellow-400 drop-shadow-[0_1px_2px_rgba(251,191,36,0.8)]">
             <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.049 8.024l1.325-2.705a.25.25 0 01.452 0l1.325 2.705 2.986.434a.25.25 0 01.139.426l-2.16 2.106.51 2.974a.25.25 0 01-.363.263L10 12.875l-2.67 1.404a.25.25 0 01-.363-.263l.51-2.974-2.16-2.106a.25.25 0 01.139-.426l2.986-.434z" />
         </svg>
-        <span className="font-bold text-lg text-yellow-300 text-shadow-sm tracking-wider">
+        <span className="font-bold text-base text-yellow-300 text-shadow-sm tracking-wider">
             {coins}
         </span>
     </div>
   );
 };
 
-// --- [MỚI] Component Hiển thị Năng Lượng ---
+// --- [CẬP NHẬT] Component Hiển thị Năng Lượng - Thiết kế lại cho nhỏ gọn ---
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
-      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-cyan-500/30">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.7)]">
-            <path d="M11.983 1.932a.75.75 0 00-1.966 0L3.343 9.425a.75.75 0 00.934 1.23l3.65-1.46V15.5a.75.75 0 001.5 0v-5.305l3.65 1.46a.75.75 0 00.934-1.23L11.983 1.932z" />
-            <path d="M3.343 9.425a.75.75 0 00.934 1.23l3.65-1.46V15.5a.75.75 0 001.5 0v-5.305l3.65 1.46a.75.75 0 00.934-1.23L11.983 1.932 3.343 9.425z" transform="translate(0, 3)" />
+      <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.7)]">
+             <path fillRule="evenodd" d="M11.337 2.033a.75.75 0 00-.674 0l-5.25 2.5a.75.75 0 000 1.366l3.626 1.727-2.31 4.96a.75.75 0 001.298.604l5.25-10.5a.75.75 0 00-1.298-.605l-3.627 7.253 2.31-4.959a.75.75 0 00-.62-1.074l-1.64-.328 2.936-1.398z" clipRule="evenodd" />
           </svg>
-          <span className="font-bold text-lg text-cyan-300 text-shadow-sm tracking-wider">
-              {current} / {max}
+          <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">
+              {current}/{max}
           </span>
       </div>
     );
-  };
+};
 
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
@@ -344,7 +343,6 @@ export default function BossBattle() {
   return (
     <>
       <style>{`
-        /* ... CSS không thay đổi ... */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .font-sans { font-family: sans-serif; }
@@ -374,16 +372,13 @@ export default function BossBattle() {
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
-        {/* [CẬP NHẬT] Header layout */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
-            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
-                {/* Nửa bên trái */}
+            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-2">
                 <div className="w-1/2">
                     <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">FLOOR 1</h3>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
-                {/* Nửa bên phải */}
-                <div className="flex items-center justify-end gap-4 w-1/2">
+                <div className="flex items-center justify-end gap-2 w-1/2">
                     <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
                     <CoinDisplay coins={playerCoins} />
                 </div>
