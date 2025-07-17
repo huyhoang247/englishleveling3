@@ -134,13 +134,13 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             {item.rewardType === 'coin' && item.value > 0 && (
                 <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-40 py-1.5 rounded-lg border border-slate-700 mb-6">
                     <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5 text-yellow-400" />
-                    <span className="text-xl font-bold text-yellow-300 text-shadow-sm">+{item.value.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{item.value.toLocaleString()}</span>
                 </div>
             )}
-            {item.rewardType === 'pickaxe' && item.rewardAmount && item.rewardAmount > 0 && (
+            {(item.rewardType === 'pickaxe' || item.rewardType === 'other') && item.rewardAmount && item.rewardAmount > 0 && (
                 <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-40 py-1.5 rounded-lg border border-slate-700 mb-6">
-                    <PickaxeIcon className="w-5 h-5" />
-                    <span className="text-xl font-bold text-slate-200 text-shadow-sm">+{item.rewardAmount.toLocaleString()}</span>
+                    {item.rewardType === 'pickaxe' ? <PickaxeIcon className="w-5 h-5" /> : null /* Can add other icons here */}
+                    <span className="text-xl font-bold text-slate-200 text-shadow-sm">x{item.rewardAmount.toLocaleString()}</span>
                 </div>
             )}
           </>
@@ -358,6 +358,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             popupDisplayName = ""; // Hide name in popup
           } else { // Other item types
             actualWonValue = wonItem.value;
+            if(wonItem.rewardAmount && wonItem.rewardAmount > 0) {
+                 // For items like "Tia chop", we want to show the name in the popup
+            } else {
+                popupDisplayName = "";
+            }
           }
           
           setWonRewardDetails({ ...wonItem, name: popupDisplayName, value: actualWonValue });
