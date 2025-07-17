@@ -69,7 +69,7 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   return (
     <div
       key={id}
-      className={`absolute top-1/3 font-lilita text-2xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
+      className={`absolute top-1/3 font-lilita text-2xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[5%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{formatDamageText(damage)}
