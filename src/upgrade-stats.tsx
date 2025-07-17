@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 
 // --- ICONS ---
@@ -113,12 +113,38 @@ interface UpgradeStatsScreenProps {
 // --- COMPONENT CHÍNH CỦA ỨNG DỤNG ---
 export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold }: UpgradeStatsScreenProps) {
   // Local state for stats and messages
+  const [displayedGold, setDisplayedGold] = useState(initialGold);
   const [stats, setStats] = useState([
     { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
     { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
     { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
+
+  // Function to animate coin changes, adapted from quiz.tsx
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+
+    const isCountingUp = endValue > startValue;
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+
+    const interval = setInterval(() => {
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
+      }
+
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setDisplayedGold(endValue);
+        clearInterval(interval);
+      } else {
+        setDisplayedGold(current);
+      }
+    }, 30);
+  }, []);
+
 
   // Handle the upgrade logic
   const handleUpgrade = (statId) => {
@@ -129,6 +155,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (initialGold >= upgradeCost) {
+      const newGoldValue = initialGold - upgradeCost;
+      startCoinCountAnimation(initialGold, newGoldValue);
+
       onUpdateGold(-upgradeCost); // Send a negative value to deduct gold
       const newStats = [...stats];
       newStats[statIndex] = { ...newStats[statIndex], level: newStats[statIndex].level + 1 };
@@ -214,7 +243,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
         {/* Bọc CoinDisplay trong một div để ghi đè font chữ */}
         <div className="font-sans">
-            <CoinDisplay displayedCoins={initialGold} isStatsFullscreen={false} />
+            <CoinDisplay displayedCoins={displayedGold} isStatsFullscreen={false} />
         </div>
       </header>
       
