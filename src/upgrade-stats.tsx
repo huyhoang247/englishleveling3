@@ -199,7 +199,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
       `}</style>
 
       {/* --- HEADER MỚI --- */}
-      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
+      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-3 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button
           onClick={onClose}
           className="p-2 rounded-lg text-white bg-slate-800/50 hover:bg-red-500/60 transition-colors duration-300"
@@ -211,13 +211,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
           </svg>
         </button>
 
-        <h1 className="text-2xl font-bold uppercase tracking-widest text-shadow-cyan pointer-events-none">
-          Nâng Cấp
-        </h1>
-
-        <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-2 px-4 flex items-center gap-2 shadow-lg">
-          <div className="w-6 h-6">{icons.coin}</div>
-          <span className="text-xl text-yellow-300 font-bold text-shadow-sm">{formatNumber(initialGold)}</span>
+        <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-1 px-3 flex items-center gap-2 shadow-lg">
+          <div className="w-5 h-5">{icons.coin}</div>
+          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{formatNumber(initialGold)}</span>
         </div>
       </header>
       
