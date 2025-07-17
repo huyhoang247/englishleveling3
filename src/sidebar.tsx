@@ -10,7 +10,6 @@ interface SidebarLayoutProps {
   // New prop to expose the toggleSidebar function
   setToggleSidebar?: (toggleFn: () => void) => void;
   // Props to handle toggling specific screens in the parent
-  onShowStats?: () => void; // Handler for showing Stats
   onShowRank?: () => void;   // Handler for showing Rank
   onShowMinerChallenge?: () => void; // NEW: Handler for Miner Challenge
   // onShowHelp?: () => void; // REMOVED
@@ -202,7 +201,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -222,12 +221,11 @@ function SidebarLayout({ children, setToggleSidebar, onShowStats, onShowRank, on
   };
 
   const menuItems = [
-    { id: 'stats', label: 'Stats', icon: AwardIcon, onClick: onShowStats },
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
     { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine },
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
     { id: 'minerChallenge', label: 'Miner Challenge', icon: BombIcon, onClick: onShowMinerChallenge },
-    { id: 'achievements', label: 'Thành Tựu', icon: TrophyIcon, onClick: onShowAchievements },
+    { id: 'achievements', label: 'Achievements', icon: TrophyIcon, onClick: onShowAchievements },
     // { id: 'help', label: 'Trợ giúp', icon: HelpCircleIcon, onClick: onShowHelp }, // REMOVED
     // NEW: Admin Panel menu item, placed after Help
     { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
