@@ -195,12 +195,8 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
       setPickaxes(newPickaxeCount);
       onUpdatePickaxes(newPickaxeCount);
     }
-
-    if (cell.isExit) {
-      if (!cell.isRevealed) updateCell(x, y, { isRevealed: true });
-      setExitConfirmationPos({ x, y });
-      return;
-    }
+    
+    // ĐÃ XOÁ LOGIC MỞ POPUP TỰ ĐỘNG KHI GẶP Ô EXIT
     
     if (cell.isMineRandom) {
       const newBoard = JSON.parse(JSON.stringify(board));
@@ -234,6 +230,12 @@ export default function App({ onClose, displayedCoins, masteryCards, onUpdateCoi
     if (isOpening) return;
 
     const cell = board[y][x];
+
+    // THAY ĐỔI: Nếu click vào ô EXIT đã được mở, thì mới hiện popup
+    if (cell.isRevealed && cell.isExit) {
+        setExitConfirmationPos({ x, y });
+        return;
+    }
 
     if ((cell.isRevealed && !cell.isCoin) || cell.isFlagged) return;
     
