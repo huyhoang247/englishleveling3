@@ -223,10 +223,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-24">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-20">
           
           {/* --- HERO GRAPHIC --- */}
-          <div className="my-4 w-48 h-48 flex items-center justify-center animate-breathing">
+          <div className="mt-2 mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <img 
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
               alt="Hero Stone Icon"
