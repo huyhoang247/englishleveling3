@@ -38,20 +38,6 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// --- [CẬP NHẬT] Component Hiển thị Coin - nhỏ gọn hơn ---
-const CoinDisplay = ({ coins }: { coins: number }) => {
-  return (
-    <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-yellow-500/30">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-yellow-400 drop-shadow-[0_1px_2px_rgba(251,191,36,0.8)]">
-            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.049 8.024l1.325-2.705a.25.25 0 01.452 0l1.325 2.705 2.986.434a.25.25 0 01.139.426l-2.16 2.106.51 2.974a.25.25 0 01-.363.263L10 12.875l-2.67 1.404a.25.25 0 01-.363-.263l.51-2.974-2.16-2.106a.25.25 0 01.139-.426l2.986-.434z" />
-        </svg>
-        <span className="font-bold text-base text-yellow-300 text-shadow-sm tracking-wider">
-            {coins}
-        </span>
-    </div>
-  );
-};
-
 // --- [CẬP NHẬT] Component Hiển thị Năng Lượng - Thiết kế lại cho nhỏ gọn ---
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
@@ -192,7 +178,6 @@ export default function BossBattle() {
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
-  const [playerCoins, setPlayerCoins] = useState(0);
 
   const logContainerRef = useRef<HTMLDivElement>(null);
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -276,17 +261,18 @@ export default function BossBattle() {
     setBattleState('finished');
     setGameOver(result);
     if (result === 'win') {
-      const coinsEarned = 100 + Math.floor(Math.random() * 51);
-      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại! Bạn nhận được ${coinsEarned} coin!`, finalTurn);
-      setPlayerCoins(prevCoins => prevCoins + coinsEarned);
+      addLog(`${BOSS_INITIAL_STATS.name} đã bị đánh bại!`, finalTurn);
     } else {
       addLog("Bạn đã gục ngã... THẤT BẠI!", finalTurn);
     }
   };
 
   const startGame = () => {
-    if (battleState === 'idle') {
+    if (battleState === 'idle' && playerStats.energy >= 10) {
+      setPlayerStats(prev => ({ ...prev, energy: prev.energy - 10 }));
       setBattleState('fighting');
+    } else if (battleState === 'idle') {
+      addLog("Không đủ năng lượng (cần 10).", 0);
     }
   };
 
@@ -380,7 +366,6 @@ export default function BossBattle() {
                 </div>
                 <div className="flex items-center justify-end gap-2 w-1/2">
                     <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
-                    <CoinDisplay coins={playerCoins} />
                 </div>
             </div>
         </header>
@@ -432,12 +417,14 @@ export default function BossBattle() {
                 {battleState === 'idle' && (
                 <button
                     onClick={startGame}
+                    disabled={playerStats.energy < 10}
                     className="btn-shine relative overflow-hidden px-10 py-3 bg-slate-900/80 rounded-lg
                                font-bold text-lg text-teal-300 tracking-widest uppercase
                                border border-teal-500/40
                                transition-all duration-300
                                hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)]
-                               active:scale-95"
+                               active:scale-95
+                               disabled:bg-slate-700/50 disabled:text-slate-500 disabled:border-slate-600 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                     Fight
                 </button>
