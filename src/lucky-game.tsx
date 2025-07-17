@@ -36,7 +36,7 @@ interface Item {
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
   color: string;
   timestamp?: number;
-  rewardType?: 'coin' | 'pickaxe';
+  rewardType?: 'coin' | 'pickaxe' | 'other';
   rewardAmount?: number; // The actual amount of the reward type
 }
 interface LuckyChestGameProps {
@@ -126,7 +126,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                 )}
             </div>
 
-            <p className="text-2xl font-bold text-slate-100 mb-1 tracking-wide">{item.name}</p>
+            <p className="text-2xl font-bold text-slate-100 mb-1 tracking-wide min-h-[32px]">{item.name}</p>
             <p className="font-sans text-sm uppercase font-bold tracking-widest mb-4" style={{ color: rarityColor }}>
                 {item.rarity}
             </p>
@@ -228,7 +228,7 @@ const SpinningWheelGrid = React.memo(({
                             <item.icon className={`w-8 h-8 ${item.color} drop-shadow-lg`} />
                         )}
 
-                        {(item.value > 0 || item.rewardType === 'pickaxe') && item.rarity !== 'jackpot' && (
+                        {(item.rewardType === 'coin' || item.rewardType === 'pickaxe') && item.rarity !== 'jackpot' && (
                             <span className="text-xs font-bold text-center text-amber-300">{item.name}</span>
                         )}
                         {item.rarity === 'jackpot' && (
@@ -265,16 +265,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
-    { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400' },
-    { icon: pickaxeIconUrl, name: '5 Cúp', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
+    { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400', rewardType: 'other' },
+    { icon: pickaxeIconUrl, name: '5', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300', value: 300, rarity: 'uncommon', color: '', rewardType: 'coin', rewardAmount: 300 },
-    { icon: pickaxeIconUrl, name: '10 Cúp', value: 0, rarity: 'rare', color: '', rewardType: 'pickaxe', rewardAmount: 10 },
-    { icon: pickaxeIconUrl, name: '15 Cúp', value: 0, rarity: 'epic', color: '', rewardType: 'pickaxe', rewardAmount: 15 },
+    { icon: pickaxeIconUrl, name: '10', value: 0, rarity: 'rare', color: '', rewardType: 'pickaxe', rewardAmount: 10 },
+    { icon: pickaxeIconUrl, name: '15', value: 0, rarity: 'epic', color: '', rewardType: 'pickaxe', rewardAmount: 15 },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500', value: 500, rarity: 'rare', color: '', rewardType: 'coin', rewardAmount: 500 },
-    { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400' },
-    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400' },
+    { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400', rewardType: 'other' },
+    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400', rewardType: 'other' },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '', rewardType: 'coin' },
-    { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400' },
+    { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400', rewardType: 'other' },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
@@ -343,19 +343,19 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           if (wonItem.rewardType === 'pickaxe' && wonItem.rewardAmount) {
             onUpdatePickaxes(wonItem.rewardAmount);
             actualWonValue = wonItem.rewardAmount;
+            popupDisplayName = ""; // Hide name in popup
           } else if (wonItem.rarity === 'jackpot') {
             actualWonValue = currentJackpotPool;
             setJackpotWon(true); setJackpotAnimation(true);
             onUpdateCoins(actualWonValue);
             onUpdateJackpotPool(0, true);
             setTimeout(() => setJackpotAnimation(false), 3000);
-          } else { // Default to coin reward
+          } else if (wonItem.rewardType === 'coin') {
             onUpdateCoins(wonItem.value);
             actualWonValue = wonItem.value;
-            const isPureCoinReward = wonItem.value > 0 && !isNaN(parseInt(wonItem.name));
-             if (isPureCoinReward) {
-                popupDisplayName = "";
-            }
+            popupDisplayName = ""; // Hide name in popup
+          } else { // Other item types
+            actualWonValue = wonItem.value;
           }
           
           setWonRewardDetails({ ...wonItem, name: popupDisplayName, value: actualWonValue });
