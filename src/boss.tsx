@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const PLAYER_INITIAL_STATS = {
   maxHp: 100,
   hp: 100,
-  atk: 15,
+  atk: 150,
   def: 5,
   maxEnergy: 50,
   energy: 50,
