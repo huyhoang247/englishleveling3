@@ -113,7 +113,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-bold uppercase mb-4 text-shadow" style={{ color: rarityColor }}>Bạn nhận được</h2>
+            <h2 className="text-2xl font-bold uppercase mb-4 text-shadow" style={{ color: rarityColor }}>You got</h2>
 
             <div className="mb-4">
                 {typeof item.icon === 'string' ? (
@@ -141,7 +141,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
           onClick={onClose}
           className="w-full mt-auto px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500 hover:border-blue-400 transition-all duration-200 active:scale-95"
         >
-          Tiếp tục
+          Continue
         </button>
       </div>
     </div>
@@ -337,7 +337,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           } else {
             onUpdateCoins(wonItem.value);
           }
-          const displayName = (wonItem.value > 0 && wonItem.rarity !== 'jackpot') ? `${wonItem.value} xu` : wonItem.name;
+          const isPureCoinReward = wonItem.value > 0 && !isNaN(parseInt(wonItem.name));
+          const displayName = isPureCoinReward ? "" : wonItem.name;
           setWonRewardDetails({ ...wonItem, name: displayName, value: actualWonAmount });
           setShowRewardPopup(true);
         }, finalPauseDuration);
