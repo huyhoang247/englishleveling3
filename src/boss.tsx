@@ -6,8 +6,10 @@ import React, { useState, useEffect, useRef } from 'react';
 const PLAYER_INITIAL_STATS = {
   maxHp: 100,
   hp: 100,
-  atk: 15,
+  atk: 150,
   def: 5,
+  maxEnergy: 50, // [MỚI] Thêm chỉ số năng lượng tối đa
+  energy: 50,    // [MỚI] Thêm chỉ số năng lượng hiện tại
 };
 
 const BOSS_INITIAL_STATS = {
@@ -36,12 +38,12 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// --- Component Hiển thị Coin ---
+// --- [CẬP NHẬT] Component Hiển thị Coin (thay icon) ---
 const CoinDisplay = ({ coins }: { coins: number }) => {
   return (
     <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-yellow-500/30">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-yellow-400 drop-shadow-[0_1px_2px_rgba(251,191,36,0.8)]">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.049 8.024l1.325-2.705a.25.25 0 01.452 0l1.325 2.705 2.986.434a.25.25 0 01.139.426l-2.16 2.106.51 2.974a.25.25 0 01-.363.263L10 12.875l-2.67 1.404a.25.25 0 01-.363-.263l.51-2.974-2.16-2.106a.25.25 0 01.139-.426l2.986-.434z" />
         </svg>
         <span className="font-bold text-lg text-yellow-300 text-shadow-sm tracking-wider">
             {coins}
@@ -49,6 +51,21 @@ const CoinDisplay = ({ coins }: { coins: number }) => {
     </div>
   );
 };
+
+// --- [MỚI] Component Hiển thị Năng Lượng ---
+const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
+    return (
+      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-cyan-500/30">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.7)]">
+            <path d="M11.983 1.932a.75.75 0 00-1.966 0L3.343 9.425a.75.75 0 00.934 1.23l3.65-1.46V15.5a.75.75 0 001.5 0v-5.305l3.65 1.46a.75.75 0 00.934-1.23L11.983 1.932z" />
+            <path d="M3.343 9.425a.75.75 0 00.934 1.23l3.65-1.46V15.5a.75.75 0 001.5 0v-5.305l3.65 1.46a.75.75 0 00.934-1.23L11.983 1.932 3.343 9.425z" transform="translate(0, 3)" />
+          </svg>
+          <span className="font-bold text-lg text-cyan-300 text-shadow-sm tracking-wider">
+              {current} / {max}
+          </span>
+      </div>
+    );
+  };
 
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
@@ -136,32 +153,23 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     )
 }
 
-// --- [CẬP NHẬT] Component Modal Thất Bại - Thiết kế tinh tế hơn ---
+// --- Component Modal Thất Bại ---
 const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div
         className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"
       >
-          {/* Icon */}
           <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-slate-500 mb-2" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13.293 14.707a.999.999 0 0 1-1.414 0L9.464 12.293a.999.999 0 0 1 0-1.414l2.414-2.414a.999.999 0 1 1 1.414 1.414L11.586 12l2.293 2.293a.999.999 0 0 1 0 1.414zM8.5 10.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm7 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"></path>
           </svg>
-
-          {/* Tiêu đề */}
           <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">
               DEFEAT
           </h2>
-
-          {/* Mô tả */}
           <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">
             The darkness has consumed you. Rise again and reclaim your honor.
           </p>
-          
-          {/* Đường kẻ ngang */}
           <hr className="w-full border-t border-slate-700/50 my-5" />
-
-          {/* Nút bấm */}
           <button
               onClick={onRestart}
               className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95"
@@ -231,7 +239,6 @@ export default function BossBattle() {
     setTurnCounter(currentTurn => {
         const nextTurn = currentTurn + 1;
         
-        // Lượt của người chơi
         setBossStats(prevBossStats => {
             const playerDmg = calculateDamage(playerStats.atk, prevBossStats.def);
             const newBossHp = prevBossStats.hp - playerDmg;
@@ -243,7 +250,6 @@ export default function BossBattle() {
                 return { ...prevBossStats, hp: 0 };
             }
 
-            // Lượt của Boss (sau 400ms)
             setTimeout(() => {
                 setPlayerStats(prevPlayerStats => {
                     const bossDmg = calculateDamage(bossStats.atk, prevPlayerStats.def);
@@ -368,13 +374,17 @@ export default function BossBattle() {
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         
+        {/* [CẬP NHẬT] Header layout */}
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
-                <div className="w-full max-w-xs">
+                {/* Nửa bên trái */}
+                <div className="w-1/2">
                     <h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">FLOOR 1</h3>
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
-                <div className="flex items-center">
+                {/* Nửa bên phải */}
+                <div className="flex items-center justify-end gap-4 w-1/2">
+                    <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
                     <CoinDisplay coins={playerCoins} />
                 </div>
             </div>
