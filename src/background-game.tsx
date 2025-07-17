@@ -795,7 +795,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout
           setToggleSidebar={handleSetToggleSidebar}
-          onShowStats={toggleStatsFullscreen}
           onShowRank={toggleRank}
           onShowGoldMine={toggleGoldMine}
           onShowLuckyGame={toggleLuckyGame}
