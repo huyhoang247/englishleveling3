@@ -100,7 +100,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
 
-  // --- START: Cải tiến logic handleClaim ---
   const handleClaim = useCallback(async (id: number) => {
     if (isClaiming || isClaimingAll) return;
 
@@ -112,7 +111,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
-    const initialCoinCount = localDisplayedCoins; // Lưu lại số vàng ban đầu
+    const initialCoinCount = localDisplayedCoins;
 
     const updatedList = vocabulary.map(item => {
       if (item.id === id) {
@@ -124,30 +123,24 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
 
-    // Bắt đầu animation tăng vàng (Optimistic UI)
     startCoinCountAnimation(initialCoinCount, initialCoinCount + goldReward);
 
-    // Chạy song song API và 1 delay tối thiểu để đảm bảo UX mượt mà
     const claimPromise = onClaimReward({ gold: goldReward, masteryCards: masteryCardReward }, updatedList);
-    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500)); // Delay tối thiểu 500ms
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
 
     try {
       await Promise.all([claimPromise, minDelayPromise]);
-      // Thành công, UI đã được cập nhật bởi component cha thông qua onClaimReward
+      // Cập nhật state cục bộ để đồng bộ hóa giao diện và tránh "nháy"
+      setVocabulary(updatedList);
     } catch (error) {
       console.error("Claiming failed, reverting UI:", error);
-      // Hoàn tác animation vàng về giá trị ban đầu nếu có lỗi
       startCoinCountAnimation(localDisplayedCoins, initialCoinCount);
-      // Bạn có thể hiển thị một thông báo lỗi ở đây, ví dụ:
-      // toast.error("Nhận thưởng thất bại, vui lòng thử lại!");
     } finally {
       setIsClaiming(false);
       setClaimingId(null);
     }
   }, [vocabulary, onClaimReward, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
-  // --- END: Cải tiến logic handleClaim ---
 
-  // --- START: Cải tiến logic handleClaimAll ---
   const handleClaimAll = useCallback(async () => {
     if (isClaiming || isClaimingAll) return;
 
@@ -159,7 +152,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     let totalGoldReward = 0;
     let totalMasteryCardReward = 0;
     const claimableIds = new Set(claimableItems.map(item => item.id));
-    const initialCoinCount = localDisplayedCoins; // Lưu vàng ban đầu
+    const initialCoinCount = localDisplayedCoins;
 
     const updatedList = vocabulary.map(item => {
       if (claimableIds.has(item.id)) {
@@ -173,24 +166,22 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
     
-    // Bắt đầu animation tăng vàng (Optimistic UI)
     startCoinCountAnimation(initialCoinCount, initialCoinCount + totalGoldReward);
     
-    // Chạy song song API và 1 delay tối thiểu
     const claimPromise = onClaimReward({ gold: totalGoldReward, masteryCards: totalMasteryCardReward }, updatedList);
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
     
     try {
        await Promise.all([claimPromise, minDelayPromise]);
+       // Cập nhật state cục bộ để đồng bộ hóa giao diện và tránh "nháy"
+       setVocabulary(updatedList);
     } catch (error) {
        console.error("Claiming all failed, reverting UI:", error);
-       // Hoàn tác animation vàng
        startCoinCountAnimation(localDisplayedCoins, initialCoinCount);
     } finally {
       setIsClaimingAll(false);
     }
   }, [vocabulary, onClaimReward, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
-  // --- END: Cải tiến logic handleClaimAll ---
   
   const totalWords = vocabulary.length;
   
