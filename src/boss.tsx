@@ -151,7 +151,7 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     )
 }
 
-// --- Component Modal Phần Thưởng (Thiết kế ô kích thước cố định) ---
+// --- Component Modal Phần Thưởng (Thiết kế lưới 2 cột linh hoạt) ---
 const RewardsModal = ({ onClose }: { onClose: () => void }) => {
   return (
     <div
@@ -172,16 +172,16 @@ const RewardsModal = ({ onClose }: { onClose: () => void }) => {
         <div className="p-5 pt-8">
           <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3>
           
-          {/* Container cho các ô phần thưởng, căn giữa các ô */}
-          <div className="flex flex-col items-center gap-3">
+          {/* Container cho các ô phần thưởng, tự động xuống hàng */}
+          <div className="flex flex-row flex-wrap justify-center gap-3">
 
-            {/* Hàng phần thưởng Vàng (kích thước cố định) */}
+            {/* Ô phần thưởng Vàng */}
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-36 py-2 rounded-lg border border-slate-700">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1.287 15.584c-1.42.368-2.92.516-4.287.395V16.6c1.077.105 2.13.045 3.129-.169a1 1 0 0 0 .87-1.119l-.547-3.284a1 1 0 0 0-1.119-.87c-.394.065-.806.11-1.229.136V9.4c.319-.016.634-.042.946-.078a1 1 0 0 0 .973-1.018l-.138-1.65a1 1 0 0 0-1.017-.973c-.886.074-1.78.11-2.664.11S9.334 5.863 8.448 5.79a1 1 0 0 0-1.017.973l-.138 1.65a1 1 0 0 0 .973 1.018c.312.036.627.062.946.078v1.896c-.423-.026-.835-.071-1.229-.136a1 1 0 0 0-1.119.87l-.547 3.284a1 1 0 0 0 .87 1.119c1.131.238 2.306.31 3.522.188v1.376c-1.385.01-2.858-.171-4.22-.656a1 1 0 1 0-.604 1.9c1.73.613 3.598.819 5.324.793 1.726.026 3.594-.18 5.324-.793a1 1 0 1 0-.604-1.9z"></path></svg>
               <span className="text-2xl font-bold text-yellow-300 text-shadow-sm">300</span>
             </div>
 
-            {/* Hàng phần thưởng Năng lượng (kích thước cố định) */}
+            {/* Ô phần thưởng Năng lượng */}
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-36 py-2 rounded-lg border border-slate-700">
               <img
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png"
@@ -191,7 +191,13 @@ const RewardsModal = ({ onClose }: { onClose: () => void }) => {
               <span className="text-2xl font-bold text-cyan-300 text-shadow-sm">5</span>
             </div>
 
-            {/* Thêm các vật phẩm khác ở đây theo cùng cấu trúc */}
+            {/* Để thêm vật phẩm thứ 3, chỉ cần chèn nó vào đây. Nó sẽ tự xuống hàng */}
+            {/* 
+            <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-36 py-2 rounded-lg border border-slate-700">
+              // Icon
+              // Span
+            </div> 
+            */}
             
           </div>
         </div>
@@ -199,6 +205,7 @@ const RewardsModal = ({ onClose }: { onClose: () => void }) => {
     </div>
   );
 };
+
 
 // --- Component Modal Chiến Thắng ---
 const VictoryModal = ({ onRestart }: { onRestart: () => void }) => {
