@@ -31,6 +31,15 @@ const icons = {
   )
 };
 
+// --- SPINNER COMPONENT ---
+const Spinner = () => (
+  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+);
+
+
 // --- LOGIC TÍNH TOÁN ---
 const calculateUpgradeCost = (level) => {
   const baseCost = 100;
@@ -74,7 +83,7 @@ const formatNumber = (num) => {
 
 
 // --- COMPONENT STAT CARD ---
-const StatCard = ({ stat, onUpgrade }) => {
+const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
   const upgradeCost = calculateUpgradeCost(level);
@@ -82,7 +91,7 @@ const StatCard = ({ stat, onUpgrade }) => {
   return (
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px 
                     transition-all duration-300 
-                    hover:shadow-lg hover:shadow-cyan-500/10`}>
+                    ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
       
       <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
@@ -94,10 +103,19 @@ const StatCard = ({ stat, onUpgrade }) => {
         </div>
         <button
           onClick={() => onUpgrade(stat.id)}
-          className="w-full bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/50 hover:border-cyan-400 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95"
+          disabled={isDisabled}
+          className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95
+                     hover:enabled:bg-slate-700 hover:enabled:border-cyan-400 
+                     disabled:cursor-not-allowed disabled:opacity-70"
         >
-          <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-          <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
+          {isProcessing ? (
+            <Spinner />
+          ) : (
+            <>
+              <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
+              <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -120,6 +138,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
     { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
+  const [upgradingId, setUpgradingId] = useState<string | null>(null);
 
   // Function to animate coin changes, adapted from quiz.tsx
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
@@ -147,7 +166,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
 
   // Handle the upgrade logic
-  const handleUpgrade = (statId) => {
+  const handleUpgrade = (statId: string) => {
+    // 1. If an upgrade is already in progress, do nothing.
+    if (upgradingId) return;
+
     const statIndex = stats.findIndex(s => s.id === statId);
     if (statIndex === -1) return;
 
@@ -155,6 +177,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (initialGold >= upgradeCost) {
+      // 2. Start the upgrade process: set the ID of the stat being processed
+      setUpgradingId(statId);
+
       const newGoldValue = initialGold - upgradeCost;
       startCoinCountAnimation(initialGold, newGoldValue);
 
@@ -163,6 +188,12 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
       newStats[statIndex] = { ...newStats[statIndex], level: newStats[statIndex].level + 1 };
       setStats(newStats);
       setMessage('');
+
+      // 3. After a delay, finish the upgrade process
+      setTimeout(() => {
+        setUpgradingId(null);
+      }, 500); // Delay 500ms before allowing another upgrade
+
     } else {
       setMessage('Không đủ vàng!');
       setTimeout(() => setMessage(''), 2000);
@@ -296,7 +327,13 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {stats.map(stat => (
-              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} />
+              <StatCard 
+                key={stat.id} 
+                stat={stat} 
+                onUpgrade={handleUpgrade}
+                isProcessing={upgradingId === stat.id}
+                isDisabled={upgradingId !== null}
+              />
             ))}
           </div>
         </div>
