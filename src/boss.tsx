@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const PLAYER_INITIAL_STATS = {
   maxHp: 1000,
   hp: 1000,
-  atk: 150,
+  atk: 15,
   def: 5,
   maxEnergy: 50,
   energy: 50,
@@ -15,7 +15,7 @@ const PLAYER_INITIAL_STATS = {
 const BOSS_INITIAL_STATS = {
   maxHp: 3000,
   hp: 3000,
-  atk: 200,
+  atk: 20,
   def: 8,
   name: "BOSS",
 };
@@ -59,7 +59,7 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   return (
     <div
       key={id}
-      className={`absolute top-1/3 font-lilita text-3xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
+      className={`absolute top-1/3 font-lilita text-2xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{damage}
