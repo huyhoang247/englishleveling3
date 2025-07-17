@@ -118,16 +118,14 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
     { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
-
-  // NEW: State for displayed gold amount for animation
   const [displayedGold, setDisplayedGold] = useState(initialGold);
 
-  // NEW: Function to animate the gold count
   const startGoldCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
 
     const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    // Tinh chỉnh step để animation mượt hơn với số lớn
+    const step = Math.max(1, Math.ceil(Math.abs(endValue - startValue) / 50));
     let current = startValue;
 
     const interval = setInterval(() => {
@@ -143,12 +141,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
       } else {
         setDisplayedGold(current);
       }
-    }, 25); // Animation speed
+    }, 15); // Tăng tần suất update để mượt hơn
   }, []);
 
-  // NEW: Effect to trigger the animation when initialGold prop changes
   useEffect(() => {
-    // Animate from the currently displayed value to the new "true" value from props
     startGoldCountAnimation(displayedGold, initialGold);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialGold]);
@@ -247,8 +243,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
         <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-1 px-3 flex items-center gap-2 shadow-lg">
           <div className="w-5 h-5">{icons.coin}</div>
-          {/* UPDATED: Use displayedGold for animation */}
-          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{Math.round(displayedGold).toLocaleString()}</span>
+          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{Math.floor(displayedGold).toLocaleString()}</span>
         </div>
       </header>
       
