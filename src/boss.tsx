@@ -199,23 +199,49 @@ const RewardsModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 
-// --- Component Modal Chiến Thắng ---
+// --- Component Modal Chiến Thắng (ĐÃ CẬP NHẬT) ---
 const VictoryModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div
         className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"
       >
+          {/* Icon Cúp Chiến Thắng */}
           <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-yellow-400 mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M16 2H8C4.691 2 2 4.691 2 8v8c0 3.309 2.691 6 6 6h8c3.309 0 6-2.691 6-6V8c0-3.309-2.691-6-6-6zm-4 16c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"></path><path d="M12 10c-1.103 0-2 .897-2 2s.897 2 2 2 2-.897 2-2-.897-2-2-2z"></path><path d="M15 2.05A8.956 8.956 0 0 0 12 1a9 9 0 0 0-9 9c0 1.948.624 3.738 1.666 5.176l1.321-1.321A6.96 6.96 0 0 1 5 9a7 7 0 0 1 14 0c0 1.294-.361 2.49-1.025 3.518l1.321 1.321C20.376 12.738 21 10.948 21 9a8.956 8.956 0 0 0-2.05-5.95z"></path>
           </svg>
-          <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-3 text-shadow"
+
+          {/* Tiêu đề VICTORY */}
+          <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow"
               style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>
               VICTORY
           </h2>
-          <p className="font-sans text-slate-300 text-sm leading-relaxed max-w-xs">
-            The darkness has been vanquished. Your bravery will be remembered.
-          </p>
+
+          {/* --- PHẦN PHẦN THƯỞNG ĐƯỢC TÍCH HỢP --- */}
+          <div className="w-full flex flex-col items-center gap-3">
+              <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
+              
+              {/* Container cho các ô phần thưởng */}
+              <div className="flex flex-row flex-wrap justify-center gap-3">
+                  {/* Ô phần thưởng Vàng */}
+                  <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1.287 15.584c-1.42.368-2.92.516-4.287.395V16.6c1.077.105 2.13.045 3.129-.169a1 1 0 0 0 .87-1.119l-.547-3.284a1 1 0 0 0-1.119-.87c-.394.065-.806.11-1.229.136V9.4c.319-.016.634-.042.946-.078a1 1 0 0 0 .973-1.018l-.138-1.65a1 1 0 0 0-1.017-.973c-.886.074-1.78.11-2.664.11S9.334 5.863 8.448 5.79a1 1 0 0 0-1.017.973l-.138 1.65a1 1 0 0 0 .973 1.018c.312.036.627.062.946.078v1.896c-.423-.026-.835-.071-1.229-.136a1 1 0 0 0-1.119.87l-.547 3.284a1 1 0 0 0 .87 1.119c1.131.238 2.306.31 3.522.188v1.376c-1.385.01-2.858-.171-4.22-.656a1 1 0 1 0-.604 1.9c1.73.613 3.598.819 5.324.793 1.726.026 3.594-.18 5.324-.793a1 1 0 1 0-.604-1.9z"></path></svg>
+                      <span className="text-xl font-bold text-yellow-300 text-shadow-sm">300</span>
+                  </div>
+
+                  {/* Ô phần thưởng Năng lượng */}
+                  <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                      <img
+                          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png"
+                          alt="Energy"
+                          className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]"
+                      />
+                      <span className="text-xl font-bold text-cyan-300 text-shadow-sm">5</span>
+                  </div>
+              </div>
+          </div>
+          {/* --- KẾT THÚC PHẦN PHẦN THƯỞNG --- */}
+
           <hr className="w-full border-t border-yellow-500/20 my-5" />
           <button
               onClick={onRestart}
