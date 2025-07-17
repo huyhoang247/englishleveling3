@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 // --- ICONS ---
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+
 const icons = {
   coin: (
     <img 
@@ -202,13 +204,11 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-3 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button
           onClick={onClose}
-          className="p-2 rounded-lg text-white bg-slate-800/50 hover:bg-red-500/60 transition-colors duration-300"
-          aria-label="Close"
+          className="p-2 rounded-lg text-slate-300 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors duration-300"
+          aria-label="Quay lại"
+          title="Quay lại"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <HomeIcon className="w-6 h-6" />
         </button>
 
         <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-1 px-3 flex items-center gap-2 shadow-lg">
