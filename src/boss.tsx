@@ -136,25 +136,35 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     )
 }
 
-// --- [MỚI] Component Modal Thất Bại ---
+// --- [CẬP NHẬT] Component Modal Thất Bại - Thiết kế tinh tế hơn ---
 const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div
-        className="relative w-80 bg-slate-900/80 border border-red-800/50 rounded-xl shadow-2xl shadow-red-900/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center gap-4"
+        className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"
       >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-slate-600" viewBox="0 0 24 24" fill="currentColor">
+          {/* Icon */}
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-slate-500 mb-2" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13.293 14.707a.999.999 0 0 1-1.414 0L9.464 12.293a.999.999 0 0 1 0-1.414l2.414-2.414a.999.999 0 1 1 1.414 1.414L11.586 12l2.293 2.293a.999.999 0 0 1 0 1.414zM8.5 10.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm7 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"></path>
           </svg>
-          <h2 className="text-6xl font-extrabold text-red-500 text-shadow" style={{ textShadow: '0 0 15px rgba(220, 38, 38, 0.5)' }}>
+
+          {/* Tiêu đề */}
+          <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">
               DEFEAT
           </h2>
-          <p className="font-sans text-slate-300 text-sm leading-relaxed -mt-2">
-            The darkness has consumed you. But your spirit is not yet broken.
+
+          {/* Mô tả */}
+          <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">
+            The darkness has consumed you. Rise again and reclaim your honor.
           </p>
+          
+          {/* Đường kẻ ngang */}
+          <hr className="w-full border-t border-slate-700/50 my-5" />
+
+          {/* Nút bấm */}
           <button
               onClick={onRestart}
-              className="w-full mt-4 px-8 py-3 bg-red-600/80 hover:bg-red-600 rounded-lg font-bold text-lg text-white tracking-widest uppercase border border-red-500/50 transition-all duration-300 hover:shadow-[0_0_15px_theme(colors.red.600/0.6)] active:scale-95"
+              className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95"
           >
               Try Again
           </button>
@@ -162,7 +172,6 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
     </div>
   );
 }
-
 
 // --- Component Chính Của Game ---
 export default function BossBattle() {
@@ -440,7 +449,6 @@ export default function BossBattle() {
                 )}
             </div>
           
-            {/* [CẬP NHẬT] Logic hiển thị màn hình kết thúc trận đấu */}
             {gameOver === 'win' && (
                 <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex flex-col items-center justify-center z-30">
                 <h2 className="text-7xl font-extrabold mb-4 text-shadow-lg text-yellow-300"
