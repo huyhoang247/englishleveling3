@@ -213,7 +213,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
         <div className="bg-slate-900/60 border border-slate-700 rounded-lg py-1 px-3 flex items-center gap-2 shadow-lg">
           <div className="w-5 h-5">{icons.coin}</div>
-          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{formatNumber(initialGold)}</span>
+          <span className="text-lg text-yellow-300 font-bold text-shadow-sm">{initialGold.toLocaleString()}</span>
         </div>
       </header>
       
@@ -223,7 +223,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-12">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-10">
           
           {/* --- HERO GRAPHIC --- */}
           <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
