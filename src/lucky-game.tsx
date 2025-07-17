@@ -378,10 +378,31 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               />
             </div>
             <div className="flex flex-col items-center justify-center mb-6">
-              <button onClick={spinChest} disabled={isSpinning || currentCoins < 100} className={`w-48 h-12 text-lg rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75 inline-flex items-center justify-center relative group ${isSpinning || currentCoins < 100 ? 'bg-gray-500 text-gray-300 cursor-not-allowed shadow-inner opacity-80' : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl focus:ring-green-400' }`}>
-                {isSpinning ? ( <span className="flex items-center"> <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg> Đang quay... </span> ) : ( <div className="flex items-center justify-center w-full"> <span className="font-semibold tracking-wide"> QUAY </span> <span className={`h-5 w-px mx-3 transition-colors duration-200 ${currentCoins < 100 ? 'bg-gray-400/60' : 'bg-white/40 group-hover:bg-white/60'}`}></span> <span className="flex items-center"> {currentCoins < 100 ? (<span className="font-medium">Hết xu</span>) : (<> <span className="font-medium">100</span> <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5 inline-block ml-1.5"/> </> )} </span> </div> )}
+              <button onClick={spinChest} disabled={isSpinning || currentCoins < 100} className={`w-36 h-36 rounded-full transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-opacity-75 flex flex-col items-center justify-center relative group shadow-lg ${isSpinning || currentCoins < 100 ? 'bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner opacity-90' : 'bg-gradient-to-br from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:scale-105 active:scale-95 hover:shadow-xl focus:ring-green-400' }`}>
+                  {isSpinning ? (
+                      <div className="flex flex-col items-center font-lilita text-slate-200">
+                          <svg className="animate-spin h-8 w-8 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>
+                          <span className="text-lg tracking-wider uppercase">Spinning...</span>
+                      </div>
+                  ) : (
+                      <div className="flex flex-col items-center justify-center text-center">
+                          <span className="font-lilita text-4xl tracking-wider uppercase" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
+                              SPIN
+                          </span>
+                          <div className={`flex items-center justify-center mt-1 transition-opacity duration-300 ${currentCoins < 100 ? 'opacity-70' : ''}`}>
+                              {currentCoins < 100 ? (
+                                  <span className="font-lilita text-base text-red-300 tracking-wide">Hết xu</span>
+                              ) : (
+                                  <div className="flex items-center">
+                                      <span className="font-lilita text-xl text-amber-200" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>100</span>
+                                      <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5 ml-1.5 drop-shadow-md" />
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+                  )}
               </button>
-              {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-2 font-semibold">Bạn không đủ xu để quay!</p>)}
+              {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-3 font-semibold">Bạn không đủ xu để quay!</p>)}
             </div>
           </>
         )}
@@ -420,7 +441,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       </div>
 
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
         body { font-family: 'Inter', sans-serif; }
+        .font-lilita { font-family: 'Lilita One', cursive; }
         .bg-grid-pattern {
           background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
           background-size: 2rem 2rem;
