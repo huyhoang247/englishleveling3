@@ -303,14 +303,13 @@ export default function BossBattle() {
       setPlayerStats(prev => ({ ...prev, energy: prev.energy - 10 }));
       setBattleState('fighting');
     } else if (battleState === 'idle') {
-      addLog("Không đủ năng lượng (cần 10).", 0);
+      addLog("Không đủ năng lượng.", 0);
     }
   };
 
   const resetGame = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setPreviousCombatLog(combatLog);
-    // Tăng năng lượng khi bắt đầu lại, ví dụ +20, không vượt quá max
     const newEnergy = Math.min(PLAYER_INITIAL_STATS.maxEnergy, playerStats.energy + 20);
     setPlayerStats({...PLAYER_INITIAL_STATS, energy: newEnergy});
     setBossStats(BOSS_INITIAL_STATS);
@@ -442,7 +441,7 @@ export default function BossBattle() {
                   <div className="w-40 h-40 md:w-56 md:h-56">
                       <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
-                  <HealthBar current={bossStats.hp} max={bossStats.hp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                  <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                 </div>
             </div>
 
@@ -451,15 +450,27 @@ export default function BossBattle() {
                 <button
                     onClick={startGame}
                     disabled={playerStats.energy < 10}
-                    className="btn-shine relative overflow-hidden px-10 py-3 bg-slate-900/80 rounded-lg
-                               font-bold text-lg text-teal-300 tracking-widest uppercase
+                    className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg
+                               text-teal-300
                                border border-teal-500/40
                                transition-all duration-300
                                hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)]
                                active:scale-95
                                disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none"
                 >
-                    Fight (10 Energy)
+                    <div className="flex flex-col items-center gap-0.5">
+                        <span className="font-bold text-lg tracking-widest uppercase">
+                            Fight
+                        </span>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80">
+                            <span>10</span>
+                            <img
+                                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png"
+                                alt=""
+                                className="w-3 h-3"
+                            />
+                        </div>
+                    </div>
                 </button>
                 )}
 
