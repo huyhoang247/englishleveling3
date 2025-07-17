@@ -117,6 +117,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(0);
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
+  // State để lưu tầng cao nhất của Miner Challenge
+  const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -244,6 +246,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGems(userData.gems || 0);
         setMasteryCards(userData.masteryCards || 0);
         setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
+        setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0); // Lấy dữ liệu tầng cao nhất
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
@@ -251,6 +254,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           gems: 0,
           masteryCards: 0,
           pickaxes: 50,
+          minerChallengeHighestFloor: 0, // Khởi tạo cho người dùng mới
           createdAt: new Date(),
         });
         setCoins(0);
@@ -258,6 +262,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGems(0);
         setMasteryCards(0);
         setPickaxes(50);
+        setMinerChallengeHighestFloor(0);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -357,6 +362,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
+  // Hàm cập nhật tầng cao nhất đã hoàn thành lên Firestore
+  const updateHighestFloorInFirestore = async (userId: string, completedFloor: number) => {
+      if (!userId) {
+          console.error("Cannot update highest floor: User not authenticated.");
+          return;
+      }
+      // Chỉ cập nhật nếu tầng hoàn thành mới lớn hơn tầng cao nhất đã lưu
+      if (completedFloor <= minerChallengeHighestFloor) {
+          return;
+      }
+
+      const userDocRef = doc(db, 'users', userId);
+      try {
+          await runTransaction(db, async (transaction) => {
+              transaction.update(userDocRef, { minerChallengeHighestFloor: completedFloor });
+          });
+          setMinerChallengeHighestFloor(completedFloor); // Cập nhật state ở local
+          console.log(`Highest floor updated in Firestore for user ${userId} to: ${completedFloor}`);
+      } catch (error) {
+          console.error("Firestore Transaction failed for highest floor: ", error);
+      }
+  };
+
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
@@ -417,6 +445,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGems(0);
         setMasteryCards(0);
         setPickaxes(0);
+        setMinerChallengeHighestFloor(0);
         setJackpotPool(0);
         setIsLoadingUserData(true);
         setVocabularyData(null);
@@ -966,6 +995,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
                     initialPickaxes={pickaxes}
                     onUpdatePickaxes={(newCount) => updatePickaxesInFirestore(auth.currentUser!.uid, newCount)}
+                    initialHighestFloor={minerChallengeHighestFloor}
+                    onUpdateHighestFloor={(floor) => updateHighestFloorInFirestore(auth.currentUser!.uid, floor)}
                 />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isTowerGameOpen ? 'block' : 'none' }}>
