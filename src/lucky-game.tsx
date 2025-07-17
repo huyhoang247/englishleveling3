@@ -228,8 +228,10 @@ const SpinningWheelGrid = React.memo(({
                             <item.icon className={`w-8 h-8 ${item.color} drop-shadow-lg`} />
                         )}
 
-                        {(item.rewardType === 'coin' || item.rewardType === 'pickaxe') && item.rarity !== 'jackpot' && (
-                            <span className="text-xs font-bold text-center text-amber-300">{item.name}</span>
+                        {item.rarity !== 'jackpot' && typeof item.rewardAmount === 'number' && (
+                            <span className="text-xs font-bold text-center text-amber-300">
+                                {item.rewardType === 'coin' ? item.rewardAmount : `x${item.rewardAmount}`}
+                            </span>
                         )}
                         {item.rarity === 'jackpot' && (
                             <span className="text-xs font-black uppercase text-yellow-300">JACKPOT</span>
@@ -265,16 +267,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '150', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
-    { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400', rewardType: 'other' },
+    { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400', rewardType: 'other', rewardAmount: 1 },
     { icon: pickaxeIconUrl, name: '5', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '300', value: 300, rarity: 'uncommon', color: '', rewardType: 'coin', rewardAmount: 300 },
     { icon: pickaxeIconUrl, name: '10', value: 0, rarity: 'rare', color: '', rewardType: 'pickaxe', rewardAmount: 10 },
     { icon: pickaxeIconUrl, name: '15', value: 0, rarity: 'epic', color: '', rewardType: 'pickaxe', rewardAmount: 15 },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '500', value: 500, rarity: 'rare', color: '', rewardType: 'coin', rewardAmount: 500 },
-    { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400', rewardType: 'other' },
-    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400', rewardType: 'other' },
+    { icon: TrophyIcon, name: 'Cúp vàng', value: 0, rarity: 'legendary', color: 'text-orange-400', rewardType: 'other', rewardAmount: 1 },
+    { icon: HeartIcon, name: 'Trái tim', value: 0, rarity: 'uncommon', color: 'text-red-400', rewardType: 'other', rewardAmount: 1 },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT!', value: 0, rarity: 'jackpot', color: '', rewardType: 'coin' },
-    { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400', rewardType: 'other' },
+    { icon: GiftIcon, name: 'Quà bí ẩn', value: 0, rarity: 'epic', color: 'text-pink-400', rewardType: 'other', rewardAmount: 1 },
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '100', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
@@ -457,7 +459,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                             {rewardHistory.map((item, index) => (
                                 <div key={`${item.name}-${item.timestamp}-${index}`} className={`flex-shrink-0 w-28 h-32 ${getRarityBg(item.rarity)} p-2.5 rounded-lg text-center flex flex-col items-center justify-around shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105`}>
                                     {typeof item.icon === 'string' ? (<img src={item.icon} alt={item.name} className="w-10 h-10 mx-auto mb-1" onError={(e) => { e.currentTarget.src = 'https://placehold.co/40x40/cccccc/000000?text=Lỗi'; }} />) : (<item.icon className={`w-10 h-10 ${item.color} mx-auto mb-1`} />)}
-                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>{item.name}</div>
+                                    <div className={`text-xs font-semibold ${item.rarity === 'jackpot' ? 'text-yellow-300' : 'text-slate-200'} leading-tight line-clamp-2`}>
+                                        {item.rewardType === 'other' ? item.name : item.rewardAmount}
+                                    </div>
                                     
                                     {item.rewardType === 'coin' && item.value > 0 && <div className="text-xs text-yellow-300 mt-0.5 flex items-center">{item.value.toLocaleString()}<CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 inline-block ml-1" /></div>}
                                     {item.rewardType === 'pickaxe' && item.rewardAmount > 0 && <div className="text-xs text-slate-200 mt-0.5 flex items-center">{item.rewardAmount.toLocaleString()}<PickaxeIcon className="w-3 h-3 inline-block ml-1" /></div>}
