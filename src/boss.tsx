@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const PLAYER_INITIAL_STATS = {
   maxHp: 100,
   hp: 100,
-  atk: 150,
+  atk: 15,
   def: 5,
   maxEnergy: 50,
   energy: 50,
@@ -41,10 +41,12 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
 // --- Component Hiển thị Năng Lượng - Thiết kế lại cho nhỏ gọn ---
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
-      <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.7)]">
-             <path fillRule="evenodd" d="M11.337 2.033a.75.75 0 00-.674 0l-5.25 2.5a.75.75 0 000 1.366l3.626 1.727-2.31 4.96a.75.75 0 001.298.604l5.25-10.5a.75.75 0 00-1.298-.605l-3.627 7.253 2.31-4.959a.75.75 0 00-.62-1.074l-1.64-.328 2.936-1.398z" clipRule="evenodd" />
-          </svg>
+      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
+          <img 
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" 
+            alt="Energy" 
+            className="w-5 h-5"
+          />
           <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">
               {current}/{max}
           </span>
@@ -57,7 +59,7 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   return (
     <div
       key={id}
-      className={`absolute top-1/3 font-lilita text-4xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
+      className={`absolute top-1/3 font-lilita text-3xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[10%]'}`}
       style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{damage}
@@ -138,7 +140,7 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     )
 }
 
-// --- [MỚI] Component Modal Chiến Thắng ---
+// --- Component Modal Chiến Thắng ---
 const VictoryModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
@@ -440,7 +442,7 @@ export default function BossBattle() {
                   <div className="w-40 h-40 md:w-56 md:h-56">
                       <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png" alt="Boss" className="w-full h-full object-contain" />
                   </div>
-                  <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                  <HealthBar current={bossStats.hp} max={bossStats.hp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                 </div>
             </div>
 
