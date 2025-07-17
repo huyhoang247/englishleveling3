@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // --- ICONS ---
 const icons = {
@@ -101,9 +101,15 @@ const StatCard = ({ stat, onUpgrade }) => {
   );
 };
 
+interface UpgradeStatsScreenProps {
+  onClose: () => void;
+  initialGold: number;
+  onUpdateGold: (amount: number) => void;
+}
+
 // --- COMPONENT CHÍNH CỦA ỨNG DỤNG ---
-export default function App() {
-  const [gold, setGold] = useState(190600);
+export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold }: UpgradeStatsScreenProps) {
+  // Local state for stats and messages
   const [stats, setStats] = useState([
     { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
     { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
@@ -111,14 +117,16 @@ export default function App() {
   ]);
   const [message, setMessage] = useState('');
 
+  // Handle the upgrade logic
   const handleUpgrade = (statId) => {
     const statIndex = stats.findIndex(s => s.id === statId);
     if (statIndex === -1) return;
+
     const statToUpgrade = stats[statIndex];
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
-    if (gold >= upgradeCost) {
-      setGold(prevGold => prevGold - upgradeCost);
+    if (initialGold >= upgradeCost) {
+      onUpdateGold(-upgradeCost); // Send a negative value to deduct gold
       const newStats = [...stats];
       newStats[statIndex] = { ...newStats[statIndex], level: newStats[statIndex].level + 1 };
       setStats(newStats);
@@ -129,6 +137,7 @@ export default function App() {
     }
   };
 
+  // Calculations for display
   const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
   const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
   const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
@@ -140,7 +149,7 @@ export default function App() {
   const progressPercent = (currentProgress / maxProgress) * 100;
 
   return (
-    <>
+    <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
       {/* --- CSS ĐÃ CẬP NHẬT HIỆU ỨNG PHÁT SÁNG --- */}
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
@@ -192,19 +201,29 @@ export default function App() {
           }
       `}</style>
 
+      <button 
+        onClick={onClose}
+        className="absolute top-4 right-4 z-50 p-2 rounded-full text-white bg-black/20 hover:bg-black/50 transition-all"
+        aria-label="Close"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
       {message && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
           {message}
         </div>
       )}
 
-      <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-        <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center">
           
           <header className="w-full flex justify-end mb-4 pt-8">
               <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg py-2 px-4 flex items-center gap-2 shadow-lg">
                   <div className="w-6 h-6">{icons.coin}</div>
-                  <span className="text-xl text-yellow-300 text-shadow-sm">{gold.toLocaleString()}</span>
+                  <span className="text-xl text-yellow-300 text-shadow-sm">{initialGold.toLocaleString()}</span>
               </div>
           </header>
 
@@ -253,7 +272,6 @@ export default function App() {
             ))}
           </div>
         </div>
-      </div>
-    </>
+    </div>
   );
 }
