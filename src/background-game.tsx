@@ -730,10 +730,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleBossBattle}
                         playerInitialStats={{
                             // >>> SỬ DỤNG `userStats` TỪ STATE ĐỂ TÍNH TOÁN CHỈ SỐ
-                            maxHp: 40000 + (userStats.hp * 1000),
-                            hp: 40000 + (userStats.hp * 1000),
-                            atk: 1000 + (userStats.atk * 50),
-                            def: 5 + userStats.def,
+                            maxHp: userStats.hp,
+                            hp: userStats.hp,
+                            atk: userStats.atk,
+                            def: userStats.def,
                             maxEnergy: 50,
                             energy: 50,
                         }}
