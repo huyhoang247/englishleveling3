@@ -19,7 +19,11 @@ import BossBattle from './boss.tsx'; // THAY THẾ: import TowerExplorerGame fro
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
-import UpgradeStatsScreen from './upgrade-stats.tsx';
+// IMPORT: Nhập các hàm và cấu hình cần thiết từ upgrade-stats.tsx
+import UpgradeStatsScreen, {
+  calculateTotalStatValue,
+  STAT_CONFIG
+} from './upgrade-stats.tsx';
 // Đảm bảo import VocabularyItem từ thanh-tuu
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
@@ -989,10 +993,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <BossBattle
                         onClose={toggleBossBattle}
                         playerInitialStats={{
-                            maxHp: 40000 + (userStats.hp * 1000),
-                            hp: 40000 + (userStats.hp * 1000),
-                            atk: 1000 + (userStats.atk * 50),
-                            def: 5 + userStats.def,
+                            // CẬP NHẬT: Sử dụng hàm tính toán được import để lấy chỉ số chính xác
+                            // Chỉ số gốc + chỉ số thưởng từ nâng cấp
+                            maxHp: 40000 + calculateTotalStatValue(userStats.hp, STAT_CONFIG.hp.baseUpgradeBonus),
+                            hp: 40000 + calculateTotalStatValue(userStats.hp, STAT_CONFIG.hp.baseUpgradeBonus),
+                            atk: 1000 + calculateTotalStatValue(userStats.atk, STAT_CONFIG.atk.baseUpgradeBonus),
+                            def: 5 + calculateTotalStatValue(userStats.def, STAT_CONFIG.def.baseUpgradeBonus),
                             maxEnergy: 50,
                             energy: 50,
                         }}
