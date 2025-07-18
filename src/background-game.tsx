@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx ---
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -15,42 +17,13 @@ import DungeonCanvasBackground from './DungeonCanvasBackground.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
-import BossBattle from './boss.tsx'; // THAY THẾ: import TowerExplorerGame from './leo-thap.tsx';
+import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen from './upgrade-stats.tsx';
-// Đảm bảo import VocabularyItem từ thanh-tuu
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
-
-// --- LOGIC TÍNH TOÁN CHỈ SỐ (sao chép từ upgrade-stats.tsx để nhất quán) ---
-const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
-  if (currentLevel === 0) return 0;
-  let totalValue = 0;
-  const fullTiers = Math.floor(currentLevel / 10);
-  const remainingLevelsInCurrentTier = currentLevel % 10;
-  for (let i = 0; i < fullTiers; i++) {
-    const bonusInTier = baseBonus * Math.pow(2, i);
-    totalValue += 10 * bonusInTier;
-  }
-  const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers);
-  totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier;
-  return totalValue;
-};
-
-// --- HẰNG SỐ CHỈ SỐ CHO NGƯỜI CHƠI ---
-const BASE_PLAYER_STATS = {
-    hp: 40000,
-    atk: 1000,
-    def: 5,
-};
-const STAT_BONUS_CONFIG = {
-    hp: 50,  // Tương ứng baseUpgradeBonus cho HP trong upgrade-stats.tsx
-    atk: 5,   // Tương ứng baseUpgradeBonus cho ATK trong upgrade-stats.tsx
-    def: 5,   // Tương ứng baseUpgradeBonus cho DEF trong upgrade-stats.tsx
-};
-
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -144,9 +117,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(0);
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
-  // State để lưu tầng cao nhất của Miner Challenge
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
-  // State để lưu chỉ số nâng cấp của người dùng
+  // >>> STATE ĐỂ LƯU CHỈ SỐ NHÂN VẬT (HP, ATK, DEF)
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
 
@@ -157,7 +129,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
   const [isMinerChallengeOpen, setIsMinerChallengeOpen] = useState(false);
-  const [isBossBattleOpen, setIsBossBattleOpen] = useState(false); // THAY THẾ: isTowerGameOpen
+  const [isBossBattleOpen, setIsBossBattleOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
@@ -274,17 +246,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setGems(userData.gems || 0);
         setMasteryCards(userData.masteryCards || 0);
         setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
-        setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0); // Lấy dữ liệu tầng cao nhất
-        setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 }); // Lấy dữ liệu chỉ số
+        setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
+        // >>> LẤY DỮ LIỆU `stats` TỪ FIRESTORE
+        setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
           masteryCards: 0,
-          stats: { hp: 0, atk: 0, def: 0 }, // Khởi tạo chỉ số cho người dùng mới
+          // >>> KHỞI TẠO `stats` CHO NGƯỜI DÙNG MỚI
+          stats: { hp: 0, atk: 0, def: 0 },
           pickaxes: 50,
-          minerChallengeHighestFloor: 0, // Khởi tạo cho người dùng mới
+          minerChallengeHighestFloor: 0,
           createdAt: new Date(),
         });
         setCoins(0);
@@ -393,13 +367,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-  // Hàm cập nhật tầng cao nhất đã hoàn thành lên Firestore
   const updateHighestFloorInFirestore = async (userId: string, completedFloor: number) => {
       if (!userId) {
           console.error("Cannot update highest floor: User not authenticated.");
           return;
       }
-      // Chỉ cập nhật nếu tầng hoàn thành mới lớn hơn tầng cao nhất đã lưu
       if (completedFloor <= minerChallengeHighestFloor) {
           return;
       }
@@ -409,14 +381,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           await runTransaction(db, async (transaction) => {
               transaction.update(userDocRef, { minerChallengeHighestFloor: completedFloor });
           });
-          setMinerChallengeHighestFloor(completedFloor); // Cập nhật state ở local
+          setMinerChallengeHighestFloor(completedFloor);
           console.log(`Highest floor updated in Firestore for user ${userId} to: ${completedFloor}`);
       } catch (error) {
           console.error("Firestore Transaction failed for highest floor: ", error);
       }
   };
 
-  // Hàm cập nhật chỉ số (HP, ATK, DEF) lên Firestore
+  // >>> HÀM ĐỂ CẬP NHẬT CHỈ SỐ LÊN FIRESTORE
   const updateStatsInFirestore = async (userId: string, newStats: { hp: number; atk: number; def: number; }) => {
       if (!userId) {
           console.error("Cannot update stats: User not authenticated.");
@@ -425,10 +397,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const userDocRef = doc(db, 'users', userId);
       try {
           await runTransaction(db, async (transaction) => {
-              // Chỉ cần cập nhật trường 'stats' trong document của người dùng
+              // Cập nhật trường 'stats' trong document của người dùng
               transaction.update(userDocRef, { stats: newStats });
           });
-          setUserStats(newStats); // Cập nhật state ở local
+          setUserStats(newStats); // Cập nhật state cục bộ
           console.log(`User stats updated in Firestore for user ${userId}.`);
       } catch (error) {
           console.error("Firestore Transaction failed for stats: ", error);
@@ -482,7 +454,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
+        setIsBossBattleOpen(false);
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -540,7 +512,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  // HÀM NHẬN THƯỞNG ĐÃ ĐƯỢC NÂNG CẤP
   const handleRewardClaim = async (
     reward: { gold: number; masteryCards: number },
     updatedVocabulary: VocabularyItem[]
@@ -548,14 +519,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     const userId = auth.currentUser?.uid;
     if (!userId) {
       console.error("Cannot claim reward: User not authenticated.");
-      // Ném lỗi để component con có thể bắt và xử lý
       throw new Error("User not authenticated");
     }
 
     const userDocRef = doc(db, 'users', userId);
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
 
-    // Bọc tất cả các thao tác ghi trong một giao dịch
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userDocRef);
 
@@ -563,7 +532,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         throw "User document does not exist!";
       }
 
-      // 1. Cập nhật Vàng và Thẻ Thông Thạo
       const currentCoins = userDoc.data().coins || 0;
       const currentCards = userDoc.data().masteryCards || 0;
       const newCoins = currentCoins + reward.gold;
@@ -574,307 +542,53 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         masteryCards: newCards
       });
 
-      // 2. Cập nhật danh sách thành tựu
       transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
     });
 
     console.log("Reward claimed and achievements updated successfully in a single transaction.");
 
-    // 3. Cập nhật state của React SAU KHI transaction thành công
-    // Điều này đảm bảo UI luôn đồng bộ với dữ liệu đã được lưu thành công
     setCoins(prev => prev + reward.gold);
     setMasteryCards(prev => prev + reward.masteryCards);
     setVocabularyData(updatedVocabulary);
   };
 
-    const toggleRank = () => {
-     if (isLoading) return;
-     setIsRankOpen(prev => {
-         const newState = !prev;
-         if (newState) {
-             hideNavBar();
-             setIsGoldMineOpen(false);
-             setIsInventoryOpen(false);
-             setIsMinerChallengeOpen(false);
-             setIsLuckyGameOpen(false);
-             setIsBlacksmithOpen(false);
-             setIsBossBattleOpen(false); // THAY THẾ
-             setIsShopOpen(false);
-             setIsVocabularyChestOpen(false);
-             setIsAchievementsOpen(false);
-             setIsAdminPanelOpen(false);
-             setIsUpgradeScreenOpen(false);
-         } else {
-             showNavBar();
-         }
-         return newState;
-         });
+  // --- Các hàm toggle ---
+  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
+    return () => {
+        if (isLoading) return;
+        setter(prev => {
+            const newState = !prev;
+            if (newState) {
+                hideNavBar();
+                // Close all other overlays
+                [
+                    setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen,
+                    setIsBlacksmithOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen,
+                    setIsVocabularyChestOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen
+                ].forEach(s => {
+                    if (s !== setter) s(false);
+                });
+            } else {
+                showNavBar();
+            }
+            return newState;
+        });
+    };
   };
 
-  const toggleGoldMine = () => {
-    if (isLoading) return;
-    setIsGoldMineOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
+  const toggleRank = createToggleFunction(setIsRankOpen);
+  const toggleGoldMine = createToggleFunction(setIsGoldMineOpen);
+  const toggleInventory = createToggleFunction(setIsInventoryOpen);
+  const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
+  const toggleMinerChallenge = createToggleFunction(setIsMinerChallengeOpen);
+  const toggleBlacksmith = createToggleFunction(setIsBlacksmithOpen);
+  const toggleBossBattle = createToggleFunction(setIsBossBattleOpen);
+  const toggleShop = createToggleFunction(setIsShopOpen);
+  const toggleVocabularyChest = createToggleFunction(setIsVocabularyChestOpen);
+  const toggleAchievements = createToggleFunction(setIsAchievementsOpen);
+  const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
+  const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
 
-  const toggleInventory = () => {
-    if (isLoading) return;
-    setIsInventoryOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleLuckyGame = () => {
-    if (isLoading) return;
-    setIsLuckyGameOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleMinerChallenge = () => {
-    if (isLoading) return;
-    setIsMinerChallengeOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-  const toggleBlacksmith = () => {
-    if (isLoading) return;
-    setIsBlacksmithOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  // THAY THẾ: toggleTowerGame -> toggleBossBattle
-  const toggleBossBattle = () => {
-    if (isLoading) return;
-    setIsBossBattleOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleShop = () => {
-    if (isLoading) return;
-    setIsShopOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleVocabularyChest = () => {
-    if (isLoading) return;
-    setIsVocabularyChestOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleAchievements = () => {
-    if (isLoading) return;
-    setIsAchievementsOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleAdminPanel = () => {
-    if (isLoading) return;
-
-    setIsAdminPanelOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsUpgradeScreenOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
-
-  const toggleUpgradeScreen = () => {
-    if (isLoading) return;
-    setIsUpgradeScreenOpen(prev => {
-      const newState = !prev;
-      if (newState) {
-        hideNavBar();
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsMinerChallengeOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false); // THAY THẾ
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-      } else {
-        showNavBar();
-      }
-      return newState;
-    });
-  };
 
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
@@ -883,16 +597,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
-
-  // Tính toán chỉ số cuối cùng của người chơi để truyền vào BossBattle
-  const finalPlayerStatsForBoss = {
-      maxHp: BASE_PLAYER_STATS.hp + calculateTotalStatValue(userStats.hp, STAT_BONUS_CONFIG.hp),
-      hp: BASE_PLAYER_STATS.hp + calculateTotalStatValue(userStats.hp, STAT_BONUS_CONFIG.hp),
-      atk: BASE_PLAYER_STATS.atk + calculateTotalStatValue(userStats.atk, STAT_BONUS_CONFIG.atk),
-      def: BASE_PLAYER_STATS.def + calculateTotalStatValue(userStats.def, STAT_BONUS_CONFIG.def),
-      maxEnergy: 50,
-      energy: 50,
-  };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
@@ -964,7 +668,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
-                // THAY THẾ: onClick: toggleTowerGame -> toggleBossBattle
                 { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
                 { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
                 { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
@@ -990,10 +693,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
               ))}
             </div>
-
           </div>
         </div>
 
+        {/* --- Overlays / Modals --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}>
              <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary>
         </div>
@@ -1020,13 +723,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     onUpdateHighestFloor={(floor) => updateHighestFloorInFirestore(auth.currentUser!.uid, floor)}
                 />)}</ErrorBoundary>
         </div>
-        {/* THAY THẾ: TowerExplorerGame -> BossBattle */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isBossBattleOpen && auth.currentUser && (
                     <BossBattle
                         onClose={toggleBossBattle}
-                        playerInitialStats={finalPlayerStatsForBoss}
+                        playerInitialStats={{
+                            // >>> SỬ DỤNG `userStats` TỪ STATE ĐỂ TÍNH TOÁN CHỈ SỐ
+                            maxHp: 40000 + (userStats.hp * 1000),
+                            hp: 40000 + (userStats.hp * 1000),
+                            atk: 1000 + (userStats.atk * 50),
+                            def: 5 + userStats.def,
+                            maxEnergy: 50,
+                            energy: 50,
+                        }}
                         onBattleEnd={(result, rewards) => {
                             console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
@@ -1051,7 +761,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 />
             )}</ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
@@ -1059,28 +768,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleAchievements}
                         userId={auth.currentUser.uid}
                         initialData={vocabularyData}
-                        onClaimReward={handleRewardClaim} // SỬ DỤNG HÀM MỚI
+                        onClaimReward={handleRewardClaim}
                         masteryCardsCount={masteryCards}
                         displayedCoins={displayedCoins}
                     />
                 )}
             </ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isUpgradeScreenOpen && auth.currentUser && (
                     <UpgradeStatsScreen
                         onClose={toggleUpgradeScreen}
                         initialGold={coins}
-                        onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser.uid, amount)}
+                        onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                        // >>> TRUYỀN `userStats` VÀ HÀM CẬP NHẬT XUỐNG COMPONENT CON
                         initialStats={userStats}
-                        onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser.uid, newStats)}
+                        onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser!.uid, newStats)}
                     />
                 )}
             </ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary>
         </div>
