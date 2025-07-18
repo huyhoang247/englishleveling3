@@ -41,6 +41,13 @@ const Spinner = () => (
 
 
 // --- LOGIC TÍNH TOÁN ---
+// EXPORT: Định nghĩa và xuất cấu hình chỉ số để có thể sử dụng ở nơi khác.
+export const STAT_CONFIG = {
+  hp: { baseUpgradeBonus: 50 },
+  atk: { baseUpgradeBonus: 5 },
+  def: { baseUpgradeBonus: 5 },
+};
+
 const calculateUpgradeCost = (level: number) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
@@ -53,7 +60,8 @@ const getBonusForLevel = (level: number, baseBonus: number) => {
   return baseBonus * Math.pow(2, tier);
 };
 
-const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
+// EXPORT: Xuất hàm này để background-game.tsx có thể sử dụng.
+export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
   if (currentLevel === 0) return 0;
   let totalValue = 0;
   const fullTiers = Math.floor(currentLevel / 10);
@@ -135,9 +143,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
   // Local state for stats and messages
   const [displayedGold, setDisplayedGold] = useState(initialGold);
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: initialStats.hp || 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
-    { id: 'atk', name: 'ATK', level: initialStats.atk || 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
-    { id: 'def', name: 'DEF', level: initialStats.def || 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
+    { id: 'hp', name: 'HP', level: initialStats.hp || 0, icon: icons.heart, baseUpgradeBonus: STAT_CONFIG.hp.baseUpgradeBonus, color: "from-red-600 to-pink-600" },
+    { id: 'atk', name: 'ATK', level: initialStats.atk || 0, icon: icons.sword, baseUpgradeBonus: STAT_CONFIG.atk.baseUpgradeBonus, color: "from-sky-500 to-cyan-500" },
+    { id: 'def', name: 'DEF', level: initialStats.def || 0, icon: icons.shield, baseUpgradeBonus: STAT_CONFIG.def.baseUpgradeBonus, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
