@@ -200,9 +200,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // *** THAY ĐỔI 1: Thêm useEffect để đồng bộ prop với state ***
-  // Đồng bộ state của người chơi với prop nhận từ cha.
-  // Điều này đảm bảo khi người chơi nâng cấp chỉ số và vào lại, các chỉ số sẽ được cập nhật.
   useEffect(() => {
     setPlayerStats(playerInitialStats);
   }, [playerInitialStats]);
@@ -235,9 +232,13 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     }, 1500);
   };
 
+  // Công thức tính sát thương (Percentage Reduction) - Cân bằng tốt hơn
   const calculateDamage = (attackerAtk: number, defenderDef: number) => {
     const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
-    return Math.max(1, Math.floor(baseDamage - defenderDef));
+    const defenseConstant = 100; // Có thể tinh chỉnh để cân bằng game
+    const damageReduction = defenderDef / (defenderDef + defenseConstant);
+    const finalDamage = baseDamage * (1 - damageReduction);
+    return Math.max(1, Math.floor(finalDamage));
   };
 
   const runBattleTurn = () => {
@@ -320,7 +321,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
   const resetGame = () => {
     resetAllStateForNewBattle();
     setCurrentBossIndex(0);
-    // *** THAY ĐỔI 2: Đơn giản hóa việc reset state ***
     setPlayerStats(playerInitialStats); 
     setBossStats(BOSS_DATA[0].stats);
     setTimeout(() => addLog(`${BOSS_DATA[0].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
@@ -331,8 +331,13 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     if(nextIndex < BOSS_DATA.length) {
       resetAllStateForNewBattle();
       setCurrentBossIndex(nextIndex);
-      // *** THAY ĐỔI 3: Đơn giản hóa việc reset state ***
-      setPlayerStats(playerInitialStats);
+      // Hồi đầy máu cho người chơi, giữ nguyên chỉ số ATK/DEF đã nâng cấp
+      // và năng lượng hiện tại (đã cộng thưởng).
+      setPlayerStats(prev => ({
+        ...playerInitialStats, // Lấy ATK/DEF... từ prop (đã được nâng cấp)
+        hp: playerInitialStats.maxHp, // Hồi đầy máu
+        energy: prev.energy // Giữ lại năng lượng hiện tại
+      }));
     }
   }
 
@@ -352,8 +357,8 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
         if (tempBossHp <= 0) { winner = 'win'; break; }
 
         const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
-        tempCombatLog.push(`[Lượt ${tempTurn}] ${currentBossData.name} phản công, gây ${bossDmg} sát thương.`);
         tempPlayerHp -= bossDmg;
+        tempCombatLog.push(`[Lượt ${tempTurn}] ${currentBossData.name} phản công, gây ${bossDmg} sát thương.`);
         if (tempPlayerHp <= 0) { winner = 'lose'; break; }
     }
     setCombatLog(tempCombatLog.reverse());
