@@ -8,27 +8,27 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const icons = {
   coin: (
-    <img 
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" 
-      alt="Gold Coin Icon" 
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+      alt="Gold Coin Icon"
     />
   ),
   heart: (
-    <img 
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000384c61f89f8572bc1cce6ca4.png" 
-      alt="HP Icon" 
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000384c61f89f8572bc1cce6ca4.png"
+      alt="HP Icon"
     />
   ),
   sword: (
-    <img 
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000002e7061f7aa3134f2cd28f2f5.png" 
-      alt="ATK Icon" 
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000002e7061f7aa3134f2cd28f2f5.png"
+      alt="ATK Icon"
     />
   ),
   shield: (
-    <img 
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png" 
-      alt="DEF Icon" 
+    <img
+      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png"
+      alt="DEF Icon"
     />
   )
 };
@@ -42,20 +42,28 @@ const Spinner = () => (
 );
 
 
+// >>> TẠO CONFIG TRUNG TÂM VÀ EXPORT
+export const statConfig = {
+  hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
+  atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
+  def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
+};
+
+
 // --- LOGIC TÍNH TOÁN ---
-const calculateUpgradeCost = (level: number) => {
+export const calculateUpgradeCost = (level: number) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
   return baseCost * Math.pow(2, tier);
 };
 
-const getBonusForLevel = (level: number, baseBonus: number) => {
+export const getBonusForLevel = (level: number, baseBonus: number) => {
   if (level === 0) return 0;
   const tier = Math.floor((level - 1) / 10);
   return baseBonus * Math.pow(2, tier);
 };
 
-const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
+export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
   if (currentLevel === 0) return 0;
   let totalValue = 0;
   const fullTiers = Math.floor(currentLevel / 10);
@@ -91,11 +99,11 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   const upgradeCost = calculateUpgradeCost(level);
 
   return (
-    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px 
-                    transition-all duration-300 
+    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px
+                    transition-all duration-300
                     ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-      
+
       <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
         <div className="w-10 h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
@@ -107,7 +115,7 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
           onClick={() => onUpgrade(stat.id)}
           disabled={isDisabled}
           className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95
-                     hover:enabled:bg-slate-700 hover:enabled:border-cyan-400 
+                     hover:enabled:bg-slate-700 hover:enabled:border-cyan-400
                      disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isProcessing ? (
@@ -137,10 +145,11 @@ interface UpgradeStatsScreenProps {
 export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold, initialStats, onUpdateStats }: UpgradeStatsScreenProps) {
   // Local state for stats and messages
   const [displayedGold, setDisplayedGold] = useState(initialGold);
+  // >>> SỬ DỤNG statConfig ĐỂ KHỞI TẠO STATE
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: initialStats.hp || 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
-    { id: 'atk', name: 'ATK', level: initialStats.atk || 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
-    { id: 'def', name: 'DEF', level: initialStats.def || 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
+    { id: 'hp', level: initialStats.hp || 0, ...statConfig.hp },
+    { id: 'atk', level: initialStats.atk || 0, ...statConfig.atk },
+    { id: 'def', level: initialStats.def || 0, ...statConfig.def },
   ]);
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
@@ -196,9 +205,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
 
       // Cập nhật Vàng trước
       await onUpdateGold(-upgradeCost);
-      
+
       // Cập nhật level của chỉ số trong state cục bộ
-      const newStatsArray = stats.map(s => 
+      const newStatsArray = stats.map(s =>
           s.id === statId ? { ...s, level: s.level + 1 } : s
       );
       setStats(newStatsArray);
@@ -209,7 +218,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
         atk: newStatsArray.find(s => s.id === 'atk')!.level,
         def: newStatsArray.find(s => s.id === 'def')!.level,
       };
-      
+
       // >>> GỌI HÀM `onUpdateStats` TỪ PROPS ĐỂ LƯU DỮ LIỆU
       await onUpdateStats(newStatsForFirestore);
       setMessage('');
@@ -225,10 +234,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
   };
 
   // Calculations for display
-  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, stats.find(s => s.id === 'hp')!.baseUpgradeBonus);
-  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk')!.level, stats.find(s => s.id === 'atk')!.baseUpgradeBonus);
-  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def')!.level, stats.find(s => s.id === 'def')!.baseUpgradeBonus);
-  
+  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, statConfig.hp.baseUpgradeBonus);
+  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk')!.level, statConfig.atk.baseUpgradeBonus);
+  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def')!.level, statConfig.def.baseUpgradeBonus);
+
   const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
   const maxProgress = 50;
   const prestigeLevel = Math.floor(totalLevels / maxProgress);
@@ -243,7 +252,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
           .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
-          
+
           @keyframes animate-gradient-border {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -300,7 +309,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
             <CoinDisplay displayedCoins={displayedGold} isStatsFullscreen={false} />
         </div>
       </header>
-      
+
       {message && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
           {message}
@@ -308,10 +317,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
       )}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
-          
+
           <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
-            <img 
-              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
+            <img
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png"
               alt="Hero Stone Icon"
               className="w-full h-full object-contain"
             />
@@ -331,7 +340,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
               <span className="text-lg font-bold">{formatNumber(totalDef)}</span>
             </div>
           </div>
-          
+
           <div className="w-full px-2 mb-8">
             <div className="flex justify-between items-baseline mb-2 px-1">
               <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
@@ -347,9 +356,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
 
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {stats.map(stat => (
-              <StatCard 
-                key={stat.id} 
-                stat={stat} 
+              <StatCard
+                key={stat.id}
+                stat={stat}
                 onUpgrade={handleUpgrade}
                 isProcessing={upgradingId === stat.id}
                 isDisabled={upgradingId !== null}
