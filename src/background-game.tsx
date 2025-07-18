@@ -19,14 +19,38 @@ import BossBattle from './boss.tsx'; // THAY THẾ: import TowerExplorerGame fro
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
-// IMPORT: Nhập các hàm và cấu hình cần thiết từ upgrade-stats.tsx
-import UpgradeStatsScreen, {
-  calculateTotalStatValue,
-  STAT_CONFIG
-} from './upgrade-stats.tsx';
+import UpgradeStatsScreen from './upgrade-stats.tsx';
 // Đảm bảo import VocabularyItem từ thanh-tuu
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
+
+// --- LOGIC TÍNH TOÁN CHỈ SỐ (sao chép từ upgrade-stats.tsx để nhất quán) ---
+const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
+  if (currentLevel === 0) return 0;
+  let totalValue = 0;
+  const fullTiers = Math.floor(currentLevel / 10);
+  const remainingLevelsInCurrentTier = currentLevel % 10;
+  for (let i = 0; i < fullTiers; i++) {
+    const bonusInTier = baseBonus * Math.pow(2, i);
+    totalValue += 10 * bonusInTier;
+  }
+  const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers);
+  totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier;
+  return totalValue;
+};
+
+// --- HẰNG SỐ CHỈ SỐ CHO NGƯỜI CHƠI ---
+const BASE_PLAYER_STATS = {
+    hp: 40000,
+    atk: 1000,
+    def: 5,
+};
+const STAT_BONUS_CONFIG = {
+    hp: 50,  // Tương ứng baseUpgradeBonus cho HP trong upgrade-stats.tsx
+    atk: 5,   // Tương ứng baseUpgradeBonus cho ATK trong upgrade-stats.tsx
+    def: 5,   // Tương ứng baseUpgradeBonus cho DEF trong upgrade-stats.tsx
+};
+
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -860,6 +884,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
+  // Tính toán chỉ số cuối cùng của người chơi để truyền vào BossBattle
+  const finalPlayerStatsForBoss = {
+      maxHp: BASE_PLAYER_STATS.hp + calculateTotalStatValue(userStats.hp, STAT_BONUS_CONFIG.hp),
+      hp: BASE_PLAYER_STATS.hp + calculateTotalStatValue(userStats.hp, STAT_BONUS_CONFIG.hp),
+      atk: BASE_PLAYER_STATS.atk + calculateTotalStatValue(userStats.atk, STAT_BONUS_CONFIG.atk),
+      def: BASE_PLAYER_STATS.def + calculateTotalStatValue(userStats.def, STAT_BONUS_CONFIG.def),
+      maxEnergy: 50,
+      energy: 50,
+  };
+
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout
@@ -992,16 +1026,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {isBossBattleOpen && auth.currentUser && (
                     <BossBattle
                         onClose={toggleBossBattle}
-                        playerInitialStats={{
-                            // CẬP NHẬT: Sử dụng hàm tính toán được import để lấy chỉ số chính xác
-                            // Chỉ số gốc + chỉ số thưởng từ nâng cấp
-                            maxHp: 40000 + calculateTotalStatValue(userStats.hp, STAT_CONFIG.hp.baseUpgradeBonus),
-                            hp: 40000 + calculateTotalStatValue(userStats.hp, STAT_CONFIG.hp.baseUpgradeBonus),
-                            atk: 1000 + calculateTotalStatValue(userStats.atk, STAT_CONFIG.atk.baseUpgradeBonus),
-                            def: 5 + calculateTotalStatValue(userStats.def, STAT_CONFIG.def.baseUpgradeBonus),
-                            maxEnergy: 50,
-                            energy: 50,
-                        }}
+                        playerInitialStats={finalPlayerStatsForBoss}
                         onBattleEnd={(result, rewards) => {
                             console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
