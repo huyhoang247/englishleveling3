@@ -200,6 +200,14 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // *** THAY ĐỔI 1: Thêm useEffect để đồng bộ prop với state ***
+  // Đồng bộ state của người chơi với prop nhận từ cha.
+  // Điều này đảm bảo khi người chơi nâng cấp chỉ số và vào lại, các chỉ số sẽ được cập nhật.
+  useEffect(() => {
+    setPlayerStats(playerInitialStats);
+  }, [playerInitialStats]);
+
+
   useEffect(() => {
     setBossStats(BOSS_DATA[currentBossIndex].stats);
     addLog(`${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`, 0);
@@ -312,7 +320,8 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
   const resetGame = () => {
     resetAllStateForNewBattle();
     setCurrentBossIndex(0);
-    setPlayerStats(prev => ({...playerInitialStats, energy: prev.energy}));
+    // *** THAY ĐỔI 2: Đơn giản hóa việc reset state ***
+    setPlayerStats(playerInitialStats); 
     setBossStats(BOSS_DATA[0].stats);
     setTimeout(() => addLog(`${BOSS_DATA[0].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
   };
@@ -322,7 +331,8 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     if(nextIndex < BOSS_DATA.length) {
       resetAllStateForNewBattle();
       setCurrentBossIndex(nextIndex);
-      setPlayerStats(prev => ({...playerInitialStats, energy: prev.energy}));
+      // *** THAY ĐỔI 3: Đơn giản hóa việc reset state ***
+      setPlayerStats(playerInitialStats);
     }
   }
 
