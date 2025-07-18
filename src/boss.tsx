@@ -1,7 +1,7 @@
 // File: src/components/BossBattle.tsx
 
 import React, { useState, useEffect, useRef } from 'react';
-import BOSS_DATA from './boss/bossData.ts'; // Import data from the new file
+import BOSS_DATA from '../data/bossData'; 
 
 // --- Props Interface for the Component ---
 interface BossBattleProps {
@@ -16,25 +16,6 @@ interface BossBattleProps {
   };
   onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
 }
-
-// --- Cấu trúc dữ liệu cho các Boss theo tầng (50 Tầng) ---
-/*
-  The full BOSS_DATA array is now located in `src/data/bossData.ts`.
-  Below is a sample structure for reference.
-
-  const BOSS_DATA_SAMPLE = [
-    { 
-      id: 1, 
-      floor: "FLOOR 1", 
-      name: "Whispering Wisp", 
-      imageSrc: "https://.../image.png", 
-      stats: { maxHp: 100, hp: 100, atk: 10, def: 6 }, 
-      rewards: { coins: 90, energy: 5 } 
-    },
-    // ... data for 49 other floors
-  ];
-*/
-
 
 // --- Component Thanh Máu ---
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
@@ -87,7 +68,7 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
-// --- Component Modal Chỉ Số (ĐÃ CHỈNH SỬA) ---
+// --- Component Modal Chỉ Số ---
 const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
@@ -102,7 +83,6 @@ const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose
             </div>
             <div className="h-16 w-px bg-slate-600/70"></div>
             <div className="flex flex-col items-center gap-1.5">
-              {/* --- Đã loại bỏ tooltip ở đây --- */}
               <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">
                   BOSS
               </h3>
@@ -154,7 +134,6 @@ const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { co
     </div>
   );
 };
-
 
 // --- Component Modal Chiến Thắng ---
 const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
@@ -332,7 +311,7 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
 
   const resetGame = () => {
     resetAllStateForNewBattle();
-    setCurrentBossIndex(0); // Quay về boss đầu
+    setCurrentBossIndex(0);
     setPlayerStats(prev => ({...playerInitialStats, energy: prev.energy}));
     setBossStats(BOSS_DATA[0].stats);
     setTimeout(() => addLog(`${BOSS_DATA[0].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
@@ -381,7 +360,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
       `}</style>
 
-      {/* --- Lời gọi StatsModal đã được cập nhật, không còn truyền `bossName` --- */}
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
       
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
@@ -414,7 +392,7 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
                 {battleState === 'fighting' && (<button onClick={skipBattle} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
             </div>
 
-            {damages.map(d => (<FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />))}
+            {damages.map(d => (<FloatingDamage key={d.id} damage={d.damage} id={d.id} isPlayerHit={d.isPlayerHit} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
@@ -428,7 +406,13 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
                     </div>
                   </div>
                   
-                  <div className="w-40 h-40 md:w-56 md:h-56"><img src={currentBossData.imageSrc} alt={currentBossData.name} className="w-full h-full object-contain" /></div>
+                  <div className="w-40 h-40 md:w-56 md:h-56">
+                    <img 
+                      src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} 
+                      alt={currentBossData.name} 
+                      className="w-full h-full object-contain" 
+                    />
+                  </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                 </div>
             </div>
