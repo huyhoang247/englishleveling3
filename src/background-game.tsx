@@ -595,9 +595,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // >>> LOGIC TÍNH TOÁN CHỈ SỐ CHO BOSS BATTLE
   const getPlayerBattleStats = () => {
-      const BASE_HP = 40000;
-      const BASE_ATK = 1000;
-      const BASE_DEF = 5;
+      const BASE_HP = 0;
+      const BASE_ATK = 0;
+      const BASE_DEF = 0;
 
       // Tính toán chỉ số cộng thêm từ level, sử dụng logic nhất quán
       const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
