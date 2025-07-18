@@ -122,8 +122,8 @@ const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: numbe
   );
 };
 
-// --- Component Modal Chỉ Số ---
-const StatsModal = ({ player, boss, bossName, onClose }: { player: any, boss: any, bossName: string, onClose: () => void }) => {
+// --- Component Modal Chỉ Số (ĐÃ CHỈNH SỬA) ---
+const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
@@ -137,16 +137,10 @@ const StatsModal = ({ player, boss, bossName, onClose }: { player: any, boss: an
             </div>
             <div className="h-16 w-px bg-slate-600/70"></div>
             <div className="flex flex-col items-center gap-1.5">
-              <div className="relative group flex justify-center">
-                {/* THÊM `select-none` VÀO ĐÂY */}
-                <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">
+              {/* --- Đã loại bỏ tooltip ở đây --- */}
+              <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">
                   BOSS
-                </h3>
-                <div className="absolute bottom-full mb-2 w-max max-w-xs px-2 py-1 bg-slate-800 text-xs font-sans font-medium text-white rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  {bossName.toUpperCase()}
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
-                </div>
-              </div>
+              </h3>
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
             </div>
@@ -157,7 +151,6 @@ const StatsModal = ({ player, boss, bossName, onClose }: { player: any, boss: an
   )
 }
 
-// ... các component modal khác giữ nguyên, không cần thay đổi ...
 // --- Component Modal Lịch Sử Chiến Đấu ---
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
@@ -243,7 +236,6 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
     </div>
   );
 }
-
 
 // --- Component Chính Của Game ---
 export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }: BossBattleProps) {
@@ -424,7 +416,9 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
       `}</style>
 
-      {showStats && <StatsModal player={playerStats} boss={bossStats} bossName={currentBossData.name} onClose={() => setShowStats(false)} />}
+      {/* --- Lời gọi StatsModal đã được cập nhật, không còn truyền `bossName` --- */}
+      {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
+      
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
       {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
@@ -460,7 +454,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <div className="relative group flex justify-center">
-                    {/* THÊM `select-none` VÀO ĐÂY */}
                     <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">
                       BOSS
                     </h2>
