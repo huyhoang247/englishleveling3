@@ -16,7 +16,7 @@ import DungeonCanvasBackground from './DungeonCanvasBackground.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import Blacksmith from './blacksmith.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
-import BossBattle from './boss.tsx';
+import BossBattle from './boss.tsx'; // THAY THẾ: import TowerExplorerGame from './leo-thap.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
@@ -88,7 +88,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center text-center">
-    <div 
+    <div
         className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"
     ></div>
     <p className="mt-5 text-lg font-medium text-gray-300">
@@ -131,7 +131,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
   const [isMinerChallengeOpen, setIsMinerChallengeOpen] = useState(false);
-  const [isBossBattleOpen, setIsBossBattleOpen] = useState(false);
+  const [isBossBattleOpen, setIsBossBattleOpen] = useState(false); // THAY THẾ: isTowerGameOpen
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
@@ -181,13 +181,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             Object.values(gameModes).forEach((mode: any) => {
                 totalCorrectCount += mode.correctCount || 0;
             });
-            wordToExpMap.set(word, totalCorrectCount * 100); 
+            wordToExpMap.set(word, totalCorrectCount * 100);
         });
 
-        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() 
-            ? achievementDocSnap.data().vocabulary || [] 
+        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
+            ? achievementDocSnap.data().vocabulary || []
             : [];
-            
+
         const finalVocabularyData: VocabularyItem[] = [];
         const processedWords = new Set<string>();
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
@@ -201,7 +201,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     expSpentToReachCurrentLevel += i * 100;
                 }
                 const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-                
+
                 finalVocabularyData.push({
                     ...existingItem,
                     exp: currentProgressExp,
@@ -224,7 +224,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 finalVocabularyData.push(item);
             }
         });
-        
+
         console.log("Vocabulary achievements data synced and merged correctly.");
         setVocabularyData(finalVocabularyData);
 
@@ -320,7 +320,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.error("Firestore Transaction failed for coins: ", error);
     }
   };
-  
+
   const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update mastery cards: User not authenticated.");
@@ -443,7 +443,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const handleGemReward = (amount: number) => {
       setGems(prev => prev + amount);
   };
-  
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
@@ -457,7 +457,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -492,7 +492,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, []);
 
   const handleTap = () => { };
-  
+
   const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
 
   useEffect(() => {
@@ -501,7 +501,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setDisplayedCoins(coins);
     }, 100);
     return () => clearTimeout(timeoutId);
-    
+
   }, [coins]);
 
   const renderCharacter = () => {
@@ -514,7 +514,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       </div>
     );
   };
-  
+
   // HÀM NHẬN THƯỞNG ĐÃ ĐƯỢC NÂNG CẤP
   const handleRewardClaim = async (
     reward: { gold: number; masteryCards: number },
@@ -526,10 +526,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       // Ném lỗi để component con có thể bắt và xử lý
       throw new Error("User not authenticated");
     }
-  
+
     const userDocRef = doc(db, 'users', userId);
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-  
+
     // Bọc tất cả các thao tác ghi trong một giao dịch
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userDocRef);
@@ -544,9 +544,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newCoins = currentCoins + reward.gold;
       const newCards = currentCards + reward.masteryCards;
 
-      transaction.update(userDocRef, { 
+      transaction.update(userDocRef, {
         coins: newCoins,
-        masteryCards: newCards 
+        masteryCards: newCards
       });
 
       // 2. Cập nhật danh sách thành tựu
@@ -575,7 +575,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             setIsLuckyGameOpen(false);
             setIsMinerChallengeOpen(false);
             setIsBlacksmithOpen(false);
-            setIsBossBattleOpen(false);
+            setIsBossBattleOpen(false); // THAY THẾ
             setIsShopOpen(false);
             setIsVocabularyChestOpen(false);
             setIsAchievementsOpen(false);
@@ -600,7 +600,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
              setIsMinerChallengeOpen(false);
              setIsLuckyGameOpen(false);
              setIsBlacksmithOpen(false);
-             setIsBossBattleOpen(false);
+             setIsBossBattleOpen(false); // THAY THẾ
              setIsShopOpen(false);
              setIsVocabularyChestOpen(false);
              setIsAchievementsOpen(false);
@@ -625,7 +625,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -650,7 +650,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -675,7 +675,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsMinerChallengeOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -700,7 +700,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -724,7 +724,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsInventoryOpen(false);
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -737,6 +737,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     });
   };
 
+  // THAY THẾ: toggleTowerGame -> toggleBossBattle
   const toggleBossBattle = () => {
     if (isLoading) return;
     setIsBossBattleOpen(prev => {
@@ -775,7 +776,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
@@ -800,7 +801,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsAchievementsOpen(false);
         setIsAdminPanelOpen(false);
@@ -825,7 +826,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAdminPanelOpen(false);
@@ -836,10 +837,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return newState;
     });
   };
-  
+
   const toggleAdminPanel = () => {
     if (isLoading) return;
-    
+
     setIsAdminPanelOpen(prev => {
       const newState = !prev;
       if (newState) {
@@ -851,7 +852,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsMinerChallengeOpen(false);
         setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -876,7 +877,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsLuckyGameOpen(false);
         setIsMinerChallengeOpen(false);
         setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
+        setIsBossBattleOpen(false); // THAY THẾ
         setIsShopOpen(false);
         setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false);
@@ -910,11 +911,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
 
-        <div 
-          style={{ 
+        <div
+          style={{
             display: isAnyOverlayOpen ? 'none' : 'block',
             visibility: isLoading ? 'hidden' : 'visible'
-          }} 
+          }}
           className="w-full h-full"
         >
           <div
@@ -966,7 +967,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[
-                { icon: <img src={uiAssets.towerIcon} alt="Đấu Boss" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
+                // THAY THẾ: onClick: toggleTowerGame -> toggleBossBattle
+                { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
                 { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
                 { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
               ].map((item, index) => (
@@ -991,7 +993,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
               ))}
             </div>
-            
+
           </div>
         </div>
 
@@ -1015,8 +1017,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
-                <MinerChallenge 
-                    onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards} 
+                <MinerChallenge
+                    onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards}
                     onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
                     initialPickaxes={pickaxes}
                     onUpdatePickaxes={(newCount) => updatePickaxesInFirestore(auth.currentUser!.uid, newCount)}
@@ -1024,29 +1026,50 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     onUpdateHighestFloor={(floor) => updateHighestFloorInFirestore(auth.currentUser!.uid, floor)}
                 />)}</ErrorBoundary>
         </div>
+        {/* THAY THẾ: TowerExplorerGame -> BossBattle */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isBossBattleOpen && <BossBattle onClose={toggleBossBattle} />}</ErrorBoundary>
+            <ErrorBoundary>
+                {isBossBattleOpen && auth.currentUser && (
+                    <BossBattle
+                        onClose={toggleBossBattle}
+                        playerInitialStats={{
+                            maxHp: 40000 + (userStats.hp * 1000),
+                            hp: 40000 + (userStats.hp * 1000),
+                            atk: 1000 + (userStats.atk * 50),
+                            def: 5 + userStats.def,
+                            maxEnergy: 50,
+                            energy: 50,
+                        }}
+                        onBattleEnd={(result, rewards) => {
+                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
+                            if (result === 'win' && auth.currentUser) {
+                                updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
+                            }
+                        }}
+                    />
+                )}
+            </ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (
-                <VocabularyChestScreen 
-                    onClose={toggleVocabularyChest} 
-                    currentUserId={currentUser.uid} 
+                <VocabularyChestScreen
+                    onClose={toggleVocabularyChest}
+                    currentUserId={currentUser.uid}
                     onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)}
-                    onGemReward={handleGemReward} 
-                    displayedCoins={displayedCoins} 
+                    onGemReward={handleGemReward}
+                    displayedCoins={displayedCoins}
                 />
             )}</ErrorBoundary>
         </div>
-        
+
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
-                    <AchievementsScreen 
-                        onClose={toggleAchievements} 
+                    <AchievementsScreen
+                        onClose={toggleAchievements}
                         userId={auth.currentUser.uid}
                         initialData={vocabularyData}
                         onClaimReward={handleRewardClaim} // SỬ DỤNG HÀM MỚI
@@ -1056,12 +1079,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        
+
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isUpgradeScreenOpen && auth.currentUser && (
-                    <UpgradeStatsScreen 
-                        onClose={toggleUpgradeScreen} 
+                    <UpgradeStatsScreen
+                        onClose={toggleUpgradeScreen}
                         initialGold={coins}
                         onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser.uid, amount)}
                         initialStats={userStats}
@@ -1070,12 +1093,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        
+
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary>
         </div>
       </SidebarLayout>
-      
+
       {isLoading && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
             <LoadingSpinner />
