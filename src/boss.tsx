@@ -16,413 +16,60 @@ interface BossBattleProps {
   onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
 }
 
-// --- Cấu trúc dữ liệu cho 50 Tầng Boss ---
-// Công thức:
-// - Tầng 1: HP 100, ATK 10, DEF 6
-// - Mỗi tầng sau: chỉ số tăng 30%
-// - Vàng thưởng: 90% HP của boss
+// --- Cấu trúc dữ liệu cho các Boss theo tầng (50 Tầng) ---
 const BOSS_DATA = [
-  {
-    id: 1,
-    floor: "FLOOR 1",
-    name: "Slime",
-    imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 100, hp: 100, atk: 10, def: 6 },
-    rewards: { coins: 90, energy: 5 }
-  },
-  {
-    id: 2,
-    floor: "FLOOR 2",
-    name: "Goblin Rogue",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/02/02/16/21/goblin-7763261_1280.png",
-    stats: { maxHp: 130, hp: 130, atk: 13, def: 8 },
-    rewards: { coins: 117, energy: 5 }
-  },
-  {
-    id: 3,
-    floor: "FLOOR 3",
-    name: "Orc Brute",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/07/04/19/22/orc-8106975_1280.png",
-    stats: { maxHp: 169, hp: 169, atk: 17, def: 10 },
-    rewards: { coins: 152, energy: 6 }
-  },
-  {
-    id: 4,
-    floor: "FLOOR 4",
-    name: "Skeleton Warrior",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/03/17/04/24/knight-7073289_1280.png",
-    stats: { maxHp: 220, hp: 220, atk: 22, def: 13 },
-    rewards: { coins: 198, energy: 6 }
-  },
-  {
-    id: 5,
-    floor: "FLOOR 5",
-    name: "Grave Bat",
-    imageSrc: "https://cdn.pixabay.com/photo/2019/08/25/16/51/bat-4429538_1280.png",
-    stats: { maxHp: 286, hp: 286, atk: 29, def: 17 },
-    rewards: { coins: 257, energy: 7 }
-  },
-  {
-    id: 6,
-    floor: "FLOOR 6",
-    name: "Shadow Imp",
-    imageSrc: "https://cdn.pixabay.com/photo/2024/02/19/14/23/ai-generated-8583648_1280.png",
-    stats: { maxHp: 371, hp: 371, atk: 37, def: 22 },
-    rewards: { coins: 334, energy: 7 }
-  },
-  {
-    id: 7,
-    floor: "FLOOR 7",
-    name: "Stone Golem",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/10/24/16/52/golem-7543787_1280.png",
-    stats: { maxHp: 483, hp: 483, atk: 48, def: 29 },
-    rewards: { coins: 435, energy: 8 }
-  },
-  {
-    id: 8,
-    floor: "FLOOR 8",
-    name: "Fire Elemental",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png",
-    stats: { maxHp: 628, hp: 628, atk: 63, def: 38 },
-    rewards: { coins: 565, energy: 8 }
-  },
-  {
-    id: 9,
-    floor: "FLOOR 9",
-    name: "Ice Serpent",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/11/24/16/23/ai-generated-8410526_1280.png",
-    stats: { maxHp: 816, hp: 816, atk: 82, def: 49 },
-    rewards: { coins: 734, energy: 9 }
-  },
-  {
-    id: 10,
-    floor: "FLOOR 10",
-    name: "Slime",
-    imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 1061, hp: 1061, atk: 106, def: 64 },
-    rewards: { coins: 955, energy: 9 }
-  },
-  {
-    id: 11,
-    floor: "FLOOR 11",
-    name: "Goblin Rogue",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/02/02/16/21/goblin-7763261_1280.png",
-    stats: { maxHp: 1379, hp: 1379, atk: 138, def: 83 },
-    rewards: { coins: 1241, energy: 10 }
-  },
-  {
-    id: 12,
-    floor: "FLOOR 12",
-    name: "Orc Brute",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/07/04/19/22/orc-8106975_1280.png",
-    stats: { maxHp: 1793, hp: 1793, atk: 179, def: 108 },
-    rewards: { coins: 1614, energy: 10 }
-  },
-  {
-    id: 13,
-    floor: "FLOOR 13",
-    name: "Skeleton Warrior",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/03/17/04/24/knight-7073289_1280.png",
-    stats: { maxHp: 2331, hp: 2331, atk: 233, def: 140 },
-    rewards: { coins: 2098, energy: 11 }
-  },
-  {
-    id: 14,
-    floor: "FLOOR 14",
-    name: "Grave Bat",
-    imageSrc: "https://cdn.pixabay.com/photo/2019/08/25/16/51/bat-4429538_1280.png",
-    stats: { maxHp: 3030, hp: 3030, atk: 303, def: 182 },
-    rewards: { coins: 2727, energy: 11 }
-  },
-  {
-    id: 15,
-    floor: "FLOOR 15",
-    name: "Shadow Imp",
-    imageSrc: "https://cdn.pixabay.com/photo/2024/02/19/14/23/ai-generated-8583648_1280.png",
-    stats: { maxHp: 3939, hp: 3939, atk: 394, def: 237 },
-    rewards: { coins: 3545, energy: 12 }
-  },
-  {
-    id: 16,
-    floor: "FLOOR 16",
-    name: "Stone Golem",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/10/24/16/52/golem-7543787_1280.png",
-    stats: { maxHp: 5121, hp: 5121, atk: 512, def: 308 },
-    rewards: { coins: 4609, energy: 12 }
-  },
-  {
-    id: 17,
-    floor: "FLOOR 17",
-    name: "Fire Elemental",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png",
-    stats: { maxHp: 6657, hp: 6657, atk: 666, def: 401 },
-    rewards: { coins: 5991, energy: 13 }
-  },
-  {
-    id: 18,
-    floor: "FLOOR 18",
-    name: "Ice Serpent",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/11/24/16/23/ai-generated-8410526_1280.png",
-    stats: { maxHp: 8654, hp: 8654, atk: 865, def: 521 },
-    rewards: { coins: 7789, energy: 13 }
-  },
-  {
-    id: 19,
-    floor: "FLOOR 19",
-    name: "Lich Adept",
-    imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 11251, hp: 11251, atk: 1125, def: 677 },
-    rewards: { coins: 10126, energy: 14 }
-  },
-  {
-    id: 20,
-    floor: "FLOOR 20",
-    name: "Beholder Spawn",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/02/02/16/21/goblin-7763261_1280.png",
-    stats: { maxHp: 14626, hp: 14626, atk: 1463, def: 880 },
-    rewards: { coins: 13163, energy: 14 }
-  },
-  {
-    id: 21,
-    floor: "FLOOR 21",
-    name: "Young Chimera",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/07/04/19/22/orc-8106975_1280.png",
-    stats: { maxHp: 19014, hp: 19014, atk: 1901, def: 1144 },
-    rewards: { coins: 17113, energy: 15 }
-  },
-  {
-    id: 22,
-    floor: "FLOOR 22",
-    name: "Cave Hydra",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/03/17/04/24/knight-7073289_1280.png",
-    stats: { maxHp: 24718, hp: 24718, atk: 2472, def: 1488 },
-    rewards: { coins: 22246, energy: 15 }
-  },
-  {
-    id: 23,
-    floor: "FLOOR 23",
-    name: "Abyssal Fiend",
-    imageSrc: "https://cdn.pixabay.com/photo/2019/08/25/16/51/bat-4429538_1280.png",
-    stats: { maxHp: 32133, hp: 32133, atk: 3213, def: 1934 },
-    rewards: { coins: 28920, energy: 16 }
-  },
-  {
-    id: 24,
-    floor: "FLOOR 24",
-    name: "Earth Titan",
-    imageSrc: "https://cdn.pixabay.com/photo/2024/02/19/14/23/ai-generated-8583648_1280.png",
-    stats: { maxHp: 41773, hp: 41773, atk: 4177, def: 2514 },
-    rewards: { coins: 37596, energy: 16 }
-  },
-  {
-    id: 25,
-    floor: "FLOOR 25",
-    name: "Slime",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/10/24/16/52/golem-7543787_1280.png",
-    stats: { maxHp: 54305, hp: 54305, atk: 5431, def: 3268 },
-    rewards: { coins: 48875, energy: 17 }
-  },
-  {
-    id: 26,
-    floor: "FLOOR 26",
-    name: "Goblin Rogue",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png",
-    stats: { maxHp: 70597, hp: 70597, atk: 7060, def: 4249 },
-    rewards: { coins: 63537, energy: 17 }
-  },
-  {
-    id: 27,
-    floor: "FLOOR 27",
-    name: "Orc Brute",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/11/24/16/23/ai-generated-8410526_1280.png",
-    stats: { maxHp: 91776, hp: 91776, atk: 9178, def: 5524 },
-    rewards: { coins: 82598, energy: 18 }
-  },
-  {
-    id: 28,
-    floor: "FLOOR 28",
-    name: "Skeleton Warrior",
-    imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 119308, hp: 119308, atk: 11931, def: 7181 },
-    rewards: { coins: 107377, energy: 18 }
-  },
-  {
-    id: 29,
-    floor: "FLOOR 29",
-    name: "Grave Bat",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/02/02/16/21/goblin-7763261_1280.png",
-    stats: { maxHp: 155101, hp: 155101, atk: 15510, def: 9335 },
-    rewards: { coins: 139591, energy: 19 }
-  },
-  {
-    id: 30,
-    floor: "FLOOR 30",
-    name: "Shadow Imp",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/07/04/19/22/orc-8106975_1280.png",
-    stats: { maxHp: 201631, hp: 201631, atk: 20163, def: 12136 },
-    rewards: { coins: 181468, energy: 19 }
-  },
-  {
-    id: 31,
-    floor: "FLOOR 31",
-    name: "Stone Golem",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/03/17/04/24/knight-7073289_1280.png",
-    stats: { maxHp: 262120, hp: 262120, atk: 26212, def: 15777 },
-    rewards: { coins: 235908, energy: 20 }
-  },
-  {
-    id: 32,
-    floor: "FLOOR 32",
-    name: "Fire Elemental",
-    imageSrc: "https://cdn.pixabay.com/photo/2019/08/25/16/51/bat-4429538_1280.png",
-    stats: { maxHp: 340756, hp: 340756, atk: 34076, def: 20510 },
-    rewards: { coins: 306680, energy: 20 }
-  },
-  {
-    id: 33,
-    floor: "FLOOR 33",
-    name: "Ice Serpent",
-    imageSrc: "https://cdn.pixabay.com/photo/2024/02/19/14/23/ai-generated-8583648_1280.png",
-    stats: { maxHp: 442983, hp: 442983, atk: 44298, def: 26663 },
-    rewards: { coins: 398685, energy: 21 }
-  },
-  {
-    id: 34,
-    floor: "FLOOR 34",
-    name: "Lich Adept",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/10/24/16/52/golem-7543787_1280.png",
-    stats: { maxHp: 575878, hp: 575878, atk: 57588, def: 34662 },
-    rewards: { coins: 518290, energy: 21 }
-  },
-  {
-    id: 35,
-    floor: "FLOOR 35",
-    name: "Beholder Spawn",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png",
-    stats: { maxHp: 748642, hp: 748642, atk: 74864, def: 45060 },
-    rewards: { coins: 673778, energy: 22 }
-  },
-  {
-    id: 36,
-    floor: "FLOOR 36",
-    name: "Young Chimera",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/11/24/16/23/ai-generated-8410526_1280.png",
-    stats: { maxHp: 973234, hp: 973234, atk: 97323, def: 58578 },
-    rewards: { coins: 875911, energy: 22 }
-  },
-  {
-    id: 37,
-    floor: "FLOOR 37",
-    name: "Cave Hydra",
-    imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 1265204, hp: 1265204, atk: 126520, def: 76152 },
-    rewards: { coins: 1138684, energy: 23 }
-  },
-  {
-    id: 38,
-    floor: "FLOOR 38",
-    name: "Abyssal Fiend",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/02/02/16/21/goblin-7763261_1280.png",
-    stats: { maxHp: 1644766, hp: 1644766, atk: 164477, def: 98997 },
-    rewards: { coins: 1480289, energy: 23 }
-  },
-  {
-    id: 39,
-    floor: "FLOOR 39",
-    name: "Earth Titan",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/07/04/19/22/orc-8106975_1280.png",
-    stats: { maxHp: 2138195, hp: 2138195, atk: 213820, def: 128697 },
-    rewards: { coins: 1924376, energy: 24 }
-  },
-  {
-    id: 40,
-    floor: "FLOOR 40",
-    name: "Slime",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/03/17/04/24/knight-7073289_1280.png",
-    stats: { maxHp: 2779654, hp: 2779654, atk: 277965, def: 167306 },
-    rewards: { coins: 2501689, energy: 24 }
-  },
-  {
-    id: 41,
-    floor: "FLOOR 41",
-    name: "Goblin Rogue",
-    imageSrc: "https://cdn.pixabay.com/photo/2019/08/25/16/51/bat-4429538_1280.png",
-    stats: { maxHp: 3613550, hp: 3613550, atk: 361355, def: 217497 },
-    rewards: { coins: 3252195, energy: 25 }
-  },
-  {
-    id: 42,
-    floor: "FLOOR 42",
-    name: "Orc Brute",
-    imageSrc: "https://cdn.pixabay.com/photo/2024/02/19/14/23/ai-generated-8583648_1280.png",
-    stats: { maxHp: 4697615, hp: 4697615, atk: 469762, def: 282747 },
-    rewards: { coins: 4227854, energy: 25 }
-  },
-  {
-    id: 43,
-    floor: "FLOOR 43",
-    name: "Skeleton Warrior",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/10/24/16/52/golem-7543787_1280.png",
-    stats: { maxHp: 6106900, hp: 6106900, atk: 610690, def: 367571 },
-    rewards: { coins: 5496210, energy: 26 }
-  },
-  {
-    id: 44,
-    floor: "FLOOR 44",
-    name: "Grave Bat",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png",
-    stats: { maxHp: 7938969, hp: 7938969, atk: 793897, def: 477842 },
-    rewards: { coins: 7145072, energy: 26 }
-  },
-  {
-    id: 45,
-    floor: "FLOOR 45",
-    name: "Shadow Imp",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/11/24/16/23/ai-generated-8410526_1280.png",
-    stats: { maxHp: 10320660, hp: 10320660, atk: 1032066, def: 621195 },
-    rewards: { coins: 9288594, energy: 27 }
-  },
-  {
-    id: 46,
-    floor: "FLOOR 46",
-    name: "Stone Golem",
-    imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 13416858, hp: 13416858, atk: 1341686, def: 807553 },
-    rewards: { coins: 12075172, energy: 27 }
-  },
-  {
-    id: 47,
-    floor: "FLOOR 47",
-    name: "Fire Elemental",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/02/02/16/21/goblin-7763261_1280.png",
-    stats: { maxHp: 17441916, hp: 17441916, atk: 1744192, def: 1049819 },
-    rewards: { coins: 15697724, energy: 28 }
-  },
-  {
-    id: 48,
-    floor: "FLOOR 48",
-    name: "Ice Serpent",
-    imageSrc: "https://cdn.pixabay.com/photo/2023/07/04/19/22/orc-8106975_1280.png",
-    stats: { maxHp: 22674491, hp: 22674491, atk: 2267449, def: 1364765 },
-    rewards: { coins: 20407042, energy: 28 }
-  },
-  {
-    id: 49,
-    floor: "FLOOR 49",
-    name: "Lich Adept",
-    imageSrc: "https://cdn.pixabay.com/photo/2022/03/17/04/24/knight-7073289_1280.png",
-    stats: { maxHp: 29476838, hp: 29476838, atk: 2947684, def: 1774195 },
-    rewards: { coins: 26529154, energy: 29 }
-  },
-  {
-    id: 50,
-    floor: "FLOOR 50",
-    name: "Beholder Spawn",
-    imageSrc: "https://cdn.pixabay.com/photo/2019/08/25/16/51/bat-4429538_1280.png",
-    stats: { maxHp: 38319889, hp: 38319889, atk: 3831989, def: 2306453 },
-    rewards: { coins: 34487900, energy: 29 }
-  },
+    { id: 1, floor: "FLOOR 1", name: "Whispering Wisp", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 100, hp: 100, atk: 10, def: 6 }, rewards: { coins: 90, energy: 5 } },
+    { id: 2, floor: "FLOOR 2", name: "Moldy Gnawer", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 120, hp: 120, atk: 12, def: 7 }, rewards: { coins: 108, energy: 5 } },
+    { id: 3, floor: "FLOOR 3", name: "Flickering Ember", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 144, hp: 144, atk: 14, def: 9 }, rewards: { coins: 130, energy: 5 } },
+    { id: 4, floor: "FLOOR 4", name: "Bone Scuttler", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 173, hp: 173, atk: 17, def: 10 }, rewards: { coins: 156, energy: 5 } },
+    { id: 5, floor: "FLOOR 5", name: "Creaking Door", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 207, hp: 207, atk: 21, def: 12 }, rewards: { coins: 186, energy: 6 } },
+    { id: 6, floor: "FLOOR 6", name: "Putrid Rat", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 249, hp: 249, atk: 25, def: 15 }, rewards: { coins: 224, energy: 6 } },
+    { id: 7, floor: "FLOOR 7", name: "Dusty Specter", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 299, hp: 299, atk: 30, def: 18 }, rewards: { coins: 269, energy: 6 } },
+    { id: 8, floor: "FLOOR 8", name: "Shivering Spider", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 358, hp: 358, atk: 36, def: 21 }, rewards: { coins: 322, energy: 6 } },
+    { id: 9, floor: "FLOOR 9", name: "Gnarled Goblet", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 430, hp: 430, atk: 43, def: 26 }, rewards: { coins: 387, energy: 6 } },
+    { id: 10, floor: "FLOOR 10", name: "Oozing Leech", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 516, hp: 516, atk: 52, def: 31 }, rewards: { coins: 464, energy: 7 } },
+    { id: 11, floor: "FLOOR 11", name: "Murmuring Echo", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 619, hp: 619, atk: 62, def: 37 }, rewards: { coins: 557, energy: 7 } },
+    { id: 12, floor: "FLOOR 12", name: "Rusted Golem", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 743, hp: 743, atk: 74, def: 45 }, rewards: { coins: 669, energy: 7 } },
+    { id: 13, floor: "FLOOR 13", name: "Sunken Gazer", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 892, hp: 892, atk: 89, def: 53 }, rewards: { coins: 803, energy: 7 } },
+    { id: 14, floor: "FLOOR 14", name: "Rancid Slime", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 1070, hp: 1070, atk: 107, def: 64 }, rewards: { coins: 963, energy: 7 } },
+    { id: 15, floor: "FLOOR 15", name: "Lurking Shade", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 1284, hp: 1284, atk: 128, def: 77 }, rewards: { coins: 1156, energy: 8 } },
+    { id: 16, floor: "FLOOR 16", name: "Cursed Lantern", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 1541, hp: 1541, atk: 154, def: 92 }, rewards: { coins: 1387, energy: 8 } },
+    { id: 17, floor: "FLOOR 17", name: "Twitching Fungus", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 1849, hp: 1849, atk: 185, def: 111 }, rewards: { coins: 1664, energy: 8 } },
+    { id: 18, floor: "FLOOR 18", name: "Hollow Tooth", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 2219, hp: 2219, atk: 222, def: 133 }, rewards: { coins: 1997, energy: 8 } },
+    { id: 19, floor: "FLOOR 19", name: "Burrowing Vermin", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 2663, hp: 2663, atk: 266, def: 160 }, rewards: { coins: 2397, energy: 8 } },
+    { id: 20, floor: "FLOOR 20", name: "Groaning Crone", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 3195, hp: 3195, atk: 320, def: 192 }, rewards: { coins: 2876, energy: 9 } },
+    { id: 21, floor: "FLOOR 21", name: "Corrupted Peasant", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 3834, hp: 3834, atk: 383, def: 230 }, rewards: { coins: 3451, energy: 9 } },
+    { id: 22, floor: "FLOOR 22", name: "Pallid Clerk", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 4601, hp: 4601, atk: 460, def: 276 }, rewards: { coins: 4141, energy: 9 } },
+    { id: 23, floor: "FLOOR 23", name: "Shambling Skeleton", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 5521, hp: 5521, atk: 552, def: 331 }, rewards: { coins: 4969, energy: 9 } },
+    { id: 24, floor: "FLOOR 24", name: "Buzzing Swarm", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 6626, hp: 6626, atk: 663, def: 398 }, rewards: { coins: 5963, energy: 9 } },
+    { id: 25, floor: "FLOOR 25", name: "Flickered Marionette", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 7951, hp: 7951, atk: 795, def: 477 }, rewards: { coins: 7156, energy: 10 } },
+    { id: 26, floor: "FLOOR 26", name: "Fetid Bat", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 9541, hp: 9541, atk: 954, def: 572 }, rewards: { coins: 8587, energy: 10 } },
+    { id: 27, floor: "FLOOR 27", name: "Echoing Howl", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 11449, hp: 11449, atk: 1145, def: 687 }, rewards: { coins: 10304, energy: 10 } },
+    { id: 28, floor: "FLOOR 28", name: "Sputtering Torch", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 13739, hp: 13739, atk: 1374, def: 824 }, rewards: { coins: 12365, energy: 10 } },
+    { id: 29, floor: "FLOOR 29", name: "Eroded Statue", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 16487, hp: 16487, atk: 1649, def: 989 }, rewards: { coins: 14838, energy: 10 } },
+    { id: 30, floor: "FLOOR 30", name: "Scarlet Eyeball", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 19784, hp: 19784, atk: 1978, def: 1187 }, rewards: { coins: 17806, energy: 11 } },
+    { id: 31, floor: "FLOOR 31", name: "Pestilent Rat King", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 23741, hp: 23741, atk: 2374, def: 1424 }, rewards: { coins: 21367, energy: 11 } },
+    { id: 32, floor: "FLOOR 32", name: "Ragged Puppet", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 28489, hp: 28489, atk: 2849, def: 1709 }, rewards: { coins: 25640, energy: 11 } },
+    { id: 33, floor: "FLOOR 33", name: "Wailing Child", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 34187, hp: 34187, atk: 3419, def: 2051 }, rewards: { coins: 30768, energy: 11 } },
+    { id: 34, floor: "FLOOR 34", name: "Dimly Lit Ghoul", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 41025, hp: 41025, atk: 4102, def: 2461 }, rewards: { coins: 36923, energy: 11 } },
+    { id: 35, floor: "FLOOR 35", name: "Thorned Creeper", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 49230, hp: 49230, atk: 4923, def: 2954 }, rewards: { coins: 44307, energy: 12 } },
+    { id: 36, floor: "FLOOR 36", name: "Fiendish Bat", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 59075, hp: 59075, atk: 5908, def: 3545 }, rewards: { coins: 53168, energy: 12 } },
+    { id: 37, floor: "FLOOR 37", name: "Gnashing Maw", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 70890, hp: 70890, atk: 7089, def: 4253 }, rewards: { coins: 63801, energy: 12 } },
+    { id: 38, floor: "FLOOR 38", name: "Moldering Husk", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 85068, hp: 85068, atk: 8507, def: 5104 }, rewards: { coins: 76561, energy: 12 } },
+    { id: 39, floor: "FLOOR 39", name: "Tongueless Monk", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 102082, hp: 102082, atk: 10208, def: 6125 }, rewards: { coins: 91874, energy: 12 } },
+    { id: 40, floor: "FLOOR 40", name: "Creeping Vine", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 122499, hp: 122499, atk: 12250, def: 7350 }, rewards: { coins: 110249, energy: 13 } },
+    { id: 41, floor: "FLOOR 41", name: "Deafening Screech", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 146998, hp: 146998, atk: 14700, def: 8820 }, rewards: { coins: 132298, energy: 13 } },
+    { id: 42, floor: "FLOOR 42", name: "Dripping Corpse", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 176398, hp: 176398, atk: 17640, def: 10584 }, rewards: { coins: 158758, energy: 13 } },
+    { id: 43, floor: "FLOOR 43", name: "Veiled Mourner", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 211678, hp: 211678, atk: 21168, def: 12701 }, rewards: { coins: 190510, energy: 13 } },
+    { id: 44, floor: "FLOOR 44", name: "Rotted Knight", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 254013, hp: 254013, atk: 25401, def: 15241 }, rewards: { coins: 228612, energy: 13 } },
+    { id: 45, floor: "FLOOR 45", name: "Sinister Jester", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 304816, hp: 304816, atk: 30482, def: 18289 }, rewards: { coins: 274334, energy: 14 } },
+    { id: 46, floor: "FLOOR 46", name: "Clanking Armor", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 365779, hp: 365779, atk: 36578, def: 21947 }, rewards: { coins: 329201, energy: 14 } },
+    { id: 47, floor: "FLOOR 47", name: "Fanged Crow", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 438935, hp: 438935, atk: 43893, def: 26336 }, rewards: { coins: 395042, energy: 14 } },
+    { id: 48, floor: "FLOOR 48", name: "Whispered Prayer", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 526722, hp: 526722, atk: 52672, def: 31603 }, rewards: { coins: 474050, energy: 14 } },
+    { id: 49, floor: "FLOOR 49", name: "Hollow Mourner", imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png", stats: { maxHp: 632066, hp: 632066, atk: 63207, def: 37924 }, rewards: { coins: 568859, energy: 14 } },
+    { id: 50, floor: "FLOOR 50", name: "Unquiet Tormentor", imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png", stats: { maxHp: 758479, hp: 758479, atk: 75848, def: 45509 }, rewards: { coins: 682631, energy: 15 } }
 ];
+
 
 // --- Component Thanh Máu ---
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
@@ -461,7 +108,6 @@ const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
 // --- Component Số Sát Thương ---
 const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
   const formatDamageText = (num: number): string => {
-    if (num >= 1000000) return `${parseFloat((num / 1000000).toFixed(1))}m`;
     if (num >= 1000) return `${parseFloat((num / 1000).toFixed(1))}k`;
     return String(num);
   };
@@ -542,7 +188,7 @@ const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { co
 };
 
 
-// --- Component Modal Chiến Thắng (SỬA ĐỂ NHẬN PHẦN THƯỞNG) ---
+// --- Component Modal Chiến Thắng ---
 const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
@@ -588,7 +234,7 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   );
 }
 
-// --- Component Chính Của Game (SỬA ĐỂ NHẬN PROPS) ---
+// --- Component Chính Của Game ---
 export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }: BossBattleProps) {
   const [currentBossIndex, setCurrentBossIndex] = useState(0);
   const currentBossData = BOSS_DATA[currentBossIndex];
