@@ -137,19 +137,16 @@ const StatsModal = ({ player, boss, bossName, onClose }: { player: any, boss: an
             </div>
             <div className="h-16 w-px bg-slate-600/70"></div>
             <div className="flex flex-col items-center gap-1.5">
-              {/* --- START: Thay đổi cho Tooltip --- */}
               <div className="relative group flex justify-center">
-                <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide">
+                {/* THÊM `select-none` VÀO ĐÂY */}
+                <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">
                   BOSS
                 </h3>
-                {/* Đây là Tooltip */}
                 <div className="absolute bottom-full mb-2 w-max max-w-xs px-2 py-1 bg-slate-800 text-xs font-sans font-medium text-white rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                   {bossName.toUpperCase()}
-                  {/* Mũi tên của tooltip */}
                   <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-800"></div>
                 </div>
               </div>
-              {/* --- END: Thay đổi cho Tooltip --- */}
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
             </div>
@@ -160,6 +157,7 @@ const StatsModal = ({ player, boss, bossName, onClose }: { player: any, boss: an
   )
 }
 
+// ... các component modal khác giữ nguyên, không cần thay đổi ...
 // --- Component Modal Lịch Sử Chiến Đấu ---
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
@@ -245,6 +243,7 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
     </div>
   );
 }
+
 
 // --- Component Chính Của Game ---
 export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }: BossBattleProps) {
@@ -460,19 +459,16 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
-                  {/* --- START: Thay đổi cho Tooltip --- */}
                   <div className="relative group flex justify-center">
-                    <h2 className="text-2xl font-bold text-red-400 text-shadow">
+                    {/* THÊM `select-none` VÀO ĐÂY */}
+                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">
                       BOSS
                     </h2>
-                    {/* Đây là Tooltip */}
                     <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                       {currentBossData.name.toUpperCase()}
-                      {/* Mũi tên của tooltip */}
                       <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-slate-900"></div>
                     </div>
                   </div>
-                  {/* --- END: Thay đổi cho Tooltip --- */}
                   
                   <div className="w-40 h-40 md:w-56 md:h-56"><img src={currentBossData.imageSrc} alt={currentBossData.name} className="w-full h-full object-contain" /></div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
