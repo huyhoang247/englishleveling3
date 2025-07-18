@@ -1,7 +1,7 @@
 // File: src/components/BossBattle.tsx
 
 import React, { useState, useEffect, useRef } from 'react';
-import BOSS_DATA from '../data/bossData'; // Import data from the new file
+import BOSS_DATA from './boss/bossData.ts'; // Import data from the new file
 
 // --- Props Interface for the Component ---
 interface BossBattleProps {
