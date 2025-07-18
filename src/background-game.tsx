@@ -123,7 +123,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
-  const [isStatsFullscreen, setIsStatsFullscreen] = useState(false);
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isGoldMineOpen, setIsGoldMineOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
@@ -450,7 +449,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         fetchVocabularyData(user.uid);
         fetchJackpotPool();
       } else {
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -504,7 +502,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, [coins]);
 
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
+    const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
     return (
@@ -561,39 +559,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setVocabularyData(updatedVocabulary);
   };
 
-
-  const toggleStatsFullscreen = () => {
-    if (isLoading) return;
-    setIsStatsFullscreen(prev => {
-        const newState = !prev;
-        if (newState) {
-            hideNavBar();
-            setIsRankOpen(false);
-            setIsGoldMineOpen(false);
-            setIsInventoryOpen(false);
-            setIsLuckyGameOpen(false);
-            setIsMinerChallengeOpen(false);
-            setIsBlacksmithOpen(false);
-            setIsBossBattleOpen(false); // THAY THẾ
-            setIsShopOpen(false);
-            setIsVocabularyChestOpen(false);
-            setIsAchievementsOpen(false);
-            setIsAdminPanelOpen(false);
-            setIsUpgradeScreenOpen(false);
-        } else {
-            showNavBar();
-        }
-        return newState;
-    });
-  };
-
     const toggleRank = () => {
      if (isLoading) return;
      setIsRankOpen(prev => {
          const newState = !prev;
          if (newState) {
              hideNavBar();
-             setIsStatsFullscreen(false);
              setIsGoldMineOpen(false);
              setIsInventoryOpen(false);
              setIsMinerChallengeOpen(false);
@@ -618,7 +589,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsInventoryOpen(false);
         setIsMinerChallengeOpen(false);
@@ -643,7 +613,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsMinerChallengeOpen(false);
@@ -668,7 +637,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -693,7 +661,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -717,7 +684,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -743,7 +709,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -768,7 +733,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -793,7 +757,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -818,7 +781,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -844,7 +806,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -869,7 +830,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const newState = !prev;
       if (newState) {
         hideNavBar();
-        setIsStatsFullscreen(false);
         setIsRankOpen(false);
         setIsGoldMineOpen(false);
         setIsInventoryOpen(false);
@@ -892,7 +852,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       sidebarToggleRef.current = toggleFn;
   };
 
-  const isAnyOverlayOpen = isStatsFullscreen || isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
+  const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -960,7 +920,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
-                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={isStatsFullscreen} />
+                    <CoinDisplay displayedCoins={displayedCoins} />
                 </div>
             </div>
 
@@ -996,9 +956,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           </div>
         </div>
 
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isStatsFullscreen ? 'block' : 'none' }}>
-            <ErrorBoundary>{auth.currentUser && (<CharacterCard onClose={toggleStatsFullscreen} coins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}/>)}</ErrorBoundary>
-        </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}>
              <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary>
         </div>
@@ -1009,7 +966,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} isStatsFullscreen={isStatsFullscreen}/>)}</ErrorBoundary>
+            <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
