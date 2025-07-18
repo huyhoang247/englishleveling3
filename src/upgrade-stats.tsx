@@ -1,3 +1,5 @@
+// --- START OF FILE upgrade-stats.tsx ---
+
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 
@@ -41,13 +43,6 @@ const Spinner = () => (
 
 
 // --- LOGIC TÍNH TOÁN ---
-// EXPORT: Định nghĩa và xuất cấu hình chỉ số để có thể sử dụng ở nơi khác.
-export const STAT_CONFIG = {
-  hp: { baseUpgradeBonus: 50 },
-  atk: { baseUpgradeBonus: 5 },
-  def: { baseUpgradeBonus: 5 },
-};
-
 const calculateUpgradeCost = (level: number) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
@@ -60,8 +55,7 @@ const getBonusForLevel = (level: number, baseBonus: number) => {
   return baseBonus * Math.pow(2, tier);
 };
 
-// EXPORT: Xuất hàm này để background-game.tsx có thể sử dụng.
-export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
+const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
   if (currentLevel === 0) return 0;
   let totalValue = 0;
   const fullTiers = Math.floor(currentLevel / 10);
@@ -130,6 +124,7 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
+// >>> INTERFACE ĐỊNH NGHĨA CÁC PROPS NHẬN TỪ COMPONENT CHA
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   initialGold: number;
@@ -143,9 +138,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
   // Local state for stats and messages
   const [displayedGold, setDisplayedGold] = useState(initialGold);
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: initialStats.hp || 0, icon: icons.heart, baseUpgradeBonus: STAT_CONFIG.hp.baseUpgradeBonus, color: "from-red-600 to-pink-600" },
-    { id: 'atk', name: 'ATK', level: initialStats.atk || 0, icon: icons.sword, baseUpgradeBonus: STAT_CONFIG.atk.baseUpgradeBonus, color: "from-sky-500 to-cyan-500" },
-    { id: 'def', name: 'DEF', level: initialStats.def || 0, icon: icons.shield, baseUpgradeBonus: STAT_CONFIG.def.baseUpgradeBonus, color: "from-blue-500 to-indigo-500" },
+    { id: 'hp', name: 'HP', level: initialStats.hp || 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
+    { id: 'atk', name: 'ATK', level: initialStats.atk || 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
+    { id: 'def', name: 'DEF', level: initialStats.def || 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
@@ -159,10 +154,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
   }, [initialStats]);
 
 
-  // Function to animate coin changes, adapted from quiz.tsx
+  // Function to animate coin changes
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
-
     const isCountingUp = endValue > startValue;
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
@@ -186,7 +180,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
 
   // Handle the upgrade logic
   const handleUpgrade = async (statId: string) => {
-    // 1. If an upgrade is already in progress, do nothing.
     if (upgradingId) return;
 
     const statIndex = stats.findIndex(s => s.id === statId);
@@ -196,14 +189,13 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (initialGold >= upgradeCost) {
-      // 2. Start the upgrade process: set the ID of the stat being processed
       setUpgradingId(statId);
 
       const newGoldValue = initialGold - upgradeCost;
       startCoinCountAnimation(initialGold, newGoldValue);
 
       // Cập nhật Vàng trước
-      await onUpdateGold(-upgradeCost); // Gửi giá trị âm để trừ vàng
+      await onUpdateGold(-upgradeCost);
       
       // Cập nhật level của chỉ số trong state cục bộ
       const newStatsArray = stats.map(s => 
@@ -217,14 +209,14 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
         atk: newStatsArray.find(s => s.id === 'atk')!.level,
         def: newStatsArray.find(s => s.id === 'def')!.level,
       };
-
-      await onUpdateStats(newStatsForFirestore); // Gửi dữ liệu mới về cho component cha
+      
+      // >>> GỌI HÀM `onUpdateStats` TỪ PROPS ĐỂ LƯU DỮ LIỆU
+      await onUpdateStats(newStatsForFirestore);
       setMessage('');
 
-      // 3. After a delay, finish the upgrade process
       setTimeout(() => {
         setUpgradingId(null);
-      }, 500); // Delay 500ms before allowing another upgrade
+      }, 500);
 
     } else {
       setMessage('Không đủ vàng!');
@@ -293,9 +285,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
           }
       `}</style>
 
-      {/* --- HEADER MỚI --- */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-        {/* --- NÚT HOME ĐƯỢC CẬP NHẬT --- */}
         <button
           onClick={onClose}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
@@ -306,7 +296,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
           <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
         </button>
 
-        {/* Bọc CoinDisplay trong một div để ghi đè font chữ */}
         <div className="font-sans">
             <CoinDisplay displayedCoins={displayedGold} isStatsFullscreen={false} />
         </div>
@@ -320,7 +309,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
           
-          {/* --- HERO GRAPHIC --- */}
           <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
             <img 
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" 
@@ -329,7 +317,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
             />
           </div>
 
-          {/* --- KHU VỰC HIỂN THỊ CHỈ SỐ TỔNG --- */}
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6">{icons.heart}</div>
@@ -345,7 +332,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
             </div>
           </div>
           
-          {/* --- THANH TIẾN TRÌNH --- */}
           <div className="w-full px-2 mb-8">
             <div className="flex justify-between items-baseline mb-2 px-1">
               <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
