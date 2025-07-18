@@ -21,7 +21,8 @@ import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
-import UpgradeStatsScreen from './upgrade-stats.tsx';
+// >>> IMPORT LOGIC TÍNH TOÁN TỪ UPGRADE-STATS
+import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 
@@ -118,7 +119,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
-  // >>> STATE ĐỂ LƯU CHỈ SỐ NHÂN VẬT (HP, ATK, DEF)
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
 
@@ -247,7 +247,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMasteryCards(userData.masteryCards || 0);
         setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
-        // >>> LẤY DỮ LIỆU `stats` TỪ FIRESTORE
         setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
       } else {
         console.log("No user document found, creating default.");
@@ -255,7 +254,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           coins: 0,
           gems: 0,
           masteryCards: 0,
-          // >>> KHỞI TẠO `stats` CHO NGƯỜI DÙNG MỚI
           stats: { hp: 0, atk: 0, def: 0 },
           pickaxes: 50,
           minerChallengeHighestFloor: 0,
@@ -388,7 +386,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
-  // >>> HÀM ĐỂ CẬP NHẬT CHỈ SỐ LÊN FIRESTORE
   const updateStatsInFirestore = async (userId: string, newStats: { hp: number; atk: number; def: number; }) => {
       if (!userId) {
           console.error("Cannot update stats: User not authenticated.");
@@ -397,10 +394,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const userDocRef = doc(db, 'users', userId);
       try {
           await runTransaction(db, async (transaction) => {
-              // Cập nhật trường 'stats' trong document của người dùng
               transaction.update(userDocRef, { stats: newStats });
           });
-          setUserStats(newStats); // Cập nhật state cục bộ
+          setUserStats(newStats);
           console.log(`User stats updated in Firestore for user ${userId}.`);
       } catch (error) {
           console.error("Firestore Transaction failed for stats: ", error);
@@ -560,7 +556,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const newState = !prev;
             if (newState) {
                 hideNavBar();
-                // Close all other overlays
                 [
                     setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen,
                     setIsBlacksmithOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen,
@@ -597,6 +592,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
+
+  // >>> LOGIC TÍNH TOÁN CHỈ SỐ CHO BOSS BATTLE
+  const getPlayerBattleStats = () => {
+      const BASE_HP = 40000;
+      const BASE_ATK = 1000;
+      const BASE_DEF = 5;
+
+      // Tính toán chỉ số cộng thêm từ level, sử dụng logic nhất quán
+      const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
+      const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
+      const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
+
+      return {
+          maxHp: BASE_HP + bonusHp,
+          hp: BASE_HP + bonusHp,
+          atk: BASE_ATK + bonusAtk,
+          def: BASE_DEF + bonusDef,
+          maxEnergy: 50,
+          energy: 50,
+      };
+  };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
@@ -728,15 +744,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 {isBossBattleOpen && auth.currentUser && (
                     <BossBattle
                         onClose={toggleBossBattle}
-                        playerInitialStats={{
-                            // >>> SỬ DỤNG `userStats` TỪ STATE ĐỂ TÍNH TOÁN CHỈ SỐ
-                            maxHp: 40000 + (userStats.hp * 1000),
-                            hp: 40000 + (userStats.hp * 1000),
-                            atk: 1000 + (userStats.atk * 50),
-                            def: 5 + userStats.def,
-                            maxEnergy: 50,
-                            energy: 50,
-                        }}
+                        playerInitialStats={getPlayerBattleStats()} // >>> SỬ DỤNG HÀM TÍNH TOÁN NHẤT QUÁN
                         onBattleEnd={(result, rewards) => {
                             console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
@@ -782,7 +790,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleUpgradeScreen}
                         initialGold={coins}
                         onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        // >>> TRUYỀN `userStats` VÀ HÀM CẬP NHẬT XUỐNG COMPONENT CON
                         initialStats={userStats}
                         onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser!.uid, newStats)}
                     />
