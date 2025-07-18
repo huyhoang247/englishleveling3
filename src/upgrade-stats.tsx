@@ -41,19 +41,19 @@ const Spinner = () => (
 
 
 // --- LOGIC TÍNH TOÁN ---
-const calculateUpgradeCost = (level) => {
+const calculateUpgradeCost = (level: number) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
   return baseCost * Math.pow(2, tier);
 };
 
-const getBonusForLevel = (level, baseBonus) => {
+const getBonusForLevel = (level: number, baseBonus: number) => {
   if (level === 0) return 0;
   const tier = Math.floor((level - 1) / 10);
   return baseBonus * Math.pow(2, tier);
 };
 
-const calculateTotalStatValue = (currentLevel, baseBonus) => {
+const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
   if (currentLevel === 0) return 0;
   let totalValue = 0;
   const fullTiers = Math.floor(currentLevel / 10);
@@ -67,7 +67,7 @@ const calculateTotalStatValue = (currentLevel, baseBonus) => {
   return totalValue;
 };
 
-const formatNumber = (num) => {
+const formatNumber = (num: number) => {
   if (num < 1000) return num.toString();
   if (num < 1000000) {
       const thousands = num / 1000;
@@ -83,7 +83,7 @@ const formatNumber = (num) => {
 
 
 // --- COMPONENT STAT CARD ---
-const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }) => {
+const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
   const upgradeCost = calculateUpgradeCost(level);
@@ -125,20 +125,31 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }) => {
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   initialGold: number;
-  onUpdateGold: (amount: number) => void;
+  onUpdateGold: (amount: number) => Promise<void> | void;
+  initialStats: { hp: number; atk: number; def: number; };
+  onUpdateStats: (newStats: { hp: number; atk: number; def: number; }) => Promise<void> | void;
 }
 
 // --- COMPONENT CHÍNH CỦA ỨNG DỤNG ---
-export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold }: UpgradeStatsScreenProps) {
+export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold, initialStats, onUpdateStats }: UpgradeStatsScreenProps) {
   // Local state for stats and messages
   const [displayedGold, setDisplayedGold] = useState(initialGold);
   const [stats, setStats] = useState([
-    { id: 'hp', name: 'HP', level: 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
-    { id: 'atk', name: 'ATK', level: 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
-    { id: 'def', name: 'DEF', level: 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
+    { id: 'hp', name: 'HP', level: initialStats.hp || 0, icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
+    { id: 'atk', name: 'ATK', level: initialStats.atk || 0, icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
+    { id: 'def', name: 'DEF', level: initialStats.def || 0, icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
   ]);
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
+
+  // Đồng bộ state cục bộ với props từ component cha
+  useEffect(() => {
+      setStats(prevStats => prevStats.map(stat => ({
+          ...stat,
+          level: initialStats[stat.id as keyof typeof initialStats] || 0
+      })));
+  }, [initialStats]);
+
 
   // Function to animate coin changes, adapted from quiz.tsx
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
@@ -166,7 +177,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
 
 
   // Handle the upgrade logic
-  const handleUpgrade = (statId: string) => {
+  const handleUpgrade = async (statId: string) => {
     // 1. If an upgrade is already in progress, do nothing.
     if (upgradingId) return;
 
@@ -183,10 +194,23 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
       const newGoldValue = initialGold - upgradeCost;
       startCoinCountAnimation(initialGold, newGoldValue);
 
-      onUpdateGold(-upgradeCost); // Send a negative value to deduct gold
-      const newStats = [...stats];
-      newStats[statIndex] = { ...newStats[statIndex], level: newStats[statIndex].level + 1 };
-      setStats(newStats);
+      // Cập nhật Vàng trước
+      await onUpdateGold(-upgradeCost); // Gửi giá trị âm để trừ vàng
+      
+      // Cập nhật level của chỉ số trong state cục bộ
+      const newStatsArray = stats.map(s => 
+          s.id === statId ? { ...s, level: s.level + 1 } : s
+      );
+      setStats(newStatsArray);
+
+      // Chuẩn bị object chỉ số mới để gửi lên Firestore
+      const newStatsForFirestore = {
+        hp: newStatsArray.find(s => s.id === 'hp')!.level,
+        atk: newStatsArray.find(s => s.id === 'atk')!.level,
+        def: newStatsArray.find(s => s.id === 'def')!.level,
+      };
+
+      await onUpdateStats(newStatsForFirestore); // Gửi dữ liệu mới về cho component cha
       setMessage('');
 
       // 3. After a delay, finish the upgrade process
@@ -201,9 +225,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold 
   };
 
   // Calculations for display
-  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp').level, stats.find(s => s.id === 'hp').baseUpgradeBonus);
-  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk').level, stats.find(s => s.id === 'atk').baseUpgradeBonus);
-  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def').level, stats.find(s => s.id === 'def').baseUpgradeBonus);
+  const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, stats.find(s => s.id === 'hp')!.baseUpgradeBonus);
+  const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk')!.level, stats.find(s => s.id === 'atk')!.baseUpgradeBonus);
+  const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def')!.level, stats.find(s => s.id === 'def')!.baseUpgradeBonus);
   
   const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
   const maxProgress = 50;
