@@ -119,6 +119,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [pickaxes, setPickaxes] = useState(0);
   // State để lưu tầng cao nhất của Miner Challenge
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
+  // State để lưu chỉ số nâng cấp của người dùng
+  const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
 
   // States for managing overlay visibility
@@ -247,12 +249,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMasteryCards(userData.masteryCards || 0);
         setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0); // Lấy dữ liệu tầng cao nhất
+        setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 }); // Lấy dữ liệu chỉ số
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0,
           gems: 0,
           masteryCards: 0,
+          stats: { hp: 0, atk: 0, def: 0 }, // Khởi tạo chỉ số cho người dùng mới
           pickaxes: 50,
           minerChallengeHighestFloor: 0, // Khởi tạo cho người dùng mới
           createdAt: new Date(),
@@ -263,6 +267,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMasteryCards(0);
         setPickaxes(50);
         setMinerChallengeHighestFloor(0);
+        setUserStats({ hp: 0, atk: 0, def: 0 });
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -385,6 +390,25 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
+  // Hàm cập nhật chỉ số (HP, ATK, DEF) lên Firestore
+  const updateStatsInFirestore = async (userId: string, newStats: { hp: number; atk: number; def: number; }) => {
+      if (!userId) {
+          console.error("Cannot update stats: User not authenticated.");
+          return;
+      }
+      const userDocRef = doc(db, 'users', userId);
+      try {
+          await runTransaction(db, async (transaction) => {
+              // Chỉ cần cập nhật trường 'stats' trong document của người dùng
+              transaction.update(userDocRef, { stats: newStats });
+          });
+          setUserStats(newStats); // Cập nhật state ở local
+          console.log(`User stats updated in Firestore for user ${userId}.`);
+      } catch (error) {
+          console.error("Firestore Transaction failed for stats: ", error);
+      }
+  };
+
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
@@ -446,6 +470,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMasteryCards(0);
         setPickaxes(0);
         setMinerChallengeHighestFloor(0);
+        setUserStats({ hp: 0, atk: 0, def: 0 });
         setJackpotPool(0);
         setIsLoadingUserData(true);
         setVocabularyData(null);
@@ -1039,6 +1064,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleUpgradeScreen} 
                         initialGold={coins}
                         onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser.uid, amount)}
+                        initialStats={userStats}
+                        onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser.uid, newStats)}
                     />
                 )}
             </ErrorBoundary>
