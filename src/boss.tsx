@@ -2,31 +2,37 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-// --- Cấu hình nhân vật ---
-const PLAYER_INITIAL_STATS = {
-  maxHp: 50000,
-  hp: 50000,
-  atk: 1500,
-  def: 5,
-  maxEnergy: 50,
-  energy: 50,
-};
+// --- Props Interface for the Component ---
+interface BossBattleProps {
+  onClose: () => void;
+  playerInitialStats: {
+    maxHp: number;
+    hp: number;
+    atk: number;
+    def: number;
+    maxEnergy: number;
+    energy: number;
+  };
+  onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
+}
 
-// --- Cấu trúc dữ liệu cho các Boss theo tầng ---
+// --- Cấu trúc dữ liệu cho các Boss theo tầng (THÊM PHẦN THƯỞNG) ---
 const BOSS_DATA = [
   {
     id: 1,
     floor: "FLOOR 1",
     name: "Slime",
     imageSrc: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000be3061f99239c401bb72f9fd.png",
-    stats: { maxHp: 30000, hp: 30000, atk: 1000, def: 8 }
+    stats: { maxHp: 30000, hp: 30000, atk: 1000, def: 8 },
+    rewards: { coins: 300, energy: 5 }
   },
   {
     id: 2,
     floor: "FLOOR 2",
     name: "Dragon",
     imageSrc: "https://cdn.pixabay.com/photo/2023/05/16/09/56/dragon-7997195_1280.png",
-    stats: { maxHp: 80000, hp: 80000, atk: 2500, def: 12 }
+    stats: { maxHp: 80000, hp: 80000, atk: 2500, def: 12 },
+    rewards: { coins: 800, energy: 10 }
   },
 ];
 
@@ -52,9 +58,9 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
       <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
-          <img 
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" 
-            alt="Energy" 
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png"
+            alt="Energy"
             className="w-5 h-5"
           />
           <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">
@@ -122,8 +128,8 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     )
 }
 
-// --- Component Modal Phần Thưởng (ĐƯỢC THÊM LẠI) ---
-const RewardsModal = ({ onClose }: { onClose: () => void }) => {
+// --- Component Modal Phần Thưởng ---
+const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
@@ -133,11 +139,11 @@ const RewardsModal = ({ onClose }: { onClose: () => void }) => {
           <div className="flex flex-row flex-wrap justify-center gap-3">
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1.287 15.584c-1.42.368-2.92.516-4.287.395V16.6c1.077.105 2.13.045 3.129-.169a1 1 0 0 0 .87-1.119l-.547-3.284a1 1 0 0 0-1.119-.87c-.394.065-.806.11-1.229.136V9.4c.319-.016.634-.042.946-.078a1 1 0 0 0 .973-1.018l-.138-1.65a1 1 0 0 0-1.017-.973c-.886.074-1.78.11-2.664.11S9.334 5.863 8.448 5.79a1 1 0 0 0-1.017.973l-.138 1.65a1 1 0 0 0 .973 1.018c.312.036.627.062.946.078v1.896c-.423-.026-.835-.071-1.229-.136a1 1 0 0 0-1.119.87l-.547 3.284a1 1 0 0 0 .87 1.119c1.131.238 2.306.31 3.522.188v1.376c-1.385.01-2.858-.171-4.22-.656a1 1 0 1 0-.604 1.9c1.73.613 3.598.819 5.324.793 1.726.026 3.594-.18 5.324-.793a1 1 0 1 0-.604-1.9z"></path></svg>
-              <span className="text-xl font-bold text-yellow-300 text-shadow-sm">300</span>
+              <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
-              <span className="text-xl font-bold text-cyan-300 text-shadow-sm">5</span>
+              <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
             </div>
           </div>
         </div>
@@ -146,8 +152,9 @@ const RewardsModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-// --- Component Modal Chiến Thắng ---
-const VictoryModal = ({ onRestart, onNextFloor, isLastBoss }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean }) => {
+
+// --- Component Modal Chiến Thắng (SỬA ĐỂ NHẬN PHẦN THƯỞNG) ---
+const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
@@ -158,11 +165,11 @@ const VictoryModal = ({ onRestart, onNextFloor, isLastBoss }: { onRestart: () =>
               <div className="flex flex-row flex-wrap justify-center gap-3">
                   <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1.287 15.584c-1.42.368-2.92.516-4.287.395V16.6c1.077.105 2.13.045 3.129-.169a1 1 0 0 0 .87-1.119l-.547-3.284a1 1 0 0 0-1.119-.87c-.394.065-.806.11-1.229.136V9.4c.319-.016.634-.042.946-.078a1 1 0 0 0 .973-1.018l-.138-1.65a1 1 0 0 0-1.017-.973c-.886.074-1.78.11-2.664.11S9.334 5.863 8.448 5.79a1 1 0 0 0-1.017.973l-.138 1.65a1 1 0 0 0 .973 1.018c.312.036.627.062.946.078v1.896c-.423-.026-.835-.071-1.229-.136a1 1 0 0 0-1.119.87l-.547 3.284a1 1 0 0 0 .87 1.119c1.131.238 2.306.31 3.522.188v1.376c-1.385.01-2.858-.171-4.22-.656a1 1 0 1 0-.604 1.9c1.73.613 3.598.819 5.324.793 1.726.026 3.594-.18 5.324-.793a1 1 0 1 0-.604-1.9z"></path></svg>
-                      <span className="text-xl font-bold text-yellow-300 text-shadow-sm">300</span>
+                      <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
                   </div>
                   <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
                       <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
-                      <span className="text-xl font-bold text-cyan-300 text-shadow-sm">5</span>
+                      <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
                   </div>
               </div>
           </div>
@@ -192,16 +199,12 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   );
 }
 
-// --- Component Chính Của Game ---
-interface BossBattleProps {
-  onClose: () => void;
-}
-
-export default function BossBattle({ onClose }: BossBattleProps) {
+// --- Component Chính Của Game (SỬA ĐỂ NHẬN PROPS) ---
+export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }: BossBattleProps) {
   const [currentBossIndex, setCurrentBossIndex] = useState(0);
   const currentBossData = BOSS_DATA[currentBossIndex];
 
-  const [playerStats, setPlayerStats] = useState(PLAYER_INITIAL_STATS);
+  const [playerStats, setPlayerStats] = useState(playerInitialStats);
   const [bossStats, setBossStats] = useState(currentBossData.stats);
   const [combatLog, setCombatLog] = useState<string[]>([]);
   const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
@@ -210,7 +213,6 @@ export default function BossBattle({ onClose }: BossBattleProps) {
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
-  // Thêm lại state cho Rewards Modal
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
 
@@ -228,8 +230,8 @@ export default function BossBattle({ onClose }: BossBattleProps) {
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     };
-  }, [battleState, bossStats, playerStats]); 
-  
+  }, [battleState, bossStats, playerStats]);
+
   const addLog = (message: string, turn: number) => {
     const logEntry = turn > 0 ? `[Lượt ${turn}] ${message}` : message;
     setCombatLog(prevLog => [logEntry, ...prevLog]);
@@ -247,7 +249,7 @@ export default function BossBattle({ onClose }: BossBattleProps) {
     const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
     return Math.max(1, Math.floor(baseDamage - defenderDef));
   };
-  
+
   const runBattleTurn = () => {
     if (gameOver) return;
 
@@ -284,21 +286,161 @@ export default function BossBattle({ onClose }: BossBattleProps) {
         return nextTurn;
     });
   };
-  
+
   const endGame = (result: 'win' | 'lose', finalTurn: number) => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     battleIntervalRef.current = null;
     setBattleState('finished');
     setGameOver(result);
+    const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
+
     if (result === 'win') {
       addLog(`${currentBossData.name} đã bị đánh bại!`, finalTurn);
-      const newEnergy = Math.min(PLAYER_INITIAL_STATS.maxEnergy, playerStats.energy + 5);
+      onBattleEnd('win', rewards);
+      const newEnergy = Math.min(playerInitialStats.maxEnergy, playerStats.energy + rewards.energy);
       setPlayerStats(prev => ({...prev, energy: newEnergy}));
     } else {
       addLog("Bạn đã gục ngã... THẤT BẠI!", finalTurn);
+      onBattleEnd('lose', { coins: 0, energy: 0 });
     }
   };
 
   const startGame = () => {
     if (battleState === 'idle' && playerStats.energy >= 10) {
-      set
+      setPlayerStats(prev => ({ ...prev, energy: prev.energy - 10 }));
+      setBattleState('fighting');
+    } else if (battleState === 'idle') {
+      addLog("Không đủ năng lượng.", 0);
+    }
+  };
+
+  const resetAllStateForNewBattle = () => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    setPreviousCombatLog(combatLog);
+    setCombatLog([]);
+    setTurnCounter(0);
+    setGameOver(null);
+    setBattleState('idle');
+    setDamages([]);
+    setShowStats(false);
+    setShowLogModal(false);
+    setShowRewardsModal(false);
+  }
+
+  const resetGame = () => {
+    resetAllStateForNewBattle();
+    setCurrentBossIndex(0); // Quay về boss đầu
+    setPlayerStats(prev => ({...playerInitialStats, energy: prev.energy}));
+    setBossStats(BOSS_DATA[0].stats);
+    setTimeout(() => addLog(`${BOSS_DATA[0].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
+  };
+
+  const handleNextFloor = () => {
+    const nextIndex = currentBossIndex + 1;
+    if(nextIndex < BOSS_DATA.length) {
+      resetAllStateForNewBattle();
+      setCurrentBossIndex(nextIndex);
+      setPlayerStats(prev => ({...playerInitialStats, energy: prev.energy}));
+    }
+  }
+
+  const skipBattle = () => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    let tempPlayerHp = playerStats.hp;
+    let tempBossHp = bossStats.hp;
+    let tempTurn = turnCounter;
+    let tempCombatLog: string[] = [...combatLog].reverse();
+    let winner: 'win' | 'lose' | null = null;
+
+    while (winner === null) {
+        tempTurn++;
+        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
+        tempBossHp -= playerDmg;
+        tempCombatLog.push(`[Lượt ${tempTurn}] Bạn tấn công, gây ${playerDmg} sát thương.`);
+        if (tempBossHp <= 0) { winner = 'win'; break; }
+
+        const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
+        tempCombatLog.push(`[Lượt ${tempTurn}] ${currentBossData.name} phản công, gây ${bossDmg} sát thương.`);
+        tempPlayerHp -= bossDmg;
+        if (tempPlayerHp <= 0) { winner = 'lose'; break; }
+    }
+    setCombatLog(tempCombatLog.reverse());
+    setPlayerStats(prev => ({ ...prev, hp: Math.max(0, tempPlayerHp) }));
+    setBossStats(prev => ({ ...prev, hp: Math.max(0, tempBossHp) }));
+    setTurnCounter(tempTurn);
+    endGame(winner, tempTurn);
+  }
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+        .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+      `}</style>
+
+      {showStats && <StatsModal player={playerStats} boss={bossStats} bossName={currentBossData.name} onClose={() => setShowStats(false)} />}
+      {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
+      {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
+
+      <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+        <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
+            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-2">
+                <div className="w-1/2"><h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">{currentBossData.floor}</h3><HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div>
+                <div className="flex items-center justify-end gap-4 w-1/2">
+                    <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
+                    <button onClick={onClose} className="w-9 h-9 flex items-center justify-center bg-slate-800/70 hover:bg-red-500/80 rounded-full text-slate-300 hover:text-white transition-colors text-xl font-sans flex-shrink-0" aria-label="Thoát">
+                        ✕
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main className="w-full h-full flex flex-col justify-center items-center pt-24 p-4">
+            <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
+                <button onClick={() => setShowStats(true)} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
+
+                {battleState === 'idle' && (
+                  <>
+                    <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">View Log</button>
+                    <button onClick={() => setShowRewardsModal(true)} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">Rewards</button>
+                  </>
+                )}
+
+                {battleState === 'fighting' && (<button onClick={skipBattle} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
+            </div>
+
+            {damages.map(d => (<FloatingDamage key={d.id} damage={d.damage} isPlayerHit={d.isPlayerHit} />))}
+
+            <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
+                  <h2 className="text-2xl font-bold text-red-400 text-shadow">{currentBossData.name.toUpperCase()}</h2>
+                  <div className="w-40 h-40 md:w-56 md:h-56"><img src={currentBossData.imageSrc} alt={currentBossData.name} className="w-full h-full object-contain" /></div>
+                  <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                </div>
+            </div>
+
+            <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+                {battleState === 'idle' && (
+                <button onClick={startGame} disabled={playerStats.energy < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
+                    <div className="flex flex-col items-center gap-0.5">
+                        <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80">
+                            <span>10</span><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="" className="w-3 h-3"/>
+                        </div>
+                    </div>
+                </button>
+                )}
+                {battleState !== 'idle' && (
+                  <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>{entry}</p>))}
+                  </div>
+                )}
+            </div>
+
+            {gameOver === 'win' && (<VictoryModal onRestart={resetGame} onNextFloor={handleNextFloor} isLastBoss={currentBossIndex === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
+            {gameOver === 'lose' && (<DefeatModal onRestart={resetGame} />)}
+        </main>
+      </div>
+    </>
+  );
+}
