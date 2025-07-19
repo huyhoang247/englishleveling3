@@ -1,5 +1,64 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Gem, Coins, ArrowUp, Warehouse, ChevronRight, Star, X, Hammer, ShieldCheck } from 'lucide-react';
+
+// --- BIỂU TƯỢNG SVG (thay thế cho lucide-react) ---
+
+const GemIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M6 3h12l4 6-10 13L2 9z" />
+    <path d="M12 22V9" />
+    <path d="m3.5 9h17" />
+  </svg>
+);
+
+const CoinsIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <ellipse cx="12" cy="16" rx="7" ry="2.5" />
+    <path d="M5 16V8.5c0-1.38 3.13-2.5 7-2.5s7 1.12 7 2.5V16" />
+    <path d="M5 12.5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5" />
+  </svg>
+);
+
+const ArrowUpIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <line x1="12" y1="19" x2="12" y2="5" />
+    <polyline points="5 12 12 5 19 12" />
+  </svg>
+);
+
+const WarehouseIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M3 21V8l9-5 9 5v13h-4V11H7v10H3z"/>
+    <path d="M8 21v-8h8v8"/>
+  </svg>
+);
+
+const ChevronRightIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+const StarIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const HammerIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/>
+    <path d="M17.64 15 22 10.64"/>
+    <path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.81c0-.98-.91-1.78-2.02-1.78h-1.96c-.67 0-1.31.25-1.79.73L10.2 12l-1.65 1.65c-.59.59-.59 1.54 0 2.12l5.5 5.5c.59.59 1.54.59 2.12 0L19.5 17.5l1.41-1.41z"/>
+  </svg>
+);
+
+const ShieldCheckIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="m9 12 2 2 4-4" />
+  </svg>
+);
+
 
 // --- CẤU HÌNH GAME ---
 const BASE_NAMES_BY_STAGE = {
@@ -56,12 +115,12 @@ const GameHeader = ({ gold, crystals }) => (
       <h1 className="text-3xl font-lilita text-yellow-300 text-shadow tracking-wider">BASE BUILDER</h1>
       <div className="flex items-center gap-4">
         <ResourceDisplay 
-            icon={<Coins className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />}
+            icon={<CoinsIcon className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />}
             value={gold}
             colorClass="border-yellow-500/30"
         />
         <ResourceDisplay 
-            icon={<Gem className="w-6 h-6 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />}
+            icon={<GemIcon className="w-6 h-6 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />}
             value={crystals}
             colorClass="border-cyan-500/30"
         />
@@ -86,7 +145,7 @@ const BaseCard = ({ base, onLevelUp, crystals }) => {
         <p className="font-sans text-sm text-slate-400 mb-2">Level {base.level}</p>
         <div className="flex items-center gap-1 mb-3">
           {Array.from({ length: MAX_LEVEL_PER_BASE }).map((_, i) => (
-            <Star key={i} className={`w-5 h-5 transition-all duration-300 ${i < base.level ? 'text-yellow-400 fill-yellow-500/80' : 'text-slate-600'}`} />
+            <StarIcon key={i} className={`w-5 h-5 transition-all duration-300 ${i < base.level ? 'text-yellow-400 fill-yellow-500/80' : 'text-slate-600'}`} />
           ))}
         </div>
         <div className="font-sans text-sm text-green-400">
@@ -99,17 +158,17 @@ const BaseCard = ({ base, onLevelUp, crystals }) => {
           disabled={!canAfford}
           className="btn-shine relative overflow-hidden mt-4 w-full flex items-center justify-center gap-2 bg-slate-800/80 text-cyan-300 font-bold px-3 py-2 rounded-lg border border-cyan-500/40 transition-all duration-200 hover:text-white hover:border-cyan-400 hover:shadow-[0_0_15px_theme(colors.cyan.500/0.5)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none"
         >
-          <ArrowUp className="w-4 h-4" />
+          <ArrowUpIcon className="w-4 h-4" />
           <span className="font-lilita tracking-wider">UPGRADE</span>
           <div className="flex items-center gap-1 font-sans">
             <span className="font-bold">{base.upgradeCost}</span>
-            <Gem className="w-4 h-4" />
+            <GemIcon className="w-4 h-4" />
           </div>
         </button>
       )}
       {isMaxLevel && (
         <div className="mt-4 text-center font-lilita tracking-widest text-yellow-400 bg-yellow-500/10 py-2 rounded-lg border border-yellow-500/20 flex items-center justify-center gap-2">
-            <ShieldCheck className="w-5 h-5"/> MAX LEVEL
+            <ShieldCheckIcon className="w-5 h-5"/> MAX LEVEL
         </div>
       )}
     </div>
@@ -128,7 +187,7 @@ const PortModal = ({ isOpen, onClose, goldInPort, goldStorage, goldPerSecond, on
         
         <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Warehouse className="w-10 h-10 text-indigo-400 drop-shadow-[0_2px_4px_rgba(129,140,248,0.4)]" />
+              <WarehouseIcon className="w-10 h-10 text-indigo-400 drop-shadow-[0_2px_4px_rgba(129,140,248,0.4)]" />
               <h2 className="text-4xl text-white text-shadow tracking-wider">PORT</h2>
             </div>
 
@@ -154,7 +213,7 @@ const PortModal = ({ isOpen, onClose, goldInPort, goldStorage, goldPerSecond, on
                   disabled={goldInPort < 1}
                   className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-green-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-green-500/80 hover:bg-green-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"
                 >
-                  <Coins className="w-6 h-6" />
+                  <CoinsIcon className="w-6 h-6" />
                   <span>CLAIM</span>
                 </button>
                 <button
@@ -162,8 +221,8 @@ const PortModal = ({ isOpen, onClose, goldInPort, goldStorage, goldPerSecond, on
                   disabled={!canAffordUpgrade}
                   className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-sky-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-sky-500/80 hover:bg-sky-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"
                 >
-                  <Hammer className="w-5 h-5" />
-                  <span>UPGRADE ({upgradeStorageCost} <Gem className="inline w-4 h-4" />)</span>
+                  <HammerIcon className="w-5 h-5" />
+                  <span>UPGRADE ({upgradeStorageCost} <GemIcon className="inline-block w-4 h-4 align-[-0.15em]" />)</span>
                 </button>
               </div>
             </div>
@@ -282,7 +341,7 @@ export default function App() {
                     className="flex items-center gap-2 bg-green-600/80 text-white font-bold px-5 py-2.5 rounded-lg hover:bg-green-600 transition-all duration-200 hover:scale-105 active:scale-100 animate-fade-in border border-green-500/80 shadow-lg shadow-green-500/20"
                 >
                     <span className="font-lilita text-lg tracking-wider">NEXT STAGE</span>
-                    <ChevronRight className="w-6 h-6" />
+                    <ChevronRightIcon className="w-6 h-6" />
                 </button>
             )}
         </div>
@@ -299,7 +358,7 @@ export default function App() {
           onClick={() => setIsPortOpen(true)}
           className="btn-shine relative overflow-hidden bg-indigo-700/90 backdrop-blur-md text-white font-lilita tracking-widest text-xl px-8 py-4 rounded-xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-600 transition-all duration-300 flex items-center gap-3 border border-indigo-500 hover:scale-105 active:scale-100"
         >
-          <Warehouse className="w-7 h-7" />
+          <WarehouseIcon className="w-7 h-7" />
           <span>PORT</span>
         </button>
       </footer>
