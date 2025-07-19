@@ -6,9 +6,7 @@ const IceShardIcon = ({ className = '' }: { className?: string }) => ( <svg clas
 const HealIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
 const BookIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>);
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
-// --- START: MỚI ---
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#fbbF24" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.39L9.32 17l.79-3.08-2.3-1.99 3.18-.28L12 9l1.01 2.65 3.18.28-2.3 1.99.79 3.08L12 15.39z" fill="#fff" /></svg> );
-// --- END: MỚI ---
 
 // --- START: CÁC HÀM HELPER VỀ ĐỘ HIẾM (TỪ SHOP.TSX) ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
@@ -37,14 +35,11 @@ const CRAFTING_COST = 50;
 
 // --- CÁC COMPONENT CON ---
 
-// --- START: MỚI ---
-const Header = ({ username, avatarUrl, gold, ancientBooks }: { username: string; avatarUrl: string; gold: number; ancientBooks: number; }) => {
+// --- START: HEADER ĐÃ CHỈNH SỬA ---
+const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
-            <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
-                <h1 className="text-2xl font-bold text-cyan-300 title-glow">
-                    Bảng Kỹ Năng
-                </h1>
+            <div className="w-full max-w-5xl mx-auto flex justify-end items-center py-3 px-4 sm:px-0">
                 <div className="flex items-center gap-4 sm:gap-6">
                     {/* Resources */}
                     <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
@@ -55,18 +50,12 @@ const Header = ({ username, avatarUrl, gold, ancientBooks }: { username: string;
                         <BookIcon className="w-6 h-6 text-yellow-300" />
                         <span className="font-bold text-white text-sm">{ancientBooks}</span>
                     </div>
-
-                    {/* User Info */}
-                    <div className="flex items-center gap-3">
-                        <span className="hidden sm:block font-semibold text-slate-300">{username}</span>
-                        <img src={avatarUrl} alt="User Avatar" className="w-10 h-10 rounded-full border-2 border-cyan-500" />
-                    </div>
                 </div>
             </div>
         </header>
     );
 };
-// --- END: MỚI ---
+// --- END: HEADER ĐÃ CHỈNH SỬA ---
 
 const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => void }) => {
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
@@ -149,7 +138,6 @@ const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skil
     );
 };
 
-// --- START: POPUP CHẾ TẠO THÀNH CÔNG MỚI ---
 const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () => void }) => {
     const IconComponent = skill.icon;
     const rarityTextColor = getRarityTextColor(skill.rarity);
@@ -160,7 +148,6 @@ const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () =>
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
             <div className="relative w-full max-w-sm">
-                {/* Hiệu ứng tia sáng nền */}
                 <div className="absolute inset-0.5 animate-spin-slow-360">
                     <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(skill.rarity)} opacity-50 rounded-full blur-2xl`}></div>
                 </div>
@@ -182,7 +169,6 @@ const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () =>
         </div>
     );
 };
-// --- END: POPUP CHẾ TẠO THÀNH CÔNG MỚI ---
 
 // --- COMPONENT CHÍNH ---
 export default function SkillScreen() {
@@ -194,11 +180,10 @@ export default function SkillScreen() {
   const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
   const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(1));
   
-  // --- START: MỚI ---
-  // Thêm state cho thông tin người dùng và vàng
-  const [user, setUser] = useState({ name: 'Thợ Rèn Z', avatar: 'https://i.pravatar.cc/40?u=adventurer' });
+  // --- START: CHỈNH SỬA ---
+  // Xóa state user, chỉ giữ lại state gold
   const [gold, setGold] = useState(12500);
-  // --- END: MỚI ---
+  // --- END: CHỈNH SỬA ---
 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
@@ -262,15 +247,11 @@ export default function SkillScreen() {
 
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
-      {/* --- START: MỚI --- */}
-      {/* Cấu trúc layout chính được cập nhật để chứa Header */}
       <div className="relative z-10 flex flex-col w-full h-screen">
-        <Header 
-          username={user.name} 
-          avatarUrl={user.avatar} 
-          gold={gold} 
-          ancientBooks={ancientBooks} 
-        />
+        {/* --- START: CHỈNH SỬA --- */}
+        {/* Cập nhật cách gọi Header */}
+        <Header gold={gold} ancientBooks={ancientBooks} />
+        {/* --- END: CHỈNH SỬA --- */}
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 p-4 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
@@ -301,7 +282,6 @@ export default function SkillScreen() {
             </section>
         </main>
       </div>
-      {/* --- END: MỚI --- */}
     </div>
   );
 }
