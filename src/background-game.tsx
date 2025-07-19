@@ -11,7 +11,6 @@ import HeaderBackground from './header-background.tsx';
 import { GemIcon } from './library/icon.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-import GoldMine from './gold-miner.tsx';
 import Inventory from './inventory.tsx';
 import DungeonCanvasBackground from './DungeonCanvasBackground.tsx';
 import LuckyChestGame from './lucky-game.tsx';
@@ -123,7 +122,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
-  const [isGoldMineOpen, setIsGoldMineOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isBlacksmithOpen, setIsBlacksmithOpen] = useState(false);
@@ -425,7 +423,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       if (user) {
         fetchUserData(user.uid); fetchVocabularyData(user.uid); fetchJackpotPool();
       } else {
-        setIsRankOpen(false); setIsGoldMineOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false);
+        setIsRankOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false);
         setIsBlacksmithOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
@@ -454,7 +452,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, [coins]);
 
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
+    const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
     return (
       <div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20">
@@ -501,7 +499,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const newState = !prev;
             if (newState) {
                 hideNavBar();
-                [ setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen, setIsBlacksmithOpen, 
+                [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, setIsBlacksmithOpen, 
                   setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, 
                   setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen
                 ].forEach(s => { if (s !== setter) s(false); });
@@ -512,7 +510,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleRank = createToggleFunction(setIsRankOpen);
-  const toggleGoldMine = createToggleFunction(setIsGoldMineOpen);
   const toggleInventory = createToggleFunction(setIsInventoryOpen);
   const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
   const toggleMinerChallenge = createToggleFunction(setIsMinerChallengeOpen);
@@ -525,7 +522,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
-  const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
+  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -542,7 +539,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
-      <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank} onShowGoldMine={toggleGoldMine}
+      <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
           onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge}
           onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen}
           onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
@@ -599,7 +596,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         {/* --- Overlays / Modals --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isGoldMineOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<GoldMine onClose={toggleGoldMine} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} currentUserId={auth.currentUser!.uid} isGamePaused={isAnyOverlayOpen}/>)}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}> <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}> <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary> </div>
