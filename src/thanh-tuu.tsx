@@ -310,7 +310,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   );
 }
 
-// --- Component con (Không thay đổi) ---
+// --- Component con ---
 function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isClaimingAll }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isBeingClaimed: boolean, isAnyClaiming: boolean, isClaimingAll: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
@@ -325,7 +325,12 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
   return (
     <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
       <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center"> <span className="text-xl font-bold text-slate-500">{rank}</span> </div>
-      <div className="col-span-10 md:col-span-3"> <p className="font-bold text-lg text-white">{word}</p> <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span> <span className="hidden md:block text-xs text-slate-400">{`Cấp ${level}`}</span> </div>
+      <div className="col-span-10 md:col-span-3">
+        {/* [ĐÃ CẬP NHẬT] Tự động viết hoa chữ cái đầu */}
+        <p className="font-bold text-lg text-white">{word.charAt(0).toUpperCase() + word.slice(1)}</p>
+        <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span>
+        <span className="hidden md:block text-xs text-slate-400">{`Cấp ${level}`}</span>
+      </div>
       <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">x1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming || isClaimingAll} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming && !isClaimingAll ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isBeingClaimed ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> </div>
@@ -333,7 +338,7 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
   );
 }
 
-// --- [ĐÃ CẬP NHẬT] Component Phân Trang - Ưu tiên Trải nghiệm người dùng ---
+// --- Component Phân Trang - Ưu tiên Trải nghiệm người dùng ---
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
     // Sử dụng useMemo để tính toán danh sách trang chỉ khi các dependency thay đổi
     const paginationRange = useMemo(() => {
