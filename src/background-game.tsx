@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (13).txt ---
+
 // --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
@@ -20,8 +22,8 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
-// GIẢI PHÁP: Đổi tên import để dễ phân biệt
-import MinerChallengeGame from './bomb.tsx';
+import MinerChallenge from './bomb.tsx';
+// >>> IMPORT LOGIC TÍNH TOÁN TỪ UPGRADE-STATS
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
@@ -143,17 +145,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   useEffect(() => {
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
-
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-
-    const setAppHeight = () => {
-      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
-    };
-
-    window.addEventListener('resize', setAppHeight);
-    setAppHeight();
-
+    const setAppHeight = () => { document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`); };
+    window.addEventListener('resize', setAppHeight); setAppHeight();
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
@@ -165,71 +160,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     try {
         const completedWordsCol = collection(db, 'users', userId, 'completedWords');
         const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-
-        const [completedWordsSnap, achievementDocSnap] = await Promise.all([
-            getDocs(completedWordsCol),
-            getDoc(achievementDocRef),
-        ]);
-
+        const [completedWordsSnap, achievementDocSnap] = await Promise.all([ getDocs(completedWordsCol), getDoc(achievementDocRef), ]);
         const wordToExpMap = new Map<string, number>();
         completedWordsSnap.forEach(wordDoc => {
-            const word = wordDoc.id;
-            const gameModes = wordDoc.data().gameModes || {};
-            let totalCorrectCount = 0;
-            Object.values(gameModes).forEach((mode: any) => {
-                totalCorrectCount += mode.correctCount || 0;
-            });
+            const word = wordDoc.id; const gameModes = wordDoc.data().gameModes || {}; let totalCorrectCount = 0;
+            Object.values(gameModes).forEach((mode: any) => { totalCorrectCount += mode.correctCount || 0; });
             wordToExpMap.set(word, totalCorrectCount * 100);
         });
-
-        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
-            ? achievementDocSnap.data().vocabulary || []
-            : [];
-
-        const finalVocabularyData: VocabularyItem[] = [];
-        const processedWords = new Set<string>();
+        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
+        const finalVocabularyData: VocabularyItem[] = []; const processedWords = new Set<string>();
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
-
         wordToExpMap.forEach((totalExp, word) => {
             const existingItem = existingAchievements.find(item => item.word === word);
-
             if (existingItem) {
                 let expSpentToReachCurrentLevel = 0;
-                for (let i = 1; i < existingItem.level; i++) {
-                    expSpentToReachCurrentLevel += i * 100;
-                }
+                for (let i = 1; i < existingItem.level; i++) { expSpentToReachCurrentLevel += i * 100; }
                 const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-
-                finalVocabularyData.push({
-                    ...existingItem,
-                    exp: currentProgressExp,
-                    maxExp: existingItem.level * 100,
-                });
-            } else {
-                finalVocabularyData.push({
-                    id: idCounter++,
-                    word: word,
-                    exp: totalExp,
-                    level: 1,
-                    maxExp: 100,
-                });
-            }
+                finalVocabularyData.push({ ...existingItem, exp: currentProgressExp, maxExp: existingItem.level * 100, });
+            } else { finalVocabularyData.push({ id: idCounter++, word: word, exp: totalExp, level: 1, maxExp: 100, }); }
             processedWords.add(word);
         });
-
-        existingAchievements.forEach(item => {
-            if (!processedWords.has(item.word)) {
-                finalVocabularyData.push(item);
-            }
-        });
-
-        console.log("Vocabulary achievements data synced and merged correctly.");
-        setVocabularyData(finalVocabularyData);
-
-    } catch (error) {
-        console.error("Error fetching and syncing vocabulary achievements data:", error);
-        setVocabularyData(initialVocabularyData);
-    }
+        existingAchievements.forEach(item => { if (!processedWords.has(item.word)) { finalVocabularyData.push(item); } });
+        console.log("Vocabulary achievements data synced and merged correctly."); setVocabularyData(finalVocabularyData);
+    } catch (error) { console.error("Error fetching and syncing vocabulary achievements data:", error); setVocabularyData(initialVocabularyData); }
   };
 
   const fetchUserData = async (userId: string) => {
@@ -237,41 +190,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     try {
       const userDocRef = doc(db, 'users', userId);
       const userDocSnap = await getDoc(userDocRef);
-
       if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        console.log("User data fetched:", userData);
-        setCoins(userData.coins || 0);
-        setDisplayedCoins(userData.coins || 0);
-        setGems(userData.gems || 0);
-        setMasteryCards(userData.masteryCards || 0);
-        setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
+        const userData = userDocSnap.data(); console.log("User data fetched:", userData);
+        setCoins(userData.coins || 0); setDisplayedCoins(userData.coins || 0); setGems(userData.gems || 0);
+        setMasteryCards(userData.masteryCards || 0); setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
         setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
-          coins: 0,
-          gems: 0,
-          masteryCards: 0,
-          stats: { hp: 0, atk: 0, def: 0 },
-          pickaxes: 50,
-          minerChallengeHighestFloor: 0,
-          createdAt: new Date(),
+          coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
+          pickaxes: 50, minerChallengeHighestFloor: 0, createdAt: new Date(),
         });
-        setCoins(0);
-        setDisplayedCoins(0);
-        setGems(0);
-        setMasteryCards(0);
-        setPickaxes(50);
-        setMinerChallengeHighestFloor(0);
-        setUserStats({ hp: 0, atk: 0, def: 0 });
+        setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
+        setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setIsLoadingUserData(false);
-    }
+    } catch (error) { console.error("Error fetching user data:", error); } 
+    finally { setIsLoadingUserData(false); }
   };
 
   const fetchJackpotPool = async () => {
@@ -279,103 +214,129 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
         const jackpotDocSnap = await getDoc(jackpotDocRef);
         if (jackpotDocSnap.exists()) {
-            const data = jackpotDocSnap.data();
-            setJackpotPool(data.poolAmount || 200);
+            const data = jackpotDocSnap.data(); setJackpotPool(data.poolAmount || 200);
             console.log("Jackpot Pool fetched:", data.poolAmount);
         } else {
             console.log("No global jackpot pool document found, creating default.");
-            await setDoc(jackpotDocRef, { poolAmount: 200, lastUpdated: new Date() });
-            setJackpotPool(200);
+            await setDoc(jackpotDocRef, { poolAmount: 200, lastUpdated: new Date() }); setJackpotPool(200);
         }
-    } catch (error) {
-        console.error("Error fetching jackpot pool:", error);
-    }
+    } catch (error) { console.error("Error fetching jackpot pool:", error); }
   };
 
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
-    if (!userId) {
-      console.error("Cannot update coins: User not authenticated.");
-      return;
-    }
+    if (!userId) { console.error("Cannot update coins: User not authenticated."); return; }
     const userDocRef = doc(db, 'users', userId);
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          transaction.set(userDocRef, {
-            coins: coins, gems: gems, createdAt: new Date()
-          });
-        } else {
-          const currentCoins = userDoc.data().coins || 0;
-          const newCoins = currentCoins + amount;
-          const finalCoins = Math.max(0, newCoins);
-          transaction.update(userDocRef, { coins: finalCoins });
+        if (!userDoc.exists()) { transaction.set(userDocRef, { coins: coins, gems: gems, createdAt: new Date() }); } 
+        else {
+          const currentCoins = userDoc.data().coins || 0; const newCoins = currentCoins + amount;
+          const finalCoins = Math.max(0, newCoins); transaction.update(userDocRef, { coins: finalCoins });
           console.log(`Coins updated in Firestore for user ${userId}: ${currentCoins} -> ${finalCoins}`);
           setCoins(finalCoins);
         }
       });
-    } catch (error) {
-      console.error("Firestore Transaction failed for coins: ", error);
-    }
+    } catch (error) { console.error("Firestore Transaction failed for coins: ", error); }
   };
 
   const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
-    if (!userId) {
-      console.error("Cannot update mastery cards: User not authenticated.");
-      return;
-    }
+    if (!userId) { console.error("Cannot update mastery cards: User not authenticated."); return; }
     const userDocRef = doc(db, 'users', userId);
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          transaction.set(userDocRef, { masteryCards: amount });
-        } else {
+        if (!userDoc.exists()) { transaction.set(userDocRef, { masteryCards: amount }); } 
+        else {
           const currentCards = userDoc.data().masteryCards || 0;
-          const newCards = currentCards + amount;
-          transaction.update(userDocRef, { masteryCards: newCards });
+          const newCards = currentCards + amount; transaction.update(userDocRef, { masteryCards: newCards });
           setMasteryCards(newCards);
         }
       });
       console.log(`Mastery Cards updated in Firestore for user ${userId}.`);
+    } catch (error) { console.error("Firestore Transaction failed for mastery cards: ", error); }
+  };
+    
+  // THAY ĐỔI 1: Tạo hàm mới để xử lý kết quả cuối cùng từ Miner Challenge
+  const handleMinerChallengeEnd = async (result: {
+    finalPickaxes: number;
+    coinsEarned: number;
+    highestFloorCompleted: number;
+  }) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      console.error("Cannot update game data: User not authenticated.");
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', userId);
+
+    console.log("Ending Miner Challenge session. Updating Firestore with:", result);
+
+    // Chỉ thực hiện ghi nếu có sự thay đổi
+    if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) {
+        console.log("No changes to update from Miner Challenge.");
+        return;
+    }
+
+    try {
+      // Thực hiện một giao dịch duy nhất để cập nhật tất cả dữ liệu
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          // Trường hợp hiếm gặp, nhưng nên xử lý
+          transaction.set(userDocRef, {
+            coins: result.coinsEarned,
+            pickaxes: result.finalPickaxes,
+            minerChallengeHighestFloor: result.highestFloorCompleted,
+          });
+        } else {
+          const currentCoins = userDoc.data().coins || 0;
+          const newCoins = currentCoins + result.coinsEarned;
+
+          transaction.update(userDocRef, {
+            coins: newCoins,
+            pickaxes: result.finalPickaxes,
+            minerChallengeHighestFloor: Math.max(
+              userDoc.data().minerChallengeHighestFloor || 0,
+              result.highestFloorCompleted
+            ),
+          });
+        }
+      });
+      
+      // Cập nhật state cục bộ của background-game SAU KHI giao dịch thành công
+      setPickaxes(result.finalPickaxes);
+      setCoins(prevCoins => prevCoins + result.coinsEarned);
+      if (result.highestFloorCompleted > minerChallengeHighestFloor) {
+        setMinerChallengeHighestFloor(result.highestFloorCompleted);
+      }
+      
+      console.log("Firestore updated successfully after Miner Challenge.");
+
     } catch (error) {
-      console.error("Firestore Transaction failed for mastery cards: ", error);
+      console.error("Firestore Transaction failed for Miner Challenge end: ", error);
     }
   };
 
-  // GIẢI PHÁP: Các hàm update riêng lẻ này vẫn tồn tại để phục vụ các tính năng khác,
-  // nhưng Miner Challenge sẽ không gọi chúng nữa.
   const updatePickaxesInFirestore = async (userId: string, newTotalAmount: number) => {
-      if (!userId) {
-          console.error("Cannot update pickaxes: User not authenticated.");
-          return;
-      }
+      if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
       const userDocRef = doc(db, 'users', userId);
       try {
           await runTransaction(db, async (transaction) => {
               const userDoc = await transaction.get(userDocRef);
               const finalAmount = Math.max(0, newTotalAmount);
-              if (!userDoc.exists()) {
-                  transaction.set(userDocRef, { pickaxes: finalAmount });
-              } else {
-                  transaction.update(userDocRef, { pickaxes: finalAmount });
-              }
+              if (!userDoc.exists()) { transaction.set(userDocRef, { pickaxes: finalAmount }); } 
+              else { transaction.update(userDocRef, { pickaxes: finalAmount }); }
               setPickaxes(finalAmount);
           });
-      } catch (error) {
-          console.error("Firestore Transaction failed for pickaxes: ", error);
-      }
+      } catch (error) { console.error("Firestore Transaction failed for pickaxes: ", error); }
   };
 
   const updateHighestFloorInFirestore = async (userId: string, completedFloor: number) => {
-      if (!userId) {
-          console.error("Cannot update highest floor: User not authenticated.");
-          return;
-      }
-      if (completedFloor <= minerChallengeHighestFloor) {
-          return;
-      }
-
+      // Hàm này không còn được dùng trực tiếp từ MinerChallenge nhưng có thể hữu ích ở nơi khác
+      if (!userId) { console.error("Cannot update highest floor: User not authenticated."); return; }
+      if (completedFloor <= minerChallengeHighestFloor) { return; }
       const userDocRef = doc(db, 'users', userId);
       try {
           await runTransaction(db, async (transaction) => {
@@ -383,34 +344,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           });
           setMinerChallengeHighestFloor(completedFloor);
           console.log(`Highest floor updated in Firestore for user ${userId} to: ${completedFloor}`);
-      } catch (error) {
-          console.error("Firestore Transaction failed for highest floor: ", error);
-      }
+      } catch (error) { console.error("Firestore Transaction failed for highest floor: ", error); }
   };
 
+
   const updateStatsInFirestore = async (userId: string, newStats: { hp: number; atk: number; def: number; }) => {
-      if (!userId) {
-          console.error("Cannot update stats: User not authenticated.");
-          return;
-      }
+      if (!userId) { console.error("Cannot update stats: User not authenticated."); return; }
       const userDocRef = doc(db, 'users', userId);
       try {
-          await runTransaction(db, async (transaction) => {
-              transaction.update(userDocRef, { stats: newStats });
-          });
-          setUserStats(newStats);
-          console.log(`User stats updated in Firestore for user ${userId}.`);
-      } catch (error) {
-          console.error("Firestore Transaction failed for stats: ", error);
-      }
+          await runTransaction(db, async (transaction) => { transaction.update(userDocRef, { stats: newStats }); });
+          setUserStats(newStats); console.log(`User stats updated in Firestore for user ${userId}.`);
+      } catch (error) { console.error("Firestore Transaction failed for stats: ", error); }
   };
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) {
-        console.error("Cannot update pickaxes: User not authenticated.");
-        return;
-    }
+    if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
     const newTotal = pickaxes + amountToAdd;
     await updatePickaxesInFirestore(userId, newTotal);
   };
@@ -419,8 +368,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
           await runTransaction(db, async (transaction) => {
-              const jackpotDoc = await transaction.get(jackpotDocRef);
-              let newJackpotPool;
+              const jackpotDoc = await transaction.get(jackpotDocRef); let newJackpotPool;
               if (!jackpotDoc.exists()) {
                   newJackpotPool = resetToDefault ? 200 : 200 + amount;
                   transaction.set(jackpotDocRef, { poolAmount: newJackpotPool, lastUpdated: new Date() });
@@ -431,44 +379,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               }
               setJackpotPool(newJackpotPool);
           });
-      } catch (error) {
-          console.error("Firestore Transaction failed for jackpot pool: ", error);
-      }
+      } catch (error) { console.error("Firestore Transaction failed for jackpot pool: ", error); }
   };
 
-  const handleGemReward = (amount: number) => {
-      setGems(prev => prev + amount);
-  };
+  const handleGemReward = (amount: number) => { setGems(prev => prev + amount); };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
-        fetchUserData(user.uid);
-        fetchVocabularyData(user.uid);
-        fetchJackpotPool();
+        fetchUserData(user.uid); fetchVocabularyData(user.uid); fetchJackpotPool();
       } else {
-        setIsRankOpen(false);
-        setIsGoldMineOpen(false);
-        setIsInventoryOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBlacksmithOpen(false);
-        setIsBossBattleOpen(false);
-        setIsShopOpen(false);
-        setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false);
-        setIsAdminPanelOpen(false);
-        setIsUpgradeScreenOpen(false);
-        setIsBackgroundPaused(false);
-        setCoins(0);
-        setDisplayedCoins(0);
-        setGems(0);
-        setMasteryCards(0);
-        setPickaxes(0);
-        setMinerChallengeHighestFloor(0);
-        setUserStats({ hp: 0, atk: 0, def: 0 });
-        setJackpotPool(0);
-        setIsLoadingUserData(true);
-        setVocabularyData(null);
+        setIsRankOpen(false); setIsGoldMineOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false);
+        setIsBlacksmithOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
+        setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
+        setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
+        setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
       }
     });
     return () => unsubscribe();
@@ -476,33 +402,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   useEffect(() => {
       const handleVisibilityChange = () => {
-          if (document.hidden) {
-              setIsBackgroundPaused(true);
-          } else {
-              setIsBackgroundPaused(false);
-          }
+          if (document.hidden) { setIsBackgroundPaused(true); } 
+          else { setIsBackgroundPaused(false); }
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const handleTap = () => { };
-
   const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
-
   useEffect(() => {
     if (displayedCoins === coins) return;
-    const timeoutId = setTimeout(() => {
-      setDisplayedCoins(coins);
-    }, 100);
+    const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100);
     return () => clearTimeout(timeoutId);
-
   }, [coins]);
 
   const renderCharacter = () => {
     const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
-
     return (
       <div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20">
         <DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isPaused} className="w-full h-full" />
@@ -510,69 +427,36 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  const handleRewardClaim = async (
-    reward: { gold: number; masteryCards: number },
-    updatedVocabulary: VocabularyItem[]
-  ) => {
+  const handleRewardClaim = async (reward: { gold: number; masteryCards: number }, updatedVocabulary: VocabularyItem[]) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) {
-      console.error("Cannot claim reward: User not authenticated.");
-      throw new Error("User not authenticated");
-    }
-
+    if (!userId) { console.error("Cannot claim reward: User not authenticated."); throw new Error("User not authenticated"); }
     const userDocRef = doc(db, 'users', userId);
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userDocRef);
-
-      if (!userDoc.exists()) {
-        throw "User document does not exist!";
-      }
-
-      const currentCoins = userDoc.data().coins || 0;
-      const currentCards = userDoc.data().masteryCards || 0;
-      const newCoins = currentCoins + reward.gold;
-      const newCards = currentCards + reward.masteryCards;
-
-      transaction.update(userDocRef, {
-        coins: newCoins,
-        masteryCards: newCards
-      });
-
+      if (!userDoc.exists()) { throw "User document does not exist!"; }
+      const currentCoins = userDoc.data().coins || 0; const currentCards = userDoc.data().masteryCards || 0;
+      const newCoins = currentCoins + reward.gold; const newCards = currentCards + reward.masteryCards;
+      transaction.update(userDocRef, { coins: newCoins, masteryCards: newCards });
       transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
     });
-
     console.log("Reward claimed and achievements updated successfully in a single transaction.");
-
-    setCoins(prev => prev + reward.gold);
-    setMasteryCards(prev => prev + reward.masteryCards);
+    setCoins(prev => prev + reward.gold); setMasteryCards(prev => prev + reward.masteryCards);
     setVocabularyData(updatedVocabulary);
   };
 
-  // --- Các hàm toggle ---
-  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
     return () => {
         if (isLoading) return;
         setter(prev => {
             const newState = !prev;
-            // GIẢI PHÁP: Điều chỉnh logic để chỉ đóng các cửa sổ khác, không gọi showNavBar ngay lập tức
             if (newState) {
                 hideNavBar();
-                [
-                    setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen,
-                    setIsBlacksmithOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen,
-                    setIsVocabularyChestOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen
-                ].forEach(s => {
-                    if (s !== setter) s(false);
-                });
-            } else {
-                // Chỉ gọi showNavBar nếu không có cửa sổ nào khác đang mở
-                const anyOtherOverlayStillOpen = [setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen, setIsBlacksmithOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen].some(s => s !== setter && s.toString() === 'true');
-                if (!anyOtherOverlayStillOpen) {
-                    showNavBar();
-                }
-            }
+                [ setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen, setIsBlacksmithOpen, 
+                  setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, 
+                  setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen
+                ].forEach(s => { if (s !== setter) s(false); });
+            } else { showNavBar(); }
             return newState;
         });
     };
@@ -590,292 +474,102 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleAchievements = createToggleFunction(setIsAchievementsOpen);
   const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
-
-  // GIẢI PHÁP: Hàm mới để xử lý kết quả từ Miner Challenge và thực hiện ghi một lần
-  const handleMinerChallengeClose = async (result: {
-      finalPickaxes: number;
-      coinsEarned: number;
-      highestFloorCompleted: number;
-  }) => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) {
-          console.error("Cannot save Miner Challenge data: User not authenticated.");
-          setIsMinerChallengeOpen(false); // Vẫn đóng cửa sổ
-          showNavBar();
-          return;
-      }
-      console.log("Saving Miner Challenge data:", result);
-
-      const userDocRef = doc(db, 'users', userId);
-      try {
-          // Sử dụng transaction để đảm bảo tất cả cập nhật đều thành công hoặc thất bại cùng nhau
-          await runTransaction(db, async (transaction) => {
-              const userDoc = await transaction.get(userDocRef);
-              if (!userDoc.exists()) {
-                  throw new Error("User document does not exist!");
-              }
-
-              const currentData = userDoc.data();
-              const currentCoins = currentData.coins || 0;
-              const newCoins = currentCoins + result.coinsEarned;
-
-              const dataToUpdate: {
-                  pickaxes: number;
-                  coins: number;
-                  minerChallengeHighestFloor?: number;
-              } = {
-                  pickaxes: result.finalPickaxes,
-                  coins: newCoins,
-              };
-              
-              // Chỉ cập nhật tầng cao nhất nếu người chơi vượt qua tầng cũ
-              const currentHighestFloor = currentData.minerChallengeHighestFloor || 0;
-              if (result.highestFloorCompleted > currentHighestFloor) {
-                dataToUpdate.minerChallengeHighestFloor = result.highestFloorCompleted;
-              }
-
-              transaction.update(userDocRef, dataToUpdate);
-          });
-
-          // Cập nhật state cục bộ của React sau khi giao dịch Firestore thành công
-          setPickaxes(result.finalPickaxes);
-          setCoins(prev => prev + result.coinsEarned);
-          if (result.highestFloorCompleted > minerChallengeHighestFloor) {
-              setMinerChallengeHighestFloor(result.highestFloorCompleted);
-          }
-          console.log("Miner Challenge data saved successfully.");
-
-      } catch (error) {
-          console.error("Firestore Transaction failed for Miner Challenge data: ", error);
-      } finally {
-          // Luôn đóng cửa sổ và hiển thị lại nav bar, dù thành công hay thất bại
-          setIsMinerChallengeOpen(false);
-          showNavBar();
-      }
-  };
-
-
-  const handleSetToggleSidebar = (toggleFn: () => void) => {
-      sidebarToggleRef.current = toggleFn;
-  };
+  const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
   const isAnyOverlayOpen = isRankOpen || isGoldMineOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
   const getPlayerBattleStats = () => {
-      const BASE_HP = 0;
-      const BASE_ATK = 0;
-      const BASE_DEF = 0;
-
+      const BASE_HP = 0; const BASE_ATK = 0; const BASE_DEF = 0;
       const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
       const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
       const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
-
       return {
-          maxHp: BASE_HP + bonusHp,
-          hp: BASE_HP + bonusHp,
-          atk: BASE_ATK + bonusAtk,
-          def: BASE_DEF + bonusDef,
-          maxEnergy: 50,
-          energy: 50,
+          maxHp: BASE_HP + bonusHp, hp: BASE_HP + bonusHp, atk: BASE_ATK + bonusAtk,
+          def: BASE_DEF + bonusDef, maxEnergy: 50, energy: 50,
       };
   };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
-      <SidebarLayout
-          setToggleSidebar={handleSetToggleSidebar}
-          onShowRank={toggleRank}
-          onShowGoldMine={toggleGoldMine}
-          onShowLuckyGame={toggleLuckyGame}
-          onShowMinerChallenge={toggleMinerChallenge}
-          onShowAchievements={toggleAchievements}
-          onShowUpgrade={toggleUpgradeScreen}
+      <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank} onShowGoldMine={toggleGoldMine}
+          onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge}
+          onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen}
           onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
-
-        <div
-          style={{
-            display: isAnyOverlayOpen ? 'none' : 'block',
-            visibility: isLoading ? 'hidden' : 'visible'
-          }}
-          className="w-full h-full"
-        >
-          <div
-            className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`}
-            onClick={handleTap}
-          >
+        <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoading ? 'hidden' : 'visible' }} className="w-full h-full">
+          <div className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`} onClick={handleTap}>
             {renderCharacter()}
-
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                        rounded-b-lg shadow-2xl
-                        bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
+                        rounded-b-lg shadow-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
                         border-b border-l border-r border-slate-700/50">
-
                 <HeaderBackground />
-
-                <button
-                    onClick={() => sidebarToggleRef.current?.()}
-                    className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20"
-                    aria-label="Mở sidebar"
-                    title="Mở sidebar"
-                >
-                     <img
-                        src={uiAssets.menuIcon}
-                        alt="Menu Icon"
-                        className="w-5 h-5 object-contain"
-                     />
+                <button onClick={() => sidebarToggleRef.current?.()} className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" aria-label="Mở sidebar" title="Mở sidebar">
+                     <img src={uiAssets.menuIcon} alt="Menu Icon" className="w-5 h-5 object-contain" />
                 </button>
-
                 <div className="flex-1"></div>
-
                 <div className="flex items-center space-x-1 currency-display-container relative z-10">
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center">
-                            <GemIcon size={16} color="#a78bfa" className="relative z-20" />
-                        </div>
-                        <div className="font-bold text-purple-200 text-xs tracking-wide">
-                            {gems.toLocaleString()}
-                        </div>
-                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse">
-                            <span className="text-white font-bold text-xs">+</span>
-                        </div>
+                        <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
+                        <div className="font-bold text-purple-200 text-xs tracking-wide">{gems.toLocaleString()}</div>
+                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
                         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
                     <CoinDisplay displayedCoins={displayedCoins} />
                 </div>
             </div>
-
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
-                { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
-                { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                  <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
-                      {item.icon}
-                  </div>
-                </div>
-              ))}
+              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
+                 { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
+                 { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
+              ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
-
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[
-                { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
-                { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
-                { icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />, onClick: toggleBlacksmith },
-              ].map((item, index) => (
-                <div key={index} className="group cursor-pointer">
-                    <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}>
-                        {item.icon}
-                    </div>
-                </div>
-              ))}
+              {[ { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
+                 { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
+                 { icon: <img src={uiAssets.blacksmithIcon} alt="Blacksmith Icon" className="w-full h-full object-contain" />, onClick: toggleBlacksmith },
+              ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
         </div>
 
         {/* --- Overlays / Modals --- */}
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}>
-             <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isGoldMineOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{auth.currentUser && (<GoldMine onClose={toggleGoldMine} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} currentUserId={auth.currentUser!.uid} isGamePaused={isAnyOverlayOpen}/>)}</ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}>
-            <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
-            <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
-        </div>
-
-        {/* GIẢI PHÁP: Sử dụng component và props đã được tối ưu hóa */}
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isGoldMineOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<GoldMine onClose={toggleGoldMine} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdateDisplayedCoins={(amount) => setDisplayedCoins(amount)} currentUserId={auth.currentUser!.uid} isGamePaused={isAnyOverlayOpen}/>)}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}> <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}> <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary> </div>
+        
+        {/* THAY ĐỔI 2: Cập nhật các props truyền vào MinerChallenge */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
-                <MinerChallengeGame
-                    onClose={handleMinerChallengeClose}
-                    displayedCoins={coins}
+                <MinerChallenge
+                    onClose={toggleMinerChallenge}
+                    // Dữ liệu ban đầu
+                    initialDisplayedCoins={displayedCoins}
                     masteryCards={masteryCards}
                     initialPickaxes={pickaxes}
                     initialHighestFloor={minerChallengeHighestFloor}
+                    // Hàm callback mới để nhận kết quả cuối cùng
+                    onGameEnd={handleMinerChallengeEnd}
                 />)}</ErrorBoundary>
         </div>
 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isBossBattleOpen && auth.currentUser && (
-                    <BossBattle
-                        onClose={toggleBossBattle}
-                        playerInitialStats={getPlayerBattleStats()}
-                        onBattleEnd={(result, rewards) => {
-                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
-                            if (result === 'win' && auth.currentUser) {
-                                updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
-                            }
-                        }}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary> {isBossBattleOpen && auth.currentUser && ( <BossBattle onClose={toggleBossBattle} playerInitialStats={getPlayerBattleStats()} onBattleEnd={(result, rewards) => { console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`); if (result === 'win' && auth.currentUser) { updateCoinsInFirestore(auth.currentUser.uid, rewards.coins); } }} /> )} </ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isVocabularyChestOpen && currentUser && (
-                <VocabularyChestScreen
-                    onClose={toggleVocabularyChest}
-                    currentUserId={currentUser.uid}
-                    onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)}
-                    onGemReward={handleGemReward}
-                    displayedCoins={displayedCoins}
-                />
-            )}</ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
-                    <AchievementsScreen
-                        onClose={toggleAchievements}
-                        userId={auth.currentUser.uid}
-                        initialData={vocabularyData}
-                        onClaimReward={handleRewardClaim}
-                        masteryCardsCount={masteryCards}
-                        displayedCoins={displayedCoins}
-                    />
-                )}
-            </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isUpgradeScreenOpen && auth.currentUser && (
-                    <UpgradeStatsScreen
-                        onClose={toggleUpgradeScreen}
-                        initialGold={coins}
-                        onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
-                        initialStats={userStats}
-                        onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser!.uid, newStats)}
-                    />
-                )}
-            </ErrorBoundary>
-        </div>
-        <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary>
-        </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} /> )}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}> <ErrorBoundary> {isUpgradeScreenOpen && auth.currentUser && ( <UpgradeStatsScreen onClose={toggleUpgradeScreen} initialGold={coins} onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} initialStats={userStats} onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser!.uid, newStats)} /> )} </ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
 
-      {isLoading && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
-            <LoadingSpinner />
-        </div>
-      )}
+      {isLoading && ( <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm"> <LoadingSpinner /> </div> )}
     </div>
   );
 }
