@@ -1,3 +1,5 @@
+// --- START OF FILE sidebar.tsx ---
+
 // src/sidebar.tsx
 
 import React, { useState, useEffect } from 'react';
@@ -12,8 +14,6 @@ interface SidebarLayoutProps {
   // Props to handle toggling specific screens in the parent
   onShowRank?: () => void;   // Handler for showing Rank
   onShowMinerChallenge?: () => void; // NEW: Handler for Miner Challenge
-  // onShowHelp?: () => void; // REMOVED
-  onShowGoldMine?: () => void; // NEW: Handler for showing Gold Mine
   onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
   onShowAchievements?: () => void; // NEW: Handler for showing Achievements
   onShowUpgrade?: () => void; // NEW: Handler for showing Upgrade screen
@@ -179,24 +179,6 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
   />
 );
 
-const PickaxeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-    {...props}
-  >
-    <path d="M14.5 9.5 3 21" /><path d="m11 14 3.5-3.5" /><path d="M14 3 21 10" /><path d="M21 3 14 10" /><path d="M15 2 22 9" /><path d="M9 15 2 22" />
-  </svg>
-);
-
 const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
   <img
     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/fortune-wheel.png" // Updated image URL
@@ -210,7 +192,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine, onShowLuckyGame, onShowAchievements, onShowUpgrade, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame, onShowAchievements, onShowUpgrade, onShowAdmin, onShowMinerChallenge }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -231,7 +213,6 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowGoldMine,
 
   const menuItems = [
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
-    { id: 'goldMine', label: 'Mỏ vàng', icon: PickaxeIcon, onClick: onShowGoldMine },
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
     { id: 'minerChallenge', label: 'Miner Challenge', icon: BombIcon, onClick: onShowMinerChallenge },
     { id: 'achievements', label: 'Achievements', icon: TrophyIcon, onClick: onShowAchievements },
