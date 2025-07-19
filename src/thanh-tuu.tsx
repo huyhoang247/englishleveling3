@@ -1,5 +1,3 @@
-// --- START OF FILE thanh-tuu.tsx (5).txt ---
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
@@ -338,55 +336,44 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
   );
 }
 
-// --- [ĐÃ CẬP NHẬT] Component Phân Trang ---
+// --- [ĐÃ CẬP NHẬT] Component Phân Trang - Siêu Gọn Nhẹ ---
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
     if (totalPages <= 1) return null;
 
-    const getPageNumbers = () => {
-        const pageNumbers: (number | string)[] = [];
-        // Giới hạn số lượng nút hiển thị để tránh tràn giao diện (ví dụ: [1, '...', 4, 5, 6, '...', 10])
-        const maxVisibleButtons = 7; 
-
-        // Trường hợp 1: Tổng số trang nhỏ, hiển thị tất cả các số trang
-        if (totalPages <= maxVisibleButtons) {
-            for (let i = 1; i <= totalPages; i++) {
-                pageNumbers.push(i);
-            }
-            return pageNumbers;
+    const getPageNumbers = (): (string | number)[] => {
+        // Luôn hiển thị tối đa 5 mục trang (số hoặc dấu '...') để đảm bảo không tràn giao diện
+        const maxPageButtons = 5;
+        if (totalPages <= maxPageButtons) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
         }
 
-        // Trường hợp 2: Tổng số trang lớn, cần dùng dấu "..."
-        const mainPages = new Set<number>();
-        
-        // Luôn hiển thị trang đầu và trang cuối
-        mainPages.add(1);
-        mainPages.add(totalPages);
-        
-        // Hiển thị trang hiện tại và các trang liền kề
-        mainPages.add(currentPage);
-        if (currentPage > 1) mainPages.add(currentPage - 1);
-        if (currentPage < totalPages) mainPages.add(currentPage + 1);
+        // Logic hiển thị dấu '...' thông minh
+        const shouldShowLeftDots = currentPage > 3;
+        const shouldShowRightDots = currentPage < totalPages - 2;
 
-        // Chuyển Set thành mảng đã sắp xếp
-        const sortedPages = Array.from(mainPages).sort((a, b) => a - b);
-        
-        let lastPage: number | null = null;
-        for (const page of sortedPages) {
-            // Thêm dấu "..." nếu có khoảng trống giữa các số trang
-            if (lastPage !== null && page - lastPage > 1) {
-                pageNumbers.push('...');
-            }
-            pageNumbers.push(page);
-            lastPage = page;
+        // Case 1: Ở gần đầu [1, 2, 3, '...', 10]
+        if (!shouldShowLeftDots && shouldShowRightDots) {
+            return [1, 2, 3, '...', totalPages];
+        }
+
+        // Case 2: Ở gần cuối [1, '...', 8, 9, 10]
+        if (shouldShowLeftDots && !shouldShowRightDots) {
+            return [1, '...', totalPages - 2, totalPages - 1, totalPages];
         }
         
-        return pageNumbers;
+        // Case 3: Ở giữa [1, '...', 4, 5, 6, '...'. 10] -> rút gọn thành [1, '...', 5, '...', 10]
+        if (shouldShowLeftDots && shouldShowRightDots) {
+            return [1, '...', currentPage, '...', totalPages];
+        }
+        
+        // Fallback cho các trường hợp cạnh, đảm bảo luôn trả về một mảng hợp lệ
+        return [1, 2, '...', totalPages -1, totalPages];
     };
 
     const pages = getPageNumbers();
 
     return (
-        <nav className="flex items-center justify-center gap-2" aria-label="Pagination">
+        <nav className="flex items-center justify-center gap-1 sm:gap-2" aria-label="Pagination">
             <button 
                 onClick={() => onPageChange(currentPage - 1)} 
                 disabled={currentPage === 1} 
@@ -401,7 +388,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
                     <button 
                         key={index} 
                         onClick={() => onPageChange(page)} 
-                        className={`px-4 py-2 text-sm font-semibold rounded-lg border border-slate-700 transition-colors ${
+                        className={`w-10 h-10 text-sm font-semibold rounded-lg border border-slate-700 transition-colors flex items-center justify-center ${
                             currentPage === page 
                             ? 'bg-cyan-500 text-white border-cyan-400' 
                             : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
@@ -411,7 +398,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
                         {page}
                     </button> 
                 ) : ( 
-                    <span key={index} className="px-2 py-2 text-sm text-slate-500" aria-hidden="true">
+                    <span key={index} className="w-10 h-10 flex items-center justify-center text-sm text-slate-500" aria-hidden="true">
                         {page}
                     </span> 
                 )
