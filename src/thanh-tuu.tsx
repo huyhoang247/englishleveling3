@@ -297,7 +297,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           </div>
         </main>
         
-        <div className="mt-6">
+        <div className="mt-6 mb-4">
              <PaginationControls 
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -305,9 +305,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
              />
         </div>
         
-        <footer className="text-center mt-8 text-slate-500 text-sm">
-          <p>Thiết kế bởi Gemini. Chúc bạn học tốt!</p>
-        </footer>
       </div>
     </div>
   );
