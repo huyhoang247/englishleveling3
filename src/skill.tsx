@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// --- ICONS (Sử dụng lại các icon SVG đã tạo) ---
+// --- ICONS (Giữ nguyên) ---
 const FireballIcon = ({ className = '' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12.81 4.62C13.25 3.53 14.65 3.53 15.09 4.62L16.2 7.29C16.34 7.6 16.6 7.86 16.91 8L19.58 9.11C20.67 9.55 20.67 10.95 19.58 11.39L16.91 12.5C16.6 12.64 16.34 12.9 16.2 13.21L15.09 15.88C14.65 16.97 13.25 16.97 12.81 15.88L11.7 13.21C11.56 12.9 11.3 12.64 10.99 12.5L8.32 11.39C7.23 10.95 7.23 9.55 8.32 9.11L10.99 8C11.3 7.86 11.56 7.6 11.7 7.29L12.81 4.62Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -36,7 +36,7 @@ const ShieldIcon = ({ className = '' }: { className?: string }) => (
     </svg>
 );
 
-// --- DỮ LIỆU MẪU ---
+// --- DỮ LIỆU MẪU (Giữ nguyên) ---
 interface Skill {
   id: string;
   name: string;
@@ -49,17 +49,54 @@ const ALL_SKILLS: Skill[] = [
   { id: 'fireball', name: 'Quả Cầu Lửa', description: 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: <FireballIcon className="w-10 h-10 text-orange-400"/>, color: 'orange' },
   { id: 'ice_shard', name: 'Mảnh Băng', description: 'Làm chậm và gây sát thương lên mục tiêu.', icon: <IceShardIcon className="w-10 h-10 text-cyan-400"/>, color: 'cyan' },
   { id: 'heal', name: 'Hồi Máu', description: 'Phục hồi một lượng máu cho bản thân.', icon: <HealIcon className="w-10 h-10 text-green-400"/>, color: 'green' },
-  { id: 'thunder', name: 'Sấm Sét', description: 'Gây sát thương lan lên nhiều kẻ địch.', icon: <ThunderIcon className="w-10 h-10 text-yellow-300"/>, color: 'yellow' },
+  { id: 'thunder', name: 'Sấm Sét', description: 'Gây sát thương lan lên nhiều kẻ địch.', icon: <ThunderIcon className="w-10 h-10 text-yellow-400"/>, color: 'yellow' }, // Thay đổi màu cho nhất quán với ảnh
   { id: 'shield', name: 'Khiên Năng Lượng', description: 'Tạo một lớp khiên chặn sát thương.', icon: <ShieldIcon className="w-10 h-10 text-blue-400"/>, color: 'blue' },
   { id: 'extra1', name: 'Tàng Hình', description: 'Trở nên vô hình trong một khoảng thời gian ngắn.', icon: <svg className="w-10 h-10 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/></svg>, color: 'purple' },
   { id: 'extra2', name: 'Tăng Tốc', description: 'Tăng tốc độ di chuyển và tấn công.', icon: <svg className="w-10 h-10 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>, color: 'pink' },
 ];
 
-// --- CÁC COMPONENT CON ---
+// --- [FIX] TẠO ĐỐI TƯỢNG ÁNH XẠ CHO CÁC CLASS ĐỘNG ---
+const textColorClasses: { [key: string]: string } = {
+  orange: 'text-orange-400',
+  cyan: 'text-cyan-400',
+  green: 'text-green-400',
+  yellow: 'text-yellow-400',
+  blue: 'text-blue-400',
+  purple: 'text-purple-400',
+  pink: 'text-pink-400',
+};
+
+const borderColorClasses: { [key: string]: string } = {
+  orange: 'border-orange-500/50 hover:border-orange-400',
+  cyan: 'border-cyan-500/50 hover:border-cyan-400',
+  green: 'border-green-500/50 hover:border-green-400',
+  yellow: 'border-yellow-500/50 hover:border-yellow-400',
+  blue: 'border-blue-500/50 hover:border-blue-400',
+  purple: 'border-purple-500/50 hover:border-purple-400',
+  pink: 'border-pink-500/50 hover:border-pink-400',
+};
+
+const hoverBgClasses: { [key: string]: string } = {
+    orange: 'hover:bg-orange-900/30',
+    cyan: 'hover:bg-cyan-900/30',
+    green: 'hover:bg-green-900/30',
+    yellow: 'hover:bg-yellow-900/30',
+    blue: 'hover:bg-blue-900/30',
+    purple: 'hover:bg-purple-900/30',
+    pink: 'hover:bg-pink-900/30',
+}
+
+
+// --- CÁC COMPONENT CON (ĐÃ CẬP NHẬT) ---
 
 const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => void }) => {
   const baseClasses = "relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
-  const borderStyle = skill ? `border-${skill.color}-500/50 hover:border-${skill.color}-400` : 'border-dashed border-slate-600 hover:border-slate-400';
+  
+  // [FIX] Sử dụng đối tượng ánh xạ để lấy class viền
+  const borderStyle = skill 
+    ? (borderColorClasses[skill.color] || 'border-slate-500/50') 
+    : 'border-dashed border-slate-600 hover:border-slate-400';
+    
   const backgroundStyle = skill ? 'bg-slate-900/80' : 'bg-slate-900/50';
 
   return (
@@ -84,23 +121,31 @@ const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => voi
 
 const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () => void, isEquipped: boolean }) => {
   const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
-  const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : `cursor-pointer hover:border-${skill.color}-500 hover:bg-slate-800/50`;
+  
+  // [FIX] Sử dụng đối tượng ánh xạ để lấy class màu và viền khi hover
+  const titleColorClass = textColorClasses[skill.color] || 'text-white';
+  const hoverBorderClass = borderColorClasses[skill.color] ? borderColorClasses[skill.color].split(' ')[1] : 'hover:border-slate-500'; // Lấy phần hover
+  const hoverBgClass = hoverBgClasses[skill.color] || 'hover:bg-slate-800/50';
+
+  const interactivity = isEquipped 
+    ? 'opacity-50 cursor-not-allowed' 
+    : `cursor-pointer ${hoverBorderClass} ${hoverBgClass}`;
   
   return (
-    <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={onClick}>
+    <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={isEquipped ? undefined : onClick}>
       {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10"></div>}
       <div className="flex-shrink-0">
         {skill.icon}
       </div>
       <div className="flex-grow">
-        <h3 className={`text-lg font-bold text-${skill.color}-400`}>{skill.name}</h3>
+        <h3 className={`text-lg font-bold ${titleColorClass}`}>{skill.name}</h3>
         <p className="text-xs text-slate-400">{skill.description}</p>
       </div>
     </div>
   );
 };
 
-// --- COMPONENT CHÍNH ---
+// --- COMPONENT CHÍNH (Giữ nguyên logic, chỉ cập nhật tên màu trong data) ---
 export default function SkillEquipScreen() {
   const [equippedSkills, setEquippedSkills] = useState<(Skill | null)[]>([null, null, null]);
   const [message, setMessage] = useState('');
@@ -110,7 +155,6 @@ export default function SkillEquipScreen() {
     setTimeout(() => setMessage(''), 2500);
   };
 
-  // Xử lý khi click vào một skill trong kho để TRANG BỊ
   const handleEquipSkill = (skillToEquip: Skill) => {
     if (equippedSkills.some(s => s?.id === skillToEquip.id)) {
       showMessage("Kỹ năng đã được trang bị.");
@@ -129,23 +173,29 @@ export default function SkillEquipScreen() {
     setEquippedSkills(newEquipped);
   };
 
-  // Xử lý khi click vào một ô đã trang bị để GỠ BỎ
   const handleUnequipSkill = (slotIndex: number) => {
-    if (!equippedSkills[slotIndex]) return; // Không làm gì nếu ô trống
+    if (!equippedSkills[slotIndex]) return;
 
     const newEquipped = [...equippedSkills];
     newEquipped[slotIndex] = null;
     setEquippedSkills(newEquipped);
   };
 
+  // Sửa lỗi onClick cho SkillCard để không trigger khi đã trang bị
+  const handleSkillCardClick = (skill: Skill) => {
+    if (equippedSkills.some(s => s?.id === skill.id)) {
+      // Không làm gì cả nếu đã trang bị
+      return;
+    }
+    handleEquipSkill(skill);
+  };
 
   return (
-    <div className="main-bg w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center font-sans text-white">
+    <div className="main-bg w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center font-sans text-white overflow-hidden">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         .font-sans { font-family: 'Inter', sans-serif; }
         .main-bg::before { content: ''; position: absolute; width: 150%; height: 150%; top: 50%; left: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); z-index: 0; pointer-events: none; }
-        /* Custom scrollbar for webkit browsers */
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(100, 116, 139, 0.5); border-radius: 20px; border: 3px solid transparent; }
@@ -158,7 +208,6 @@ export default function SkillEquipScreen() {
         </div>
       )}
 
-      {/* --- Header --- */}
       <header className="w-full max-w-4xl mx-auto z-10 text-center flex-shrink-0 py-2">
         <h1 className="text-3xl md:text-4xl font-black tracking-wider uppercase">Trang Bị Kỹ Năng</h1>
         <p className="text-slate-400 mt-1">Nhấp vào kỹ năng trong kho để trang bị, nhấp vào ô đã chọn để gỡ bỏ.</p>
@@ -166,7 +215,6 @@ export default function SkillEquipScreen() {
       
       <div className="w-full max-w-4xl mx-auto z-10 flex flex-col items-center gap-6 flex-grow min-h-0 py-4">
         
-        {/* --- KHU VỰC TRANG BỊ (3 Ô) --- */}
         <section className="w-full flex-shrink-0">
             <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
                 {equippedSkills.map((skill, index) => (
@@ -179,15 +227,14 @@ export default function SkillEquipScreen() {
             </div>
         </section>
 
-        {/* --- TÚI ĐỒ / KHO KỸ NĂNG (Scrollable) --- */}
-        <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
+        <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col min-h-0">
             <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0">Kho Kỹ Năng</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2 flex-grow">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
                 {ALL_SKILLS.map(skill => (
                     <SkillCard
                         key={skill.id}
                         skill={skill}
-                        onClick={() => handleEquipSkill(skill)}
+                        onClick={() => handleSkillCardClick(skill)}
                         isEquipped={equippedSkills.some(s => s?.id === skill.id)}
                     />
                 ))}
