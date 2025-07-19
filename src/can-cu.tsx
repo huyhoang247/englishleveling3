@@ -12,8 +12,8 @@ const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" wid
 
 // --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 500;
-const INITIAL_GOLD_STORAGE = 1000;
+const INITIAL_CRYSTALS = 5000;
+const INITIAL_GOLD_STORAGE = 10000;
 
 const ALL_BASES = [
   { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 9, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
