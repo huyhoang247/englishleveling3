@@ -1,3 +1,5 @@
+// --- START OF FILE skill.tsx (2).txt ---
+
 // --- START OF FILE skill.tsx (5).txt ---
 
 import React, { useState } from 'react';
@@ -7,6 +9,7 @@ const FireballIcon = ({ className = '' }: { className?: string }) => ( <svg clas
 const IceShardIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 2L9.13 8.37L2 10.5L7.87 15.63L6.25 22L12 18.5L17.75 22L16.13 15.63L22 10.5L14.87 8.37L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 2V18.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M2 10.5H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M6.25 22L12 11.5L17.75 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M9.13 8.37L2.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M14.87 8.37L21.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
 const HealIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
 const BookIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>);
+const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
 
 // --- DỮ LIỆU & CẤU HÌNH ---
 interface Skill {
@@ -18,9 +21,9 @@ interface Skill {
 }
 
 const colorMap = {
-  orange: { text: 'text-orange-400', border: 'border-orange-500/50 hover:border-orange-400', icon: 'text-orange-400' },
-  cyan:   { text: 'text-cyan-400',   border: 'border-cyan-500/50 hover:border-cyan-400',     icon: 'text-cyan-400' },
-  green:  { text: 'text-green-400',  border: 'border-green-500/50 hover:border-green-400',   icon: 'text-green-400' },
+  orange: { text: 'text-orange-400', border: 'border-orange-500/50 hover:border-orange-400', icon: 'text-orange-400', bg: 'from-orange-900/60 to-slate-900' },
+  cyan:   { text: 'text-cyan-400',   border: 'border-cyan-500/50 hover:border-cyan-400',     icon: 'text-cyan-400',   bg: 'from-cyan-800/70 to-slate-900' },
+  green:  { text: 'text-green-400',  border: 'border-green-500/50 hover:border-green-400',   icon: 'text-green-400',  bg: 'from-green-900/60 to-slate-900' },
 };
 
 const ALL_SKILLS: Skill[] = [
@@ -80,11 +83,70 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
   );
 };
 
+// --- START: MODAL CHI TIẾT KỸ NĂNG MỚI ---
+const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skill, onClose: () => void, onEquip: (skill: Skill) => void, isEquipped: boolean }) => {
+    const colors = colorMap[skill.color];
+    const IconComponent = skill.icon;
+    
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+          
+          <div className={`relative bg-gradient-to-br ${colors.bg} p-5 rounded-xl border-2 ${colors.border} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}>
+            {/* Header */}
+            <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
+              <div className="flex justify-between items-start">
+                <h3 className={`text-2xl font-bold ${colors.text}`}>{skill.name}</h3>
+                <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1">
+                  <CloseIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                <div className="flex flex-col items-center text-center gap-4">
+                    <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${colors.border} shadow-inner`}>
+                        <IconComponent className={`w-20 h-20 ${colors.icon}`} />
+                    </div>
+                    <p className="text-slate-300 text-base leading-relaxed">{skill.description}</p>
+                    {/* Placeholder cho các chỉ số khác */}
+                    <div className="w-full text-left text-sm mt-4 p-4 bg-black/20 rounded-lg border border-slate-700/50">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            <div className="flex justify-between"><span className="text-slate-400">Loại:</span> <span className="font-semibold text-white">Chủ Động</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">Năng lượng:</span> <span className="font-semibold text-white">30</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">Thời gian hồi:</span> <span className="font-semibold text-white">5s</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">Mục tiêu:</span> <span className="font-semibold text-white">Đơn</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
+                <button 
+                  onClick={() => onEquip(skill)} 
+                  disabled={isEquipped}
+                  className={`w-full font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform 
+                    ${isEquipped 
+                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`
+                  }>
+                  {isEquipped ? 'Đã Trang Bị' : 'Trang Bị'}
+                </button>
+            </div>
+          </div>
+        </div>
+    );
+};
+// --- END: MODAL CHI TIẾT KỸ NĂNG MỚI ---
+
 
 // --- COMPONENT CHÍNH ---
 export default function SkillScreen() {
   const [equippedSkills, setEquippedSkills] = useState<(Skill | null)[]>([null, null, null]);
   const [ancientBooks, setAncientBooks] = useState(120);
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   
   // Bắt đầu với 1 kỹ năng để demo
   const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
@@ -113,6 +175,7 @@ export default function SkillScreen() {
     const newEquipped = [...equippedSkills];
     newEquipped[firstEmptySlotIndex] = skillToEquip;
     setEquippedSkills(newEquipped);
+    setSelectedSkill(null); // Đóng modal sau khi trang bị
   };
 
   const handleUnequipSkill = (slotIndex: number) => {
@@ -165,6 +228,15 @@ export default function SkillScreen() {
         </div>
       )}
 
+      {selectedSkill && (
+        <SkillDetailModal 
+          skill={selectedSkill}
+          onClose={() => setSelectedSkill(null)}
+          onEquip={handleEquipSkill}
+          isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)}
+        />
+      )}
+
       <div className="relative z-10 flex flex-col w-full h-screen p-4 sm:p-6 md:p-8">
         
         <header className="w-full max-w-5xl mx-auto text-center flex-shrink-0 pb-2">
@@ -207,13 +279,13 @@ export default function SkillScreen() {
             {/* KHO KỸ NĂNG CỐ ĐỊNH */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2 flex-grow">
                     {ownedSkills.length > 0 ? (
                         ownedSkills.map(skill => (
                             <SkillCard
                                 key={skill.id}
                                 skill={skill}
-                                onClick={() => handleEquipSkill(skill)}
+                                onClick={() => setSelectedSkill(skill)}
                                 isEquipped={equippedSkills.some(s => s?.id === skill.id)}
                             />
                         ))
