@@ -11,26 +11,28 @@ const HealIcon = ({ className = '' }: { className?: string }) => ( <svg classNam
 const BookIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>);
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
 
+// --- START: CÁC HÀM HELPER VỀ ĐỘ HIẾM (TỪ SHOP.TSX) ---
+const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
+const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
+const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-400'; } };
+const getRarityDisplayName = (rarity: string) => { if (!rarity) return 'Unknown Rank'; return `${rarity.toUpperCase()} Rank`; }
+// --- END: CÁC HÀM HELPER VỀ ĐỘ HIẾM ---
+
+
 // --- DỮ LIỆU & CẤU HÌNH ---
 interface Skill {
   id: string;
   name: string;
   description: string;
   icon: (props: { className?: string }) => React.ReactElement;
-  color: string;
+  rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
 }
 
-const colorMap = {
-  orange: { text: 'text-orange-400', border: 'border-orange-500/50 hover:border-orange-400', icon: 'text-orange-400', bg: 'from-orange-900/60 to-slate-900' },
-  cyan:   { text: 'text-cyan-400',   border: 'border-cyan-500/50 hover:border-cyan-400',     icon: 'text-cyan-400',   bg: 'from-cyan-800/70 to-slate-900' },
-  green:  { text: 'text-green-400',  border: 'border-green-500/50 hover:border-green-400',   icon: 'text-green-400',  bg: 'from-green-900/60 to-slate-900' },
-};
-
 const ALL_SKILLS: Skill[] = [
-  { id: 'fireball',    name: 'Quả Cầu Lửa',      description: 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, color: 'orange' },
-  { id: 'ice_shard',   name: 'Mảnh Băng',         description: 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, color: 'cyan' },
-  { id: 'heal',        name: 'Hồi Máu',          description: 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, color: 'green' },
-  // ... thêm các kỹ năng khác
+  { id: 'fireball',    name: 'Quả Cầu Lửa',      description: 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B' },
+  { id: 'ice_shard',   name: 'Mảnh Băng',         description: 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A' },
+  { id: 'heal',        name: 'Hồi Máu',          description: 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, rarity: 'D' },
+  // ... thêm các kỹ năng khác với các cấp độ khác nhau
 ];
 
 const CRAFTING_COST = 50;
@@ -39,7 +41,7 @@ const CRAFTING_COST = 50;
 
 const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => void }) => {
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
-  const borderStyle = skill ? colorMap[skill.color]?.border : 'border-dashed border-slate-600 hover:border-slate-400';
+  const borderStyle = skill ? `${getRarityColor(skill.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
   const backgroundStyle = skill ? 'bg-slate-900/80' : 'bg-slate-900/50';
   const IconComponent = skill?.icon;
 
@@ -48,7 +50,7 @@ const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => voi
       {skill && IconComponent ? (
         <div className="text-center p-2 flex flex-col items-center gap-2">
           <div className="transition-all duration-300 group-hover:scale-110">
-             <IconComponent className={`w-10 h-10 ${colorMap[skill.color]?.icon}`} />
+             <IconComponent className={`w-10 h-10 ${getRarityTextColor(skill.rarity)}`} />
           </div>
           <p className="text-xs sm:text-sm font-bold tracking-wider text-white">{skill.name}</p>
         </div>
@@ -63,7 +65,6 @@ const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => voi
 
 const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () => void, isEquipped: boolean }) => {
   const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
-  const colors = colorMap[skill.color];
   const interactivity = isEquipped 
     ? 'opacity-50 cursor-not-allowed' 
     : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`;
@@ -72,12 +73,15 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
   return (
     <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped ? onClick : undefined}>
       {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đã Trang Bị</div>}
-      <div className="flex-shrink-0">
-        <IconComponent className={`w-10 h-10 ${colors?.icon}`} />
+      <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(skill.rarity)} bg-black/20`}>
+        <IconComponent className={`w-8 h-8 ${getRarityTextColor(skill.rarity)}`} />
       </div>
       <div className="flex-grow">
-        <h3 className={`text-lg font-bold ${colors?.text}`}>{skill.name}</h3>
-        <p className="text-xs text-slate-400">{skill.description}</p>
+        <div className="flex items-center gap-3">
+          <h3 className={`text-lg font-bold ${getRarityTextColor(skill.rarity)}`}>{skill.name}</h3>
+          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skill.rarity)} ${getRarityTextColor(skill.rarity)}`}>{skill.rarity}</span>
+        </div>
+        <p className="text-xs text-slate-400 mt-1">{skill.description}</p>
       </div>
     </div>
   );
@@ -85,32 +89,33 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
 
 // --- START: MODAL CHI TIẾT KỸ NĂNG MỚI ---
 const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skill, onClose: () => void, onEquip: (skill: Skill) => void, isEquipped: boolean }) => {
-    const colors = colorMap[skill.color];
     const IconComponent = skill.icon;
     
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
           
-          <div className={`relative bg-gradient-to-br ${colors.bg} p-5 rounded-xl border-2 ${colors.border} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}>
+          <div className={`relative bg-gradient-to-br ${getRarityGradient(skill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(skill.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}>
             {/* Header */}
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
-              <div className="flex justify-between items-start">
-                <h3 className={`text-2xl font-bold ${colors.text}`}>{skill.name}</h3>
+              <div className="flex justify-between items-start mb-2">
+                <h3 className={`text-2xl font-bold ${getRarityTextColor(skill.rarity)}`}>{skill.name}</h3>
                 <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1">
                   <CloseIcon className="w-5 h-5" />
                 </button>
               </div>
+               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(skill.rarity)} bg-gray-800/70 border ${getRarityColor(skill.rarity)} capitalize`}>
+                {getRarityDisplayName(skill.rarity)}
+              </span>
             </div>
 
             {/* Body */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 <div className="flex flex-col items-center text-center gap-4">
-                    <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${colors.border} shadow-inner`}>
-                        <IconComponent className={`w-20 h-20 ${colors.icon}`} />
+                    <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}>
+                        <IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} />
                     </div>
                     <p className="text-slate-300 text-base leading-relaxed">{skill.description}</p>
-                    {/* Placeholder cho các chỉ số khác */}
                     <div className="w-full text-left text-sm mt-4 p-4 bg-black/20 rounded-lg border border-slate-700/50">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                             <div className="flex justify-between"><span className="text-slate-400">Loại:</span> <span className="font-semibold text-white">Chủ Động</span></div>
@@ -202,7 +207,7 @@ export default function SkillScreen() {
     setOwnedSkills(prev => [...prev, newSkill].sort((a, b) => a.id.localeCompare(b.id))); // Sắp xếp lại cho nhất quán
     setCraftableSkills(prev => prev.filter(s => s.id !== newSkill.id));
     
-    showMessage(`Chế tạo thành công: ${newSkill.name}!`);
+    showMessage(`Chế tạo thành công: ${newSkill.name} (Rank ${newSkill.rarity})!`);
   };
 
   return (
