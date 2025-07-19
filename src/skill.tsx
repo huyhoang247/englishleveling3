@@ -258,18 +258,20 @@ export default function SkillScreen() {
                     {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} skill={skill} onClick={() => handleUnequipSkill(index)} />))}
                 </div>
             </section>
+            {/* --- START: ĐÃ CHỈNH SỬA --- */}
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <BookIcon className="w-8 h-8 text-yellow-300" />
                     <div className="text-left">
-                        <span className="text-xs text-slate-400">Sách Cổ</span>
                         <p className="text-xl font-bold text-white">{ancientBooks}</p>
+                        <span className="text-xs text-slate-400 -mt-1 block">Sách Cổ (Cần {CRAFTING_COST})</span>
                     </div>
                 </div>
                 <button onClick={handleTrainAndCraft} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
-                  Train ({CRAFTING_COST})
+                  Train
                 </button>
             </section>
+            {/* --- END: ĐÃ CHỈNH SỬA --- */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
