@@ -26,7 +26,8 @@ const ALL_BASES = [
 ];
 
 // --- CÁC COMPONENT GIAO DIỆN PHỤ ---
-const StyledProgressBar = ({ current, max, colorGradient, shadowColor }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans"><span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span></div></div></div> ); };
+// THAY ĐỔI: Thêm prop `label` để tùy chỉnh nội dung text trên progress bar
+const StyledProgressBar = ({ current, max, colorGradient, shadowColor, label }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans">{label ? label : <span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span>}</div></div></div> ); };
 const ResourceDisplay = ({ icon, value, colorClass }) => ( <div className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border ${colorClass}`}>{icon}<span className="font-bold text-lg text-white tracking-wider">{Math.floor(value).toLocaleString()}</span></div> );
 
 const GameHeader = ({ gold, crystals }) => (
@@ -123,9 +124,20 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
                 <StarIcon key={i} className={`w-7 h-7 transition-all duration-300 ${i < level ? 'text-yellow-400 fill-yellow-500/80' : 'text-slate-600'}`} />
               ))}
             </div>
-            <div className="bg-black/30 p-3 rounded-lg text-center">
-              <p className="font-sans text-lg text-slate-300">Level <span className="font-bold text-2xl text-white">{level}</span></p>
-              <p className="font-sans text-sm text-green-400">+{(goldPerSecond * level).toFixed(1)} Gold/s from this base</p>
+            {/* THAY ĐỔI: Thay thế Text Level bằng Progress Bar */}
+            <div className="bg-black/30 p-4 rounded-lg space-y-2">
+                <StyledProgressBar
+                    current={level}
+                    max={MAX_LEVEL_PER_BASE}
+                    colorGradient="bg-gradient-to-r from-cyan-500 to-blue-600"
+                    shadowColor="rgba(34, 211, 238, 0.5)"
+                    label={
+                        <span className="text-base tracking-wide">
+                            Level <span className="font-black">{level}</span> / {MAX_LEVEL_PER_BASE}
+                        </span>
+                    }
+                />
+                <p className="font-sans text-sm text-green-400 text-center pt-1">+{(goldPerSecond * level).toFixed(1)} Gold/s from this base</p>
             </div>
         </div>
         <div className="mt-6">
@@ -223,7 +235,6 @@ export default function App() {
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 md:p-6 pt-20">
         
-        {/* THAY ĐỔI: Container cho Stage và nút Port */}
         <div className="w-full max-w-sm flex justify-between items-center mb-6 animate-fade-in">
           <h2 className="text-2xl font-lilita text-white text-shadow">Stage {currentStage}</h2>
           <button
