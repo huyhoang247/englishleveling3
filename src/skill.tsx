@@ -1,4 +1,4 @@
-// --- START OF FILE skill.tsx (5).txt ---
+// --- START OF FILE skill.tsx (6).txt ---
 
 import React, { useState } from 'react';
 
@@ -27,7 +27,6 @@ const ALL_SKILLS: Skill[] = [
   { id: 'fireball',    name: 'Quả Cầu Lửa',      description: 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, color: 'orange' },
   { id: 'ice_shard',   name: 'Mảnh Băng',         description: 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, color: 'cyan' },
   { id: 'heal',        name: 'Hồi Máu',          description: 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, color: 'green' },
-  // ... thêm các kỹ năng khác
 ];
 
 const CRAFTING_COST = 50;
@@ -58,8 +57,9 @@ const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => voi
   );
 };
 
+// *** UPDATED *** SkillCard được thiết kế lại để nhỏ gọn hơn
 const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () => void, isEquipped: boolean }) => {
-  const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
+  const baseClasses = "relative p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition-all duration-200 text-center";
   const colors = colorMap[skill.color];
   const interactivity = isEquipped 
     ? 'opacity-50 cursor-not-allowed' 
@@ -69,12 +69,10 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
   return (
     <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped ? onClick : undefined}>
       {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đã Trang Bị</div>}
-      <div className="flex-shrink-0">
-        <IconComponent className={`w-10 h-10 ${colors?.icon}`} />
-      </div>
+      <IconComponent className={`w-10 h-10 ${colors?.icon}`} />
       <div className="flex-grow">
-        <h3 className={`text-lg font-bold ${colors?.text}`}>{skill.name}</h3>
-        <p className="text-xs text-slate-400">{skill.description}</p>
+        <h3 className={`font-bold ${colors?.text}`}>{skill.name}</h3>
+        <p className="text-xs text-slate-400 mt-1">{skill.description}</p>
       </div>
     </div>
   );
@@ -84,12 +82,10 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
 // --- COMPONENT CHÍNH ---
 export default function SkillScreen() {
   const [equippedSkills, setEquippedSkills] = useState<(Skill | null)[]>([null, null, null]);
-  const [ancientBooks, setAncientBooks] = useState(120);
+  const [ancientBooks, setAncientBooks] = useState(70);
   
-  // Bắt đầu với 1 kỹ năng để demo
-  const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
-  // Kỹ năng còn lại có thể chế tạo
-  const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(1));
+  const [ownedSkills, setOwnedSkills] = useState<Skill[]>(ALL_SKILLS.slice(0, 2));
+  const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(2));
 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
@@ -136,7 +132,7 @@ export default function SkillScreen() {
     const newSkill = craftableSkills[randomIndex];
 
     setAncientBooks(prev => prev - CRAFTING_COST);
-    setOwnedSkills(prev => [...prev, newSkill].sort((a, b) => a.id.localeCompare(b.id))); // Sắp xếp lại cho nhất quán
+    setOwnedSkills(prev => [...prev, newSkill].sort((a, b) => a.id.localeCompare(b.id)));
     setCraftableSkills(prev => prev.filter(s => s.id !== newSkill.id));
     
     showMessage(`Chế tạo thành công: ${newSkill.name}!`);
@@ -167,13 +163,13 @@ export default function SkillScreen() {
 
       <div className="relative z-10 flex flex-col w-full h-screen p-4 sm:p-6 md:p-8">
         
-        <header className="w-full max-w-5xl mx-auto text-center flex-shrink-0 pb-2">
+        {/* Header bị ẩn để giống với ảnh chụp màn hình */}
+        {/* <header className="w-full max-w-5xl mx-auto text-center flex-shrink-0 pb-2">
           <h1 className="text-3xl md:text-4xl font-black tracking-wider uppercase title-glow">QUẢN LÝ KỸ NĂNG</h1>
-        </header>
+        </header> */}
 
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4">
 
-            {/* KHU VỰC TRANG BỊ */}
             <section className="flex-shrink-0 py-4">
                 <p className="text-slate-400 text-center mb-3 text-sm md:text-base">Kỹ năng đang trang bị. Nhấp để gỡ bỏ.</p>
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
@@ -187,7 +183,6 @@ export default function SkillScreen() {
                 </div>
             </section>
 
-            {/* KHU VỰC CHẾ TẠO & TÀI NGUYÊN */}
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <BookIcon className="w-8 h-8 text-yellow-300" />
@@ -204,10 +199,10 @@ export default function SkillScreen() {
                 </button>
             </section>
 
-            {/* KHO KỸ NĂNG CỐ ĐỊNH */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2 flex-grow">
+                {/* *** UPDATED *** Lưới kỹ năng thông minh, co giãn */}
+                <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(160px,1fr))] overflow-y-auto custom-scrollbar pr-2 flex-grow">
                     {ownedSkills.length > 0 ? (
                         ownedSkills.map(skill => (
                             <SkillCard
@@ -229,4 +224,4 @@ export default function SkillScreen() {
     </div>
   );
 }
-// --- END OF FILE skill.tsx (5).txt ---
+// --- END OF FILE skill.tsx (6).txt ---
