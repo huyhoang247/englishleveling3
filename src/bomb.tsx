@@ -1,6 +1,6 @@
-// --- START OF FILE bomb.tsx ---
+// --- START OF FILE bomb.tsx (5).txt ---
 
-import React, { useState, memo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
@@ -32,7 +32,7 @@ const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
 const MAX_PICKAXES = 50;
-const OPEN_CELL_DELAY = 400;
+const OPEN_CELL_DELAY = 400; // Thời gian delay khi mở ô (ms)
 
 // --- CSS CHO HIỆU ỨNG RUNG Ô VÀ CÁC HIỆU ỨNG KHÁC ---
 const CustomAnimationStyles = () => (
@@ -47,7 +47,7 @@ const CustomAnimationStyles = () => (
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-3px); }
       50% { transform: translateX(3px); }
-      75% { translateX(-3px); }
+      75% { transform: translateX(-3px); }
     }
     .cell-shake {
       animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
@@ -59,10 +59,10 @@ const CustomAnimationStyles = () => (
 const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
     const isCollectableCoin = isRevealed && isCoin && !isCollected;
-    const cellStyle = {
-        base: 'w-full h-full rounded-lg transition-all duration-200 relative',
-        hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent',
-        revealed: 'bg-slate-800/80 cursor-default border border-slate-700',
+    const cellStyle = { 
+        base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
+        hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
+        revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
         exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
         collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer'
     };
@@ -74,66 +74,61 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
 
     if (isFlagged) {
         content = <div className={wrapperClass}><FlagIcon className={`${iconClass} text-red-500`} /></div>;
-    }
+    } 
     else if (isRevealed) {
         specificCellStyle = cellStyle.revealed;
         if(isCollectableCoin) specificCellStyle += ` ${cellStyle.collectableCoin}`;
-        let iconContent = null;
+        let iconContent = null; 
         let finalWrapperClass = wrapperClass;
 
         if (isMineRandom) {
             iconContent = <BombIcon className={imageIconClass} />;
         } else if (isExit) {
             iconContent = <StairsIcon className={imageIconClass} />;
-            specificCellStyle = cellStyle.exitRevealed;
+            specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCollectableCoin) {
             finalWrapperClass = "w-[60%] h-[60%]";
             iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
         }
         content = ( <div className={finalWrapperClass}> {iconContent} </div> );
     }
-
-    return (
-      <div
-        className={`${cellStyle.base} ${isRevealed ? specificCellStyle : cellStyle.hidden} ${isAnimating ? 'cell-shake' : ''}`}
-        onClick={() => onCellClick(cellData.x, cellData.y)}
+    
+    return ( 
+      <div 
+        className={`${cellStyle.base} ${isRevealed ? specificCellStyle : cellStyle.hidden} ${isAnimating ? 'cell-shake' : ''}`} 
+        onClick={() => onCellClick(cellData.x, cellData.y)} 
         onContextMenu={(e) => onRightClick(e, cellData.x, cellData.y)}
       >
         <div className="absolute inset-0 flex items-center justify-center"> {content} </div>
-      </div>
+      </div> 
     );
 });
 
-// GIẢI PHÁP: Thay đổi Props để nhận một callback `onClose` duy nhất với dữ liệu tổng kết
+// THAY ĐỔI: Cập nhật props interface
 interface MinerChallengeProps {
-  onClose: (result: {
+  onClose: () => void;
+  initialDisplayedCoins: number;
+  masteryCards: number;
+  initialPickaxes: number;
+  initialHighestFloor: number;
+  onGameEnd: (result: {
     finalPickaxes: number;
     coinsEarned: number;
     highestFloorCompleted: number;
   }) => void;
-  displayedCoins: number;
-  masteryCards: number;
-  initialPickaxes: number;
-  initialHighestFloor: number;
 }
 
-export default function MinerChallenge({
-  onClose,
-  displayedCoins,
-  masteryCards,
-  initialPickaxes,
-  initialHighestFloor,
-}: MinerChallengeProps) {
+export default function App({ onClose, initialDisplayedCoins, masteryCards, initialPickaxes, initialHighestFloor, onGameEnd }: MinerChallengeProps) {
   const createBoard = () => {
     const newBoard = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
-    const placeItem = (itemType) => {
-        let placed = false;
-        while(!placed) {
-            const x = Math.floor(Math.random() * BOARD_SIZE);
-            const y = Math.floor(Math.random() * BOARD_SIZE);
-            const cell = newBoard[y][x];
-            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; }
-        }
+    const placeItem = (itemType) => { 
+        let placed = false; 
+        while(!placed) { 
+            const x = Math.floor(Math.random() * BOARD_SIZE); 
+            const y = Math.floor(Math.random() * BOARD_SIZE); 
+            const cell = newBoard[y][x]; 
+            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; } 
+        } 
     };
     for (let i = 0; i < NUM_RANDOM_BOMBS; i++) placeItem('isMineRandom');
     for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
@@ -141,21 +136,19 @@ export default function MinerChallenge({
     return newBoard;
   };
 
+  // THAY ĐỔI: Quản lý State cục bộ cho phiên chơi
   const [currentFloor, setCurrentFloor] = useState(initialHighestFloor > 0 ? initialHighestFloor + 1 : 1);
-  const [highestFloorCompleted, setHighestFloorCompleted] = useState(initialHighestFloor);
   const [board, setBoard] = useState(() => createBoard());
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
-
-  // GIẢI PHÁP: Quản lý state cục bộ, không gọi prop ra ngoài liên tục nữa
+  
+  // State cục bộ, không còn phụ thuộc vào props để cập nhật liên tục
   const [pickaxes, setPickaxes] = useState(initialPickaxes);
-  const [coinsEarned, setCoinsEarned] = useState(0); // Chỉ theo dõi tiền kiếm được trong phiên này
-  const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(displayedCoins);
+  const [coinsEarnedThisSession, setCoinsEarnedThisSession] = useState(0); // Chỉ theo dõi vàng kiếm được trong session này
+  const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(initialDisplayedCoins);
+  const [highestFloorCompletedThisSession, setHighestFloorCompletedThisSession] = useState(initialHighestFloor);
 
   const [isOpening, setIsOpening] = useState<{ x: number, y: number } | null>(null);
-
-  // GIẢI PHÁP: Ref để theo dõi trạng thái đã lưu khi unmount hay chưa
-  const savedOnExit = useRef(false);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -172,11 +165,15 @@ export default function MinerChallenge({
       }
     }, 30);
   }, []);
-
+  
+  const updateCell = (x, y, newProps) => {
+    setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
+  };
+  
   const collectAllVisibleCoins = useCallback(() => {
       const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
       let totalReward = 0;
-      const newBoard = board.map(row =>
+      const newBoard = board.map(row => 
           row.map(cell => {
               if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
                   totalReward += rewardPerCoin;
@@ -186,16 +183,13 @@ export default function MinerChallenge({
           })
       );
       if(totalReward > 0) {
+          const newTotalCoinsEarned = coinsEarnedThisSession + totalReward;
           setBoard(newBoard);
-          setCoinsEarned(prev => prev + totalReward); // Cập nhật state nội bộ
-          // Animate số coin hiển thị bằng cách cộng vào số coin đã có
-          startCoinCountAnimation(animatedDisplayedCoins, animatedDisplayedCoins + totalReward);
+          setCoinsEarnedThisSession(newTotalCoinsEarned); // Cập nhật state vàng kiếm được
+          // Cập nhật số vàng hiển thị trên màn hình
+          startCoinCountAnimation(animatedDisplayedCoins, initialDisplayedCoins + newTotalCoinsEarned);
       }
-  }, [board, masteryCards, currentFloor, animatedDisplayedCoins, startCoinCountAnimation]);
-
-  const updateCell = (x, y, newProps) => {
-    setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
-  };
+  }, [board, masteryCards, currentFloor, coinsEarnedThisSession, animatedDisplayedCoins, initialDisplayedCoins, startCoinCountAnimation]);
 
   const processCellOpening = (x: number, y: number) => {
     const cell = board[y][x];
@@ -203,10 +197,10 @@ export default function MinerChallenge({
 
     if (!cell.isRevealed) {
       if (pickaxes <= 0) return;
-      // GIẢI PHÁP: Chỉ cập nhật state cục bộ, không gọi prop ra ngoài
+      // THAY ĐỔI: Chỉ cập nhật state cục bộ, không gọi ra ngoài
       setPickaxes(prev => prev - 1);
     }
-
+    
     if (cell.isMineRandom) {
       const newBoard = JSON.parse(JSON.stringify(board));
       const explosionsQueue = [{ x, y }];
@@ -256,7 +250,8 @@ export default function MinerChallenge({
         processCellOpening(x, y);
         setIsOpening(null);
     }, OPEN_CELL_DELAY);
-  }, [board, collectAllVisibleCoins, pickaxes, isOpening, processCellOpening]);
+
+  }, [board, collectAllVisibleCoins, pickaxes, isOpening]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
@@ -271,57 +266,64 @@ export default function MinerChallenge({
         setFlagsPlaced(prev => prev - 1);
     }
   }, [board, flagsPlaced, isOpening]);
-
+  
   const goToNextFloor = () => {
-    // GIẢI PHÁP: Cập nhật tầng cao nhất đã hoàn thành trong state cục bộ
-    setHighestFloorCompleted(currentFloor);
-
+    // THAY ĐỔI: Cập nhật tầng cao nhất đã hoàn thành CỤC BỘ
+    setHighestFloorCompletedThisSession(prev => Math.max(prev, currentFloor));
     setCurrentFloor(prev => prev + 1);
     setBoard(createBoard());
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
   };
-
-  // GIẢI PHÁP: Hàm duy nhất để đóng và lưu game
-  const handleCloseAndSave = useCallback(() => {
-    if (savedOnExit.current) return; // Đảm bảo chỉ lưu một lần
-
-    // Tự động thu thập tiền còn lại trên bàn cờ khi thoát
+  
+  // THAY ĐỔI: Hàm xử lý khi đóng game, tổng hợp dữ liệu và gọi onGameEnd
+  const handleClose = () => {
     let uncollectedReward = 0;
     const rewardPerCoinOnCurrentFloor = Math.max(1, masteryCards) * currentFloor;
+
     board.flat().forEach(cell => {
       if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
         uncollectedReward += rewardPerCoinOnCurrentFloor;
       }
     });
+    
+    const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
 
-    const totalCoinsToUpdate = coinsEarned + uncollectedReward;
-
-    // Gửi gói dữ liệu tổng kết về cho component cha
-    onClose({
-        finalPickaxes: pickaxes,
-        coinsEarned: totalCoinsToUpdate,
-        highestFloorCompleted: highestFloorCompleted,
+    // Gửi gói dữ liệu cuối cùng về cho component cha
+    onGameEnd({
+      finalPickaxes: pickaxes,
+      coinsEarned: totalCoinsEarned,
+      // Tính tầng cao nhất đã hoàn thành trong phiên này
+      highestFloorCompleted: highestFloorCompletedThisSession
     });
-    savedOnExit.current = true;
-  }, [board, pickaxes, coinsEarned, highestFloorCompleted, masteryCards, currentFloor, onClose]);
 
-  // GIẢI PHÁP: Đảm bảo dữ liệu được lưu ngay cả khi component bị unmount đột ngột
-  useEffect(() => {
-      return () => {
-          handleCloseAndSave();
-      }
-  }, [handleCloseAndSave]);
+    onClose(); // Gọi hàm đóng giao diện game
+  };
+
+  const resetGame = () => {
+    // Logic reset này cần xem xét lại. Hiện tại nó chỉ reset cục bộ.
+    // Nếu muốn reset thực sự (ghi về DB), cần gọi onGameEnd với giá trị mặc định.
+    setCurrentFloor(1);
+    setFlagsPlaced(0);
+    setBoard(createBoard());
+    setExitConfirmationPos(null);
+    setPickaxes(MAX_PICKAXES);
+    setCoinsEarnedThisSession(0); // Reset vàng kiếm được
+    setAnimatedDisplayedCoins(initialDisplayedCoins); // Reset vàng hiển thị
+    // Không gọi onGameEnd ở đây trừ khi bạn muốn lưu trạng thái reset này vào DB
+  };
 
   const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
 
   return (
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
       <CustomAnimationStyles />
+      
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
-              onClick={handleCloseAndSave} // GIẢI PHÁP: Gọi hàm lưu và đóng
+              // THAY ĐỔI: Gọi hàm handleClose đã được sửa đổi
+              onClick={handleClose}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
               aria-label="Home"
               title="Home"
@@ -330,11 +332,13 @@ export default function MinerChallenge({
               <span className="hidden sm:inline text-sm font-semibold text-slate-300">Home</span>
           </button>
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* THAY ĐỔI: Hiển thị tổng số vàng động */}
             <CoinDisplay displayedCoins={animatedDisplayedCoins} isStatsFullscreen={false} />
             <MasteryDisplay masteryCount={masteryCards} />
           </div>
         </div>
       </header>
+      
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
@@ -372,19 +376,19 @@ export default function MinerChallenge({
 
         <div className="relative">
           <div className="w-full aspect-square">
-            <div
-              className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700"
-              style={{
-                gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`,
+            <div 
+              className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" 
+              style={{ 
+                gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, 
                 gap: '6px',
-                pointerEvents: isOpening ? 'none' : 'auto'
+                pointerEvents: isOpening ? 'none' : 'auto' 
               }}
             >
               {board.flat().map((cell) => (
-                <Cell
-                  key={`${cell.y}-${cell.x}`}
-                  cellData={cell}
-                  onCellClick={handleCellClick}
+                <Cell 
+                  key={`${cell.y}-${cell.x}`} 
+                  cellData={cell} 
+                  onCellClick={handleCellClick} 
                   onRightClick={handleRightClick}
                   isAnimating={isOpening?.x === cell.x && isOpening?.y === cell.y}
                 />
