@@ -135,6 +135,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isUpgradeScreenOpen, setIsUpgradeScreenOpen] = useState(false);
 
+  // States for data syncing and rate limiting UI
+  const [isSyncingData, setIsSyncingData] = useState(false);
+  const [showRateLimitToast, setShowRateLimitToast] = useState(false);
+
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
 
@@ -152,6 +156,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       window.removeEventListener('resize', setAppHeight);
     };
   }, []);
+
+  // Effect to hide the "too fast" toast after a delay
+  useEffect(() => {
+    if (showRateLimitToast) {
+      const timer = setTimeout(() => {
+        setShowRateLimitToast(false);
+      }, 2500); // Hide after 2.5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showRateLimitToast]);
 
   const fetchVocabularyData = async (userId: string) => {
     try {
@@ -266,13 +280,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
 
     const userDocRef = doc(db, 'users', userId);
-
     console.log("Ending Miner Challenge session. Updating Firestore with:", result);
 
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) {
         console.log("No changes to update from Miner Challenge.");
         return;
     }
+
+    setIsSyncingData(true);
 
     try {
       await runTransaction(db, async (transaction) => {
@@ -308,6 +323,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     } catch (error) {
       console.error("Firestore Transaction failed for Miner Challenge end: ", error);
+    } finally {
+      setIsSyncingData(false);
     }
   };
 
@@ -365,6 +382,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
     const userDocRef = doc(db, 'users', userId);
 
+    setIsSyncingData(true);
+
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
@@ -396,6 +415,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.error("Giao dịch Firestore cho việc nâng cấp chỉ số thất bại: ", error);
       // Ném lại lỗi để khối `catch` của component con có thể thực thi và khôi phục UI.
       throw error;
+    } finally {
+      setIsSyncingData(false);
     }
   };
 
@@ -447,22 +468,35 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (!userId) { console.error("Cannot claim reward: User not authenticated."); throw new Error("User not authenticated"); }
     const userDocRef = doc(db, 'users', userId);
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-    await runTransaction(db, async (transaction) => {
-      const userDoc = await transaction.get(userDocRef);
-      if (!userDoc.exists()) { throw "User document does not exist!"; }
-      const currentCoins = userDoc.data().coins || 0; const currentCards = userDoc.data().masteryCards || 0;
-      const newCoins = currentCoins + reward.gold; const newCards = currentCards + reward.masteryCards;
-      transaction.update(userDocRef, { coins: newCoins, masteryCards: newCards });
-      transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
-    });
-    console.log("Reward claimed and achievements updated successfully in a single transaction.");
-    setCoins(prev => prev + reward.gold); setMasteryCards(prev => prev + reward.masteryCards);
-    setVocabularyData(updatedVocabulary);
+    
+    setIsSyncingData(true);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const userDoc = await transaction.get(userDocRef);
+            if (!userDoc.exists()) { throw "User document does not exist!"; }
+            const currentCoins = userDoc.data().coins || 0; const currentCards = userDoc.data().masteryCards || 0;
+            const newCoins = currentCoins + reward.gold; const newCards = currentCards + reward.masteryCards;
+            transaction.update(userDocRef, { coins: newCoins, masteryCards: newCards });
+            transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
+        });
+        console.log("Reward claimed and achievements updated successfully in a single transaction.");
+        setCoins(prev => prev + reward.gold); setMasteryCards(prev => prev + reward.masteryCards);
+        setVocabularyData(updatedVocabulary);
+    } catch (error) {
+        console.error("Transaction for claiming reward failed:", error);
+    } finally {
+        setIsSyncingData(false);
+    }
   };
 
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
     return () => {
         if (isLoading) return;
+        if (isSyncingData) {
+            setShowRateLimitToast(true);
+            return;
+        }
         setter(prev => {
             const newState = !prev;
             if (newState) {
@@ -537,6 +571,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <CoinDisplay displayedCoins={displayedCoins} />
                 </div>
             </div>
+
+            {/* --- Thanh thông báo "Thao tác quá nhanh" --- */}
+            <div className={`absolute top-14 left-1/2 -translate-x-1/2 z-40 transform transition-all duration-300 ${showRateLimitToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5 pointer-events-none'}`}>
+                <div className="bg-yellow-500/80 backdrop-blur-sm text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg border border-yellow-300/50">
+                    Bạn thao tác quá nhanh, vui lòng chờ...
+                </div>
+            </div>
+
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
                  { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
