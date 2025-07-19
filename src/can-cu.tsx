@@ -222,8 +222,10 @@ export default function App() {
       <GameHeader gold={gold} crystals={crystals} />
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 md:p-6 pt-20">
-        <div className="absolute top-0 right-4 md:right-6 mt-[88px] z-20">
-          {/* THAY ĐỔI: Nút Port đã được cập nhật */}
+        
+        {/* THAY ĐỔI: Container cho Stage và nút Port */}
+        <div className="w-full max-w-sm flex justify-between items-center mb-6 animate-fade-in">
+          <h2 className="text-2xl font-lilita text-white text-shadow">Stage {currentStage}</h2>
           <button
             onClick={() => setIsPortOpen(true)}
             className="btn-shine relative overflow-hidden bg-slate-800/90 backdrop-blur-md text-white font-lilita tracking-wider px-6 py-2 rounded-lg shadow-lg shadow-black/20 hover:bg-slate-700 transition-all duration-300 border border-slate-600/80 hover:scale-105 active:scale-100"
@@ -231,8 +233,6 @@ export default function App() {
             Port
           </button>
         </div>
-        
-        <h2 className="text-4xl font-lilita text-white text-shadow mb-8 animate-fade-in">Stage {currentStage}</h2>
 
         <div className="w-full flex items-center justify-center">
             <FocusBaseCard
