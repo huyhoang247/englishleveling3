@@ -12,11 +12,11 @@ const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" wid
 
 // --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 500;
-const INITIAL_GOLD_STORAGE = 1000;
+const INITIAL_CRYSTALS = 5000;
+const INITIAL_GOLD_STORAGE = 10000;
 
 const ALL_BASES = [
-  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
+  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 9, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
   { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250, imageUrl: 'https://placehold.co/400x300/a16207/ffffff?text=Lean-to' },
   { id: 2, name: "Wooden Palisade", stage: 1, goldPerSecond: 1.1, baseUpgradeCost: 150, unlockCost: 700, imageUrl: 'https://placehold.co/400x300/78350f/ffffff?text=Palisade' },
   { id: 3, name: "Watchtower", stage: 1, goldPerSecond: 2.5, baseUpgradeCost: 400, unlockCost: 1800, imageUrl: 'https://placehold.co/400x300/654321/ffffff?text=Watchtower' },
