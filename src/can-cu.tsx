@@ -13,8 +13,8 @@ const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" wid
 
 // --- CẤU HÌNH GAME (Không thay đổi) ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 500;
-const INITIAL_GOLD_STORAGE = 1000;
+const INITIAL_CRYSTALS = 5000;
+const INITIAL_GOLD_STORAGE = 10000;
 const ALL_BASES = [
   { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0 },
   { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250 },
