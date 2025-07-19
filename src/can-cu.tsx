@@ -12,11 +12,11 @@ const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" wid
 
 // --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 5000;
-const INITIAL_GOLD_STORAGE = 10000;
+const INITIAL_CRYSTALS = 500;
+const INITIAL_GOLD_STORAGE = 1000;
 
 const ALL_BASES = [
-  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 9, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
+  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
   { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250, imageUrl: 'https://placehold.co/400x300/a16207/ffffff?text=Lean-to' },
   { id: 2, name: "Wooden Palisade", stage: 1, goldPerSecond: 1.1, baseUpgradeCost: 150, unlockCost: 700, imageUrl: 'https://placehold.co/400x300/78350f/ffffff?text=Palisade' },
   { id: 3, name: "Watchtower", stage: 1, goldPerSecond: 2.5, baseUpgradeCost: 400, unlockCost: 1800, imageUrl: 'https://placehold.co/400x300/654321/ffffff?text=Watchtower' },
@@ -28,10 +28,38 @@ const ALL_BASES = [
 // --- CÁC COMPONENT GIAO DIỆN PHỤ ---
 const StyledProgressBar = ({ current, max, colorGradient, shadowColor }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans"><span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span></div></div></div> ); };
 const ResourceDisplay = ({ icon, value, colorClass }) => ( <div className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border ${colorClass}`}>{icon}<span className="font-bold text-lg text-white tracking-wider">{Math.floor(value).toLocaleString()}</span></div> );
-const GameHeader = ({ gold, crystals }) => ( <header className="fixed top-0 left-0 w-full z-30 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20"><div className="max-w-6xl mx-auto flex justify-between items-center"><h1 className="text-3xl font-lilita text-yellow-300 text-shadow tracking-wider">BASE BUILDER</h1><div className="flex items-center gap-4"><ResourceDisplay icon={<CoinsIcon className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />} value={gold} colorClass="border-yellow-500/30" /><ResourceDisplay icon={<GemIcon className="w-6 h-6 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />} value={crystals} colorClass="border-cyan-500/30" /></div></div></header> );
+
+// THAY ĐỔI: Header nhận `onPortClick` và không còn `h1`
+const GameHeader = ({ gold, crystals, onPortClick }) => (
+  <header className="fixed top-0 left-0 w-full z-30 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
+    <div className="max-w-6xl mx-auto flex justify-end items-center">
+      <div className="flex items-center gap-3">
+        <ResourceDisplay 
+            icon={<CoinsIcon className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />}
+            value={gold}
+            colorClass="border-yellow-500/30"
+        />
+        <ResourceDisplay 
+            icon={<GemIcon className="w-6 h-6 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />}
+            value={crystals}
+            colorClass="border-cyan-500/30"
+        />
+        {/* THAY ĐỔI: Nút Port nhỏ gọn đã được thêm vào đây */}
+        <button
+          onClick={onPortClick}
+          className="flex items-center justify-center w-12 h-12 bg-indigo-600/80 rounded-full border border-indigo-500/80 hover:bg-indigo-600 transition-all active:scale-95"
+          aria-label="Open Port"
+        >
+          <WarehouseIcon className="w-6 h-6 text-white" />
+        </button>
+      </div>
+    </div>
+  </header>
+);
+
 const PortModal = ({ isOpen, onClose, goldInPort, goldStorage, goldPerSecond, onClaim, onUpgradeStorage, upgradeStorageCost, crystals }) => { if (!isOpen) return null; const canAffordUpgrade = crystals >= upgradeStorageCost; return ( <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}><div className="relative w-full max-w-md bg-slate-900/80 border border-slate-600 rounded-2xl shadow-2xl shadow-black/40 animate-fade-in-scale-fast text-white font-lilita m-4" onClick={(e) => e.stopPropagation()}><button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button><div className="p-6"><div className="flex items-center gap-3 mb-6"><WarehouseIcon className="w-10 h-10 text-indigo-400 drop-shadow-[0_2px_4px_rgba(129,140,248,0.4)]" /><h2 className="text-4xl text-white text-shadow tracking-wider">PORT</h2></div><div className="space-y-5 font-sans"><p className="text-slate-300 mb-1 text-sm">Mining Rate: <span className="text-xl font-bold text-green-400 text-shadow-sm">{goldPerSecond.toFixed(1)} Gold/s</span></p><div><p className="text-slate-300 mb-2 text-sm">Gold Storage</p><StyledProgressBar current={goldInPort} max={goldStorage} colorGradient="bg-gradient-to-r from-yellow-500 to-amber-400" shadowColor="rgba(234, 179, 8, 0.5)" /></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4"><button onClick={onClaim} disabled={goldInPort < 1} className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-green-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-green-500/80 hover:bg-green-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"><CoinsIcon className="w-6 h-6" /><span>CLAIM</span></button><button onClick={onUpgradeStorage} disabled={!canAffordUpgrade} className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-sky-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-sky-500/80 hover:bg-sky-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"><HammerIcon className="w-5 h-5" /><span>UPGRADE ({upgradeStorageCost} <GemIcon className="inline-block w-4 h-4 align-[-0.15em]" />)</span></button></div></div></div></div></div> ); };
 
-// --- COMPONENT THẺ CĂN CỨ VỚI HÌNH ẢNH ĐÃ ĐIỀU CHỈNH ---
+// --- COMPONENT THẺ CĂN CỨ ---
 const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBaseData, crystals, gold }) => {
   if (!baseData || !playerState) return null;
 
@@ -95,10 +123,9 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
       </div>
       <div className="p-6 pt-2 flex flex-col flex-grow">
-        {/* THAY ĐỔI: Giảm margin-top âm từ -mt-6 xuống -mt-4 */}
-        <div className="text-center mb-4 -mt-4 relative z-10">
-          <p className="font-sans text-sm text-cyan-300 uppercase tracking-widest">Current Base</p>
-          <h2 className="font-lilita text-3xl text-white text-shadow-sm truncate">{name}</h2>
+        {/* THAY ĐỔI: Xóa "Current Base" và chỉ để lại tên căn cứ */}
+        <div className="text-center mb-4">
+          <h2 className="font-lilita text-4xl text-white text-shadow-sm truncate">{name}</h2>
         </div>
         <div className="flex-grow">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -202,8 +229,9 @@ export default function App() {
         .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.7s ease; }
         .btn-shine:hover:not(:disabled)::before { left: 125%; }
       `}</style>
-
-      <GameHeader gold={gold} crystals={crystals} />
+      
+      {/* THAY ĐỔI: Truyền `onPortClick` vào GameHeader */}
+      <GameHeader gold={gold} crystals={crystals} onPortClick={() => setIsPortOpen(true)} />
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 md:p-6 pt-20">
         <h2 className="text-4xl font-lilita text-white text-shadow mb-8 animate-fade-in">Stage {currentStage}</h2>
@@ -221,12 +249,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="relative z-20 p-4 flex justify-center">
-        <button onClick={() => setIsPortOpen(true)} className="btn-shine relative overflow-hidden bg-indigo-700/90 backdrop-blur-md text-white font-lilita tracking-widest text-xl px-8 py-4 rounded-xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-600 transition-all duration-300 flex items-center gap-3 border border-indigo-500 hover:scale-105 active:scale-100">
-          <WarehouseIcon className="w-7 h-7" />
-          <span>PORT</span>
-        </button>
-      </footer>
+      {/* THAY ĐỔI: Xóa footer */}
 
       <PortModal isOpen={isPortOpen} onClose={() => setIsPortOpen(false)} goldInPort={goldInPort} goldStorage={goldStorage} goldPerSecond={goldPerSecond} onClaim={handleClaimGold} onUpgradeStorage={handleUpgradeStorage} upgradeStorageCost={upgradeStorageCost} crystals={crystals} />
     </div>
