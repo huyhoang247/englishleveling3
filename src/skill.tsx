@@ -182,7 +182,9 @@ export default function SkillEquipScreen() {
         {/* --- TÚI ĐỒ / KHO KỸ NĂNG (Scrollable) --- */}
         <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col min-h-0">
             <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0">Kho Kỹ Năng</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
+            
+            {/* === DÒNG ĐÃ SỬA: Thêm "flex-1" vào đây === */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
                 {ALL_SKILLS.map(skill => (
                     <SkillCard
                         key={skill.id}
