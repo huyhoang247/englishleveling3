@@ -12,11 +12,11 @@ const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" wid
 
 // --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 5000;
-const INITIAL_GOLD_STORAGE = 10000;
+const INITIAL_CRYSTALS = 500;
+const INITIAL_GOLD_STORAGE = 1000;
 
 const ALL_BASES = [
-  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 9, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
+  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
   { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250, imageUrl: 'https://placehold.co/400x300/a16207/ffffff?text=Lean-to' },
   { id: 2, name: "Wooden Palisade", stage: 1, goldPerSecond: 1.1, baseUpgradeCost: 150, unlockCost: 700, imageUrl: 'https://placehold.co/400x300/78350f/ffffff?text=Palisade' },
   { id: 3, name: "Watchtower", stage: 1, goldPerSecond: 2.5, baseUpgradeCost: 400, unlockCost: 1800, imageUrl: 'https://placehold.co/400x300/654321/ffffff?text=Watchtower' },
@@ -26,7 +26,8 @@ const ALL_BASES = [
 ];
 
 // --- CÁC COMPONENT GIAO DIỆN PHỤ ---
-const StyledProgressBar = ({ current, max, colorGradient, shadowColor, label }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans">{label ? label : <span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span>}</div></div></div> ); };
+// THAY ĐỔI: Giảm shadow để thanh progress rõ hơn
+const StyledProgressBar = ({ current, max, colorGradient, shadowColor, label }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 10px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans">{label ? label : <span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span>}</div></div></div> ); };
 const ResourceDisplay = ({ icon, value, colorClass }) => ( <div className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border ${colorClass}`}>{icon}<span className="font-bold text-lg text-white tracking-wider">{Math.floor(value).toLocaleString()}</span></div> );
 
 const GameHeader = ({ gold, crystals }) => (
@@ -123,9 +124,8 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
                 <StarIcon key={i} className={`w-7 h-7 transition-all duration-300 ${i < level ? 'text-yellow-400 fill-yellow-500/80' : 'text-slate-600'}`} />
               ))}
             </div>
-            {/* THAY ĐỔI: Hoàn trả lại hiển thị Level của base hiện tại */}
+            {/* THAY ĐỔI: Ẩn dòng level, chỉ giữ lại gold/s */}
             <div className="bg-black/30 p-3 rounded-lg text-center">
-              <p className="font-sans text-lg text-slate-300">Level <span className="font-bold text-2xl text-white">{level}</span></p>
               <p className="font-sans text-sm text-green-400">+{(goldPerSecond * level).toFixed(1)} Gold/s from this base</p>
             </div>
         </div>
@@ -153,11 +153,10 @@ export default function App() {
   
   const currentStage = currentBaseData?.stage || 1;
 
-  // THAY ĐỔI: Tính toán tiến độ của các base trong stage hiện tại
   const basesInCurrentStage = useMemo(() => ALL_BASES.filter(b => b.stage === currentStage), [currentStage]);
   const totalBasesInStage = basesInCurrentStage.length;
   const currentBaseStageIndex = useMemo(() => basesInCurrentStage.findIndex(b => b.id === currentBaseIndex), [basesInCurrentStage, currentBaseIndex]);
-  const progressInStage = currentBaseStageIndex + 1; // +1 để hiển thị dạng 1-based (1/4, 2/4...)
+  const progressInStage = currentBaseStageIndex + 1;
 
   const goldPerSecond = useMemo(() => {
     return playerBases.reduce((total, pBase) => {
@@ -230,7 +229,6 @@ export default function App() {
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 md:p-6 pt-20">
         
-        {/* THAY ĐỔI: Container cho Stage info và progress bar */}
         <div className="w-full max-w-sm mb-6 animate-fade-in">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-2xl font-lilita text-white text-shadow">Stage {currentStage}</h2>
@@ -247,7 +245,8 @@ export default function App() {
             colorGradient="bg-gradient-to-r from-purple-500 to-indigo-600"
             shadowColor="rgba(167, 139, 250, 0.5)"
             label={
-              <span className="text-base tracking-wide">
+              // THAY ĐỔI: Chuyển sang font-lilita và giảm kích thước
+              <span className="font-lilita text-sm tracking-wider !font-normal">
                 Base <span className="font-black">{progressInStage}</span> / {totalBasesInStage}
               </span>
             }
