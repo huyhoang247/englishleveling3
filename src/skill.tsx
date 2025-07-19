@@ -223,22 +223,6 @@ export default function SkillScreen() {
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
       <div className="relative z-10 flex flex-col w-full h-screen p-4 sm:p-6 md:p-8">
-        <header className="w-full max-w-5xl mx-auto flex justify-between items-center flex-shrink-0 pb-6">
-            <div>
-                <h1 className="text-2xl md:text-3xl font-black tracking-wider uppercase title-glow">Sổ Tay Kỹ Năng</h1>
-                <p className="text-sm text-slate-400">Trang bị và chế tạo sức mạnh của bạn.</p>
-            </div>
-            <div className="flex items-center gap-3">
-                <div className="text-right">
-                    <p className="font-bold text-white">Hunter_77</p>
-                    <p className="text-xs text-yellow-400">Cấp 24</p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-purple-500 flex items-center justify-center font-bold text-lg text-purple-400">
-                   H
-                </div>
-            </div>
-        </header>
-
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
