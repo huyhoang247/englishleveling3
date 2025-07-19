@@ -11,44 +11,44 @@ const HammerIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="2
 const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg> );
 
 
-// --- CẤU HÌNH GAME (Không thay đổi) ---
+// --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 5000;
-const INITIAL_GOLD_STORAGE = 10000;
+const INITIAL_CRYSTALS = 500;
+const INITIAL_GOLD_STORAGE = 1000;
+
+// CẬP NHẬT: Thay thế URL ảnh cho căn cứ đầu tiên, giữ placeholder cho các căn cứ khác.
 const ALL_BASES = [
-  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0 },
-  { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250 },
-  { id: 2, name: "Wooden Palisade", stage: 1, goldPerSecond: 1.1, baseUpgradeCost: 150, unlockCost: 700 },
-  { id: 3, name: "Watchman’s Watchtower", stage: 1, goldPerSecond: 2.5, baseUpgradeCost: 400, unlockCost: 1800 },
-  { id: 4, name: "Stone Foundation", stage: 2, goldPerSecond: 5, baseUpgradeCost: 1000, unlockCost: 5000 },
-  { id: 5, name: "Reinforced Wall", stage: 2, goldPerSecond: 10, baseUpgradeCost: 2200, unlockCost: 12000 },
-  { id: 6, name: "Guard Tower", stage: 2, goldPerSecond: 18, baseUpgradeCost: 5000, unlockCost: 30000 },
+  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
+  { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250, imageUrl: 'https://placehold.co/400x300/a16207/ffffff?text=Lean-to' },
+  { id: 2, name: "Wooden Palisade", stage: 1, goldPerSecond: 1.1, baseUpgradeCost: 150, unlockCost: 700, imageUrl: 'https://placehold.co/400x300/78350f/ffffff?text=Palisade' },
+  { id: 3, name: "Watchtower", stage: 1, goldPerSecond: 2.5, baseUpgradeCost: 400, unlockCost: 1800, imageUrl: 'https://placehold.co/400x300/654321/ffffff?text=Watchtower' },
+  { id: 4, name: "Stone Foundation", stage: 2, goldPerSecond: 5, baseUpgradeCost: 1000, unlockCost: 5000, imageUrl: 'https://placehold.co/400x300/6b7280/ffffff?text=Foundation' },
+  { id: 5, name: "Reinforced Wall", stage: 2, goldPerSecond: 10, baseUpgradeCost: 2200, unlockCost: 12000, imageUrl: 'https://placehold.co/400x300/4b5563/ffffff?text=Wall' },
+  { id: 6, name: "Guard Tower", stage: 2, goldPerSecond: 18, baseUpgradeCost: 5000, unlockCost: 30000, imageUrl: 'https://placehold.co/400x300/374151/ffffff?text=Guard+Tower' },
 ];
 
 
-// --- CÁC COMPONENT GIAO DIỆN PHỤ (Không thay đổi) ---
+// --- CÁC COMPONENT GIAO DIỆN PHỤ ---
 const StyledProgressBar = ({ current, max, colorGradient, shadowColor }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans"><span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span></div></div></div> ); };
 const ResourceDisplay = ({ icon, value, colorClass }) => ( <div className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border ${colorClass}`}>{icon}<span className="font-bold text-lg text-white tracking-wider">{Math.floor(value).toLocaleString()}</span></div> );
 const GameHeader = ({ gold, crystals }) => ( <header className="fixed top-0 left-0 w-full z-30 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20"><div className="max-w-6xl mx-auto flex justify-between items-center"><h1 className="text-3xl font-lilita text-yellow-300 text-shadow tracking-wider">BASE BUILDER</h1><div className="flex items-center gap-4"><ResourceDisplay icon={<CoinsIcon className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />} value={gold} colorClass="border-yellow-500/30" /><ResourceDisplay icon={<GemIcon className="w-6 h-6 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />} value={crystals} colorClass="border-cyan-500/30" /></div></div></header> );
 const PortModal = ({ isOpen, onClose, goldInPort, goldStorage, goldPerSecond, onClaim, onUpgradeStorage, upgradeStorageCost, crystals }) => { if (!isOpen) return null; const canAffordUpgrade = crystals >= upgradeStorageCost; return ( <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}><div className="relative w-full max-w-md bg-slate-900/80 border border-slate-600 rounded-2xl shadow-2xl shadow-black/40 animate-fade-in-scale-fast text-white font-lilita m-4" onClick={(e) => e.stopPropagation()}><button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button><div className="p-6"><div className="flex items-center gap-3 mb-6"><WarehouseIcon className="w-10 h-10 text-indigo-400 drop-shadow-[0_2px_4px_rgba(129,140,248,0.4)]" /><h2 className="text-4xl text-white text-shadow tracking-wider">PORT</h2></div><div className="space-y-5 font-sans"><p className="text-slate-300 mb-1 text-sm">Mining Rate: <span className="text-xl font-bold text-green-400 text-shadow-sm">{goldPerSecond.toFixed(1)} Gold/s</span></p><div><p className="text-slate-300 mb-2 text-sm">Gold Storage</p><StyledProgressBar current={goldInPort} max={goldStorage} colorGradient="bg-gradient-to-r from-yellow-500 to-amber-400" shadowColor="rgba(234, 179, 8, 0.5)" /></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4"><button onClick={onClaim} disabled={goldInPort < 1} className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-green-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-green-500/80 hover:bg-green-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"><CoinsIcon className="w-6 h-6" /><span>CLAIM</span></button><button onClick={onUpgradeStorage} disabled={!canAffordUpgrade} className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-sky-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-sky-500/80 hover:bg-sky-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"><HammerIcon className="w-5 h-5" /><span>UPGRADE ({upgradeStorageCost} <GemIcon className="inline-block w-4 h-4 align-[-0.15em]" />)</span></button></div></div></div></div></div> ); };
 
 
-// --- COMPONENT THẺ CĂN CỨ ĐÃ ĐƯỢC NÂNG CẤP ---
+// --- COMPONENT THẺ CĂN CỨ VỚI HÌNH ẢNH ---
 const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBaseData, crystals, gold }) => {
   if (!baseData || !playerState) return null;
 
-  const { name, goldPerSecond } = baseData;
+  const { name, goldPerSecond, imageUrl } = baseData;
   const { level, upgradeCost } = playerState;
   
   const isMaxLevel = level >= MAX_LEVEL_PER_BASE;
   const canAffordUpgrade = crystals >= upgradeCost;
   const canAffordUnlock = nextBaseData ? gold >= nextBaseData.unlockCost : false;
 
-  // Function to render the action button based on state
   const renderActionButton = () => {
     if (isMaxLevel) {
       if (nextBaseData) {
-        // State: Max level, ready to unlock next base
         return (
           <button
             onClick={onUnlockNext}
@@ -64,7 +64,6 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
           </button>
         );
       } else {
-        // State: Max level of the final base
         return (
           <div className="text-center font-lilita tracking-widest text-yellow-400 bg-yellow-500/10 py-3 rounded-lg border border-yellow-500/20 flex items-center justify-center gap-2 text-xl">
             <ShieldCheckIcon className="w-6 h-6"/> ALL BASES COMPLETED
@@ -72,7 +71,6 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
         );
       }
     } else {
-      // State: Default, can upgrade
       return (
         <button
           onClick={onLevelUp}
@@ -91,27 +89,34 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
   };
 
   return (
-    <div className="w-full max-w-sm bg-slate-900/70 backdrop-blur-md p-6 rounded-2xl border-2 border-cyan-500/40 shadow-2xl shadow-cyan-500/10 flex flex-col justify-between animate-fade-in-scale-fast">
-      <div>
-        <div className="text-center mb-4">
+    <div className="group w-full max-w-sm bg-slate-900/70 backdrop-blur-md rounded-2xl border-2 border-cyan-500/40 shadow-2xl shadow-cyan-500/10 flex flex-col overflow-hidden animate-fade-in-scale-fast">
+      <div className="relative w-full h-48 overflow-hidden bg-black/20">
+        <img 
+          src={imageUrl} 
+          alt={name} 
+          className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+      </div>
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="text-center mb-4 -mt-12 relative z-10">
           <p className="font-sans text-sm text-cyan-300 uppercase tracking-widest">Current Base</p>
           <h2 className="font-lilita text-4xl text-white text-shadow-sm truncate">{name}</h2>
         </div>
-
-        <div className="flex items-center justify-center gap-2 mb-4">
-          {Array.from({ length: MAX_LEVEL_PER_BASE }).map((_, i) => (
-            <StarIcon key={i} className={`w-7 h-7 transition-all duration-300 ${i < level ? 'text-yellow-400 fill-yellow-500/80' : 'text-slate-600'}`} />
-          ))}
+        <div className="flex-grow">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {Array.from({ length: MAX_LEVEL_PER_BASE }).map((_, i) => (
+                <StarIcon key={i} className={`w-7 h-7 transition-all duration-300 ${i < level ? 'text-yellow-400 fill-yellow-500/80' : 'text-slate-600'}`} />
+              ))}
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg text-center">
+              <p className="font-sans text-lg text-slate-300">Level <span className="font-bold text-2xl text-white">{level}</span></p>
+              <p className="font-sans text-sm text-green-400">+{(goldPerSecond * level).toFixed(1)} Gold/s from this base</p>
+            </div>
         </div>
-
-        <div className="bg-black/30 p-3 rounded-lg mb-5 text-center">
-            <p className="font-sans text-lg text-slate-300">Level <span className="font-bold text-2xl text-white">{level}</span></p>
-            <p className="font-sans text-sm text-green-400">+{(goldPerSecond * level).toFixed(1)} Gold/s from this base</p>
+        <div className="mt-6">
+          {renderActionButton()}
         </div>
-      </div>
-      
-      <div className="mt-4">
-        {renderActionButton()}
       </div>
     </div>
   );
@@ -137,6 +142,7 @@ export default function App() {
   const goldPerSecond = useMemo(() => {
     return playerBases.reduce((total, pBase) => {
       const baseData = ALL_BASES.find(b => b.id === pBase.id);
+      if (!baseData) return total;
       return total + (baseData.goldPerSecond * pBase.level);
     }, 0);
   }, [playerBases]);
@@ -151,7 +157,7 @@ export default function App() {
   const upgradeStorageCost = useMemo(() => Math.floor(goldStorage / 5), [goldStorage]);
 
   const handleLevelUp = useCallback(() => {
-    if (!currentBaseState || currentBaseState.level >= MAX_LEVEL_PER_BASE) return;
+    if (!currentBaseState || !currentBaseData || currentBaseState.level >= MAX_LEVEL_PER_BASE) return;
     if (crystals >= currentBaseState.upgradeCost) {
       setCrystals(prev => prev - currentBaseState.upgradeCost);
       setPlayerBases(prevPlayerBases =>
@@ -165,7 +171,7 @@ export default function App() {
   }, [crystals, currentBaseIndex, currentBaseState, currentBaseData]);
 
   const handleUnlockNextBase = useCallback(() => {
-    if (!nextBaseData || gold < nextBaseData.unlockCost) return;
+    if (!nextBaseData || !currentBaseData || gold < nextBaseData.unlockCost) return;
     
     setGold(prev => prev - nextBaseData.unlockCost);
     setCurrentBaseIndex(prev => prev + 1);
@@ -174,6 +180,7 @@ export default function App() {
     if (nextBaseData.stage > currentBaseData.stage) {
       const bonus = 500 * currentBaseData.stage;
       setCrystals(prev => prev + bonus);
+      // Thay alert bằng một modal thông báo đẹp hơn trong tương lai
       alert(`Congratulations! You've reached Stage ${nextBaseData.stage} and earned ${bonus} Crystals!`);
     }
   }, [gold, nextBaseData, currentBaseData]);
@@ -184,7 +191,6 @@ export default function App() {
   return (
     <div className="main-bg relative min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] text-white overflow-hidden flex flex-col">
       <style>{`
-        /* ... CSS styles (không thay đổi) ... */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
         .font-sans { font-family: 'Inter', sans-serif; }
@@ -207,7 +213,6 @@ export default function App() {
         <h2 className="text-4xl font-lilita text-white text-shadow mb-8 animate-fade-in">Stage {currentStage}</h2>
 
         <div className="w-full flex items-center justify-center">
-            {/* Chỉ hiển thị một thẻ căn cứ duy nhất */}
             <FocusBaseCard
                 baseData={currentBaseData}
                 playerState={currentBaseState}
