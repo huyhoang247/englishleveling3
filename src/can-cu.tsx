@@ -138,7 +138,12 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
 };
 
 // --- COMPONENT CHÍNH CỦA GAME ---
-export default function App() {
+interface BaseBuildingProps {
+  onClose: () => void;
+}
+
+// RENAME: from App to BaseBuildingScreen, and add onClose prop
+export default function BaseBuildingScreen({ onClose }: BaseBuildingProps) {
   const [gold, setGold] = useState(0);
   const [crystals, setCrystals] = useState(INITIAL_CRYSTALS);
   const [currentBaseIndex, setCurrentBaseIndex] = useState(0);
@@ -208,6 +213,15 @@ export default function App() {
 
   return (
     <div className="main-bg relative min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] text-white overflow-hidden flex flex-col">
+       {/* NEW: Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200"
+          aria-label="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; }
