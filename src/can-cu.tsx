@@ -94,10 +94,9 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
       </div>
-      {/* THAY ĐỔI: p-6 và pt-2 */}
       <div className="p-6 pt-2 flex flex-col flex-grow">
-        {/* THAY ĐỔI: Giảm -mt-6 và text-3xl */}
-        <div className="text-center mb-4 -mt-6 relative z-10">
+        {/* THAY ĐỔI: Giảm margin-top âm từ -mt-6 xuống -mt-4 */}
+        <div className="text-center mb-4 -mt-4 relative z-10">
           <p className="font-sans text-sm text-cyan-300 uppercase tracking-widest">Current Base</p>
           <h2 className="font-lilita text-3xl text-white text-shadow-sm truncate">{name}</h2>
         </div>
