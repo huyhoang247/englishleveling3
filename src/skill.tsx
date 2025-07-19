@@ -207,7 +207,7 @@ export default function SkillScreen() {
             {/* KHO KỸ NĂNG CỐ ĐỊNH */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2 flex-grow">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
                     {ownedSkills.length > 0 ? (
                         ownedSkills.map(skill => (
                             <SkillCard
