@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// --- BIỂU TƯỢNG SVG (Không thay đổi) ---
+// --- BIỂU TƯỢNG SVG ---
 const GemIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 3h12l4 6-10 13L2 9z" /><path d="M12 22V9" /><path d="m3.5 9h17" /></svg> );
 const CoinsIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><ellipse cx="12" cy="16" rx="7" ry="2.5" /><path d="M5 16V8.5c0-1.38 3.13-2.5 7-2.5s7 1.12 7 2.5V16" /><path d="M5 12.5c0 1.38 3.13 2.5 7 2.5s7-1.12 7-2.5" /></svg> );
 const ArrowUpIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></svg> );
@@ -10,15 +10,13 @@ const StarIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24"
 const HammerIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.81c0-.98-.91-1.78-2.02-1.78h-1.96c-.67 0-1.31.25-1.79.73L10.2 12l-1.65 1.65c-.59.59-.59 1.54 0 2.12l5.5 5.5c.59.59 1.54.59 2.12 0L19.5 17.5l1.41-1.41z"/></svg> );
 const ShieldCheckIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg> );
 
-
 // --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
 const INITIAL_CRYSTALS = 500;
 const INITIAL_GOLD_STORAGE = 1000;
 
-// CẬP NHẬT: Thay thế URL ảnh cho căn cứ đầu tiên, giữ placeholder cho các căn cứ khác.
 const ALL_BASES = [
-  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 9, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
+  { id: 0, name: "Mud Hut", stage: 1, goldPerSecond: 0.2, baseUpgradeCost: 25, unlockCost: 0, imageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250719_1127_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Ng%C3%B4i%20Nh%C3%A0%20B%C3%B9n_simple_compose_01k0geyxbzezdvpkr11t976685.png' },
   { id: 1, name: "Thatched Lean-to", stage: 1, goldPerSecond: 0.5, baseUpgradeCost: 60, unlockCost: 250, imageUrl: 'https://placehold.co/400x300/a16207/ffffff?text=Lean-to' },
   { id: 2, name: "Wooden Palisade", stage: 1, goldPerSecond: 1.1, baseUpgradeCost: 150, unlockCost: 700, imageUrl: 'https://placehold.co/400x300/78350f/ffffff?text=Palisade' },
   { id: 3, name: "Watchtower", stage: 1, goldPerSecond: 2.5, baseUpgradeCost: 400, unlockCost: 1800, imageUrl: 'https://placehold.co/400x300/654321/ffffff?text=Watchtower' },
@@ -27,15 +25,13 @@ const ALL_BASES = [
   { id: 6, name: "Guard Tower", stage: 2, goldPerSecond: 18, baseUpgradeCost: 5000, unlockCost: 30000, imageUrl: 'https://placehold.co/400x300/374151/ffffff?text=Guard+Tower' },
 ];
 
-
 // --- CÁC COMPONENT GIAO DIỆN PHỤ ---
 const StyledProgressBar = ({ current, max, colorGradient, shadowColor }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans"><span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span></div></div></div> ); };
 const ResourceDisplay = ({ icon, value, colorClass }) => ( <div className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border ${colorClass}`}>{icon}<span className="font-bold text-lg text-white tracking-wider">{Math.floor(value).toLocaleString()}</span></div> );
 const GameHeader = ({ gold, crystals }) => ( <header className="fixed top-0 left-0 w-full z-30 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20"><div className="max-w-6xl mx-auto flex justify-between items-center"><h1 className="text-3xl font-lilita text-yellow-300 text-shadow tracking-wider">BASE BUILDER</h1><div className="flex items-center gap-4"><ResourceDisplay icon={<CoinsIcon className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />} value={gold} colorClass="border-yellow-500/30" /><ResourceDisplay icon={<GemIcon className="w-6 h-6 text-cyan-400 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />} value={crystals} colorClass="border-cyan-500/30" /></div></div></header> );
 const PortModal = ({ isOpen, onClose, goldInPort, goldStorage, goldPerSecond, onClaim, onUpgradeStorage, upgradeStorageCost, crystals }) => { if (!isOpen) return null; const canAffordUpgrade = crystals >= upgradeStorageCost; return ( <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}><div className="relative w-full max-w-md bg-slate-900/80 border border-slate-600 rounded-2xl shadow-2xl shadow-black/40 animate-fade-in-scale-fast text-white font-lilita m-4" onClick={(e) => e.stopPropagation()}><button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button><div className="p-6"><div className="flex items-center gap-3 mb-6"><WarehouseIcon className="w-10 h-10 text-indigo-400 drop-shadow-[0_2px_4px_rgba(129,140,248,0.4)]" /><h2 className="text-4xl text-white text-shadow tracking-wider">PORT</h2></div><div className="space-y-5 font-sans"><p className="text-slate-300 mb-1 text-sm">Mining Rate: <span className="text-xl font-bold text-green-400 text-shadow-sm">{goldPerSecond.toFixed(1)} Gold/s</span></p><div><p className="text-slate-300 mb-2 text-sm">Gold Storage</p><StyledProgressBar current={goldInPort} max={goldStorage} colorGradient="bg-gradient-to-r from-yellow-500 to-amber-400" shadowColor="rgba(234, 179, 8, 0.5)" /></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4"><button onClick={onClaim} disabled={goldInPort < 1} className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-green-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-green-500/80 hover:bg-green-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"><CoinsIcon className="w-6 h-6" /><span>CLAIM</span></button><button onClick={onUpgradeStorage} disabled={!canAffordUpgrade} className="w-full font-lilita tracking-wider text-lg flex items-center justify-center gap-2 bg-sky-600/80 text-white font-semibold px-4 py-3 rounded-lg border border-sky-500/80 hover:bg-sky-600 transition-all duration-200 active:scale-95 disabled:bg-slate-700 disabled:text-slate-400 disabled:border-slate-600 disabled:cursor-not-allowed"><HammerIcon className="w-5 h-5" /><span>UPGRADE ({upgradeStorageCost} <GemIcon className="inline-block w-4 h-4 align-[-0.15em]" />)</span></button></div></div></div></div></div> ); };
 
-
-// --- COMPONENT THẺ CĂN CỨ VỚI HÌNH ẢNH ---
+// --- COMPONENT THẺ CĂN CỨ VỚI HÌNH ẢNH ĐÃ ĐIỀU CHỈNH ---
 const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBaseData, crystals, gold }) => {
   if (!baseData || !playerState) return null;
 
@@ -90,16 +86,16 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
 
   return (
     <div className="group w-full max-w-sm bg-slate-900/70 backdrop-blur-md rounded-2xl border-2 border-cyan-500/40 shadow-2xl shadow-cyan-500/10 flex flex-col overflow-hidden animate-fade-in-scale-fast">
-      <div className="relative w-full h-48 overflow-hidden bg-black/20">
+      <div className="relative w-full h-40 overflow-hidden bg-black/20 p-2">
         <img 
           src={imageUrl} 
           alt={name} 
-          className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+          className="w-full h-full object-contain transition-transform duration-500 ease-in-out group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
       </div>
-      <div className="p-6 flex flex-col flex-grow">
-        <div className="text-center mb-4 -mt-12 relative z-10">
+      <div className="p-6 pt-0 flex flex-col flex-grow">
+        <div className="text-center mb-4 -mt-8 relative z-10">
           <p className="font-sans text-sm text-cyan-300 uppercase tracking-widest">Current Base</p>
           <h2 className="font-lilita text-4xl text-white text-shadow-sm truncate">{name}</h2>
         </div>
@@ -121,7 +117,6 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
     </div>
   );
 };
-
 
 // --- COMPONENT CHÍNH CỦA GAME ---
 export default function App() {
